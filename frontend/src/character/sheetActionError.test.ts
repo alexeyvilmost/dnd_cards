@@ -2,6 +2,25 @@ import { describe, expect, it } from 'vitest';
 import { playerFacingSheetActionError } from './sheetActionError';
 
 describe('playerFacingSheetActionError', () => {
+  it.each([{level:2,reference:'arbitrary-river-spell'},{level:7,reference:'different-flame-spell'}])(
+    'formats missing level $level slots through the shared resource label without leaking source identity', ({level,reference}) => {
+      const message=playerFacingSheetActionError(new Error(`No level ${level} slot for ${reference}`));
+      expect(message).toBe(`Нет доступного ресурса «Ячейка ${level}-го круга».`);
+      expect(message).not.toContain(reference);
+      expect(playerFacingSheetActionError(new Error(`SpellResourceUnavailable: No level ${level} slot for ${reference}`)))
+        .toBe(message);
+    });
+  it.each([
+    ['Invalid casting level 0 for action:river','Выберите допустимый круг заклинания.'],
+    ['Spell grant source:ritual has no available free use or slot resource','Нет бесплатного применения или подходящей ячейки.'],
+    ['Spell action action:flame is in source:class but is not prepared','Заклинание не подготовлено.'],
+    ['Spell action action:river has 2 grants; grantId is required','Выберите источник заклинания.'],
+    ['Spell grant source:flame has no defined casting access','Заклинание недоступно из выбранного источника.'],
+    ['Grant source:ritual can cast action:river only as a ritual','Из этого источника заклинание доступно только как ритуал.'],
+    ['Grant source:class cannot cast action:flame as a ritual','Из этого источника заклинание недоступно как ритуал.'],
+  ])('localizes the canonical spell rejection %s', (detail,expected)=>{
+    expect(playerFacingSheetActionError(new Error(detail))).toBe(expected);
+  });
   it('explains incompatible character rulesets in player-facing Russian', () => {
     const message = playerFacingSheetActionError(
       new Error('Atomic participants use incompatible rulesets'),

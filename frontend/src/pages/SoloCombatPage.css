@@ -44,7 +44,7 @@
   border-radius: 8px;
   background: #211c16;
 }
-.combat-topbar__right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; min-width: 0; }
+.combat-topbar__right { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .combat-topbar__actions { display: flex; gap: 4px; }
 .combat-settings-button:focus-visible { outline: 2px solid var(--site-gold, #c9ad74); outline-offset: 3px; }
 .combat-settings-button:hover { border-color: #ad8952; color: #f1d6a8; }
@@ -179,6 +179,7 @@
 .tactical-map .tactical-cell.is-route-preview::after { display: none; }
 .tactical-map .tactical-cell.is-route-preview { background: #8ad7d908; box-shadow: none; }
 .combat-stage {
+  position: relative;
   height: calc(100vh - 286px);
   min-height: 420px;
   display: grid;
@@ -528,6 +529,13 @@
   margin: 0 0 10px;
   font: 700 17px Pangolin;
 }
+.combat-log__heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.combat-log__heading h2 { margin: 0; }
+.combat-log-toggle { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border: 1px solid #5e4d38; border-radius: 7px; background: #171c19e8; color: #dbc5a4; cursor: pointer; pointer-events: auto; }
+.combat-log-toggle:hover { border-color: #bba477; color: #fff1d1; }
+.combat-log-toggle:focus-visible { outline: 2px solid #dbbc77; outline-offset: 3px; }
+.combat-log-restore { position: absolute; right: 14px; top: 14px; z-index: 3; }
+.combat-stage.is-log-hidden { grid-template-columns: minmax(0, 1fr); }
 .combat-log-entry {
   --combat-log-tone: #6d6255;
   margin: 6px 0;
@@ -1246,7 +1254,7 @@
 .solo-combat-page.is-3d-field .combat-topbar { background: linear-gradient(#131a17ec,#101714c9); }
 .solo-combat-page.is-3d-field .combat-log {
   position: absolute;
-  top: 94px;
+  top: calc(var(--site-navigation-height, 0px) + 94px);
   right: 12px;
   bottom: 192px;
   z-index: 2;
@@ -1256,6 +1264,21 @@
   pointer-events: auto;
 }
 @media(max-width:900px){.solo-combat-page.is-3d-field .combat-log{display:none}}
+.initiative-ribbon--tokens-only .initiative-card { flex: 0 0 50px; width: 50px; min-width: 50px; max-width: 50px; height: 50px; display: grid; grid-template-columns: 1fr; grid-template-rows: 1fr; padding: 3px; border: 1px solid var(--combat-accent); border-radius: 7px; opacity: 1; }
+.initiative-ribbon--tokens-only .initiative-card__portrait { grid-row: auto; width: 100%; height: 100%; overflow: hidden; border: 0; border-radius: 4px; }
+.initiative-ribbon--tokens-only .initiative-card img { border-radius: 4px; }
+.initiative-ribbon--tokens-only .initiative-card.is-dead { opacity: .35; }
+.solo-combat-page.is-3d-field .combat-log-restore { top: calc(var(--site-navigation-height, 0px) + 94px); right: 12px; }
+@media(max-width:900px) {
+  .combat-topbar { grid-template-columns: 70px minmax(0,1fr) auto; gap: 8px; }
+  .combat-topbar__right { gap: 6px; }
+  .combat-topbar__actions { flex-direction: column; }
+  .initiative-ribbon--tokens-only .initiative-card { flex-basis: 42px; width: 42px; min-width: 42px; max-width: 42px; height: 42px; }
+  .combat-stage:not(.is-log-hidden) .combat-log { display: block; position: absolute; top: 6px; right: 6px; bottom: 6px; width: min(300px,80vw); z-index: 3; box-sizing: border-box; background: #151a18ed; }
+  .solo-combat-page.is-3d-field .combat-stage:not(.is-log-hidden) .combat-log { top: calc(var(--site-navigation-height, 0px) + 84px); bottom: 190px; }
+  .solo-combat-page.is-3d-field .combat-log-restore { top: calc(var(--site-navigation-height, 0px) + 84px); }
+  .combat-log-restore { top: 6px; right: 6px; }
+}
 .tactical-cell.is-area-preview { background: #58a9dc45 !important; box-shadow: inset 0 0 0 2px #88d0f0; z-index: 1; }
 .tactical-cell.is-area-preview.has-token { background: #d4a04f4f !important; }
 .combat-sheet-drawer { width: min(390px,100%); padding: 18px; background: #12100d; color: #e8dccb; border-left: 1px solid #6a5332; }
@@ -1320,3 +1343,4 @@
 .combat-hotbar__actions.is-row-view .combat-sheet-action { display:flex; flex-direction:row; width:240px; min-width:240px; align-items:stretch; }
 .combat-hotbar__actions.is-row-view .sheet-item-row { width:100%; text-align:left; }
 .combat-hotbar__actions.is-row-view .combat-hotbar__action-label { display:none; }
+.combat-reaction-actions.combat-triggered-action-icons{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:12px}

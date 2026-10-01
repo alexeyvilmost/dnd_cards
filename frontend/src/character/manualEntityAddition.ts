@@ -8,6 +8,7 @@ import { buildResourceRuntimePatch } from './resourceInit';
 import { resolveCharacterRules } from './rules/resolveCharacterRules';
 import { buildCharacterContext } from './runtime';
 import type { CharacterDraft, ForgeCharacter } from './types';
+import { spellCanBeAcquired } from './spellChoices';
 
 export type ManualEntityType = 'items' | 'actions' | 'effects' | 'spells' | 'feats';
 export type ManualEntitySource = Card | Action | PassiveEffect | Spell | Feat;
@@ -74,7 +75,7 @@ export async function loadManualEntities(
   }
   if (type === 'spells') {
     const response = await loadCatalogPages((page: number) => spellsApi.getSpells({ page, limit, search: query }), 'spells');
-    return (response.spells ?? []).map((entity) => normalize(entity, type));
+    return (response.spells ?? []).filter(spellCanBeAcquired).map((entity) => normalize(entity, type));
   }
   if (type === 'feats') {
     const response = await loadCatalogPages((page: number) => featsApi.getFeats({ page, limit, search: query }), 'feats');
@@ -141,6 +142,9 @@ export async function addManualEntities(
 ): Promise<ForgeCharacter> {
   const selected = selections.filter(({ amount }) => amount > 0);
   if (!selected.length) return character;
+  if (type === 'spells' && selected.some(({ entity }) => !spellCanBeAcquired(entity.source))) {
+    throw new Error('Версию заклинания можно выбрать только при наложении родительского заклинания');
+  }
 
   if (type === 'items') {
     const inventory = (character.inventory_items ?? []).map((row) => ({ ...row }));
@@ -158,7 +162,7 @@ export async function addManualEntities(
   const ruleState = resolveCharacterRules({ draft, assembled });
   let updated = await charactersV3Api.update(
     character.id,
-    buildSavePayload(draft, assembled, ruleState, character.current_hp),
+    buildSavePayload(draft, assembled, ruleState, character.current_hp, character.max_hp),
   );
 
   const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);

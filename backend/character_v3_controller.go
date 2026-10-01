@@ -49,7 +49,7 @@ func cloneJSONMapValue(value *JSONMap) JSONMap {
 // lock has established whether encounter runtime owns HP/effects/temp HP.
 // Other runtime fields (including other turn_state keys) remain independently
 // editable while the character participates in an encounter.
-func runtimeUpdatesForLockedCharacter(character CharacterV3, req PatchCharacterRuntimeRequest) map[string]interface{} {
+func runtimeUpdatesForLockedCharacter(character CharacterV3, req PatchCharacterRuntimeRequest, dormantItemPools ...map[string]bool) map[string]interface{} {
 	updates := make(map[string]interface{})
 	linked := character.CurrentEncounterID != nil
 	if req.CurrentHP != nil && !linked {
@@ -57,6 +57,9 @@ func runtimeUpdatesForLockedCharacter(character CharacterV3, req PatchCharacterR
 	}
 	if req.MaxHP != nil {
 		updates["max_hp"] = *req.MaxHP
+		if !linked && *req.MaxHP > 0 && *req.MaxHP != character.MaxHP {
+			updates["current_hp"] = characterCurrentHPForMaximum(character.CurrentHP, character.MaxHP, *req.MaxHP)
+		}
 	}
 	if req.Equipment != nil {
 		updates["equipment"] = req.Equipment
@@ -64,8 +67,12 @@ func runtimeUpdatesForLockedCharacter(character CharacterV3, req PatchCharacterR
 	if req.InventoryItems != nil {
 		updates["inventory_items"] = req.InventoryItems
 	}
-	if req.Resources != nil {
-		updates["resources"] = req.Resources
+	var dormantPools map[string]bool
+	if len(dormantItemPools) > 0 {
+		dormantPools = dormantItemPools[0]
+	}
+	if resources := reconcileCharacterResourceCapacities(character, req, dormantPools); resources != nil {
+		updates["resources"] = resources
 	}
 	if req.MaxResources != nil {
 		updates["max_resources"] = req.MaxResources
@@ -372,6 +379,10 @@ func (cc *CharacterV3Controller) CreateCharacterV3(c *gin.Context) {
 	}
 	defer tx.Rollback()
 
+	if err := validateNewCharacterSpellAcquisitions(tx, nil, character.SpellIDs, character.ResolvedChoices); err != nil {
+		writeCharacterRuntimeCommandError(c, err)
+		return
+	}
 	if err := tx.Create(&character).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка создания персонажа", "details": err.Error()})
 		return
@@ -537,6 +548,9 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 			roguelikeRun = run
 		}
 
+		if err := validateNewCharacterSpellAcquisitions(tx, &locked, req.SpellIDs, req.ResolvedChoices); err != nil {
+			return err
+		}
 		if req.Name != "" {
 			locked.Name = req.Name
 		}
@@ -568,9 +582,14 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		locked.Languages = req.Languages
 		locked.ResolvedChoices = req.ResolvedChoices
 		locked.RuleState = req.RuleState
+		previousMaxHP, previousCurrentHP := locked.MaxHP, locked.CurrentHP
 		locked.MaxHP = req.MaxHP
 		if locked.CurrentEncounterID == nil {
-			locked.CurrentHP = req.CurrentHP
+			if req.MaxHP > 0 {
+				locked.CurrentHP = characterCurrentHPForMaximum(previousCurrentHP, previousMaxHP, req.MaxHP)
+			} else {
+				locked.CurrentHP = req.CurrentHP
+			}
 		}
 		locked.Speed = req.Speed
 		locked.ProficiencyBonus = req.ProficiencyBonus
@@ -923,7 +942,11 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 		if err := validateItemEquipmentChange(tx, locked, req.Equipment); err != nil {
 			return err
 		}
-		updates := runtimeUpdatesForLockedCharacter(locked, req)
+		dormantPools, err := dormantCharacterItemResourcePools(tx, locked, req)
+		if err != nil {
+			return err
+		}
+		updates := runtimeUpdatesForLockedCharacter(locked, req, dormantPools)
 		if req.ExpectedRuntimeRevision != nil && locked.RuntimeRevision != *req.ExpectedRuntimeRevision {
 			expected := *req.ExpectedRuntimeRevision
 			actual := locked.RuntimeRevision

@@ -1,7 +1,7 @@
 import type { AssembledCharacter } from './assemble';
 import { collectActionUsesPools, type GrantedAction } from './actionSheet';
 import { hitDiceResourceKey, initResources, resolveCount, resolveLeveledCount, resourceLevel } from '../engine/resources';
-import { freeuseKey, isFreeusePoolKey, type FreeuseSpec } from '../engine/freeuse';
+import { resolveFreeusePoolKey, isFreeusePoolKey, type FreeuseSpec } from '../engine/freeuse';
 import type { ValueBreakdown } from '../mvp/contracts';
 import type { CharacterContext, RollModifier, RuntimeState } from '../mvp/contracts';
 import type { ForgeCharacter } from './types';
@@ -10,6 +10,8 @@ import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
 import { expandPassiveChoicePayloads, passiveSourceId } from '../mechanics/expandChoices';
 import type { Card } from '../types';
 import {collectItemMechanics} from './attunement';
+import {currentResourceForMaximum} from './vitalityReconciliation';
+import resourceDeclarations from '../engine/data/resources.json';
 
 type Dict = Record<string, unknown>;
 
@@ -81,7 +83,7 @@ function resourceGrantParts(passives: Dict[], resourceKey: string, ctx: Characte
 
 /**
  * Объяснение максимума ресурса для UI. Порядок зеркалит syncRuntimeResources:
- * системные/классовые пулы + гранты, затем виртуальные uses/freeuse-пулы.
+ * системные/классовые пулы + гранты, объявленные uses и generic freeuse-пулы.
  * actualMax добавляет явную строку согласования для старого или вручную
  * изменённого snapshot, поэтому показанные части всегда сходятся с UI-числом.
  */
@@ -93,13 +95,12 @@ export function resourceMaximumBreakdown(
   actualMax?: number,
 ): ValueBreakdown {
   let parts: ValueBreakdown['parts'] = [];
-  const turnLabels: Record<string, string> = {
-    action: 'Действие', bonus_action: 'Бонусное действие', reaction: 'Реакция',
-  };
+  const systemPool = resourceDeclarations.system_pools.find(pool => pool.resource_id === resourceKey);
+  const declaration = resourceDeclarations.resources.find(resource => resource.resource_id === resourceKey);
 
-  if (turnLabels[resourceKey]) {
-    parts = [{ value: 1, source: 'Экономика хода', reason: turnLabels[resourceKey] }];
-  } else if (resourceKey.startsWith('hit_dice_d')) {
+  if (systemPool) {
+    parts = [{ value: systemPool.count, source: 'Экономика хода', reason: declaration?.name ?? resourceKey }];
+  } else if (Object.values(resourceDeclarations.hit_dice).includes(resourceKey)) {
     for (const klass of assembled.classes ?? (assembled.klass ? [assembled.klass] : [])) {
       if (hitDiceResourceKey(klass.hit_die) !== resourceKey) continue;
       const slug = (klass.card_number || klass.name).replace(/^CLASS[-_]/i, '').toLowerCase().replace(/-/g, '_');
@@ -127,7 +128,9 @@ export function resourceMaximumBreakdown(
     parts = [{ value: resolveLeveledCount(usesPool, ctx), source: usesPool.source, reason: 'лимит использований' }];
   }
 
-  const freeuse = freeuseSpells.find((spec) => freeuseKey(spec.spell) === resourceKey);
+  const freeuse = freeuseSpells.find((spec) => resolveFreeusePoolKey(spec, {
+    spells: assembled.spells, resources: { [resourceKey]: actualMax ?? 0 },
+  }) === resourceKey);
   if (freeuse) {
     const spell = assembled.spells.find((candidate) => candidate.id === freeuse.spell || candidate.card_number === freeuse.spell);
     parts = [{
@@ -209,7 +212,7 @@ export function syncRuntimeResources(
   // Each class contributes its own Hit Dice. Replace the legacy single-class
   // total seeded by initResources with one pool per die size.
   for (const key of Object.keys(fresh.maxResources)) {
-    if (key.startsWith('hit_dice_d')) {
+    if (Object.values(resourceDeclarations.hit_dice).includes(key)) {
       delete fresh.maxResources[key];
       delete fresh.resources[key];
     }
@@ -223,9 +226,9 @@ export function syncRuntimeResources(
     fresh.resources[key] = (fresh.resources[key] ?? 0) + count;
   }
   const sources: Record<string, RollModifier[]> = {};
-  addResourceSource(sources, 'action', 1, 'Базовый ресурс хода', 'один ресурс на ход');
-  addResourceSource(sources, 'bonus_action', 1, 'Базовый ресурс хода', 'один ресурс на ход');
-  addResourceSource(sources, 'reaction', 1, 'Базовый ресурс хода', 'одна реакция на ход');
+  for (const pool of resourceDeclarations.system_pools) {
+    addResourceSource(sources, pool.resource_id, pool.count, 'Базовый ресурс хода', 'базовый максимум на ход');
+  }
 
   if (classRes) {
     for (const [id, def] of Object.entries(classRes)) {
@@ -240,22 +243,25 @@ export function syncRuntimeResources(
     addResourceSource(sources, id, amount, source, 'грант ресурса');
   }
 
-  // Виртуальные пулы использований действий (mechanics.uses → uses_<key>).
-  for (const pool of collectActionUsesPools(assembled, itemCards, grantedActions)) {
+  // Пулы использований из объявлений mechanics.uses.
+  const ownedItemIds=new Set(existing
+    ? [...Object.values(existing.equipment),...existing.inventory.map(row=>row.cardId)].filter((id):id is string=>Boolean(id))
+    : (ctx.equippedCards??[]).map(card=>card.id));
+  for (const pool of collectActionUsesPools(assembled, existing?itemCards.filter(card=>ownedItemIds.has(card.id)):itemCards, grantedActions)) {
     const count = resolveLeveledCount(pool, ctx);
     if (count > 0) {
       fresh.maxResources[pool.key] = count;
       fresh.resources[pool.key] = count;
-      addResourceSource(sources, pool.key, count, `Действие: ${pool.key.replace(/^uses_/, '')}`, 'число использований');
+      addResourceSource(sources, pool.key, count, pool.source, 'число использований');
     }
   }
 
-  // Пулы бесплатных использований заклинаний (grant_spell.freeuse → freeuse-<spell>).
+  // Generic-пулы бесплатных использований: сохранённые ключи переживают исправление ссылок выдачи.
   for (const spec of freeuseSpells) {
     if (spec.atWill) continue;
     const count = resolveCount(spec.count, ctx);
     if (count > 0) {
-      const key = freeuseKey(spec.spell);
+      const key = resolveFreeusePoolKey(spec, { spells: assembled.spells, resources: existing?.maxResources });
       fresh.maxResources[key] = count;
       fresh.resources[key] = count;
       addResourceSource(sources, key, count, `Заклинание: ${spec.spell}`, 'бесплатные использования');
@@ -288,35 +294,27 @@ export function syncRuntimeResources(
     }
   }
 
-  // Heroic Inspiration is a universal runtime-owned resource: another
-  // character can grant it even when the recipient's build does not declare
-  // a matching class/species/feat pool. Keep that server snapshot across the
-  // automatic sheet resource reconciliation, otherwise opening the recipient
-  // sheet immediately deletes Musician's grant.
-  if (existing.maxResources.heroic_inspiration > 0
-    && maxResources.heroic_inspiration == null) {
-    maxResources.heroic_inspiration = existing.maxResources.heroic_inspiration;
-    resources.heroic_inspiration = Math.min(
-      existing.resources.heroic_inspiration ?? 0,
-      existing.maxResources.heroic_inspiration,
-    );
-    addResourceSource(
-      sources,
-      'heroic_inspiration',
-      existing.maxResources.heroic_inspiration,
-      'Героическое вдохновение',
-      'универсальный ресурс персонажа',
-    );
+  // Runtime-owned resources may be granted by another actor. Their declared
+  // ownership policy preserves the server snapshot across build reconciliation.
+  for (const key of resourceDeclarations.runtime_owned) {
+    if (existing.maxResources[key] > 0 && maxResources[key] == null) {
+      maxResources[key] = existing.maxResources[key];
+      resources[key] = Math.min(existing.resources[key] ?? 0, existing.maxResources[key]);
+      const declaration = resourceDeclarations.resources.find(resource => resource.resource_id === key);
+      addResourceSource(sources, key, existing.maxResources[key], declaration?.name ?? key, 'ресурс персонажа');
+    }
   }
 
   for (const key of Object.keys(maxResources)) {
     const cur = existing.resources[key];
     if (cur != null) {
       const oldMax = existing.maxResources[key] ?? maxResources[key];
-      const gainedAtLevelUp = key.startsWith('hit_dice_d')
-        ? Math.max(0, maxResources[key] - oldMax)
-        : 0;
-      resources[key] = Math.min(cur + gainedAtLevelUp, maxResources[key]);
+      // Re-equipping a previously exhausted item must not replenish its
+      // dormant pool. Permanent class/feat capacity increases are available
+      // immediately, including slots and limited-use action pools.
+      const dormantItemPool = knownItemResourceKeys.has(key) && oldMax === 0;
+      resources[key] = dormantItemPool ? Math.min(cur, maxResources[key])
+        : currentResourceForMaximum(cur, oldMax, maxResources[key]);
     }
   }
 

@@ -417,7 +417,7 @@ func main() {
 	}
 
 	log.Printf("Сервер запущен на порту %s", port)
-	if err := r.Run(":" + port); err != nil {
+	if err := r.Run(os.Getenv("LISTEN_HOST") + ":" + port); err != nil {
 		log.Fatal("Ошибка запуска сервера:", err)
 	}
 }

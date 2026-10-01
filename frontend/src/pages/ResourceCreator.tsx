@@ -6,21 +6,13 @@ import { resourcesApi } from '../api/client';
 import { formatEntityEditorError } from '../utils/entityEditorError';
 import type { CreateResourceRequest, ResourceDefinition } from '../types';
 import ImageUploader from '../components/ImageUploader';
+import {RESOURCE_CATEGORY_LABEL,RESOURCE_RECHARGE_LABEL} from '../components/ResourcePreview';
 
-const categoryOptions = [
-  { value: 'action_cost', label: 'Стоимость действия' },
-  { value: 'class_resource', label: 'Ресурс класса' },
-  { value: 'character_resource', label: 'Ресурс персонажа' },
-  { value: 'item_resource', label: 'Ресурс предмета' },
-];
+const categoryOptions = Object.entries(RESOURCE_CATEGORY_LABEL).map(([value,label])=>({value,label}));
 
 const rechargeOptions = [
   { value: '', label: 'Не восстанавливается автоматически' },
-  { value: 'per_turn', label: 'Каждый ход' },
-  { value: 'per_round', label: 'Каждый раунд' },
-  { value: 'short_rest', label: 'Короткий отдых' },
-  { value: 'long_rest', label: 'Длинный отдых' },
-  { value: 'custom', label: 'Произвольно' },
+  ...Object.entries(RESOURCE_RECHARGE_LABEL).map(([value,label])=>({value,label})),
 ];
 
 const ResourceCreator = () => {

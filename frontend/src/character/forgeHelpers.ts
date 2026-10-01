@@ -24,6 +24,8 @@ import { normalizeSkillList } from './skillNormalize';
 import type { Feat, Race, RaceTrait } from '../types';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { characterClassLevels, draftClassLevels, normalizedSubclassIds } from './multiclass';
+import { spellCanBeAcquired } from './spellChoices';
+import {currentHpForMaximum} from './vitalityReconciliation';
 
 /**
  * Keep every choice introduced by the current level visible after it is
@@ -280,6 +282,7 @@ export function buildSavePayload(
   assembled: AssembledCharacter,
   ruleState: CharacterRuleState = resolveCharacterRules({ draft, assembled }),
   prevCurrentHp?: number,
+  prevMaxHp?: number,
 ): SaveForgeCharacterRequest {
   const maxHP = ruleState.maxHP;
   return {
@@ -322,8 +325,8 @@ export function buildSavePayload(
     },
     rule_state: ruleState,
     max_hp: maxHP,
-    // E3: при редактировании не восстанавливаем хиты — клампим старый current к новому max.
-    current_hp: prevCurrentHp != null ? Math.min(prevCurrentHp, maxHP) : maxHP,
+    current_hp: prevCurrentHp == null ? maxHP : prevMaxHp != null
+      ? currentHpForMaximum(prevCurrentHp, prevMaxHp, maxHP) : Math.min(prevCurrentHp, maxHP),
     speed: ruleState.speed,
     proficiency_bonus: ruleState.proficiencyBonus,
     armor_class: ruleState.armorClass,
@@ -335,6 +338,17 @@ export function buildSavePayload(
 // Незакрытые обязательные выборы (навыки класса + choice-интеракции).
 export function requiredChoiceIssues(draft: CharacterDraft, assembled: AssembledCharacter): string[] {
   const issues: string[] = [];
+  const acquiredReferences = new Set([
+    ...(draft.spellIds ?? []),
+    ...(draft.manualSpellIds ?? []),
+    ...assembled.pendingChoices.filter((choice) => choice.source === 'spell' || choice.source === 'prepared_spell')
+      .flatMap((choice) => draft.resolvedChoices[choice.id] ?? []),
+  ]);
+  for (const spell of assembled.spells) {
+    if (!spellCanBeAcquired(spell) && (acquiredReferences.has(spell.id) || acquiredReferences.has(spell.card_number))) {
+      issues.push(`«${spell.name}»: версию можно выбрать только при наложении родительского заклинания`);
+    }
+  }
   const sc = classSkillChoice(assembled);
   if (sc && draft.classSkillChoices.length < sc.count) {
     issues.push(`Навыки класса: выберите ${sc.count} (выбрано ${draft.classSkillChoices.length})`);

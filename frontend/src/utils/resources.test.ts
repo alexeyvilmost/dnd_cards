@@ -26,6 +26,9 @@ describe('actionCostResourceIds — стоимость из activation.cost (е�
   });
 
   it('показывает контекстные стоимости человекочитаемо, не меняя runtime id', () => {
+    expect(resourceLabel([], 'hit_dice_d10')).toBe('Кости хитов (к10)');
+    expect(resourceLabel([], 'hit_dice_d6')).toBe('Кости хитов (к6)');
+    expect(resourceLabel([{id:'hit_dice_d10',label:'Зарегистрированные кости'}], 'hit_dice_d10')).toBe('Зарегистрированные кости');
     expect(resourceLabel([], 'self_uses')).toBe('Заряд способности');
     expect(resourceLabel([], 'uses_ACT-second-wind')).toBe('Заряд способности');
     expect(resourceLabel([], 'self_item')).toBe('Использование предмета');
@@ -38,5 +41,8 @@ describe('actionCostResourceIds — стоимость из activation.cost (е�
     expect(resourceLabel([], 'pact_slot_1')).toBe('Ячейка Магии договора 1-го круга');
     expect(resourceLabel([], 'action_surge_action')).toBe('Дополнительное действие Всплеска');
     expect(resourceLabel([], 'quickened_spell_action')).toBe('Ускоренное сотворение');
+  });
+  it.each(['uses_renamed_feature','freeuse-declared-spell','spell_slot_1'])('prefers authored metadata for %s to generic compatibility labels',id=>{
+    expect(resourceLabel([{id,label:'Ресурс из данных'}],id)).toBe('Ресурс из данных');
   });
 });

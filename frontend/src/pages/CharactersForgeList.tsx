@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { withoutLegacyRunSuffix } from '../character/familiarLabels';
 import { Link } from 'react-router-dom';
 import { Plus, Trash2, User, Users } from 'lucide-react';
 import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
@@ -94,7 +95,7 @@ const CharactersForgeList = () => {
                 <span className="forge-char-token" aria-hidden>
                   {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.name || '?').slice(0, 1)}
                 </span>
-                <span className="ec-name">{c.name || 'Без имени'}</span>
+                <span className="ec-name">{(c.character_type === 'dungeon_crawl' ? withoutLegacyRunSuffix(c.name) : c.name) || 'Без имени'}</span>
                 <span className="ec-sub">{subtitle(c)}</span>
                 <span className="ec-sub">{characterMetadataLabel(c)}</span>
                 <CharacterAccessBadge character={c} />

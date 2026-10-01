@@ -26,7 +26,7 @@ import {
 import type { ForgeCharacter } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
-import { collectFreeuseRecharge, collectFreeuseRecovery, isFreeusePoolKey } from '../engine/freeuse';
+import { collectFreeuseRecharge, collectFreeuseRecovery, isFreeusePoolKey, resolveFreeusePoolKey, FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 import {
   executeManualEffectCommand,
@@ -42,6 +42,8 @@ import ActiveEffectCard from './ActiveEffectCard';
 import BoonActivationDialog from './BoonActivationDialog';
 import { armBoonForNextRoll, runtimeBoonSpec, type RuntimeBoonSpec } from '../engine/boons';
 import type { Card } from '../types';
+
+const NO_ITEM_CARDS: readonly Card[] = [];
 
 interface Props {
   character: ForgeCharacter;
@@ -60,7 +62,7 @@ interface Props {
   onBusyChange?: (busy: boolean) => void;
 }
 
-export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked, itemCards = [], disabledReason, onBusyChange }: Props) {
+export default function SheetRuntimePanel({ character, assembled, ruleState, onUpdated, onEvents, onPersistedEvents, onLongRestComplete, encounterApply, combatLocked, itemCards = NO_ITEM_CARDS, disabledReason, onBusyChange }: Props) {
   const [busy, setBusy] = useState(false);
   const [restBusy, setRestBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,13 +73,13 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   const resourceRecharge = useMemo(
     () => ({
       ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
-      ...collectFreeuseRecharge(ruleState.freeuseSpells),
+      ...collectFreeuseRecharge(ruleState.freeuseSpells,{spells:assembled.spells,resources:character.max_resources ?? undefined}),
     }),
-    [assembled.klass?.resources, ruleState.freeuseSpells],
+    [assembled.klass?.resources, assembled.spells, character.max_resources, ruleState.freeuseSpells],
   );
   const resourceRecovery = useMemo(
-    () => ({...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),...collectFreeuseRecovery(ruleState.freeuseSpells)}),
-    [assembled.klass?.resources, ruleState.freeuseSpells],
+    () => ({...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),...collectFreeuseRecovery(ruleState.freeuseSpells,{spells:assembled.spells,resources:character.max_resources ?? undefined})}),
+    [assembled.klass?.resources, assembled.spells, character.max_resources, ruleState.freeuseSpells],
   );
 
   const ctx = useMemo(
@@ -194,10 +196,11 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
   // Скрываем пустые пулы, счётчики использований действий (uses_*) и пулы freeuse
   // (freeuse-<spell>, рисуются витриной FreeuseSpellsRow; freeuse-spells не пул).
   const resourceKeys = useMemo(
-    () => Object.keys(runtime.maxResources)
-      .filter((k) => runtime.maxResources[k] > 0 && !k.startsWith('uses_') && !isFreeusePoolKey(k))
+    () => [...Object.keys(runtime.maxResources)
+      .filter((k) => runtime.maxResources[k] > 0 && !k.startsWith('uses_') && !isFreeusePoolKey(k)),
+      ...(ruleState.freeuseSpells.some(spec=>!spec.atWill && runtime.maxResources[resolveFreeusePoolKey(spec,{spells:assembled.spells,resources:runtime.maxResources})]>0) ? [FREEUSE_SHOWCASE_KEY] : [])]
       .sort((a, b) => sheetResourceTileOrder(a, resourceOptions) - sheetResourceTileOrder(b, resourceOptions) || a.localeCompare(b)),
-    [runtime.maxResources, resourceOptions],
+    [runtime.maxResources, resourceOptions, ruleState.freeuseSpells],
   );
 
   const handleDismissEffect = (effectIds: readonly string[]) => {
@@ -242,7 +245,9 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
       {error && <p className="issues">{error}</p>}
 
       <div className="res-tile-row">
-        {resourceKeys.map((key) => (
+        {resourceKeys.map((key) => key === FREEUSE_SHOWCASE_KEY ? <FreeuseSpellsTile key={key}
+          runtime={runtime} freeuseSpells={ruleState.freeuseSpells} spells={assembled.spells}
+          resourceOptions={resourceOptions} resourceSources={resourceBreakdowns}/> : (
           <SheetResourceTile
             key={key}
             resourceId={key}
@@ -250,15 +255,9 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
             current={runtime.resources[key] ?? 0}
             maximum={runtime.maxResources[key]}
             maximumBreakdown={resourceMaximumBreakdown(key, ctx, assembled, ruleState.freeuseSpells, runtime.maxResources[key])}
+            resourceContext={ctx}
           />
         ))}
-        <FreeuseSpellsTile
-          runtime={runtime}
-          freeuseSpells={ruleState.freeuseSpells}
-          spells={assembled.spells}
-          resourceOptions={resourceOptions}
-          resourceSources={resourceBreakdowns}
-        />
         {!resourceKeys.length && (
           <p className="forge-note">
             Ресурсы не инициализированы.{' '}
@@ -290,7 +289,7 @@ export default function SheetRuntimePanel({ character, assembled, ruleState, onU
       {activeEffectGroups.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 12 }}>
           <h3 className="sheet-h3">Активные эффекты</h3>
-          <ul className="sheet-active-effects">
+          <ul className="sheet-active-effects sheet-active-effects--icons">
             {activeEffectGroups.map((group) => (
               <li key={group.key} className="sheet-active-effect">
                 <ActiveEffectCard group={group} actions={<>

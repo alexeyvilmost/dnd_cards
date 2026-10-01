@@ -20,6 +20,21 @@ func nonNilRoguelikeMap(value JSONMap) JSONMap {
 	return value
 }
 
+// Opening presentation is returned only with the accepted initialization
+// receipt. It never becomes a second persisted combat state or exposes the
+// private worker envelope and entropy through the public run DTO.
+func addRoguelikeCombatOpeningState(response JSONMap, commandType string, result *roguelikeWorkerResult) error {
+	if commandType != "initialize_combat" || result == nil || len(result.CombatOpeningState) == 0 {
+		return nil
+	}
+	run, ok := response["run"].(map[string]any)
+	if !ok {
+		return fmt.Errorf("invalid combat initialization response")
+	}
+	run["combat_opening_state"] = result.CombatOpeningState
+	return nil
+}
+
 func applyTrustedRoguelikePatch(character *CharacterV3, patch JSONMap) error {
 	allowed := map[string]bool{"current_hp": true, "resources": true, "max_resources": true, "active_effects": true,
 		"inventory_items": true, "equipment": true, "turn_state": true, "runtime_revision": true}
@@ -219,6 +234,9 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		}
 		response, err = roguelikeRunResponse(accepted)
 		if err != nil {
+			return err
+		}
+		if err = addRoguelikeCombatOpeningState(response, request.Type, result); err != nil {
 			return err
 		}
 

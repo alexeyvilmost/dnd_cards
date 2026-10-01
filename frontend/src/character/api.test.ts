@@ -79,6 +79,14 @@ function rejectAllRequests(error: unknown): void {
 describe('charactersV3Api access handling', () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it('keeps a sale receipt immutable while displaying the latest character after replay', async () => {
+    const receipt={...character,runtime_revision:3,current_hp:10},latest={...character,runtime_revision:8,current_hp:4};
+    vi.spyOn(apiClient,'post').mockResolvedValue({data:{character:receipt,replayed:true}} as never);
+    const get=vi.spyOn(apiClient,'get').mockResolvedValue({data:latest} as never);
+    const result=await charactersV3Api.sellItem(character.id,{command_id:runtimeCommand.command_id,expected_runtime_revision:2,card_id:'card',quantity:1});
+    expect(result).toEqual(latest);expect(get).toHaveBeenCalledWith(`/api/characters-v3/${character.id}`);expect(receipt.current_hp).toBe(10);
+  });
+
   it('keeps an equipment retry context immutable when the current route changes', async () => {
     const post = vi.spyOn(apiClient, 'post').mockResolvedValue({ data: {
       command_id: runtimeCommand.command_id, replayed: true, participants: [],

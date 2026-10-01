@@ -1,0 +1,272 @@
+.combat-hotbar.combat-hotbar--compact {
+  grid-template-columns: 150px minmax(0, 1fr) 120px;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__resource-dock {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 7px);
+  translate: -50% 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: calc(100vw - 24px);
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__resource-filter {
+  position: static;
+  translate: none;
+  min-width: 0;
+  max-width: 680px;
+  flex: 0 1 auto;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__turn-resources {
+  flex: 0 0 auto;
+  overflow: visible;
+}
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__character-resources {
+  flex-wrap: wrap;
+  justify-content: center;
+  overflow: visible;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__tools {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid #735b39;
+  border-radius: 9px 9px 5px 5px;
+  background: linear-gradient(180deg, #302920fa, #17130ffa);
+  box-shadow: 0 7px 20px #000b;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__tool {
+  color: #e8d6b9;
+  cursor: pointer;
+  padding: 0;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__tool svg {
+  width: 22px;
+  height: 22px;
+}
+.combat-hotbar__tool:has(.combat-hotbar__movement-remaining) svg { translate: 0 -4px; }
+.combat-hotbar__movement-remaining {
+  position: absolute; inset: auto 0 1px; color: #eee8dc;
+  font-size: 10px; line-height: 11px; font-weight: 700; text-align: center;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__tool:hover,
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__tool.res-tile--selected {
+  border-color: #e0b66f;
+  background: #4a3522;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__tool:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__resources {
+  grid-column: 1;
+  grid-row: 1;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 8px 0 0;
+  border-right: 1px solid #4c4031;
+  border-bottom: 0;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__character-summary {
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__portrait-frame {
+  position: relative;
+  width: 82px;
+  height: 82px;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__portrait {
+  box-sizing: border-box;
+  width: 82px;
+  height: 82px;
+  flex: 0 0 auto;
+  font-size: 34px;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__sheet,
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__escape {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 2px;
+  border: 1px solid #735b39;
+  border-radius: 6px;
+  background: #241e17;
+  color: #e8d6b9;
+  cursor: pointer;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__sheet { top: -2px; right: -7px; }
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__escape { bottom: -2px; right: -7px; }
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__sheet svg,
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__escape svg { width: 18px; height: 18px; }
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__escape:disabled { opacity: .35; cursor: not-allowed; }
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__hp {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  overflow: hidden;
+  border: 1px solid #713c35;
+  border-radius: 4px;
+  background: #291411;
+  text-align: center;
+  color: #fff2e8;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__hp-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(180deg, #ab443d, #792b29);
+  transition: width .25s ease-out;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__hp b {
+  position: relative;
+  text-shadow: 0 1px 2px #000;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__temp-hp {
+  height: 14px;
+  color: #b7d3e6;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__content {
+  grid-column: 2;
+  grid-row: 1;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-hotbar__actions.is-grouped {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+}
+.combat-hotbar__action-group { display: contents; }
+.combat-hotbar__actions.is-grouped .combat-hotbar__action-group {
+  display: grid;
+  flex: 0 0 auto;
+  grid-auto-flow: column;
+  grid-auto-columns: 52px;
+  grid-template-rows: repeat(2, 52px);
+  align-content: center;
+  gap: 8px;
+}
+.combat-hotbar__actions.is-grouped .combat-hotbar__action-group + .combat-hotbar__action-group {
+  border-left: 1px solid #735b3977;
+  padding-left: 10px;
+}
+.combat-hotbar__actions.is-grouped.is-row-view .combat-hotbar__action-group {
+  grid-auto-columns: 240px;
+  grid-template-rows: repeat(2, minmax(52px, auto));
+}
+
+.combat-hotbar.combat-hotbar--compact .combat-end-turn { grid-column: 3; grid-row: 1; }
+
+.combat-hotbar-passive-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.combat-hotbar-passive-dialog h2 { margin: 0; color: #d8b978; font-size: 18px; }
+.combat-hotbar-passive-dialog header button {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: #d8b978;
+  cursor: pointer;
+}
+.combat-hotbar-passive-dialog header svg { width: 20px; height: 20px; }
+.combat-hotbar-passive-dialog__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  /* Let the canonical dialog grow to its content. The backdrop already owns
+   * viewport overflow, so a second short scroll container wastes height. */
+  max-height: none;
+  overflow: visible;
+  padding: 4px;
+}
+
+@media (max-width: 900px) {
+  .combat-hotbar.combat-hotbar--compact { grid-template-columns: 130px minmax(0, 1fr) 90px; }
+}
+
+@media (max-width: 560px) {
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__resource-dock {
+    width: calc(100vw - 24px);
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__character-resources {
+    box-sizing: border-box;
+    order: -1;
+    flex: 1 0 100%;
+  }
+  .combat-hotbar.combat-hotbar--compact {
+    height: 180px;
+    grid-template-columns: 100px minmax(0, 1fr) 74px;
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__portrait-frame,
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__portrait { width: 72px; height: 72px; }
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__actions {
+    grid-column: auto;
+    grid-row: auto;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, 52px);
+    grid-auto-columns: 52px;
+    gap: 7px;
+    align-content: center;
+  }
+  .combat-hotbar.combat-hotbar--compact .combat-sheet-action {
+    width: 52px;
+    min-width: 52px;
+    display: inline-flex;
+    flex-direction: row;
+  }
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__actions.is-row-view {
+    grid-auto-columns: 240px;
+    grid-template-rows: repeat(2, minmax(52px, auto));
+  }
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__actions.is-row-view .combat-sheet-action { width: 240px; min-width: 240px; }
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__action-label,
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__action-reason { display: none; }
+  .combat-hotbar.combat-hotbar--compact .combat-end-turn { padding: 8px 4px; font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .combat-hotbar.combat-hotbar--compact .combat-hotbar__hp-fill { transition: none; }
+}

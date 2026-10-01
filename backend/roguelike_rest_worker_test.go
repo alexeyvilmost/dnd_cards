@@ -269,7 +269,10 @@ func TestTrustedCampActionsCommitEventsOnceAndRejectLegacyPatches(t *testing.T) 
 			goldSpent = 9
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "goldSpent": goldSpent, "elapsedSeconds": elapsedSeconds, "patch": JSONMap{"current_hp": 7, "runtime_revision": body.Input.Character.RuntimeRevision + 1}, "events": []JSONMap{{"type": "healing", "amount": 3, "source": "Second Wind"}}})
+		json.NewEncoder(w).Encode(map[string]any{"status": "ready", "goldSpent": goldSpent, "elapsedSeconds": elapsedSeconds, "patch": JSONMap{"current_hp": 7, "runtime_revision": body.Input.Character.RuntimeRevision + 1}, "events": []JSONMap{
+			{"type": "healing", "amount": 3, "source": "Second Wind"},
+			{"type": "domain_event", "ownerActorId": body.Input.Character.ID.String(), "event": JSONMap{"kind": "healing_received", "timing": "after", "data": JSONMap{"amount": 3}}},
+		}})
 	}))
 	defer server.Close()
 	t.Setenv("RULES_WORKER_URL", server.URL)
@@ -318,7 +321,7 @@ func TestTrustedCampActionsCommitEventsOnceAndRejectLegacyPatches(t *testing.T) 
 	}
 	var count int64
 	fixture.db.Model(&CharacterEvent{}).Where("character_id = ?", character.ID).Count(&count)
-	if count != 3 {
+	if count != 6 {
 		t.Fatalf("events duplicated or lost: %d", count)
 	}
 }

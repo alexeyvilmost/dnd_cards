@@ -14,6 +14,10 @@ export function featureSection(origin: ChoiceOrigin, feats: AssembledCharacter['
   return ['race', 'feat', 'class'].includes(origin.kind) ? origin.kind : 'other';
 }
 const sourceLabel = (kind: string) => ({race:'Вид', feat:'Черта', class:'Класс', background:'Предыстория'}[kind] ?? 'Источник');
+const passiveIconShape = (mechanics: unknown): 'round' | 'square' => {
+  const activation = (mechanics as {activation?: {mode?: string}} | null)?.activation;
+  return !activation?.mode || activation.mode === 'passive' ? 'round' : 'square';
+};
 
 /** One projection shared by sheet layouts; no parallel feat-name summary. */
 export default function SheetFeatureSections({assembled}: {assembled: Pick<AssembledCharacter, 'effects' | 'actions' | 'feats'>}) {
@@ -30,8 +34,10 @@ export default function SheetFeatureSections({assembled}: {assembled: Pick<Assem
       <div className="sheet-feature-section__entities">
       <ForgeAbilityDisplay mode={entityDisplay.effects} linesClassName="sheet-item-cols" entries={[
         ...effects.map(({effect, origin}) => ({key:`effect:${effect.id}:${origin.id}`, imageUrl:effect.image_url,
+          iconShape: section.id === 'race' || section.id === 'class' ? passiveIconShape(effect.mechanics) : undefined,
           ...effectAbilityPresentation(effect, origin, assembled.feats, sourceLabel)})),
-        ...feats.map(feat => ({key:`feat:${feat.id}`, name:feat.name, imageUrl:feat.image_url, feat})),
+        ...feats.map(feat => ({key:`feat:${feat.id}`, name:feat.name, imageUrl:feat.image_url, feat,
+          iconShape: section.id === 'class' ? 'round' as const : undefined})),
       ]}/>
       <ForgeAbilityDisplay mode={entityDisplay.actions} linesClassName="sheet-item-cols" entries={actions.map(({action, origin}) => ({
         key:`action:${action.id}:${origin.id}`, name:action.name, imageUrl:action.image_url,

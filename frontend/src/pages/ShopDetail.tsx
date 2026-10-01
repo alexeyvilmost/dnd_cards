@@ -23,6 +23,7 @@ import { useSiteSettings } from '../settings';
 import MerchantSettingsDialog from '../components/MerchantSettingsDialog';
 import {merchantSettingsApi,type MerchantSettings} from '../api/entityTags';
 import ShopCart, {type CartRow} from '../components/ShopCart';
+import RunShopInventory from '../components/RunShopInventory';
 import {walletInCopper} from '../utils/money';
 import {runMoneyCopper} from '../roguelike/money';
 import {shopReturnTo} from '../utils/shopNavigation';
@@ -367,6 +368,8 @@ const ShopDetail = () => {
       )}
 
       <ShopCart key={basketKey} rows={cartRows} busy={Boolean(buyingId)||Boolean(roguelike&&(roguelike.phase!=='camp'||roguelike.status!=='active'))} availableMoney={wallet?walletInCopper(wallet):0} onQuantity={changeBasket} onRemove={id=>changeBasket(id,-1)} onBuy={()=>void checkout()} onInspect={setInspectedCard} canResume={canResumeCart} message={shopMsg}/>
+      {roguelike&&<RunShopInventory key={roguelike.id} run={roguelike} onUpdated={applyRun} busy={Boolean(buyingId)} onBusyChange={busy=>setBuyingId(busy?'sale':null)}/>}
+      {!roguelike&&selectedCharacter&&<RunShopInventory key={selectedCharacter.id} character={selectedCharacter} onCharacterUpdated={updated=>setCharacters(previous=>previous.map(row=>row.id===updated.id?updated:row))} busy={Boolean(buyingId)} onBusyChange={busy=>setBuyingId(busy?'sale':null)}/>}
 
       {loading && (
         <div className="flex justify-center items-center py-12">

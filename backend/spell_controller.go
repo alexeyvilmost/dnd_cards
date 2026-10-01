@@ -104,9 +104,12 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		return
 	}
 	legacyImageIDs := map[uuid.UUID]bool{}
+	variantMechanics := map[uuid.UUID]*JSONMap{}
 	if light {
 		ids := make([]uuid.UUID, 0, len(spells))
+		pageIDs := make([]uuid.UUID, 0, len(spells))
 		for _, spell := range spells {
+			pageIDs = append(pageIDs, spell.ID)
 			if !contentImageSourceUsable(spell.ImageCloudinaryURL) {
 				ids = append(ids, spell.ID)
 			}
@@ -114,6 +117,12 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		var imageErr error
 		legacyImageIDs, imageErr = listLegacyImageIDs(sc.db, "spells", ids)
 		if imageErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинаний"})
+			return
+		}
+		var variantErr error
+		variantMechanics, variantErr = listSpellVariantMechanics(sc.db, pageIDs)
+		if variantErr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинаний"})
 			return
 		}
@@ -125,7 +134,7 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		r := spell.ToSpellResponse()
 		if light {
 			r.DetailedDescription = nil
-			r.Mechanics = nil
+			r.Mechanics = variantMechanics[spell.ID]
 			r.ImageURL = listImageURL("spells", spell.ID, spell.ImageCloudinaryURL, legacyImageIDs[spell.ID])
 		}
 		responses = append(responses, r)
@@ -137,6 +146,31 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		"page":   page,
 		"limit":  limit,
 	})
+}
+
+// Keep the parent relation available to acquisition filters without reading
+// executable mechanics or authoring payloads into lightweight catalog rows.
+// Only the IDs in the requested page are queried; ordinary spells remain nil.
+func listSpellVariantMechanics(db *gorm.DB, spellIDs []uuid.UUID) (map[uuid.UUID]*JSONMap, error) {
+	result := make(map[uuid.UUID]*JSONMap)
+	if len(spellIDs) == 0 {
+		return result, nil
+	}
+	var rows []struct {
+		ID               uuid.UUID `gorm:"column:id"`
+		VariantOfSpellID string    `gorm:"column:variant_of_spell_id"`
+	}
+	if err := db.Model(&Spell{}).
+		Select("id, mechanics->>'variant_of_spell_id' AS variant_of_spell_id").
+		Where("id IN ? AND jsonb_typeof(mechanics->'variant_of_spell_id') = 'string'", spellIDs).
+		Scan(&rows).Error; err != nil {
+		return nil, err
+	}
+	for _, row := range rows {
+		mechanics := JSONMap{"variant_of_spell_id": row.VariantOfSpellID}
+		result[row.ID] = &mechanics
+	}
+	return result, nil
 }
 
 // GetSpell - получение заклинания по ID (UUID) или card_number

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import type { RuleActionDefinition } from '../rules-core/domain';
-import { combatActionTimingAvailability, combatHotbarResourceKeys, filterCombatActionsByResource } from './CombatHotbar';
+import type { SoloCombatState } from '../solo-combat/types';
+import { combatActionTimingAvailability, combatHotbarResourceKeys, combatResourceOption, filterCombatActionsByResource, isCombatHotbarAction } from './CombatHotbar';
 
 function action(id: string, resource?: string, level?: number): RuleActionDefinition {
   return {
@@ -15,6 +16,18 @@ function action(id: string, resource?: string, level?: number): RuleActionDefini
 }
 
 describe('combat hotbar resource filter', () => {
+  it('presents ability-use pools from their bound data and preserves registered resource definitions', () => {
+    const first = {...action('breath', 'uses_species-a'), name: 'Дыхание'};
+    const second = {...action('charm', 'uses_item-b'), name: 'Амулет'};
+    const snapshot = {catalogActions: [first, second], actionPresentation: {
+      breath: {imageUrl: '/breath.png'}, charm: {imageUrl: '/charm.png'},
+    }} as unknown as SoloCombatState;
+    expect(combatResourceOption(snapshot, 'uses_species-a', [])).toMatchObject({label: 'Заряды: Дыхание', imageUrl: '/breath.png'});
+    expect(combatResourceOption(snapshot, 'uses_item-b', [])).toMatchObject({label: 'Заряды: Амулет', imageUrl: '/charm.png'});
+    expect(combatResourceOption(snapshot, 'uses_legacy', [])?.label).toBe('Заряд способности');
+    const registered = {id: 'uses_item-b', label: 'Заряды кристалла'};
+    expect(combatResourceOption(snapshot, 'uses_item-b', [registered])).toBe(registered);
+  });
   const actions = [
     action('main', 'action'),
     action('bonus', 'bonus_action'),
@@ -39,19 +52,36 @@ describe('combat hotbar resource filter', () => {
       .map(({ id }) => id)).toEqual(['spell-free']);
   });
 
+  it.each([
+    ['action-family', 'variant_of_action_id'],
+    ['spell-family', 'variant_of_spell_id'],
+  ])('keeps %s versions in their parent dialog, never in the hotbar', (id, parentKey) => {
+    const parent = action(id, 'action');
+    const child = { ...action(`${id}:version`, 'action'), mechanics: {
+      activation: parent.mechanics.activation, [parentKey]: parent.id,
+    } };
+    const shown = [parent, child].filter(isCombatHotbarAction);
+    expect(shown).toEqual([parent]);
+    expect(filterCombatActionsByResource(shown, 'action', new Set())).toEqual([parent]);
+    expect(child.mechanics[parentKey]).toBe(parent.id);
+  });
+
   it('exposes class resources and Pact slots as usable hotbar filters', () => {
     const classActions = [action('flurry', 'focus'), action('font', 'sorcery_points')];
-    expect(combatHotbarResourceKeys(classActions, {
+    expect(filterCombatActionsByResource(classActions, 'focus', new Set()).map(({id}) => id)).toEqual(['flurry']);
+    expect(combatHotbarResourceKeys({
       action: 1, bonus_action: 1, reaction: 1, focus: 2, sorcery_points: 2,
       pact_slot_1: 2, hit_dice_d8: 2, 'freeuse-misty-step': 1,
       'uses_EFF-innate-sorcery': 1, 'uses_CARD-0491': 10,
+      movement: 30, unused: 0,
     })).toEqual([
       'action', 'bonus_action', 'reaction', 'focus', 'sorcery_points', 'pact_slot_1',
+      'hit_dice_d8', 'uses_EFF-innate-sorcery', 'uses_CARD-0491',
     ]);
   });
 
   it('shows temporary Action Surge and Quickened Spell economy with readable filters', () => {
-    expect(combatHotbarResourceKeys(actions, {
+    expect(combatHotbarResourceKeys({
       action: 1,
       action_surge_action: 1,
       quickened_spell_action: 1,

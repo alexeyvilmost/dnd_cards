@@ -7,7 +7,7 @@
 import type { RuntimeState } from '../mvp/contracts';
 import type { RollModifier } from '../mvp/contracts';
 import type { FreeuseSpec } from '../engine/freeuse';
-import { freeuseKey, FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
+import { resolveFreeusePoolKey, FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import type { Spell } from '../types';
 import { findResource } from '../utils/resources';
 import type { ResourceOption } from '../utils/resources';
@@ -28,7 +28,7 @@ export default function FreeuseSpellsTile({
 }: Props) {
   const rows = freeuseSpells
     .map((spec) => {
-      const key = freeuseKey(spec.spell);
+      const key = resolveFreeusePoolKey(spec, { spells, resources: runtime.maxResources });
       const spell = spells.find((s) => s.card_number === spec.spell || s.id === spec.spell);
       return { key, name: spell?.name ?? spec.spell, cur: runtime.resources[key] ?? 0, max: runtime.maxResources[key] ?? 0, sources: resourceSources?.[key] ?? [] };
     })

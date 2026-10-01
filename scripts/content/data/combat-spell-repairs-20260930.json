@@ -1,0 +1,352 @@
+[
+  {
+    "id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+    "card_number": "SPELL-0260",
+    "name": "Погребальный звон",
+    "expected_before": "sha256:6087f81ecc2a5de24d2f9e558d2a845bc726116c2922764f78db3b3c65c165f4",
+    "mechanics": {
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          }
+        ],
+        "mode": "active"
+      },
+      "effects": [
+        {
+          "resolution": "save",
+          "who": "target",
+          "ability": "wis",
+          "dc": "8 + prof + spellcasting",
+          "on_success": [],
+          "on_fail": [
+            {
+              "kind": "damage",
+              "dice": "1d8",
+              "type": "necrotic",
+              "scaling": {
+                "dice": "1d8",
+                "per": "character_level"
+              },
+              "when": [
+                {
+                  "kind": "not",
+                  "of": {
+                    "kind": "target_hp_fraction_below",
+                    "value": 1
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "damage",
+              "dice": "1d12",
+              "type": "necrotic",
+              "scaling": {
+                "dice": "1d12",
+                "per": "character_level"
+              },
+              "when": [
+                {
+                  "kind": "target_hp_fraction_below",
+                  "value": 1
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": [
+        "CLASS-cleric",
+        "CLASS-warlock",
+        "CLASS-wizard"
+      ],
+      "targeting": {
+        "filter": "any",
+        "range": "60 футов",
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 60,
+        "requires_sight": true,
+        "requires_line_of_sight": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      }
+    }
+  },
+  {
+    "id": "fe0a8d3c-318c-4308-9ff0-3838367f75e6",
+    "card_number": "SPELL-0164",
+    "name": "Божественная кара",
+    "expected_before": "sha256:2275e9a41f6ff6a51c384e04cba4b385520630aab21167a9db1cb2b9a3ce1105",
+    "mechanics": {
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "amount": 1,
+            "level": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "triggered",
+        "trigger": {
+          "event": "hit",
+          "requires_melee_hit": true,
+          "requires_weapon_or_unarmed_hit": true
+        }
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "damage",
+              "dice": "2d8",
+              "type": "radiant",
+              "scaling": {
+                "dice": "1d8",
+                "per": "spell_slot_above"
+              },
+              "inherit_attack_critical": true
+            },
+            {
+              "kind": "damage",
+              "dice": "1d8",
+              "type": "radiant",
+              "when": [
+                {
+                  "kind": "target_creature_type_in",
+                  "values": [
+                    "fiend",
+                    "undead"
+                  ]
+                }
+              ],
+              "inherit_attack_critical": true
+            }
+          ],
+          "who": "target"
+        }
+      ],
+      "spell_class_list_ids": [
+        "CLASS-paladin"
+      ],
+      "targeting": {
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ],
+        "domain": "actor",
+        "max_targets": 1,
+        "min_targets": 1,
+        "range_ft": 5,
+        "requires_line_of_sight": false,
+        "shape": "single",
+        "range_from_triggering_attack": true
+      }
+    }
+  },
+  {
+    "id": "ae684edc-08c3-4f00-94ab-5c11c6b05f4e",
+    "card_number": "SPELL-0186",
+    "name": "Громовая кара",
+    "expected_before": "sha256:53d4474850d26fe99675140e97735e0a8f8e1f9c96ea643efef1554542b7a38e",
+    "mechanics": {
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "amount": 1,
+            "level": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "triggered",
+        "trigger": {
+          "event": "hit",
+          "requires_melee_hit": true,
+          "requires_weapon_or_unarmed_hit": true
+        }
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "dice": "2d6",
+              "kind": "damage",
+              "scaling": {
+                "dice": "1d6",
+                "per": "spell_slot_above"
+              },
+              "type": "thunder",
+              "inherit_attack_critical": true
+            }
+          ],
+          "who": "target"
+        },
+        {
+          "ability": "str",
+          "dc": "8 + prof + spellcasting",
+          "on_fail": [
+            {
+              "distance": 10,
+              "kind": "movement",
+              "value": "push"
+            },
+            {
+              "kind": "condition",
+              "op": "apply",
+              "value": "prone"
+            }
+          ],
+          "on_success": [],
+          "resolution": "save",
+          "who": "target"
+        }
+      ],
+      "spell_class_list_ids": [
+        "CLASS-paladin"
+      ],
+      "targeting": {
+        "filter": "enemy",
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 5,
+        "range_from_triggering_attack": true,
+        "requires_line_of_sight": false,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      }
+    }
+  },
+  {
+    "id": "04dc8ba1-388f-4acc-ab4b-5a6784faeeaa",
+    "card_number": "SPELL-0254",
+    "name": "Палящая кара",
+    "expected_before": "sha256:591a23c511cc303d9d6bea1531ed0af7bd445059f9b7bad82cc30354bef6d2a0",
+    "mechanics": {
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "amount": 1,
+            "level": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "triggered",
+        "trigger": {
+          "event": "hit",
+          "requires_melee_hit": true,
+          "requires_weapon_or_unarmed_hit": true
+        }
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "target",
+          "result": [
+            {
+              "kind": "damage",
+              "dice": "1d6",
+              "type": "fire",
+              "scaling": {
+                "dice": "1d6",
+                "per": "spell_slot_above"
+              },
+              "inherit_attack_critical": true
+            },
+            {
+              "kind": "triggered_effect",
+              "event": "turn_start",
+              "duration": {
+                "type": "rounds",
+                "amount": 10,
+                "round_boundary": "end"
+              },
+              "stack_id": "spell:searing-smite:burning",
+              "stack_type": "overwrite",
+              "formula_bindings": {
+                "searing_dice": "1 + spell_slot_above",
+                "searing_dc": "8 + prof + spellcasting"
+              },
+              "effects": [
+                {
+                  "resolution": "auto",
+                  "who": "self",
+                  "result": [
+                    {
+                      "kind": "damage",
+                      "dice": "searing_dice d6",
+                      "type": "fire",
+                      "inherit_attack_critical": false
+                    }
+                  ]
+                },
+                {
+                  "resolution": "save",
+                  "who": "self",
+                  "ability": "con",
+                  "dc": "searing_dc",
+                  "on_fail": [],
+                  "on_success": [
+                    {
+                      "kind": "remove_effect",
+                      "stack_id": "spell:searing-smite:burning"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "spell_class_list_ids": [
+        "CLASS-paladin"
+      ],
+      "targeting": {
+        "filter": "enemy",
+        "shape": "single",
+        "domain": "actor",
+        "actor_targets": true,
+        "min_targets": 1,
+        "max_targets": 1,
+        "range_ft": 5,
+        "range_from_triggering_attack": true,
+        "requires_line_of_sight": false,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ]
+      }
+    }
+  }
+]

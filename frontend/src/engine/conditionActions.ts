@@ -5,6 +5,8 @@ import definitions from './data/conditionActions.json';
 export interface ConditionGrantedAction {
   id: string; name: string; description: string; movementFraction: number;
   effects: Record<string, unknown>[];
+  /** Optional presentation policies; execution and payment remain authoritative. */
+  decisionPolicies?: string[];
 }
 
 /** Legacy movement_options is an explicit data grant, not a condition-id test.

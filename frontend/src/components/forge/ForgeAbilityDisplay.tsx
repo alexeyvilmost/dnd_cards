@@ -15,6 +15,7 @@ export type AbilityEntry = {
   effect?: PassiveEffect;
   action?: Action;
   feat?: Feat;
+  iconShape?: 'square' | 'round';
 };
 
 type Props = {
@@ -43,6 +44,8 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
           sourceLabel={entry.sourceLabel}
           detail={entry.detail}
           feat={entry.feat}
+          variant={mode}
+          iconShape={entry.iconShape}
         />
       );
     }
@@ -56,6 +59,7 @@ const ForgeAbilityDisplay = ({ entries, mode, linesClassName = 'forge-ability-li
         effectRef={entry.effect}
         actionRef={entry.action}
         variant={mode}
+        iconShape={entry.iconShape}
         inspectMode
         onActivate={() => undefined}
       />

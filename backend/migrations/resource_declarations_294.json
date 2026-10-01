@@ -1,0 +1,518 @@
+{
+  "schema_version": 1,
+  "system_pools": [
+    {
+      "resource_id": "action",
+      "count": 1
+    },
+    {
+      "resource_id": "bonus_action",
+      "count": 1
+    },
+    {
+      "resource_id": "reaction",
+      "count": 1
+    }
+  ],
+  "hit_dice": {
+    "d2": "hit_dice_d2",
+    "d4": "hit_dice_d4",
+    "d6": "hit_dice_d6",
+    "d8": "hit_dice_d8",
+    "d10": "hit_dice_d10",
+    "d12": "hit_dice_d12",
+    "d20": "hit_dice_d20"
+  },
+  "resources": [
+    {
+      "resource_id": "psi_warrior_telekinetic_movement",
+      "name": "Телекинетическое перемещение",
+      "category": "class_resource",
+      "recharge": "short_rest",
+      "sort_order": 182
+    },
+    {
+      "resource_id": "psi_warrior_energy_die",
+      "name": "Кости псионической энергии воина",
+      "description": "Короткий отдых: одна кость; долгий: все.",
+      "category": "class_resource",
+      "recharge": "long_rest",
+      "sort_order": 181
+    },
+    {
+      "resource_id": "superiority_die",
+      "name": "Кости превосходства",
+      "description": "Кости манёвров Мастера боя.",
+      "category": "class_resource",
+      "recharge": "short_rest",
+      "sort_order": 180
+    },
+    {
+      "resource_id": "action",
+      "name": "Действие",
+      "description": "Основное действие в ход.",
+      "category": "action_cost",
+      "image_url": "/icons/resources/action.png",
+      "sort_order": 10
+    },
+    {
+      "resource_id": "main_action",
+      "name": "Основное действие",
+      "description": "Основное действие в ход.",
+      "category": "action_cost",
+      "image_url": "/icons/resources/action.png",
+      "sort_order": 11
+    },
+    {
+      "resource_id": "bonus_action",
+      "name": "Бонусное действие",
+      "description": "Бонусное действие в ход.",
+      "category": "action_cost",
+      "image_url": "/icons/resources/bonus_action.png",
+      "sort_order": 20
+    },
+    {
+      "resource_id": "reaction",
+      "name": "Реакция",
+      "description": "Ответное действие.",
+      "category": "action_cost",
+      "image_url": "/icons/resources/reaction.png",
+      "sort_order": 30
+    },
+    {
+      "resource_id": "free_action",
+      "name": "Свободное действие",
+      "description": "Не тратит основной ресурс действия.",
+      "category": "action_cost",
+      "image_url": "/icons/resources/action.png",
+      "sort_order": 40
+    },
+    {
+      "resource_id": "giant_legacy",
+      "name": "Наследие великанов",
+      "description": "Заряд наследия голиафа.",
+      "category": "species_resource",
+      "sort_order": 50
+    },
+    {
+      "resource_id": "rage",
+      "name": "Ярость",
+      "description": "Использования Ярости варвара.",
+      "category": "class_resource",
+      "sort_order": 100
+    },
+    {
+      "resource_id": "rage_charge",
+      "name": "Ярость",
+      "description": "Использования Ярости варвара.",
+      "category": "class_resource",
+      "sort_order": 101
+    },
+    {
+      "resource_id": "bardic_inspiration",
+      "name": "Бардовское вдохновение",
+      "description": "Кости Бардовского вдохновения.",
+      "category": "class_resource",
+      "sort_order": 110
+    },
+    {
+      "resource_id": "channel_divinity",
+      "name": "Божественный канал",
+      "description": "Использования Божественного канала.",
+      "category": "class_resource",
+      "sort_order": 120
+    },
+    {
+      "resource_id": "wild_shape",
+      "name": "Дикий облик",
+      "description": "Использования Дикого облика.",
+      "category": "class_resource",
+      "sort_order": 130
+    },
+    {
+      "resource_id": "focus",
+      "name": "Очки фокусировки",
+      "description": "Очки Фокуса монаха.",
+      "category": "class_resource",
+      "sort_order": 140
+    },
+    {
+      "resource_id": "sorcery_points",
+      "name": "Очки чародейства",
+      "description": "Очки чародейства для Метамагии и Магического источника.",
+      "category": "class_resource",
+      "sort_order": 150
+    },
+    {
+      "resource_id": "second_wind",
+      "name": "Второе дыхание",
+      "description": "Использования Второго дыхания воина.",
+      "category": "class_resource",
+      "sort_order": 160
+    },
+    {
+      "resource_id": "action_surge",
+      "name": "Всплеск действий",
+      "description": "Использования Всплеска действий воина.",
+      "category": "class_resource",
+      "sort_order": 170
+    },
+    {
+      "resource_id": "action_surge_action",
+      "name": "Дополнительное действие Всплеска",
+      "description": "Одно дополнительное действие от Всплеска действий; его нельзя потратить на Магию.",
+      "category": "action_cost",
+      "image_url": "/icons/resources/action.png",
+      "sort_order": 12
+    },
+    {
+      "resource_id": "quickened_spell_action",
+      "name": "Ускоренное сотворение",
+      "description": "Одно заклинание со временем сотворения «Действие», подготовленное Метамагией.",
+      "category": "action_cost",
+      "image_url": "/icons/resources/bonus_action.png",
+      "sort_order": 21
+    },
+    {
+      "resource_id": "spell_slot_1",
+      "name": "Ячейка 1-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 101
+    },
+    {
+      "resource_id": "pact_slot_1",
+      "name": "Ячейка Магии договора 1-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 151
+    },
+    {
+      "resource_id": "warlock_spell_slot_1",
+      "name": "Ячейка Магии договора 1-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 151
+    },
+    {
+      "resource_id": "spell_slot_2",
+      "name": "Ячейка 2-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 102
+    },
+    {
+      "resource_id": "pact_slot_2",
+      "name": "Ячейка Магии договора 2-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 152
+    },
+    {
+      "resource_id": "warlock_spell_slot_2",
+      "name": "Ячейка Магии договора 2-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 152
+    },
+    {
+      "resource_id": "spell_slot_3",
+      "name": "Ячейка 3-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 103
+    },
+    {
+      "resource_id": "pact_slot_3",
+      "name": "Ячейка Магии договора 3-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 153
+    },
+    {
+      "resource_id": "warlock_spell_slot_3",
+      "name": "Ячейка Магии договора 3-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 153
+    },
+    {
+      "resource_id": "spell_slot_4",
+      "name": "Ячейка 4-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 104
+    },
+    {
+      "resource_id": "pact_slot_4",
+      "name": "Ячейка Магии договора 4-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 154
+    },
+    {
+      "resource_id": "warlock_spell_slot_4",
+      "name": "Ячейка Магии договора 4-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 154
+    },
+    {
+      "resource_id": "spell_slot_5",
+      "name": "Ячейка 5-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 105
+    },
+    {
+      "resource_id": "pact_slot_5",
+      "name": "Ячейка Магии договора 5-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 155
+    },
+    {
+      "resource_id": "warlock_spell_slot_5",
+      "name": "Ячейка Магии договора 5-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 155
+    },
+    {
+      "resource_id": "spell_slot_6",
+      "name": "Ячейка 6-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 106
+    },
+    {
+      "resource_id": "pact_slot_6",
+      "name": "Ячейка Магии договора 6-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 156
+    },
+    {
+      "resource_id": "warlock_spell_slot_6",
+      "name": "Ячейка Магии договора 6-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 156
+    },
+    {
+      "resource_id": "spell_slot_7",
+      "name": "Ячейка 7-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 107
+    },
+    {
+      "resource_id": "pact_slot_7",
+      "name": "Ячейка Магии договора 7-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 157
+    },
+    {
+      "resource_id": "warlock_spell_slot_7",
+      "name": "Ячейка Магии договора 7-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 157
+    },
+    {
+      "resource_id": "spell_slot_8",
+      "name": "Ячейка 8-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 108
+    },
+    {
+      "resource_id": "pact_slot_8",
+      "name": "Ячейка Магии договора 8-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 158
+    },
+    {
+      "resource_id": "warlock_spell_slot_8",
+      "name": "Ячейка Магии договора 8-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 158
+    },
+    {
+      "resource_id": "spell_slot_9",
+      "name": "Ячейка 9-го круга",
+      "description": "Ячейка для сотворения заклинания соответствующего или меньшего круга.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/spell_slot.png",
+      "recharge": "long_rest",
+      "sort_order": 109
+    },
+    {
+      "resource_id": "pact_slot_9",
+      "name": "Ячейка Магии договора 9-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 159
+    },
+    {
+      "resource_id": "warlock_spell_slot_9",
+      "name": "Ячейка Магии договора 9-го круга",
+      "description": "Ячейка Магии договора. Восстанавливается после короткого или долгого отдыха.",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 159
+    },
+    {
+      "resource_id": "pact_slot",
+      "name": "Ячейка Магии договора",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 150
+    },
+    {
+      "resource_id": "warlock_spell_slot",
+      "name": "Ячейка Магии договора",
+      "category": "spellcasting_resource",
+      "image_url": "/icons/resources/warlock_spell_slot.png",
+      "recharge": "short_rest",
+      "sort_order": 150
+    },
+    {
+      "resource_id": "hit_dice_d2",
+      "name": "Кости хитов (к2)",
+      "description": "Можно потратить во время короткого отдыха, чтобы восстановить хиты. Число костей определяется уровнями классов с этой костью хитов.",
+      "category": "hit_dice",
+      "recharge": "long_rest",
+      "sort_order": 902
+    },
+    {
+      "resource_id": "hit_dice_d4",
+      "name": "Кости хитов (к4)",
+      "description": "Можно потратить во время короткого отдыха, чтобы восстановить хиты. Число костей определяется уровнями классов с этой костью хитов.",
+      "category": "hit_dice",
+      "recharge": "long_rest",
+      "sort_order": 904
+    },
+    {
+      "resource_id": "hit_dice_d6",
+      "name": "Кости хитов (к6)",
+      "description": "Можно потратить во время короткого отдыха, чтобы восстановить хиты. Число костей определяется уровнями классов с этой костью хитов.",
+      "category": "hit_dice",
+      "recharge": "long_rest",
+      "sort_order": 906
+    },
+    {
+      "resource_id": "hit_dice_d8",
+      "name": "Кости хитов (к8)",
+      "description": "Можно потратить во время короткого отдыха, чтобы восстановить хиты. Число костей определяется уровнями классов с этой костью хитов.",
+      "category": "hit_dice",
+      "recharge": "long_rest",
+      "sort_order": 908
+    },
+    {
+      "resource_id": "hit_dice_d10",
+      "name": "Кости хитов (к10)",
+      "description": "Можно потратить во время короткого отдыха, чтобы восстановить хиты. Число костей определяется уровнями классов с этой костью хитов.",
+      "category": "hit_dice",
+      "recharge": "long_rest",
+      "sort_order": 910
+    },
+    {
+      "resource_id": "hit_dice_d12",
+      "name": "Кости хитов (к12)",
+      "description": "Можно потратить во время короткого отдыха, чтобы восстановить хиты. Число костей определяется уровнями классов с этой костью хитов.",
+      "category": "hit_dice",
+      "recharge": "long_rest",
+      "sort_order": 912
+    },
+    {
+      "resource_id": "hit_dice_d20",
+      "name": "Кости хитов (к20)",
+      "description": "Можно потратить во время короткого отдыха, чтобы восстановить хиты. Число костей определяется уровнями классов с этой костью хитов.",
+      "category": "hit_dice",
+      "recharge": "long_rest",
+      "sort_order": 920
+    },
+    {
+      "resource_id": "freeuse-spells",
+      "name": "Бесплатные заклинания",
+      "description": "Заклинания, которые можно использовать без траты ячеек благодаря способностям персонажа.",
+      "category": "spellcasting_resource",
+      "sort_order": 190
+    },
+    {
+      "resource_id": "heroic_inspiration",
+      "name": "Героическое вдохновение",
+      "description": "Позволяет перебросить к20 через доступное действие влияния на бросок. Может быть предоставлено другим существом.",
+      "category": "character_resource",
+      "image_url": "/icons/passives/roll-influence.svg",
+      "sort_order": 200
+    },
+    {
+      "resource_id": "movement",
+      "name": "Передвижение",
+      "description": "Доступная дистанция передвижения в футах. Скорость и стоимость движения определяются состоянием персонажа и правилами поля боя.",
+      "category": "character_resource",
+      "image_url": "/icons/resources/movement.svg",
+      "sort_order": 850
+    }
+  ],
+  "runtime_owned": [
+    "heroic_inspiration"
+  ]
+}

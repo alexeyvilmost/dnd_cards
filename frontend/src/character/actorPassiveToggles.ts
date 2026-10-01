@@ -11,6 +11,7 @@ export function actorPassiveToggles(actor: ActorState, actions: readonly RuleAct
   const imageFor = (id: string) => presentation?.[id]?.imageUrl || presentation?.[id]?.actionRef?.image_url || presentation?.[id]?.spellRef?.image_url;
   return [
     ...decisionPolicyToggles('roll_influence'),
+    ...decisionPolicyToggles('turn_start'),
     ...actions.filter(action => actor.capabilities.actionIds.includes(action.id)).flatMap(action =>
       decisionPolicyToggles('reaction', action).map(toggle => ({...toggle, sourceName: action.name, imageUrl: toggle.imageUrl || imageFor(action.id)}))),
     ...combatPassiveToggles(actor, choiceActions, id => presentation?.[id]?.actionRef?.card_number)

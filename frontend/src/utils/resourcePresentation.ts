@@ -1,5 +1,6 @@
 import type {EntitySupportCertification} from '../content/supportStatus';
 import { getAllCharges } from './charges';
+import catalog from '../engine/data/resources.json';
 
 export type ResourceOption = {
   id: string;
@@ -14,32 +15,19 @@ export type ResourceOption = {
   support?: EntitySupportCertification | null;
 };
 
-const actionDefaults: ResourceOption[] = [
-  {id:'psi_warrior_telekinetic_movement',label:'Телекинетическое перемещение',category:'class_resource',recharge:'short_rest',sortOrder:182},
-  { id: 'psi_warrior_energy_die', label: 'Кости псионической энергии воина', description: 'Короткий отдых: одна кость; долгий: все.', category: 'class_resource', recharge: 'long_rest', sortOrder: 181 },
-  { id: 'superiority_die', label: 'Кости превосходства', description: 'Кости манёвров Мастера боя.', category: 'class_resource', recharge: 'short_rest', sortOrder: 180 },
-  { id: 'action', label: 'Действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 10 },
-  { id: 'main_action', label: 'Основное действие', description: 'Основное действие в ход.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 11 },
-  { id: 'bonus_action', label: 'Бонусное действие', description: 'Бонусное действие в ход.', category: 'action_cost', imageUrl: '/charges/bonus_action.png', sortOrder: 20 },
-  { id: 'reaction', label: 'Реакция', description: 'Ответное действие.', category: 'action_cost', imageUrl: '/charges/reaction_action.png', sortOrder: 30 },
-  { id: 'free_action', label: 'Свободное действие', description: 'Не тратит основной ресурс действия.', category: 'action_cost', imageUrl: '/charges/free_action.png', sortOrder: 40 },
-  { id: 'giant_legacy', label: 'Наследие великанов', description: 'Заряд наследия голиафа.', category: 'species_resource', sortOrder: 50 },
-  { id: 'rage', label: 'Ярость', description: 'Использования Ярости варвара.', category: 'class_resource', sortOrder: 100 },
-  { id: 'rage_charge', label: 'Ярость', description: 'Использования Ярости варвара.', category: 'class_resource', sortOrder: 101 },
-  { id: 'bardic_inspiration', label: 'Бардовское вдохновение', description: 'Кости Бардовского вдохновения.', category: 'class_resource', sortOrder: 110 },
-  { id: 'channel_divinity', label: 'Божественный канал', description: 'Использования Божественного канала.', category: 'class_resource', sortOrder: 120 },
-  { id: 'wild_shape', label: 'Дикий облик', description: 'Использования Дикого облика.', category: 'class_resource', sortOrder: 130 },
-  { id: 'focus', label: 'Очки фокусировки', description: 'Очки Фокуса монаха.', category: 'class_resource', sortOrder: 140 },
-  { id: 'sorcery_points', label: 'Очки чародейства', description: 'Очки чародейства для Метамагии и Магического источника.', category: 'class_resource', sortOrder: 150 },
-  { id: 'second_wind', label: 'Второе дыхание', description: 'Использования Второго дыхания воина.', category: 'class_resource', sortOrder: 160 },
-  { id: 'action_surge', label: 'Всплеск действий', description: 'Использования Всплеска действий воина.', category: 'class_resource', sortOrder: 170 },
-  { id: 'action_surge_action', label: 'Дополнительное действие Всплеска', description: 'Одно дополнительное действие от Всплеска действий; его нельзя потратить на Магию.', category: 'action_cost', imageUrl: '/charges/main_action.png', sortOrder: 12 },
-  { id: 'quickened_spell_action', label: 'Ускоренное сотворение', description: 'Одно заклинание со временем сотворения «Действие», подготовленное Метамагией.', category: 'action_cost', imageUrl: '/charges/bonus_action.png', sortOrder: 21 },
-];
+const declaredResourceOptions: ResourceOption[] = catalog.resources.map(resource => ({
+  id: resource.resource_id,
+  label: resource.name,
+  description: 'description' in resource ? resource.description : undefined,
+  category: resource.category,
+  imageUrl: 'image_url' in resource ? resource.image_url : undefined,
+  recharge: 'recharge' in resource ? resource.recharge : undefined,
+  sortOrder: resource.sort_order,
+}));
 
 export const staticResourceOptions = (): ResourceOption[] => [
-  ...actionDefaults,
-  ...getAllCharges().map((charge, index) => ({
+  ...declaredResourceOptions,
+  ...getAllCharges().filter(charge => !declaredResourceOptions.some(resource => resource.id === charge.id)).map((charge, index) => ({
     id: charge.id,
     label: charge.russian_name,
     description: charge.description,
@@ -65,6 +53,11 @@ export function findResource(resources: ResourceOption[], id?: string | null): R
 }
 
 export function resourceLabel(resources: ResourceOption[], id?: string | null): string {
+  const declared = findResource(resources, id);
+  if (declared) return declared.label;
+  // Compatibility labels only for archived content without a catalog declaration.
+  const hitDice = /^hit_dice_d(\d+)$/u.exec(id ?? '');
+  if (hitDice) return findResource(resources, id)?.label || `Кости хитов (к${hitDice[1]})`;
   const spellSlot = /^spell_slot_([1-9])$/u.exec(id ?? '');
   if (spellSlot) return `Ячейка ${spellSlot[1]}-го круга`;
   const pactSlot = /^(?:pact_slot|warlock_spell_slot)_?([1-9])?$/u.exec(id ?? '');
@@ -98,6 +91,8 @@ const COST_ICON_MAP: Record<string, string> = {
 };
 
 export function resourceCostIcon(resources: ResourceOption[], id?: string | null): string {
+  const declared = resources.find(resource => resource.id === id);
+  if (declared?.imageUrl && !declared.imageUrl.startsWith('/charges/')) return declared.imageUrl;
   if (id && COST_ICON_MAP[id]) return `/icons/resources/${COST_ICON_MAP[id]}.png`;
   const found = findResource(resources, id);
   if (found?.imageUrl && !found.imageUrl.startsWith('/charges/')) return found.imageUrl;
@@ -106,6 +101,27 @@ export function resourceCostIcon(resources: ResourceOption[], id?: string | null
 
 export function registryItems(resources: ResourceOption[]) {
   return resources.map((resource) => ({ id: resource.id, label: resource.label }));
+}
+
+/** Catalog categories own the grouping. Schema-key fallbacks retain the same
+ * order for archived slot/free-use pools before their catalog definition loads. */
+export function resourceDisplayGroup(key: string, resources: ResourceOption[]): 'main' | 'spellcasting' | 'other' {
+  const category = findResource(resources, key)?.category;
+  if (category === 'spellcasting_resource' || category === 'spell_slot'
+    || /^(?:spell_slot|pact_slot|warlock_spell_slot)(?:_[1-9])?$/.test(key)
+    || key.startsWith('freeuse-')) return 'spellcasting';
+  if (category === 'action_cost') return 'main';
+  return 'other';
+}
+
+export function resourceDisplayOrder(key: string, resources: ResourceOption[]): number {
+  const group = resourceDisplayGroup(key, resources);
+  const definition = findResource(resources, key);
+  const slot = /^(spell_slot|pact_slot|warlock_spell_slot)(?:_([1-9]))?$/.exec(key);
+  const fallback = slot ? (slot[1] === 'spell_slot' ? 100 : 200) + Number(slot[2] ?? 0)
+    : key.startsWith('freeuse-') ? 300 : 89999;
+  const order = Math.max(0, Math.min(definition?.sortOrder ?? fallback, 999999));
+  return (group === 'main' ? 0 : group === 'spellcasting' ? 1000000 : 2000000) + order;
 }
 
 /** Ресурсы-СТОИМОСТЬ действия для отображения. Единый источник правды — mechanics.activation.cost

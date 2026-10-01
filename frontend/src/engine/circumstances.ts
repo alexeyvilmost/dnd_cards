@@ -186,6 +186,11 @@ export function evaluateCondition(cond: Dict, ctx: EvalContext): boolean {
       const threshold=Number(cond.value),hp=ctx.state?.hp;
       return Number.isFinite(threshold)&&threshold>=0&&threshold<=1&&!!hp&&hp.max>0&&hp.current>=0&&hp.current<hp.max*threshold;
     }
+    case 'target_hp_fraction_below': {
+      const threshold = Number(cond.value), hp = ctx.target?.runtimeState?.hp;
+      return Number.isFinite(threshold) && threshold >= 0 && threshold <= 1
+        && !!hp && hp.max > 0 && hp.current >= 0 && hp.current < hp.max * threshold;
+    }
     case 'class_id_in': {
       if(!Array.isArray(cond.values)||!cond.values.length||!ctx.character?.classLevels)return false;
       return cond.values.some(value=>typeof value==='string'&&Number(ctx.character!.classLevels![value])>0);

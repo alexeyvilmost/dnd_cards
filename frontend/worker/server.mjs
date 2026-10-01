@@ -8,6 +8,56 @@ import {fileURLToPath} from 'node:url';
 const hashOf = bytes => `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 const require = createRequire(import.meta.url);
 
+// Archived combat artifacts throw `${CommandRejectionCode}: ${details}`. Only
+// the code crosses the diagnostic boundary; details can contain private state.
+const commandRejectionCodes = new Set([
+  'ActorNotFound', 'ActorDead', 'WorldObjectNotFound', 'CardNotFound', 'ItemNotOwned', 'NotArmor',
+  'ActionNotGranted', 'FeatureNotGranted', 'ActionNotFound', 'InvalidActionDefinition',
+  'HazardNotFound', 'InvalidHazardDefinition', 'HideNotEligible', 'InvalidFacts', 'CapabilityDenied',
+  'InvalidSpellDeclaration', 'DuplicateCommand', 'InsufficientResources', 'InvalidDecision',
+  'InvalidCommandId', 'InvalidActionTiming', 'InvalidInitiative', 'InvalidTargets', 'TargetNotWilling',
+  'TargetArmored', 'InvalidEquipmentState', 'AttackActionNotFound', 'AttackActionClosed',
+  'AttackActionBlocked', 'WeaponNotEquipped', 'NotWeapon', 'GrappleNotFound', 'NoFreeGraspingPart',
+  'TargetTooLarge', 'MissingSpatialFacts', 'OutOfRange', 'LineOfSightBlocked', 'IllegalRelation',
+  'NotActorsTurn', 'NoPendingResolution', 'ResolutionInProgress', 'StaleDecision',
+  'TurnAlreadyStarted', 'TurnNotStarted', 'RulesetMismatch', 'StaleRevision',
+]);
+
+function commandRejectionCode(error) {
+  if (typeof error?.message !== 'string') return undefined;
+  const code = /^([A-Za-z]+): /.exec(error.message)?.[1];
+  return commandRejectionCodes.has(code) ? code : undefined;
+}
+
+// Compatibility with errors predating structured rule codes. This mirrors the
+// API's bounded legacy allowlist; unknown exception messages stay private here
+// as well as at the public API boundary.
+const legacyPlayerErrors = new Set([
+  'Неизвестная команда боя', 'Карта столкновения отсутствует',
+  'Нет карты, вмещающей всех участников и их размеры', 'Некорректное зерно карты',
+  'Некорректный состав столкновения', 'Некорректный участник столкновения', 'Некорректная группа',
+  'Слишком много противников', 'Несовместимая версия каталога', 'Несовместимая версия каталога боя',
+  'Несовместимая версия правил боя', 'Некорректная ревизия персонажа', 'Чужой персонаж в снимке боя',
+  'Повреждён поток случайности боя', 'Неполный каталог искусностей оружия',
+  'Каталог требует явный тип эффекта', 'Сначала завершите текущее решение или дождитесь своего хода',
+  'Сначала завершите текущее решение', 'Бой уже завершён', 'Цель вне дальности',
+  'Недостаточно перемещения', 'До клетки нет доступного маршрута с оставшимся перемещением',
+  'Прыжок превышает доступную дистанцию', 'Для прыжка нужно встать',
+  'Способность доступна только после соответствующего события', 'Сейчас ход другого участника',
+  'Выберите свободную клетку', 'Выберите клетку на поле', 'Центр области вне дальности',
+  'Центр области закрыт полным укрытием', 'Сначала завершите открытую реакцию на бросок к20',
+  'Сначала завершите дополнительное перемещение', 'Ресурсы для этой реакции больше недоступны',
+  'Укажите действие влияния на бросок', 'Выбранное влияние больше недоступно',
+  'Проверка уже завершена', 'Воздействие недоступно', 'Нет ожидающей проверки', 'Событие требует решения',
+]);
+const legacyCatalogError = /^(Каталог не содержит |Неоднозначная ссылка каталога: )(race|class|background|feat|effect|action|spell|card|resource)\/[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
+
+function legacyPlayerError(error) {
+  const message = error?.message;
+  return typeof message === 'string' && (legacyPlayerErrors.has(message) || legacyCatalogError.test(message))
+    ? message : undefined;
+}
+
 // Independent of executable artifact versions, so archived workers also get a
 // verifiable journal. Normalize objects while preserving array order.
 export function snapshotHash(value) {
@@ -42,7 +92,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
     if (request.method === 'GET' && request.url === '/health') return send(200, {status: 'ok', artifactHash, sourceCommit});
     const suppliedAuth = Buffer.from(request.headers.authorization || '');
     if (suppliedAuth.length !== expectedAuth.length || !timingSafeEqual(suppliedAuth, expectedAuth)) return send(401, {error: 'unauthorized'});
-    if (request.method !== 'POST' || !['/initialize', '/transition', '/rest', '/camp-action', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
+    if (request.method !== 'POST' || !['/initialize', '/transition', '/rest', '/camp-action', '/camp-inventory', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
     try {
       let size = 0;
       const chunks = [];
@@ -60,6 +110,10 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       }
       if (request.url === '/camp-action') {
         const result = await artifact.executeRoguelikeCampAction(body.input);
+        return send(200, {...result, artifactHash: hash});
+      }
+      if (request.url === '/camp-inventory') {
+        const result = await artifact.projectRoguelikeCampInventory(body.input);
         return send(200, {...result, artifactHash: hash});
       }
       if (request.url === '/rest') {
@@ -84,7 +138,9 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
     } catch (error) {
       // No request or snapshot logging: the envelope contains private entropy.
       const missing = error.code === 'ENOENT';
-      send(missing ? 409 : 422, {error: missing ? 'artifact_unavailable' : 'invalid_combat_command', message: missing ? 'Pinned rules artifact unavailable' : String(error.message).slice(0, 500)});
+      const rejectionCode = missing ? undefined : commandRejectionCode(error);
+      send(missing ? 409 : 422, {error: missing ? 'artifact_unavailable' : 'invalid_combat_command',
+        ...(rejectionCode ? {rejectionCode} : {message: missing ? 'Pinned rules artifact unavailable' : legacyPlayerError(error)})});
     }
   });
 }
@@ -97,5 +153,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   });
   server.requestTimeout = 30000;
   server.headersTimeout = 10000;
-  server.listen(Number(process.env.PORT || 8090), '0.0.0.0');
+  server.listen(Number(process.env.PORT || 8090), process.env.LISTEN_HOST || '0.0.0.0');
 }

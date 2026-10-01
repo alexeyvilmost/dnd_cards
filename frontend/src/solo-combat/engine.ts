@@ -68,6 +68,7 @@ import { InMemoryRulesSession } from '../rules-core/session';
 import {foldEvents} from '../rules-core/reducer';
 import {getSystemActionDefinition, SYSTEM_ACTION_IDS} from '../rules-core/systemActions';
 import { resolveSpellAccess } from '../rules-core/spellcastingAccess';
+import {availableCombatSpellLevels} from './spellCastChoices';
 import { canFamiliarUseOrdinaryAction } from '../rules-core/findFamiliar';
 import { canonicalTouchSpell } from '../rules-core/familiarRuntime';
 import { turnStartGrappleDamageOpportunity } from '../rules-core/fightingStyleComplexPrimitives';
@@ -2898,8 +2899,13 @@ function triggeringMeleeReach(actor: ActorState, action: RuleActionDefinition | 
   if (!action) return undefined;
   const kind = weaponAttackKind(action.mechanics);
   if (kind === 'unarmed') return actor.attackProfile?.reachFt ?? 5;
-  if (!kind) return undefined;
   const effects = action.mechanics.effects as Record<string, unknown>[] | undefined;
+  if (!kind) {
+    const explicitMelee = effects?.some(effect => effect.resolution === 'attack_roll'
+      && ['weapon_melee', 'unarmed'].includes(String(effect.attack_kind)));
+    const reach = action.targeting?.rangeFt ?? actor.attackProfile?.reachFt;
+    return explicitMelee && typeof reach === 'number' && Number.isFinite(reach) && reach > 0 ? reach : undefined;
+  }
   if (!effects?.some(effect => attackRangeFromEffect(effect, kind, actor.character, actor.runtime.equipment) === 'melee')) return undefined;
   const id = actor.runtime.equipment[kind === 'off' ? 'off_hand' : 'main_hand'];
   const card = [...(actor.character.knownCards ?? []), ...(actor.character.equippedCards ?? [])].find(row => row.id === id);
@@ -2931,12 +2937,14 @@ export function resolveTriggeredCombatAction(
       pending.sourceActorId,
       action,
       pending.targetIds,
+      undefined,
+      choices,
     );
     const command: GameCommand = {
       ...commandBase(cleared as SoloCombatState, pending.sourceActorId),
       type: 'UseReactionAction', trigger: pending.event, actionId,
       targetIds: declaration.targetIds,
-      ...(choices ? {choices: projectSoloCombatActionChoices(action, choices)} : {}),
+      ...(declaration.choices ? {choices: declaration.choices} : {}),
       ...(declaration.factsByTarget ? { factsByTarget: declaration.factsByTarget } : {}),
       ...(declaration.spell ? {
         spell: {
@@ -3702,6 +3710,7 @@ function sourceQualifiesForTriggeredAction(input: {
       || targetSize! > sourceSize! + Number(trigger!.feat_max_relative_size)) return false;
   }
   const sourceAction = state.catalogActions.find((candidate) => candidate.id === sourceActionId);
+  if (trigger?.requires_melee_hit === true && triggeringMeleeReach(actor, sourceAction) === undefined) return false;
   if (trigger?.requires_weapon_damage_own_turn === true) {
     if (state.world.scene.mode !== 'encounter'
       || state.world.scene.initiative[state.world.scene.activeIndex] !== actor.id
@@ -3940,7 +3949,11 @@ function offerSourceTriggeredAttackActions(input: {
       ? activation.cost as Array<Record<string, unknown>>
       : [];
     const event = events.find((candidate) => isTriggeredCombatAction(action, candidate));
-    return canPay(actor.runtime, costs).ok && event ? [{ actionId: action.id, event }] : [];
+    const payable = action.kind === 'spell' && action.spell.level > 0 && actor.spellcastingAccess
+      ? availableCombatSpellLevels(actor, action).length > 0
+        && canPay(actor.runtime, costs.filter(cost => cost.resource !== 'spell_slot')).ok
+      : canPay(actor.runtime, costs).ok;
+    return payable && event ? [{ actionId: action.id, event }] : [];
   });
   const needsSneakTradeoff = options.some(({ event }) => event === 'sneak_attack_hit');
   const tradeoff = needsSneakTradeoff

@@ -235,11 +235,35 @@
       "minLength": 1,
       "description": "Item-owned capability: recheck the declared item's equipment and attunement gate before execution."
     },
-    "world_item_reuse": {"type":"boolean"},
-    "variant_of_spell_id": {"type":"string","minLength":1},
-    "spell_variant_ids": {"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
-    "variant_of_action_id": {"type":"string","minLength":1},
-    "action_variant_ids": {"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
+    "world_item_reuse": {
+      "type": "boolean"
+    },
+    "variant_of_spell_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "spell_variant_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "variant_of_action_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "action_variant_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "weapon_mastery": {
       "$ref": "#/$defs/weaponMasteryPrimitive"
     },
@@ -379,22 +403,42 @@
       "oneOf": [
         {
           "type": "object",
-          "required": ["illumination"],
+          "required": [
+            "illumination"
+          ],
           "properties": {
             "illumination": {
-              "type": "array", "minItems": 1,
-              "items": { "enum": ["bright", "dim", "dark"] }
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "bright",
+                  "dim",
+                  "dark"
+                ]
+              }
             }
           },
           "additionalProperties": false
         },
         {
           "type": "object",
-          "required": ["relative_to", "max_distance_ft", "requires_visible"],
+          "required": [
+            "relative_to",
+            "max_distance_ft",
+            "requires_visible"
+          ],
           "properties": {
-            "relative_to": { "const": "target" },
-            "max_distance_ft": { "type": "number", "exclusiveMinimum": 0 },
-            "requires_visible": { "const": true }
+            "relative_to": {
+              "const": "target"
+            },
+            "max_distance_ft": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "requires_visible": {
+              "const": true
+            }
           },
           "additionalProperties": false
         }
@@ -2261,7 +2305,15 @@
           "const": 1
         },
         "total_attacks": {
-          "oneOf": [{"type": "integer", "minimum": 1}, {"const": "actor"}]
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "const": "actor"
+            }
+          ]
         },
         "once_per_attack_action": {
           "type": "boolean"
@@ -3077,16 +3129,32 @@
             "string"
           ]
         },
-        "allow_repeat_targets": {"type": "boolean"},
-        "allow_cross_plane": {"type": "boolean"},
-        "additional_target_slots_per_spell_slot_above_base": {"type": "integer", "minimum": 1},
+        "allow_repeat_targets": {
+          "type": "boolean"
+        },
+        "allow_cross_plane": {
+          "type": "boolean"
+        },
+        "additional_target_slots_per_spell_slot_above_base": {
+          "type": "integer",
+          "minimum": 1
+        },
         "target_slots_by_character_level": {
           "type": "object",
           "minProperties": 1,
-          "patternProperties": {"^([1-9]|1[0-9]|20)$": {"type": "integer", "minimum": 1, "maximum": 64}},
+          "patternProperties": {
+            "^([1-9]|1[0-9]|20)$": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            }
+          },
           "additionalProperties": false
         },
-        "additional_targets_within_ft_of_first": {"type": "number", "exclusiveMinimum": 0},
+        "additional_targets_within_ft_of_first": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
         "allowed_relations": {
           "type": "array",
           "items": {
@@ -3151,7 +3219,10 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": { "type": "string", "minLength": 1 }
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
         }
       }
     },
@@ -3651,24 +3722,61 @@
       },
       "allOf": [
         {
-          "if": {"properties": {"kind": {"const": "item_owned_actor"}}},
-          "then": {
-            "required": ["item_card_id", "action_ref", "initiative", "attacks_per_turn"],
+          "if": {
             "properties": {
-              "item_card_id": {"type": "string", "minLength": 1},
-              "action_ref": {"type": "string", "minLength": 1},
-              "initiative": {"const": "independent"},
-              "attacks_per_turn": {"const": 1}
+              "kind": {
+                "const": "item_owned_actor"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "item_card_id",
+              "action_ref",
+              "initiative",
+              "attacks_per_turn"
+            ],
+            "properties": {
+              "item_card_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "action_ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "initiative": {
+                "const": "independent"
+              },
+              "attacks_per_turn": {
+                "const": 1
+              }
             }
           }
         },
         {
-          "if": {"properties": {"kind": {"const": "roll_die"}}},
-          "then": {
-            "required": ["sides", "label"],
+          "if": {
             "properties": {
-              "sides": {"type": "integer", "minimum": 2, "maximum": 1000},
-              "label": {"type": "string", "minLength": 1}
+              "kind": {
+                "const": "roll_die"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sides",
+              "label"
+            ],
+            "properties": {
+              "sides": {
+                "type": "integer",
+                "minimum": 2,
+                "maximum": 1000
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         },
@@ -4536,10 +4644,25 @@
               },
               "target_save": {
                 "type": "object",
-                "required": ["ability", "dc"],
+                "required": [
+                  "ability",
+                  "dc"
+                ],
                 "properties": {
-                  "ability": {"enum": ["str", "dex", "con", "int", "wis", "cha"]},
-                  "dc": {"type": "integer", "minimum": 1}
+                  "ability": {
+                    "enum": [
+                      "str",
+                      "dex",
+                      "con",
+                      "int",
+                      "wis",
+                      "cha"
+                    ]
+                  },
+                  "dc": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
                 }
               },
               "when": {
@@ -4846,23 +4969,50 @@
             }
           },
           "then": {
-            "required": ["weapon_choice_id", "damage_type", "scaling", "duration"],
+            "required": [
+              "weapon_choice_id",
+              "damage_type",
+              "scaling",
+              "duration"
+            ],
             "properties": {
-              "weapon_choice_id": { "type": "string", "minLength": 1 },
-              "damage_type": { "type": "string", "minLength": 1 },
+              "weapon_choice_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "damage_type": {
+                "type": "string",
+                "minLength": 1
+              },
               "scaling": {
-                "type": "array", "minItems": 1,
+                "type": "array",
+                "minItems": 1,
                 "items": {
                   "type": "object",
-                  "required": ["min_spell_level", "attack_bonus", "damage_dice"],
+                  "required": [
+                    "min_spell_level",
+                    "attack_bonus",
+                    "damage_dice"
+                  ],
                   "properties": {
-                    "min_spell_level": { "type": "integer", "minimum": 1 },
-                    "attack_bonus": { "type": "integer", "minimum": 0 },
-                    "damage_dice": { "type": "string", "pattern": "^[0-9]+d[0-9]+$" }
+                    "min_spell_level": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "attack_bonus": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "damage_dice": {
+                      "type": "string",
+                      "pattern": "^[0-9]+d[0-9]+$"
+                    }
                   }
                 }
               },
-              "duration": { "$ref": "#/$defs/duration" }
+              "duration": {
+                "$ref": "#/$defs/duration"
+              }
             }
           }
         },
@@ -5388,8 +5538,19 @@
           "then": {
             "anyOf": [
               {
-                "required": ["cause_tags"],
-                "properties": {"cause_tags": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}}
+                "required": [
+                  "cause_tags"
+                ],
+                "properties": {
+                  "cause_tags": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
               },
               {
                 "required": [
@@ -6457,6 +6618,13 @@
           "items": {
             "$ref": "#/$defs/condition"
           }
+        },
+        "round_boundary": {
+          "enum": [
+            "start",
+            "end"
+          ],
+          "description": "Explicit owner turn boundary for finite round durations; end preserves a start-of-turn listener through its final turn."
         }
       }
     },
@@ -6596,6 +6764,11 @@
               ]
             }
           }
+        },
+        "resource_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,100}$",
+          "description": "Stable reference to an authored catalog resource. Legacy absence retains the immutable contextual binding."
         }
       }
     }

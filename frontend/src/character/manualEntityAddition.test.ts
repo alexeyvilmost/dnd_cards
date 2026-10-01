@@ -1,11 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   appendManualEntityIds,
   FEAT_CATEGORY_LABELS,
   manualEntityAlreadyAdded,
+  addManualEntities,
+  loadManualEntities,
   type ManualEntity,
 } from './manualEntityAddition';
 import type { ForgeCharacter } from './types';
+import { spellsApi } from '../api/client';
+import { charactersV3Api } from './api';
+import type { Spell } from '../types';
+
+afterEach(() => vi.restoreAllMocks());
 
 const entity = (id: string, repeatable = false): ManualEntity => ({
   id,
@@ -23,6 +30,24 @@ const character = {
 } as ForgeCharacter;
 
 describe('ручное добавление сущностей в лист', () => {
+  it('offers parent spells and ordinary spells, while excluding children of different families', async () => {
+    const rows = ['parent-command', 'parent-hex'].flatMap((id) => [
+      { id, name: id, level: 1, mechanics: { spell_variant_ids: [`${id}-child`] } } as unknown as Spell,
+      { id: `${id}-child`, name: `${id}-child`, level: 1, mechanics: { variant_of_spell_id: id } } as unknown as Spell,
+    ]);
+    const read = vi.spyOn(spellsApi, 'getSpells').mockResolvedValue({ spells: rows, total: rows.length, page: 1, limit: 100 });
+    expect((await loadManualEntities('spells')).map((entry) => entry.id)).toEqual(['parent-command', 'parent-hex']);
+    expect(read).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a stale manually selected child before saving the character', async () => {
+    const save = vi.spyOn(charactersV3Api, 'update');
+    const child = entity('child');
+    child.source = { id: child.id, mechanics: { variant_of_spell_id: 'parent' } } as unknown as Spell;
+    await expect(addManualEntities(character, 'spells', [{ entity: child, amount: 1 }])).rejects.toThrow('только при наложении родительского');
+    expect(save).not.toHaveBeenCalled();
+  });
+
   it('не дублирует обычную сущность и поддерживает повторяемые эффекты', () => {
     expect(appendManualEntityIds(['one'], [
       { entity: entity('one'), amount: 1 },

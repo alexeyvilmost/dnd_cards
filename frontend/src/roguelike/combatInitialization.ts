@@ -50,10 +50,14 @@ export async function initializeRoguelikeCombat(input: RoguelikeCombatInitializa
     ...(input.initiativeManeuverActionId ? {initiativeManeuverActionIds: {[input.character.id]: input.initiativeManeuverActionId}} : {})});
   const envelope: RoguelikeCombatEnvelope = {schemaVersion: 1, artifactHash,
     entropy: {seed: input.seed, cursor: random.cursor}, state};
+  // Live presentation starts from the exact initialized encounter before the
+  // worker advances enemy turns. This separate response field is never part
+  // of the committed envelope, entropy tape or saved combat journal.
+  const combatOpeningState = structuredClone(state);
   const settled = state.outcome === 'active'
     ? stepRoguelikeCombat(envelope, {type: 'resume'}, artifactHash)
     : {envelope, randomValues: [] as number[]};
-  return {status: 'ready' as const, ...settled, contentManifestHash: prepared.contentManifestHash,
+  return {status: 'ready' as const, ...settled, combatOpeningState, contentManifestHash: prepared.contentManifestHash,
     randomValues: [...random.randomValues, ...settled.randomValues]};
 }
 

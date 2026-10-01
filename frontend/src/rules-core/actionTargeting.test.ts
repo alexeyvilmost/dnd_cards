@@ -117,6 +117,8 @@ describe('compileMechanicsTargeting', () => {
     [{ domain: 'planar', actor_targets: true }, /domain/],
     [{ shape: 'hex' }, /shape/],
     [{ range_ft: Number.NaN }, /range_ft/],
+    [{ range_from_triggering_attack: false }, /range_from_triggering_attack/],
+    [{ range_from_triggering_attack: true, max_targets: 2 }, /range_from_triggering_attack/],
     [{ allowed_relations: ['enemy', 'enemy'] }, /unique/],
     [{ domain: 'actor', actor_targets: false, shape: 'self', allowed_relations: [] }, /exactly self/],
     [{ domain: 'actor', actor_targets: false, shape: 'self', allowed_relations: ['ally'] }, /exactly self/],

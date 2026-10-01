@@ -26,6 +26,8 @@ func completeRollPayload() JSONMap {
 
 func TestValidateCharacterEventAcceptsCurrentEngineEventUnion(t *testing.T) {
 	valid := []JSONMap{
+		{"type": "domain_event", "ownerActorId": "healer", "targetActorId": "ally", "event": JSONMap{"kind": "healing_given", "timing": "after", "source": "healer", "target": "ally", "data": JSONMap{"amount": 5}}},
+		{"type": "domain_event", "ownerActorId": "attacker", "event": JSONMap{"kind": "damage_dealt", "data": JSONMap{"amount": 8, "damageType": "cold"}}},
 		completeRollPayload(),
 		{"type": "damage", "amount": float64(7), "damageType": "fire", "source": "Wizard"},
 		{"type": "healing", "amount": float64(4), "source": "Cleric"},
@@ -73,6 +75,13 @@ func TestValidateCharacterEventRejectsMalformedOrAmbiguousPayloads(t *testing.T)
 		{name: "nil payload", eventType: "damage", payload: nil, want: "must be a JSON object"},
 		{name: "outer type mismatch", eventType: "healing", payload: JSONMap{"type": "damage", "amount": float64(1), "damageType": "fire"}, want: "must exactly match"},
 		{name: "unsupported type", eventType: "custom", payload: JSONMap{"type": "custom"}, want: "not a supported"},
+		{name: "domain owner required", eventType: "domain_event", payload: JSONMap{"type": "domain_event", "event": JSONMap{"kind": "healing_received"}}, want: "ownerActorId: is required"},
+		{name: "domain object required", eventType: "domain_event", payload: JSONMap{"type": "domain_event", "ownerActorId": "healer", "event": []any{}}, want: "event: must be a JSON object"},
+		{name: "domain kind required", eventType: "domain_event", payload: JSONMap{"type": "domain_event", "ownerActorId": "healer", "event": JSONMap{}}, want: "event.kind: is required"},
+		{name: "domain timing closed", eventType: "domain_event", payload: JSONMap{"type": "domain_event", "ownerActorId": "healer", "event": JSONMap{"kind": "healing_received", "timing": "eventually"}}, want: "event.timing: is unsupported"},
+		{name: "domain data object required", eventType: "domain_event", payload: JSONMap{"type": "domain_event", "ownerActorId": "healer", "event": JSONMap{"kind": "healing_received", "data": []any{}}}, want: "event.data: must be a JSON object"},
+		{name: "domain unknown fields", eventType: "domain_event", payload: JSONMap{"type": "domain_event", "ownerActorId": "healer", "event": JSONMap{"kind": "healing_received", "patch": JSONMap{"current_hp": 999}}}, want: "event.patch: is not allowed"},
+		{name: "domain target bounded", eventType: "domain_event", payload: JSONMap{"type": "domain_event", "ownerActorId": "healer", "targetActorId": "", "event": JSONMap{"kind": "healing_received"}}, want: "targetActorId: must be a bounded string"},
 		{name: "unknown field", eventType: "damage", payload: JSONMap{"type": "damage", "amount": float64(1), "damageType": "fire", "effectId": "injected"}, want: "is not allowed"},
 		{name: "missing damage type", eventType: "damage", payload: JSONMap{"type": "damage", "amount": float64(1)}, want: "damageType: is required"},
 		{name: "fractional damage", eventType: "damage", payload: JSONMap{"type": "damage", "amount": 1.5, "damageType": "fire"}, want: "non-negative safe integer"},

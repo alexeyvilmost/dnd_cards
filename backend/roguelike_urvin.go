@@ -366,7 +366,7 @@ func urvinCommandAllowed(run *RoguelikeRun, kind string) error {
 	switch kind {
 	case "start_encounter", "victory":
 		return roguelikeError(409, "route_required", "Выберите следующую комнату на карте Урвинского забега")
-	case "buy", "buy_cart", "pin", "refresh_shop":
+	case "buy", "buy_cart", "sell", "pin", "refresh_shop":
 		if node == nil || node.Kind != "shop" || node.Completed {
 			return roguelikeError(409, "shop_room_required", "Магазин доступен только в комнате торговца")
 		}

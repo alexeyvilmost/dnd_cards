@@ -1,4 +1,5 @@
 import SheetFeatureSections from '../components/SheetFeatureSections';
+import { withoutLegacyRunSuffix } from '../character/familiarLabels';
 import HealingPulse from '../audio/HealingPulse';
 import SheetTogglePassives from '../components/SheetTogglePassives';
 import { useRef, useState, type ReactNode } from 'react';
@@ -322,7 +323,7 @@ const CharacterSheetV2 = ({
           </button>
           <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(event) => void uploadAvatar(event.target.files?.[0])} />
           <div className="cs-ident-txt">
-            <div className="cs-name">{character.name || 'Без имени'}</div>
+            <div className="cs-name">{(character.character_type === 'dungeon_crawl' ? withoutLegacyRunSuffix(character.name) : character.name) || 'Без имени'}</div>
             <div className="cs-sub">{subLine || '—'}</div>
           </div>
         </div>
@@ -398,7 +399,7 @@ const CharacterSheetV2 = ({
           conditions={readOnly
             ? runtimeState?.activeEffects.length
               ? <div className="cs-active-effects">{groupActiveEffectsForDisplay(runtimeState.activeEffects)
-                .map((group) => <ActiveEffectCard key={group.key} group={group} />)}</div>
+                .map((group) => <ActiveEffectCard key={group.key} group={group} variant="icon" />)}</div>
               : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>
             : <SheetConditionsPanel character={character} onUpdated={onUpdated} onEvents={onEvents} passives={passives} embedded encounterApply={encounterApply} />}
           breakdownFor={sheetCtx && runtimeState

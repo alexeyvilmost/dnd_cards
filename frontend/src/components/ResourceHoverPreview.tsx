@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import type { ResourceDefinition } from '../types';
 import type { ResourceOption } from '../utils/resources';
-import type { ValueBreakdown } from '../mvp/contracts';
+import type { CharacterContext, ValueBreakdown } from '../mvp/contracts';
 import type { RollModifier } from '../mvp/contracts';
 import HoverCard from './HoverCard';
 import ResourcePreview from './ResourcePreview';
@@ -10,12 +10,14 @@ interface ResourceHoverPreviewProps {
   resourceId: string;
   option?: ResourceOption;
   maximum?: ValueBreakdown;
+  availability?: {current: number; maximum: number};
   sources?: RollModifier[];
+  resourceContext?: Pick<CharacterContext, 'resourceRecharge' | 'resourceRecovery'>;
   children: ReactNode;
 }
 
 /** Ресурсная плитка с тем же превью, что используется в библиотеке ресурсов. */
-export default function ResourceHoverPreview({ resourceId, option, maximum, sources, children }: ResourceHoverPreviewProps) {
+export default function ResourceHoverPreview({ resourceId, option, maximum, availability, sources, resourceContext, children }: ResourceHoverPreviewProps) {
   const resource = useMemo<ResourceDefinition>(() => ({
     id: option?.entityId ?? resourceId,
     resource_id: resourceId,
@@ -24,10 +26,10 @@ export default function ResourceHoverPreview({ resourceId, option, maximum, sour
     category: option?.category,
     image_url: option?.imageUrl,
     image_url_spent: option?.imageUrlSpent,
-    recharge: option?.recharge,
+    recharge: resourceContext?.resourceRecharge?.[resourceId] ?? option?.recharge,
     sort_order: option?.sortOrder,
     support: option?.support,
-  }), [resourceId, option]);
+  }), [resourceId, option, resourceContext]);
 
   return (
     <HoverCard
@@ -45,7 +47,8 @@ export default function ResourceHoverPreview({ resourceId, option, maximum, sour
               </ul>
             </div>
           )}
-          <ResourcePreview resource={resource} maximum={maximum} disableHover />
+          <ResourcePreview resource={resource} maximum={maximum} availability={availability}
+            recovery={resourceContext?.resourceRecovery?.[resourceId]} disableHover />
         </div>
       )}
     >

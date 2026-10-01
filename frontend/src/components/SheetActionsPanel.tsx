@@ -35,10 +35,11 @@ import type { Combatant, BattleLogEntry, PendingSave, PendingAttack, SaveOutcome
 import { pendingAttackDamage } from '../battle/pendingAttack';
 import { describeEngineEvent, narrativeEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
-import { isCharacterReadOnly, type ForgeCharacter, type ForgeCharacterPreview } from '../character/types';
+import { isCharacterReadOnly, type CharacterType, type ForgeCharacter, type ForgeCharacterPreview } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
-import { applyFreeuseCost, findFreeusePoolKey, freeuseKey, isFreeusePoolKey } from '../engine/freeuse';
+import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
+import { applyFreeuseCost, resolveFreeusePoolKey, freeuseSpellReferences, isFreeusePoolKey, FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
 import { activeEffectRequirementIssue } from '../engine/actionRequirements';
@@ -69,10 +70,11 @@ import type { EngineEvent, ExecuteContext, ReactionOffer, RollLog, RuntimeState,
 import { getSettings } from '../settings';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
 import SheetActionLine from './SheetActionLine';
+import SheetActionGroups, {sheetActionGroups} from './SheetActionGroups';
 import SpellPreview from './SpellPreview';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionPreview from './ActionPreview';
-import SheetResourceTile from './SheetResourceTile';
+import SheetResourceTile, {sheetResourceTileOrder} from './SheetResourceTile';
 import ActiveEffectCard from './ActiveEffectCard';
 import { loadMasteryEffects } from '../utils/mastery';
 import {
@@ -563,9 +565,10 @@ function mechanicsPrimitiveType(mechanics: Record<string, unknown>): string | nu
   return typeof type === 'string' && type ? type : null;
 }
 
-/** Every spell row uses canonical grant/preparation access, primitive or not. */
+/** Every spell row and every run action uses the canonical authority, primitive or not. */
 export function sheetActionNeedsCanonicalAvailability(
   action: Pick<SheetAction, 'mechanics' | 'spellRef'>,
+  characterType?: CharacterType,
 ): boolean {
   const effects = Array.isArray(action.mechanics.effects)
     ? action.mechanics.effects as Record<string, unknown>[]
@@ -573,7 +576,8 @@ export function sheetActionNeedsCanonicalAvailability(
   const structuralUnarmed = effects.some((effect) => (
     effect.resolution === 'attack_roll' && effect.attack_kind === 'unarmed'
   ));
-  return action.spellRef !== undefined
+  return characterType === 'dungeon_crawl'
+    || action.spellRef !== undefined
     || mechanicsPrimitiveType(action.mechanics) !== null
     || structuralUnarmed;
 }
@@ -1149,7 +1153,7 @@ export default function SheetActionsPanel({
     if (spellVariantIds.some((id) => !spellVariantsById[id]) || actionVariantIds.some((id) => !actionVariantsById[id]))
       return { runtime: null, error: new Error('Варианты заклинаний и действий загружаются') };
     const needsCanonical = allActions.some((candidate) => (
-      sheetActionNeedsCanonicalAvailability(candidate)
+      sheetActionNeedsCanonicalAvailability(candidate, character.character_type)
     )) || assembled.effects.some(({ effect }) => (
       mechanicsPrimitiveType((effect.mechanics ?? {}) as Record<string, unknown>)?.startsWith('pact_') === true
     ));
@@ -1212,6 +1216,23 @@ export default function SheetActionsPanel({
     ruleState,
   ]);
 
+  const resourcePreviewContext = useMemo(() => {
+    const classResources = (assembled.klass?.resources ?? null) as Record<string, unknown> | null;
+    const canonicalCharacter = canonicalBuild.runtime?.world.actors[canonicalBuild.runtime.actorId]?.character;
+    return {
+      resourceRecharge: {
+        ...buildResourceRecharge(classResources),
+        ...ctx.resourceRecharge,
+        ...canonicalCharacter?.resourceRecharge,
+      },
+      resourceRecovery: {
+        ...buildResourceRecovery(classResources),
+        ...ctx.resourceRecovery,
+        ...canonicalCharacter?.resourceRecovery,
+      },
+    };
+  }, [assembled.klass?.resources, ctx, canonicalBuild.runtime]);
+
   const canonicalFor = (action: SheetAction): SheetCanonicalActionContext | undefined => {
     if (!sheetActionNeedsCanonicalAvailability(action)) return undefined;
     if (canonicalBuild.error) throw canonicalBuild.error;
@@ -1238,8 +1259,10 @@ export default function SheetActionsPanel({
   const actionsAsIcons = entityDisplay.actions === 'icon';
   // uses_<key> и freeuse-<spell> — виртуальные пулы: не плитки-ресурсы (freeuse рисуется
   // отдельной витриной FreeuseSpellsRow, uses — на строке действия).
-  const resourceKeys = Object.keys(runtime.maxResources)
-    .filter((k) => runtime.maxResources[k] > 0 && !isActionUsesKey(k) && !isFreeusePoolKey(k));
+  const resourceKeys = [...Object.keys(runtime.maxResources)
+    .filter((k) => runtime.maxResources[k] > 0 && !isActionUsesKey(k) && !isFreeusePoolKey(k)),
+    ...(ruleState.freeuseSpells.some(spec=>!spec.atWill && runtime.maxResources[resolveFreeusePoolKey(spec,{spells:assembled.spells,resources:runtime.maxResources})]>0) ? [FREEUSE_SHOWCASE_KEY] : [])]
+    .sort((left,right)=>sheetResourceTileOrder(left,resourceOptions)-sheetResourceTileOrder(right,resourceOptions)||left.localeCompare(right));
 
   const apply = useCallback(async (
     next: RuntimeState,
@@ -1298,9 +1321,11 @@ export default function SheetActionsPanel({
   // фиксированным кругом бесплатного каста (spec.level или базовый круг). null — нет пула/зарядов.
   const freeuseFor = (action: SheetAction): { key: string; current: number; max: number; level: number } | null => {
     if (!action.spellRef) return null;
-    const key = findFreeusePoolKey(runtime.resources, { cardNumber: action.spellRef.card_number, id: action.spellRef.id });
+    const references = freeuseSpellReferences(action.spellRef);
+    const spec = ruleState.freeuseSpells.find(candidate => !candidate.atWill && references.includes(candidate.spell));
+    if (!spec) return null;
+    const key = resolveFreeusePoolKey(spec,{spells:[action.spellRef],resources:runtime.maxResources});
     if (!key || (runtime.resources[key] ?? 0) <= 0) return null;
-    const spec = ruleState.freeuseSpells.find((s) => freeuseKey(s.spell) === key);
     const base = action.spellRef.level ?? action.level ?? 0;
     return { key, current: runtime.resources[key] ?? 0, max: runtime.maxResources[key] ?? 0, level: spec?.level ?? base };
   };
@@ -2982,7 +3007,7 @@ export default function SheetActionsPanel({
       } catch (cause) {
         return {
           disabled: true,
-          reason: cause instanceof Error ? cause.message : String(cause),
+          reason: playerFacingSheetActionError(cause),
         };
       }
     }
@@ -3047,7 +3072,7 @@ export default function SheetActionsPanel({
       } catch (cause) {
         return {
           disabled: true,
-          reason: cause instanceof Error ? cause.message : String(cause),
+          reason: playerFacingSheetActionError(cause),
         };
       }
     }
@@ -3159,13 +3184,7 @@ export default function SheetActionsPanel({
     return action.group !== 'spell' || spellIsPrepared(action);
   });
 
-  const allGroups: { key: string; label: string; items: SheetAction[] }[] = [
-    { key: 'basic', label: 'Базовые', items: actionBlockActions.filter((a) => a.group === 'basic') },
-    { key: 'race', label: 'Вид', items: actionBlockActions.filter((a) => a.group === 'race') },
-    { key: 'class', label: 'Класс', items: actionBlockActions.filter((a) => a.group === 'class') },
-    { key: 'item', label: 'Предметы', items: actionBlockActions.filter((a) => a.group === 'item') },
-    { key: 'spell', label: 'Заклинания', items: actionBlockActions.filter((a) => a.group === 'spell') },
-  ];
+  const allGroups = sheetActionGroups(actionBlockActions);
   // Режим «только заклинания»: группировка по кругам (тот же SheetActionLine и то же
   // поведение по клику/наведению, что и в блоке «Действия»).
   const spellLevelGroups: { key: string; label: string; items: SheetAction[] }[] = (() => {
@@ -3325,19 +3344,16 @@ export default function SheetActionsPanel({
       {showResources && !spellsOnly && resourceKeys.length > 0 && (
         <div className="res-tile-row">
           {resourceKeys.map((key) => {
+            if (key === FREEUSE_SHOWCASE_KEY) return <FreeuseSpellsTile key={key} runtime={runtime}
+              freeuseSpells={ruleState.freeuseSpells} spells={assembled.spells} resourceOptions={resourceOptions}/>;
             const cur = runtime.resources[key] ?? 0;
             const max = runtime.maxResources[key];
             const def = findResource(resourceOptions, key);
             return (
-              <SheetResourceTile key={key} resourceId={key} option={def} current={cur} maximum={max} />
+              <SheetResourceTile key={key} resourceId={key} option={def} current={cur} maximum={max}
+                resourceContext={resourcePreviewContext} />
             );
           })}
-          <FreeuseSpellsTile
-            runtime={runtime}
-            freeuseSpells={ruleState.freeuseSpells}
-            spells={assembled.spells}
-            resourceOptions={resourceOptions}
-          />
         </div>
       )}
 
@@ -3410,11 +3426,7 @@ export default function SheetActionsPanel({
         </div>
       )}
 
-      {groups.map(({ key, label, items }) => items.length > 0 && (
-        <div key={key} className="sheet-group">
-          <h3 className="sheet-h3">{label}</h3>
-          <div className={actionsAsIcons ? 'cs-action-tiles' : 'sheet-item-cols'}>
-            {items.map((action) => {
+      <SheetActionGroups groups={groups} icons={actionsAsIcons} bySpellLevel={spellsOnly} renderAction={(action) => {
               // Loading/build failures are not preparation failures. Preserve
               // their real reason in the hover card until canonical access is
               // available; only then can an actor-owned grant be called
@@ -3462,10 +3474,7 @@ export default function SheetActionsPanel({
                 />
                 </div>
               );
-            })}
-          </div>
-        </div>
-      ))}
+      }}/>
 
       {slotPick && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-label="Выбор источника оплаты заклинания">
@@ -3509,7 +3518,7 @@ export default function SheetActionsPanel({
       {showEffects && !spellsOnly && activeEffectGroups.length > 0 && (
         <div className="sheet-group" style={{ marginTop: 8 }}>
           <h3 className="sheet-h3">Активные эффекты</h3>
-          <ul className="sheet-active-effects">
+          <ul className="sheet-active-effects sheet-active-effects--icons">
             {activeEffectGroups.map((group) => {
               const remoteManipulator = group.effects.find((effect) => remoteManipulatorSpec(effect));
               return (

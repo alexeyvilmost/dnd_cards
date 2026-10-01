@@ -74,7 +74,7 @@ export default function SheetConflictResolveDialog({
     try {
       const nextDraft = applySkillConflictReplacement(draft, activeSlot, skillId, ruleState);
       const nextRules = resolveCharacterRules({ draft: nextDraft, assembled });
-      const payload = buildSavePayload(nextDraft, assembled, nextRules, character.current_hp);
+      const payload = buildSavePayload(nextDraft, assembled, nextRules, character.current_hp, character.max_hp);
       const updated = await charactersV3Api.update(character.id, payload);
       // Клиентский снимок поверх ответа: навыки класса живут в resolved_choices + rule_state,
       // и лист пересчитывает владения из драфта — гарантируем, что замена сразу видна.

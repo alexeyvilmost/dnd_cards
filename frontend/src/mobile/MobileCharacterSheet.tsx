@@ -45,8 +45,8 @@ import {
 } from './MobileEntityCard';
 import { useMobileCharacter } from './useMobileCharacter';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
-import { groupActiveEffectsForDisplay, type ActiveEffectDisplayGroup } from '../engine/effects';
-import { useActiveEffectEntity } from '../components/ActiveEffectCard';
+import { groupActiveEffectsForDisplay } from '../engine/effects';
+import ActiveEffectCard from '../components/ActiveEffectCard';
 import '../pages/CharacterForge.css';
 import './mobile.css';
 
@@ -114,53 +114,6 @@ function Section({
       </header>
       {children}
     </section>
-  );
-}
-
-function EntityRow({
-  name,
-  detail,
-  imageUrl,
-  onClick,
-}: {
-  name: string;
-  detail?: string;
-  imageUrl?: string | null;
-  onClick?: () => void;
-}) {
-  return (
-    <button type="button" className="m-entity-row" onClick={onClick}>
-      <span className="m-entity-row-image">
-        {imageUrl
-          ? <img src={imageUrl} alt="" onError={(event) => { event.currentTarget.src = '/default_image.png'; }} />
-          : name.slice(0, 1).toUpperCase()}
-      </span>
-      <span>
-        <strong>{name}</strong>
-        {detail && <small>{detail}</small>}
-      </span>
-      <ChevronRight size={18} />
-    </button>
-  );
-}
-
-function ActiveEffectEntityRow({
-  group,
-  onOpen,
-}: {
-  group: ActiveEffectDisplayGroup;
-  onOpen: (view: MobileEntityView) => void;
-}) {
-  const entity = useActiveEffectEntity(group);
-  return (
-    <EntityRow
-      name={group.name}
-      detail={[group.source, group.duration].filter(Boolean).join(' · ')}
-      imageUrl={entity?.image_url}
-      onClick={() => onOpen(entity
-        ? { kind: 'effect', entity, sourceLabel: group.source ?? 'Активный эффект' }
-        : { kind: 'text', title: group.name, detail: group.instructions.join(' ') })}
-    />
   );
 }
 
@@ -289,7 +242,7 @@ export default function MobileCharacterSheet() {
       draft.notes = overlay.notes;
       const updated = await charactersV3Api.update(
         data.character.id,
-        buildSavePayload(draft, data.assembled, data.ruleState, data.character.current_hp),
+        buildSavePayload(draft, data.assembled, data.ruleState, data.character.current_hp, data.character.max_hp),
       );
       data.updateCharacter(updated);
       setOverlay(null);
@@ -640,12 +593,11 @@ export default function MobileCharacterSheet() {
             </Section>
 
             <Section title="Состояния" action={addButton('conditions')} wide>
-              <div className="m-entity-list">
+              <div className="cs-active-effects">
                 {activeConditionGroups.map((group) => (
-                  <ActiveEffectEntityRow
+                  <ActiveEffectCard
                     key={group.key}
                     group={group}
-                    onOpen={(view) => setOverlay({ type: 'entity', view })}
                   />
                 ))}
                 {!activeConditions.length && <p className="m-muted">Нет активных состояний.</p>}
@@ -653,12 +605,11 @@ export default function MobileCharacterSheet() {
             </Section>
 
             <Section title="Эффекты" action={addButton('effects')} wide>
-              <div className="m-entity-list">
+              <div className="cs-active-effects">
                 {activeNonConditionGroups.map((group) => (
-                  <ActiveEffectEntityRow
+                  <ActiveEffectCard
                     key={group.key}
                     group={group}
-                    onOpen={(view) => setOverlay({ type: 'entity', view })}
                   />
                 ))}
                 {!activeNonConditions.length && <p className="m-muted">Нет активных эффектов.</p>}

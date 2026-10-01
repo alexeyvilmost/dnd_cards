@@ -534,7 +534,7 @@ func (rc *RoguelikeController) Create(c *gin.Context) {
 		clone.GroupID = nil
 		clone.Group = nil
 		clone.User = User{}
-		clone.Name = strings.TrimSpace(source.Name) + " · Забег"
+		clone.Name = strings.TrimSpace(source.Name)
 		clone.CharacterType = "dungeon_crawl"
 		if err = resetRoguelikeCloneRuntime(&clone); err != nil {
 			return err
@@ -1552,7 +1552,7 @@ func applyRoguelikeCommand(tx *gorm.DB, run *RoguelikeRun, request RoguelikeComm
 	if err := urvinCommandAllowed(run, request.Type); err != nil {
 		return err
 	}
-	if request.Type == "buy" || request.Type == "buy_cart" || request.Type == "pin" || request.Type == "refresh_shop" {
+	if request.Type == "buy" || request.Type == "buy_cart" || request.Type == "sell" || request.Type == "pin" || request.Type == "refresh_shop" {
 		if run.Status != RoguelikeStatusActive || run.Phase != RoguelikePhaseCamp {
 			return roguelikeError(409, "camp_required", "магазин доступен только в лагере активного забега")
 		}
@@ -1576,6 +1576,8 @@ func applyRoguelikeCommand(tx *gorm.DB, run *RoguelikeRun, request RoguelikeComm
 		return buyRoguelikeCart(tx, run, lines)
 	case "transfer_item":
 		return transferRoguelikeItem(tx, run, request)
+	case "sell":
+		return sellRoguelikeItem(tx.Statement.Context, tx, roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}, run, request)
 	case "pin":
 		return pinRoguelikeOffer(run, roguelikePayloadString(request, "offer_id"))
 	case "refresh_shop":
@@ -1623,6 +1625,12 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 	}
 	var response JSONMap
 	err = rc.db.WithContext(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
+		// Serialize the same accepted command before receipt lookup. A concurrent
+		// retry receives the receipt after the first commit rather than a stale
+		// run revision; unrelated commands still use ordinary run/actor locks.
+		if err := tx.Exec("SELECT pg_advisory_xact_lock(hashtextextended(?, 0))", userID.String()+":"+runID.String()+":"+request.CommandID.String()).Error; err != nil {
+			return err
+		}
 		var receipt RoguelikeCommandReceipt
 		receiptResult := tx.Where("run_id = ? AND user_id = ? AND command_id = ?", runID, userID, request.CommandID).First(&receipt)
 		if receiptResult.Error == nil {

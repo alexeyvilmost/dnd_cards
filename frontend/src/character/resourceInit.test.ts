@@ -34,6 +34,45 @@ const assembled = {
 } as unknown as AssembledCharacter;
 
 describe('MM4 — resource maximum sources', () => {
+  it('fills gained class slots and ability-scaled capacity while preserving already spent charges', () => {
+    const caster = {...assembled, klass: {id:'wizard',name:'Renamed caster',resources:{
+      spell_slot_1:{by_level:{1:2,2:3},level_source:'wizard'},
+      spell_slot_2:{by_level:{3:2},level_source:'wizard'},
+      class_pool:{count:'max(cha, 1)'},
+    }}, effects:[]} as unknown as AssembledCharacter;
+    const existing = {hp:{current:5,max:10,temp:0},resources:{action:0,bonus_action:1,reaction:1,spell_slot_1:0,class_pool:1},
+      maxResources:{action:1,bonus_action:1,reaction:1,spell_slot_1:2,class_pool:3},equipment:{},inventory:[],activeEffects:[],firedThisTurn:[],firedThisRest:[]};
+    const synced = syncRuntimeResources({...ctx,level:7,classLevels:{wizard:3,fighter:4},abilityMods:{...ctx.abilityMods,cha:4}},caster,existing);
+    expect(synced.maxResources).toMatchObject({spell_slot_1:3,spell_slot_2:2,class_pool:4});
+    expect(synced.resources).toMatchObject({action:0,spell_slot_1:1,spell_slot_2:2,class_pool:2});
+    const repeated = syncRuntimeResources({...ctx,level:7,classLevels:{wizard:3,fighter:4},abilityMods:{...ctx.abilityMods,cha:4}},caster,{...existing,...synced});
+    expect(repeated.resources).toEqual(synced.resources);
+  });
+
+  it('makes additional limited action uses available without restoring old spent uses in a multiclass', () => {
+    const action = {id:'limited',card_number:'ACT-limited',name:'Renamed action',mechanics:{activation:{mode:'active',cost:[{resource:'self_uses'}]},
+      uses:{count:2,by_level:{1:2,4:3},level_source:'fighter',per:'long_rest'},effects:[]}} as unknown as Action;
+    const mixed = {...assembled,effects:[],actions:[{action,origin:{kind:'class',id:'fighter',name:'Fighter'}}]} as unknown as AssembledCharacter;
+    const before = syncRuntimeResources({...ctx,level:5,classLevels:{fighter:1,wizard:4}},mixed);
+    const existing = {hp:{current:5,max:10,temp:0},resources:{...before.resources,'uses_ACT-limited':0},maxResources:before.maxResources,
+      equipment:{},inventory:[],activeEffects:[],firedThisTurn:[],firedThisRest:[]};
+    const after = syncRuntimeResources({...ctx,level:8,classLevels:{fighter:4,wizard:4}},mixed,existing);
+    expect(after.resources['uses_ACT-limited']).toBe(1);
+    expect(after.maxResources['uses_ACT-limited']).toBe(3);
+  });
+
+  it('preserves an exhausted item pool through unequip and re-equip', () => {
+    const card = {id:'item',name:'Renamed item',mechanics:{activation:{mode:'passive'},effects:[{resolution:'auto',result:[{kind:'resource',op:'grant',id:'item_pool',amount:2}]}]}} as unknown as Card;
+    const noSources = {...assembled,klass:null,effects:[]} as unknown as AssembledCharacter;
+    const existing = {hp:{current:5,max:10,temp:0},resources:{action:1,bonus_action:1,reaction:1,item_pool:0},
+      maxResources:{action:1,bonus_action:1,reaction:1,item_pool:2},equipment:{},inventory:[{cardId:card.id,qty:1}],activeEffects:[],firedThisTurn:[],firedThisRest:[]};
+    const dormant = syncRuntimeResources(ctx,noSources,existing,[],[card]);
+    expect(dormant.maxResources.item_pool).toBe(0);
+    const equipped = syncRuntimeResources({...ctx,equippedCards:[card]},noSources,{...existing,...dormant,equipment:{ring:card.id}},[],[card]);
+    expect(equipped.maxResources.item_pool).toBe(2);
+    expect(equipped.resources.item_pool).toBe(0);
+  });
+
   it('returns base, class and granted pool sources', () => {
     const result = syncRuntimeResources(ctx, assembled);
 
@@ -46,7 +85,7 @@ describe('MM4 — resource maximum sources', () => {
       { value: 2, source: 'Особая способность', reason: 'грант ресурса' },
     ]);
     expect(result.sources.action).toEqual([
-      { value: 1, source: 'Базовый ресурс хода', reason: 'один ресурс на ход' },
+      { value: 1, source: 'Базовый ресурс хода', reason: 'базовый максимум на ход' },
     ]);
   });
 
@@ -168,7 +207,7 @@ describe('MM4 — resource maximum sources', () => {
     expect(reconciled.maxResources['uses_ACT-dragonborn-draconic-flight']).toBe(1);
     expect(reconciled.sources['uses_ACT-dragonborn-draconic-flight']).toEqual([{
       value: 1,
-      source: 'Действие: ACT-dragonborn-draconic-flight',
+      source: 'Драконьий полёт · Драконорождённый',
       reason: 'число использований',
     }]);
   });

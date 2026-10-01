@@ -2,7 +2,6 @@ import {actorHasConsciousVitality} from '../engine/lifePolicies';
 import {maximumActorLongJumpFt} from '../solo-combat/jump';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import {combatRollInfluences,resolveCombatDeathSave,finalizeCombatOutcome} from '../solo-combat/engine';
-import {emptyDeathSaves} from '../engine/deathSaves';
 import {persistedRollPresentation} from '../solo-combat/persistedRollPresentation';
 import RollInfluenceActions from '../components/RollInfluenceActions';
 import {isLooseTelekineticObject, telekineticHeldObjects} from '../rules-core/telekineticMovement';
@@ -19,10 +18,10 @@ import DecisionPolicyToggles from '../components/DecisionPolicyToggles';
 import AttackRollEquation from '../components/AttackRollEquation';
 import RollCalculationDetails from '../components/RollCalculationDetails';
 import {previewAttackDefense} from '../rules-core/handler';
-import {resolveSpellAccess} from '../rules-core/spellcastingAccess';
+import {availableCombatSpellLevels} from '../solo-combat/spellCastChoices';
 import {useSiteSettings} from '../settings';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, RotateCcw, SlidersHorizontal, X } from 'lucide-react';
 import { actionsApi, effectsApi, spellsApi, ApiRequestError } from '../api/client';
 import { charactersV3Api } from '../character/api';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
@@ -54,10 +53,12 @@ import MonsterTurnController from '../components/MonsterTurnController';
 import SheetPendingCombatPanel, { sheetReactionDecisionOptions } from '../components/SheetPendingCombatPanel';
 import TacticalBattleMap from '../components/TacticalBattleMap';
 import CombatPresentationDialog from '../components/CombatPresentationDialog';
+import CombatDeathSaveDialog from '../components/CombatDeathSaveDialog';
 import CombatRewardDialog from '../components/CombatRewardDialog';
 import SheetSettingsDialog from '../components/SheetSettingsDialog';
 import { useCombatPresentation } from '../solo-combat/useCombatPresentation';
 import {useAutomaticCombatDecision} from '../solo-combat/useAutomaticCombatDecision';
+import {useAutomaticTurnStartAction} from '../solo-combat/useAutomaticTurnStartAction';
 import { useSheetWorldInputDialog } from '../components/SheetWorldInputDialog';
 import { monstersApi } from '../monsters/api';
 import {
@@ -211,6 +212,7 @@ export default function SoloCombatPage() {
   const [rewardTransitionFailed, setRewardTransitionFailed] = useState(false);
   const autoRewardStartedRef = useRef(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [logHidden, setLogHidden] = useState(true);
   const presentation = useCombatPresentation(state, openingState);
   useCombatAudio(state,presentation.playing,presentation.initiative,presentation.blocked);
   const presentationBlockedRef = useRef(false);
@@ -423,7 +425,7 @@ export default function SoloCombatPage() {
           setCharacter(accepted.character);
           participantCharactersRef.current = Object.fromEntries(runCharacters(accepted).map(c=>[c.id,c]));
           setParticipantCharacters(participantCharactersRef.current);
-          if (!loadedRun.combat_state) setOpeningState(accepted.combat_state);
+          if (!loadedRun.combat_state) setOpeningState(accepted.combat_opening_state ?? accepted.combat_state);
           setState(accepted.combat_state);
           setBusy(false);
           return;
@@ -619,10 +621,22 @@ export default function SoloCombatPage() {
     } catch (reason) { setError(playerFacingSheetActionError(reason)); }
   });
 
+  const requestSpellCastLevel = async (action: SoloCombatState['catalogActions'][number], actorId: string): Promise<Record<string, string[]> | null> => {
+    if (!state || action.kind !== 'spell' || action.spell.level === 0 || !state.world.actors[actorId].spellcastingAccess) return {};
+    const levels = availableCombatSpellLevels(state.world.actors[actorId], action);
+    if (!levels.length) throw new Error(`Для «${action.name}» нет доступной ячейки или свободного использования`);
+    if (levels.length === 1) return {spell_cast_level: [String(levels[0])]};
+    return choiceDialog.request([{id: 'spell_cast_level', prompt: 'На каком уровне наложить заклинание?', count: 1,
+      source: 'explicit', context: 'in_play', origin: {kind: 'other', id: action.id, name: action.name},
+      items: levels.map(level => ({id: String(level), name: `${level}-й уровень`}))}], action.name);
+  };
+
   const resolveTriggeredChoice = async (actionId: string | null) => {
     if (!state?.pendingTriggeredAction || busy) return;
     try {
       const action = state.catalogActions.find(candidate => candidate.id === actionId);
+      const spellLevelChoice = action ? await requestSpellCastLevel(action, state.pendingTriggeredAction.sourceActorId) : {};
+      if (!spellLevelChoice) return;
       const required = action ? collectSoloCombatActionChoices(
         state.world.actors[state.pendingTriggeredAction.sourceActorId], action,
         state.actionPresentation?.[action.id]?.actionRef?.card_number,
@@ -637,7 +651,7 @@ export default function SoloCombatPage() {
       const manualChoices = passiveChoices.pending.length
         ? await choiceDialog.request(passiveChoices.pending, action!.name) : {};
       if (!manualChoices) return;
-      const choices = {...passiveChoices.automatic, ...manualChoices};
+      const choices = {...spellLevelChoice, ...passiveChoices.automatic, ...manualChoices};
       if (action && triggeredSecondaryTargetIds(state, action.id).length) {
         setSelectedActionId(null); setMovementMode(false); setSelectedActionChoices(choices);
         setSecondaryActionId(action.id); return;
@@ -654,6 +668,12 @@ export default function SoloCombatPage() {
     ? activeActor(state).id
     : state?.characterId ?? '');
   const playerTurn = state ? isPlayerControlledCombatActor(state, activeActor(state).id) && actorHasConsciousVitality(activeActor(state)) && !state.pendingDeathSave : false;
+  useAutomaticTurnStartAction(state,combatPassiveEnabled,busy||Boolean(error)||presentation.blocked||!playerTurn,
+    (actorId,actionId)=>{
+      if(!state)return;
+      applyIntent(state.conditionActionSchemaVersion===1?{type:'condition_action',actorId,actionId}:{type:'stand',actorId},
+        ()=>executeConditionAction(state,actorId,actionId));
+    });
   const deathResumeKey=useRef<string|null>(null);
   useEffect(()=>{
     if(!state||state.deathSavesVersion!==1||state.outcome!=='active'||busy||error||presentation.blocked
@@ -742,19 +762,8 @@ export default function SoloCombatPage() {
     if (wasSelected) return;
     try {
       const actor = state.world.actors[activeControlledActorId];
-      let spellLevelChoice:Record<string,string[]>={};
-      if(action.kind==='spell'&&actor.spellcastingAccess&&action.spell.level>0){
-        const baseLevel=action.spell.level;
-        const levels=Array.from({length:10-baseLevel},(_,index)=>baseLevel+index)
-          .filter(level=>actor.spellcastingAccess!.grants.some(grant=>grant.actionId===action.id
-            &&resolveSpellAccess({state:actor.spellcastingAccess!,actionId:action.id,grantId:grant.grantId,resources:actor.runtime.resources,castLevel:level}).status==='allowed'));
-        if(levels.length>1){
-          const picked=await choiceDialog.request([{id:'spell_cast_level',prompt:'На каком уровне наложить заклинание?',count:1,source:'explicit',context:'in_play',
-            origin:{kind:'other',id:action.id,name:action.name},items:levels.map(level=>({id:String(level),name:`${level}-й уровень`}))}],action.name);
-          if(!picked)return;
-          spellLevelChoice={spell_cast_level:picked.spell_cast_level};
-        }else if(levels.length===1)spellLevelChoice={spell_cast_level:[String(levels[0])]};
-      }
+      const spellLevelChoice = await requestSpellCastLevel(action, activeControlledActorId);
+      if (!spellLevelChoice) return;
       const variantIds=action.kind==='spell'?action.mechanics.spell_variant_ids:action.mechanics.action_variant_ids;
       if(Array.isArray(variantIds)&&variantIds.length){
         if(variantIds.some(id=>typeof id!=='string'))throw Error('Некорректные варианты заклинания');
@@ -1199,7 +1208,6 @@ export default function SoloCombatPage() {
   if (!state || !character) {
     return <main className="solo-combat-loading"><h1>Подготовка поля боя</h1><p>{error ?? 'Компилируем лист, монстров и инициативу…'}</p>{staleRulesSnapshot && <button type="button" onClick={() => void resetStaleCombat()}>Сбросить устаревший бой</button>}{error && <Link to={`/characters-v3/${id}`}>Вернуться в лист</Link>}</main>;
   }
-  const actor = activeActor(state);
   const pending = state.world.pendingResolution;
   const pendingTriggered = state.pendingTriggeredAction;
   const pendingD20Interrupt = persistedRollPresentation(state.pendingD20Interrupt);
@@ -1247,22 +1255,22 @@ export default function SoloCombatPage() {
     : null;
   const heldForDisplay = (influenceOfferVisible && offeredHeldInfluences.length>0) || error
     ? heldDecision : undefined;
-  // Cosmetic projection only: a refreshed library portrait never patches the archived combat envelope.
-  const displayState = {...state,tokens:Object.fromEntries(Object.entries(state.tokens).map(([actorId,token]) => [actorId,
+  // Animation and refreshed portraits are display-only; commands keep the authoritative state.
+  const presentedState = presentation.displayState ?? state;
+  const displayState = {...presentedState,tokens:Object.fromEntries(Object.entries(presentedState.tokens).map(([actorId,token]) => [actorId,
     {...token,tokenUrl:participantCharacters[actorId]?.avatar_url || (token.templateId && monsterPortraits[token.templateId]) || token.tokenUrl}]))};
+  const displayActor = activeActor(displayState);
   return (
     <main className={`solo-combat-page forge${presentation.blocked ? ' combat-input-blocked' : ''}${siteSettings.combat3d ? ' is-3d-field' : ''}`}>
       {rewardRun && <CombatRewardDialog run={rewardRun} onClose={() => navigate(`/roguelike/${rewardRun.id}`)} />}
       {presentation.initiative && <CombatPresentationDialog initiative={presentation.initiative} onClose={presentation.closeInitiative} />}
-      {state.pendingDeathSave && !presentation.blocked && (()=>{
-        const death=state.pendingDeathSave,actor=state.world.actors[death.actorId];
-        const respond=(effectId?:string)=>applyIntent({type:'death_save',actorId:actor.id,phase:death.phase,effectId},()=>resolveCombatDeathSave(state,effectId));
-        return <CombatPresentationDialog modeOverride="standard" busy={busy} provisional={death.phase==='rolled'}
-          beat={{id:`death:${actor.id}:${death.round}`,sourceId:actor.id,sourceName:actor.name,audience:'own',actionName:'Спасбросок от смерти',rollKind:'save',roll:death.roll,cues:[],
-            deathSave:death.phase==='rolled'?death.before:actor.runtime.deathSaves??emptyDeathSaves()}}
-          influences={death.phase==='rolled'?combatRollInfluences(state,actor.id,'save',death.roll):[]}
-          onInfluence={death.phase==='rolled'?respond:undefined} onClose={()=>respond()}/>;
-      })()}
+      <CombatDeathSaveDialog state={state} busy={busy} blocked={presentation.blocked} error={Boolean(error)}
+        preferences={combatPassiveEnabled}
+        onResolve={effectId => {
+          const death = state.pendingDeathSave;
+          if (death) applyIntent({type:'death_save',actorId:death.actorId,phase:death.phase,effectId},
+            () => resolveCombatDeathSave(state,effectId));
+        }}/>
       {(heldForDisplay?.held || presentation.beat) && <CombatPresentationDialog
         modeOverride={heldForDisplay?.held ? 'standard' : undefined}
         beat={heldForDisplay?.held ? {id: 'roll-influence-pending', sourceId: heldForDisplay.command.actorId,
@@ -1281,32 +1289,30 @@ export default function SoloCombatPage() {
       <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
         <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
-        <div className="initiative-ribbon" aria-label="Порядок инициативы">
-          {state.initiative.map((entry, index) => {
-            const participant = state.world.actors[entry.actorId];
-            const isActive = actor.id === entry.actorId;
-            const identity = combatIdentity(state, entry.actorId);
+        <div className="initiative-ribbon initiative-ribbon--tokens-only" aria-label="Порядок инициативы">
+          {displayState.initiative.map((entry) => {
+            const participant = displayState.world.actors[entry.actorId];
+            if (!participant) return null;
+            const identity = combatIdentity(displayState, entry.actorId);
             return <button type="button" key={entry.actorId}
-              className={`initiative-card is-${identity.side}${isActive ? ' is-active' : ''}${!actorHasConsciousVitality(participant) ? ' is-dead' : ''}${hoveredActorId === entry.actorId ? ' is-linked-highlight' : ''}`}
+              className={`initiative-card is-${identity.side}${!actorHasConsciousVitality(participant) ? ' is-dead' : ''}${hoveredActorId === entry.actorId ? ' is-linked-highlight' : ''}`}
               style={{'--combat-accent': identity.accent} as CSSProperties}
               aria-description={`${identity.displayName} · инициатива: ${initiativeLabel(entry)}`}
-              aria-label={`${index + 1}. ${identity.displayName}${isActive ? ', текущий ход' : ''}`}
+              aria-label={identity.displayName}
               onMouseEnter={() => setCombatHoveredActorId(entry.actorId)} onMouseLeave={() => setCombatHoveredActorId(null)}
               onFocus={() => setCombatHoveredActorId(entry.actorId)} onBlur={() => setCombatHoveredActorId(null)}>
-              <b className="initiative-card__order">{index + 1}</b>
-              <span className="initiative-card__portrait">{displayState.tokens[entry.actorId]?.tokenUrl ? <img src={displayState.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}{identity.duplicateIndex && <i>{identity.duplicateIndex}</i>}</span>
-              <span className="initiative-card__name">{identity.displayName}</span>
-              {isActive && <small>ХОД</small>}
+              <span className="initiative-card__portrait">{displayState.tokens[entry.actorId]?.tokenUrl ? <img src={displayState.tokens[entry.actorId].tokenUrl} alt="" /> : combatActorDisplayName(participant).slice(0, 1)}</span>
             </button>;
           })}
         </div>
-        <div className="combat-topbar__right"><div className="combat-topbar__actions"><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя"><SlidersHorizontal size={16} /><span className="sheet-header-btn-label">Настройки</span></button><WorkspaceExpandButton className="combat-settings-button" /></div><div className="combat-round">Раунд {state.world.scene.mode === 'encounter' ? state.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${combatActorDisplayName(actor)}`}</b></div></div>
+        <div className="combat-topbar__right"><div className="combat-round">Раунд {displayState.world.scene.mode === 'encounter' ? displayState.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${combatActorDisplayName(displayActor)}`}</b></div><div className="combat-topbar__actions"><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя"><SlidersHorizontal size={16} /></button><WorkspaceExpandButton className="combat-settings-button" iconOnly /></div></div>
       </header>
       {error && <div className="combat-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError(null)}><X size={16} /></button></div>}
-      <section className="combat-stage">
+      <section className={`combat-stage${logHidden ? ' is-log-hidden' : ''}`}>
         <div className={`combat-map-wrap${secondaryActionId && state.pendingTriggeredAction ? ' is-selecting-secondary' : ''}`}>
           <TacticalBattleMap
             state={displayState}
+            actionsDisabled={presentation.blocked}
             feedback={presentation.playing}
             selectedActionChoices={selectedActionChoices}
             actorId={activeControlledActorId}
@@ -1421,10 +1427,10 @@ export default function SoloCombatPage() {
             </section>
           )}
         </div>
-        <CombatLogPanel state={state} />
+        {logHidden ? <button type="button" className="combat-log-toggle combat-log-restore" onClick={() => setLogHidden(false)} aria-label="Показать журнал боя"><ChevronLeft size={18} /></button> : <CombatLogPanel state={displayState} onCollapse={() => setLogHidden(true)} />}
       </section>
       {inspectedActorId && state.world.actors[inspectedActorId] && (
-        <CombatActorInspector state={state} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
+        <CombatActorInspector state={displayState} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
       )}
       {sceneConstructorOpen && <CombatSceneConstructor
         state={state}
@@ -1434,7 +1440,7 @@ export default function SoloCombatPage() {
         onAddMonster={addSceneMonster}
         onClose={() => setSceneConstructorOpen(false)}
       />}
-      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onConditionAction={actionId => { setMovementMode(false); applyIntent(state.conditionActionSchemaVersion === 1 ? {type: 'condition_action', actorId: activeControlledActorId, actionId} : {type: 'stand', actorId: activeControlledActorId}, () => executeConditionAction(state, activeControlledActorId, actionId)); }} state={state} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} passiveEnabled={combatPassiveEnabled} onPassiveToggle={setCombatPassive} disabled={presentation.blocked || !playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
+      <CombatHotbar onEscape={() => { void chooseEscapeGrapple(); }} onConditionAction={actionId => { setMovementMode(false); applyIntent(state.conditionActionSchemaVersion === 1 ? {type: 'condition_action', actorId: activeControlledActorId, actionId} : {type: 'stand', actorId: activeControlledActorId}, () => executeConditionAction(state, activeControlledActorId, actionId)); }} state={state} displayState={displayState} actorId={activeControlledActorId} selectedActionId={selectedActionId} movementMode={movementMode} passiveEnabled={combatPassiveEnabled} onPassiveToggle={setCombatPassive} disabled={presentation.blocked || !playerTurn || Boolean(state.pendingAdditionalMovement) || busy || Boolean(pending) || Boolean(pendingTriggered) || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt) || state.outcome !== 'active'} onAction={(action) => { void chooseAction(action); }} onMove={() => { void (async () => {
         setSelectedActionId(null); setSelectedActionChoices({}); setDancingLightsMoveGroupId(null);
         if (movementMode) { setMovementMode(false); return; }
         try {
@@ -1484,7 +1490,7 @@ export default function SoloCombatPage() {
         const drawerCharacter = participantCharacters[drawerActorId] ?? character;
         const drawerActor = state.world.actors[drawerActorId];
         const drawerRun = trustedRunRef.current;
-        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{drawerActor.name}</h2><p>Уровень {drawerCharacter.level} · КД {effectiveArmorClass(drawerActor)} · скорость {effectiveActorSpeedFt(drawerActor)} фт.</p></header><CombatCharacterSidebar
+        return <aside className="combat-sheet-drawer"><button type="button" className="combat-sheet-drawer__close" onClick={() => setSheetOpen(false)} aria-label="Закрыть"><X /></button><header><h2>{combatActorDisplayName(drawerActor)}</h2><p>Уровень {drawerCharacter.level} · КД {effectiveArmorClass(drawerActor)} · скорость {effectiveActorSpeedFt(drawerActor)} фт.</p></header><CombatCharacterSidebar
           character={drawerCharacter}
           state={state}
           actorId={drawerActorId}

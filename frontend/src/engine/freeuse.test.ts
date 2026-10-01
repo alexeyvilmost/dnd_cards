@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   parseFreeuse, freeuseKey, isFreeusePoolKey, FREEUSE_SHOWCASE_KEY,
-  findFreeusePoolKey, applyFreeuseCost, collectFreeuseRecharge, type FreeuseSpec,
+  findFreeusePoolKey, applyFreeuseCost, collectFreeuseRecharge, collectFreeuseRecovery,
+  resolveFreeusePoolKey, freeuseSpellReferences, type FreeuseSpec,
 } from './freeuse';
+import {syncRuntimeResources} from '../character/resourceInit';
+import type {AssembledCharacter} from '../character/assemble';
 import { canPay, pay } from './cost';
 import { longRest, shortRest } from './turn';
 import { freshFighterState, FIGHTER_CTX } from '../mvp/fixtures';
@@ -36,6 +39,57 @@ describe('freeuse — нормализация параметра', () => {
 });
 
 describe('freeuse — ключи пула', () => {
+  it('keeps independently chosen spells in separate generic pools through payment and JSON reload',()=>{
+    const template=parseFreeuse({count:2,recharge:'long_rest'})!;
+    const specs=['selected-ward','selected-healing'].map(spell=>({spell,...template}));
+    const assembled={actions:[],effects:[],spells:[]} as unknown as AssembledCharacter;
+    const before=syncRuntimeResources(FIGHTER_CTX,assembled,undefined,specs);
+    expect(before.maxResources).toMatchObject({'freeuse-selected-ward':2,'freeuse-selected-healing':2});
+    const paid=pay({...freshFighterState(),...before},[{resource:freeuseKey(specs[0].spell),amount:1}]).state;
+    const after=syncRuntimeResources(FIGHTER_CTX,assembled,JSON.parse(JSON.stringify(paid)),specs);
+    expect(after.resources).toMatchObject({'freeuse-selected-ward':1,'freeuse-selected-healing':2});
+  });
+  it.each([
+    {name_en:'Dragon’s Breath',card_number:'SPELL-ward',id:'ward-id',legacy:'dragons_breath'},
+    {name_en:'Misty Step',card_number:'SPELL-step',id:'step-id',legacy:'step-id'},
+  ])('preserves the saved $legacy pool after a grant reference repair, including payment and rest',spell=>{
+    const key=freeuseKey(spell.legacy),raw={count:3,recharge:'short_rest',level:2};
+    const spec:FreeuseSpec={spell:spell.card_number,...parseFreeuse(raw)!};
+    const base=freshFighterState(),existing={...base,resources:{...base.resources,[key]:1},maxResources:{...base.maxResources,[key]:3}};
+    const assembled={actions:[],effects:[],spells:[spell]} as unknown as AssembledCharacter;
+    const synced=syncRuntimeResources(FIGHTER_CTX,assembled,JSON.parse(JSON.stringify(existing)),[spec]);
+    expect(synced.resources[key]).toBe(1);expect(synced.maxResources[key]).toBe(3);
+    expect(synced.resources).not.toHaveProperty(freeuseKey(spec.spell));
+    const bindings={spells:[spell],resources:synced.maxResources};
+    expect(resolveFreeusePoolKey(spec,bindings)).toBe(key);
+    expect(collectFreeuseRecharge([spec],bindings)).toEqual({[key]:'short_rest'});
+    expect(findFreeusePoolKey(synced.resources,{aliases:freeuseSpellReferences(spell)})).toBe(key);
+    const cost=((applyFreeuseCost({activation:{cost:[{resource:'action'},{resource:'spell_slot',level:1}]}},key).activation as Dict).cost as Dict[]);
+    const paid=pay({...existing,...synced},cost).state;
+    expect(paid.resources[key]).toBe(0);
+    const reloaded=JSON.parse(JSON.stringify(paid));
+    expect(syncRuntimeResources(FIGHTER_CTX,assembled,reloaded,[spec]).resources[key]).toBe(0);
+    const rested=shortRest(reloaded,{...FIGHTER_CTX,resourceRecharge:collectFreeuseRecharge([spec],bindings)}).state;
+    expect(rested.resources[key]).toBe(3);
+    expect(longRest(reloaded,FIGHTER_CTX).state.resources[key]).toBe(3);
+    expect(raw).toEqual({count:3,recharge:'short_rest',level:2});
+  });
+  it('recognizes both previous punctuation aliases without creating a catalog resource',()=>{
+    const spell={id:'breath-id',card_number:'SPELL-breath',name_en:'Dragon’s Breath'};
+    expect(freeuseSpellReferences(spell)).toContain('dragons_breath');
+    expect(freeuseSpellReferences(spell)).toContain('dragon_s_breath');
+    expect(resolveFreeusePoolKey({spell:spell.card_number},{spells:[spell],resources:{'freeuse-dragon_s_breath':0}}))
+      .toBe('freeuse-dragon_s_breath');
+    expect(parseFreeuse({count:2,resource_id:'old-annotation',resource_id_prefix:'old-prefix-'}))
+      .toEqual({count:2,recharge:'long_rest',level:undefined});
+  });
+  it('binds explicit rest recovery to the saved generic alias as well',()=>{
+    const spell={id:'recovery-id',card_number:'SPELL-recovery',name_en:'Healing Word'};
+    const recovery={short_rest:{mode:'fixed' as const,amount:1},long_rest:{mode:'full' as const}};
+    const spec={spell:spell.card_number,...parseFreeuse({count:3,recovery})!};
+    expect(collectFreeuseRecovery([spec],{spells:[spell],resources:{'freeuse-healing_word':0}}))
+      .toEqual({'freeuse-healing_word':recovery});
+  });
   it('freeuseKey → freeuse-<spell>', () => {
     expect(freeuseKey('misty_step')).toBe('freeuse-misty_step');
   });

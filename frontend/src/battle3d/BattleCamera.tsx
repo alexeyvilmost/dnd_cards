@@ -1,10 +1,27 @@
 import {useEffect, useRef} from 'react';
 import {useFrame, useThree} from '@react-three/fiber';
-import {MathUtils, MOUSE, PerspectiveCamera, TOUCH, Vector3} from 'three';
+import {MathUtils, MOUSE, PerspectiveCamera, TOUCH, Vector3, type Camera} from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 import type {GridPosition} from '../solo-combat/types';
 
 export type CameraCommand = {id:number; kind:'in'|'out'|'reset'|'hero'};
+
+export function createBattleCameraControls(camera: Camera, element: HTMLElement, width: number, height: number) {
+  const controls = new OrbitControls(camera, element);
+  controls.enableDamping = true;
+  controls.dampingFactor = .13;
+  controls.minDistance = 3.5;
+  controls.maxDistance = Math.max(width, height) * 5;
+  controls.enableRotate = false;
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
+  controls.zoomToCursor = true;
+  controls.mouseButtons.LEFT = MOUSE.PAN;
+  controls.touches.ONE = TOUCH.PAN;
+  controls.touches.TWO = TOUCH.DOLLY_PAN;
+  controls.zoomSpeed = .75;
+  return controls;
+}
 
 export function frameBattleCamera(camera: PerspectiveCamera, width:number, height:number, maxHeight=2.4) {
   const vertical=MathUtils.degToRad(camera.fov);
@@ -24,19 +41,8 @@ export default function BattleCamera({width,height,maxHeight,command,hero,onUnav
   const controlsRef=useRef<OrbitControls|null>(null);
   const lastCommand=useRef(0);
   useEffect(()=>{
-    const controls=new OrbitControls(camera,gl.domElement);
+    const controls=createBattleCameraControls(camera,gl.domElement,width,height);
     controlsRef.current=controls;
-    controls.enableDamping=true;
-    controls.dampingFactor=.13;
-    controls.minDistance=3.5;
-    controls.maxDistance=Math.max(width,height)*5;
-    controls.enableRotate=false;
-    controls.enablePan=true;
-    controls.screenSpacePanning=true;
-    controls.mouseButtons.LEFT=MOUSE.PAN;
-    controls.touches.ONE=TOUCH.PAN;
-    controls.touches.TWO=TOUCH.DOLLY_PAN;
-    controls.zoomSpeed=.75;
     const redraw=()=>invalidate();
     controls.addEventListener('change',redraw);
     return ()=>{controls.removeEventListener('change',redraw);controls.dispose();controlsRef.current=null;};
@@ -79,8 +85,9 @@ export default function BattleCamera({width,height,maxHeight,command,hero,onUnav
     const controls=controlsRef.current;
     if(!controls)return;
     controls.update();
-    controls.target.x=MathUtils.clamp(controls.target.x,-width*.25,width*1.25);
-    controls.target.z=MathUtils.clamp(controls.target.z,-height*.25,height*1.25);
+    // Allow a full empty field on either side instead of stopping at a panel edge.
+    controls.target.x=MathUtils.clamp(controls.target.x,-width*2,width*3);
+    controls.target.z=MathUtils.clamp(controls.target.z,-height*2,height*3);
   });
   return null;
 }

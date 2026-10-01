@@ -22,7 +22,15 @@ describe('per-side roll preferences',()=>{
   });
   it('validates malformed modes',()=>{
     vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({combatRollMode:'invalid',enemyCombatRollMode:'invalid'})});
-    expect(getSettings().enemyCombatRollMode).toBe('standard');
+    expect(getSettings().enemyCombatRollMode).toBe('skip');
+  });
+  it('skips roll dialogs for new and legacy unset preferences without replacing an explicit saved mode',()=>{
+    for(const stored of [null,{}, {diceDialog:true}]) {
+      vi.stubGlobal('localStorage',{getItem:()=>stored===null?null:JSON.stringify(stored)});
+      expect(getSettings()).toMatchObject({combatRollMode:'skip',enemyCombatRollMode:'skip'});
+    }
+    vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({combatRollMode:'fast',enemyCombatRollMode:'standard'})});
+    expect(getSettings()).toMatchObject({combatRollMode:'fast',enemyCombatRollMode:'standard'});
   });
   it('keeps 3D combat opt-in for new, legacy and malformed settings',()=>{
     for (const stored of [null, {}, { combat3d: 'false' }]) {

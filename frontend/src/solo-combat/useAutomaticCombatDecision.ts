@@ -2,13 +2,18 @@ import {useEffect,useRef} from 'react';
 import type {SoloCombatState} from './types';
 import {persistedRollPresentation} from './persistedRollPresentation';
 
-type AutomaticDecisionKind = 'roll_influence' | 'reaction';
+type AutomaticDecisionKind = 'roll_influence' | 'reaction' | 'death_save';
 
 /** Read-only identity for both current and archived encounters. Journal length
  * is bounded (80) and cannot identify a command. Revisions and entry IDs survive
  * JSON roundtrips and distinguish even identical rolls in successive actions. */
 export function automaticCombatDecisionKey(state:SoloCombatState|null,kind:AutomaticDecisionKind|null):string|null {
  if(!state||!kind)return null;
+ if(kind==='death_save'){
+  const pending=state.pendingDeathSave;
+  return pending?.phase==='rolled'?JSON.stringify([kind,state.world.id,state.world.revision,
+   pending.actorId,pending.round,pending.randomValues]):null;
+ }
  if(kind==='reaction'){
   const request=state.world.pendingResolution?.request;
   return request?.type==='reaction'?JSON.stringify([kind,state.world.id,request.id]):null;

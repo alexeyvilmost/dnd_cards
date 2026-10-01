@@ -1,7 +1,7 @@
 import type {SoloCombatState} from '../solo-combat/types';
 import SheetActionLine from './SheetActionLine';
 
-/** The combat choice uses the same visual action rows as the character sheet. */
+/** Trigger choices use canonical action/spell icons and their shared previews. */
 export default function CombatTriggeredActionPanel({state, busy, onChoose}: {
   state: SoloCombatState; busy: boolean; onChoose: (actionId: string | null) => void;
 }) {
@@ -22,7 +22,7 @@ export default function CombatTriggeredActionPanel({state, busy, onChoose}: {
       {pending.sneakAttackTradeoff.dieResults.length > 1 ? ' (критическое удвоение)' : ''}.
       {' '}Фактический урон уменьшится на {pending.sneakAttackTradeoff.effectiveDamage}.
     </p>}
-    <div className="combat-reaction-actions">
+    <div className="combat-reaction-actions combat-triggered-action-icons cs-action-tiles">
       {pending.optionActionIds.map(actionId => {
         const action = state.catalogActions.find(row => row.id === actionId);
         if (!action) return null;
@@ -34,6 +34,7 @@ export default function CombatTriggeredActionPanel({state, busy, onChoose}: {
           : undefined;
         const name = action.name.replace(/ — провоцированная атака/gu, '').replace(/ — Превентивный удар$/u, '');
         return <SheetActionLine key={actionId} name={name}
+          variant="icon"
           imageUrl={presentation?.imageUrl ?? card?.image_url ?? unarmed?.imageUrl}
           description={presentation?.description ?? card?.description ?? unarmed?.description}
           sourceLabel={actor.name}

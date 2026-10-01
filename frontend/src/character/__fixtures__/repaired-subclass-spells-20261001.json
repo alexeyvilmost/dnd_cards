@@ -1,0 +1,967 @@
+[
+  {
+    "id": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+    "area": null,
+    "name": "Благословение",
+    "type": null,
+    "level": 1,
+    "range": "30 футов",
+    "author": "Admin",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "enchantment",
+    "source": "Player's Handbook",
+    "classes": [
+      "жрец",
+      "паладин"
+    ],
+    "name_en": "Bless",
+    "duration": "Концентрация, вплоть до 1 минуты",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "kind": "grant_effect",
+              "value": "EFFECT-runtime-013c48cc11a703d0985f"
+            },
+            {
+              "kind": "grant_effect",
+              "value": "EFFECT-runtime-7ffb84d97c88eb28d0d3"
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "range": "30 футов",
+        "shape": "multiple",
+        "domain": "actor",
+        "filter": "creature",
+        "range_ft": 30,
+        "max_targets": 3,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ],
+        "requires_line_of_sight": true,
+        "additional_target_slots_per_spell_slot_above_base": 1
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "level": 1,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active",
+        "cast_time": {
+          "unit": "action",
+          "amount": 1
+        }
+      },
+      "spell_class_list_ids": [
+        "CLASS-cleric",
+        "CLASS-paladin"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-0163",
+    "description": "Вы благословляете не более трёх существ в пределах дистанции. Каждый раз, когда до окончания заклинания цель совершает [[бросок атаки|concept:attack_roll]] или [[спасбросок|concept:saving_throw_]], она добавляет 1к4 к результату.",
+    "is_extended": false,
+    "casting_time": "Действие",
+    "save_outcome": null,
+    "concentration": true,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": true,
+    "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+    "detailed_description": null
+  },
+  {
+    "id": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+    "area": null,
+    "name": "Лечение ран",
+    "type": null,
+    "level": 1,
+    "range": "Касание",
+    "author": "Admin",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "abjuration",
+    "source": "Player's Handbook",
+    "classes": [
+      "бард",
+      "друид",
+      "жрец",
+      "паладин",
+      "следопыт"
+    ],
+    "name_en": "Cure Wounds",
+    "duration": "Мгновенная",
+    "heal_dice": "2d8",
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "kind": "healing",
+              "amount": "2d8 + spellcasting",
+              "scaling": {
+                "per": "spell_slot_above",
+                "dice": "2d8"
+              }
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "range": "Касание",
+        "shape": "single",
+        "domain": "actor",
+        "filter": "any",
+        "range_ft": 5,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "requires_touch": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ],
+        "requires_line_of_sight": false
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "level": 1,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active",
+        "cast_time": {
+          "unit": "action",
+          "amount": 1
+        }
+      },
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-druid",
+        "CLASS-paladin",
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": true,
+    "subclasses": null,
+    "card_number": "SPELL-0214",
+    "description": "Существо, которого вы касаетесь, восстанавливает количество [[Хитов|concept:hit_points]], равное 2к8 плюс ваш модификатор заклинательной характеристики.",
+    "is_extended": false,
+    "casting_time": "Действие",
+    "save_outcome": null,
+    "concentration": false,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": false,
+    "upcast_description": "Лечение увеличивается на 2к8 за каждый уровень ячейки выше первого.",
+    "detailed_description": null
+  },
+  {
+    "id": "d659e7f1-458c-4d04-890f-9c60c2265705",
+    "area": null,
+    "name": "Малое восстановление",
+    "type": null,
+    "level": 2,
+    "range": "Касание",
+    "author": "Admin",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "abjuration",
+    "source": "Player's Handbook",
+    "classes": [
+      "бард",
+      "друид",
+      "жрец",
+      "паладин",
+      "следопыт"
+    ],
+    "name_en": "Lesser Restoration",
+    "duration": "Мгновенная",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "id": "lesser_restoration_condition",
+              "kind": "choice",
+              "count": 1,
+              "prompt": "Какое состояние окончить?",
+              "context": "in_play",
+              "options": {
+                "items": [
+                  {
+                    "id": "blinded",
+                    "name": "Ослеплённый",
+                    "grants": [
+                      {
+                        "op": "remove",
+                        "kind": "condition",
+                        "value": "blinded"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "deafened",
+                    "name": "Оглохший",
+                    "grants": [
+                      {
+                        "op": "remove",
+                        "kind": "condition",
+                        "value": "deafened"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "paralyzed",
+                    "name": "Парализованный",
+                    "grants": [
+                      {
+                        "op": "remove",
+                        "kind": "condition",
+                        "value": "paralyzed"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "poisoned",
+                    "name": "Отравленный",
+                    "grants": [
+                      {
+                        "op": "remove",
+                        "kind": "condition",
+                        "value": "poisoned"
+                      }
+                    ]
+                  }
+                ],
+                "source": "explicit"
+              }
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 5,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "neutral"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "level": 2,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "spell_variant_ids": [
+        "9d4916ec-dd84-5ac9-a74b-2d1e730218da",
+        "11003ac8-fac2-56c8-aca0-81ac5a8fe890",
+        "98cd0901-f917-5ced-a67f-5d36a9567737",
+        "3617a821-22ac-52c7-af42-bb7dd1e252cc"
+      ],
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-druid",
+        "CLASS-paladin",
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-0221",
+    "description": "Вы касаетесь существа и заканчиваете на нём одно из состояний: [[Ослеплённый|effect:d10dd048-8fb8-4321-8bbe-08dd61dd82a7]], [[Оглохший|effect:5f6ff775-a9a5-4294-acfa-99939288697f]], [[Парализованный|effect:74457eba-0f39-4f6d-90ce-ed84d3b9cda4]] или [[Отравленный|effect:b22482db-5254-4528-b873-ecf41fc13c30]].",
+    "is_extended": false,
+    "casting_time": "Бонусное действие",
+    "save_outcome": null,
+    "concentration": false,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": false,
+    "upcast_description": null,
+    "detailed_description": null
+  },
+  {
+    "id": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
+    "area": null,
+    "name": "Метка охотника",
+    "type": null,
+    "level": 1,
+    "range": "90 футов",
+    "author": "Admin",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "divination",
+    "source": "Player's Handbook",
+    "classes": [
+      "следопыт"
+    ],
+    "name_en": "Hunter's Mark",
+    "duration": "Концентрация, вплоть до 1 часа",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "kind": "grant_effect",
+              "value": "EFFECT-runtime-32a2c848cc2506d4987d"
+            },
+            {
+              "kind": "narrative",
+              "description": "Преимущество на проверки Мудрости (Восприятие и Выживание) для поиска отмеченной цели и перенос метки после падения цели требуют явного выбора связанной цели."
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 90,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "enemy",
+          "neutral"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "level": 1,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "interaction": {
+        "intent": "harmful"
+      },
+      "spell_class_list_ids": [
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-0223",
+    "description": "Вы волшебным образом объявляете своей добычей одно существо, которое можете видеть в пределах дистанции. Пока заклинание активно, вы наносите дополнительно 1к6чистой силой при попадании по этой цели [[броском атаки|concept:attack_roll]].",
+    "is_extended": false,
+    "casting_time": "Бонусное действие",
+    "save_outcome": null,
+    "concentration": true,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": false,
+    "component_material": false,
+    "upcast_description": "Ваша [[Концентрация|concept:concentration]] длится дольше с ячейкой заклинания 3‑4 уровней (до 8 часов) или 5 уровня и выше (до 24 часов).",
+    "detailed_description": "Вы волшебным образом объявляете своей добычей одно существо, которое можете видеть в пределах дистанции. Пока заклинание активно, вы наносите дополнительно [force]1к6:force:чистой силой[/force] при попадании по этой цели [[броском атаки|concept:attack_roll]]. Вы также совершаете с [[преимуществом|concept:advantage]] проверки Мудрости (Восприятие или Выживание), совершённые для её поиска.\n\nЕсли [[Хиты|concept:hit_points]] цели опускаются до 0, пока заклинание активно, вы можете :bonus_action:Бонусным действием переместить метку на новое существо, которое можете видеть в пределах дистанции."
+  },
+  {
+    "id": "b4686a0c-dba4-410f-9269-b80181eb733b",
+    "area": null,
+    "name": "Подмога",
+    "type": null,
+    "level": 2,
+    "range": "30 футов",
+    "author": "Admin",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "abjuration",
+    "source": "Player's Handbook",
+    "classes": [
+      "бард",
+      "друид",
+      "жрец",
+      "паладин",
+      "следопыт"
+    ],
+    "name_en": "Aid",
+    "duration": "8 часов",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "id": "max_hp",
+              "op": "grant",
+              "kind": "resource",
+              "amount": 5
+            },
+            {
+              "id": "current_hp",
+              "op": "grant",
+              "kind": "resource",
+              "amount": 5
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "multi",
+        "domain": "actor",
+        "range_ft": 30,
+        "max_targets": 3,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "level": 2,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-druid",
+        "CLASS-paladin",
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-0261",
+    "description": "Выберите не более трёх существ в пределах дистанции. На время длительности максимум [[Хитов|concept:hit_points]] и текущие Хиты каждой цели увеличиваются на 5.",
+    "is_extended": false,
+    "casting_time": "Действие",
+    "save_outcome": null,
+    "concentration": false,
+    "material_text": "полоска белой ткани",
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": true,
+    "upcast_description": "[[Хиты|concept:hit_points]] каждой цели увеличиваются на 5 за каждый уровень ячейки выше второго.",
+    "detailed_description": null
+  },
+  {
+    "id": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+    "area": null,
+    "name": "Порча",
+    "type": null,
+    "level": 1,
+    "range": "30 футов",
+    "author": "Admin",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "enchantment",
+    "source": "Player's Handbook",
+    "classes": [
+      "бард",
+      "жрец",
+      "колдун"
+    ],
+    "name_en": "Bane",
+    "duration": "Концентрация, вплоть до 1 минуты",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "dc": "8 + prof + spellcasting",
+          "who": "target",
+          "ability": "cha",
+          "on_fail": [
+            {
+              "kind": "grant_effect",
+              "value": "EFFECT-runtime-77cfd2e6375a2dfc9667"
+            },
+            {
+              "kind": "grant_effect",
+              "value": "EFFECT-runtime-66e9d1ac1a98be18b2c9"
+            }
+          ],
+          "on_success": [],
+          "resolution": "save"
+        }
+      ],
+      "targeting": {
+        "shape": "multiple",
+        "domain": "actor",
+        "range_ft": 30,
+        "max_targets": 3,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "enemy",
+          "neutral"
+        ],
+        "requires_line_of_sight": true,
+        "additional_target_slots_per_spell_slot_above_base": 1
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "level": 1,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "interaction": {
+        "intent": "harmful"
+      },
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-warlock"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-0267",
+    "description": "Не более трёх существ по вашему выбору, которых вы видите в пределах дистанции, должны совершить [[спасброски|concept:saving_throw_]] Харизмы. Пока заклинание активно, каждый раз, когда цель, провалившая этот спасбросок, совершает [[бросок атаки|concept:attack_roll]] или спасбросок, она должна бросать 1к4 и вычитать это значение из результата броска атаки или спасброска.",
+    "is_extended": false,
+    "casting_time": "Действие",
+    "save_outcome": null,
+    "concentration": true,
+    "material_text": "капля крови",
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": true,
+    "upcast_description": "Вы можете выбрать целью одно дополнительное существо за каждый уровень ячейки выше первого.",
+    "detailed_description": null
+  },
+  {
+    "id": "9d4916ec-dd84-5ac9-a74b-2d1e730218da",
+    "area": null,
+    "name": "Малое восстановление — Ослеплённый",
+    "type": null,
+    "level": 2,
+    "range": "Касание",
+    "author": "System",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "abjuration",
+    "source": "Catalog spell variants 2026-09-29",
+    "classes": [
+      "бард",
+      "друид",
+      "жрец",
+      "паладин",
+      "следопыт"
+    ],
+    "name_en": "Lesser Restoration",
+    "duration": "Мгновенная",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "op": "remove",
+              "kind": "condition",
+              "value": "blinded"
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 5,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "neutral"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "level": 2,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "variant_of_spell_id": "d659e7f1-458c-4d04-890f-9c60c2265705",
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-druid",
+        "CLASS-paladin",
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-VAR-SPELL-0221-blinded",
+    "description": "Вы касаетесь существа и заканчиваете на нём одно из состояний: [[Ослеплённый|effect:d10dd048-8fb8-4321-8bbe-08dd61dd82a7]], [[Оглохший|effect:5f6ff775-a9a5-4294-acfa-99939288697f]], [[Парализованный|effect:74457eba-0f39-4f6d-90ce-ed84d3b9cda4]] или [[Отравленный|effect:b22482db-5254-4528-b873-ecf41fc13c30]].\n\nВариант: Ослеплённый.",
+    "is_extended": false,
+    "casting_time": "Бонусное действие",
+    "save_outcome": null,
+    "concentration": false,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": false,
+    "upcast_description": null,
+    "detailed_description": null
+  },
+  {
+    "id": "11003ac8-fac2-56c8-aca0-81ac5a8fe890",
+    "area": null,
+    "name": "Малое восстановление — Оглохший",
+    "type": null,
+    "level": 2,
+    "range": "Касание",
+    "author": "System",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "abjuration",
+    "source": "Catalog spell variants 2026-09-29",
+    "classes": [
+      "бард",
+      "друид",
+      "жрец",
+      "паладин",
+      "следопыт"
+    ],
+    "name_en": "Lesser Restoration",
+    "duration": "Мгновенная",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "op": "remove",
+              "kind": "condition",
+              "value": "deafened"
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 5,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "neutral"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "level": 2,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "variant_of_spell_id": "d659e7f1-458c-4d04-890f-9c60c2265705",
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-druid",
+        "CLASS-paladin",
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-VAR-SPELL-0221-deafened",
+    "description": "Вы касаетесь существа и заканчиваете на нём одно из состояний: [[Ослеплённый|effect:d10dd048-8fb8-4321-8bbe-08dd61dd82a7]], [[Оглохший|effect:5f6ff775-a9a5-4294-acfa-99939288697f]], [[Парализованный|effect:74457eba-0f39-4f6d-90ce-ed84d3b9cda4]] или [[Отравленный|effect:b22482db-5254-4528-b873-ecf41fc13c30]].\n\nВариант: Оглохший.",
+    "is_extended": false,
+    "casting_time": "Бонусное действие",
+    "save_outcome": null,
+    "concentration": false,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": false,
+    "upcast_description": null,
+    "detailed_description": null
+  },
+  {
+    "id": "98cd0901-f917-5ced-a67f-5d36a9567737",
+    "area": null,
+    "name": "Малое восстановление — Парализованный",
+    "type": null,
+    "level": 2,
+    "range": "Касание",
+    "author": "System",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "abjuration",
+    "source": "Catalog spell variants 2026-09-29",
+    "classes": [
+      "бард",
+      "друид",
+      "жрец",
+      "паладин",
+      "следопыт"
+    ],
+    "name_en": "Lesser Restoration",
+    "duration": "Мгновенная",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "op": "remove",
+              "kind": "condition",
+              "value": "paralyzed"
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 5,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "neutral"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "level": 2,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "variant_of_spell_id": "d659e7f1-458c-4d04-890f-9c60c2265705",
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-druid",
+        "CLASS-paladin",
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-VAR-SPELL-0221-paralyzed",
+    "description": "Вы касаетесь существа и заканчиваете на нём одно из состояний: [[Ослеплённый|effect:d10dd048-8fb8-4321-8bbe-08dd61dd82a7]], [[Оглохший|effect:5f6ff775-a9a5-4294-acfa-99939288697f]], [[Парализованный|effect:74457eba-0f39-4f6d-90ce-ed84d3b9cda4]] или [[Отравленный|effect:b22482db-5254-4528-b873-ecf41fc13c30]].\n\nВариант: Парализованный.",
+    "is_extended": false,
+    "casting_time": "Бонусное действие",
+    "save_outcome": null,
+    "concentration": false,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": false,
+    "upcast_description": null,
+    "detailed_description": null
+  },
+  {
+    "id": "3617a821-22ac-52c7-af42-bb7dd1e252cc",
+    "area": null,
+    "name": "Малое восстановление — Отравленный",
+    "type": null,
+    "level": 2,
+    "range": "Касание",
+    "author": "System",
+    "damage": [],
+    "rarity": "common",
+    "ritual": false,
+    "school": "abjuration",
+    "source": "Catalog spell variants 2026-09-29",
+    "classes": [
+      "бард",
+      "друид",
+      "жрец",
+      "паладин",
+      "следопыт"
+    ],
+    "name_en": "Lesser Restoration",
+    "duration": "Мгновенная",
+    "heal_dice": null,
+    "mechanics": {
+      "effects": [
+        {
+          "who": "target",
+          "result": [
+            {
+              "op": "remove",
+              "kind": "condition",
+              "value": "poisoned"
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 5,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "neutral"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "level": 2,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "variant_of_spell_id": "d659e7f1-458c-4d04-890f-9c60c2265705",
+      "spell_class_list_ids": [
+        "CLASS-bard",
+        "CLASS-cleric",
+        "CLASS-druid",
+        "CLASS-paladin",
+        "CLASS-ranger"
+      ]
+    },
+    "resources": null,
+    "is_healing": false,
+    "subclasses": null,
+    "card_number": "SPELL-VAR-SPELL-0221-poisoned",
+    "description": "Вы касаетесь существа и заканчиваете на нём одно из состояний: [[Ослеплённый|effect:d10dd048-8fb8-4321-8bbe-08dd61dd82a7]], [[Оглохший|effect:5f6ff775-a9a5-4294-acfa-99939288697f]], [[Парализованный|effect:74457eba-0f39-4f6d-90ce-ed84d3b9cda4]] или [[Отравленный|effect:b22482db-5254-4528-b873-ecf41fc13c30]].\n\nВариант: Отравленный.",
+    "is_extended": false,
+    "casting_time": "Бонусное действие",
+    "save_outcome": null,
+    "concentration": false,
+    "material_text": null,
+    "component_verbal": true,
+    "component_somatic": true,
+    "component_material": false,
+    "upcast_description": null,
+    "detailed_description": null
+  }
+]

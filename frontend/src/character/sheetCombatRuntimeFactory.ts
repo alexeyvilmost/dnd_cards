@@ -359,7 +359,13 @@ async function loadSheetCanonicalParticipant(input: {
     runtime.resources[key] = remaining;
     runtime.maxResources[key] = maximum;
   }
-  for (const key of Object.keys(influenceResources.maxResources).filter(isActionUsesKey)) {
+  // Every declared pool uses the same reconciliation as the visible sheet,
+  // including item/resource grants. The catalog cache may also contain cards
+  // no longer owned; their previous action-use pools become dormant.
+  for (const key of Object.keys(runtime.maxResources).filter(isActionUsesKey)) {
+    if(influenceResources.maxResources[key]===undefined){runtime.resources[key]=0;runtime.maxResources[key]=0;}
+  }
+  for (const key of Object.keys(influenceResources.maxResources)) {
     runtime.resources[key] = influenceResources.resources[key];
     runtime.maxResources[key] = influenceResources.maxResources[key];
   }
@@ -418,10 +424,10 @@ async function loadSheetCanonicalParticipant(input: {
     resourceRecharge: {
       ...buildResourceRecharge(activeClassResources),
       ...collectActionUsesRecharge(assembled, itemCards, inventory.grantedActions),
-      ...collectFreeuseRecharge(ruleState.freeuseSpells),
+      ...collectFreeuseRecharge(ruleState.freeuseSpells,{spells:assembled.spells,resources:runtime.maxResources}),
     },
     resourceRecovery: {
-      ...collectFreeuseRecovery(ruleState.freeuseSpells),
+      ...collectFreeuseRecovery(ruleState.freeuseSpells,{spells:assembled.spells,resources:runtime.maxResources}),
       ...buildResourceRecovery(activeClassResources),
       ...collectActionUsesRecovery(assembled, itemCards, inventory.grantedActions),
     },

@@ -16,3 +16,12 @@ export function shopPriceCopper(card:Card,offers:RoguelikeOffer[],passives:Recor
  return offer?discountedPurchaseCopper(priceInCopper(offer.price,offer.price_currency||'gold'),passives)
   :priceInCopper(purchasePrice(card,passives).payable,card.price_currency||'gold');
 }
+
+/** Printed catalog value, independent of the merchant offer or buying perks. */
+export function itemSaleCopper(card:Card,quantity=1):number|null {
+ if(card.price==null||!Number.isFinite(card.price)||card.price<0||!Number.isSafeInteger(quantity)||quantity<1||quantity>10000)return null;
+ try {
+  const value=card.price*priceInCopper(1,card.price_currency||'gold')*quantity/2;
+  return Number.isFinite(value)&&value<=1e12?Math.floor(value+1e-8):null;
+ }catch{return null;}
+}

@@ -9,6 +9,7 @@
 .cs-action-tile--round > .forge-entity-icon { border-radius: 50%; object-fit: cover; width: 100%; height: 100%; filter: saturate(.35) brightness(.7); }
 .cs-action-tile.cs-action-tile--round.is-selected { border-color: #e2bd70; background: #302416; box-shadow: inset 0 0 0 2px #271c0e, 0 0 9px #d899322d; }
 .cs-action-tile--round.is-selected > .forge-entity-icon { filter: none; }
+.cs-action-tile--round:not([aria-pressed]) > .forge-entity-icon { filter: none; }
 .cs-action-tile.cs-action-tile--round:hover { border-color: #ffe0a0; box-shadow: 0 0 0 2px #b8915044; }
 .cs-action-tile.cs-action-tile--round:focus-visible { outline: 2px solid #ffe0a0; outline-offset: 4px; }
 .cs-action-tile--round .passive-orbit { position: absolute; inset: -2px; border-radius: 50%; pointer-events: none; display: none; }

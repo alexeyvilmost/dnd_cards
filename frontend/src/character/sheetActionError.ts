@@ -1,3 +1,5 @@
+import {resourceLabel} from '../utils/resourcePresentation';
+
 const INCOMPATIBLE_RULESETS = new Set([
   'Atomic participants use incompatible rulesets',
   'Combat participants use incompatible rulesets',
@@ -11,6 +13,31 @@ export function playerFacingSheetActionError(cause: unknown): string {
   if (/character runtime revision (?:is stale|changed during commit)/u.test(detail)
     || /runtime revision changed; rebuild the command from fresh sheets/u.test(detail)) {
     return 'Лист изменился в другой вкладке или во время боя.';
+  }
+  const missingSlot = /^(?:SpellResourceUnavailable:\s*)?No level ([1-9]) slot for .+$/u.exec(detail);
+  if (missingSlot) {
+    return `Нет доступного ресурса «${resourceLabel([], `spell_slot_${missingSlot[1]}`)}».`;
+  }
+  if (/^(?:SpellResourceUnavailable:\s*)?Invalid casting level \d+ for /u.test(detail)) {
+    return 'Выберите допустимый круг заклинания.';
+  }
+  if (/^(?:SpellResourceUnavailable:\s*)?Spell grant .+ has no available free use or slot resource$/u.test(detail)) {
+    return 'Нет бесплатного применения или подходящей ячейки.';
+  }
+  if (/^(?:SpellNotPrepared:\s*)?Spell action .+ but is not prepared$/u.test(detail)) {
+    return 'Заклинание не подготовлено.';
+  }
+  if (/^(?:SpellSourceAmbiguous:\s*)?Spell action .+ has \d+ grants; grantId is required$/u.test(detail)) {
+    return 'Выберите источник заклинания.';
+  }
+  if (/^(?:SpellGrantUnavailable:\s*)?Spell grant .+ has no defined casting access$/u.test(detail)) {
+    return 'Заклинание недоступно из выбранного источника.';
+  }
+  if (/^(?:SpellNormalCastNotAllowed:\s*)?Grant .+ can cast .+ only as a ritual$/u.test(detail)) {
+    return 'Из этого источника заклинание доступно только как ритуал.';
+  }
+  if (/^(?:RitualNotAllowed:\s*)?Grant .+ cannot cast .+ as a ritual$/u.test(detail)) {
+    return 'Из этого источника заклинание недоступно как ритуал.';
   }
   const outOfRange = /^OutOfRange: .* is outside (\d+) ft (?:range|unarmed reach)$/u.exec(detail);
   if (outOfRange) {

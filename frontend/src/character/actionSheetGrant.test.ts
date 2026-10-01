@@ -14,7 +14,7 @@ import {
   type GrantedAction,
 } from './actionSheet';
 import type { AssembledCharacter } from './assemble';
-import type { Action } from '../types';
+import type { Action, Card } from '../types';
 import { executeAction } from '../engine/execute';
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 
@@ -112,6 +112,19 @@ describe('runtime effect library references', () => {
 });
 
 describe('S6 — collectSheetActions fromGranted', () => {
+  it('records the exact item providers of two different grants on mechanics and canonical action refs', () => {
+    const items=[
+      {card:{id:'boots'} as Card,mechanics:{effects:[{kind:'grant_action',value:dashAction.card_number}]}},
+      {card:{id:'cloak'} as Card,mechanics:{effects:[{resolution:'auto',result:[{kind:'grant_action',values:[dashAction.id,triggeredAction.id]}]}]}},
+    ];
+    const grants:GrantedAction[]=[{action:dashAction,sourceLabel:'Boots',group:'item'},
+      {action:triggeredAction,sourceLabel:'Cloak',group:'item'}];
+    const before=JSON.stringify({items,grants});
+    const actions=collectSheetActions(emptyAssembled,items,[],grants).filter(action=>action.id.startsWith('granted-'));
+    expect(actions.map(action=>action.mechanics.requires_any_item_source)).toEqual([['boots','cloak'],['cloak']]);
+    expect(actions.map(action=>action.actionRef?.mechanics?.requires_any_item_source)).toEqual([['boots','cloak'],['cloak']]);
+    expect(JSON.stringify({items,grants})).toBe(before);
+  });
   it('выданное действие появляется как строка листа группы item с экономикой С КАРТЫ действия', () => {
     const granted: GrantedAction[] = [{ action: dashAction, sourceLabel: 'Сапоги скорохода', group: 'item' }];
     const out = collectSheetActions(emptyAssembled, [], [], granted);

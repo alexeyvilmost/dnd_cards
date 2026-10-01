@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { finiteDurationRounds } from './duration';
+import { cappedEffectDuration, finiteDurationRounds } from './duration';
 
 describe('finite effect duration', () => {
   it.each([
@@ -17,5 +17,10 @@ describe('finite effect duration', () => {
     expect(finiteDurationRounds({ type: 'until_long_rest' })).toBeUndefined();
     expect(finiteDurationRounds({ type: 'concentration' })).toBeUndefined();
     expect(finiteDurationRounds(undefined)).toBeUndefined();
+  });
+
+  it.each(['start', 'end'])('retains an explicit %s boundary when capping finite durations', (round_boundary) => {
+    expect(cappedEffectDuration({type: 'rounds', amount: 10, round_boundary}, 3))
+      .toEqual({type: 'rounds', amount: 3, round_boundary, concentration: false});
   });
 });

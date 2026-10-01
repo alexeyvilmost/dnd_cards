@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { CircleDot } from 'lucide-react';
 import { effectsApi } from '../api/client';
 import type { ActiveEffectDisplayGroup } from '../engine/effects';
 import type { PassiveEffect } from '../types';
 import EffectPreview from './EffectPreview';
 import HoverCard from './HoverCard';
+import DialogShell from './DialogShell';
+import './ActiveEffectCard.css';
 
 function entityReference(group: ActiveEffectDisplayGroup) {
   return group.effects.find((effect) => effect.entityRef)?.entityRef ?? null;
@@ -33,40 +36,62 @@ export default function ActiveEffectCard({
   group,
   className = '',
   actions,
+  variant = 'icon',
+  onInspect,
 }: {
   group: ActiveEffectDisplayGroup;
   className?: string;
   actions?: ReactNode;
+  variant?: 'row' | 'icon';
+  onInspect?: (entity: PassiveEffect) => void;
 }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const entity = useActiveEffectEntity(group);
   const icon = entity?.image_url?.trim();
-  const body = (
-    <span className="active-effect-card__body">
+  const previewEntity: PassiveEffect = entity ?? {
+    id: group.key, name: group.name, description: group.instructions.join('\n\n'),
+    mechanics: group.effects[0]?.mechanics, rarity: 'common', card_number: '',
+    effect_type: 'passive', created_at: '', updated_at: '',
+  };
+  const footer = <div className="active-effect-preview__footer">
+    <span>Источник: {group.source ?? 'Не указан'}</span>
+    <span>Длительность: {group.duration}</span>
+  </div>;
+  const bodyContents = <>
       <span className="active-effect-card__icon" aria-hidden="true">
         {icon
           ? <img src={icon} alt="" onError={(event) => { event.currentTarget.src = '/default_image.png'; }} />
           : <CircleDot size={18} />}
       </span>
-      <span className="active-effect-card__summary">
+      {variant === 'row' && <span className="active-effect-card__summary">
         <strong>{group.name}</strong>
         {group.source && <small>Источник: {group.source}</small>}
         <small>Длительность: {group.duration}</small>
         {group.instructions.map((instruction) => <small key={instruction}>{instruction}</small>)}
-      </span>
-    </span>
-  );
+      </span>}
+  </>;
+  const body = variant === 'icon'
+    ? <button type="button" className="active-effect-card__body" aria-label={group.name}
+      aria-haspopup="dialog" onClick={() => onInspect ? onInspect(previewEntity) : setDetailsOpen(true)}>{bodyContents}</button>
+    : <span className="active-effect-card__body" aria-label={group.name}>{bodyContents}</span>;
 
   return (
-    <span className={`active-effect-card ${className}`.trim()}>
-      {entity ? (
+    <span className={`active-effect-card${variant === 'icon' ? ' active-effect-card--icon' : ''} ${className}`.trim()}>
         <HoverCard
           className="active-effect-card__hover"
-          content={<EffectPreview effect={entity} disableHover sourceLabel={group.source ?? 'Активный эффект'} />}
+          disabled={detailsOpen}
+          content={<EffectPreview effect={previewEntity} disableHover footer={footer} />}
         >
           {body}
         </HoverCard>
-      ) : body}
-      {actions && <span className="active-effect-card__actions">{actions}</span>}
+      {variant === 'row' && actions && <span className="active-effect-card__actions">{actions}</span>}
+      {detailsOpen && createPortal(<DialogShell label={group.name} wrap onCancel={() => setDetailsOpen(false)}>
+        <div className="active-effect-details">
+          <EffectPreview effect={previewEntity} disableHover footer={footer} />
+          {actions && <div className="active-effect-details__actions">{actions}</div>}
+          <button type="button" className="forge-btn ghost" onClick={() => setDetailsOpen(false)}>Закрыть</button>
+        </div>
+      </DialogShell>, document.body)}
     </span>
   );
 }

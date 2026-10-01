@@ -160,11 +160,11 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
         <p className="forge-note">Нет активных состояний и эффектов.</p>
       )}
       {effectGroups.length > 0 && (
-        <ul className="sheet-conditions">
+        <ul className="sheet-conditions sheet-conditions--icons">
           {effectGroups.map((group) => {
             return (
               <li key={group.key} className="sheet-condition">
-                <ActiveEffectCard group={group} actions={<button
+                <ActiveEffectCard group={group} variant="icon" actions={<button
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={busy || Boolean(mutationBlockReason)}

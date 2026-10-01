@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { optionsForChoice } from './components';
+import {featForChoiceOption} from './components';
+import type {Feat} from '../types';
 import { WEAPON_TYPE_PROFICIENCY_CATEGORY } from '../mechanics/registries';
 
 const origin: PendingChoice['origin'] = {
@@ -21,6 +23,14 @@ function abilityChoice(overrides: Partial<PendingChoice> = {}): PendingChoice {
 }
 
 describe('optionsForChoice explicit option domains', () => {
+  it('joins distinct explicit feat payload references without rewriting their picker ids', () => {
+    const feats=[{id:'one',card_number:'FEAT-one',name:'One',category:'general'}, {id:'two',card_number:'FEAT-two',name:'Two',category:'fighting_style'}] as Feat[];
+    const choice=abilityChoice({source:'feat',items:[{id:'option-a',name:'A',value:'FEAT-one'},{id:'option-b',name:'B',grants:[{kind:'grant_feat',value:'two'}]}]});
+    expect(optionsForChoice(choice,feats).map(option=>option.id)).toEqual(['option-a','option-b']);
+    expect(featForChoiceOption(choice,'option-a',feats)).toBe(feats[0]);
+    expect(featForChoiceOption(choice,'option-b',feats)).toBe(feats[1]);
+    expect(featForChoiceOption(choice,'missing',feats)).toBeUndefined();
+  });
   it('uses an entity-declared ability subset instead of expanding the global registry', () => {
     expect(optionsForChoice(abilityChoice({
       items: [

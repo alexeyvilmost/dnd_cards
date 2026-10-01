@@ -1,6 +1,7 @@
 import {useEffect, useState} from 'react';
 import {classesApi, racesApi} from '../api/client';
 import type {ForgeCharacter} from '../character/types';
+import {withoutLegacyRunSuffix} from '../character/familiarLabels';
 
 /** Catalog names, never inferred from preset IDs or personal character names. */
 export default function RunCharacterIdentity({character, name = character.name}: {
@@ -30,6 +31,6 @@ export default function RunCharacterIdentity({character, name = character.name}:
   }, [classKey, character.level]);
   return <span className="run-character-identity">
     {character.avatar_url && <img src={character.avatar_url} alt="" loading="lazy" />}
-    <span className="run-character-description"><strong>{name}</strong><span aria-hidden="true"> | </span><span>{race}</span><span aria-hidden="true"> | </span><span>{classes}</span></span>
+    <span className="run-character-description"><strong>{withoutLegacyRunSuffix(name)}</strong><span aria-hidden="true"> | </span><span>{race}</span><span aria-hidden="true"> | </span><span>{classes}</span></span>
   </span>;
 }

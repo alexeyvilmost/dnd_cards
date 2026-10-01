@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { equipItem, planEquip, totalWeight } from './equipment';
+import { equipItem, planEquip, totalWeight,unequipSlot } from './equipment';
 import { computeAC } from './ac';
 import { weaponContext } from './weapon';
 import { clearCardRegistry } from './cardRegistry';
@@ -13,6 +13,11 @@ import type { Card } from '../types';
 beforeEach(() => clearCardRegistry());
 
 describe('equipment', () => {
+  it('removes body armor without disturbing a two-handed weapon',()=>{
+    const state=freshFighterState();state.equipment={...state.equipment,body:CARD_CHAIN_MAIL.id,main_hand:CARD_GREATAXE.id,off_hand:CARD_GREATAXE.id};
+    const armorOff=unequipSlot(state,'body');expect(armorOff.equipment.body).toBeNull();expect(armorOff.equipment.main_hand).toBe(CARD_GREATAXE.id);expect(armorOff.equipment.off_hand).toBe(CARD_GREATAXE.id);
+    const weaponOff=unequipSlot(state,'off_hand');expect(weaponOff.equipment.main_hand).toBeNull();expect(weaponOff.equipment.off_hand).toBeNull();expect(weaponOff.equipment.body).toBe(CARD_CHAIN_MAIL.id);
+  });
   it('equips sword and shield', () => {
     let { state } = equipItem(freshFighterState(), CARD_LONGSWORD);
     ({ state } = equipItem(state, CARD_SHIELD));

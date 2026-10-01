@@ -211,6 +211,10 @@ export function compileMechanicsTargeting(mechanics: JsonObject): ActionTargetin
   const rangeFt = targeting.range_ft === undefined
     ? legacyRangeFt(targeting)
     : finiteNonNegative(targeting.range_ft, 'targeting.range_ft');
+  if (targeting.range_from_triggering_attack !== undefined
+    && (targeting.range_from_triggering_attack !== true || !actorTargets || area || self || minTargets !== 1 || maxTargets !== 1)) {
+    throw new ActionTargetingDefinitionError('targeting.range_from_triggering_attack requires one actor target');
+  }
   const requiresLineOfSight = targeting.requires_line_of_sight === undefined
     ? !self
     : targeting.requires_line_of_sight;

@@ -4,6 +4,7 @@
     "name": "Встать",
     "description": "Окончить состояние, предоставившее это действие. Стоимость — половина текущей скорости (округляется вниз), а не половина оставшегося перемещения. При скорости 0 действие недоступно.",
     "movementFraction": 0.5,
+    "decisionPolicies": ["turn-start.auto-stand"],
     "effects": [{"resolution": "auto", "result": [{"kind": "condition", "value": "$granting_condition", "op": "remove"}]}]
   }
 }

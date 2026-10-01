@@ -10,7 +10,7 @@ import { hasWeaponBondPolicy } from '../rules-core/weaponBond';
 import { readWeaponBondObjects } from '../character/weaponBondPersistence';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
 import { roguelikeApi } from '../roguelike/api';
-import { activeRunId, notifyRunUpdated,runCharacter } from '../roguelike/navigation';
+import { activeRunId, notifyRunUpdated,runCharacter,runCombatURL } from '../roguelike/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePinMode } from '../hooks/usePinMode';
 import { Sparkles } from 'lucide-react';
@@ -112,6 +112,7 @@ function CharacterEquipmentPanel({
   const weaponBonds = readWeaponBondObjects(character.turn_state, character.id);
   const canBindWeapons = character.character_type === 'dungeon_crawl' && hasWeaponBondPolicy(passives);
   const [error, setError] = useState<string | null>(null);
+  const [combatRedirect,setCombatRedirect]=useState<string|null>(null);
   const { entityDisplay, itemPreview } = useSiteSettings();
   const [hoveredItem, setHoveredItem] = useState<Card | null>(null);
   const [itemMouse, setItemMouse] = useState({ x: 0, y: 0 });
@@ -152,6 +153,7 @@ function CharacterEquipmentPanel({
     disabled: readOnly || otherBusy,
     prepare: async (operation) => {
       const runId = activeRunId();
+      if(runId){const run=await roguelikeApi.get(runId);if(run.phase==='combat'){setCombatRedirect(runCombatURL(run));throw Error('Изменение экипировки в листе доступно после завершения боя. Вернитесь на поле боя.');}}
       const participant = await loadSheetCombatParticipant({ character, cards: cardMap });
       const request = prepareSheetEquipmentCommand(participant, newSheetRuntimeCommandId(), operation, Math.random).request;
       return runId ? { ...request, roguelike_run_id: runId, roguelike_intent: 'camp' } : request;
@@ -464,6 +466,7 @@ function CharacterEquipmentPanel({
   const body = (
     <>
       {(error || equipmentSave.error) && <p className="issues">{error || equipmentSave.error}</p>}
+      {combatRedirect&&<a href={combatRedirect}>Вернуться в бой</a>}
       {pendingEquipment&&<p className="issues">Изменение экипировки ожидает подтверждения. <button type="button" disabled={busy||readOnly} onClick={()=>void commitEquipment()}>Повторить сохранение</button></p>}
 
       <div className="sheet-equip-topbar">

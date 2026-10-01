@@ -15,6 +15,8 @@ import { stepRoguelikeCombat, type RoguelikeCombatEnvelope } from '../roguelike/
 import compiledFixtureJson from '../pages/rulesLabFixture.generated.json';
 import itemTriggerPatches from '../../../scripts/content/data/item-triggers-20260929.json';
 import fightingStyleDefinitions from '../../../scripts/content/data/mini-mvp-complex-fighting-styles.v1.json';
+import combatSpellRepairs from '../../../scripts/content/data/combat-spell-repairs-20260930.json';
+import {compileDeclaredMechanicsTargeting} from '../rules-core/actionTargeting';
 import { createWorld, type ActorState, type RuleActionDefinition, type RulesCatalog, type RulesetReference } from '../rules-core/domain';
 import { CARD_LONGSWORD, CARD_SHIELD } from '../mvp/fixtures';
 import type { SheetCanonicalRuntime } from '../character/sheetCanonicalWorld';
@@ -5741,5 +5743,126 @@ describe('Nimble Escape monster controller', () => {
       state = executeCombatAction({state, actorId: test.enemy, actionId: kind === 'melee' ? scimitar().id : test.bow.id, targetIds: [test.hero], rng: () => critical ? 0.99 : 0.7});
       expect(start - state.world.actors[test.hero].runtime.hp.current).toBe((critical ? 14 : 7) + (advantage && !cancelled ? (critical ? 8 : 3) : 0));
     }
+  });
+});
+
+describe('saved opportunity spell level declarations',()=>{
+  it.each([
+    {event:'opportunity_attack' as const,id:'renamed-slot-reaction',castLevel:3,freeUse:false,damageType:'cold'},
+    {event:'reach_entry' as const,id:'independent-innate-reaction',castLevel:1,freeUse:true,damageType:'force'},
+  ])('preserves chosen level and payment for $event / $id after reload',async data=>{
+    const participant=wizardSeed();
+    let state=await createSoloCombatState({character:participant.character,participant,
+      selected:[{monster:{...goblin(),max_hp:200},quantity:1}],actions:[scimitar()],effects:[],rng:()=>.5});
+    const actor=state.world.actors[participant.character.id];
+    const target=Object.values(state.world.actors).find(candidate=>candidate.kind==='monster')!;
+    state.tokens[actor.id].position={x:4,y:4};state.tokens[target.id].position={x:5,y:4};
+    const spell:RuleActionDefinition={id:data.id,name:'Reaction from entity data',kind:'spell',spell:{level:1},sourceEntityIds:[data.id],
+      targeting:{minTargets:1,maxTargets:1,rangeFt:30,requiresLineOfSight:true,allowedRelations:['enemy']},
+      mechanics:{activation:{mode:'reaction',trigger:{events:[data.event]},cost:[{resource:'reaction'}]},
+        effects:[{resolution:'auto',who:'target',result:[{kind:'damage',dice:'1d6',type:data.damageType,
+          scaling:{dice:'1d6',per:'spell_slot_above'}}]}]}};
+    actor.capabilities.actionIds.push(spell.id);state.catalogActions.push(spell);
+    actor.spellcastingAccess??={grants:[],preparedSources:{}};
+    actor.spellcastingAccess.grants.push({grantId:data.id+':grant',actionId:spell.id,sourceId:'independent-source',
+      access:'always_prepared',level:1,spellcastingAbility:'int',slotResource:'spell_slot_1',
+      ...(data.freeUse?{freeUseResource:'reaction_free'}:{})});
+    actor.runtime.resources={...actor.runtime.resources,reaction:1,spell_slot_1:1,spell_slot_3:1,reaction_free:data.freeUse?1:0};
+    actor.runtime.maxResources={...actor.runtime.maxResources,reaction:1,spell_slot_1:1,spell_slot_3:1,reaction_free:1};
+    state.pendingTriggeredAction={event:data.event,sourceActorId:actor.id,sourceActionId:spell.id,targetIds:[target.id],optionActionIds:[spell.id]};
+    const restored=readSoloCombatState(writeSoloCombatState({},state),state.characterId,state.runtimeRevision)!;
+    const before=JSON.stringify(restored),hp=restored.world.actors[target.id].runtime.hp.current;
+    const next=autoResolveSystemDecisions(resolveTriggeredCombatAction(restored,spell.id,()=>.5,{spell_cast_level:[String(data.castLevel)]}),()=>.5);
+    expect(next.world.actors[target.id].runtime.hp.current).toBe(hp-data.castLevel*4);
+    expect(next.world.actors[actor.id].runtime.resources).toMatchObject({reaction:0,spell_slot_1:1,
+      spell_slot_3:data.freeUse?1:0,reaction_free:0});
+    const declaration=next.log.flatMap(entry=>entry.records??[]).find(record=>record.kind==='action'&&record.actionId===spell.id);
+    expect(declaration?.spell).toEqual({baseLevel:1,castLevel:data.castLevel});
+    expect(next.pendingTriggeredAction).toBeUndefined();
+    expect(JSON.stringify(restored)).toBe(before);
+    expect(()=>resolveTriggeredCombatAction(next,spell.id,()=>.5,{spell_cast_level:[String(data.castLevel)]})).toThrow(/Нет ожидающей/);
+  });
+});
+
+describe('post-hit spells retain target, reach and spell payment',()=>{
+  async function setup(cardNumber:string,reachFt=10,freeUse=false) {
+    let participant=wizardSeed();
+    const reviewed=combatSpellRepairs.find(row=>row.card_number===cardNumber)!;
+    const attack:RuleActionDefinition={id:'test:reach-attack',name:'Атака заданной досягаемости',kind:'nonSpell',sourceEntityIds:['test:reach-attack'],
+      targeting:{minTargets:1,maxTargets:1,rangeFt:reachFt,requiresLineOfSight:true,allowedRelations:['ally','enemy']},
+      mechanics:{activation:{mode:'active',cost:[{resource:'action',amount:1}]},
+        targeting:{domain:'actor',actor_targets:true,shape:'single',min_targets:1,max_targets:1,range_ft:reachFt,requires_line_of_sight:true,allowed_relations:['ally','enemy']},
+        effects:[{resolution:'attack_roll',ability:'str',attack_kind:'weapon_melee',vs:'ac',attack_bonus_override:20,on_hit:[{kind:'damage',amount:1,type:'slashing'}]}]}};
+    const mechanics=clone(reviewed.mechanics) as Record<string,unknown>;
+    const rider:RuleActionDefinition={id:reviewed.id,name:reviewed.name,kind:'spell',sourceEntityIds:[reviewed.id],
+      spell:{level:1,sourceClass:'CLASS-paladin'},mechanics,targeting:compileDeclaredMechanicsTargeting(mechanics)};
+    const actor=participant.canonical.world.actors[participant.character.id];
+    actor.capabilities.actionIds.push(attack.id,rider.id);
+    for(const [resource,amount] of Object.entries({action:1,bonus_action:1,spell_slot_1:freeUse?0:1,spell_slot_3:freeUse?0:1,'test:smite-free':freeUse?1:0})) {
+      actor.runtime.resources[resource]=amount;actor.runtime.maxResources[resource]=amount;
+    }
+    actor.spellcastingAccess??={grants:[],preparedSources:{}};
+    actor.spellcastingAccess.grants.push({grantId:'test:hit-rider',actionId:rider.id,sourceId:'CLASS-paladin',access:'known',level:1,
+      spellcastingAbility:'int',slotResource:'spell_slot_1',...(freeUse?{freeUseResource:'test:smite-free'}:{})});
+    participant.character.resources=clone(actor.runtime.resources);participant.character.max_resources=clone(actor.runtime.maxResources);
+    const actions=[...participant.canonical.actions,attack,rider],byId=new Map(actions.map(action=>[action.id,action]));
+    participant={...participant,canonical:{...participant.canonical,actions,catalog:{getAction:id=>byId.get(id),listActions:()=>actions}}};
+    let state=await createSoloCombatState({character:participant.character,participant,
+      selected:[{monster:{...goblin(),max_hp:200},quantity:2}],actions:[scimitar()],effects:[],rng:()=>.5});
+    const [target,other]=Object.values(state.world.actors).filter(actor=>actor.kind==='monster');
+    state.tokens[actor.id].position={x:2,y:2};state.tokens[target.id].position={x:2+reachFt/5,y:2};state.tokens[other.id].position={x:10,y:8};
+    state=autoResolveSystemDecisions(executeCombatAction({state,actorId:actor.id,actionId:attack.id,targetIds:[target.id],rng:()=>.6}),()=>.6);
+    expect(state.pendingTriggeredAction?.optionActionIds).toContain(rider.id);
+    expect(state.pendingTriggeredAction?.triggeringAttack).toMatchObject({targetActorId:target.id,meleeReachFt:reachFt,critical:false});
+    return {state,actorId:actor.id,targetId:target.id,otherId:other.id,rider};
+  }
+
+  it.each([10,15])('casts Divine Smite at %ift after reload, upcasts and adds fiend damage from target data',async reach=>{
+    const test=await setup('SPELL-0164',reach);
+    test.state.world.actors[test.targetId].character.creatureType='fiend';
+    const saved=clone(test.state),hp=saved.world.actors[test.targetId].runtime.hp.current;
+    const next=autoResolveSystemDecisions(resolveTriggeredCombatAction(saved,test.rider.id,()=>.5,{spell_cast_level:['3']}),()=>.5);
+    expect(next.pendingTriggeredAction).toBeUndefined();expect(next.world.pendingResolution).toBeNull();
+    expect(next.world.actors[test.actorId].runtime.resources).toMatchObject({bonus_action:0,spell_slot_1:1,spell_slot_3:0});
+    expect(next.world.actors[test.targetId].runtime.hp.current).toBe(hp-25);
+    expect(next.world.actors[test.otherId].runtime.hp.current).toBe(saved.world.actors[test.otherId].runtime.hp.current);
+    expect(saved).toEqual(test.state);
+    expect(()=>resolveTriggeredCombatAction(next,test.rider.id,()=>.5)).toThrow(/Нет ожидающей/);
+  });
+
+  it('keeps Searing damage and its burning condition on the hit creature at captured reach',async()=>{
+    const test=await setup('SPELL-0254',15),hp=test.state.world.actors[test.targetId].runtime.hp.current;
+    const next=autoResolveSystemDecisions(resolveTriggeredCombatAction(clone(test.state),test.rider.id,()=>.5,{spell_cast_level:['3']}),()=>.5);
+    expect(next.world.actors[test.targetId].runtime.hp.current).toBe(hp-12);
+    expect(next.world.actors[test.targetId].runtime.activeEffects.some(effect=>(effect.mechanics as Record<string,unknown>).stack_id==='spell:searing-smite:burning')).toBe(true);
+    expect(next.world.actors[test.actorId].runtime.resources).toMatchObject({bonus_action:0,spell_slot_3:0});
+  });
+
+  it('spends one free use with the bonus action and rejects target changes without spending',async()=>{
+    const test=await setup('SPELL-0164',10,true),saved=clone(test.state);
+    expect(()=>resolveTriggeredCombatAction(test.state,test.rider.id,()=>.5,undefined,[test.otherId])).toThrow(/не позволяет менять/);
+    expect(test.state).toEqual(saved);
+    const declined=resolveTriggeredCombatAction(test.state,null);
+    expect(declined.world.actors[test.actorId].runtime.resources).toEqual(saved.world.actors[test.actorId].runtime.resources);
+    const next=autoResolveSystemDecisions(resolveTriggeredCombatAction(clone(saved),test.rider.id,()=>.5,{spell_cast_level:['1']}),()=>.5);
+    expect(next.world.actors[test.actorId].runtime.resources).toMatchObject({bonus_action:0,'test:smite-free':0,spell_slot_1:0,spell_slot_3:0});
+    expect(next.world.actors[test.targetId].runtime.hp.current).toBeLessThan(saved.world.actors[test.targetId].runtime.hp.current);
+  });
+
+  it('retains Thunderous Smite target and reach through its save continuation with damage on either save outcome',async()=>{
+    const test=await setup('SPELL-0186',15),hp=test.state.world.actors[test.targetId].runtime.hp.current;
+    const waiting=resolveTriggeredCombatAction(clone(test.state),test.rider.id,()=>.5,{spell_cast_level:['1']});
+    expect(waiting.world.pendingResolution).toMatchObject({type:'target_save',sourceActorId:test.actorId,targetActorId:test.targetId,
+      facts:{distanceFt:15},triggeringAttack:{targetActorId:test.targetId,meleeReachFt:15}});
+    expect(waiting.world.actors[test.actorId].runtime.resources).toMatchObject({bonus_action:0,spell_slot_1:0});
+    const success=autoResolveSystemDecisions(clone(waiting),()=>.99);
+    expect(success.world.pendingResolution).toBeNull();
+    expect(success.world.actors[test.targetId].runtime.hp.current).toBeLessThan(hp);
+    expect(success.world.actors[test.targetId].runtime.activeEffects.some(effect=>effect.mechanics.value==='prone')).toBe(false);
+    expect(success.world.actors[test.otherId].runtime.hp).toEqual(test.state.world.actors[test.otherId].runtime.hp);
+    const failure=autoResolveSystemDecisions(clone(waiting),()=>0);
+    expect(failure.world.actors[test.targetId].runtime.hp.current).toBeLessThan(hp);
+    expect(failure.world.actors[test.targetId].runtime.activeEffects.some(effect=>effect.mechanics.value==='prone')).toBe(true);
+    expect(failure.world.actors[test.actorId].runtime.resources).toMatchObject({bonus_action:0,spell_slot_1:0});
   });
 });

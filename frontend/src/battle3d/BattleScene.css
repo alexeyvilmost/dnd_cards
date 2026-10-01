@@ -26,11 +26,15 @@
 .battle-scene-3d__label.is-expanded .battle-scene-3d__health{display:block;width:100%}
 .battle-scene-3d__label.is-active .battle-scene-3d__name{color:#e2f4ff;background:#203a4cdd}
 .battle-scene-3d__label.is-fallen{opacity:.6}
-.battle-scene-3d__cue{max-width:170px;min-width:70px;margin-bottom:5px;padding:3px 7px;text-align:center;font-size:12px;font-weight:750;line-height:1.2;color:#ffe8b4;background:#251e1be8;border:1px solid #e7bf6655;border-radius:6px;box-shadow:0 2px 8px #0005;animation:battle-3d-cue .2s ease-out}
+.battle-scene-3d__cue{max-width:170px;min-width:70px;margin-bottom:5px;padding:1px 3px;text-align:center;font-size:12px;font-weight:750;line-height:1.2;color:#ffe8b4;background:transparent;border:0;border-radius:0;box-shadow:none;-webkit-text-stroke:.65px #000;paint-order:stroke fill;text-shadow:-1px 0 #000,1px 0 #000,0 -1px #000,0 1px #000;animation:battle-3d-cue .2s ease-out}
+.battle-scene-3d__movement-choice{position:absolute;top:8px;left:8px;z-index:8;display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;color:#eedcbd;background:#1e1915ec;font-size:12px}.battle-scene-3d__movement-choice button{padding:5px 8px;border:1px solid #806744;border-radius:6px;background:#31271e;color:inherit}
 .battle-scene-3d__help{flex-shrink:0;margin:0;padding:7px 12px;text-align:center;font-size:10px;line-height:1.4;color:#b9aa8f;background:linear-gradient(90deg,#2c261e,#202426);border-top:1px solid #d5b98324}
 .battle-scene-3d:focus-visible{outline:2px solid #ffe29b;outline-offset:-2px}
 .battle-map-3d-loading{display:grid;place-items:center;flex:1;min-height:200px;color:#d8c39a;background:#1c2029;border-radius:14px;font-size:13px}
 .battle-map-3d-fallback{margin:0;padding:7px 10px;color:#ead4a8;background:#342b20;border:1px solid #a9894f66;border-radius:8px;font-size:12px;z-index:9;position:relative}
-@keyframes battle-3d-cue{from{opacity:0;translate:0 4px}to{opacity:1;translate:0 0}}
+.battle-scene-3d__cue{animation:battle-3d-cue 1.8s ease-out both}
+@keyframes battle-3d-cue{0%{opacity:0;translate:0 4px}12%,65%{opacity:1}100%{opacity:0;translate:0 -30px}}
+@media(prefers-reduced-motion:reduce){.battle-scene-3d__cue{animation-name:battle-3d-cue-still}}
+@keyframes battle-3d-cue-still{0%,100%{opacity:0}10%,90%{opacity:1}}
 @media(max-width:640px){.battle-scene-3d__viewport{height:clamp(300px,56vh,550px);min-height:160px}.battle-scene-3d__name{font-size:9px;max-width:90px}.battle-scene-3d__toolbar{gap:4px;padding:5px 7px}.battle-scene-3d__help{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.battle-scene-3d__cue{animation:none}}

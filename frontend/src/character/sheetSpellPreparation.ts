@@ -1,6 +1,7 @@
 import type { AssembledCharacter } from './assemble';
 import type { ForgeCharacter } from './types';
 import type { PendingChoice } from '../mechanics/collectChoices';
+import { spellCanBeAcquired } from './spellChoices';
 
 export const SHEET_SPELL_PREPARATION_KEY = 'sheet_spell_preparation_v1' as const;
 export const SHEET_SPELL_PREPARATION_VERSION = 1 as const;
@@ -79,12 +80,15 @@ export function collectLongRestPreparationChoices(input: {
         const spell = input.assembled.spells.find((candidate) => (
           candidate.id === reference || candidate.card_number === reference
         ));
-        return spell ? [{ id: reference, name: spell.name, previewSpell: spell }] : [];
+        return spell && spellCanBeAcquired(spell)
+          ? [{ id: reference, name: spell.name, previewSpell: spell }] : [];
       });
+      const allowedOptionIds = items.map((item) => item.id);
       return {
         ...choice,
         context: 'in_play',
-        recommended: preparedSpellSelection(input.character, choice),
+        allowedOptionIds,
+        recommended: preparedSpellSelection(input.character, choice).filter((reference) => allowedOptionIds.includes(reference)),
         items,
       };
     });

@@ -14,11 +14,15 @@ export default function DialogShell({
   label,
   onCancel,
   wrap = false,
+  className = '',
+  initialFocus = 'first',
 }: {
   children: ReactNode;
   label: string;
   onCancel: () => void;
   wrap?: boolean;
+  className?: string;
+  initialFocus?: 'first' | 'dialog';
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
@@ -29,7 +33,7 @@ export default function DialogShell({
     previousFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = dialogRef.current;
     const focusables = dialog ? [...dialog.querySelectorAll<HTMLElement>(FOCUSABLE)] : [];
-    (focusables[0] ?? dialog)?.focus();
+    (initialFocus === 'dialog' ? dialog : focusables[0] ?? dialog)?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -57,12 +61,12 @@ export default function DialogShell({
       document.removeEventListener('keydown', onKeyDown);
       previousFocus.current?.focus();
     };
-  }, []);
+  }, [initialFocus]);
 
   const dialog = (
     <div
       ref={dialogRef}
-      className="dice-dialog"
+      className={`dice-dialog${className ? ` ${className}` : ''}`}
       role="dialog"
       aria-modal="true"
       aria-label={label}

@@ -7,6 +7,7 @@ import {actorFootprint, footprintDistanceFt} from './footprint';
 import type {
   ActionWorldInput,
   RuleActionDefinition,
+  ActorRuntimePatch,
   RuleHazardDefinition,
   SpatialFacts,
   WorldState,
@@ -96,6 +97,9 @@ export interface CombatLogEventRecord {
   actorId: string;
   targetIds: string[];
   event?: EngineEvent;
+  /** Exact committed vitality/effect checkpoints for live presentation. Older
+   * artifacts omit them; their immutable history remains readable as before. */
+  runtimePatch?: Pick<ActorRuntimePatch, 'hp' | 'deathSaves' | 'activeEffects'>;
   facts?: Record<string, unknown>;
   /** Presentation provenance projected from the committed declaration. */
   actionId?: string;

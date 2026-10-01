@@ -64,6 +64,18 @@ func validateCharacterEvent(eventType string, payload JSONMap) error {
 	}
 
 	switch payloadType {
+	case "domain_event":
+		if err := exactKeys(normalized, "payload", []string{"type", "ownerActorId", "event"}, []string{"targetActorId"}); err != nil {
+			return err
+		}
+		if _, err := requiredString(normalized, "ownerActorId", "payload.ownerActorId", false); err != nil {
+			return err
+		}
+		if err := optionalString(normalized, "targetActorId", "payload.targetActorId", false); err != nil {
+			return err
+		}
+		return validateCharacterDomainEvent(normalized["event"])
+
 	case "roll":
 		if err := exactKeys(normalized, "payload", []string{"type", "label", "roll"}, nil); err != nil {
 			return err
@@ -267,6 +279,42 @@ func validateCharacterEvent(eventType string, payload JSONMap) error {
 	default:
 		return invalidCharacterEvent("payload.type", "is not a supported EngineEvent type")
 	}
+}
+
+// The canonical engine records trigger observations alongside visible healing
+// and damage. Retain those observations verbatim; the journal never executes
+// them or derives a second runtime patch from their data.
+func validateCharacterDomainEvent(raw any) error {
+	event, ok := raw.(map[string]any)
+	if !ok || event == nil {
+		return invalidCharacterEvent("payload.event", "must be a JSON object")
+	}
+	if err := exactKeys(event, "payload.event", []string{"kind"}, []string{"timing", "source", "target", "data"}); err != nil {
+		return err
+	}
+	if _, err := requiredString(event, "kind", "payload.event.kind", false); err != nil {
+		return err
+	}
+	if _, exists := event["timing"]; exists {
+		timing, err := requiredString(event, "timing", "payload.event.timing", false)
+		if err != nil {
+			return err
+		}
+		if !oneOf(timing, "before", "during", "after", "replaces") {
+			return invalidCharacterEvent("payload.event.timing", "is unsupported")
+		}
+	}
+	for _, key := range []string{"source", "target"} {
+		if err := optionalString(event, key, "payload.event."+key, false); err != nil {
+			return err
+		}
+	}
+	if data, exists := event["data"]; exists {
+		if object, ok := data.(map[string]any); !ok || object == nil {
+			return invalidCharacterEvent("payload.event.data", "must be a JSON object")
+		}
+	}
+	return nil
 }
 
 func validateOptionalRollAndSource(payload map[string]any) error {

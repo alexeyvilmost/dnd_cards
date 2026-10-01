@@ -6,7 +6,10 @@ import SheetPassiveToggle from './SheetPassiveToggle';
 import { combatActorDisplayName } from '../character/familiarLabels';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import { useEffect, useMemo, useState } from 'react';
-import { Footprints, MoreHorizontal, Sparkles, Swords, Unlink } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Backpack, Footprints, MoreHorizontal, Sparkles, Unlink, X } from 'lucide-react';
+import DialogShell from './DialogShell';
+import './CombatHotbar.css';
 import {conditionGrantedActions} from '../engine/conditionActions';
 import {grantedActionPresentation} from '../character/actionPresentation';
 import {useSiteSettings} from '../settings';
@@ -28,9 +31,9 @@ import { parseActivationLevelRequirement } from '../rules-core/activationRequire
 import { parseActivationCastTime } from '../rules-core/activationCastTime';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
 import { playerActionIdsFor, type SoloCombatState } from '../solo-combat/types';
-import { canEscapeActorGrapple, canUseConditionAction, isTriggeredCombatAction } from '../solo-combat/engine';
+import { canEscapeActorGrapple, canUseConditionAction } from '../solo-combat/engine';
 import { combatActorMovementMode, effectiveCombatActorSpeedFt } from '../solo-combat/tacticalGrid';
-import { actionCostResourceIds, findResource, resourceLabel as sharedResourceLabel, useResourceOptions } from '../utils/resources';
+import { actionCostResourceIds, findResource, resourceLabel as sharedResourceLabel, useResourceOptions, type ResourceOption } from '../utils/resources';
 import SheetActionLine from './SheetActionLine';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import SheetResourceTile, { sheetResourceTileOrder } from './SheetResourceTile';
@@ -43,6 +46,19 @@ import {
   ownsGeneralFeatCapability,
 } from '../rules-core/generalFeatDamageRuntime';
 import { LIGHT_WEAPON_EXTRA_ATTACK_PRIMITIVE } from '../rules-core/weaponActionPolicies';
+import HoverCard from './HoverCard';
+import EffectPreview from './EffectPreview';
+import type {PassiveEffect} from '../types';
+import {
+  COMBAT_HOTBAR_GROUPS, combatFreeuseActionIds, combatHotbarActionGroup, combatHotbarActionHasSource,
+  combatHotbarResourceKeys, filterCombatActionsByResource, isCombatHotbarAction,
+} from '../solo-combat/hotbarActions';
+export { combatHotbarResourceKeys, filterCombatActionsByResource, isCombatHotbarAction } from '../solo-combat/hotbarActions';
+
+function utilityPreview(name: string, description: string): PassiveEffect {
+  return {id: `combat-control:${name}`, name, description, rarity: 'common', card_number: '',
+    effect_type: 'passive', created_at: '', updated_at: ''};
+}
 
 function resourceLabel(resource: string): string {
   if (resource === 'spell_slot') return 'Ячейка';
@@ -61,51 +77,29 @@ function actionLabel(action: RuleActionDefinition): string {
   return primitive?.type === 'weapon_attack' ? 'Атака' : action.name;
 }
 
-export function combatHotbarResourceKeys(
-  actions: RuleActionDefinition[],
-  maxResources: Record<string, number>,
-): string[] {
-  const declaredCosts = new Set(actions.flatMap(actionCostResourceIds));
-  return Object.entries(maxResources).flatMap(([key, maximum]) => (
-    maximum > 0 && !isFreeusePoolKey(key) && !key.startsWith('uses_') && (
-      ['action', 'bonus_action', 'reaction'].includes(key)
-      || ['action_surge_action', 'quickened_spell_action'].includes(key)
-      || /^(?:spell_slot|pact_slot|warlock_spell_slot)_\d+$/u.test(key)
-      || declaredCosts.has(key)
-    ) ? [key] : []
-  ));
+const TURN_RESOURCE_IDS = new Set(['action', 'bonus_action', 'reaction']);
+
+/** Bound costs carry the exact owner of an ability-use pool; labels never decide rules. */
+export function combatResourceOption(state: SoloCombatState, key: string, options: ResourceOption[]): ResourceOption | undefined {
+  const registered = findResource(options, key);
+  if (registered || !key.startsWith('uses_')) return registered;
+  const action = state.catalogActions.find(candidate => actionCostResourceIds(candidate).includes(key));
+  const presentation = action ? state.actionPresentation?.[action.id] : undefined;
+  return {id: key, label: action ? `Заряды: ${action.name}` : sharedResourceLabel(options, key),
+    imageUrl: presentation?.imageUrl ?? undefined, description: presentation?.description};
 }
 
 export function combatHpLabel(hp: { current: number; max: number; temp: number }): string {
   return `HP ${hp.current}/${hp.max}${hp.temp > 0 ? ` · Врем. HP +${hp.temp}` : ''}`;
 }
 
-export function filterCombatActionsByResource(
-  actions: RuleActionDefinition[],
-  selectedResourceId: string | null,
-  freeuseActionIds: ReadonlySet<string>,
-): RuleActionDefinition[] {
-  if (!selectedResourceId) return actions;
-  if (selectedResourceId === FREEUSE_SHOWCASE_KEY) {
-    return actions.filter((action) => freeuseActionIds.has(action.id));
-  }
-  if (selectedResourceId === 'action_surge_action') {
-    return actions.filter((action) => (
-      action.kind !== 'spell' && actionCostResourceIds(action).includes('action')
-    ));
-  }
-  if (selectedResourceId === 'quickened_spell_action') {
-    return actions.filter((action) => (
-      action.kind === 'spell' && actionCostResourceIds(action).includes('action')
-    ));
-  }
-  return actions.filter((action) => actionCostResourceIds(action).includes(selectedResourceId));
-}
-
 export function combatActionTimingAvailability(
   action: RuleActionDefinition,
 ): { enabled: boolean; reason?: string } {
   const activation = action.mechanics.activation as Record<string, unknown> | undefined;
+  if (activation?.mode === 'triggered') {
+    return { enabled: false, reason: 'Доступно только в окне выбора после подходящего события' };
+  }
   if (activation?.mode === 'reaction') {
     return {
       enabled: false,
@@ -386,11 +380,13 @@ export function combatActionAvailability(
 }
 
 export default function CombatHotbar({
-  state, actorId, selectedActionId, movementMode, disabled,
+  state, displayState = state, actorId, selectedActionId, movementMode, disabled,
   passiveEnabled, onPassiveToggle,
   onAction, onMove, onConditionAction, onEscape, onEndTurn, onSheet,
 }: {
   state: SoloCombatState;
+  /** Presentation-only progression; commands and resource availability use state. */
+  displayState?: SoloCombatState;
   actorId: string;
   selectedActionId: string | null;
   movementMode: boolean;
@@ -405,11 +401,15 @@ export default function CombatHotbar({
   onSheet: () => void;
 }) {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
+  const [itemsSelected, setItemsSelected] = useState(false);
   const {entityDisplay} = useSiteSettings();
-  const [activeTab, setActiveTab] = useState<'actions' | 'passives'>('actions');
-  useEffect(() => setSelectedResourceId(null), [actorId]);
+  const [passivesOpen, setPassivesOpen] = useState(false);
+  useEffect(() => { setSelectedResourceId(null); setItemsSelected(false); setPassivesOpen(false); }, [actorId]);
   const resourceOptions = useResourceOptions();
   const actor = state.world.actors[actorId];
+  const displayedActor = displayState.world.actors[actorId] ?? actor;
+  const displayedHp = displayedActor.runtime.hp;
+  const hpPercent = displayedHp.max > 0 ? Math.max(0, Math.min(100, displayedHp.current / displayedHp.max * 100)) : 0;
   const grappled = Object.values(state.world.grapples).some(grapple => grapple.targetActorId === actorId);
   const movementRemaining = effectiveCombatActorSpeedFt(state, actorId) > 0 ? state.movementRemainingFt[actorId] ?? 0 : 0;
   const movementLabel = ({walk: 'Движение', climb: 'Лазание', fly: 'Полёт', swim: 'Плавание', burrow: 'Рытьё',jump:'Прыжок'} as const)[combatActorMovementMode(state, actorId)];
@@ -422,12 +422,16 @@ export default function CombatHotbar({
     };
   const actions = playerActionIdsFor(state, actorId).flatMap((id) => {
     const action = state.catalogActions.find((candidate) => candidate.id === id);
-    return action && !isTriggeredCombatAction(action) ? [action] : [];
+    return action && isCombatHotbarAction(action) && combatHotbarActionHasSource(state, actorId, action) ? [action] : [];
   }).map((action) => projectCombatHotbarAction(state, action, actorId));
   const passiveToggles = actorPassiveToggles(actor, state.catalogActions, state.actionPresentation, actions);
   const passiveCount = passiveToggles.length;
+  const freeuseActionIds = combatFreeuseActionIds(actions, actor.runtime.maxResources, actor.spellcastingAccess);
   const freeuseResources = Object.entries(actor.runtime.maxResources)
-    .filter(([key, maximum]) => maximum > 0 && isFreeusePoolKey(key));
+    .filter(([key, maximum]) => maximum > 0 && isFreeusePoolKey(key)
+      && actions.some(action => freeuseActionIds.has(action.id)
+        && (actor.spellcastingAccess?.grants.some(grant => grant.actionId === action.id && grant.freeUseResource === key)
+          || actionCostResourceIds(action).includes(key))));
   const freeuseSpells = freeuseResources.map(([key, maximum]) => ({
     spell: key.slice('freeuse-'.length),
     count: maximum,
@@ -438,91 +442,125 @@ export default function CombatHotbar({
     const spell = grant ? state.actionPresentation?.[grant.actionId]?.spellRef : undefined;
     return spell ? [{ ...spell, card_number: key.slice('freeuse-'.length) }] : [];
   });
-  const freeuseActionIds = new Set(actor.spellcastingAccess?.grants
-    .filter((grant) => grant.freeUseResource && freeuseResources.some(([key]) => key === grant.freeUseResource))
-    .map((grant) => grant.actionId) ?? []);
-  const selectedSlotActionIds = new Set(actor.spellcastingAccess?.grants
-    .filter((grant) => grant.slotResource === selectedResourceId)
-    .map((grant) => grant.actionId) ?? []);
-  const visibleActions = selectedSlotActionIds.size > 0
-    ? actions.filter((action) => selectedSlotActionIds.has(action.id))
-    : filterCombatActionsByResource(actions, selectedResourceId, freeuseActionIds);
-  const resourceKeys = combatHotbarResourceKeys(actions, actor.runtime.maxResources);
+  const visibleActions = itemsSelected
+    ? actions.filter(action => combatHotbarActionGroup(state, actorId, action) === 'items')
+    : filterCombatActionsByResource(actions, selectedResourceId, freeuseActionIds, actor.spellcastingAccess);
+  const resourceKeys = combatHotbarResourceKeys(actor.runtime.maxResources, actions, freeuseActionIds, actor.spellcastingAccess);
+  const selectedResourcePresent = selectedResourceId === FREEUSE_SHOWCASE_KEY
+    ? freeuseActionIds.size > 0 : !!selectedResourceId && resourceKeys.includes(selectedResourceId);
+  useEffect(() => {
+    if (selectedResourceId && !selectedResourcePresent) setSelectedResourceId(null);
+  }, [selectedResourceId, selectedResourcePresent]);
+  const selectResource = (key: string) => {
+    setItemsSelected(false);
+    setSelectedResourceId(current => current === key ? null : key);
+  };
+  const grouped = !selectedResourceId && !itemsSelected;
+  const conditionActions = grouped ? conditionGrantedActions(actor.runtime) : [];
+  const actionGroups = grouped
+    ? COMBAT_HOTBAR_GROUPS.map(group => ({ ...group,
+      actions: visibleActions.filter(action => combatHotbarActionGroup(state, actorId, action) === group.id),
+    })).filter(group => group.actions.length > 0 || group.id === 'basic' && conditionActions.length > 0)
+    : [{ id: 'filtered', label: itemsSelected ? 'Действия предметов' : 'Действия выбранного ресурса', actions: visibleActions }];
   const resources = resourceKeys.map((key) => [key, actor.runtime.maxResources[key]] as const)
     .sort(([left], [right]) => sheetResourceTileOrder(left, resourceOptions)
       - sheetResourceTileOrder(right, resourceOptions) || left.localeCompare(right));
-  const actionEconomy = [
-    ['Действие', 'action'],
-    ['Бонус', 'bonus_action'],
-    ['Реакция', 'reaction'],
-  ] as const;
-
+  const turnResources = resources.filter(([key]) => TURN_RESOURCE_IDS.has(key));
+  const characterResources = [...resources.filter(([key]) => !TURN_RESOURCE_IDS.has(key)),
+    ...(freeuseResources.length > 0 ? [[FREEUSE_SHOWCASE_KEY,0] as const] : [])]
+    .sort(([left],[right])=>sheetResourceTileOrder(left,resourceOptions)-sheetResourceTileOrder(right,resourceOptions)||left.localeCompare(right));
+  const hasCharacterResources = characterResources.length > 0 || freeuseResources.length > 0;
+  const resourceTiles = (entries: typeof resources) => entries.map(([key, maximum]) => key === FREEUSE_SHOWCASE_KEY ? (
+    <FreeuseSpellsTile key={key} runtime={actor.runtime} freeuseSpells={freeuseSpells} spells={freeuseSpellRefs}
+      resourceOptions={resourceOptions} selected={selectedResourceId === FREEUSE_SHOWCASE_KEY}
+      onSelect={() => selectResource(FREEUSE_SHOWCASE_KEY)}/>
+  ) : (
+    <SheetResourceTile
+      key={key}
+      resourceId={key}
+      option={combatResourceOption(state, key, resourceOptions)}
+      current={actor.runtime.resources[key] ?? 0}
+      maximum={maximum}
+      resourceContext={actor.character}
+      selected={selectedResourceId === key}
+      onSelect={() => selectResource(key)}
+    />
+  ));
   return (
     <CharacterFormulaProvider value={formulaContext}>
-    <section className="combat-hotbar" aria-label="Панель действий">
-      {activeTab === 'actions' && <div className="combat-hotbar__resource-filter" role="group" aria-label="Фильтр действий по ресурсу">
-        <FreeuseSpellsTile
-          runtime={actor.runtime}
-          freeuseSpells={freeuseSpells}
-          spells={freeuseSpellRefs}
-          resourceOptions={resourceOptions}
-          selected={selectedResourceId === FREEUSE_SHOWCASE_KEY}
-          onSelect={() => setSelectedResourceId((current) => current === FREEUSE_SHOWCASE_KEY ? null : FREEUSE_SHOWCASE_KEY)}
-        />
-        {resources.map(([key, maximum]) => (
-          <SheetResourceTile
-            key={key}
-            resourceId={key}
-            option={findResource(resourceOptions, key)}
-            current={actor.runtime.resources[key] ?? 0}
-            maximum={maximum}
-            selected={selectedResourceId === key}
-            onSelect={() => setSelectedResourceId((current) => current === key ? null : key)}
-          />
-        ))}
+    <section className="combat-hotbar combat-hotbar--compact" aria-label="Панель действий">
+      <div className="combat-hotbar__resource-dock">
+      <div className="combat-hotbar__resource-filter combat-hotbar__turn-resources" role="group" aria-label="Ресурсы хода">
+        {resourceTiles(turnResources)}
+      </div>
+      {hasCharacterResources && <div className="combat-hotbar__resource-filter combat-hotbar__character-resources" role="group" aria-label="Ресурсы персонажа">
+        {resourceTiles(characterResources)}
       </div>}
+      <div className="combat-hotbar__tools" role="group" aria-label="Управление полем">
+        <HoverCard disabled={passivesOpen} content={<EffectPreview effect={utilityPreview('Пассивы',
+          'Открывает переключаемые пассивы персонажа. Выберите, какие предложения и способности использовать в бою. Переключение сохраняет настройку и не тратит действия или ресурсы.')} disableHover />}>
+        <button type="button" className={`res-tile combat-hotbar__tool${passivesOpen ? ' res-tile--selected' : ''}`}
+          aria-label="Пассивы" aria-haspopup="dialog" aria-expanded={passivesOpen}
+          onClick={() => setPassivesOpen(true)}><Sparkles aria-hidden="true" /></button>
+        </HoverCard>
+        <HoverCard content={<EffectPreview effect={utilityPreview(movementLabel,
+          `Выберите способ передвижения, затем укажите клетку на поле. Оставшееся передвижение: ${movementRemaining} фт. Стоимость пути и доступность клеток проверяются при выборе маршрута.`)} disableHover />}>
+        <button type="button" className={`res-tile combat-hotbar__tool${movementMode ? ' res-tile--selected' : ''}`}
+          disabled={disabled || movementRemaining <= 0} aria-label={`${movementLabel}: ${movementRemaining} фт.`}
+          aria-description="Выбрать способ передвижения" aria-pressed={movementMode} onClick={onMove}>
+          <Footprints aria-hidden="true" />
+          <span className="combat-hotbar__movement-remaining" aria-hidden="true">{movementRemaining}</span>
+        </button>
+        </HoverCard>
+        <HoverCard content={<EffectPreview effect={utilityPreview('Рюкзак',
+          'Показывает все действия, предоставляемые предметами: применение, заряды и заклинания предметов. Недоступные действия можно изучить в превью. Повторное нажатие возвращает все действия.')} disableHover />}>
+        <button type="button" className={`res-tile combat-hotbar__tool${itemsSelected ? ' res-tile--selected' : ''}`}
+          aria-label="Рюкзак" aria-pressed={itemsSelected}
+          onClick={() => { setSelectedResourceId(null); setItemsSelected(current => !current); }}>
+          <Backpack aria-hidden="true" />
+        </button>
+        </HoverCard>
+      </div>
+      </div>
       <div className="combat-hotbar__resources">
         <div className="combat-hotbar__character-summary">
-          <span className="combat-hotbar__portrait">
-            {state.tokens[actorId]?.tokenUrl
-              ? <img src={state.tokens[actorId].tokenUrl} alt="" />
-              : combatActorDisplayName(actor).slice(0, 1)}
-          </span>
-          <div className="combat-hotbar__identity"><b>{combatActorDisplayName(actor)}</b><span>{combatHpLabel(actor.runtime.hp)}</span></div>
-        </div>
-        <div className="combat-hotbar__economy" aria-label="Экономика хода">
-          {actionEconomy.map(([label, key]) => (
-            <span key={key} className={(actor.runtime.resources[key] ?? 0) > 0 ? 'is-ready' : 'is-spent'}>
-              {label} <b>{actor.runtime.resources[key] ?? 0}</b>
+          <div className="combat-hotbar__portrait-frame">
+            <span className="combat-hotbar__portrait" aria-label={combatActorDisplayName(displayedActor)}>
+              {displayState.tokens[actorId]?.tokenUrl
+                ? <img src={displayState.tokens[actorId].tokenUrl} alt="" />
+                : combatActorDisplayName(displayedActor).slice(0, 1)}
             </span>
-          ))}
-        </div>
-        <div className={`combat-hotbar__utility${grappled ? ' has-stand' : ''}`} role="group" aria-label="Управление полем">
-          {grappled && onEscape && <button type="button" className="combat-utility-button" disabled={disabled || !canEscapeActorGrapple(state, actorId)} onClick={onEscape} aria-description="Действие: проверка Атлетики или Акробатики">
-            <Unlink /><span>Освободиться</span>
-          </button>}
-          <button type="button" className={`combat-utility-button${movementMode ? ' is-selected' : ''}`} disabled={disabled || movementRemaining <= 0} onClick={onMove} aria-description="Перемещение">
-            <Footprints /><span>{movementLabel}</span><small>{movementRemaining} фт.</small>
-          </button>
-          <button type="button" className="combat-utility-button" onClick={onSheet} aria-description="Открыть сокращённый лист">
-            <MoreHorizontal /><span>Лист</span>
-          </button>
+            <button type="button" className="combat-hotbar__sheet" onClick={onSheet}
+              aria-label="Открыть лист персонажа"><MoreHorizontal aria-hidden="true" /></button>
+            {grappled && onEscape && <button type="button" className="combat-hotbar__escape"
+              disabled={disabled || !canEscapeActorGrapple(state, actorId)} onClick={onEscape}
+              aria-label="Освободиться" aria-description="Действие: проверка Атлетики или Акробатики">
+              <Unlink aria-hidden="true" />
+            </button>}
+          </div>
+          <div className="combat-hotbar__hp" role="progressbar" aria-label="Хиты"
+            aria-valuemin={0} aria-valuemax={displayedHp.max} aria-valuenow={displayedHp.current}
+            aria-valuetext={combatHpLabel(displayedHp)}>
+            <span className="combat-hotbar__hp-fill" style={{width: `${hpPercent}%`}} />
+            <b>{displayedHp.current} / {displayedHp.max}</b>
+          </div>
+          <span className="combat-hotbar__temp-hp" aria-label="Временные хиты">
+            {displayedHp.temp > 0 ? `Врем. хиты +${displayedHp.temp}` : '\u00a0'}
+          </span>
         </div>
       </div>
 
       <div className="combat-hotbar__content">
-        <div className="combat-hotbar__tabs" role="tablist" aria-label="Разделы хотбара">
-          <button type="button" role="tab" aria-selected={activeTab === 'actions'} className={activeTab === 'actions' ? 'is-active' : ''} onClick={() => setActiveTab('actions')}><Swords /> Действия</button>
-          <button type="button" role="tab" aria-selected={activeTab === 'passives'} className={activeTab === 'passives' ? 'is-active' : ''} onClick={() => setActiveTab('passives')}><Sparkles /> Пассивы{passiveCount ? ` · ${passiveCount}` : ''}</button>
-        </div>
-      {activeTab === 'actions' ? <div className={`combat-hotbar__actions cs-action-tiles site-scrollbar${entityDisplay.actions === 'row' ? ' is-row-view' : ''}`} role="tabpanel" aria-label="Действия персонажа">
-        {!selectedResourceId && conditionGrantedActions(actor.runtime).map(action => <div className="combat-sheet-action" key={action.id}>
+      <div className={`combat-hotbar__actions cs-action-tiles site-scrollbar${grouped ? ' is-grouped' : ''}${entityDisplay.actions === 'row' ? ' is-row-view' : ''}`} role="group" aria-label="Действия персонажа">
+        {actionGroups.map(group => <div className="combat-hotbar__action-group" key={group.id}
+          role="group" aria-label={group.label} data-action-group={group.id}>
+        {group.id === 'basic' && conditionActions.map(action => <div className="combat-sheet-action" key={action.id}>
           <SheetActionLine name={action.name} variant={entityDisplay.actions} actionRef={grantedActionPresentation({...action, mechanics: {effects: action.effects, activation: {mode: 'active', cost: [{resource: 'movement', amount: Math.floor(effectiveCombatActorSpeedFt(state, actorId) * action.movementFraction)}]}}})} sourceLabel="Действие состояния"
             disabled={disabled || !canUseConditionAction(state, actorId, action.id)} disabledTitle="Недостаточно перемещения или сейчас действие недоступно"
             onActivate={() => onConditionAction(action.id)}/>
           <span className="combat-hotbar__action-label">{action.name}</span>
         </div>)}
-        {visibleActions.map((action) => {
+        {group.actions.map((action) => {
           const availability = combatActionAvailability(state, action, actorId);
           const presentation = state.actionPresentation?.[action.id];
           const heldCards = (['main_hand', 'off_hand'] as const)
@@ -607,22 +645,28 @@ export default function CombatHotbar({
               )}
             </div>
           );
-        })}
-        {visibleActions.length === 0 && (
-          <p className="combat-hotbar__empty-filter">Нет доступных действий для этого ресурса</p>
+        })}</div>)}
+        {visibleActions.length === 0 && conditionActions.length === 0 && (
+          <p className="combat-hotbar__empty-filter">{itemsSelected ? 'Нет действий предметов' : selectedResourceId ? 'Нет действий для этого ресурса' : 'Нет действий'}</p>
         )}
-      </div> : <div className="combat-hotbar__passives site-scrollbar" role="tabpanel" aria-label="Пассивные эффекты атак">
-        {passiveToggles.map((toggle) => {
-          const enabled = passiveEnabled?.[toggle.id] ?? toggle.defaultEnabled;
-          return <SheetPassiveToggle key={toggle.id} toggle={toggle}
-            enabled={enabled} onChange={(id, value) => onPassiveToggle?.(id, value)}/>;
-        })}
-        {!passiveCount && <p className="combat-hotbar__empty-filter">Нет переключаемых пассивов</p>}
-      </div>}
+      </div>
       </div>
 
       <button type="button" className="combat-end-turn" disabled={disabled} onClick={onEndTurn}>Завершить ход</button>
     </section>
+    {passivesOpen && createPortal(<DialogShell label="Пассивы" wrap onCancel={() => setPassivesOpen(false)}>
+      <div className="combat-hotbar-passive-dialog">
+        <header><h2>Пассивы</h2><button type="button" aria-label="Закрыть пассивы" onClick={() => setPassivesOpen(false)}><X aria-hidden="true" /></button></header>
+        <div className="combat-hotbar-passive-dialog__list site-scrollbar">
+          {passiveToggles.map((toggle) => {
+            const enabled = passiveEnabled?.[toggle.id] ?? toggle.defaultEnabled;
+            return <SheetPassiveToggle key={toggle.id} toggle={toggle}
+              enabled={enabled} onChange={(id, value) => onPassiveToggle?.(id, value)}/>;
+          })}
+          {!passiveCount && <p className="combat-hotbar__empty-filter">Нет переключаемых пассивов</p>}
+        </div>
+      </div>
+    </DialogShell>, document.body)}
     </CharacterFormulaProvider>
   );
 }

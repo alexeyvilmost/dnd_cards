@@ -20,6 +20,31 @@ const entry = (events: EngineEvent[], text = 'Герой: Удар: выполн
 
 describe('combat presentation from committed events', () => {
   afterEach(() => setCombatAnimationCatalog(builtInAnimationCatalog));
+  it.each(['thunder-rider', 'unrelated-force-rider'])('does not deliver a second hit for the same damage-then-save cast (%s)', id => {
+    const definition = {id, name: 'Дополнительное воздействие', kind: 'spell', sourceEntityIds: [id], spell: {level: 1},
+      mechanics: {effects: [{resolution: 'auto', result: [{kind: 'damage', type: 'thunder', dice: '2d6'}]},
+        {resolution: 'save', ability: 'str', dc: 13, on_fail: [{kind: 'movement', value: 'push', distance_ft: 10}]}]}} as RuleActionDefinition;
+    const damage: CombatLogEntry = {id: 'cast', round: 1, actorId: 'hero', text: 'Сохранённое применение', records: [
+      {kind: 'action', ordinal: 0, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'], actionId: id},
+      {kind: 'engine', ordinal: 1, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'], actionId: id,
+        event: {type: 'damage', amount: 5, damageType: 'thunder'}},
+    ]};
+    const saved: CombatLogEntry = {id: 'save', round: 1, actorId: 'enemy', text: 'Сохранённый спасбросок', records: [
+      {kind: 'engine', ordinal: 0, sourceActorId: 'enemy', actorId: 'enemy', targetIds: ['hero'], actionId: id,
+        event: {type: 'roll', label: 'Спасбросок СИЛ', roll: {...roll, kind: 'save', outcome: 'fail', target: {type: 'dc', value: 13}}}},
+      {kind: 'engine', ordinal: 1, sourceActorId: 'hero', actorId: 'enemy', targetIds: ['enemy'], actionId: id,
+        event: {type: 'movement', mode: 'forced', distanceFt: 10, recipientActorId: 'enemy'}, movement: {from: {x: 3, y: 2}, to: {x: 5, y: 2}}},
+    ]};
+    const laterCast = {...damage, id: 'second-cast'};
+    const laterSave = {...saved, id: 'second-save'};
+    const combat = {...state, catalogActions: [definition], log: [damage, saved, laterCast, laterSave]};
+    const before = JSON.stringify(combat);
+    const beats = presentCombatEntries(combat, combat.log);
+    expect(beats.filter(beat => beat.rollKind === 'save').map(beat => beat.suppressAnimation)).toEqual([true, true]);
+    expect(beats.filter(beat => beat.damage?.length).map(beat => Boolean(beat.suppressAnimation))).toEqual([false, false]);
+    expect(beats[1].presentationChanges).toContainEqual(expect.objectContaining({kind: 'movement', actorId: 'enemy', position: {x: 5, y: 2}}));
+    expect(JSON.stringify(combat)).toBe(before);
+  });
   it.each([
     {id: 'unrelated-critical-blade', primitive: 'melee_slash' as const, visual: 'slashing' as const},
     {id: 'unrelated-critical-launcher', primitive: 'weapon_throw' as const, visual: 'ranged' as const, weaponShape: 'axe' as const},
@@ -116,12 +141,20 @@ describe('combat presentation from committed events', () => {
     expect(beat.animation?.key).toBe(data.profile);
     expect(beat.roll).toBeUndefined();
   });
-  it('starts the turn with a quiet nonblocking self pulse and keeps later damage separate', () => {
+  it('starts the turn silently and keeps actual later damage delivery separate', () => {
     const [turn, damage] = presentCombatEntries(state, [entry([{type: 'turn_started'}, {type: 'damage', amount: 4, damageType: 'fire'}], 'Начало')]);
     expect(turn).toMatchObject({sourceId: 'hero', targetId: 'hero', actionName: 'Начало хода',
-      blocksInput: false, cues: [], animation: {key: 'action.effect'}, from: {x: 2, y: 2}, to: {x: 2, y: 2}});
+      blocksInput: false, cues: [], suppressAnimation: true, presentationDurationMs: 0,
+      from: {x: 2, y: 2}, to: {x: 2, y: 2}});
+    expect(turn.animation).toBeUndefined();
     expect(turn.damage).toBeUndefined();
     expect(damage).toMatchObject({targetId: 'enemy', damage: [{amount: 4, damageType: 'fire'}]});
+  });
+  it.each(['turn_started','turn_ended'] as const)('does not invent a spell delivery for a %s boundary', type => {
+    const boundary = entry([{type}], 'Граница хода');
+    const [beat] = presentCombatEntries(state, [boundary]);
+    expect(beat).toMatchObject({suppressAnimation: true, presentationDurationMs: 0, cues: []});
+    expect(beat.animation).toBeUndefined(); expect(beat.visual).toBeUndefined();
   });
   it('does not turn a declaration awaiting a save into a completed utility animation', () => {
     const spell = {id: 'spell', name: 'Ожидание', kind: 'spell' as const, sourceEntityIds: ['spell'] as [string], spell: {level: 0}, mechanics: {}};
@@ -136,9 +169,19 @@ describe('combat presentation from committed events', () => {
     const log = entry([{type: 'temp_hp', amount: 7}, {type: 'stabilized'}, {type: 'effect_expired', name: 'Защита'}], 'Обновление');
     log.records!.push({kind: 'death', ordinal: 3, sourceActorId: 'hero', actorId: 'enemy', targetIds: ['enemy']});
     const beats = presentCombatEntries(state, [log]);
-    expect(beats[0].cues.map(cue => cue.text)).toEqual(['+7 врем. HP', 'Стабилизирован', 'Защита: завершено']);
+    expect(beats[0].cues.map(cue => cue.text)).toEqual(['+7 врем. HP', 'Стабилизирован']);
+    expect(beats[0].cues.every(cue => cue.kind === 'effect')).toBe(true);
     expect(beats[0].animation).toBeDefined();
-    expect(beats[1]).toMatchObject({targetId: 'enemy', animation: {primitive: 'death'}, cues: [{actorId: 'enemy', text: 'Погибает'}]});
+    expect(beats[1]).toMatchObject({suppressAnimation: true, cues: [{actorId: 'enemy', text: 'Защита: завершено', kind: 'effect'}]});
+    expect(beats[1].animation).toBeUndefined(); expect(beats[1].visual).toBeUndefined();
+    expect(beats[2]).toMatchObject({targetId: 'enemy', animation: {primitive: 'death'}, cues: [{actorId: 'enemy', text: 'Погибает'}]});
+  });
+  it.each(['Защита', 'Другое состояние'])('does not replay healing when %s expires after a real heal', name => {
+    const log = entry([{type: 'healing', amount: 4}, {type: 'effect_expired', name}], 'Обновление');
+    const beats = presentCombatEntries(state, [log]);
+    expect(beats[0].cues).toMatchObject([{kind: 'healing', text: '+4'}]);
+    expect(beats[1]).toMatchObject({suppressAnimation: true, cues: [{kind: 'effect', text: `${name}: завершено`}]});
+    expect(beats[1].animation).toBeUndefined(); expect(beats[1].visual).toBeUndefined();
   });
   it('uses movement coordinates captured by the log after the token has moved again', () => {
     const log: CombatLogEntry = {id: 'move', round: 1, actorId: 'hero', text: 'Произвольный текст', records: [{
@@ -146,6 +189,20 @@ describe('combat presentation from committed events', () => {
       movement: {from: {x: 0, y: 0}, to: {x: 1, y: 0}},
     }]};
     expect(presentCombatEntries(state, [log])[0]).toMatchObject({from: {x: 0, y: 0}, to: {x: 1, y: 0}, animation: {primitive: 'move'}});
+  });
+  it('uses each attacking and defending cell before subsequent movements in the same response', () => {
+    const first = {...entry([{type: 'roll', label: 'Атака', roll}]), id: 'first-hit'};
+    const movement: CombatLogEntry = {id: 'later-movement', round: 1, actorId: 'hero', text: 'Сохранено', records: [
+      {kind: 'movement', ordinal: 0, sourceActorId: 'hero', actorId: 'hero', targetIds: ['hero'], movement: {from: {x: 2, y: 2}, to: {x: 5, y: 2}}},
+      {kind: 'engine', ordinal: 1, sourceActorId: 'hero', actorId: 'hero', targetIds: ['enemy'],
+        event: {type: 'movement', recipientActorId: 'enemy', mode: 'push', distanceFt: 5}, movement: {from: {x: 3, y: 2}, to: {x: 6, y: 2}}},
+    ]};
+    const second = {...first, id: 'second-hit'};
+    const combat = {...state, log: [first, movement, second], tokens: {...state.tokens,
+      hero: {...state.tokens.hero, position: {x: 5, y: 2}}, enemy: {...state.tokens.enemy, position: {x: 6, y: 2}}}};
+    const beats = presentCombatEntries(combat, combat.log).filter(beat => beat.roll);
+    expect(beats[0]).toMatchObject({from: {x: 2, y: 2}, to: {x: 3, y: 2}});
+    expect(beats[1]).toMatchObject({from: {x: 5, y: 2}, to: {x: 6, y: 2}});
   });
   it('withholds miss cues as well as the strike before a defensive reaction', () => {
     const [beat] = presentCombatEntries(state, [entry([{type: 'roll', label: 'Атака — до реакции', roll: {...roll, outcome: 'miss'}}])]);

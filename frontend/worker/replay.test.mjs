@@ -78,6 +78,10 @@ test('replays actual HTTP worker transitions, RNG and projected revisions after 
         abilities: {str: 14, dex: 10, con: 10, int: 10, wis: 10, cha: 10}, action_ids: ['slam'], effect_ids: [], ai: {strategy: 'tactical'}}]}});
     let result = await post('/initialize', {input});
     assert.equal(result.status, 'ready');
+    assert.ok(result.combatOpeningState?.world?.actors?.[input.character.id], 'Initialize returns the exact pre-enemy board');
+    assert.equal(result.combatOpeningState.entropy, undefined);
+    assert.equal(result.envelope.combatOpeningState, undefined);
+    assert.equal(result.envelope.state.combatOpeningState, undefined);
     const records = [{schemaVersion: 1, type: 'initialize_combat', artifactHash: result.envelope.artifactHash,
       baseline: result.envelope, baselinePosition: 'after', ...result.trace}];
     for (let i = 0; i < 3; i++) {
@@ -85,6 +89,7 @@ test('replays actual HTTP worker transitions, RNG and projected revisions after 
       const intent = {type: 'end_turn', actorId: input.character.id};
       result = await post('/transition', {artifactHash: before.artifactHash, envelope: before, intent,
         character: {...input.character, runtime_revision: result.patch.runtime_revision}});
+      assert.equal(result.combatOpeningState, undefined, 'Later transitions never replay an opening board');
       assert.equal(result.trace.beforeHash, snapshotHash(before));
       records.push({schemaVersion: 1, type: 'combat_intent', artifactHash: before.artifactHash, intent,
         randomValues: result.randomValues, ...result.trace});

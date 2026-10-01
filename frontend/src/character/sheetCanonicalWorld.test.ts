@@ -1184,7 +1184,8 @@ describe('real sheet canonical world materialization', () => {
     expect(built.world.actors[built.actorId].capabilities.actionIds).not.toContain(child.id);
   });
 
-  it('compiles a levelled species spell as always prepared with free-use and slot payments', () => {
+  it.each(['uuid', 'english', 'legacy-apostrophe'] as const)(
+    'compiles a species grant repaired to a card reference while retaining its saved %s generic pool', (poolKind) => {
     const root = clone(generated.roots.wizard);
     const sheetAction = root.actions
       .filter((candidate): candidate is Extract<RuleActionDefinition, { kind: 'spell' }> => (
@@ -1192,6 +1193,7 @@ describe('real sheet canonical world materialization', () => {
       ))
       .map(sheetSpell)[0];
     const spell = sheetAction.spellRef!;
+    spell.name_en = 'Dragon’s Breath';
     const lineage = {
       id: 'effect:drow-lineage', card_number: 'RE-sub-drow', name: 'Drow Lineage',
       description: '', rarity: 'common', effect_type: 'species_ability',
@@ -1209,7 +1211,8 @@ describe('real sheet canonical world materialization', () => {
       },
       effects: [{ effect: lineage, origin: { kind: 'race' as const, id: raceId, name: 'Elf' } }],
     };
-    const freeUseResource = `freeuse-${spell.id}`;
+    const freeUseResource = `freeuse-${poolKind === 'uuid' ? spell.id
+      : poolKind === 'english' ? 'dragons_breath' : 'dragon_s_breath'}`;
     const built = buildSheetCanonicalRuntime({
       character: character('sheet-drow-spell'),
       assembled: assembly,
@@ -1219,7 +1222,7 @@ describe('real sheet canonical world materialization', () => {
           type: 'species', id: sourceId, name: 'Elf: Drow Lineage',
           originEntityId: raceId, featureEntityId: lineage.id,
         },
-        kind: 'spell', value: spell.id, mode: 'proficiency',
+        kind: 'spell', value: spell.card_number, mode: 'proficiency',
         spellcastingAbility: 'cha', label: 'always_prepared',
         freeuse: { count: 1, recharge: 'long_rest' },
       }] },

@@ -731,6 +731,13 @@ function preflightPayload(
 
     case 'damage': {
       const base = value.amount ?? value.dice;
+      if(value.inherit_attack_critical!==undefined&&typeof value.inherit_attack_critical!=='boolean') {
+        throw mechanicsError('INVALID_PAYLOAD',`${path}.inherit_attack_critical`,'inherit_attack_critical must be boolean');
+      }
+      if(value.inherit_attack_critical===true&&ctx.triggeringAttack
+        &&(!targetOwned||ctx.triggeringAttack.targetActorId!==ctx.target?.id||typeof ctx.triggeringAttack.critical!=='boolean')) {
+        throw mechanicsError('INVALID_MECHANICS',path,'inherited critical damage requires the saved triggering target and critical outcome');
+      }
       if (value.type === 'triggering_attack') {
         const attack = ctx.triggeringAttack;
         if (value.requires_triggering_attack_hit === true && (!attack?.roll || !Number.isFinite(ctx.target?.ac))) {
@@ -3771,7 +3778,8 @@ function applyPayloads(
           }
         }
         const damageCritical = p.inherit_attack_critical === false ? false
-          : p.type === 'triggering_attack' ? ctx.triggeringAttack?.critical === true : crit;
+          : p.inherit_attack_critical === true || p.type === 'triggering_attack'
+            ? ctx.triggeringAttack?.critical ?? crit : crit;
         // Оружейный урон может раскрыться в несколько строк (основной + стихийный) —
         // каждую наносим отдельным событием (сопротивления по типам, план кубов, №4).
         const routedTarget = whoTarget
@@ -4885,8 +4893,11 @@ function runSave(
   const recipientState=whoTarget&&!targetRef.aliasesSelf?targetRef.state:state;
   const recipientPassives=whoTarget&&!targetRef.aliasesSelf?ctx.target?.passives??[]:ctx.passives??[];
   const recipientCharacter=whoTarget&&!targetRef.aliasesSelf?ctx.target?.characterContext:ctx.character;
+  const savingActor: ExecuteContext['target'] = effect.who === 'self'
+    ? {id: ctx.selfId, characterContext: ctx.character, runtimeState: state, passives: ctx.passives}
+    : ctx.target;
   const damagePolicy=(success:boolean)=>recipientState?saveDamagePolicy(recipientState,recipientPassives,ability,success,recipientCharacter):undefined;
-  const automaticSuccess = automaticSaveSuccessReason(effect, ctx.target);
+  const automaticSuccess = automaticSaveSuccessReason(effect, savingActor);
   if (automaticSuccess) {
     events.push(narrativeEvent(
       `Спасбросок ${ABILITY_LABEL[ability]} — автоуспех: ${automaticSuccess.reason}.`
@@ -4922,12 +4933,12 @@ function runSave(
   // Берём эффекты из рантайма цели (богатая цель, фаза E); у обобщённой цели их нет.
   // evalCtx с savedConditions гейтит модификаторы «преимущество/бонус на спас против состояния X»
   // (Происхождение фей). Раньше сейв не передавал evalCtx — condition-scoped when не срабатывал.
-  const targetState = ctx.target?.runtimeState;
+  const targetState = savingActor?.runtimeState;
   const collected = targetState
-    ? collectModifiers(targetState, ctx.target?.passives ?? [], {
-        roll: 'saving_throw', filter: { ability, saveSource:ctx.spell?'spell':'other',...effectRollFacts(effect) },
-        formulaCtx:targetFormulaCtx(ctx.target) ?? {},
-        evalCtx: { character:ctx.target?.characterContext,state: targetState, activeConditions: activeConditionsOf(targetState), savedConditions: new Set(savedConditionsOf(effect)) },
+    ? collectModifiers(targetState, savingActor?.passives ?? [], {
+        roll: 'saving_throw', filter: { ability, saveSource:ctx.spell || ctx.damageSource?.kind === 'spell' ? 'spell' : 'other',...effectRollFacts(effect) },
+        formulaCtx:targetFormulaCtx(savingActor) ?? {},
+        evalCtx: { character:savingActor?.characterContext,state: targetState, activeConditions: activeConditionsOf(targetState), savedConditions: new Set(savedConditionsOf(effect)) },
       })
     : { modifiers: [] as RollModifier[], advantage: 'none' as const, hasAdvantage:false,hasDisadvantage:false, autoFail: false, rules: [] as Dict[] };
 
@@ -4945,7 +4956,7 @@ function runSave(
     events.push(narrativeEvent(`Спасбросок ${ABILITY_LABEL[ability]} — автопровал (состояние цели).`));
     success = false;
   } else {
-    const saveMod = targetSaveMod(ctx.target, ability);
+    const saveMod = targetSaveMod(savingActor, ability);
     const roll = rollD20({
       advantage: collected.advantage, hasAdvantage: collected.hasAdvantage, hasDisadvantage: collected.hasDisadvantage,
       modifiers: [{ value: saveMod, source: 'цель' }, ...collected.modifiers],
@@ -4963,7 +4974,7 @@ function runSave(
   }
   let next = state;
   if(whoTarget&&!targetRef.aliasesSelf)next=emitEvent({kind:'forced_save',source:'self',target:ctx.target?.id,data:{ability,dc,outcome:success?'success':'failure'}},next,ctx,events,[],targetRef,[],true);
-  if (targetState && targetRef.state) {
+  if (whoTarget && targetState && targetRef.state) {
     const consumedTarget = consumeNextRollEffects(targetRef.state, 'saving_throw', events, {
       usedRuleKeys,
       filter: { ability },

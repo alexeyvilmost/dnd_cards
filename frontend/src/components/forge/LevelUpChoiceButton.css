@@ -1,0 +1,48 @@
+.levelup-choice {
+  --levelup-gold: var(--forge-gold, #d8b978);
+  padding: 18px;
+  border: 1px solid var(--forge-line, #6b5836);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d8b97808, transparent 70%), var(--forge-panel, #1c1813);
+  min-width: 0;
+}
+.levelup-choice-heading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+.levelup-choice-source { color: var(--forge-text-dim, #a99f8b); font-size: 10px; letter-spacing: .06em; }
+.levelup-choice h3 { margin: 4px 0 0; font: 400 18px/1.3 Georgia, 'Times New Roman', serif; color: var(--levelup-gold); }
+.levelup-choice .choice-count { display: inline-flex; align-items: center; gap: 4px; margin: 3px 0 0; padding: 5px 8px; border: 1px solid #d8b97833; border-radius: 20px; color: var(--forge-text-dim, #a99f8b); font-size: 11px; white-space: nowrap; }
+.levelup-choice .choice-count.done { color: #b7cf9d; border-color: #b7cf9d40; }
+.levelup-choice-hint { margin: -4px 0 15px; font-size: 12px; color: var(--forge-text-dim, #a99f8b); }
+.levelup-choice-feats { display: flex; flex-wrap: wrap; gap: 16px; }
+.levelup-selected-feat { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+.levelup-choice-feats--icon .levelup-selected-feat { width: 104px; }
+.levelup-choice-feats--icon .forge-square-card { width: 104px; height: 104px; flex: 0 0 104px; border-radius: 12px 12px 0 0; border-width: 1px; padding: 8px; background: linear-gradient(140deg, #d8b97814, #15130f); }
+.levelup-choice-feats--icon .forge-square-card-label { font-size: 11px; }
+.levelup-choice-feats--icon .forge-square-card-label.long { font-size: 10px; }
+.levelup-choice-feats--row { flex-direction: column; }
+.levelup-choice-feats--row .levelup-selected-feat { flex-direction: row; align-items: center; justify-content: space-between; gap: 15px; padding: 12px 14px; background: #d8b97808; border: 1px solid var(--forge-line, #6b5836); border-radius: 10px; }
+.levelup-selected-feat .forge-ability-line { margin: 0; min-width: 0; }
+.levelup-choice-edit { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--forge-line, #6b5836); border-radius: 0 0 9px 9px; padding: 7px 9px; background: #d8b97812; color: var(--levelup-gold); font-family: inherit; font-size: 12px; line-height: 1.2; cursor: pointer; }
+.levelup-choice-edit:hover { background: #d8b97822; border-color: var(--levelup-gold); }
+.levelup-choice-feats--row .levelup-choice-edit, .levelup-choice-edit--group { border-radius: 8px; }
+.levelup-choice-feats--row .forge-ability-lines { flex: 1; min-width: 0; }
+.levelup-choice-feats--row .sheet-item-row { border: 0; padding: 0; background: transparent; }
+.levelup-choice-edit--group { margin-top: 12px; padding: 8px 13px; }
+.levelup-choice-selected-spells { padding: 6px 0; }
+.levelup-choice-selected-spells .sheet-item-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 8px; }
+.levelup-choice-labels { display: flex; flex-wrap: wrap; gap: 6px; }
+.levelup-choice-labels span { padding: 6px 10px; border: 1px solid var(--forge-line, #6b5836); border-radius: 8px; color: var(--forge-text, #e8e0d0); font-size: 13px; }
+.levelup-choice-empty { display: flex; align-items: center; gap: 18px; width: 100%; padding: 16px; text-align: left; color: inherit; border: 1px dashed #d8b97865; border-radius: 10px; background: radial-gradient(ellipse at 0 50%, #d8b9780d, transparent 70%); cursor: pointer; }
+.levelup-choice-empty:hover { border-color: var(--levelup-gold); background-color: #d8b97808; }
+.levelup-choice-emblem { display: grid; place-items: center; width: 62px; height: 62px; flex: 0 0 62px; color: var(--levelup-gold); border: 1px solid #d8b97855; border-radius: 50%; background: #d8b9780c; box-shadow: inset 0 0 0 4px #d8b97805; }
+.levelup-choice-empty-copy { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
+.levelup-choice-empty-copy b { font: 400 16px/1.25 Georgia, 'Times New Roman', serif; color: var(--forge-text, #e8e0d0); }
+.levelup-choice-empty-copy > span { font-size: 12px; line-height: 1.4; color: var(--forge-text-dim, #a99f8b); }
+.levelup-choice-select { display: inline-flex; align-items: center; gap: 5px; padding: 8px 10px; color: var(--levelup-gold); font-size: 12px; }
+.levelup-choice :is(button):focus-visible { outline: 2px solid var(--levelup-gold); outline-offset: 3px; }
+@media (max-width: 540px) {
+  .levelup-choice { padding: 14px; }
+  .levelup-choice-empty { gap: 12px; padding: 13px; flex-wrap: wrap; }
+  .levelup-choice-emblem { width: 46px; height: 46px; flex-basis: 46px; }
+  .levelup-choice-select { margin-left: auto; padding: 4px 0 0; }
+  .levelup-choice-feats--row .levelup-selected-feat { flex-wrap: wrap; }
+}

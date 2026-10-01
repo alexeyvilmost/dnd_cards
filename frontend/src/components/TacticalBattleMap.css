@@ -1,0 +1,117 @@
+.combat-map-wrap > .tactical-map-viewport,
+.tactical-map-viewport.tactical-map-viewport {
+  display: block;
+  position: relative;
+  /* Panning keeps its imperative scroll offsets; native scrollbars and wheel
+   * scrolling must not compete with the map's pointer/zoom gestures. */
+  overflow: hidden;
+}
+
+/* A full viewport of empty space on each side lets the map pass the side panels. */
+.tactical-map-pan-space {
+  width: max-content;
+  min-width: 100%;
+  box-sizing: content-box;
+}
+
+.tactical-map-pan-space > .tactical-map {
+  margin: 0;
+}
+
+.tactical-map-movement-choice {
+  position: sticky;
+  top: 8px;
+  left: 8px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: calc(100% - 16px);
+  padding: 5px 8px;
+  border-radius: 8px;
+  color: #eedcbd;
+  background: #1e1915ec;
+  font-size: 12px;
+}
+
+.tactical-map-movement-choice button {
+  padding: 5px 8px;
+  border: 1px solid #806744;
+  border-radius: 6px;
+  background: #31271e;
+  color: inherit;
+}
+
+.tactical-map .battle-token-motion {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  will-change: translate;
+}
+
+.battle-token__lost-health {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  background: rgb(174 25 35 / 36%);
+  pointer-events: none;
+}
+
+.battle-token__health-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.tactical-map .battle-token__name { z-index: 2; }
+
+.tactical-map .tactical-cell.is-dead { opacity: .7; filter: none; }
+.tactical-map .tactical-cell.is-dead-enemy { opacity: 1; }
+.tactical-map .tactical-cell.is-dead-enemy .battle-token { filter: grayscale(1); }
+
+/* Camera input remains available; command delivery is guarded by the map prop. */
+.combat-input-blocked .tactical-map-viewport,
+.combat-input-blocked .battle-map-3d { pointer-events: auto; }
+
+.tactical-map .tactical-cell.is-movement-hazard {
+  background-color: #d2472440;
+  box-shadow: inset 0 0 0 2px #ee8158;
+}
+.tactical-map .tactical-cell.is-route-preview.is-movement-hazard { background-color: #d2472460; }
+
+.combat-map-tooltip.combat-enemy-preview {
+  position: fixed;
+  z-index: 100;
+  width: min(340px, calc(100vw - 24px));
+  pointer-events: none;
+}
+.combat-actor-hover-preview.sp-tip h3 { padding-right: 0; }
+.combat-actor-hover-preview__hp { position: relative; height: 18px; margin: 10px 0; overflow: hidden; border: 1px solid #75392e; border-radius: 4px; background: #331711; text-align: center; font-size: 11px; line-height: 16px; }
+.combat-actor-hover-preview__hp > span { position: absolute; inset: 0 auto 0 0; background: #a74539; }
+.combat-actor-hover-preview__hp > b { position: relative; color: #fff1db; text-shadow: 0 1px #000; }
+.combat-actor-hover-preview__hint { margin: 10px 0 0!important; color: #b7a68b; font-size: 11px; }
+.combat-actor-hover-preview .combat-hit-chance__details { padding: 8px 0; border-top: 1px solid #735b393f; color: #f5d995; }
+.combat-actor-hover-preview .combat-hit-chance__details > b { font-size: 20px; }
+.combat-actor-hover-preview .combat-hit-chance__details > small { display: block; font-size: 11px; }
+.combat-actor-hover-preview .combat-hit-chance__details.is-unavailable { color: #e4a597; }
+.combat-route-warning--hazard { white-space: normal; color: #ffb28e; }
+
+.combat-map-feedback .combat-floating-cue {
+  padding: 1px 3px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  -webkit-text-stroke: .65px #000;
+  paint-order: stroke fill;
+  text-shadow: -1px 0 #000, 1px 0 #000, 0 -1px #000, 0 1px #000;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tactical-map .battle-token-motion { will-change: auto; }
+}

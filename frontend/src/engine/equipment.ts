@@ -185,7 +185,7 @@ export function unequipSlot(state: RuntimeState, slot: string): RuntimeState {
   const id = equipment[slot as EquipmentSlotKey];
   if (!id) return { ...state, equipment };
 
-  if (equipment.main_hand && equipment.main_hand === equipment.off_hand) {
+  if ((slot === 'main_hand' || slot === 'off_hand') && equipment.main_hand && equipment.main_hand === equipment.off_hand) {
     equipment.main_hand = null;
     equipment.off_hand = null;
   } else {

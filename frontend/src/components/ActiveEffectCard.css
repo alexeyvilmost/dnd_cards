@@ -1,0 +1,49 @@
+.active-effect-card.active-effect-card--icon {
+  position: relative; display: inline-flex; width: 42px; height: 42px; flex: 0 0 42px;
+  padding: 0; border: 0; border-radius: 50%;
+}
+.active-effect-card--icon .active-effect-card__hover { width: 100%; height: 100%; }
+.active-effect-card--icon .active-effect-card__body {
+  display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
+  padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer;
+}
+.active-effect-card--icon .active-effect-card__icon {
+  display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
+  overflow: hidden; border: 1px solid var(--forge-line, #6e5b3a); background: var(--forge-bg, #18140f);
+}
+.active-effect-card--icon .active-effect-card__icon img { width: 100%; height: 100%; object-fit: cover; }
+.active-effect-card--icon .active-effect-card__body:focus-visible { outline: 2px solid #d8b978; outline-offset: 3px; }
+.active-effect-card--icon .active-effect-card__actions { position: absolute; top: -4px; right: -5px; margin: 0; z-index: 1; }
+.active-effect-card--icon .sheet-active-effect-dismiss {
+  display: grid; place-items: center; width: 19px; height: 19px; padding: 0;
+  background: #25211d; border: 1px solid #76624a; border-radius: 50%;
+}
+.active-effect-preview__footer {
+  display: flex; flex-direction: column; gap: 4px; margin: 0 -20px; padding: 9px 20px;
+  color: #c9b99f; font-size: 12px; background: #191511; border-top: 1px solid #4a3f35;
+  border-radius: 0 0 12px 12px;
+}
+.active-effect-details { display: flex; flex-direction: column; align-items: stretch; gap: 12px; }
+.active-effect-details .sp-tip { width: min(360px, 78vw); }
+.active-effect-details__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
+.active-effect-details__actions .sheet-active-effect-dismiss {
+  display: grid; place-items: center; width: 30px; height: 30px; padding: 4px;
+  border: 1px solid #76624a; border-radius: 50%; background: #25211d;
+}
+.sheet-active-effects.sheet-active-effects--icons {
+  display: flex; flex-direction: row; flex-wrap: wrap; gap: 9px; padding: 0; list-style: none;
+}
+.sheet-active-effects--icons .sheet-active-effect {
+  flex: 0 0 auto; padding: 0; border: 0; background: transparent;
+}
+.cs-active-effects, .sheet-conditions.sheet-conditions--icons,
+.combat-sheet-effects.combat-sheet-effects--icons,
+.combat-actor-inspector__effects.combat-actor-inspector__effects--icons {
+  display: flex; flex-wrap: wrap; align-items: flex-start; gap: 9px;
+}
+.cs-active-effects .active-effect-card.active-effect-card--icon { padding: 0; border: 0; border-radius: 50%; }
+.sheet-conditions--icons .sheet-condition { border: 0; padding: 0; }
+.combat-sheet-effects--icons .combat-sheet-effect { padding: 0; border: 0; }
+.combat-actor-inspector__effects--icons > div:has(.active-effect-card--icon) {
+  padding: 0; border: 0; background: transparent;
+}

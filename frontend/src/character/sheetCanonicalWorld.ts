@@ -43,7 +43,7 @@ import {
   type PreparedSourceProjection,
   type SpellGrantProjection,
 } from '../canon/spellcastingAccessProjection';
-import { freeuseKey } from '../engine/freeuse';
+import { resolveFreeusePoolKey } from '../engine/freeuse';
 import { collectItemMechanics, readAttunedIds, type ItemMechanic } from './attunement';
 import { actionUsesKey, restoreSelfUsesCost } from '../engine/actionUses';
 import { preparedSpellSelectionIssues } from '../mechanics/collectChoices';
@@ -774,6 +774,23 @@ function accessForGrant(grant: AppliedGrant, spell: Spell, override?: SpellCasti
   throw new SheetCanonicalWorldError(`${grant.id}: levelled spell grant requires an explicit access label`);
 }
 
+/** Read-only access projection for incomplete Forge builds. It uses the same
+ * source provenance and casting declarations as the authoritative sheet, but
+ * does not require preparation choices or a runtime world to be complete. */
+export function projectSheetSpellGrantAccess(input: {
+  spell: Spell;
+  grant: AppliedGrant;
+  assembled: AssembledCharacter;
+  itemSources?: readonly ItemMechanic[];
+}) {
+  const binding = spellGrantBinding({...input, itemSources: input.itemSources ?? []});
+  return {
+    access: accessForGrant(input.grant, input.spell, binding.castingOverride),
+    sourceId: binding.sourceId,
+    castingOverride: binding.castingOverride,
+  };
+}
+
 function declaredSlotResource(action: RuleActionDefinition): string | undefined {
   if (action.kind !== 'spell' || action.spell.level === 0) return undefined;
   const activation = object(action.mechanics.activation);
@@ -877,6 +894,7 @@ function baseSpellAccess(input: {
   tomeActionIds: ReadonlySet<string>;
   manualSpellcastingAbility: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
   passives?: readonly Record<string, unknown>[];
+  runtimeResources: Readonly<Record<string, number>>;
 }): ReturnType<typeof projectSpellcastingAccess> {
   const quickRitual = hasRitualCasterQuickRitual(input.passives ?? []);
   const grants: SpellGrantProjection[] = input.compiled.flatMap(({ sheet, action, spellGrant, manualSpell }) => {
@@ -922,7 +940,9 @@ function baseSpellAccess(input: {
         : quickRitual && sheet.spellRef.ritual === true
           ? { freeUseResource: 'ritual_caster_quick_ritual' }
         : spellGrant.grant.freeuse && !spellGrant.grant.freeuse.atWill
-          ? { freeUseResource: freeuseKey(spellGrant.grant.value) }
+          ? { freeUseResource: resolveFreeusePoolKey({ spell: spellGrant.grant.value }, {
+            spells: [sheet.spellRef], resources: input.runtimeResources,
+          }) }
           : {}),
       ...(slotResource ? { slotResource } : {}),
       ...(unavailableReason ? { unavailableReason } : {}),
@@ -1386,6 +1406,7 @@ export function buildSheetCanonicalRuntime(input: {
 
   const baseSpellcastingAccess = baseSpellAccess({
     compiled,
+    runtimeResources: input.runtime.maxResources,
     assembled: input.assembled,
     resolvedChoices: input.character.resolved_choices,
     runtimePreparedChoices: readSheetSpellPreparation(input.character.turn_state)?.choices,

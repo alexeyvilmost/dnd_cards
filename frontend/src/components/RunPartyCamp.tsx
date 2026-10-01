@@ -15,6 +15,7 @@ import UrvinJourney from './UrvinJourney';
 import {formatCopper} from '../utils/money';
 import {runMoneyCopper} from '../roguelike/money';
 import RunParticipantArmorClass from './RunParticipantArmorClass';
+import { withoutLegacyRunSuffix } from '../character/familiarLabels';
 
 export default function RunPartyCamp({run,onUpdated}:{run:RoguelikeRun;onUpdated:(run:RoguelikeRun)=>void}){
   const navigate=useNavigate(),settings=useSiteSettings();
@@ -78,9 +79,9 @@ export default function RunPartyCamp({run,onUpdated}:{run:RoguelikeRun;onUpdated
     <section className="run-party-roster" aria-label="Участники группы">
       {members.map(c=><article key={c.id} className={`run-party-member${c.current_hp<1?' is-downed':''}`}>
         <HealingPulse id={c.id} hp={c.current_hp}/>
-        <Link to={runSheetURL(run,c.id)} className="run-party-portrait">{c.avatar_url?<img src={c.avatar_url} alt={c.name}/>:<Users size={48}/>}</Link>
-        <div className="run-party-member-info"><h2>{c.name}</h2><p>{classNames[c.class_id??'']??'Персонаж'} · уровень {c.level} · <RunParticipantArmorClass character={c}/></p>
-          <div className="run-party-hp" role="progressbar" aria-label={`Хиты: ${c.name}`} aria-valuemin={0} aria-valuemax={c.max_hp} aria-valuenow={c.current_hp}><i style={{width:`${Math.min(100,100*c.current_hp/Math.max(1,c.max_hp))}%`}}/></div>
+        <Link to={runSheetURL(run,c.id)} className="run-party-portrait">{c.avatar_url?<img src={c.avatar_url} alt={withoutLegacyRunSuffix(c.name)}/>:<Users size={48}/>}</Link>
+        <div className="run-party-member-info"><h2>{withoutLegacyRunSuffix(c.name)}</h2><p>{classNames[c.class_id??'']??'Персонаж'} · уровень {c.level} · <RunParticipantArmorClass character={c}/></p>
+          <div className="run-party-hp" role="progressbar" aria-label={`Хиты: ${withoutLegacyRunSuffix(c.name)}`} aria-valuemin={0} aria-valuemax={c.max_hp} aria-valuenow={c.current_hp}><i style={{width:`${Math.min(100,100*c.current_hp/Math.max(1,c.max_hp))}%`}}/></div>
           <strong>{c.current_hp} / {c.max_hp} хитов</strong>
           <div className="run-party-member-links"><Link to={runSheetURL(run,c.id)}>Лист · действия и лечение</Link>
             {camp&&c.level<earned&&<Link to={`/character-forge/${c.id}?levelup=1&roguelike=${run.id}`}>Повысить до {c.level+1} уровня</Link>}
@@ -90,8 +91,8 @@ export default function RunPartyCamp({run,onUpdated}:{run:RoguelikeRun;onUpdated
     </section>
     {camp&&transferOpen&&<section className="run-party-transfer" aria-label="Передача предметов">
       <h2>Из рюкзака в рюкзак</h2><p>Экипированные, настроенные и связанные предметы сначала нужно освободить. Содержимое контейнера не передаётся вместе с ним.</p>
-      <div className="run-party-transfer-fields"><label>Отправитель<select value={from} onChange={e=>setFrom(e.target.value)}>{members.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-        <label>Получатель<select value={to} onChange={e=>setTo(e.target.value)}><option value="">Выберите участника</option>{members.filter(c=>c.id!==from).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+      <div className="run-party-transfer-fields"><label>Отправитель<select value={from} onChange={e=>setFrom(e.target.value)}>{members.map(c=><option key={c.id} value={c.id}>{withoutLegacyRunSuffix(c.name)}</option>)}</select></label>
+        <label>Получатель<select value={to} onChange={e=>setTo(e.target.value)}><option value="">Выберите участника</option>{members.filter(c=>c.id!==from).map(c=><option key={c.id} value={c.id}>{withoutLegacyRunSuffix(c.name)}</option>)}</select></label>
       </div>
       <div className="cs-action-tiles run-party-transfer-items">{cards.map(card=><SheetActionLine key={card.id} itemRef={card} name={card.name} imageUrl={card.image_url} variant={settings.entityDisplay.items} selected={item===card.id}
         detail={`В рюкзаке: ${rows.find(r=>r.card_id===card.id)?.qty??0}`} onActivate={()=>{setItem(card.id);setQty(1)}}/>)}{!cards.length&&<p>Рюкзак пуст</p>}</div>

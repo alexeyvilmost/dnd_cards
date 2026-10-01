@@ -160,7 +160,7 @@ func createRoguelikeParty(tx *gorm.DB, userID uuid.UUID, ids []uuid.UUID) (*Rogu
 		clone.GroupID = nil
 		clone.Group = nil
 		clone.User = User{}
-		clone.Name = strings.TrimSpace(source.Name) + " · Забег"
+		clone.Name = strings.TrimSpace(source.Name)
 		clone.CharacterType = "dungeon_crawl"
 		clone.CreatedAt = time.Time{}
 		clone.UpdatedAt = time.Time{}

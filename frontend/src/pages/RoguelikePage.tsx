@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import {withoutLegacyRunSuffix} from '../character/familiarLabels';
 import { RotateCcw, Trophy } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { charactersV3Api } from '../character/api';
@@ -220,7 +221,7 @@ function RunCamp({ id }: { id: string }) {
       <h1>{title}</h1>
       {error && <p className="roguelike-error" role="alert">{error}</p>}
       {run && <>
-        <p className="roguelike-ending-character">{run.character?.name ?? 'Персонаж'}</p>
+        <p className="roguelike-ending-character">{withoutLegacyRunSuffix(run.character?.name ?? 'Персонаж')}</p>
         <div className="roguelike-ending-stats" aria-label="Результат забега">
           <span><strong>{run.experience.toLocaleString('ru-RU')}</strong><small>опыта</small></span>
           <span><strong>{run.encounters_won}</strong><small>побед</small></span>

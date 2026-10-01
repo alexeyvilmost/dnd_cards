@@ -22,6 +22,44 @@ function input(): RoguelikeCombatInitialization {
       action_ids: ['test-attack'], effect_ids: [], ai: {strategy: 'tactical'}}] as unknown as RoguelikeCombatInitialization['monsters']['monsters']}};
 }
 describe('trusted combat initialization', () => {
+  it.each([{damage: 3, party: false}, {damage: 5, party: true}])(
+    'returns the exact pre-enemy board separately from committed damage, party=$party', async ({damage, party}) => {
+      const request = input();
+      request.seed = party ? 'opening-party-hit' : 'opening-solo-hit';
+      request.character.initiative_bonus = -100;
+      request.monsters.monsters[0].initiative_bonus = 100;
+      request.monsters.monsters[0].speed = 90;
+      request.monsters.actions[0].mechanics = {
+        activation: {mode: 'active', cost: [{resource: 'action', amount: 1}]},
+        targeting: {domain: 'actor', actor_targets: true, shape: 'single', min_targets: 1, max_targets: 1,
+          range_ft: 5, requires_line_of_sight: true, allowed_relations: ['enemy']},
+        effects: [{resolution: 'attack_roll', ability: 'str', attack_kind: 'weapon_melee',
+          attack_bonus_override: 100, vs: 'ac', on_hit: [{kind: 'damage', amount: damage, type: 'bludgeoning'}]}],
+      };
+      if (party) request.characters = [request.character, {...structuredClone(request.character), id: 'qa:opening-ally'}];
+      const savedInput = JSON.stringify(request);
+      const result = await initializeRoguelikeCombat(request, artifactHash);
+      if (result.status !== 'ready') throw Error('Missing fixture');
+      const opening = result.combatOpeningState;
+      const committed = result.envelope.state;
+      expect(opening).not.toBe(committed);
+      expect(opening.world.scene.mode).toBe('encounter');
+      if (opening.world.scene.mode !== 'encounter') throw Error('Encounter missing');
+      const firstActorId = opening.world.scene.initiative[opening.world.scene.activeIndex];
+      expect(opening.world.actors[firstActorId].kind).toBe('monster');
+      const heroes = request.characters ?? [request.character];
+      for (const hero of heroes) expect(opening.world.actors[hero.id].runtime.hp.current).toBe(hero.current_hp);
+      expect(heroes.some(hero => committed.world.actors[hero.id].runtime.hp.current < opening.world.actors[hero.id].runtime.hp.current)).toBe(true);
+      expect(committed.log.slice(0, opening.log.length)).toEqual(opening.log);
+      expect(committed.log.slice(opening.log.length).some(entry => entry.records?.some(record => record.event?.type === 'damage'))).toBe(true);
+      expect(opening).not.toHaveProperty('entropy');
+      expect(result.envelope).not.toHaveProperty('combatOpeningState');
+      expect(committed).not.toHaveProperty('combatOpeningState');
+      expect(result.envelope.entropy.cursor).toBe(result.randomValues.length);
+      expect(await initializeRoguelikeCombat(request, artifactHash)).toEqual(result);
+      expect(JSON.stringify(request)).toBe(savedInput);
+    });
+
   it('encounter lifecycle reaches equipped catalog items and per-encounter spell uses before the first save',async()=>{
     const request=input(),spellId='77200000-0000-4000-8000-000000000001',cardId='77200000-0000-4000-8000-000000000002';
     const spellNumber='SPELL-encounter-test',pool=`freeuse-${spellNumber}`;

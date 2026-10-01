@@ -31,4 +31,5 @@ func registerCharacterV3Routes(
 		controller.PostCharacterEvents,
 	)
 	routes.PATCH("/:id/runtime", controller.PatchCharacterRuntime)
+	routes.POST("/:id/item-sales", JSONBodyLimitMiddleware(4096), RequestBodyLimitMiddleware(4096), controller.SellCharacterItem)
 }

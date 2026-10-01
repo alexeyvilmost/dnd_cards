@@ -7,11 +7,13 @@ import {boardDimensions} from '../solo-combat/boardGeometry';
 import {resolveCombatAnimation, resolveActiveSpellCircles} from '../solo-combat/animationProfiles';
 import CombatAnimationLayer from './CombatAnimationLayer';
 import CombatSpellCircle from './CombatSpellCircle';
+import {useCombatFloatingCues} from '../solo-combat/useCombatFloatingCues';
 import '../dice/CombatPresentation.css';
 import './CombatAnimations.css';
 import '../audio/healing.css';
 
 export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;state:SoloCombatState}) {
+  const captionBatches=useCombatFloatingCues(beat);
   const centre=(position: NonNullable<CombatBeat['from']>, actorId?: string)=>{
     const offset=actorFootprint(actorId ? state.world.actors[actorId] : undefined, state)/2;
     return {x:position.x+offset,y:position.y+offset};
@@ -47,14 +49,18 @@ export default function CombatMapFeedback({beat,state}: {beat:CombatBeat|null;st
       const pos=state.tokens[id]?.position;if(!pos)return null;
       return <div key={`heal:${id}`} className="combat-healing-aura" aria-hidden="true" style={{left:`calc(${pos.x} * var(--tactical-cell-size))`,top:`calc(${pos.y} * var(--tactical-cell-size))`,'--healing-size':actorFootprint(state.world.actors[id],state)} as CSSProperties}/>;
     })}
-    {[...grouped].map(([actorId,cues])=>{
-      const pos=state.tokens[actorId]?.position;
-      if(!pos)return null;
-      return <div key={`${committed?.id}:${actorId}`} className="combat-floating-stack" style={{left:`clamp(116px, calc(${centre(pos,actorId).x} * var(--tactical-cell-size)), calc(100% - 116px))`,top:`calc(${pos.y < 1 ? pos.y + 1 : pos.y} * var(--tactical-cell-size))`}}>
-        {cues.map((cue,i)=><span key={i} className={`combat-floating-cue is-${cue.kind}`}>
-          {cue.damageType&&<img src={getDamageIconPath(cue.damageType)} alt={getDamageLabel(cue.damageType)}/>}<b>{cue.text}</b>
-        </span>)}
-      </div>;
+    {captionBatches.flatMap(batch=>{
+      const captionGroups=new Map<string,CombatBeat['cues']>();
+      for(const cue of batch.cues)captionGroups.set(cue.actorId,[...(captionGroups.get(cue.actorId)??[]),cue]);
+      return [...captionGroups].map(([actorId,cues])=>{
+        const pos=state.tokens[actorId]?.position;
+        if(!pos)return null;
+        return <div key={`${batch.id}:${actorId}`} className="combat-floating-stack" style={{animationDelay:`${batch.delayMs}ms`,left:`clamp(116px, calc(${centre(pos,actorId).x} * var(--tactical-cell-size)), calc(100% - 116px))`,top:`calc(${pos.y < 1 ? pos.y + 1 : pos.y} * var(--tactical-cell-size))`}}>
+          {cues.map((cue,i)=><span key={i} className={`combat-floating-cue is-${cue.kind}`}>
+            {cue.damageType&&<img src={getDamageIconPath(cue.damageType)} alt={getDamageLabel(cue.damageType)}/>}<b>{cue.text}</b>
+          </span>)}
+        </div>;
+      });
     })}
   </div>;
 }

@@ -146,6 +146,11 @@ function createClientEventId(): string {
 // API новой системы персонажей (characters_v3). Весь surface защищён строгой
 // JWT-аутентификацией; 403 означает отсутствие ownership/write-доступа.
 export const charactersV3Api = {
+  sellItem: (characterId:string,request:{command_id:string;expected_runtime_revision:number;card_id:string;quantity:number}):Promise<ForgeCharacter> => characterV3Request('runtime_command',async()=>{
+    const {data}=await apiClient.post<{character:ForgeCharacter;replayed:boolean}>(`/api/characters-v3/${characterId}/item-sales`,request);
+    if(data.replayed){const latest=await apiClient.get<ForgeCharacter>(`/api/characters-v3/${characterId}`);return latest.data;}
+    return data.character;
+  }),
   list: (): Promise<ForgeCharacter[]> => cached(
     '/api/characters-v3',
     0,

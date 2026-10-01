@@ -52,6 +52,7 @@ import {
 } from '../engine/manualEffectCommands';
 import type { Action, Card, Feat, PassiveEffect, ResourceDefinition, Spell } from '../types';
 import { useSiteSettings } from '../settings';
+import { spellCanBeAcquired } from '../character/spellChoices';
 import MobileOverlay from './MobileOverlay';
 import './mobile.css';
 
@@ -142,7 +143,7 @@ async function loadEntities(type: CatalogType, search: string): Promise<CatalogE
     }
     case 'spells': {
       const response = await spellsApi.getSpells({ limit: 100, search: query || undefined });
-      return (response.spells ?? []).map((entity) => normalize(entity, type));
+      return (response.spells ?? []).filter(spellCanBeAcquired).map((entity) => normalize(entity, type));
     }
     case 'feats': {
       const response = await featsApi.getFeats({ limit: 100, search: query || undefined });
@@ -292,7 +293,7 @@ export async function saveMobileCatalogSelection(
   const ruleState = resolveCharacterRules({ draft, assembled });
   await charactersV3Api.update(
     character.id,
-    buildSavePayload(draft, assembled, ruleState, character.current_hp),
+    buildSavePayload(draft, assembled, ruleState, character.current_hp, character.max_hp),
   );
 
   if (type === 'resources') {

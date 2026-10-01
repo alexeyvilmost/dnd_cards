@@ -73,6 +73,19 @@ function character(): Pick<ForgeCharacter, 'turn_state' | 'resolved_choices'> {
 }
 
 describe('Wizard Memorize Spell short-rest workflow', () => {
+  it('does not offer child spell rows retained in an old spellbook as replacements', () => {
+    const oldBook = assembled();
+    for (const parentId of ['command', 'hex']) {
+      const child = {...spell(`SPELL-${parentId}-child`, 'Child ' + parentId, 1), mechanics: {variant_of_spell_id: parentId}};
+      oldBook.spells.push(child);
+      oldBook.pendingChoices[0].allowedOptionIds!.push(child.card_number);
+    }
+    const [policy] = collectSheetPreparedSpellSwapPolicies({assembled: oldBook, character: character()});
+    expect(policy.replacements.map((option) => option.reference)).toEqual(['SPELL-MISTY-STEP']);
+    expect(() => applySheetPreparedSpellSwap({turnState: {}, policy, selection: {forgetReference: 'SPELL-SHIELD', memorizeReference: 'SPELL-command-child'}}))
+      .toThrow('недоступно в книге');
+  });
+
   it('compiles the catalog declaration without a display-name or class-id branch', () => {
     const renamed = assembled();
     renamed.effects[0].effect.name = 'Renamed feature';

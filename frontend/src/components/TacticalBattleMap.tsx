@@ -1,9 +1,9 @@
 import {auraSurfacesAt} from '../solo-combat/auraTerrain';
-import {FACING_LABELS,type CombatFacing} from '../solo-combat/facing';
+import type {CombatFacing} from '../solo-combat/facing';
 import { boardLightSources, illuminationAt } from '../solo-combat/combatIllumination';
 import './TacticalIllumination.css';
 import { combatActorDisplayName } from '../character/familiarLabels';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {useSiteSettings} from '../settings';
 import BattleSceneBoundary from '../battle3d/BattleSceneBoundary';
 
@@ -34,8 +34,17 @@ import {useViewportPopoverPosition} from '../hooks/useViewportPopoverPosition';
 import {projectileTrajectory} from '../solo-combat/projectilePreview';
 import {creatureCoverObstacles} from '../solo-combat/creatureCover';
 import {previewAttackCover,attackCoverLabel} from '../solo-combat/attackCoverPreview';
+import {lostHealthFraction} from '../battle3d/tokenHealth';
+import {useBattleMovement} from '../battle3d/useBattleMovement';
+import {useReducedMotion} from '../hooks/useReducedMotion';
+import BattleTokenMotion from './BattleTokenMotion';
+import './TacticalBattleMap.css';
+import CombatActorHoverPreview from './CombatActorHoverPreview';
+import {combatAreaHazardLines,movementHazardAreas,previewMovementHazards} from '../solo-combat/movementHazardPreview';
+import {captureMapZoomAnchor, mapZoomScrollDelta, type MapZoomAnchor} from './mapZoom';
 
 const MAP_CELL_PREVIEW_DELAY_MS = 500;
+const ENEMY_PREVIEW_DELAY_MS = 250;
 
 export default function TacticalBattleMap({
   state,
@@ -55,7 +64,7 @@ export default function TacticalBattleMap({
   onInspectActor,
   onActorHover,
   onDeclineAdditionalMovement,
-  onFacing,
+  actionsDisabled = false,
 }: {
   state: SoloCombatState;
   feedback?: CombatBeat | null;
@@ -75,8 +84,11 @@ export default function TacticalBattleMap({
   onActorHover?: (actorId: string | null) => void;
   onDeclineAdditionalMovement?: () => void;
   onFacing?:(facing:CombatFacing)=>void;
+  /** Commands are blocked during delivery; camera gestures stay available. */
+  actionsDisabled?: boolean;
 }) {
   const {combat3d} = useSiteSettings();
+  const reducedMotion = useReducedMotion();
   useAnimationCatalog();
   const committedFeedback=feedback?.rollPhase==='before-reaction'?null:feedback;
   const animationPrimitive=committedFeedback?.animation?.primitive;
@@ -98,6 +110,8 @@ export default function TacticalBattleMap({
     return committedFeedback.cues.some(cue=>cue.actorId===id&&cue.kind==='damage')?' is-animating-target':'';
   };
   const [rendererError, setRendererError] = useState<string | null>(null);
+  const render2D = !combat3d || Boolean(rendererError);
+  const movements = useBattleMovement(state, render2D);
   useEffect(() => { setRendererError(null); }, [combat3d]);
   const [hovered, setHovered] = useState<GridPosition | null>(null);
   const {width:boardWidth,height:boardHeight}=boardDimensions(state);
@@ -111,6 +125,7 @@ export default function TacticalBattleMap({
   const [hoverAnchor, setHoverAnchor] = useState({x: 0, y: 0});
   const [previewCell, setPreviewCell] = useState<GridPosition | null>(null);
   const previewTimerRef = useRef<number | null>(null);
+  const previewPositionRef = useRef<string | null>(null);
   const clearPreviewTimer = () => {
     if (previewTimerRef.current != null) {
       window.clearTimeout(previewTimerRef.current);
@@ -119,16 +134,88 @@ export default function TacticalBattleMap({
   };
   useEffect(() => () => clearPreviewTimer(), []);
   const scheduleCellPreview = (position: GridPosition | null) => {
+    const key: `${number}:${number}` | null = position ? `${position.x}:${position.y}` : null;
+    if (previewPositionRef.current === key) return;
+    previewPositionRef.current = key;
     clearPreviewTimer();
     setPreviewCell(null);
     if (!position) return;
-    previewTimerRef.current = window.setTimeout(() => setPreviewCell(position), MAP_CELL_PREVIEW_DELAY_MS);
+    const target = tokenByCell.get(key!);
+    const enemy = target && combatRelation(state,actorId,target.actorId) === 'enemy';
+    previewTimerRef.current = window.setTimeout(() => setPreviewCell(position), enemy ? ENEMY_PREVIEW_DELAY_MS : MAP_CELL_PREVIEW_DELAY_MS);
   };
   const cellPreviewContentKey = previewCell ? `cell:${previewCell.x}:${previewCell.y}` : null;
   const {popoverRef, popoverPos} = useViewportPopoverPosition(Boolean(hovered), hoverAnchor, cellPreviewContentKey);
   const [zoom, setZoom] = useState(1);
+  const zoomRef = useRef(zoom);
   const [panning, setPanning] = useState(false);
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const zoomAnchorRef = useRef<{viewport: HTMLDivElement; anchor: MapZoomAnchor} | null>(null);
+  const centerFrameRef = useRef<number | null>(null);
+  const initialFitDone = useRef(false);
+  const [panSpace, setPanSpace] = useState({x: 600, y: 400});
+  const panSpaceRef = useRef(panSpace);
+  useLayoutEffect(() => {
+    zoomRef.current = zoom;
+    const pending = zoomAnchorRef.current;
+    zoomAnchorRef.current = null;
+    if (!pending || !render2D || pending.viewport !== viewportRef.current || !mapRef.current) return;
+    const delta = mapZoomScrollDelta(mapRef.current.getBoundingClientRect(), pending.anchor);
+    pending.viewport.scrollLeft += delta.x;
+    pending.viewport.scrollTop += delta.y;
+  }, [zoom, render2D]);
+  useEffect(() => {
+    initialFitDone.current = false;
+    if (centerFrameRef.current !== null) window.cancelAnimationFrame(centerFrameRef.current);
+    centerFrameRef.current = null;
+    return () => {
+      if (centerFrameRef.current !== null) window.cancelAnimationFrame(centerFrameRef.current);
+      centerFrameRef.current = null;
+    };
+  }, [render2D]);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const resize = () => {
+      const next = {x: Math.max(240, viewport.clientWidth), y: Math.max(240, viewport.clientHeight)};
+      const previous = panSpaceRef.current;
+      panSpaceRef.current = next;
+      setPanSpace(next);
+      if (initialFitDone.current) {
+        viewport.scrollLeft += next.x - previous.x;
+        viewport.scrollTop += next.y - previous.y;
+      }
+    };
+    resize();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(resize);
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, [combat3d, rendererError]);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!render2D || !viewport) return;
+    // React's delegated wheel listener is passive. A native non-passive
+    // listener cancels browser scrolling before changing only the map scale.
+    const zoomWithWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const delta = event.deltaY || event.deltaX;
+      if (!delta) return;
+      const next = Math.min(1.8, Math.max(.35, Number((zoomRef.current + (delta < 0 ? .1 : -.1)).toFixed(2))));
+      if (next === zoomRef.current) return;
+      const anchor = mapRef.current && captureMapZoomAnchor(mapRef.current.getBoundingClientRect(), event.clientX, event.clientY);
+      zoomAnchorRef.current = anchor ? {viewport, anchor} : null;
+      // A camera gesture takes ownership from an initial fit still awaiting RAF.
+      initialFitDone.current = true;
+      if (centerFrameRef.current !== null) window.cancelAnimationFrame(centerFrameRef.current);
+      centerFrameRef.current = null;
+      zoomRef.current = next;
+      setZoom(next);
+    };
+    viewport.addEventListener('wheel', zoomWithWheel, {passive: false});
+    return () => viewport.removeEventListener('wheel', zoomWithWheel);
+  }, [render2D]);
   const panRef = useRef<{
     pointerId: number;
     x: number;
@@ -138,7 +225,6 @@ export default function TacticalBattleMap({
     moved: boolean;
   } | null>(null);
   const suppressClickRef = useRef(false);
-  const initialFitDone = useRef(false);
   const activeId = state.world.scene.mode === 'encounter'
     ? state.world.scene.initiative[state.world.scene.activeIndex]
     : '';
@@ -185,6 +271,8 @@ export default function TacticalBattleMap({
     && (state.world.actors[hoveredActorId]?.runtime.hp.current ?? 0) > 0
     ? hoveredActorId
     : undefined;
+  const hoveredEnemyActorId = hoveredActorId && combatRelation(state,actorId,hoveredActorId) === 'enemy'
+    ? hoveredActorId : undefined;
   const approachPreview = useMemo(() => (
     contextualAction && hoveredEnemyId
       ? combatApproachRoute(state, actorId, hoveredEnemyId, combatActionRangeFt(state,actorId,contextualAction))
@@ -199,6 +287,9 @@ export default function TacticalBattleMap({
   const movementThreats = useMemo(() => previewMovementThreats(state, actorId, previewRoute?.path ?? []),
     [state, actorId, previewRoute]);
   const dangerNames = movementThreats.map(threat => combatIdentity(state, threat.actorId).displayName).join(', ');
+  const movementHazards = useMemo(() => previewMovementHazards(state,actorId,previewRoute?.path ?? []),[state,actorId,previewRoute]);
+  const hazardousCells = useMemo(() => new Set((movementMode || Boolean(previewRoute?.path.length)
+    ? movementHazardAreas(state,actorId) : []).flatMap(area => area.cells.map(position => `${position.x}:${position.y}`))),[state,actorId,movementMode,previewRoute]);
   const routeOrigin = state.tokens[actorId]?.position;
   const movingCenter = actorFootprint(state.world.actors[actorId], state) / 2;
   const routeCells = useMemo(() => new Set(
@@ -252,18 +343,21 @@ export default function TacticalBattleMap({
       : [],
   ), [actorId, movementMode, state]);
 
-  const centerOn = useCallback((positions: GridPosition[], nextZoom = zoom) => {
+  const centerOn = useCallback((positions: GridPosition[], nextZoom = zoom, behavior: ScrollBehavior = 'smooth') => {
     const viewport = viewportRef.current;
     if (!viewport || !positions.length) return;
     setZoom(nextZoom);
-    window.requestAnimationFrame(() => {
+    if (centerFrameRef.current !== null) window.cancelAnimationFrame(centerFrameRef.current);
+    centerFrameRef.current = window.requestAnimationFrame(() => {
+      centerFrameRef.current = null;
+      if (viewportRef.current !== viewport) return;
       const cellSize = 80 * nextZoom;
       const centerX = positions.reduce((sum, position) => sum + position.x + 0.5, 0) / positions.length;
       const centerY = positions.reduce((sum, position) => sum + position.y + 0.5, 0) / positions.length;
-      const left = Math.max(0, centerX * cellSize - viewport.clientWidth / 2);
-      const top = Math.max(0, centerY * cellSize - viewport.clientHeight / 2);
+      const left = Math.max(0, panSpaceRef.current.x + centerX * cellSize - viewport.clientWidth / 2);
+      const top = Math.max(0, panSpaceRef.current.y + centerY * cellSize - viewport.clientHeight / 2);
       if (typeof viewport.scrollTo === 'function') {
-        viewport.scrollTo({ left, top, behavior: 'smooth' });
+        viewport.scrollTo({ left, top, behavior });
       } else {
         viewport.scrollLeft = left;
         viewport.scrollTop = top;
@@ -272,13 +366,13 @@ export default function TacticalBattleMap({
   }, [zoom]);
 
   useEffect(() => {
-    if (initialFitDone.current) return;
+    const viewport = viewportRef.current;
+    if (!render2D || !viewport || initialFitDone.current) return;
     const positions = Object.values(state.tokens).flatMap((token) => footprintCells(token.position, actorFootprint(state.world.actors[token.actorId], state)));
     if (!positions.length) return;
-    initialFitDone.current = true;
-    window.requestAnimationFrame(() => {
-      const viewport = viewportRef.current;
-      if (!viewport) return;
+    const frame = window.requestAnimationFrame(() => {
+      if (viewportRef.current !== viewport) return;
+      initialFitDone.current = true;
       const minX = Math.min(...positions.map((position) => position.x));
       const maxX = Math.max(...positions.map((position) => position.x));
       const minY = Math.min(...positions.map((position) => position.y));
@@ -289,9 +383,10 @@ export default function TacticalBattleMap({
         viewport.clientWidth / (widthCells * 80),
         viewport.clientHeight / (heightCells * 80),
       )));
-      centerOn(positions, Number(fitZoom.toFixed(2)));
+      centerOn(positions, Number(fitZoom.toFixed(2)), 'auto');
     });
-  }, [centerOn, state.tokens]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [centerOn, state.tokens, render2D]);
 
   const finishPan = (event: React.PointerEvent<HTMLDivElement>) => {
     const pan = panRef.current;
@@ -353,6 +448,7 @@ export default function TacticalBattleMap({
       blocked: features.some(f => f.blocksMovement), reachable: reachableCells.has(key),
       areaPreview: areaCells.has(key) || Boolean(token && eligibleTargetIds?.includes(token.actorId)),
       route: routeCells.has(key), unavailable: Boolean(previewRoute && !previewRoute.available),
+      movementHazard: hazardousCells.has(key),
       active: Boolean(token && token.actorId === activeId),
       inspected: Boolean(token && token.actorId === inspectedActorId),
       highlighted: Boolean(token && token.actorId === highlightedActorId),
@@ -366,6 +462,7 @@ export default function TacticalBattleMap({
   });
   const sceneCells = cells.map(({illusion, illusionView, ...cell}) => ({...cell, illusion: illusionView}));
   const activateCell = (position: GridPosition) => {
+    if (actionsDisabled) return;
     const cell = cells[position.y * boardWidth + position.x];
     if (!cell || (cell.blocked && !cell.token)) return;
     if (cell.token && !selectedActionId && !movementMode
@@ -373,7 +470,7 @@ export default function TacticalBattleMap({
     onCell(position, cell.token?.actorId);
   };
   const hoverCell = (position: GridPosition | null, anchor?: {x: number; y: number}) => {
-    setHovered(position);
+    setHovered(current => current?.x === position?.x && current?.y === position?.y ? current : position);
     scheduleCellPreview(position);
     if (anchor) setHoverAnchor(anchor);
     onActorHover?.(position ? tokenByCell.get(`${position.x}:${position.y}`)?.actorId ?? null : null);
@@ -405,6 +502,7 @@ export default function TacticalBattleMap({
         area.hazard?.resolution === 'save'
           ? `Опасность: спасбросок ${area.hazard.save.ability.toUpperCase()} СЛ ${area.hazard.save.dc}`
           : area.hazard?.resolution === 'automatic' ? 'Опасность без спасброска' : null,
+        ...combatAreaHazardLines(area),
         area.triggers.length
           ? `Срабатывает: ${area.triggers.map((trigger) => ({
             created: 'при создании', enter: 'при входе', exit: 'при выходе',
@@ -426,24 +524,31 @@ export default function TacticalBattleMap({
     return cards;
   }, [cellPreview]);
   const showCellPreview = cellPreviewCards.length > 0
-    && !(hoveredTarget && hoveredTarget.actorId === hoveredEnemyId && contextualAction)
+    && !hoveredEnemyActorId
     && !(freeMovePreview && !hoveredTarget);
+  const hoveredEnemy = cellPreview?.actorId === hoveredEnemyActorId && hoveredEnemyActorId
+    ? state.world.actors[hoveredEnemyActorId] : undefined;
+  const hazardWarnings = movementHazards.map(({area,lines}) => <small key={area.id} className="combat-route-warning combat-route-warning--hazard"><strong>{area.name}</strong>: {lines.join(' · ')}</small>);
   const hoverTooltip = <>
-            {hoveredTarget && hoveredTarget.actorId === hoveredEnemyId && contextualAction && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-hit-chance${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`} role="status">
+            {hoveredEnemy && createPortal(<div ref={popoverRef} style={popoverPos} className="combat-map-tooltip combat-enemy-preview forge-effect-popover entity-preview-enter">
+              <CombatActorHoverPreview name={combatActorDisplayName(hoveredEnemy)} hp={hoveredEnemy.runtime.hp}>
+              {hoveredEnemyActorId === hoveredEnemyId && contextualAction && <div className={`combat-hit-chance__details${approachPreview && !approachPreview.available ? ' is-unavailable' : ''}`}>
               {approachPreview && approachPreview.costFt > 0 && <span className="combat-hit-chance__movement">Подойти {approachPreview.costFt} фт. · останется {approachPreview.remainingFt} фт.</span>}
               {!approachPreview && <span className="combat-hit-chance__movement">Нет доступной точки для атаки</span>}
               {approachPreview && !approachPreview.available && <span className="combat-hit-chance__movement">Не хватает {approachPreview.costFt - approachPreview.availableFt} фт. движения</span>}
               {hitPreview && <>
               Попадание <b>{Math.round(hitPreview.probability * 1000) / 10}%</b>
-              <small>КД {hitPreview.profile.target?.value} · {hitPreview.profile.modifiers?.map(mod => `${mod.value >= 0 ? '+' : ''}${mod.value} ${mod.source}`).join(' · ')}
-                {hitPreview.profile.advantage === 'advantage' ? ' · преимущество' : hitPreview.profile.advantage === 'disadvantage' ? ' · помеха' : ''}</small></>}
-              {coverPreview&&<small className={`combat-hit-chance__cover${coverPreview.cover!=='none'?' is-covered':''}`}>{attackCoverLabel(coverPreview)}</small>}
-              <small>I / Ш — изучить противника</small>
+              <small>КД {hitPreview.profile.target?.value}</small></>}
+              {coverPreview && coverPreview.cover !== 'none' && coverPreview.bonus !== 0 && <small className="combat-hit-chance__cover is-covered">{attackCoverLabel(coverPreview)}</small>}
               {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости.</small>}
+              {hazardWarnings}
+              </div>}
+              </CombatActorHoverPreview>
             </div>, document.body)}
             {!hoveredTarget && hovered && freeMovePreview && createPortal(<div ref={popoverRef} style={popoverPos} className={`combat-map-tooltip combat-move-preview${!freeMovePreview.available ? ' is-unavailable' : ''}`} role="status">
               Перемещение <b>{freeMovePreview.costFt} фт.</b><small>Останется {freeMovePreview.remainingFt} фт.{!freeMovePreview.available ? ` · не хватает ${freeMovePreview.costFt - freeMovePreview.availableFt} фт.` : ''}</small>
               {dangerNames && <small className="combat-route-warning">Провоцированная атака: {dangerNames}. Выход из досягаемости; Отход помогает избежать атаки.</small>}
+              {hazardWarnings}
             </div>, document.body)}
             {showCellPreview && createPortal(<div ref={popoverRef} style={popoverPos} className="forge-effect-popover battle-map-cell-previews entity-preview-enter">
               {cellPreviewCards.map((card) => (
@@ -459,8 +564,8 @@ export default function TacticalBattleMap({
           cells={sceneCells} hovered={hovered}
           ghost={ghostPosition ? {position: ghostPosition, footprint: movingCenter * 2, available: previewRoute?.available ?? true} : null}
           route={routeOrigin && previewRoute ? {points: [routeOrigin, ...previewRoute.path], footprint: movingCenter * 2, available: previewRoute.available} : null}
-          trajectory={trajectory} onHover={hoverCell} onCell={activateCell} onInspectActor={onInspectActor}
-          onUnavailable={setRendererError} onDeclineAdditionalMovement={onDeclineAdditionalMovement}/>
+          trajectory={trajectory} onHover={hoverCell} onCell={activateCell} onInspectActor={actionsDisabled ? undefined : onInspectActor}
+          onUnavailable={setRendererError} onDeclineAdditionalMovement={actionsDisabled ? undefined : onDeclineAdditionalMovement}/>
       </Suspense>
     </BattleSceneBoundary>
     {hoverTooltip}
@@ -470,9 +575,10 @@ export default function TacticalBattleMap({
   return (
     <div
       ref={viewportRef}
-      className={`tactical-map-viewport site-scrollbar${panning ? ' is-panning' : ''}`}
+      className={`tactical-map-viewport${panning ? ' is-panning' : ''}`}
       data-testid="tactical-map-viewport"
       data-panning={panning || undefined}
+      tabIndex={0}
       onScroll={() => {
         // Scrolling caused by focus/scrollIntoView keeps the pointer over the
         // same cell. Only an active pan invalidates that hover authority.
@@ -481,10 +587,21 @@ export default function TacticalBattleMap({
         scheduleCellPreview(null);
         onActorHover?.(null);
       }}
-      aria-description={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту`}
-      onWheel={(event) => {
-        event.preventDefault();
-        setZoom((current) => Math.min(1.8, Math.max(0.35, Number((current + (event.deltaY < 0 ? 0.1 : -0.1)).toFixed(2)))));
+      aria-label="Поле боя"
+      aria-description={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту · Home возвращает к персонажу`}
+      onKeyDown={event => {
+        if (event.target !== event.currentTarget) return;
+        if (event.key === 'Home') {
+          event.preventDefault();
+          const position = state.tokens[actorId]?.position;
+          if (position) centerOn([position]);
+        } else if (event.key === '+' || event.key === '=') {
+          event.preventDefault();
+          setZoom(current => Math.min(1.8, Number((current + .1).toFixed(2))));
+        } else if (event.key === '-') {
+          event.preventDefault();
+          setZoom(current => Math.max(.35, Number((current - .1).toFixed(2))));
+        }
       }}
       onPointerDown={(event) => {
         if (event.button !== 0 || !event.isPrimary) return;
@@ -525,24 +642,13 @@ export default function TacticalBattleMap({
       }}
     >
     {rendererError && <p className="battle-map-3d-fallback" role="status">{rendererError} Используется обычная карта.</p>}
-    <div className="tactical-map-controls" role="group" aria-label="Навигация по полю">
-      {onFacing&&<label>Направление <select aria-label="Направление персонажа" value={state.tokens[actorId]?.facing??''} onChange={event=>onFacing(event.target.value as CombatFacing)}>
-        <option value="" disabled>Не задано</option>{Object.entries(FACING_LABELS).map(([value,label])=><option key={value} value={value}>{label}</option>)}
-      </select></label>}
-      {state.battleMap&&<details className="tactical-map-legend"><summary>{state.battleMap.name} · {boardWidth}×{boardHeight}</summary><p>{state.battleMap.description}</p></details>}
-      <button type="button" onClick={() => setZoom((current) => Math.max(0.35, Number((current - 0.1).toFixed(2))))} aria-label="Уменьшить масштаб">−</button>
-      <span>{Math.round(zoom * 100)}%</span>
-      <button type="button" onClick={() => setZoom((current) => Math.min(1.8, Number((current + 0.1).toFixed(2))))} aria-label="Увеличить масштаб">+</button>
-      <button type="button" onClick={() => {
-        const position = state.tokens[actorId]?.position;
-        if (position) centerOn([position]);
-      }}>К персонажу</button>
-      {state.pendingAdditionalMovement && !state.playerMovement && <>
+    {state.pendingAdditionalMovement && !state.playerMovement && <div className="tactical-map-movement-choice" role="group" aria-label="Дополнительное перемещение">
         <span role="status">Выберите клетку · до {state.pendingAdditionalMovement.remainingFt} фт.{state.pendingAdditionalMovement.requiresReaction ? " · реакция" : ""}</span>
-        <button type="button" disabled={!onDeclineAdditionalMovement} onClick={onDeclineAdditionalMovement}>Остаться на месте</button>
-      </>}
-    </div>
+        <button type="button" disabled={actionsDisabled || !onDeclineAdditionalMovement} onClick={onDeclineAdditionalMovement}>Остаться на месте</button>
+    </div>}
+    <div className="tactical-map-pan-space" style={{padding: `${panSpace.y}px ${panSpace.x}px`}}>
     <div
+        ref={mapRef}
       className={`tactical-map${selectedActionId ? ' is-targeting' : ''}${movementMode ? ' is-moving' : ''}${implicitActionsEnabled && !selectedActionId ? ' is-contextual' : ''}${worldObjectMoveMode ? ' is-world-object-moving' : ''}`}
       data-testid="tactical-map"
       data-zoom={zoom}
@@ -577,10 +683,11 @@ export default function TacticalBattleMap({
           <button
             type="button"
             key={`${position.x}:${position.y}`}
-            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token && token.actorId === activeId ? ' is-active' : ''}${token && token.actorId === inspectedActorId ? ' is-inspected' : ''}${token && token.actorId === highlightedActorId ? ' is-linked-highlight' : ''}${dead ? ' is-dead' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}${routeCells.has(`${position.x}:${position.y}`) ? ` is-route-preview${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}` : ''}`}
+            className={`tactical-cell${token ? ' has-token' : ''}${dancingLight || illusion ? ' has-world-object' : ''}${persistentAreas.length ? ' has-combat-area' : ''}${persistentAreas.some((area) => area.lightlyObscured) ? ' is-lightly-obscured' : ''}${persistentAreas.some((area) => area.heavilyObscured) ? ' is-heavily-obscured' : ''}${persistentAreas.some((area) => area.difficultTerrain) ? ' is-difficult-terrain' : ''}${token && token.actorId === activeId ? ' is-active' : ''}${token && token.actorId === inspectedActorId ? ' is-inspected' : ''}${token && token.actorId === highlightedActorId ? ' is-linked-highlight' : ''}${dead ? ' is-dead' : ''}${dead && token && combatIdentity(state,token.actorId).side === 'enemy' ? ' is-dead-enemy' : ''}${areaCells.has(`${position.x}:${position.y}`) || (token && eligibleTargetIds?.includes(token.actorId)) ? ' is-area-preview' : ''}${reachableCells.has(`${position.x}:${position.y}`) ? ' is-move-reachable' : ''}${routeCells.has(`${position.x}:${position.y}`) ? ` is-route-preview${previewRoute && !previewRoute.available ? ' is-unavailable' : ''}` : ''}${hazardousCells.has(`${position.x}:${position.y}`) ? ' is-movement-hazard' : ''}`}
             aria-label={`${label}${auraSurfacesAt(state,position).includes('ice')?', лёд':''}`}
             data-illumination={illumination.level}
             data-surface={auraSurfacesAt(state,position).join(' ')}
+            data-movement-hazard={hazardousCells.has(`${position.x}:${position.y}`) || undefined}
             aria-description={[terrainLabel, illumination.magicalDarkness ? 'Магическая тьма' : illumination.daylight ? 'Дневной свет' : illumination.level === 'dark' ? 'Тьма' : illumination.level === 'dim' ? 'Тусклый свет' : 'Яркий свет'].filter(Boolean).join('; ')}
             data-actor-id={token?.actorId}
             data-scenery-zone={persistentAreas.length>0&&persistentAreas.every(area=>area.sceneryFeatureId)?'true':undefined}
@@ -627,6 +734,7 @@ export default function TacticalBattleMap({
             {token && actor && tokenAnchor && (() => {
               const identity = combatIdentity(state, token.actorId);
               return (
+              <BattleTokenMotion movement={movements[token.actorId]} position={token.position} cellSize={Math.round(80 * zoom)} reducedMotion={reducedMotion}>
               <span key={tokenAnimation(token.actorId)?committedFeedback?.id:token.actorId}
                 className={`battle-token is-${identity.side}${tokenAnimation(token.actorId)}`}
                 style={{ '--token-color': identity.accent, '--token-size': actorFootprint(actor, state),
@@ -634,16 +742,17 @@ export default function TacticalBattleMap({
                   '--token-contact-delay':`${tokenTiming.contactMs}ms`,'--token-launch-delay':`${tokenTiming.launchMs}ms`,
                   '--lunge-x':`${Math.cos(animationAngle)*9}px`,'--lunge-y':`${Math.sin(animationAngle)*9}px` } as React.CSSProperties}>
                 {token.tokenUrl ? <img src={token.tokenUrl} alt="" /> : <b>{combatActorDisplayName(actor).slice(0, 1)}</b>}
-                {identity.duplicateIndex && <span className="battle-token__duplicate">{identity.duplicateIndex}</span>}
-                <span className="battle-token__name">{identity.displayName}</span>
-                {token.facing&&<span className="battle-token__facing" aria-label={`Направление: ${FACING_LABELS[token.facing]}`}>{FACING_LABELS[token.facing].slice(-1)}</span>}
-                <span className="battle-token__hp"><i style={{ width: `${Math.max(0, actor.runtime.hp.current / actor.runtime.hp.max * 100)}%` }} /></span>
+                <span className="battle-token__health-mask" aria-hidden="true"><span className="battle-token__lost-health" style={{height: `${lostHealthFraction(actor.runtime.hp.current, actor.runtime.hp.max) * 100}%`}} /></span>
+                {identity.side !== 'enemy' && identity.duplicateIndex && <span className="battle-token__duplicate">{identity.duplicateIndex}</span>}
+                <span className="battle-token__name">{identity.side === 'enemy' ? combatActorDisplayName(actor) : identity.displayName}</span>
               </span>
+              </BattleTokenMotion>
               );
             })()}
           </button>
         );
       })}
+    </div>
     </div>
     {hoverTooltip}
     {!state.tacticalFootprints && Object.values(state.world.actors).some(actor=>actorFootprint(actor)>1) && <p className="text-sm p-2" role="note">Этот бой сохранён по прежним правилам размещения. Области 2×2 и 3×3 будут использоваться со следующей встречи.</p>}

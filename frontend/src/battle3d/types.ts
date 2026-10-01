@@ -16,6 +16,7 @@ export interface BattleCellView {
   reachable: boolean;
   areaPreview: boolean;
   route: boolean;
+  movementHazard?: boolean;
   unavailable: boolean;
   active: boolean;
   inspected: boolean;

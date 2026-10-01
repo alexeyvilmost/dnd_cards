@@ -1,6 +1,8 @@
 import {useEffect, useMemo, useState} from 'react';
-import {CanvasTexture, Color, SRGBColorSpace, Texture, TextureLoader, Vector2} from 'three';
+import {CanvasTexture, SRGBColorSpace, Texture, TextureLoader, Vector2} from 'three';
 import {terrainMaterial} from './terrain/materials';
+import {lostHealthFraction} from './tokenHealth';
+import {coinAppearanceColor,fallenPortraitFragment} from './coinAppearance';
 
 export type CoinFinish = 'stone' | 'bronze' | 'silver' | 'obsidian';
 
@@ -54,44 +56,38 @@ function usePortrait(url:string|undefined,name:string) {
   return portrait??fallback;
 }
 
-function useHealthNumber(hp:number) {
+function useLostHealthMask(hp:number,maxHp:number,fallen:boolean) {
+  const lost = lostHealthFraction(hp,maxHp);
   const texture=useMemo(()=>canvasTexture(ctx=>{
-    ctx.fillStyle='#202622';ctx.beginPath();ctx.arc(128,128,117,0,Math.PI*2);ctx.fill();
-    ctx.strokeStyle='#d8c397';ctx.lineWidth=12;ctx.stroke();
-    ctx.fillStyle='#f7ead0';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.shadowColor='#000';ctx.shadowBlur=8;
-    ctx.font=`bold ${hp>99?102:hp>9?132:158}px Georgia,serif`;
-    ctx.fillText(String(Math.max(0,hp)),128,137);
-  }),[hp]);
+    ctx.fillStyle=fallen?'#777777':'#ae1923';
+    ctx.fillRect(0,256*(1-lost),256,256*lost);
+  }),[lost,fallen]);
   useEffect(()=>()=>{texture?.dispose();},[texture]);
   return texture;
 }
 
 /** A portrait set into a carved coin. Only the read-only combat projection supplies its appearance. */
-export default function CoinToken({portraitUrl,name,hp,maxHp,accent,finish='stone'}: {
-  portraitUrl?:string;name:string;hp:number;maxHp:number;accent:string;finish?:CoinFinish;
+export default function CoinToken({portraitUrl,name,hp,maxHp,accent,finish='stone',fallen=hp<=0}: {
+  portraitUrl?:string;name:string;hp:number;maxHp:number;accent:string;finish?:CoinFinish;fallen?:boolean;
 }) {
   const portrait=usePortrait(portraitUrl,name);
-  const number=useHealthNumber(hp);
-  const material=FINISHES[finish];
+  const lostHealth=useLostHealthMask(hp,maxHp,fallen);
+  const material={...FINISHES[finish],body:coinAppearanceColor(FINISHES[finish].body,fallen),edge:coinAppearanceColor(FINISHES[finish].edge,fallen),inlay:coinAppearanceColor(FINISHES[finish].inlay,fallen)};
   const stone=terrainMaterial('stone');
+  const appearanceShader=(shader:{fragmentShader:string})=>{if(fallen)shader.fragmentShader=fallenPortraitFragment(shader.fragmentShader);};
+  const appearanceKey=()=>fallen?'battle-fallen-coin':'battle-living-coin';
   const profile=useMemo(()=>[
     new Vector2(0,0),new Vector2(.445,0),new Vector2(.46,.012),
     new Vector2(.46,.165),new Vector2(.448,.178),new Vector2(0,.178),
   ],[]);
-  const ratio=Math.max(0,Math.min(1,hp/Math.max(1,maxHp)));
-  const healthColor=useMemo(()=>ratio>.5
-    ? new Color('#d4aa65').lerp(new Color('#69c18c'),(ratio-.5)*2)
-    : new Color('#c96859').lerp(new Color('#d4aa65'),ratio*2),[ratio]);
   return <group name={`coin:${name}`}>
-    <mesh castShadow receiveShadow><latheGeometry args={[profile,48]}/><meshStandardMaterial color={material.body} map={finish==='stone'?stone.map:null} bumpMap={finish==='stone'?stone.bumpMap:null} roughnessMap={finish==='stone'?stone.roughnessMap:null} bumpScale={.03} roughness={material.roughness} metalness={material.metalness}/></mesh>
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.09,0]} castShadow><torusGeometry args={[.454,.01,4,48]}/><meshStandardMaterial color={material.edge} map={finish==='stone'?stone.map:null} roughness={material.roughness} metalness={material.metalness}/></mesh>
+    <mesh castShadow receiveShadow><latheGeometry args={[profile,48]}/><meshStandardMaterial key={fallen?'fallen':'living'} color={material.body} map={finish==='stone'?stone.map:null} bumpMap={finish==='stone'?stone.bumpMap:null} roughnessMap={finish==='stone'?stone.roughnessMap:null} bumpScale={.03} roughness={material.roughness} metalness={material.metalness} onBeforeCompile={appearanceShader} customProgramCacheKey={appearanceKey}/></mesh>
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.09,0]} castShadow><torusGeometry args={[.454,.01,4,48]}/><meshStandardMaterial key={fallen?'fallen':'living'} color={material.edge} map={finish==='stone'?stone.map:null} roughness={material.roughness} metalness={material.metalness} onBeforeCompile={appearanceShader} customProgramCacheKey={appearanceKey}/></mesh>
     <mesh rotation={[-Math.PI/2,0,0]} position={[0,.181,0]}><ringGeometry args={[.416,.438,48]}/><meshStandardMaterial color={material.inlay} roughness={.72} metalness={.24}/></mesh>
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.187,0]}><circleGeometry args={[.383,64]}/><meshBasicMaterial color="#252a27"/></mesh>
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.191,0]}><circleGeometry args={[.378,64]}/><meshBasicMaterial map={portrait} color={hp<=0?'#797c79':'#ffffff'}/></mesh>
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.196,0]}><ringGeometry args={[.387,.411,64]}/><meshBasicMaterial color="#26302d"/></mesh>
-    {ratio>0&&<mesh rotation={[-Math.PI/2,0,0]} position={[0,.2,0]}><ringGeometry args={[.387,.411,64,1,Math.PI/2,Math.PI*2*ratio]}/><meshBasicMaterial color={healthColor} toneMapped={false}/></mesh>}
-    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.203,0]}><ringGeometry args={[.378,.384,64]}/><meshBasicMaterial color={accent} transparent opacity={.8}/></mesh>
-    {number&&<mesh rotation={[-Math.PI/2,0,0]} position={[0,.21,.29]}><circleGeometry args={[.082,32]}/><meshBasicMaterial map={number} transparent depthWrite={false}/></mesh>}
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.187,0]}><circleGeometry args={[.383,64]}/><meshBasicMaterial color={coinAppearanceColor('#252a27',fallen)}/></mesh>
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.191,0]}><circleGeometry args={[.378,64]}/><meshBasicMaterial key={fallen?'fallen':'living'} map={portrait} color="#ffffff" onBeforeCompile={shader=>{if(fallen)shader.fragmentShader=fallenPortraitFragment(shader.fragmentShader);}} customProgramCacheKey={()=>fallen?'battle-fallen-portrait':'battle-living-portrait'}/></mesh>
+    {lostHealth&&<mesh name="lost-health-shading" rotation={[-Math.PI/2,0,0]} position={[0,.194,0]}><circleGeometry args={[.378,64]}/><meshBasicMaterial map={lostHealth} transparent opacity={.36} depthWrite={false} toneMapped={false}/></mesh>}
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.196,0]}><ringGeometry args={[.387,.411,64]}/><meshBasicMaterial color={coinAppearanceColor('#26302d',fallen)}/></mesh>
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.203,0]}><ringGeometry args={[.378,.384,64]}/><meshBasicMaterial color={coinAppearanceColor(accent,fallen)} transparent opacity={.8}/></mesh>
   </group>;
 }

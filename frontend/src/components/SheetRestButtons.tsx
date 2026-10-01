@@ -217,15 +217,15 @@ export default function SheetRestButtons({
     () => ({
       ...buildResourceRecharge((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
       ...actionUseRestPolicies.recharge,
-      ...collectFreeuseRecharge(ruleState.freeuseSpells),
+      ...collectFreeuseRecharge(ruleState.freeuseSpells,{spells:assembled.spells,resources:character.max_resources ?? undefined}),
     }),
-    [assembled.klass?.resources, actionUseRestPolicies.recharge, ruleState.freeuseSpells],
+    [assembled.klass?.resources, assembled.spells, character.max_resources, actionUseRestPolicies.recharge, ruleState.freeuseSpells],
   );
   const resourceRecovery = useMemo(() => ({
-    ...collectFreeuseRecovery(ruleState.freeuseSpells),
+    ...collectFreeuseRecovery(ruleState.freeuseSpells,{spells:assembled.spells,resources:character.max_resources ?? undefined}),
     ...buildResourceRecovery((assembled.klass?.resources ?? null) as Record<string, unknown> | null),
     ...actionUseRestPolicies.recovery,
-  }), [assembled.klass?.resources, actionUseRestPolicies.recovery, ruleState.freeuseSpells]);
+  }), [assembled.klass?.resources, assembled.spells, character.max_resources, actionUseRestPolicies.recovery, ruleState.freeuseSpells]);
 
   const ctx = useMemo(
     () => ({

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PendingChoice } from '../mechanics/collectChoices';
 import type { Spell } from '../types';
-import { preparedSpellChoiceAllowsOwnedOption, spellMatchesChoice } from './spellChoices';
+import { preparedSpellChoiceAllowsOwnedOption, spellCanBeAcquired, spellMatchesChoice } from './spellChoices';
 
 const spell = (id: string, level: number, classes: string[]): Spell =>
   ({ id, level, classes } as Spell);
@@ -17,6 +17,17 @@ const choice = (filter: unknown): PendingChoice =>
   } as unknown as PendingChoice);
 
 describe('spellMatchesChoice', () => {
+  it.each(['parent-command', 'parent-hex'])('excludes children of %s from every ordinary choice filter', (parentId) => {
+    const parent = { ...spell(parentId, 1, ['wizard']), card_number: parentId, mechanics: { spell_variant_ids: [`${parentId}-child`] } };
+    const child = { ...parent, id: `${parentId}-child`, card_number: `${parentId}-child-card`, mechanics: { variant_of_spell_id: parentId } };
+    const acquisitionChoices = [choice('all'), choice([child.id]), choice(child.id), choice({ levels: [1], classes: ['wizard'] }),
+      { ...choice({}), source: 'prepared_spell', allowedOptionIds: [parent.id, child.card_number] }];
+    expect(spellCanBeAcquired(parent)).toBe(true);
+    expect(spellCanBeAcquired(child)).toBe(false);
+    for (const acquisitionChoice of acquisitionChoices) expect(spellMatchesChoice(child, acquisitionChoice, 1)).toBe(false);
+    expect(spellMatchesChoice(parent, choice({ levels: [1], classes: ['wizard'] }), 1)).toBe(true);
+  });
+
   it('фильтрует заговоры и классовые списки тем же правилом, что кузница', () => {
     const fireBolt = spell('fire-bolt', 0, ['wizard']);
     const guidance = spell('guidance', 0, ['cleric', 'druid']);

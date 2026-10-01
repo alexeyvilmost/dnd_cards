@@ -45,6 +45,22 @@ function engineRecord(
 }
 
 describe('structured solo-combat log', () => {
+  it('retains exact HP, survival and effect patches without adding a journal row or replaying rules', () => {
+    const events = [{ordinal: 3, sourceActorId: 'enemy', obligationIds: [], payload: {
+      type: 'ActorRuntimePatched', actorId: 'hero', reason: 'action', patch: {
+        hp: {current: 1, max: 20, temp: 0}, deathSaves: {successes: 0, failures: 0, stable: false, dead: false},
+        activeEffects: [], resources: {reaction: 0},
+      },
+    }}] as UncommittedRuleEvent[];
+    const saved = JSON.stringify(events);
+    const [record] = projectCombatLogRecords(events);
+    expect(record).toMatchObject({kind: 'engine', ordinal: 3, sourceActorId: 'enemy', actorId: 'hero', targetIds: ['hero'],
+      runtimePatch: {hp: {current: 1, max: 20, temp: 0}, activeEffects: [], deathSaves: {dead: false}}});
+    expect(record.runtimePatch).not.toHaveProperty('resources');
+    expect(combatLogDetails(record, state)).toEqual([]);
+    expect(JSON.stringify(events)).toBe(saved);
+    expect(projectCombatLogRecords(JSON.parse(saved))).toEqual([record]);
+  });
   it('projects stable entity and cast provenance for utility declarations and their engine events', () => {
     const records = projectCombatLogRecords([
       {ordinal: 1, sourceActorId: 'hero', obligationIds: [], payload: {

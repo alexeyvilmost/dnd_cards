@@ -1,0 +1,27 @@
+.dice-dialog.subclass-comparison-dialog { width: min(1280px, calc(100vw - 32px)); }
+.subclass-comparison-scroll { min-height: 0; overflow: auto; scrollbar-color: #6b5836 #1c1813; border: 1px solid #6b5836; border-radius: 10px; }
+.subclass-comparison-scroll:focus-visible { outline: 2px solid #d8b978; outline-offset: 3px; }
+.subclass-comparison-table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: auto; }
+.subclass-comparison-table :is(th,td) { border-right: 1px solid #6b583655; border-bottom: 1px solid #6b583655; padding: 16px; min-width: 230px; vertical-align: top; }
+.subclass-comparison-table tr > :last-child { border-right: 0; }
+.subclass-comparison-table tbody tr:last-child > * { border-bottom: 0; }
+.subclass-comparison-table thead th { background: #211c15; text-align: center; position: sticky; top: 0; z-index: 2; }
+.subclass-comparison-table thead .forge-square-card { margin: auto; width: 130px; max-width: 130px; }
+.subclass-comparison-table .subclass-level-label { min-width: 64px; width: 64px; padding: 16px 10px; position: sticky; left: 0; background: #211c15; color: #d8b978; text-align: center; font-weight: 400; font-size: 12px; z-index: 1; }
+.subclass-comparison-table thead .subclass-level-label { z-index: 3; vertical-align: middle; }
+.subclass-level-label b { display: block; font: 26px/1.2 Georgia, serif; }
+.subclass-level-label span { font-size: 10px; color: #a99f8b; }
+.subclass-comparison-table td.is-selected { background: #d8b97808; }
+.subclass-comparison-table .forge-ability-lines { display: grid; gap: 8px; }
+.subclass-comparison-table .sheet-item-row { width: 100%; text-align: left; }
+.subclass-comparison-table .cs-action-tiles { gap: 8px; justify-content: flex-start; }
+.subclass-comparison-table .forge-ability-lines + .forge-ability-lines,
+.subclass-comparison-table .cs-action-tiles + .cs-action-tiles { margin-top: 10px; }
+.subclass-comparison-empty { display: block; color: #a99f8b; text-align: center; }
+.subclass-comparison-status { color: #a99f8b; padding: 24px; text-align: center; }
+@media (max-width: 540px) {
+  .dice-dialog.subclass-comparison-dialog { padding: 20px 12px 14px; }
+  .subclass-comparison-table :is(th,td) { min-width: 225px; padding: 12px; }
+  .subclass-comparison-table .subclass-level-label { min-width: 45px; width: 45px; padding: 12px 6px; }
+  .subclass-comparison-dialog .dice-dialog-actions { display: flex; }
+}

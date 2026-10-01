@@ -47,7 +47,7 @@ export default function SettingsPanel({initialPage='home',onTestDice}:{initialPa
       {section('audio',<AudioSettings/>)}
       {section('combat',<>
         {check('combat3d','Монетки на поле','Объёмное поле на фоне страницы. Камера смотрит строго сверху; поле можно сдвигать и масштабировать.')}
-        {decisionPolicyToggles('roll_influence').map(policy=><label className="settings-panel-check" key={policy.id}>
+        {[...decisionPolicyToggles('roll_influence'),...decisionPolicyToggles('turn_start')].map(policy=><label className="settings-panel-check" key={policy.id}>
           <input type="checkbox" checked={decisionPolicyEnabled(policy,preferences)} onChange={event=>setPreference(policy.id,event.target.checked)}/>
           <span>{policy.name}<small>{policy.description}</small></span>
         </label>)}

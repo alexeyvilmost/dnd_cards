@@ -110,23 +110,31 @@ function restoreTurnResources(
 }
 
 /**
- * Один явный переход хода уменьшает раундовые длительности на 1. В одиночном листе
- * игрок может пользоваться либо «Новый ход», либо «Конец хода», поэтому оба действия
- * вызывают этот резолвер.
+ * Unqualified round durations retain the legacy transition policy. A duration
+ * can declare its own start/end boundary, so a start-of-turn listener remains
+ * present throughout its final turn and expires at that turn's end.
  */
 function advanceRoundEffects(
   state: RuntimeState,
-  expireStartBoundary = false,
+  boundary: 'start' | 'end',
+  advanceDefault: boolean,
 ): { state: RuntimeState; events: EngineEvent[] } {
   const events: EngineEvent[] = [];
   const kept: typeof state.activeEffects = [];
   for (const e of state.activeEffects) {
-    if (expireStartBoundary && e.expiry === 'start_of_next_turn') {
+    if (boundary === 'start' && advanceDefault && e.expiry === 'start_of_next_turn') {
       events.push({ type: 'effect_expired', name: e.name });
       continue;
     }
     // Длительность в раундах: каждый явный переход хода списывает один оставшийся ход.
     if (e.roundsLeft != null) {
+      const duration = e.mechanics.duration as Dict | undefined;
+      const declaredBoundary = duration?.round_boundary;
+      if ((declaredBoundary === 'start' || declaredBoundary === 'end')
+        ? declaredBoundary !== boundary : !advanceDefault) {
+        kept.push(e);
+        continue;
+      }
       const left = e.roundsLeft - 1;
       if (left <= 0) {
         events.push({ type: 'effect_expired', name: e.name });
@@ -141,7 +149,7 @@ function advanceRoundEffects(
 }
 
 export interface TurnTransitionOptions {
-  /** Rules-core uses StartTurn as the single round-duration boundary. */
+  /** Controls legacy durations. Explicit data-owned boundaries always advance. */
   advanceRoundDurations?: boolean;
 }
 
@@ -157,8 +165,8 @@ export function startTurn(
   // Сброс гейта «раз за ход» для triggered-эффектов (Скрытая атака и т.п.).
   next = resetEventOccurrences({ ...next, firedThisTurn: [] }, 'turn');
   next = restoreTurnResources(next, ctx?.resourceRecharge);
-  if (options.advanceRoundDurations !== false) {
-    const expired = advanceRoundEffects(next, true);
+  {
+    const expired = advanceRoundEffects(next, 'start', options.advanceRoundDurations !== false);
     const ended = ctx ? reconcileEndedEffects(next, expired.state, execCtxOf(ctx), executeAction, { boundary: 'start' }) : expired;
     next = reconcileTemporaryResourceGrants(next,ended.state,ctx);
     if (ctx) events.push(...ended.events);
@@ -375,8 +383,8 @@ export function endTurn(
 
   // Списываем ход только у эффектов, существовавших до turn_end-триггеров. Эффект,
   // который сам возник «в конце хода», не должен немедленно потерять первый ход.
-  if (options.advanceRoundDurations !== false) {
-    const advanced = advanceRoundEffects(next);
+  {
+    const advanced = advanceRoundEffects(next, 'end', options.advanceRoundDurations !== false);
     const ended = ctx ? reconcileEndedEffects(next, advanced.state, execCtxOf(ctx), executeAction) : advanced;
     next = reconcileTemporaryResourceGrants(next,ended.state,ctx);
     if (ctx) events.push(...ended.events);

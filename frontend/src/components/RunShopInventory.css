@@ -1,0 +1,14 @@
+.run-shop-inventory{margin:24px 0;padding:20px;border:1px solid #775831;border-radius:12px;background:linear-gradient(120deg,#33261980,#201b14);color:#d8cbb3}
+.run-shop-inventory>header{display:flex;justify-content:space-between;gap:16px;align-items:start}
+.run-shop-inventory h2{margin:0;font-size:1.2rem;font-weight:400;color:var(--shop-gold,#d9b975)}
+.run-shop-inventory p{margin:8px 0;color:#b5a689;line-height:1.5}
+.run-shop-owned-items{margin-top:20px;gap:10px}
+.run-shop-inventory select,.run-shop-sale-confirm input{display:block;padding:8px 10px;border:1px solid #775831;border-radius:6px;color:#efdbb4;background:#151410}
+.run-shop-sale-confirm{display:grid;gap:12px;margin-top:16px;color:#d8cbb3}
+.run-shop-sale-confirm p{color:#b5a689;line-height:1.5}
+.run-shop-sale-confirm input{max-width:130px}
+.run-shop-sale-confirm button,.run-shop-sale-pending button{padding:10px 16px;background:linear-gradient(#755129,#463019);border:1px solid #b38a48;color:#ffe1a5;border-radius:7px;cursor:pointer}
+.run-shop-inventory button:disabled{opacity:.45;cursor:not-allowed}
+.run-shop-sale-pending{padding:12px;border:1px solid #a3814466;border-radius:8px;background:#d9b97508}
+.run-shop-sale-confirm :is(button,input):focus-visible,.run-shop-inventory select:focus-visible{outline:2px solid #d9b975;outline-offset:3px}
+@media(max-width:640px){.run-shop-inventory>header{flex-direction:column}}

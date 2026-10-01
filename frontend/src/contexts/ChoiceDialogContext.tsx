@@ -8,14 +8,24 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import type { PendingChoice } from '../mechanics/collectChoices';
 import { ChoiceResolver } from '../character/components';
 import DialogShell from '../components/DialogShell';
+import type {Feat} from '../types';
 import './DiceDialog.css';
+import './ForgeChoiceDialog.css';
 
 /** Результат: id выбора (сырой choice.id) → выбранные значения. null — отмена. */
 export type ChoiceResult = Record<string, string[]> | null;
 
+export interface ChoiceDialogOptions {
+  presentation?: 'levelup';
+  feats?: Feat[];
+  summary?: string;
+  unavailableOptions?: (choice: PendingChoice, selection: string[]) => Record<string, string>;
+  canApply?: (values: Record<string, string[]>) => boolean;
+}
+
 interface ChoiceDialogApi {
   /** Пустой список выборов → сразу resolve({}) без окна (как автобросок в dice-диалоге). */
-  request: (choices: PendingChoice[], title: string) => Promise<ChoiceResult>;
+  request: (choices: PendingChoice[], title: string, options?: ChoiceDialogOptions) => Promise<ChoiceResult>;
 }
 
 const Ctx = createContext<ChoiceDialogApi | null>(null);
@@ -26,7 +36,7 @@ export function useChoiceDialog(): ChoiceDialogApi {
   return api;
 }
 
-interface DialogState { choices: PendingChoice[]; title: string; }
+interface DialogState { choices: PendingChoice[]; title: string; options?: ChoiceDialogOptions; }
 
 export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
   const [dialog, setDialog] = useState<DialogState | null>(null);
@@ -37,7 +47,7 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
     resolver.current = null;
   }, []);
 
-  const request = useCallback((choices: PendingChoice[], title: string): Promise<ChoiceResult> => {
+  const request = useCallback((choices: PendingChoice[], title: string, options?: ChoiceDialogOptions): Promise<ChoiceResult> => {
     if (choices.length === 0) return Promise.resolve({});
     return new Promise((resolve) => {
       // Не оставляем предыдущий запрос «висящим» без ответа (защита от гонки при повторном request).
@@ -45,7 +55,7 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
       resolver.current = resolve;
       // Рекомендованные варианты предвыбираем сразу (можно изменить перед «Применить»).
       setValues(Object.fromEntries(choices.map((c) => [c.id, (c.recommended ?? []).slice(0, Math.max(1, c.count || 1))])));
-      setDialog({ choices, title });
+      setDialog({ choices, title, options });
     });
   }, []);
 
@@ -56,21 +66,27 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
   };
 
   // Готово, когда у каждого выбора набрано нужное число значений (count, минимум 1).
-  const ready = dialog ? dialog.choices.every((c) => (values[c.id]?.length ?? 0) >= Math.max(1, c.count || 1)) : false;
+  const ready = dialog ? dialog.choices.every((c) => (values[c.id]?.length ?? 0) >= Math.max(1, c.count || 1))
+    && (dialog.options?.canApply?.(values) ?? true) : false;
 
   return (
     <Ctx.Provider value={{ request }}>
       {children}
       {dialog && (
-        <DialogShell label="Выбор при действии" onCancel={() => finish(null)} wrap>
+        <DialogShell label={dialog.title} onCancel={() => finish(null)} wrap
+          initialFocus={dialog.options?.presentation === 'levelup' ? 'dialog' : 'first'}
+          className={dialog.options?.presentation === 'levelup' ? 'forge-choice-dialog' : undefined}>
               <div className="dice-dialog-title">{dialog.title}</div>
-              <div className="dice-dialog-summary">Выберите вариант применения:</div>
+              <div className="dice-dialog-summary">{dialog.options?.summary ?? 'Выберите вариант применения:'}</div>
               <div className="dice-dialog-list">
                 {dialog.choices.map((c) => (
                   <ChoiceResolver
                     key={c.id}
                     choice={c}
                     value={values[c.id] || []}
+                    feats={dialog.options?.feats}
+                    groupSpellLevels={dialog.options?.presentation === 'levelup'}
+                    unavailableOptions={dialog.options?.unavailableOptions?.(c, values[c.id] || [])}
                     onChange={(v) => setValues((prev) => ({ ...prev, [c.id]: v }))}
                   />
                 ))}

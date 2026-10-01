@@ -1,5 +1,16 @@
 [
   {
+    "id": "turn-start.auto-stand",
+    "scope": "turn_start",
+    "predicate": "granted_condition_action",
+    "name": "Вставать автоматически, если хватает передвижения",
+    "description": "В начале своего хода автоматически использовать предоставленное состоянием действие «Встать», если персонаж в сознании и хватает передвижения. Стоимость и доступность заново проверяются правилами.",
+    "enabledDescription": "В начале хода подходящее действие состояния выполняется обычной командой. Если передвижения не хватает, действие остаётся доступным для ручного выбора.",
+    "disabledDescription": "Выбирать действие «Встать» вручную.",
+    "imageUrl": "/icons/passives/auto-stand.svg",
+    "defaultEnabled": true
+  },
+  {
     "id": "roll-influence.only-misses",
     "scope": "roll_influence",
     "imageUrl": "/icons/passives/roll-influence.svg",

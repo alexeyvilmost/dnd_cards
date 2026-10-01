@@ -126,9 +126,9 @@ export default function CombatActorInspector({
       <section>
         <h3>Состояния</h3>
         {effectGroups.length || grappleStatuses.length
-          ? <div className="combat-actor-inspector__effects">{effectGroups.map((group) => (
+          ? <div className="combat-actor-inspector__effects combat-actor-inspector__effects--icons">{effectGroups.map((group) => (
             <div key={group.key}>
-              <ActiveEffectCard group={group} />
+              <ActiveEffectCard group={group} variant="icon" />
             </div>
           ))}{grappleStatuses.map((status) => (
             <div key={status.key}>

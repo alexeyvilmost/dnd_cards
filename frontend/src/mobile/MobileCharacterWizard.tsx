@@ -739,7 +739,7 @@ export default function MobileCharacterWizard() {
     setError(null);
     try {
       const resolvedRules = resolveCharacterRules({ draft, assembled });
-      const payload = buildSavePayload(draft, assembled, resolvedRules, original?.current_hp);
+      const payload = buildSavePayload(draft, assembled, resolvedRules, original?.current_hp, original?.max_hp);
       const context = buildCharacterContext(resolvedRules, draft, [], assembled.klass);
       let character: ForgeCharacter;
       if (!original) {

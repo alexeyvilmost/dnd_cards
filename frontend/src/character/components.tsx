@@ -1,7 +1,7 @@
 import SheetActionLine from '../components/SheetActionLine';
 import {useSiteSettings} from '../settings';
 import SheetWeaponMasteryDialog from '../components/SheetWeaponMasteryDialog';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { optionsForChoiceSource, labelOf, SKILLS, type RegistryItem } from '../mechanics/registries';
 import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
@@ -12,6 +12,7 @@ import {
   type AbilityBonuses, type AbilityGenMethod, type AbilityKey, type CharacterDraft,
 } from './types';
 import type { Action, Feat, FeatCategory, Spell } from '../types';
+import {getSpellLevelLabel} from '../types';
 import { actionsApi,spellsApi } from '../api/client';
 import { abilityMod } from './derive';
 import {
@@ -156,8 +157,28 @@ export function choiceOptionIdByReference(
   ))?.id;
 }
 
+/** Join a picker option to its declared feat payload without changing the
+ * option id persisted by the generic choice resolver. */
+export function featForChoiceOption(choice: PendingChoice, optionId: string, feats: readonly Feat[]): Feat | undefined {
+  const item = choice.items?.find(candidate => candidate.id === optionId);
+  const references = item
+    ? [item.value, ...(item.grants ?? []).filter(grant => grant.kind === 'grant_feat').map(grant => grant.value), optionId]
+    : [optionId];
+  for (const reference of references) {
+    if (typeof reference !== 'string') continue;
+    const feat = feats.find(candidate => candidate.id === reference || candidate.card_number === reference);
+    if (feat) return feat;
+  }
+  // Older data can point at a shared registry key. Reuse the declared alias
+  // join already used by the full feat domain, never entity-specific rules.
+  const all = optionsForChoice({...choice, source: 'feat', items: undefined, filter: 'all', options: undefined}, [...feats]);
+  const canonical = references.flatMap(reference => typeof reference === 'string'
+    ? [choiceOptionIdByReference(all, reference)].filter((id): id is string => Boolean(id)) : []);
+  return feats.find(feat => canonical.includes(feat.id));
+}
+
 export function ChoiceResolver({
-  choice, value, onChange, unavailableOptions = {}, feats,
+  choice, value, onChange, unavailableOptions = {}, feats, groupSpellLevels = false,
 }: {
   choice: PendingChoice;
   value: string[];
@@ -165,6 +186,8 @@ export function ChoiceResolver({
   unavailableOptions?: Record<string, string>;
   /** Справочник черт для choice(source:"feat") — варианты по категории. */
   feats?: Feat[];
+  /** Presentation only; all levels retain one canonical selection/count. */
+  groupSpellLevels?: boolean;
 }) {
   const {entityDisplay} = useSiteSettings();
   const options = optionsForChoice(choice, feats);
@@ -218,12 +241,18 @@ export function ChoiceResolver({
     }
   };
   const done = value.length >= choice.count;
+  const previewSpell = (optionId: string) => choice.items?.find(item => item.id === optionId)?.previewSpell ?? spellPreviews[optionId];
+  const spellOptions = groupSpellLevels ? [...options].sort((left, right) => (
+    (previewSpell(left.id)?.level ?? 0) - (previewSpell(right.id)?.level ?? 0)
+  )) : options;
 
   // Выбор черты (боевой стиль, доп. черта Человека и т.п.) — как выбор
   // черты происхождения: сетка квадратов с иконкой и превью при наведении.
-  const featById = new Map((feats || []).map((f) => [f.id, f]));
   const featTiles = choice.source === 'feat'
-    ? options.map((o) => featById.get(o.id)).filter((f): f is Feat => !!f)
+    ? options.flatMap(option => {
+      const feat = featForChoiceOption(choice, option.id, feats ?? []);
+      return feat ? [{option, feat}] : [];
+    })
     : [];
 
   return (
@@ -238,14 +267,17 @@ export function ChoiceResolver({
           unavailableOptions={unavailableOptions} initialShowAll onChange={(_id,next)=>onChange(next)} onClose={()=>setMasteryOpen(false)}/>}
       </> : spellReferences!=='[]'||choice.items?.some(item=>item.previewSpell) ? (
         <div className={entityDisplay.spells === 'icon' ? 'cs-action-tiles choice-spell-entities' : 'choice-spell-entities'}>
-          {options.map(option => {
-            const spell = choice.items?.find(item => item.id === option.id)?.previewSpell??spellPreviews[option.id];
-            return <SheetActionLine key={option.id} name={option.label} imageUrl={spell?.image_url}
+          {spellOptions.map((option, index) => {
+            const spell = previewSpell(option.id);
+            const startsLevel = groupSpellLevels && (index === 0 || spell?.level !== previewSpell(spellOptions[index - 1].id)?.level);
+            return <Fragment key={option.id}>
+              {startsLevel && <div className="choice-spell-level">{getSpellLevelLabel(spell?.level ?? 0)}</div>}
+              <SheetActionLine name={option.label} imageUrl={spell?.image_url}
               variant={entityDisplay.spells} spellRef={spell} level={spell?.level}
               selected={value.includes(option.id)} sourceLabel={value.includes(option.id) ? 'Выбрано' : choice.prompt}
               detail={value.includes(option.id) ? 'Выбрано' : spell ? `${spell.level} ур.` : undefined}
               disabled={!!unavailableOptions[option.id] && !value.includes(option.id)} disabledTitle={unavailableOptions[option.id]}
-              onActivate={() => toggle(option.id)}/>;
+              onActivate={() => toggle(option.id)}/></Fragment>;
           })}
         </div>
       ) : choice.items?.some(item=>item.previewAction) ? (
@@ -278,20 +310,27 @@ export function ChoiceResolver({
           })}
         </div>
       ) : featTiles.length > 0 ? (
-        <div className="forge-square-grid">
-          {featTiles.map((f) => (
-            <EntitySquareCard
-              key={f.id}
+        <div className={entityDisplay.effects === 'row' ? 'choice-feat-rows' : 'forge-square-grid'}>
+          {featTiles.map(({option, feat: f}) => entityDisplay.effects === 'row' ? <ForgeAbilityLine
+            key={option.id} name={f.name} imageUrl={f.image_url} feat={f} variant="row"
+            selected={value.includes(option.id)}
+            disabled={!!unavailableOptions[option.id] && !value.includes(option.id)}
+            disabledReason={unavailableOptions[option.id]} onActivate={() => toggle(option.id)}/>
+            : <EntitySquareCard
+              key={option.id}
               name={f.name}
               imageUrl={f.image_url}
-              selected={value.includes(f.id)}
-              disabled={!!unavailableOptions[f.id] && !value.includes(f.id)}
-              disabledReason={unavailableOptions[f.id]}
-              onClick={() => toggle(f.id)}
+              selected={value.includes(option.id)}
+              disabled={!!unavailableOptions[option.id] && !value.includes(option.id)}
+              disabledReason={unavailableOptions[option.id]}
+              onClick={() => toggle(option.id)}
               preview={<FeatPreview feat={f} disableHover />}
               supportEntity={f}
-            />
-          ))}
+            />)}
+          {options.filter(option => !featTiles.some(tile => tile.option.id === option.id)).map(option => <button
+            key={option.id} type="button" className={`chip ${value.includes(option.id) ? 'on' : ''}`}
+            aria-pressed={value.includes(option.id)} disabled={!!unavailableOptions[option.id] && !value.includes(option.id)}
+            aria-description={unavailableOptions[option.id]} onClick={() => toggle(option.id)}>{option.label}</button>)}
         </div>
       ) : (
         <div className="chips">

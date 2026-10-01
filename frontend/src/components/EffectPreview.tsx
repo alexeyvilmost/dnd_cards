@@ -24,9 +24,11 @@ interface EffectPreviewProps {
   onClick?: () => void;
   /** Контекстная подпись источника (лист/кузня): «Вид · Эльф», «Черта · Ловкач». Замещает тип эффекта. */
   sourceLabel?: string;
+  /** Runtime context appended to the canonical entity preview. */
+  footer?: React.ReactNode;
 }
 
-const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', disableHover = false, onClick, sourceLabel }: EffectPreviewProps) => {
+const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', disableHover = false, onClick, sourceLabel, footer }: EffectPreviewProps) => {
   const resources = useResourceOptions();
   const { playerMode } = useSiteSettings();
   const formulaCtx = useCharacterFormulaCtx();
@@ -153,6 +155,7 @@ const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', di
       ) : (
         <div className="sp-spacer" />
       )}
+      {footer}
     </div>
   );
 };

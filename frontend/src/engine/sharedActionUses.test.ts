@@ -2,6 +2,8 @@ import {describe,expect,it} from 'vitest';
 import {actionUsesKey} from './actionUses';
 import {projectRuleAction} from '../canon/ruleActionProjection';
 import {collectActionUsesPools,collectActionUsesRecovery} from '../character/actionSheet';
+import {syncRuntimeResources} from '../character/resourceInit';
+import {FIGHTER_CTX} from '../mvp/fixtures';
 import type {AssembledCharacter} from '../character/assemble';
 import type {Action} from '../types';
 import {pay} from './cost';
@@ -25,5 +27,25 @@ describe('shared data-owned action uses',()=>{
   it('rejects malformed shared identities and preserves ordinary action identities',()=>{
     expect(()=>actionUsesKey('normal',{uses:{count:1,pool:''}})).toThrow();
     expect(actionUsesKey('normal',{uses:{count:1}})).toBe('uses_normal');
+  });
+  it.each(['guarding-capability','healing-capability'])('uses the authored %s resource across projection, reload and payment',id=>{
+    const entity=action(`renamed-${id}`,'old-pool');
+    const key=`uses_${id}`;
+    (entity.mechanics!.uses as Record<string,unknown>).resource_id=key;
+    const assembled={actions:[],effects:[],spells:[]} as unknown as AssembledCharacter;
+    const grants=[{action:entity,sourceLabel:'Data owner',group:'class' as const}];
+    const before={resources:{[key]:2},maxResources:{[key]:6},inventory:[],equipment:{},
+      hp:{current:10,max:10,temp:0},activeEffects:[]} as RuntimeState;
+    const synced=syncRuntimeResources(FIGHTER_CTX,assembled,JSON.parse(JSON.stringify(before)),[],[],grants);
+    const projected=projectRuleAction(entity),cost=(projected.mechanics.activation as {cost:Record<string,unknown>[]}).cost;
+    expect(cost[0].resource).toBe(key);
+    expect(synced.resources[key]).toBe(2);
+    expect(synced.maxResources[key]).toBe(6);
+    expect(synced.maxResources).not.toHaveProperty(`uses_${entity.card_number}`);
+    expect(pay({...before,...synced},cost).state.resources[key]).toBe(1);
+    expect(collectActionUsesRecovery(assembled,[],grants)[key]?.long_rest).toEqual({mode:'dice',dice:'1d6'});
+  });
+  it.each(['', 'unregistered ref', 'x'.repeat(101), 17])('rejects invalid explicitly authored resource %s',resource_id=>{
+    expect(()=>actionUsesKey('legacy',{uses:{count:2,resource_id}})).toThrow('Invalid declared');
   });
 });

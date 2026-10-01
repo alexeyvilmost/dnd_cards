@@ -16,5 +16,6 @@ export function cappedEffectDuration(duration:Record<string,unknown>|undefined,c
     'until_start_of_source_next_turn','until_end_of_source_next_turn'].includes(String(duration?.type))){
     return {...duration,concentration:false};
   }
-  return {type:'rounds',amount:Math.min(cap,finiteDurationRounds(duration)??cap),concentration:false};
+  return {type:'rounds',amount:Math.min(cap,finiteDurationRounds(duration)??cap),concentration:false,
+    ...(['start','end'].includes(String(duration?.round_boundary)) ? {round_boundary:duration!.round_boundary} : {})};
 }

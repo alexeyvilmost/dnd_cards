@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {withoutLegacyRunSuffix} from '../character/familiarLabels';
 import {Link,useLocation} from 'react-router-dom';
 import {Swords,Skull,Store,PackageOpen,Mountain,Tent,Sparkles,Crown,Check,MapPin,ChevronsUp} from 'lucide-react';
 import type {RoguelikeRun,RoguelikeCommandType} from '../roguelike/api';
@@ -29,8 +30,8 @@ export function UrvinStash({run,busy,onClaim}:{run:RoguelikeRun;busy:boolean;onC
   if(!run.journey?.stash?.length)return null;
   return <article aria-label="Невместившаяся добыча"><h3>Невместившаяся добыча</h3>
     <p>{run.status==='active'?'Освободите место в рюкзаке и заберите награду.':'Выберите участника со свободным местом в рюкзаке.'}</p>
-    <select aria-label="Получатель добычи" value={actor} disabled={busy} onChange={e=>setActor(e.target.value)}>{members.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
-    {run.status==='active'&&<div className="urvin-room-actions">{members.map(c=><Link key={c.id} className="roguelike-secondary" to={runSheetURL(run,c.id)}>Лист · {c.name}</Link>)}</div>}
+    <select aria-label="Получатель добычи" value={actor} disabled={busy} onChange={e=>setActor(e.target.value)}>{members.map(c=><option key={c.id} value={c.id}>{withoutLegacyRunSuffix(c.name)}</option>)}</select>
+    {run.status==='active'&&<div className="urvin-room-actions">{members.map(c=><Link key={c.id} className="roguelike-secondary" to={runSheetURL(run,c.id)}>Лист · {withoutLegacyRunSuffix(c.name)}</Link>)}</div>}
     <JourneyLoot items={run.journey.stash} busy={busy} onClaim={id=>onClaim(id,actor)}/>
   </article>;
 }
@@ -83,7 +84,7 @@ export default function UrvinJourney({run,busy,command}:{run:RoguelikeRun;busy:b
                 const pendingHere=!!run.pending_level&&c.level===earned;
                 return <li key={c.id} className={needsLevel?'is-pending':pendingHere?'is-waiting':''}>
                   <div>
-                    <strong>{c.name}</strong>
+                    <strong>{withoutLegacyRunSuffix(c.name)}</strong>
                     <span>уровень {c.level}{needsLevel?` → ${c.level+1}`:pendingHere?' · ждёт союзников':earned===c.level?' · готов':''}</span>
                   </div>
                   {needsLevel
@@ -100,7 +101,7 @@ export default function UrvinJourney({run,busy,command}:{run:RoguelikeRun;busy:b
             {!current.completed&&current.kind==='shop'&&<div className="urvin-room-actions"><Link className="roguelike-primary" to={shopURLFromPage(`/shop/roguelike?roguelike=${run.id}&character=${run.character_id}`,location)}>К торговцу</Link><button className="roguelike-secondary" disabled={busy} onClick={()=>void command('leave_room')}>Продолжить путь</button></div>}
             {!current.completed&&['pass','camp'].includes(current.kind)&&<><p>Отдых общий для всей группы. Для выбора костей хитов или подготовки заклинаний откройте лист участника.</p><button className="roguelike-primary" disabled={busy||members.some(c=>c.current_hp<1)} onClick={()=>void command(current.kind==='camp'?'long_rest':'short_rest',{preserve_preparation:true})}>{current.kind==='camp'?'Разбить лагерь · долгий отдых':'Передохнуть · короткий отдых'}</button></>}
             {!current.completed&&event&&!event.finished&&<section className="urvin-event"><h3>{event.definition.name}</h3><p>{event.definition.description}</p>
-              {!event.choice_id?<><label>Кто действует?<select value={actor} onChange={e=>setActor(e.target.value)}>{members.map(c=><option key={c.id} value={c.id} disabled={c.current_hp<1}>{c.name}</option>)}</select></label>
+              {!event.choice_id?<><label>Кто действует?<select value={actor} onChange={e=>setActor(e.target.value)}>{members.map(c=><option key={c.id} value={c.id} disabled={c.current_hp<1}>{withoutLegacyRunSuffix(c.name)}</option>)}</select></label>
                 {event.definition.options.map(o=><button className="urvin-option" key={o.id} disabled={busy||run.gold<(o.cost_gold??0)} onClick={()=>void command('event_choice',{option_id:o.id,character_id:actor})}><strong>{o.name}{o.cost_gold?` · ${o.cost_gold} золотых`:''}</strong><span>{o.description}</span>{!!o.checks?.length&&<small>{o.checks.map(c=>`${skills[c.skill]??c.skill} · СЛ ${c.dc}`).join(' → ')}</small>}</button>)}
               </>:<><strong>{choice?.name} · {participant?.name}</strong>{event.rolls.map((r,i)=><p key={i}>{skills[choice?.checks?.[i]?.skill??'']}: {r.roll.total} — {r.roll.outcome==='success'?'успех':'провал'}</p>)}
                 {!pending&&choice?.checks?.[event.check_index]&&<button className="roguelike-primary" disabled={busy} onClick={()=>void command('event_roll')}>Бросить · {skills[choice.checks[event.check_index].skill]} · СЛ {choice.checks[event.check_index].dc}</button>}</>}

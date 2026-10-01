@@ -24,7 +24,7 @@ import { buildCharacterContext } from '../character/runtime';
 import { ABILITY_KEYS, type CharacterDraft } from '../character/types';
 import {
   collectFreeuseRecharge, collectFreeuseRecovery,
-  findFreeusePoolKey,
+  findFreeusePoolKey, freeuseSpellReferences,
 } from '../engine/freeuse';
 import {
   LANGUAGES,
@@ -1535,6 +1535,7 @@ function spellcastingAccessForRoot(
         ? findFreeusePoolKey(runtimeResources as Record<string, number>, {
           cardNumber: spell.card_number,
           id: spell.id,
+          aliases: freeuseSpellReferences(spell),
         })
         : null;
       if (spell.level > 0 && !freeUseResource) {
@@ -2253,9 +2254,9 @@ function compileRoot(
         : []
     ))),
     ...collectActionUsesRecharge(assembled),
-    ...collectFreeuseRecharge(ruleState.freeuseSpells),
+    ...collectFreeuseRecharge(ruleState.freeuseSpells,{spells:assembled.spells,resources:runtimeResources.maxResources}),
   };
-  const resourceRecovery = {...collectActionUsesRecovery(assembled),...collectFreeuseRecovery(ruleState.freeuseSpells)};
+  const resourceRecovery = {...collectActionUsesRecovery(assembled),...collectFreeuseRecovery(ruleState.freeuseSpells,{spells:assembled.spells,resources:runtimeResources.maxResources})};
   const classSpellIds = classSpellEntityIds(raw, assembled, draft, catalogs);
   const selectedInvocation = selectedWarlockInvocation(assembled);
   const pactDeclaration = declaredWarlockPact(selectedInvocation);

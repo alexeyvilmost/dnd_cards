@@ -261,6 +261,9 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		if err != nil {
 			return err
 		}
+		if err = addRoguelikeCombatOpeningState(response, request.Type, result); err != nil {
+			return err
+		}
 		if camp {
 			response["events"] = rows
 		}

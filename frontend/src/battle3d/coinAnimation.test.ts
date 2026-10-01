@@ -1,5 +1,7 @@
 import {describe,expect,it} from 'vitest';
 import {coinMotionAt,shotPhaseAt} from './coinAnimation';
+import {combatAnimationTiming} from '../solo-combat/animationTiming';
+import type {CombatAnimationPrimitive,CombatAnimationProfile} from '../solo-combat/animationProfiles';
 
 describe('coin attack presentation',()=>{
   it('winds up, lunges toward the target, then returns to its cell',()=>{
@@ -30,5 +32,26 @@ describe('coin attack presentation',()=>{
     expect(shotPhaseAt(.3).progress).toBeGreaterThan(0);
     expect(shotPhaseAt(.6)).toMatchObject({visible:false,impact:true});
     expect(shotPhaseAt(.9).impact).toBe(false);
+  });
+
+  it.each([['ranged_arrow',720],['charged_beam',2600]] as const)('uses %s authored delivery markers for projectile arrival and impact', (primitive,durationMs)=>{
+    const profile:CombatAnimationProfile={key:`entity:${primitive}`,primitive,motion:{durationMs,scale:1},palette:{primary:'#fff',secondary:'#aaa'},casterCircle:false};
+    const marker=combatAnimationTiming(profile);
+    const timing={launch:marker.launchMs/1000,contact:marker.contactMs/1000,duration:marker.durationMs/1000};
+    expect(shotPhaseAt(timing.launch-.001,timing).visible).toBe(false);
+    expect(shotPhaseAt((timing.launch+timing.contact)/2,timing)).toMatchObject({progress:.5,visible:true,impact:false});
+    expect(shotPhaseAt(timing.contact,timing)).toMatchObject({progress:1,visible:false,impact:true});
+  });
+
+  it.each([['melee_slash',920],['melee_pierce',1450]] as const)('reaches the defender at %s contact and begins its recoil then', (primitive:CombatAnimationPrimitive,durationMs)=>{
+    const profile:CombatAnimationProfile={key:`entity:${primitive}`,primitive,motion:{durationMs,scale:1},palette:{primary:'#fff',secondary:'#aaa'},casterCircle:false};
+    const marker=combatAnimationTiming(profile);
+    const timing={launch:marker.launchMs/1000,contact:marker.contactMs/1000,duration:marker.durationMs/1000};
+    const animation={attack:'melee' as const,hit:true,hitDelay:timing.contact,reach:.5,timing};
+    expect(coinMotionAt(animation,timing.contact-.001).travel).toBeCloseTo(.5,3);
+    expect(coinMotionAt(animation,timing.contact-.001).wobble).toBe(0);
+    expect(coinMotionAt(animation,timing.contact).travel).toBe(.5);
+    expect(Math.abs(coinMotionAt(animation,timing.contact+.045).wobble)).toBeGreaterThan(.05);
+    expect(coinMotionAt(animation,timing.duration+.68).travel).toBe(0);
   });
 });

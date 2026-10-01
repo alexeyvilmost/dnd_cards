@@ -137,3 +137,60 @@ func TestRoguelikeExistingRunCanInitializeCombatReadOnly(t *testing.T) {
 		t.Fatalf("initialization did not return a ready frozen catalog: status=%s", result.Status)
 	}
 }
+
+// Camp abilities assemble the complete saved character, including subclass
+// spell grants. This exercises that catalog path without committing gameplay.
+func TestRoguelikeExistingRunCanHealInCampReadOnly(t *testing.T) {
+	dsn := os.Getenv("ROGUELIKE_ALIAS_TEST_DATABASE_URL")
+	runID := os.Getenv("ROGUELIKE_WORKER_CAMP_RUN_ID")
+	actionID := os.Getenv("ROGUELIKE_WORKER_CAMP_ACTION_ID")
+	workerURL, token := os.Getenv("RULES_WORKER_URL"), os.Getenv("RULES_WORKER_TOKEN")
+	if dsn == "" || runID == "" || actionID == "" || workerURL == "" || token == "" {
+		t.Skip("local camp snapshot and worker configuration are required")
+	}
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = sqlDB.Close() })
+	readOnly := db.Begin(&sql.TxOptions{ReadOnly: true})
+	if readOnly.Error != nil {
+		t.Fatal(readOnly.Error)
+	}
+	defer readOnly.Rollback()
+	var run RoguelikeRun
+	if err = readOnly.Preload("Character").First(&run, "id = ?", runID).Error; err != nil {
+		t.Fatal(err)
+	}
+	if run.Character == nil || run.Phase != RoguelikePhaseCamp || run.Character.CurrentHP < 1 {
+		t.Fatal("expected a living saved character in camp")
+	}
+	run.Character.AccessMode = characterV3AccessOwner
+	beforeHP, beforeRevision := run.Character.CurrentHP, run.Character.RuntimeRevision
+	result, err := executeRoguelikeCampActionWorker(context.Background(), readOnly,
+		roguelikeWorkerClient{URL: workerURL, Token: token}, run.Character,
+		RoguelikeCommandRequest{CommandID: uuid.New(), Type: "camp_action", Payload: JSONMap{"action_id": actionID, "choices": JSONMap{}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Status != "ready" {
+		t.Fatalf("camp action did not return a ready patch: status=%s", result.Status)
+	}
+	for _, event := range result.Events {
+		kind, _ := event["type"].(string)
+		if err = validateCharacterEvent(kind, event); err != nil {
+			t.Fatalf("camp journal cannot persist %s: %v", kind, err)
+		}
+	}
+	if err = applyTrustedRoguelikePatch(run.Character, result.Patch); err != nil {
+		t.Fatal(err)
+	}
+	if run.Character.CurrentHP <= beforeHP || run.Character.RuntimeRevision != beforeRevision+1 {
+		t.Fatalf("healing projection failed: HP %d -> %d, revision %d -> %d", beforeHP, run.Character.CurrentHP, beforeRevision, run.Character.RuntimeRevision)
+	}
+	t.Logf("read-only camp healing: HP %d -> %d; revision %d -> %d; goldSpent=%d elapsed=%d events=%d", beforeHP, run.Character.CurrentHP, beforeRevision, run.Character.RuntimeRevision, result.GoldSpent, result.ElapsedSeconds, len(result.Events))
+}

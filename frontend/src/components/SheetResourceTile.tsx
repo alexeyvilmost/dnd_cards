@@ -1,6 +1,6 @@
 import { useState, type ReactElement } from 'react';
-import type { ValueBreakdown } from '../mvp/contracts';
-import { findResource, type ResourceOption } from '../utils/resources';
+import type { CharacterContext, ValueBreakdown } from '../mvp/contracts';
+import { findResource, resourceDisplayOrder, type ResourceOption } from '../utils/resources';
 import ResourceHoverPreview from './ResourceHoverPreview';
 
 const RESOURCE_LABELS: Record<string, string> = {
@@ -23,7 +23,6 @@ const GLYPH_KEYS: Record<string, GlyphKind> = {
   reaction: 'reaction',
 };
 
-const GLYPH_ORDER: Record<GlyphKind, number> = { action: 1, bonus_action: 2, reaction: 3 };
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 
 const spellSlotLevel = (key: string): number | null => {
@@ -45,13 +44,7 @@ const monogram = (label: string): string => {
 
 /** Shared ordering used by every character-sheet resource strip. */
 export function sheetResourceTileOrder(key: string, options: ResourceOption[]): number {
-  const glyph = GLYPH_KEYS[key];
-  if (glyph) return GLYPH_ORDER[glyph];
-  const slot = spellSlotLevel(key);
-  if (slot != null) return 100 + slot;
-  const warlock = warlockSlotLevel(key);
-  if (warlock != null) return 150 + warlock;
-  return 1000 + Math.min(findResource(options, key)?.sortOrder ?? 8999, 8999);
+  return resourceDisplayOrder(key, options);
 }
 
 function ResourceGlyph({ kind, spent }: { kind: GlyphKind; spent: boolean }) {
@@ -84,6 +77,7 @@ export default function SheetResourceTile({
   current,
   maximum,
   maximumBreakdown,
+  resourceContext,
   selected = false,
   onSelect,
 }: {
@@ -92,6 +86,7 @@ export default function SheetResourceTile({
   current: number;
   maximum: number;
   maximumBreakdown?: ValueBreakdown;
+  resourceContext?: Pick<CharacterContext, 'resourceRecharge' | 'resourceRecovery'>;
   selected?: boolean;
   onSelect?: () => void;
 }) {
@@ -119,7 +114,7 @@ export default function SheetResourceTile({
   if (customUrl && !failed[customUrl]) {
     const useSpentImage = spent && !!spentUrl && !failed[spentUrl];
     const src = useSpentImage && spentUrl ? spentUrl : customUrl;
-    icon = <img src={src} alt="" className={`res-tile-icon${spent && !useSpentImage ? ' res-tile-icon--dim' : ''}`} onError={() => markFailed(src)} />;
+    icon = <img src={src} alt="" className={`res-tile-icon${spent ? ' res-tile-icon--dim' : ''}`} onError={() => markFailed(src)} />;
   } else if (glyphKind) {
     icon = <ResourceGlyph kind={glyphKind} spent={spent} />;
   } else if (builtinUrl && !failed[builtinUrl]) {
@@ -138,7 +133,8 @@ export default function SheetResourceTile({
     </>
   );
   return (
-    <ResourceHoverPreview resourceId={resourceId} option={option} maximum={maximumBreakdown}>
+    <ResourceHoverPreview resourceId={resourceId} option={option ?? findResource([], resourceId)} maximum={maximumBreakdown}
+      availability={{current, maximum}} resourceContext={resourceContext}>
       {onSelect ? (
         <button
           type="button"

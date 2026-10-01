@@ -7,6 +7,7 @@ import { conditionLabel } from '../engine/conditions';
 import { combatAnimationAction, combatAttackPresentation, combatDamagePalette, resolveCombatAnimation, type CombatAnimationProfile } from './animationProfiles';
 import {areaEffectOrigin, areaPositionsForAction, tacticalAreaGeometry} from './tacticalGrid';
 import type {RuleActionDefinition} from '../rules-core/domain';
+import {addCombatPresentationChanges, type CombatPresentationChange} from './presentationState';
 
 export interface CombatCue {
   actorId: string;
@@ -40,6 +41,11 @@ export interface CombatBeat {
   /** Pure board movement is decorative and must not delay the next command. */
   blocksInput?: boolean;
   sourceEntryId?: string;
+  sourceOrdinal?: number;
+  /** Live view checkpoints from the same committed events as this beat. */
+  presentationChanges?: CombatPresentationChange[];
+  /** Silent timeline markers advance the view without inventing a cast. */
+  presentationDurationMs?: number;
   rollKind?: 'attack' | 'save' | 'check' | 'damage' | 'healing' | 'other';
   saveGroupId?: string;
   saveRows?: CombatBeat[];
@@ -79,6 +85,21 @@ function recordedArea(state: SoloCombatState, entry: CombatLogEntry, record: Com
   return {geometry, sourcePosition, origin: areaEffectOrigin(input), aim: record.targetPosition, cells: areaPositionsForAction(input)};
 }
 
+/** Batched turns can move an actor again after an earlier impact. Its visible
+ * origin/target comes from the immutable movement envelopes around that record,
+ * rather than the final board cell returned with the entire batch. */
+function recordedPosition(state: SoloCombatState, history: CombatLogEntry[], entry: CombatLogEntry, ordinal: number, actorId: string): GridPosition | undefined {
+  const entryIndex = history.findIndex(row => row.id === entry.id);
+  if (entryIndex < 0) return state.tokens[actorId]?.position;
+  const movementFor = (record: CombatLogEventRecord) => record.movement && (record.kind === 'movement' ? record.actorId === actorId
+    : record.event?.type === 'movement' && (record.event.recipientActorId ?? record.targetIds[0] ?? record.actorId) === actorId);
+  const earlier = history.slice(0, entryIndex).flatMap(combatLogRecords)
+    .concat(combatLogRecords(entry).filter(record => record.ordinal < ordinal)).filter(movementFor).at(-1);
+  const later = combatLogRecords(entry).filter(record => record.ordinal >= ordinal)
+    .concat(history.slice(entryIndex + 1).flatMap(combatLogRecords)).find(movementFor);
+  return earlier?.movement?.to ?? later?.movement?.from ?? state.tokens[actorId]?.position;
+}
+
 export function presentCombatEntries(state: SoloCombatState, entries: CombatLogEntry[]): CombatBeat[] {
   const beats: CombatBeat[] = [];
   const playedAreas = new Set<string>();
@@ -114,13 +135,13 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
         : definition ? {id: definition.kind === 'spell' ? definition.spell?.entityId ?? definition.id : definition.id,
           kind: definition.kind === 'spell' ? 'spell' : 'action'} : undefined,
       spellLevel: metadata?.spell?.castLevel ?? (definition?.kind === 'spell' ? definition.spell?.level ?? 0 : undefined),
-      sourceEntryId: entry.id, visual: definition?.kind === 'spell' ? 'magic' : undefined,
+      sourceEntryId: entry.id, sourceOrdinal: ordinal, visual: definition?.kind === 'spell' ? 'magic' : undefined,
       animation: definition || metadata?.sourceEntityIds ? resolveCombatAnimation(definition, {sourceEntityIds: metadata?.sourceEntityIds}) : undefined,
       area,
-      from: area?.sourcePosition ?? state.tokens[sourceId]?.position,
+      from: area?.sourcePosition ?? recordedPosition(state, state.log ?? entries, entry, ordinal, sourceId),
       ...(targetPosition && !metadata?.targetIds.length ? {targetIsPoint: true} : {}),
       to: targetPosition && !metadata?.targetIds.length ? targetPosition
-        : (targetId ? state.tokens[targetId]?.position : undefined) ?? targetPosition,
+        : (targetId ? recordedPosition(state, state.log ?? entries, entry, ordinal, targetId) : undefined) ?? targetPosition,
       cues: [], damage: [],
     }; };
     const push = (beat: CombatBeat) => {
@@ -145,19 +166,20 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
         movement.from = record.movement.from; movement.to = record.movement.to;
         movement.actionName = 'Перемещение';
         movement.animation = resolveCombatAnimation(undefined, {event: 'movement'});
-        movement.blocksInput = false;
+        movement.blocksInput = movement.audience === 'enemy';
         push(movement); continue;
       }
       const event = record.event;
       if (!event) continue;
-      if (event.type === 'turn_started') {
+      if (event.type === 'turn_started' || event.type === 'turn_ended') {
         const actorId = record.actorId;
         const actorName = entry.actorNames?.[actorId] ?? name(actorId);
-        push({id: `${entry.id}:${record.ordinal}`, sourceEntryId: entry.id, sourceId: actorId, targetId: actorId,
-          sourceName: actorName, targetName: actorName, actionName: 'Начало хода',
+        push({id: `${entry.id}:${record.ordinal}`, sourceEntryId: entry.id, sourceOrdinal: record.ordinal, sourceId: actorId, targetId: actorId,
+          sourceName: actorName, targetName: actorName, actionName: event.type === 'turn_started' ? 'Начало хода' : 'Конец хода',
           audience: combatRelation(state, state.characterId, actorId) === 'enemy' ? 'enemy' : 'own',
           from: state.tokens[actorId]?.position, to: state.tokens[actorId]?.position,
-          animation: resolveCombatAnimation(undefined, {event: event.type}), blocksInput: false, cues: []});
+          suppressAnimation: true, presentationDurationMs: 0,
+          blocksInput: combatRelation(state, state.characterId, actorId) === 'enemy', cues: []});
         continue;
       }
       if (event.type === 'roll' && event.roll.kind === 'save') {
@@ -183,12 +205,21 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
             || (!row.records?.some(item => item.actionId) && row.text.startsWith(`${name(effectSourceId)}: ${current!.actionName}:`))));
         current.saveGroupId = origin?.id ?? entry.id;
         const originalDeclaration = origin?.records?.find(row => row.kind === 'action' && row.actionId === current!.actionId);
+        const originIndex = history.findIndex(row => row.id === origin?.id);
+        // A damage-then-save action has already delivered its impact. Its
+        // deferred save and forced movement are consequences of that cast,
+        // not a second projectile/hit. The nearest declaration distinguishes
+        // a new cast of the same action later in the round.
+        const alreadyDelivered = originIndex >= 0 && history.slice(originIndex, historyIndex + 1).some(row =>
+          combatLogRecords(row).some(item => (row.id !== entry.id || item.ordinal < record.ordinal)
+            && item.actionId === current!.actionId && item.event?.type === 'damage'
+            && item.targetIds.includes(defenderId)));
+        if (alreadyDelivered) current.suppressAnimation = true;
         current.area = origin ? recordedArea(state, origin, originalDeclaration, saveAction, effectSourceId) ?? current.area : current.area;
         if (current.area) {
           current.from = current.area.sourcePosition;
           current.to = current.area.aim;
-          const originIndex = history.findIndex(row => row.id === origin?.id);
-          current.suppressAnimation = history.slice(originIndex + 1, historyIndex).some(row => row.records?.some(item =>
+          current.suppressAnimation = current.suppressAnimation || history.slice(originIndex + 1, historyIndex).some(row => row.records?.some(item =>
             item.actionId === current!.actionId && item.event?.type === 'roll' && item.event.roll.kind === 'save'));
         }
         current.visual = 'magic';
@@ -243,12 +274,12 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
       let cues: CombatCue[] = [];
       if (event.type === 'damage') cues = targets.map(actorId => ({actorId, text: String(event.amount), damageType: event.damageType, kind: 'damage'}));
       if (event.type === 'healing') cues = targets.map(actorId => ({actorId, text: `+${event.amount}`, damageType: 'healing', kind: 'healing'}));
-      if (event.type === 'temp_hp') cues = targets.map(actorId => ({actorId, text: `+${event.amount} врем. HP`, kind: 'healing'}));
-      if (event.type === 'stabilized') cues = targets.map(actorId => ({actorId, text: 'Стабилизирован', kind: 'healing'}));
+      if (event.type === 'temp_hp') cues = targets.map(actorId => ({actorId, text: `+${event.amount} врем. HP`, kind: 'effect'}));
+      if (event.type === 'stabilized') cues = targets.map(actorId => ({actorId, text: 'Стабилизирован', kind: 'effect'}));
       if (event.type === 'effect_expired') cues = targets.map(actorId => ({actorId, text: `${event.name}: завершено`, kind: 'effect'}));
       if (event.type === 'condition_immune') cues = targets.map(actorId => ({actorId, text: `Иммунитет: ${conditionLabel(event.condition)}`, kind: 'effect'}));
       if (event.type === 'damage_reduction' && event.amount > 0) cues = targets.map(actorId => ({actorId, text: `−${event.amount} урона`, kind: 'effect'}));
-      if (event.type === 'resource_restored' && event.amount > 0) cues = [{actorId: record.actorId, text: `+${event.amount}`, kind: 'healing'}];
+      if (event.type === 'resource_restored' && event.amount > 0) cues = [{actorId: record.actorId, text: `+${event.amount}`, kind: 'effect'}];
       if (event.type === 'world_interaction' || event.type === 'communication') cues = [{actorId: record.targetIds[0] ?? record.actorId, text: action?.name ?? 'Взаимодействие', kind: 'effect'}];
       if (event.type === 'movement') cues = [{actorId: event.recipientActorId ?? targets[0], text: event.mode === 'additional' ? 'Дополнительное перемещение' : 'Перемещение', kind: 'effect'}];
       if (event.type === 'effect_applied') {
@@ -260,6 +291,14 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
       }
       if (event.type === 'condition_applied') cues = targets.map(actorId => ({actorId, text: conditionLabel(event.condition), kind: 'effect'}));
       if (!cues.length) continue;
+      // Expiry is a lifecycle caption, not another cast of its source ability.
+      // In particular the legacy generic "recover" profile depicts healing.
+      if (event.type === 'effect_expired') {
+        const expired = makeBeat(record.ordinal, record.sourceActorId, cues[0]?.actorId, record);
+        expired.animation = undefined; expired.visual = undefined; expired.area = undefined;
+        expired.suppressAnimation = true; expired.cues = cues;
+        push(expired); continue;
+      }
       if (!current || (event.type === 'damage' && current.targetId !== targets[0])) {
         current = makeBeat(record.ordinal, record.sourceActorId, cues[0]?.actorId ?? targets[0], record);
         const definition = state.catalogActions.find(row => row.id === current!.actionId);
@@ -296,7 +335,7 @@ export function presentCombatEntries(state: SoloCombatState, entries: CombatLogE
       push(current);
     }
   }
-  return beats;
+  return addCombatPresentationChanges(state, entries, beats);
 }
 
 /** Group only one committed application of an effect; never merge repeated casts. */

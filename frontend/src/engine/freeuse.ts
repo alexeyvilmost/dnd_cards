@@ -6,10 +6,11 @@ import {parseResourceRestRecovery} from './actionUses';
  * Даётся видами/чертами/предметами через параметр `freeuse` у payload `grant_spell`
  * (нативно и внутри choice). См. docs (фича freeuse).
  *
- * Реализация — виртуальный пул-ресурс `freeuse-<spell>` (близнец uses_<action>, actionUses.ts):
- * тратится штатным canPay/pay, восстанавливается отдыхом по recharge-карте, СКРЫТ из общего
- * ряда плиток (рисуется отдельной витриной `freeuse-spells`). Оплата generic — движок правок
- * не требует; при касте cost-запись spell_slot ПОДМЕНЯЕТСЯ на freeuse-пул.
+ * Реализация — виртуальный generic-пул `freeuse-<spell>`, без отдельной записи
+ * ресурса в каталоге. Сохранённый пул связывается с заклинанием по его ссылкам,
+ * поэтому исправление ссылки выдачи не восстанавливает потраченные заряды. Пул тратится
+ * штатным canPay/pay и восстанавливается по recharge-карте; отдельная витрина
+ * freeuse-spells собирает бесплатные применения. Стоимость ячейки заменяется этим пулом.
  */
 
 type Dict = Record<string, unknown>;
@@ -38,23 +39,49 @@ export function freeuseKey(spell: string): string {
   return `${FREEUSE_PREFIX}${spell}`;
 }
 
+/** Identity aliases are compatibility references, never catalog resource declarations. */
+export interface FreeuseSpellIdentity {
+  id?: string | null;
+  card_number?: string | null;
+  name_en?: string | null;
+}
+
+export function freeuseSpellReferences(spell: FreeuseSpellIdentity): string[] {
+  const english = spell.name_en?.trim().toLowerCase();
+  const aliases = english ? [
+    english.replace(/['’]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+    english.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+  ] : [];
+  return [...new Set([spell.card_number, spell.id, ...aliases].filter((ref): ref is string => !!ref))];
+}
+
+export interface FreeusePoolBindings {
+  spells: readonly FreeuseSpellIdentity[];
+  resources?: Readonly<Record<string, number>>;
+}
+
+/** Preserve the existing generic key even when a grant's alias was repaired. */
+export function resolveFreeusePoolKey(spec: Pick<FreeuseSpec, 'spell'>, bindings?: FreeusePoolBindings): string {
+  const spell = bindings?.spells.find(candidate => freeuseSpellReferences(candidate).includes(spec.spell));
+  const references = [spec.spell, ...(spell ? freeuseSpellReferences(spell) : [])];
+  return findFreeusePoolKey(bindings?.resources, { aliases: references }) ?? freeuseKey(spec.spell);
+}
+
 /** true для пулов freeuse-<spell>, НО не для витрины freeuse-spells (её показываем). */
 export function isFreeusePoolKey(key: string): boolean {
   return key.startsWith(FREEUSE_PREFIX) && key !== FREEUSE_SHOWCASE_KEY;
 }
 
 /** Кандидаты ключей пула для заклинания-действия (контент ссылается slug'ом ИЛИ uuid). */
-export function freeuseKeyCandidates(opts: { cardNumber?: string | null; id?: string | null }): string[] {
-  const keys: string[] = [];
-  if (opts.cardNumber) keys.push(freeuseKey(opts.cardNumber));
-  if (opts.id) keys.push(freeuseKey(opts.id));
-  return keys;
+export function freeuseKeyCandidates(opts: { cardNumber?: string | null; id?: string | null; aliases?: readonly string[] }): string[] {
+  const references = [opts.cardNumber, opts.id, ...(opts.aliases ?? [])];
+  return [...new Set(references.filter((ref): ref is string => !!ref).map(freeuseKey))];
 }
 
 /** Существующий пул freeuse для заклинания среди кандидатов (или null). */
 export function findFreeusePoolKey(
-  resources: Record<string, number> | undefined,
-  opts: { cardNumber?: string | null; id?: string | null },
+  resources: Readonly<Record<string, number>> | undefined,
+  opts: { cardNumber?: string | null; id?: string | null; aliases?: readonly string[] },
 ): string | null {
   if (!resources) return null;
   for (const k of freeuseKeyCandidates(opts)) if (k in resources) return k;
@@ -76,9 +103,9 @@ export function applyFreeuseCost(mech: Dict, poolKey: string): Dict {
 }
 
 /** recharge-карта пулов freeuse: freeuse-<spell> → per (для короткого отдыха/дня). */
-export function collectFreeuseRecharge(specs: FreeuseSpec[]): Record<string, string> {
+export function collectFreeuseRecharge(specs: FreeuseSpec[], bindings?: FreeusePoolBindings): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const s of specs) if (!s.atWill && s.recharge) out[freeuseKey(s.spell)] = s.recharge;
+  for (const s of specs) if (!s.atWill && s.recharge) out[resolveFreeusePoolKey(s, bindings)] = s.recharge;
   return out;
 }
 
@@ -103,6 +130,6 @@ export function parseFreeuse(raw: unknown): Omit<FreeuseSpec, 'spell'> | undefin
   return undefined;
 }
 
-export function collectFreeuseRecovery(specs:FreeuseSpec[]):Record<string,ResourceRestRecovery|null>{
-  return Object.fromEntries(specs.filter(s=>!s.atWill&&s.recovery!==undefined).map(s=>[freeuseKey(s.spell),s.recovery??null]));
+export function collectFreeuseRecovery(specs:FreeuseSpec[],bindings?:FreeusePoolBindings):Record<string,ResourceRestRecovery|null>{
+  return Object.fromEntries(specs.filter(s=>!s.atWill&&s.recovery!==undefined).map(s=>[resolveFreeusePoolKey(s,bindings),s.recovery??null]));
 }

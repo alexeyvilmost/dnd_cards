@@ -1,15 +1,15 @@
 /**
- * Использования-на-действие (mechanics.uses): «Второе дыхание», «Всплеск
- * действий», «Оружие дыхания» и т.п. — не ресурсы персонажа, их запас живёт
- * в самом действии. Реализация: виртуальный пул ресурсов с ключом
- * uses_<card_number|id действия>, который тратится обычными canPay/pay
+ * Использования-на-действие (mechanics.uses) объявляют каталоговый ресурс
+ * через resource_id. Он тратится обычными canPay/pay
  * и восстанавливается отдыхами по recharge-карте (legacy uses.per) либо
  * явной bounded-политике mechanics.uses.recovery.
  *
  * Важно: наличие mechanics.uses только объявляет пул. Оно НЕ добавляет цену
  * активации. Трата должна быть явно записана в данных как
  * activation.cost[{resource:'self_uses'}]. Адаптер сущности связывает этот
- * относительный примитив с её стабильным runtime-ключом uses_<ref>.
+ * относительный примитив с её объявленным стабильным runtime-ключом.
+ * Отсутствие resource_id сохраняет uses_<ref>/uses_shared_<pool> только для
+ * совместимости прежних сохранённых механик и артефактов.
  *
  * Конвенция UI: панели ресурсов СКРЫВАЮТ ключи с префиксом uses_
  * (см. isActionUsesKey) — остаток рисуется на строке самого действия.
@@ -23,6 +23,7 @@ export const ACTION_USES_PREFIX = 'uses_';
 export const SELF_USES_RESOURCE = 'self_uses';
 
 export type ActionUses = {
+  resource_id?: string;
   count: number | string;
   per?: string;
   by_level?: Record<string, unknown>;
@@ -34,9 +35,16 @@ export type ActionUsesRecoveryResolution =
   | { status: 'invalid' }
   | { status: 'configured'; recovery: ResourceRestRecovery };
 
-/** Ключ виртуального пула: uses_<card_number|id>. */
+/** Declared catalog identity; legacy identities stay unchanged for replay. */
 export function actionUsesKey(ref: string, mechanics?: Dict | null): string {
   const uses=mechanics?.uses as Dict|undefined;
+  if (uses && Object.prototype.hasOwnProperty.call(uses, 'resource_id')) {
+    const id = uses.resource_id;
+    if (typeof id !== 'string' || !/^[A-Za-z0-9_-]{1,100}$/.test(id)) {
+      throw Error('Invalid declared action uses resource');
+    }
+    return id;
+  }
   const pool=uses?.pool;
   if(pool===undefined)return `${ACTION_USES_PREFIX}${ref}`;
   if(typeof pool!=='string'||!/^[A-Za-z0-9][A-Za-z0-9_:-]{0,127}$/.test(pool))throw Error('Invalid shared action uses pool');
@@ -103,6 +111,7 @@ export function usesFromMechanics(mech: Dict | null | undefined): ActionUses | n
   const byLevel = uses.by_level;
   return {
     count,
+    ...(typeof uses.resource_id === 'string' ? { resource_id: uses.resource_id } : {}),
     per: typeof uses.per === 'string' ? uses.per : undefined,
     ...(byLevel && typeof byLevel === 'object' && !Array.isArray(byLevel)
       ? { by_level: byLevel as Record<string, unknown> }

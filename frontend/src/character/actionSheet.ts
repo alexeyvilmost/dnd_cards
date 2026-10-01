@@ -11,6 +11,7 @@ import type { ResourceRestRecovery } from '../mvp/contracts';
 import type { Action, Card, PassiveEffect, Spell } from '../types';
 import { upgradeLegacyActionMechanics } from './legacyActionMechanics';
 import {itemFeatActionSources} from './itemFeatGrants';
+import {collectGrantActionSlugs} from '../mechanics/actionGrants';
 
 type Dict = Record<string, unknown>;
 
@@ -358,7 +359,11 @@ export function collectSheetActions(
       if (typeof action.mechanics?.variant_of_action_id === 'string') return null;
       const mechanics = actionMechanics(action, true, true);
       if (!mechanics) return null;
-      const itemSources=itemFeatActionSources(assembled,action);
+      const itemSources=[...new Set([
+        ...itemFeatActionSources(assembled,action),
+        ...(group === 'item' ? itemMechanics.filter(item => collectGrantActionSlugs(item.mechanics)
+          .some(reference => reference === action.id || reference === action.card_number)).map(item => item.card.id) : []),
+      ])];
       if(itemSources.length)mechanics.requires_any_item_source=itemSources;
       return {
         id: `granted-${action.id}`,

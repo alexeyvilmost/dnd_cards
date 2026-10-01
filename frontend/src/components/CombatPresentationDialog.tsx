@@ -15,8 +15,17 @@ import RollCalculationDetails from './RollCalculationDetails';
 import RollInfluenceActions from './RollInfluenceActions';
 import AttackRollEquation from './AttackRollEquation';
 import type {RollInfluence} from '../engine/rollInfluence';
+import type {RollLog} from '../mvp/contracts';
 import '../dice/CombatPresentation.css';
 import './CombatRollLayout.css';
+
+function visualRollIdentity(roll?: RollLog) {
+  // Command-local ordinals can disappear when a held command is replayed.
+  // They describe the random tape, not a new visual throw. Preserve all visible
+  // dice/provenance fields so an actual replacement still animates normally.
+  return [roll?.dice.map(die => ({sides: die.sides, result: die.result, discarded: die.discarded,
+    source: die.source, sign: die.sign, role: die.role})), roll?.total, roll?.modifiers];
+}
 
 export default function CombatPresentationDialog({initiative, beat, onClose, modeOverride, influences = [], onInfluence, busy, provisional = false}: {
   initiative?: SoloCombatState | null;
@@ -52,7 +61,7 @@ export default function CombatPresentationDialog({initiative, beat, onClose, mod
   const ready = attackReady && (!animateDamage || damageRolled);
   // Held -> committed is the same throw. A replacement changes its provenance
   // or dice; adding damage must not remount or spin the attack die again.
-  const rollKey = JSON.stringify(saveRows ? saveRows.map(row => [row.roll?.dice,row.roll?.total,row.roll?.modifiers]) : [roll?.dice, roll?.total, roll?.modifiers]);
+  const rollKey = JSON.stringify(saveRows ? saveRows.map(row => visualRollIdentity(row.roll)) : visualRollIdentity(roll));
   const hasSelection = (initiative?.initiative.map(entry => entry.roll) ?? saveRows?.map(row => row.roll) ?? [roll])
     .some(entry => entry && entry.advantage !== 'none');
   useEffect(()=>{

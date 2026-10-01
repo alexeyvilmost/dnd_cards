@@ -68,6 +68,8 @@ export interface RoguelikeRun {
   journey?: UrvinJourney;
   command_events?: CharacterEventRow[];
   combat_state?: SoloCombatState;
+  /** Initialization receipt only: exact board before automatic enemy turns. */
+  combat_opening_state?: SoloCombatState;
   trusted_combat_available?: boolean;
   id: string;
   user_id: string;
@@ -105,6 +107,7 @@ export type RoguelikeCommandType =
   | 'complete_encounter'
   | 'buy'
   | 'buy_cart'
+  | 'sell'
   | 'transfer_item'
   | 'pin'
   | 'refresh_shop'

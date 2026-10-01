@@ -1,6 +1,15 @@
 import type { PendingChoice } from '../mechanics/collectChoices';
 import type { Spell } from '../types';
 
+/** Child spell rows are cast choices of an owned parent, not independent
+ * learned, prepared, or manually acquired spells. List DTOs retain this
+ * data-owned marker even when their executable mechanics are omitted. */
+export function spellCanBeAcquired(spell: object): boolean {
+  const mechanics = (spell as {mechanics?: unknown}).mechanics;
+  return !mechanics || typeof mechanics !== 'object' || Array.isArray(mechanics)
+    || typeof (mechanics as Record<string, unknown>).variant_of_spell_id !== 'string';
+}
+
 function spellHasAttackRoll(value: unknown): boolean {
   if (Array.isArray(value)) return value.some(spellHasAttackRoll);
   if (!value || typeof value !== 'object') return false;
@@ -20,7 +29,7 @@ export function spellMatchesChoice(
 ): boolean {
   // Variant rows are executable choices of an owned parent, never new spells
   // acquired or prepared independently by a character.
-  if (typeof spell.mechanics?.variant_of_spell_id === 'string') return false;
+  if (!spellCanBeAcquired(spell)) return false;
   if (choice.source === 'prepared_spell') {
     const allowed = new Set(choice.allowedOptionIds ?? []);
     return allowed.has(spell.id) || allowed.has(spell.card_number);

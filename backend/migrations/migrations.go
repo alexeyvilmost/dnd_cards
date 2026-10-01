@@ -1518,13 +1518,32 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "283_explicit_reference_levels", Description: "Keep levels only on explicitly level-bound class and species references", Up: correctEntityReferenceLevels279, Down: func(db *sql.DB) error { return fmt.Errorf("Explicit reference levels must be retained") }},
 		{Version: "284_entity_reference_coverage", Description: "Index current formula, item and variant references and reject ambiguous aliases", Up: expandEntityReferenceCoverage284, Down: func(db *sql.DB) error { return fmt.Errorf("Mechanical reference coverage must be retained") }},
 		{Version: "285_production_effect_classification", Description: "Review new production effects and classify the spell-bond by its mechanical source", Up: classifyProductionEffects285, Down: refuseEffectClassification285Down},
-		{Version: "286_combat_animation_metadata", Description: "Separate 2D animation profiles and authored entity bindings from immutable rules", Up: createCombatAnimation286, Down: func(db *sql.DB) error { return fmt.Errorf("Animation profiles and entity assignments must be retained") }},
+		{Version: "286_combat_animation_metadata", Description: "Separate 2D animation profiles and authored entity bindings from immutable rules", Up: createCombatAnimation286, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Animation profiles and entity assignments must be retained")
+		}},
 		{Version: "287_combat_animation_coverage", Description: "Assign reviewed monster attacks, first-level spells and breath areas without overriding custom presentation", Up: expandCombatAnimation287, Down: func(db *sql.DB) error { return fmt.Errorf("Reviewed animation assignments must be retained") }},
 		{Version: "288_force_animation_palette", Description: "Render authored force animations and their circles in red while preserving custom presentation", Up: updateForceAnimation288, Down: func(db *sql.DB) error { return fmt.Errorf("Force animation palette must be retained") }},
-		{Version: "289_selected_combat_audio", Description: "Install approved sound recordings and phase assignments while retaining custom entity presentation", Up: installSelectedAudio289, Down: func(db *sql.DB) error { return fmt.Errorf("Approved audio recordings and assignments must be retained") }},
+		{Version: "289_selected_combat_audio", Description: "Install approved sound recordings and phase assignments while retaining custom entity presentation", Up: installSelectedAudio289, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Approved audio recordings and assignments must be retained")
+		}},
 		{Version: "290_critical_weapon_animations", Description: "Add data-owned critical weapon variants without changing entity bindings or custom presentation", Up: addCriticalWeaponAnimations290, Down: func(db *sql.DB) error { return fmt.Errorf("Critical weapon animation profiles must be retained") }},
 		{Version: "291_expanded_fantasy_music", Description: "Replace the 17 short menu, run and map themes with approved extended compositions", Up: installExpandedMusic291, Down: func(db *sql.DB) error { return fmt.Errorf("Approved extended music must be retained") }},
 		{Version: "292_critical_spell_animations", Description: "Add data-owned critical beam and spell projectile variants while preserving custom presentation", Up: addCriticalSpellAnimations292, Down: func(db *sql.DB) error { return fmt.Errorf("Critical spell animation profiles must be retained") }},
+		{Version: combatSpellRepairs293Version, Description: "Repair four guarded combat spells, archive previous mechanics and invalidate manual review without changing combat history", Up: applyCombatSpellRepairs293, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Combat spell repair rollback requires a reviewed inverse manifest and retained archive")
+		}},
+		{Version: resourceDeclarations294Version, Description: "Declare stable ability resource bindings and register data-owned resource metadata while retaining generic spell free uses and saved charges", Up: applyResourceDeclarations294, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Resource declarations and retained preimages require a reviewed inverse migration")
+		}},
+		{Version: spellGrantRefs295Version, Description: "Repair reviewed spell grant references and access labels while preserving resource pool identities and historical snapshots", Up: repairSpellGrantReferences295, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Spell grant reference rollback requires a reviewed inverse manifest and retained archive")
+		}},
+		{Version: spellGrantAbilities296Version, Description: "Declare source-owned spell grant casting abilities from guarded class metadata without changing historical snapshots", Up: repairSpellGrantReferences296, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Spell grant ability rollback requires a reviewed inverse manifest and retained archive")
+		}},
+		{Version: genericSpellFreeuses297Version, Description: "Retain generic spell free uses and archive unshipped per-spell resource declarations without changing saved charges or historical receipts", Up: retainGenericSpellFreeuses297, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Generic spell free-use rollback requires a reviewed inverse manifest and retained archive")
+		}},
 		// Здесь можно добавлять новые миграции
 	}
 }

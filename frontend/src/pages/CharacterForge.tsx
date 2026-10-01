@@ -1,7 +1,7 @@
 import { previewAnchor } from '../utils/previewAnchor';
 import { useDeferredValue, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText, Settings } from 'lucide-react';
+import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText, Settings, CheckCircle2 } from 'lucide-react';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
@@ -9,12 +9,11 @@ import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { roguelikeApi } from '../roguelike/api';
 import { runHasCharacter } from '../roguelike/navigation';
 import { buildCharacterContext } from '../character/runtime';
-import { buildResourceRuntimePatch, syncRuntimeResources } from '../character/resourceInit';
+import { buildResourceRuntimePatch, resourceMaximumBreakdown, syncRuntimeResources } from '../character/resourceInit';
 import { projectCharacterStartingEquipmentPatch } from '../character/startingEquipment';
 import { runtimeSeedFromSavePayload, saveCharacter } from '../character/saveCharacter';
 import { maxAvailableSpellSlotLevel, resolveByLevel } from '../engine/resources';
 import { useResourceOptions } from '../utils/resources';
-import { resourceView } from '../utils/eventDisplay';
 import {
   assemble,
   bundleDependencyKey,
@@ -48,7 +47,6 @@ import {
   resolveLineageName,
 } from '../character/forgeHelpers';
 import { unavailableChoiceOptions } from '../character/choiceAvailability';
-import { generalFeatPrerequisiteIssue } from '../character/featPrerequisites';
 import { normalizeSkillId, normalizeSkillList } from '../character/skillNormalize';
 import { getSkillGrantSource, grantReason, resolveCharacterRules } from '../character/rules/resolveCharacterRules';
 import type { CharacterRuleState } from '../character/rules/types';
@@ -58,6 +56,7 @@ import {
   ChoiceResolver,
   AbilityAssigner,
   choiceOptionIdByReference,
+  featForChoiceOption,
   optionsForChoice,
   recommendedOptionSelection,
   useAutoRecommendedChoices,
@@ -84,13 +83,22 @@ import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { preparedSpellChoiceAllowsOwnedOption, spellMatchesChoice } from '../character/spellChoices';
 import { isEntityUuid } from '../engine/ids';
 import { isSpellSelectionChoice, requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
-import { labelOf, SKILLS, ABILITIES, WEAPON_TYPE_PROFICIENCY_CATEGORY } from '../mechanics/registries';
+import { labelOf, SKILLS, ABILITIES } from '../mechanics/registries';
 import { FormattedText } from '../utils/formattedText';
 import { writeSoloCombatState } from '../solo-combat/persistence';
 import { CharacterFormulaProvider, formulaCtxFromCharacter } from '../contexts/CharacterFormulaContext';
 import { loadCatalogPages } from '../api/catalogPages';
 import { equipmentWeaponMasterySeed, weaponTypesFromEquipmentOption } from '../character/equipmentWeaponMastery';
 import { getCardsIndex } from '../utils/cardsIndex';
+import {useChoiceDialog} from '../contexts/ChoiceDialogContext';
+import {levelUpChoiceSelectionLabels, levelUpDialogChoice, levelUpReturnURL} from '../character/levelUpChoices';
+import {levelUpResourceGains, levelUpResourceOptions, type LevelUpSpellGrantSnapshot} from '../character/levelUpPresentation';
+import {forgeChoiceUnavailableOptions} from '../character/forgeChoiceAvailability';
+import LevelUpChoiceButton from '../components/forge/LevelUpChoiceButton';
+import LevelUpSubclassAbilities from '../components/forge/LevelUpSubclassAbilities';
+import LevelUpResourceGains from '../components/forge/LevelUpResourceGains';
+import LevelUpSpellGrants from '../components/forge/LevelUpSpellGrants';
+import SubclassProgressionDialog from '../components/forge/SubclassProgressionDialog';
 import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
@@ -106,8 +114,9 @@ const FORGE_OVERVIEW_ID = 'overview';
 const CharacterForge = () => {
   const navigate = useNavigate();
   const { id: editId } = useParams<{ id: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { entityDisplay } = useSiteSettings();
+  const choiceDialog = useChoiceDialog();
 
   // Справочники сущностей
   const [races, setRaces] = useState<Race[]>([]);
@@ -116,6 +125,8 @@ const CharacterForge = () => {
   const [feats, setFeats] = useState<Feat[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [catalogError, setCatalogError] = useState(false);
+  const [catalogsReady, setCatalogsReady] = useState(false);
+  const [spellCatalogReady, setSpellCatalogReady] = useState(false);
 
   const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
   const [restorable, setRestorable] = useState<CharacterDraft | null>(null);
@@ -135,11 +146,14 @@ const CharacterForge = () => {
     choiceCounts: Map<string, number>;
     choiceLevels: Map<string, number>;
     maxHP: number;
+    maxResources: Record<string, number>;
+    spellGrants: LevelUpSpellGrantSnapshot;
   } | null>(null);
   const originalLevelChoices = useRef<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [subclassComparisonOpen, setSubclassComparisonOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paper, setPaper] = useState<boolean>(() => {
     try { return localStorage.getItem('forge-theme') === 'paper'; } catch { return false; }
@@ -157,6 +171,7 @@ const CharacterForge = () => {
   // HP существующего персонажа при редактировании — чтобы правка посреди сессии
   // не восстанавливала хиты (E3). null = создание нового (полный HP).
   const savedHpRef = useRef<number | null>(null);
+  const savedMaxHpRef = useRef<number | null>(null);
 
   // Загрузка справочников. При сбое сети — честный баннер + повтор (иначе
   // игрок видит враньё «Нет видов в базе» вместо ошибки).
@@ -164,6 +179,7 @@ const CharacterForge = () => {
   const loadCatalogs = useCallback(async () => {
     const request = ++catalogRequest.current;
     setCatalogError(false);
+    setCatalogsReady(false);
     try {
       const [rr, cc, bb, ff] = await Promise.all([
         loadCatalogPages((page: number) => racesApi.getRaces({ page, limit: 100, fields: 'list' }), 'races', true, () => request === catalogRequest.current),
@@ -178,6 +194,7 @@ const CharacterForge = () => {
       // Все черты: origin — для смены черты происхождения, fighting_style
       // и другие категории — как варианты choice(source:"feat").
       setFeats(ff.feats || []);
+      setCatalogsReady(true);
     } catch (e) {
       if (request !== catalogRequest.current) return;
       console.error(e);
@@ -193,8 +210,9 @@ const CharacterForge = () => {
   const forgeSpellLevelCap = Math.min(9, Math.max(1, Math.ceil((draft.level || 1) / 2)));
   useEffect(() => {
     let stale = false;
+    setSpellCatalogReady(false);
     loadCatalogPages((page: number) => spellsApi.getSpells({ page, limit: 500, max_level: forgeSpellLevelCap, fields: 'list' }), 'spells', true, () => !stale)
-      .then((response) => { if (!stale) setSpells(response.spells || []); })
+      .then((response) => { if (!stale) { setSpells(response.spells || []); setSpellCatalogReady(true); } })
       .catch((reason) => {
         console.error(reason);
         if (!stale) setCatalogError(true);
@@ -237,6 +255,7 @@ const CharacterForge = () => {
     savedSkillsRef.current = [];
     restoredClassSkillsRef.current = false;
     savedHpRef.current = null;
+    savedMaxHpRef.current = null;
   }, [editId]);
 
   // Загрузка существующего черновика для редактирования.
@@ -261,6 +280,7 @@ const CharacterForge = () => {
         }
         savedSkillsRef.current = c.skill_proficiencies || [];
         savedHpRef.current = c.current_hp ?? null;
+        savedMaxHpRef.current = c.max_hp ?? null;
         restoredClassSkillsRef.current = false;
         const d = characterToDraft(c);
         if (searchParams.get('levelup') === '1') {
@@ -271,7 +291,6 @@ const CharacterForge = () => {
           d.level = Math.min(20, fromLevel + 1);
           if (d.classId && fromLevel < 20) d.classLevels = addClassLevel({ ...d, level: fromLevel, classLevels: fromClassLevels }, d.classId);
           setLevelUp({ fromLevel, fromClassLevels, selectedClassId: d.classId ?? '', committed: !!run?.pending_level });
-          if (!runId) setSearchParams({}, { replace: true });
         }
         setDraft(d);
       } catch (e) {
@@ -745,13 +764,18 @@ const CharacterForge = () => {
       // выборы этого уровня (их показываем даже заполненными, #3) от прежних.
       const oldAssembled = assemble({ ...oldBundle, spells: [] }, oldDraft);
       const prevChoiceIds = new Set(oldAssembled.pendingChoices.map((pc) => pc.id));
+      const oldRules = resolveCharacterRules({draft: oldDraft, assembled: oldAssembled});
+      const oldContext = buildCharacterContext(oldRules, oldDraft, [], oldAssembled.klass);
+      const oldRuntime = syncRuntimeResources(oldContext, oldAssembled, undefined, oldRules.freeuseSpells);
       setPrevRefs({
         effects: new Set(oldBundle.effects.map((e) => e.effect.id)),
         actions: new Set(oldBundle.actions.map((a) => a.action.id)),
         choiceIds: prevChoiceIds,
         choiceCounts: new Map(oldAssembled.pendingChoices.map((pc) => [pc.id, pc.count])),
         choiceLevels: new Map(oldAssembled.pendingChoices.map((pc) => [pc.id, pc.origin.owningClassLevel ?? 0])),
-        maxHP: resolveCharacterRules({ draft: oldDraft, assembled: oldAssembled }).maxHP,
+        maxHP: oldRules.maxHP,
+        maxResources: oldRuntime.maxResources,
+        spellGrants: {assembled:oldAssembled, grants:oldRules.appliedGrants, context:oldContext},
       });
     })();
     return () => { stale = true; };
@@ -781,7 +805,7 @@ const CharacterForge = () => {
     try {
       const isCreate = !draft.id;
       const localAvatar = draft.avatarUrl?.startsWith('data:') ? draft.avatarUrl : null;
-      const payload = buildSavePayload(draft, assembled, ruleState, savedHpRef.current ?? undefined);
+      const payload = buildSavePayload(draft, assembled, ruleState, savedHpRef.current ?? undefined, savedMaxHpRef.current ?? undefined);
       // A data URL is only the local preview. The durable row receives the
       // object-storage URL after the owner-scoped upload below.
       if (localAvatar) payload.avatar_url = '';
@@ -837,8 +861,8 @@ const CharacterForge = () => {
       }
       setSavedId(res.id);
       setDraft((d) => ({ ...d, id: res.id, avatarUrl: res.avatar_url || d.avatarUrl }));
-      // Последующие сохранения в этой же сессии тоже не должны лечить (E3).
-      savedHpRef.current = payload.current_hp ?? null;
+      savedHpRef.current = res.current_hp ?? null;
+      savedMaxHpRef.current = res.max_hp ?? null;
       // Успешно сохранён — черновик-автосейв больше не нужен.
       setRestorable(null);
       try { localStorage.removeItem(FORGE_DRAFT_KEY); } catch { /* ignore */ }
@@ -966,9 +990,14 @@ const CharacterForge = () => {
       ? visibleClasses.filter((entry) => entry.parent_class_id === selectedLevelClass.id)
       : [];
     const selectedLevelClassLevel = selectedLevelClass ? (draftClassLevels(draft)[selectedLevelClass.id] ?? 0) : 0;
+    const selectedFromClassLevel = levelUp.fromClassLevels[levelUp.selectedClassId] ?? 0;
+    const selectedToClassLevel = selectedFromClassLevel + 1;
     const selectedLevelSubclassThreshold = selectedLevelClass?.subclass_level ?? 3;
     const selectedSubclassIds = normalizedSubclassIds(draft.subclassIds, draft.classId, draft.subclassId);
     const selectedLevelSubclassId = selectedLevelClass ? selectedSubclassIds[selectedLevelClass.id] : undefined;
+    const selectedLevelSubclass = (assembled.subclasses ?? []).find(entry => entry.id === selectedLevelSubclassId)
+      ?? selectedLevelSubclasses.find(entry => entry.id === selectedLevelSubclassId);
+    const returnURL = levelUpReturnURL(draft.id ?? '', searchParams.get('roguelike'));
     const selectedLevelSubclassUnlocked = selectedLevelClassLevel >= selectedLevelSubclassThreshold;
     const takingNewClass = selectedLevelClass && !levelUp.fromClassLevels[selectedLevelClass.id];
     const prerequisiteClasses = takingNewClass
@@ -1013,6 +1042,50 @@ const CharacterForge = () => {
       ? spellChoices.filter((pc) => replacementLimits[pc.id] != null
           || levelUpChoicesToShow([pc], prevRefs.choiceIds, draft.resolvedChoices, prevRefs.choiceCounts).length > 0)
       : unresolvedSpells;
+    const featLevelUpChoices = levelUpOtherChoices.filter(choice => choice.source === 'feat');
+    const openLevelUpChoice = async (choice: PendingChoice) => {
+      if (!catalogsReady || (isSpellSelectionChoice(choice) && !spellCatalogReady)) return;
+      const request = levelUpDialogChoice(choice, visibleSpells, maxSlotLevel, draft.resolvedChoices[choice.id] ?? [], visibleFeats);
+      const options = optionsForChoice(request, visibleFeats);
+      const canonical = (reference: string) => {
+        const spell = visibleSpells.find(spell => spell.id === reference || spell.card_number === reference);
+        return isSpellSelectionChoice(choice) ? spell?.id ?? reference
+          : choiceOptionIdByReference(options, reference) ?? reference;
+      };
+      const original = (originalLevelChoices.current[choice.id] ?? []).map(canonical);
+      const canReplace = (values: string[]) => replacementLimits[choice.id] == null
+        || levelUpReplacementAllowed(original, values.map(canonical), replacementLimits[choice.id]);
+      const unavailable = (pending: PendingChoice, values: string[]) => {
+        const temporaryDraft = applyForgeResolvedChoices(draft, {[choice.id]: values}, assembled.pendingChoices);
+        const projected = resolveCharacterRules({draft: temporaryDraft, assembled});
+        if (!isSpellSelectionChoice(choice)) {
+          const ownedHere = new Set((draft.resolvedChoices[choice.id] ?? []).map(canonical));
+          return forgeChoiceUnavailableOptions(pending, projected, values, visibleFeats,
+            assembled.feats.filter(feat => !ownedHere.has(feat.id)));
+        }
+        const blocked = unavailableChoiceOptions(pending, projected, options.map(option => option.id), values, {canonicalSpellId: canonical});
+        if (choice.source !== 'prepared_spell') {
+          for (const other of spellChoices.filter(other => other.id !== choice.id && other.source !== 'prepared_spell')) {
+            for (const reference of draft.resolvedChoices[other.id] ?? []) {
+              if (!values.includes(canonical(reference))) blocked[canonical(reference)] = 'Уже выбрано в другом выборе';
+            }
+          }
+        }
+        return blocked;
+      };
+      const picked = await choiceDialog.request([request], choice.prompt, {
+        presentation: 'levelup',
+        feats: visibleFeats,
+        summary: `Выберите всего ${choice.count}. ${replacementLimits[choice.id] != null ? `Можно заменить до ${replacementLimits[choice.id]} ранее выбранных вариантов. ` : ''}Выбор сохранится при подтверждении уровня.`,
+        unavailableOptions: unavailable,
+        canApply: values => {
+          const selected = values[choice.id] ?? [];
+          const blocked = unavailable(request, selected);
+          return selected.length === choice.count && canReplace(selected) && selected.every(reference => !blocked[reference]);
+        },
+      });
+      if (picked?.[choice.id] && canReplace(picked[choice.id])) setResolved(choice.id, picked[choice.id]);
+    };
     const oldMaxHP = prevRefs?.maxHP ?? computeMulticlassMaxHP(
       (assembled.classes ?? []).map((klass) => ({
         id: klass.id,
@@ -1022,29 +1095,21 @@ const CharacterForge = () => {
       draft.classId,
       draft.abilities.con,
     );
-    // #2: ресурсы, выданные/увеличенные классом на этом уровне (ячейки, заряды и т.п.) — по дельте
-    // by_level-сеток между старым и новым уровнем. Не-by_level ресурсы (count/max) → 0, отсекаются.
-    const klassResources = (selectedLevelClass?.resources ?? {}) as Record<string, { by_level?: unknown }>;
-    const selectedFromClassLevel = levelUp.fromClassLevels[levelUp.selectedClassId] ?? 0;
-    const selectedToClassLevel = selectedFromClassLevel + 1;
-    const resourceGains = Object.entries(klassResources)
-      .map(([key, def]) => {
-        const before = resolveByLevel(def?.by_level, selectedFromClassLevel) ?? 0;
-        const after = resolveByLevel(def?.by_level, selectedToClassLevel) ?? 0;
-        return { key, before, after, delta: after - before };
-      })
-      .filter((r) => r.delta > 0)
-      .sort((a, b) => a.key.localeCompare(b.key));
+    // Compare canonical projections, including subclass pools, passive grants,
+    // multiclass slots and action uses. This view never refills saved resources.
+    const resourceContext = buildCharacterContext(ruleState, draft, [], assembled.klass);
+    const projectedRuntime = syncRuntimeResources(resourceContext, assembled, undefined, ruleState.freeuseSpells);
+    const resourceGains = prevRefs ? levelUpResourceGains(prevRefs.maxResources, projectedRuntime.maxResources) : [];
     // Блокируют подтверждение только незакрытые НОВЫЕ выборы; конфликты,
     // унаследованные от создания, показываем предупреждением (править их тут нечем).
-    const blockingIssues = requiredChoiceIssues(draft, assembled);
-    blockingIssues.unshift(...subclassSelectionProblems.map((issue) => (
+    const pendingChoiceHints = requiredChoiceIssues(draft, assembled);
+    const levelUpErrors = subclassSelectionProblems.map((issue) => (
       `${issue.className}: выберите допустимый подкласс`
-    )));
+    ));
     // Пересечение порога подкласса: выбор обязателен.
     const subclassDue = selectedLevelSubclasses.length > 0 && selectedLevelSubclassUnlocked && !selectedLevelSubclassId;
     if (subclassDue) {
-      blockingIssues.unshift('Выберите подкласс');
+      pendingChoiceHints.unshift('Выберите подкласс');
     }
     // Подкласс редактируем только когда его выбирают ПРЯМО СЕЙЧАС (порог пересечён на этом
     // уровне или ещё не выбран). Выбранный на прошлом уровне — закреплён, как класс/вид (#4).
@@ -1055,35 +1120,75 @@ const CharacterForge = () => {
     const conflictWarnings = ruleState.conflicts
       .filter((c) => c.severity === 'error')
       .map((c) => c.message);
-    blockingIssues.unshift(...multiclassIssues.map((issue) => `Требование мультикласса: ${issue}`));
-    const canConfirm = bundleReady && blockingIssues.length === 0 && !!levelUp.selectedClassId;
+    levelUpErrors.unshift(...multiclassIssues.map((issue) => `Требование мультикласса: ${issue}`));
+    const canConfirm = bundleReady && pendingChoiceHints.length === 0 && levelUpErrors.length === 0 && !!levelUp.selectedClassId;
+    const isReplacementOnly = (choice: PendingChoice) => (replacementLimits[choice.id] ?? 0) > 0
+      && (prevRefs?.choiceCounts.get(choice.id) ?? 0) >= choice.count;
+    const replacementChoices = [...featLevelUpChoices, ...newSpellChoices].filter(isReplacementOnly);
+    const freshFeatChoices = featLevelUpChoices.filter(choice => !isReplacementOnly(choice));
+    const freshSpellChoices = newSpellChoices.filter(choice => !isReplacementOnly(choice));
+    // New choices granted by a previously selected subclass still belong on
+    // the page even when its subclass picker is now locked.
+    const generalLevelChoices = [...otherLevelUpChoices, ...(subclassEditable ? [] : selectedSubclassChoices)]
+      .filter(choice => choice.source !== 'feat');
+    const replacementOtherChoices = generalLevelChoices.filter(isReplacementOnly);
+    const freshOtherChoices = generalLevelChoices.filter(choice => !isReplacementOnly(choice));
+    const renderLevelChoice = (choice: PendingChoice) => {
+      const references = draft.resolvedChoices[choice.id] ?? [];
+      const options = optionsForChoice(choice, visibleFeats);
+      const selectedFeats = choice.source === 'feat' ? references.flatMap(reference => {
+        const optionId = choiceOptionIdByReference(options, reference);
+        const feat = optionId && featForChoiceOption(choice, optionId, visibleFeats);
+        return feat ? [feat] : [];
+      }) : [];
+      return <LevelUpChoiceButton key={choice.id} choice={choice}
+        selectedLabels={levelUpChoiceSelectionLabels(choice, references, visibleFeats, visibleSpells)}
+        selectedFeats={selectedFeats}
+        selectedSpells={isSpellSelectionChoice(choice) ? visibleSpells.filter(spell => references.includes(spell.id) || references.includes(spell.card_number)) : []}
+        replacementLimit={replacementLimits[choice.id] > 0 ? replacementLimits[choice.id] : undefined}
+        loading={!catalogsReady || (isSpellSelectionChoice(choice) && !spellCatalogReady)}
+        onActivate={() => { void openLevelUpChoice(choice); }}/>;
+    };
 
     return (
       <CharacterFormulaProvider value={formulaCtx}>
-      <div className={rootCls}>
+      <div className={rootCls + ' levelup-screen'}>
         <div className="forge-header sheet-header-bar">
-          <button type="button" className="sheet-back" aria-label="Отмена"
-            onClick={() => navigate(`/characters-v3/${draft.id}`)}>
+          <button type="button" className="sheet-back" aria-label="Отмена" disabled={saving}
+            onClick={() => navigate(returnURL)}>
             <ArrowLeft size={18} />
           </button>
           <span>Повышение уровня — {draft.name || 'Без имени'}</span>
           <Link to="/" className="forge-brand-link" aria-description="На главную страницу">Bag of Holding</Link>
         </div>
-        <div className="sheet-scroll">
+        <div className="sheet-scroll levelup-scroll">
           <div className="levelup-wrap">
             <div className="levelup-head">
-              <span className="levelup-badge">Уровень {levelUp.fromLevel} → {draft.level}</span>
-              <span className="levelup-hp">
-                Хиты: {oldMaxHP} → <b>{ruleState.maxHP}</b>
-                {assembled.klass?.hit_die ? ` (кость хитов ${assembled.klass.hit_die})` : ''}
-              </span>
-              <span className="levelup-class">
-                {assembled.klass?.name}{lineageName ? ` · ${lineageName}` : assembled.race ? ` · ${assembled.race.name}` : ''}
-              </span>
+              <div className="levelup-seal" aria-hidden="true"><Sparkles size={18}/><b>{draft.level}</b><span>уровень</span></div>
+              <div className="levelup-identity">
+                <span className="levelup-eyebrow">Развитие персонажа</span>
+                <h1>{draft.name || 'Без имени'}</h1>
+                <span className="levelup-class">{[assembled.klass?.name, lineageName || assembled.race?.name].filter(Boolean).join(' · ')}</span>
+                <span className="levelup-badge">Уровень {levelUp.fromLevel} → {draft.level}</span>
+              </div>
+              <div className="levelup-hp"><span>Максимум хитов</span><div>{oldMaxHP}<span aria-hidden="true">→</span><b>{ruleState.maxHP}</b></div>
+                <small>{selectedLevelClass?.hit_die ? <>Кость хитов {selectedLevelClass.hit_die}</> : 'Развитие жизненных сил'}</small></div>
             </div>
-            <div className="forge-block">
-              <div className="forge-section-h">Уровень класса</div>
-              <p className="forge-note">{searchParams.get('roguelike') ? 'Продолжите развитие своего класса.' : 'Продолжите текущий класс или возьмите первый уровень другого класса.'}</p>
+            <section className="levelup-section" aria-labelledby="levelup-change-heading">
+              <div className="levelup-section-heading"><span aria-hidden="true">I</span><div><h2 id="levelup-change-heading">Можно изменить</h2><p>Выберите направление развития и доступные замены.</p></div></div>
+            <div className="forge-block levelup-class-block">
+              <div className="levelup-class-summary">
+                {selectedLevelClass && <EntitySquareCard name={selectedLevelClass.name} imageUrl={selectedLevelClass.image_url}
+                  preview={<ClassPreview characterClass={selectedLevelClass} disableHover/>}/>}
+                <div className="levelup-class-copy">
+                  <span className="levelup-eyebrow">Следующий уровень класса</span>
+                  <h3>{selectedLevelClass?.name ?? 'Выберите класс'}</h3>
+                  <p>{selectedFromClassLevel ? <>Уровень класса {selectedFromClassLevel} → {selectedToClassLevel}</> : 'Первый уровень нового класса'}</p>
+                  <span className="forge-note">{searchParams.get('roguelike') ? 'Продолжите развитие своего класса.' : 'Продолжите текущий класс или начните путь в другом.'}</span>
+                </div>
+              </div>
+              {!searchParams.get('roguelike') && <details className="levelup-class-picker">
+                <summary>Изменить класс <span aria-hidden="true">⌄</span></summary>
               <div className="forge-square-grid">
                 {rootClasses.filter((entry) => !searchParams.get('roguelike') || entry.id === draft.classId).map((entry) => {
                   const requirements = entry.id === draft.classId ? [] : multiclassPrerequisiteIssues(entry, draft.abilities);
@@ -1101,8 +1206,102 @@ const CharacterForge = () => {
                   );
                 })}
               </div>
+              </details>}
             </div>
 
+
+              {replacementChoices.length > 0 && <div className="levelup-choice-stack">{replacementChoices.map(renderLevelChoice)}</div>}
+              {replacementOtherChoices.length > 0 && <ChoiceList choices={replacementOtherChoices}
+                resolved={draft.resolvedChoices} setResolved={setLevelResolved} ruleState={ruleState}
+                feats={visibleFeats} activeFeats={assembled.feats} title="Доступные замены"/>}
+            </section>
+            <section className="levelup-section" aria-labelledby="levelup-new-heading">
+              <div className="levelup-section-heading"><span aria-hidden="true">II</span><div><h2 id="levelup-new-heading">Новые выборы</h2><p>Добавьте способности, которые открыл новый уровень.</p></div></div>
+            {subclassSelectionProblems.filter((issue) => issue.classId !== selectedLevelClass?.id).map((issue) => {
+              const options = visibleClasses.filter((entry) => entry.parent_class_id === issue.classId);
+              return (
+                <div className="forge-block forge-square-block" key={`repair-subclass:${issue.classId}`}>
+                  <div className="forge-section-h">Подкласс: {issue.className}</div>
+                  <p className="forge-note">Этот класс уже достиг уровня подкласса. Выбор обязателен.</p>
+                  <div className="forge-square-grid">
+                    {options.map((entry) => (
+                      <EntitySquareCard key={entry.id} name={entry.name} imageUrl={entry.image_url}
+                        selected={allSubclassIds[issue.classId] === entry.id}
+                        onClick={() => selectSubclass(entry.id, issue.classId)}
+                        preview={<ClassPreview characterClass={entry} disableHover />} supportEntity={entry} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            {subclassEditable && (
+              <div className="forge-block forge-square-block">
+                <div className="levelup-subclass-heading"><div className="forge-section-h">Подкласс</div>
+                  <button type="button" className="forge-btn ghost" onClick={()=>setSubclassComparisonOpen(true)}>Подробнее</button></div>
+                <div className="forge-square-grid">
+                  {(selectableLevelSubclasses as CharacterClass[]).map((c) => (
+                    <EntitySquareCard
+                      key={c.id}
+                      name={c.name}
+                      imageUrl={c.image_url}
+                      selected={selectedLevelSubclassId === c.id}
+                      onClick={() => selectSubclass(c.id, selectedLevelClass?.id ?? null)}
+                      preview={<ClassPreview characterClass={c} disableHover />}
+                      supportEntity={c}
+                    />
+                  ))}
+                </div>
+                {selectedLevelSubclass && <div className="levelup-subclass-description"><FormattedText text={selectedLevelSubclass.description}/></div>}
+                {selectedLevelSubclassId && <LevelUpSubclassAbilities assembled={assembled} subclassId={selectedLevelSubclassId}
+                  classLevel={selectedLevelClassLevel} loading={!bundleReady}/>}
+                {selectedSubclassChoices.some(choice => choice.source !== 'feat') && (
+                <ChoiceList
+                    choices={selectedSubclassChoices.filter(choice => choice.source !== 'feat')}
+                    resolved={draft.resolvedChoices}
+                    setResolved={setLevelResolved}
+                    ruleState={ruleState}
+                    feats={visibleFeats}
+                    activeFeats={assembled.feats}
+                    title="Выборы подкласса"
+                  />
+                )}
+              </div>
+            )}
+            {subclassLocked && (
+              <div className="forge-block">
+                <div className="levelup-subclass-heading"><div className="forge-section-h">Подкласс</div>
+                  <button type="button" className="forge-btn ghost" onClick={()=>setSubclassComparisonOpen(true)}>Подробнее</button></div>
+                {selectedLevelSubclass && <div className="levelup-subclass-summary"><EntitySquareCard name={selectedLevelSubclass.name}
+                  imageUrl={selectedLevelSubclass.image_url} preview={<ClassPreview characterClass={selectedLevelSubclass} disableHover/>}/>
+                  <div><h3>{selectedLevelSubclass.name}</h3><p className="forge-note">Закреплён для этого класса.</p></div></div>}
+                {selectedLevelSubclassId && <LevelUpSubclassAbilities assembled={assembled} subclassId={selectedLevelSubclassId}
+                  classLevel={selectedLevelClassLevel} loading={!bundleReady}/>}
+              </div>
+            )}
+
+            {freshOtherChoices.length > 0 && (
+              <ChoiceList
+                choices={freshOtherChoices}
+                resolved={draft.resolvedChoices}
+                setResolved={setLevelResolved}
+                ruleState={ruleState}
+                feats={visibleFeats}
+                activeFeats={assembled.feats}
+                title="Другие выборы"
+              />
+            )}
+
+
+              {freshFeatChoices.length > 0 && <div className="levelup-choice-stack">{freshFeatChoices.map(renderLevelChoice)}</div>}
+              {freshSpellChoices.length > 0 && <div className="levelup-spell-choices"><div className="levelup-subsection-heading"><Sparkles size={16}/><h3>Заклинания</h3></div>
+                <div className="levelup-choice-stack">{freshSpellChoices.map(renderLevelChoice)}</div></div>}
+              {freshFeatChoices.length === 0 && freshSpellChoices.length === 0 && !subclassEditable
+                && subclassSelectionProblems.length === 0 && freshOtherChoices.length === 0
+                && <div className="levelup-no-choices"><CheckCircle2 size={24} aria-hidden="true"/><div><b>Все решения уже приняты</b><p>На этом уровне дополнительных выборов нет.</p></div></div>}
+            </section>
+            <section className="levelup-section levelup-gains" aria-labelledby="levelup-gains-heading">
+              <div className="levelup-section-heading"><span aria-hidden="true">✦</span><div><h2 id="levelup-gains-heading">Что даёт уровень</h2><p>Способности и ресурсы, которые получит персонаж.</p></div></div>
             <div className="forge-block">
               <div className="forge-section-h">Новые способности</div>
               {newEffects.length === 0 && newActions.length === 0 && (
@@ -1130,122 +1329,28 @@ const CharacterForge = () => {
               />
             </div>
 
+            <LevelUpSpellGrants before={prevRefs?.spellGrants ?? null}
+              after={{assembled, grants:ruleState.appliedGrants, context:resourceContext}} spells={spells}
+              loading={!bundleReady || !spellCatalogReady}/>
+
             {resourceGains.length > 0 && (
               <div className="forge-block">
                 <div className="forge-section-h">Новые ресурсы</div>
-                <div className="levelup-resources">
-                  {resourceGains.map((r) => {
-                    const { label, icon } = resourceView(resourceOptions, r.key);
-                    return (
-                      <div key={r.key} className="levelup-resource">
-                        <img src={icon} alt="" className="levelup-resource-icon"
-                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
-                        <span className="levelup-resource-name">{label}</span>
-                        <span className="levelup-resource-delta">
-                          {r.before > 0 ? `${r.before} → ${r.after}` : `+${r.delta}`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <LevelUpResourceGains gains={resourceGains} options={levelUpResourceOptions(resourceOptions,assembled)} sources={projectedRuntime.sources}
+                  maximumBreakdowns={Object.fromEntries(resourceGains.map(gain=>[gain.key,resourceMaximumBreakdown(gain.key,resourceContext,assembled,ruleState.freeuseSpells,gain.after)]))}/>
               </div>
             )}
 
-            {subclassSelectionProblems.filter((issue) => issue.classId !== selectedLevelClass?.id).map((issue) => {
-              const options = visibleClasses.filter((entry) => entry.parent_class_id === issue.classId);
-              return (
-                <div className="forge-block forge-square-block" key={`repair-subclass:${issue.classId}`}>
-                  <div className="forge-section-h">Подкласс: {issue.className}</div>
-                  <p className="forge-note">Этот класс уже достиг уровня подкласса. Выбор обязателен.</p>
-                  <div className="forge-square-grid">
-                    {options.map((entry) => (
-                      <EntitySquareCard key={entry.id} name={entry.name} imageUrl={entry.image_url}
-                        selected={allSubclassIds[issue.classId] === entry.id}
-                        onClick={() => selectSubclass(entry.id, issue.classId)}
-                        preview={<ClassPreview characterClass={entry} disableHover />} supportEntity={entry} />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
 
-            {subclassEditable && (
-              <div className="forge-block forge-square-block">
-                <div className="forge-section-h">Подкласс</div>
-                <div className="forge-square-grid">
-                  {(selectableLevelSubclasses as CharacterClass[]).map((c) => (
-                    <EntitySquareCard
-                      key={c.id}
-                      name={c.name}
-                      imageUrl={c.image_url}
-                      selected={selectedLevelSubclassId === c.id}
-                      onClick={() => selectSubclass(c.id, selectedLevelClass?.id ?? null)}
-                      preview={<ClassPreview characterClass={c} disableHover />}
-                      supportEntity={c}
-                    />
-                  ))}
-                </div>
-                {selectedLevelSubclassId && (
-                  <p className="forge-note">
-                    {(selectedLevelSubclasses as CharacterClass[]).find((c) => c.id === selectedLevelSubclassId)?.description}
-                  </p>
-                )}
-                {selectedSubclassChoices.length > 0 && (
-                <ChoiceList
-                    choices={selectedSubclassChoices}
-                    resolved={draft.resolvedChoices}
-                    setResolved={setLevelResolved}
-                    ruleState={ruleState}
-                    feats={visibleFeats}
-                    activeFeats={assembled.feats}
-                    title="Выборы подкласса"
-                  />
-                )}
-              </div>
-            )}
-            {subclassLocked && (
-              <div className="forge-block">
-                <div className="forge-section-h">Подкласс</div>
-                <p className="forge-note">
-                  {(selectedLevelSubclasses as CharacterClass[]).find((c) => c.id === selectedLevelSubclassId)?.name} — закреплён для этого класса.
-                </p>
-              </div>
-            )}
-
-            {otherLevelUpChoices.length > 0 && (
-              <ChoiceList
-                choices={otherLevelUpChoices}
-                resolved={draft.resolvedChoices}
-                setResolved={setLevelResolved}
-                ruleState={ruleState}
-                feats={visibleFeats}
-                activeFeats={assembled.feats}
-                title="Выборы при повышении уровня"
-              />
-            )}
-
-            {(newSpellChoices.length > 0) && (
-              <div className="forge-block">
-                <div className="forge-section-h">Новые заклинания</div>
-                <SpellsSection
-                  spells={visibleSpells}
-                  granted={grantedSpells}
-                  choices={newSpellChoices}
-                  ownerChoices={spellChoices}
-                  maxSlotLevel={maxSlotLevel}
-                  ruleState={ruleState}
-                  resolved={draft.resolvedChoices}
-                  setResolved={setResolved}
-                  replacementLimits={replacementLimits}
-                  originalSelections={originalLevelChoices.current}
-                />
-              </div>
-            )}
-
+            </section>
             <div className="levelup-footer">
-              {blockingIssues.length > 0 && (
+              {pendingChoiceHints.length > 0 && <details className="levelup-pending-choices">
+                <summary>Осталось завершить выборы: {pendingChoiceHints.length}<span aria-hidden="true">⌄</span></summary>
+                <ul>{pendingChoiceHints.map((hint,index)=><li key={index}>{hint}</li>)}</ul>
+              </details>}
+              {levelUpErrors.length > 0 && (
                 <ul className="issues forge-overview-issues">
-                  {blockingIssues.slice(0, 4).map((it, i) => <li key={i}>{it}</li>)}
+                  {levelUpErrors.map((it, i) => <li key={i}>{it}</li>)}
                 </ul>
               )}
               {conflictWarnings.length > 0 && (
@@ -1260,18 +1365,21 @@ const CharacterForge = () => {
                   type="button"
                   className="forge-btn forge-create-btn"
                   disabled={!canConfirm || saving}
-                  onClick={async () => { if (await save()) navigate(`/characters-v3/${draft.id}${searchParams.get('roguelike') ? `?roguelike=${searchParams.get('roguelike')}` : ''}`); }}
+                  onClick={async () => { if (await save()) navigate(returnURL); }}
                 >
                   {saving ? 'Сохранение…' : `Подтвердить уровень ${draft.level}`}
                 </button>
-                <button type="button" className="forge-btn ghost"
-                  onClick={() => navigate(`/characters-v3/${draft.id}${searchParams.get('roguelike') ? `?roguelike=${searchParams.get('roguelike')}` : ''}`)}>
+                <button type="button" className="forge-btn ghost" disabled={saving}
+                  onClick={() => navigate(returnURL)}>
                   Отмена
                 </button>
               </div>
             </div>
           </div>
         </div>
+        {subclassComparisonOpen && selectedLevelClass && <SubclassProgressionDialog subclasses={selectedLevelSubclasses}
+          className={selectedLevelClass.name} unlockLevel={selectedLevelSubclassThreshold} selectedId={selectedLevelSubclassId}
+          onClose={()=>setSubclassComparisonOpen(false)}/>}
       </div>
       </CharacterFormulaProvider>
     );
@@ -1537,55 +1645,7 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFe
       <div className="forge-section-h">{title}</div>
       {choices.map((pc) => {
         const value = resolved[pc.id] || [];
-        const optionIds = optionsForChoice(pc, feats).map((option) => option.id);
-        const featByReference = new Map((feats ?? []).flatMap((feat) => (
-          [[feat.id, feat.id], [feat.card_number, feat.id]] as const
-        )));
-        const declarativeUnavailable = unavailableChoiceOptions(
-          pc,
-          ruleState,
-          optionIds,
-          value,
-          {
-            activeFeatIds: new Set((activeFeats ?? []).map((feat) => feat.id)),
-            repeatableFeatIds: new Set((feats ?? []).filter((feat) => feat.repeatable).map((feat) => feat.id)),
-            canonicalFeatId: (reference) => featByReference.get(reference) ?? reference,
-          },
-        );
-        const prerequisiteUnavailable = pc.source === 'feat'
-          ? Object.fromEntries((feats ?? []).map((feat) => [
-            feat.id,
-            generalFeatPrerequisiteIssue(feat, ruleState),
-          ]).filter(([, issue]) => Boolean(issue))) as Record<string, string>
-          : {};
-        // Предел характеристики 2024 не является AppliedGrant: это отдельное
-        // числовое ограничение поверх общей grant-semantics.
-        const sourceUnavailable = pc.source === 'ability'
-          ? Object.fromEntries(ABILITIES.map((ab) => {
-            const score = ruleState.abilities?.[ab.id as AbilityKey] ?? 0;
-            const capped = score >= 20 && !value.includes(ab.id);
-            return [ab.id, capped ? 'Максимум 20' : undefined];
-          }).filter(([, reason]) => !!reason)) as Record<string, string>
-          : undefined;
-        const weaponUnavailable = pc.source === 'weapon'
-          ? Object.fromEntries(optionIds.flatMap((weaponType) => {
-            if (pc.grantKind === 'weapon_mastery' && !value.includes(weaponType)
-              && ruleState.weaponMasteries.includes(weaponType)) {
-              return [[weaponType, 'Искусность этого вида оружия уже получена']];
-            }
-            if (pc.filter !== 'proficient') return [];
-            const category = WEAPON_TYPE_PROFICIENCY_CATEGORY[weaponType];
-            const proficient = ruleState.proficiencies.weapons.includes(weaponType)
-              || (category != null && ruleState.proficiencies.weapons.includes(category));
-            return proficient ? [] : [[weaponType, 'Нет владения этим видом оружия']];
-          })) as Record<string, string>
-          : {};
-        const unavailableOptions = {
-          ...declarativeUnavailable,
-          ...prerequisiteUnavailable,
-          ...(sourceUnavailable ?? {}),
-          ...weaponUnavailable,
-        };
+        const unavailableOptions = forgeChoiceUnavailableOptions(pc, ruleState, value, feats, activeFeats);
         return (
           <ChoiceResolver
             key={pc.id}

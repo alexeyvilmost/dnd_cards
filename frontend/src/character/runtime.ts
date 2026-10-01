@@ -6,6 +6,7 @@ import type { CharacterRuleState } from './rules/types';
 import { readDeathSaves } from './death';
 import { untrainedArmorCategories } from './untrainedArmor';
 import { OCCURRENCE_PERIODS } from '../engine/eventOccurrence';
+import {currentHpForMaximum} from './vitalityReconciliation';
 
 export const RULES_ENGINE_RUNTIME_TURN_STATE_KEY = 'rules_engine_runtime_v1' as const;
 export const RULES_ENGINE_RUNTIME_TURN_STATE_VERSION = 1 as const;
@@ -119,7 +120,7 @@ export function alignRuntimeHp(state: RuntimeState, computedMax: number): Runtim
     hp: {
       ...state.hp,
       max: computedMax,
-      current: Math.min(state.hp.current, computedMax),
+      current: currentHpForMaximum(state.hp.current, state.hp.max, computedMax),
     },
   };
 }

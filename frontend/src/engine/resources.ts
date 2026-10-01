@@ -3,6 +3,7 @@
  */
 import type { CharacterContext, ResourceRestRecovery } from '../mvp/contracts';
 import { evaluate, type FormulaContext } from './formula';
+import resourceDeclarations from './data/resources.json';
 
 type Dict = Record<string, unknown>;
 
@@ -13,17 +14,15 @@ export type LeveledCountDefinition = {
   level_source?: unknown;
 };
 
-const TURN_RESOURCES: Record<string, number> = {
-  action: 1,
-  bonus_action: 1,
-  reaction: 1,
-};
+const TURN_RESOURCES: Record<string, number> = Object.fromEntries(
+  resourceDeclarations.system_pools.map(pool => [pool.resource_id, pool.count]),
+);
 
 const TURN_KEYS = ['action', 'bonus_action', 'reaction'] as const;
 
 export function hitDiceResourceKey(hitDie: string | null | undefined): string | null {
-  const match = /^d(\d+)$/i.exec(String(hitDie ?? '').trim());
-  return match ? `hit_dice_d${Number(match[1])}` : null;
+  const declarations: Readonly<Record<string, string>> = resourceDeclarations.hit_dice;
+  return declarations[String(hitDie ?? '').trim().toLowerCase()] ?? null;
 }
 
 export function hitDieSides(hitDie: string | null | undefined): number | null {

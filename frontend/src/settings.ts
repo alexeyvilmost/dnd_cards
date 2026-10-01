@@ -61,8 +61,8 @@ const DEFAULTS: SiteSettings = {
   audioEffects: .8,
   audioUI: .35,
   combat3d: false,
-  combatRollMode: 'standard',
-  enemyCombatRollMode: 'standard',
+  combatRollMode: 'skip',
+  enemyCombatRollMode: 'skip',
   diceDialog: true,
   dice3d: true,
   dice3dAutoThrow: false,
@@ -91,7 +91,7 @@ export function getSettings(): SiteSettings {
       ...parsed,
       entityDisplay: { ...DEFAULTS.entityDisplay, ...(parsed.entityDisplay ?? {}) },
     };
-    if (!['standard', 'fast', 'skip', 'field'].includes(merged.combatRollMode)) merged.combatRollMode = 'standard';
+    if (!['standard', 'fast', 'skip', 'field'].includes(merged.combatRollMode)) merged.combatRollMode = DEFAULTS.combatRollMode;
     for (const key of ['audioMaster','audioMusic','audioEffects','audioUI'] as const) {
       merged[key] = typeof merged[key] === 'number' && Number.isFinite(merged[key]) ? Math.max(0,Math.min(1,merged[key])) : DEFAULTS[key];
     }

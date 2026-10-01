@@ -18,6 +18,7 @@ import { excludesMicroMvpL1SourceEffect } from '../canon/microMvpSourceCorrectio
 import { meetsActivationLevelRequirement } from '../rules-core/activationRequirements';
 import { resolvePrimarySpellcastingAbility } from './spellcastingAbility';
 import { draftClassLevels, normalizedSubclassIds } from './multiclass';
+import { spellCanBeAcquired } from './spellChoices';
 
 // ─── Собранный персонаж ──────────────────────────────────────────────────────
 
@@ -404,7 +405,10 @@ function assemble(bundle: EntityBundle, draft: CharacterDraft): AssembledCharact
     ));
     prepared.allowedOptionIds = [...new Set(spellbookChoices.flatMap((choice) => (
       draft.resolvedChoices[choice.id] ?? []
-    )))];
+    )))].filter((reference) => {
+      const spell = bundle.spells.find((candidate) => candidate.id === reference || candidate.card_number === reference);
+      return !spell || spellCanBeAcquired(spell);
+    });
   }
 
   const abilityMods = Object.fromEntries(

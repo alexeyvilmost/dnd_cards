@@ -586,14 +586,16 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 				intent := roguelikeIntentCombat
 				if request.RoguelikeIntent == roguelikeIntentCamp {
 					intent = roguelikeIntentCamp
-					if err := validateRoguelikeCampAction(character, participant.Patch); err != nil {
-						return err
-					}
 				}
 				if _, err := authorizeRoguelikeCharacterMutation(
 					tx, character, userID, request.RoguelikeRunID, intent,
 				); err != nil {
 					return err
+				}
+				if intent == roguelikeIntentCamp {
+					if err := validateRoguelikeCampEquipmentResources(c.Request.Context(), tx, character, participant.Patch); err != nil {
+						return err
+					}
 				}
 			}
 			if character.SystemID != request.RulesetRef.SystemID {

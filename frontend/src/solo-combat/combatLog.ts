@@ -60,6 +60,17 @@ export function projectCombatLogRecords(
         targetIds: [envelope.payload.actorId],
       }];
     }
+    if (envelope.payload.type === 'ActorRuntimePatched') {
+      const {actorId, patch} = envelope.payload;
+      const runtimePatch = {
+        ...(patch.hp ? {hp: patch.hp} : {}),
+        ...(patch.deathSaves ? {deathSaves: patch.deathSaves} : {}),
+        ...(patch.activeEffects ? {activeEffects: patch.activeEffects} : {}),
+      };
+      if (!Object.keys(runtimePatch).length) return [];
+      return [{kind: 'engine', ordinal: envelope.ordinal, sourceActorId: envelope.sourceActorId,
+        actorId, targetIds: [actorId], runtimePatch: structuredClone(runtimePatch)}];
+    }
     return [];
   });
 }

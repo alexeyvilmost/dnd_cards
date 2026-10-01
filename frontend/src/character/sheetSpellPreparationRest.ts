@@ -1,5 +1,6 @@
 import type { AssembledCharacter } from './assemble';
 import type { ForgeCharacter } from './types';
+import { spellCanBeAcquired } from './spellChoices';
 import {
   preparedSpellSelectionIssues,
   type PendingChoice,
@@ -83,7 +84,7 @@ function optionForReference(
     candidate.id === reference || candidate.card_number === reference
   ));
   const level = Number(spell?.level);
-  return spell && Number.isInteger(level) && level >= 1
+  return spell && spellCanBeAcquired(spell) && Number.isInteger(level) && level >= 1
     ? { reference, name: spell.name, level }
     : null;
 }

@@ -10,9 +10,9 @@ import {setSetting} from '../settings';
 vi.mock('./presentation',async importOriginal=>({...await importOriginal<typeof import('./presentation')>(),presentCombatEntries:(_state:unknown,entries:unknown[])=>entries}));
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 const roll:CombatBeat['roll']={kind:'d20',dice:[{sides:20,result:10}],modifiers:[],total:10,advantage:'none',outcome:'miss',text:'10'};
-const beats:CombatBeat[]=['own','enemy','own'].map((audience,i)=>({id:String(i),sourceId:String(i),sourceName:'Actor',audience:audience as 'own'|'enemy',actionName:'Attack',roll,cues:[]}));
 const animation=(durationMs:number):NonNullable<CombatBeat['animation']>=>({key:'test',primitive:'aura',
   palette:{primary:'#ffffff',secondary:'#99ccff'},motion:{durationMs,scale:1},casterCircle:false});
+const beats:CombatBeat[]=['own','enemy','own'].map((audience,i)=>({id:String(i),sourceId:String(i),sourceName:'Actor',audience:audience as 'own'|'enemy',actionName:'Attack',roll,animation:animation(1800),cues:[]}));
 const state=(log:CombatBeat[])=>({log} as unknown as SoloCombatState);
 let current:ReturnType<typeof useCombatPresentation>;
 function Harness({combat}:{combat:SoloCombatState}) { current=useCombatPresentation(combat,null);return null; }
@@ -22,6 +22,7 @@ describe('per-source combat presentation queue',()=>{
   beforeEach(()=>{
     vi.useFakeTimers(); let stored:string|null=null;
     vi.stubGlobal('localStorage',{getItem:()=>stored,setItem:(_key:string,value:string)=>{stored=value;}});
+    setSetting('combatRollMode','standard');setSetting('enemyCombatRollMode','standard');
     container=document.createElement('div');document.body.append(container);root=createRoot(container);
   });
   afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.useRealTimers();vi.unstubAllGlobals();});
@@ -47,16 +48,26 @@ describe('per-source combat presentation queue',()=>{
     await act(async()=>vi.advanceTimersByTime(240));
     expect(current.playing).toBeNull();
   });
-  it.each([false,true])('keeps captions readable after a short weapon animation, reduced motion=%s', async reduced=>{
+  it.each([false,true])('does not hold gameplay for captions after a short weapon animation, reduced motion=%s', async reduced=>{
     vi.stubGlobal('matchMedia',()=>({matches:reduced}));
     const result:CombatBeat={...beats[0],roll:undefined,animation:animation(920),
       cues:[{actorId:'target',text:'8',kind:'damage'}]};
     await act(async()=>root.render(<Harness combat={state([])}/>));
     await act(async()=>root.render(<Harness combat={state([result])}/>));
-    await act(async()=>vi.advanceTimersByTime(1799));
+    const duration=reduced?240:920;
+    await act(async()=>vi.advanceTimersByTime(duration-1));
     expect(current.playing?.id).toBe(result.id);
     await act(async()=>vi.advanceTimersByTime(1));
     expect(current.playing).toBeNull();
+    expect(current.blocked).toBe(false);
+  });
+  it('immediately resolves caption-only events without inventing a delivery animation',async()=>{
+    const result:CombatBeat={...beats[0],roll:undefined,animation:undefined,suppressAnimation:true,
+      cues:[{actorId:'target',text:'Завершено',kind:'effect'}]};
+    await act(async()=>root.render(<Harness combat={state([])}/>));
+    await act(async()=>root.render(<Harness combat={state([result])}/>));
+    await act(async()=>vi.advanceTimersByTime(0));
+    expect(current.playing).toBeNull();expect(current.blocked).toBe(false);
   });
   it('lets the longest grouped target animation finish', async()=>{
     const first:CombatBeat={...beats[0],roll:undefined,rollKind:'save',saveGroupId:'cast',targetId:'a',animation:animation(920)};

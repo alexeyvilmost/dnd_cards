@@ -46,3 +46,40 @@ test('internal worker authenticates requests and retains exact executable artifa
     await rm(directory, {recursive: true, force: true});
   }
 });
+
+test('transition diagnostics expose known rule codes without exception details', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'roguelike-worker-diagnostics-'));
+  const artifactFile = path.join(directory, 'current.cjs');
+  const artifact = `exports.stepRoguelikeCombat = (_envelope, intent) => {throw new Error(intent.message);};`;
+  await writeFile(artifactFile, artifact);
+  const server = await createRulesWorker({artifactFile, artifactsDirectory: path.join(directory, 'artifacts'), token});
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  try {
+    for (const [message, expected] of [
+      ['OutOfRange: target-private is outside 0 ft range; entropy-private', {rejectionCode: 'OutOfRange'}],
+      ['InsufficientResources: Missing resources: slot_private; entropy-private', {rejectionCode: 'InsufficientResources'}],
+      ['InvalidActionDefinition: private-snapshot-secret', {rejectionCode: 'InvalidActionDefinition'}],
+      ['OutOfRangePrivate: entropy-private', {}],
+      ['prefix OutOfRange: entropy-private', {}],
+      ['private-snapshot-secret', {}],
+      ['Прыжок превышает доступную дистанцию: entropy-private', {}],
+      ['Каталог не содержит spell/test; entropy-private', {}],
+      ['Карта столкновения отсутствует', {message: 'Карта столкновения отсутствует'}],
+      ['Каталог не содержит spell/test_spell', {message: 'Каталог не содержит spell/test_spell'}],
+    ]) {
+      const response = await fetch(`http://127.0.0.1:${server.address().port}/transition`, {
+        method: 'POST', headers: {authorization: `Bearer ${token}`, 'Content-Type': 'application/json'},
+        body: JSON.stringify({envelope: {entropy: {seed: 'request-private'}}, intent: {message}}),
+      });
+      assert.equal(response.status, 422);
+      const diagnostic = await response.json();
+      assert.deepEqual(diagnostic, {error: 'invalid_combat_command', ...expected});
+      assert.ok(!JSON.stringify(diagnostic).includes('private'));
+    }
+  } finally {
+    await new Promise(resolve => server.close(resolve));
+    assert.equal(path.dirname(path.resolve(directory)), path.resolve(tmpdir()));
+    assert.ok(path.basename(directory).startsWith('roguelike-worker-diagnostics-'));
+    await rm(directory, {recursive: true, force: true});
+  }
+});

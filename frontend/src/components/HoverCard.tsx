@@ -58,6 +58,13 @@ const HoverCard = ({ children, content, className, onClick, disabled = false, al
     setOpen(true);
   }, []);
 
+  useEffect(() => {
+    if (hoverDisabled) {
+      clearTimer();
+      setOpen(false);
+    }
+  }, [hoverDisabled]);
+
   // Уход мыши: в обычном режиме закрываем; в режиме закрепления НЕ закрываем —
   // превью остаётся, пока курсор был на триггере (можно дойти до ссылок внутри).
   const handleLeave = useCallback(() => {
@@ -95,6 +102,8 @@ const HoverCard = ({ children, content, className, onClick, disabled = false, al
         className={className}
         onMouseEnter={hoverDisabled ? undefined : openNow}
         onMouseLeave={hoverDisabled ? undefined : handleLeave}
+        onFocus={hoverDisabled ? undefined : openNow}
+        onBlur={hoverDisabled ? undefined : handleLeave}
         onClick={onClick}
       >
         {children}

@@ -11,7 +11,7 @@ function held(revision=46,lastId='first',actorId='archer'):SoloCombatState{
   pendingD20Interrupt:{operation:'roll_influence',command:{actorId,actionId:'bow',targetIds:['enemy']},
    held:{kind:'attack',roll:{kind:'d20',dice:[{sides:20,result:13}],outcome:'hit',total:20}}}} as SoloCombatState;
 }
-type Props={state:SoloCombatState|null;kind?:'roll_influence'|'reaction'|null;blocked?:boolean};
+type Props={state:SoloCombatState|null;kind?:'roll_influence'|'reaction'|'death_save'|null;blocked?:boolean};
 describe('automatic continuation of saved decisions',()=>{
  let root:Root,container:HTMLDivElement;
  const send=vi.fn();
@@ -69,5 +69,17 @@ describe('automatic continuation of saved decisions',()=>{
  it('ignores absent decisions',async()=>{
   await render({state:null});const state=held();delete state.pendingD20Interrupt;
   await render({state});await render({state,kind:'reaction'});expect(send).not.toHaveBeenCalled();
+ });
+ it('identifies each held death save across serialization and ignores confirmed phases',async()=>{
+  const state=held();state.pendingDeathSave={actorId:'fighter',round:2,phase:'rolled',randomValues:[.65]} as SoloCombatState['pendingDeathSave'];
+  const firstKey=automaticCombatDecisionKey(state,'death_save');
+  await render({state,kind:'death_save'});await render({state:structuredClone(state),kind:'death_save'});
+  expect(send).toHaveBeenCalledTimes(1);
+  const confirmed=structuredClone(state);confirmed.pendingDeathSave!.phase='resolved';
+  expect(automaticCombatDecisionKey(confirmed,'death_save')).toBeNull();
+  await render({state:confirmed,kind:'death_save'});expect(send).toHaveBeenCalledTimes(1);
+  const next=structuredClone(state);next.pendingDeathSave!.actorId='cleric';
+  expect(automaticCombatDecisionKey(next,'death_save')).not.toBe(firstKey);
+  await render({state:next,kind:'death_save'});expect(send).toHaveBeenCalledTimes(2);
  });
 });

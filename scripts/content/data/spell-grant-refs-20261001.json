@@ -1,0 +1,2147 @@
+{
+  "schema_version": 1,
+  "migration_version": "295_stable_spell_grant_references",
+  "entities": [
+    {
+      "id": "05716ef3-2efc-4c44-ae71-bb17eaef8522",
+      "card_number": "EFFECT-0015",
+      "name": "Чарующая магия",
+      "expected_description_hash": "sha256:b7483efbdd0794f506028684ef907b3e773cbe9e8fff7b36e0351530e11130fe",
+      "expected_before": "sha256:a8f9f91434e80885d57a3d49a6cf4065d7fe33bb61181d5a92ad6b86471530f4",
+      "expected_after": "sha256:6523e9380c357a0f19a74c119b5b3cb47b3e1f28fd484b5a7eb191d117314583",
+      "mechanics": {
+        "activation": {
+          "mode": "triggered",
+          "trigger": {
+            "event": "spell_cast"
+          }
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0251",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0249",
+                "label": "always_prepared"
+              }
+            ]
+          },
+          {
+            "ability": "wis",
+            "dc": "8 + prof + spellcasting",
+            "on_fail": [
+              {
+                "description": "Цель Очарована или Испугана (по вашему выбору) на 1 минуту; повторяет спасбросок в конце каждого своего хода, оканчивая эффект при успехе.",
+                "kind": "narrative"
+              }
+            ],
+            "on_success": [],
+            "resolution": "save"
+          }
+        ],
+        "uses": {
+          "count": 1,
+          "per": "long_rest",
+          "resource_id": "uses_EFFECT-0015"
+        }
+      }
+    },
+    {
+      "id": "0ca05646-4b3d-4aab-aeac-c29b81e27c86",
+      "card_number": "EFFECT-0181",
+      "name": "Заклинания Клятвы славы",
+      "expected_description_hash": "sha256:0f51955537a65507d0b1f37f355a0b157d69561cb8e039f95a34b4ceaeb6cb9c",
+      "expected_before": "sha256:f6095509fe3d14fbca769d4e079f957bff9f8cdb1409285bd5b4f252b6c07643",
+      "expected_after": "sha256:0d2db61e77c74184caac7e70e7f276554e75ae13297f1c9b62ac14a83a0627d7",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0229",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0181",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0309",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0219",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "haste",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "protection_from_energy",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "compulsion",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "freedom_of_movement",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "legend_lore",
+                "level_gate": 17,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "yolandes_regal_presence",
+                "level_gate": 17,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "SPELL-0219",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "SPELL-0309",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "0d8e6b8c-db4e-403d-8a4e-0b461cf66639",
+      "card_number": "EFFECT-0227",
+      "name": "Псионические заклинания",
+      "expected_description_hash": "sha256:f94a7b939412151417d08d779a4174e29053c12bd2a20a5d29b3a721f7ac417c",
+      "expected_before": "sha256:2626973c8c3ee901105c9df5592cf10d79e84de733c9fdd1dd3df55f25505694",
+      "expected_after": "sha256:7267c170bb0fe0dbf2287274688e64a94c37481bb35eff87a3e4fdfa19fe73d6",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0187",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0239",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0281",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0283",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0310",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "На 5-м уровне Чародея добавляются Голод Хадара и Послание; на 7-м — Вызов Аберрации и Чёрные щупальца Эварда; на 9-м — Ментальная связь Рэри и Телекинез (всегда подготовлены)."
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "hunger_of_hadar",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "sending",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "22965a36-ea0c-4f13-867f-18d9bb9edf28",
+      "card_number": "EFFECT-0133",
+      "name": "Мистический сглаз",
+      "expected_description_hash": "sha256:ef46ccd43c45bbf69b838ed7205a2a5a831be06e0d074c2e49730982cd000370",
+      "expected_before": "sha256:ae3b4238431e97c9ecb6db846f000d9c4baa2a50e944b218fda458cc771fb99c",
+      "expected_after": "sha256:028a841842f85d06a27a4600163b9cee7e013c0eba70202689cb813bb6544928",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0287",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "При сотворении Сглаза цель также совершает с Помехой спасброски выбранной характеристики на время длительности заклинания."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "23edbcbe-f8b6-4938-b75e-db6961ed2a81",
+      "card_number": "EFFECT-0234",
+      "name": "Драконьи заклинания",
+      "expected_description_hash": "sha256:ce19f4b77c8c8343f9daa1e94ae5ec4849b0106e4ffe3f8c9377244219dd7d2f",
+      "expected_before": "sha256:cc43af82b1737830d2e656d4e8ede0cb163d561bf1573bd0cb087bd3532650ed",
+      "expected_after": "sha256:f621135f48061f1a9caaea09404fd15a3b24fb4f45d3089033bed8dca063dd04",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0197",
+                "ability": "cha",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0272",
+                "ability": "cha",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0293",
+                "ability": "cha",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0314",
+                "ability": "cha",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "На 5-м уровне Чародея добавляются Полёт и Страх; на 7-м — Магический глаз и Очарование чудовища; на 9-м — Вызов Дракона и Знание легенд (всегда подготовлены)."
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "fly",
+                "ability": "cha",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "fear",
+                "ability": "cha",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "2ad5ea5e-9430-4466-b49c-6c5b9d36f292",
+      "card_number": "EFFECT-0130",
+      "name": "Заклинания Великого Древнего",
+      "expected_description_hash": "sha256:98bb5657cb4708a994faf3e31c40aa6ff0f1c67561403aa327d96f0f081f0905",
+      "expected_before": "sha256:4e096ef7234a77ab446cc8e8d9a56aa4b000efe0ade8e5b6ac2fea4b0c2c0191",
+      "expected_after": "sha256:cf3e1d3b2187ee2370f96eeb74b13cebf779e32c0cc7f0bd6bc4e34a98db8dc4",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0177",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0187",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0199",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0239",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "hunger_of_hadar",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "clairvoyance",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "summon_aberration",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "confusion",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "modify_memory",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "telekinesis",
+                "level_gate": 9,
+                "label": "always_prepared"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "32b4885c-75ea-4c5d-a56f-0eb3c1bb205c",
+      "card_number": "EFFECT-0071",
+      "name": "Иллюзорные существа",
+      "expected_description_hash": "sha256:dfe4ec4e3a199b529725fee4515ddf5d98311804616cb2ba4f17e14c5c750793",
+      "expected_before": "sha256:9b41321c9aba7bdc62425e13a607e9492c018ea543a1f6478355f96dd93e0080",
+      "expected_after": "sha256:7d30715e7a6787e90717d099efae052777891696f9cae0715fc68bfdfe4e1be2",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0178",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "summon_fey",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "Можно менять школу этих заклинаний на Иллюзию (существо призрачное). Иллюзорный вариант можно сотворить без ячейки (Хиты существа вдвое меньше) — до Долгого отдыха."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "37a6f6c9-fe3c-4c30-9600-dd59485a40b9",
+      "card_number": "EFFECT-0157",
+      "name": "Управление стихиями",
+      "expected_description_hash": "sha256:30df63248919a293bfecc11eec49d5f519cf00dff775e45c2791cecc464e1006",
+      "expected_before": "sha256:dc4e2af73b87e863e7bb4f5de5b6ac881098b12d57a741cebfdb3285912fd0fd",
+      "expected_after": "sha256:e9bb49a6511b8aa21be59846c50a709b949a59106370342b97fc1468348d0721",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0298"
+              },
+              {
+                "kind": "narrative",
+                "description": "Заклинательная характеристика — Мудрость."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "3d59b00f-210c-4d5a-83db-b6a9a3797d5a",
+      "card_number": "EFFECT-0124",
+      "name": "Заклинания Архифеи",
+      "expected_description_hash": "sha256:6b02d4da923ecaa51f5b52580ab1f395fd0ddd83f9048f0f67f79527b3aac290",
+      "expected_before": "sha256:0975e662708cdc051de656184f078b36f646343d733da81cc0072e79acd89c00",
+      "expected_after": "sha256:8fcdf5bc5917e1d7ea47986c73778055190de748b8e34fc9e40d97723a1434ab",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0177",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "faerie_fire",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "misty_step",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0310",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0311",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "blink",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "plant_growth",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "greater_invisibility",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "dominate_beast",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "dominate_person",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "seeming",
+                "level_gate": 9,
+                "label": "always_prepared"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "50979822-4fdd-4f03-9472-e87bad442d1a",
+      "card_number": "EFFECT-0017",
+      "name": "Мантия величия",
+      "expected_description_hash": "sha256:ee9840d706559c425f6102a09c155c046229084d01ac4311032c4560f31a6edf",
+      "expected_before": "sha256:a6caa5829c4100107a54e1f0dd06e5dd7529e2d2040c88ffbb58c9ecf68c3953",
+      "expected_after": "sha256:0270443d4783002d1a0dd3a6238724297e8e88df4876f5cb408ec1ab8cd7c975",
+      "mechanics": {
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            }
+          ],
+          "mode": "active"
+        },
+        "effects": [
+          {
+            "resolution": "auto",
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0272",
+                "label": "always_prepared"
+              },
+              {
+                "description": "Сотворите Приказ без траты ячейки и примите неземной облик на 1 минуту (пока длится Концентрация); всё это время можно Бонусным действием сотворять Приказ без траты ячейки. Очарованные вами существа автоматически проваливают спасбросок против такого Приказа. Восстановление: Долгий отдых или трата ячейки 3-го уровня и выше.",
+                "kind": "narrative"
+              }
+            ]
+          }
+        ],
+        "uses": {
+          "count": 1,
+          "per": "long_rest",
+          "resource_id": "uses_EFFECT-0017"
+        }
+      }
+    },
+    {
+      "id": "55673276-c33d-40ee-b171-ca298b893bfe",
+      "card_number": "EFFECT-0216",
+      "name": "Заклинания Странника фей",
+      "expected_description_hash": "sha256:31d4cf9d417c8615fc3c12b5b97a5b2ff62c0badc52214d3afe5605a26d62fa6",
+      "expected_before": "sha256:e20ba6d473da91685d81fae4a1b58ddd9dd8e350a500d39e609497e174d5698d",
+      "expected_after": "sha256:10d7ca3e162f33225472bfd1f3c7dacbc8a7ed9a9833ce21258e657f72d198a8",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0251",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "Всегда подготовлены: Очарование личности (3), Туманный шаг (5), Вызов Феи (9), Переносящая дверь (13), Фальшивый двойник (17). Плюс косметический дар Страны Фей (по выбору или 1к6)."
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "misty_step",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "63fe7b25-de73-4ffb-b24f-28b3fedd30cb",
+      "card_number": "EFFECT-0116",
+      "name": "Заклинания Домена обмана",
+      "expected_description_hash": "sha256:c265a4cd5cbfe7c28c7d7b046b2b594d33cde114b7023e0eb3a83ba4de3ebe10",
+      "expected_before": "sha256:2fc6728648d82102481bde52d75412c153c01b9b2bcce3edf6d7a473f99ae11d",
+      "expected_after": "sha256:43bad0410cf144c8b2a21fa8477a1745fb2f5479155801196221902fe5a6c8b7",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "pass_without_trace",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0222",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0231",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0251",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "На 5-м уровне Жреца добавляются Гипнотический узор и Необнаружимость, на 7-м — Переносящая дверь и Смятение, на 9-м — Изменение памяти и Подчинение личности; все они всегда подготовлены"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "hypnotic_pattern",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "nondetection",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "6b453ba5-6ba7-442e-9361-7fd79f2adec2",
+      "card_number": "EFFECT-0238",
+      "name": "Заводные заклинания",
+      "expected_description_hash": "sha256:0eecad27a4441bcfdd13097af8090b95a2f825628e143113c06546c20b5b8f32",
+      "expected_before": "sha256:c779b4b8919ec4ceec0a94b831ffa4b0feeecf2313956a87b9bfabb392cb846c",
+      "expected_after": "sha256:afa2b7766ae00a9fd4e402769211f7dac28ef8b396da773e0fdc0983be4f86bc",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0201",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0221",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0261",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0288",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "На 5-м уровне Чародея добавляются Защита от энергии и Рассеивание магии; на 7-м — Вызов Конструкта и Свобода перемещения; на 9-м — Высшее восстановление и Силовая стена (всегда подготовлены). Визуальное проявление порядка — по таблице «Проявления порядка» (1к6)."
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "protection_from_energy",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "dispel_magic",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "8061790f-067f-459c-8645-91e864ed0c64",
+      "card_number": "EFFECT-0095",
+      "name": "Заклинания Круга луны",
+      "expected_description_hash": "sha256:5bd316a6bf8fce3114f152cb91a2fe1bdd348d30f7255229707d944ea7b3e6e5",
+      "expected_before": "sha256:33217ae88c0295a0ed7908d0bd736fc6440a316540b2b8332635ddd398fff307",
+      "expected_after": "sha256:6e2770b0596cf6e0a8fbe5f64fb3b48ceef3992ad9c88096875ff6ac4d74abbc",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0204",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0214",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0215",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "conjure_animals",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "fount_of_moonlight",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "mass_cure_wounds",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "Заклинания этого умения можно сотворять в Диком облике"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "80eeda8b-2f5c-4934-ae54-aa244ac99169",
+      "card_number": "EFFECT-0110",
+      "name": "Заклинания Домена жизни",
+      "expected_description_hash": "sha256:07bc5c5e9ac0dfc8cb287105aa64f34329f441040d37ee7c3333015526f707c7",
+      "expected_before": "sha256:491c132b3713d180cf3a82f9201205eab6211af91425e324857b6eaa6d558505",
+      "expected_after": "sha256:1ca51e0c514d2708521841e5f0b3038ea3cdd36fa7e2ca266a58396665d044a7",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0163",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0214",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0221",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0261",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "На 5-м уровне Жреца добавляются Возрождение и Множественное лечащее слово, на 7-м — Аура жизни и Защита от смерти, на 9-м — Высшее восстановление и Множественное лечение ран; все они всегда подготовлены"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "revivify",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "mass_healing_word",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "86616b30-3517-4d20-99ba-f00dc530b3c4",
+      "card_number": "EFFECT-0141",
+      "name": "Заклинания Небожителя",
+      "expected_description_hash": "sha256:dca6f5b0b95eefefc3657169f043bd3fbcceb75a2dce85f6bd808e69136e610e",
+      "expected_before": "sha256:3dfe723443332e4bbc32e9bb31f3934bfd05c9e6a09351ada6cdf681380f8c76",
+      "expected_after": "sha256:fb9506f2b20456f813d670d1d6cf61f69b01d2c2a0cbedb8f56eb677bacc5961",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0214",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0221",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0229",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0261",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "cantrip",
+                "value": "light"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "cantrip",
+                "value": "SPELL-0286"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "revivify",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "daylight",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "wall_of_fire",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "guardian_of_faith",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "summon_celestial",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "greater_restoration",
+                "level_gate": 9,
+                "label": "always_prepared"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "86c2d0f5-aae2-480f-8a93-8655f3878486",
+      "card_number": "EFFECT-0165",
+      "name": "Заклинания Клятвы возмездия",
+      "expected_description_hash": "sha256:7543aded44e028d9a11c7f4663a6160eb7f3bbcdbcfdd6f794ebeb26fd90c796",
+      "expected_before": "sha256:1e0f56ce4960dbb92152b626df61152c621ea0c42b08cdfc7f01a5d505a36f94",
+      "expected_after": "sha256:84713ea8afcf3c9d1114b77443d94556ada9ff5d2b8d3a62e7793cab697ff737",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0267",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0223",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "hold_person",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "misty_step",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "haste",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "protection_from_energy",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "banishment",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "dimension_door",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "hold_monster",
+                "level_gate": 17,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "scrying",
+                "level_gate": 17,
+                "label": "always_prepared"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "9aec36b3-56b2-48f2-bdec-eacea4e50554",
+      "card_number": "EFFECT-0099",
+      "name": "Заклинания Круга моря",
+      "expected_description_hash": "sha256:8d64ac7f436cffbbed97c44cf581b3f01d9deb5ef01996c815a751c9d614286b",
+      "expected_before": "sha256:a55a22aee183fde47b6b4bf878d6a489f569d5e1f31a59d6eadeb7a0479f0e81",
+      "expected_after": "sha256:461b6bed7d2659638cde58d30fa2c4f348dd88949603dc2d12f4eb4303a55b74",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0171",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0191",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0218",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0268",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0303",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "lightning_bolt",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "water_breathing",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "control_water",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "ice_storm",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "conjure_elemental",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "hold_monster",
+                "level_gate": 9,
+                "label": "always_prepared"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "9cd165c8-a2d8-4e3c-88b9-194373e430d6",
+      "card_number": "EFFECT-0137",
+      "name": "Заклинания Исчадия",
+      "expected_description_hash": "sha256:b8d58a4cfdd97ba3a815e9145ad60e51178b3c6e1ff9326f48ea00e1b7da9bb4",
+      "expected_before": "sha256:cf51ab03af57c2ba1735f227da11294d8deb4a5f655fe80a73252307d271b33c",
+      "expected_after": "sha256:3231b9382f7af66691b49237119608e709d201ed05ad99d65f9e369cef26c53a",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0170",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0242",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0255",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0272",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "stinking_cloud",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "fireball",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "wall_of_fire",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "fire_shield",
+                "level_gate": 7,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "geas",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "insect_plague",
+                "level_gate": 9,
+                "label": "always_prepared"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "b1ecf119-6131-451f-ab8b-59c78b40cd13",
+      "card_number": "EFFECT-0196",
+      "name": "Сотворение заклинаний",
+      "expected_description_hash": "sha256:cb8d606ddf504f4838e16e73eb4470d5e1b986ca35992aaa66ff3e2f0a7bc017",
+      "expected_before": "sha256:4b385eda4b8c2419e6f062630801807d8bbe8ad671fe6027e092aa51feefd7d3",
+      "expected_after": "sha256:4dc2727ffc13e24bd2e5701be7c5c7004f16ff7c4e9133b1cecff4ee59535e85",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0173"
+              },
+              {
+                "kind": "narrative",
+                "description": "3 заговора Волшебника (Волшебная рука + 2 на выбор, ещё 1 на 10-м ур.); подготовленные заклинания Волшебника: 3 на 3-м ур. до 13 на 20-м; ячейки треть-кастера по таблице подкласса; характеристика — Интеллект"
+              }
+            ],
+            "resolution": "auto"
+          },
+          {
+            "id": "at_cantrips",
+            "kind": "choice",
+            "count": 2,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "cantrip"
+            },
+            "prompt": "Выберите 2 заговора волшебника",
+            "options": {
+              "filter": {
+                "levels": [
+                  0
+                ],
+                "classes": [
+                  "волшебник"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          },
+          {
+            "id": "at_spells_l1",
+            "kind": "choice",
+            "count": 3,
+            "grant": {
+              "kind": "grant_spell",
+              "label": "known"
+            },
+            "prompt": "Выберите 3 заклинания волшебника 1-го круга",
+            "options": {
+              "filter": {
+                "levels": [
+                  1
+                ],
+                "classes": [
+                  "волшебник"
+                ]
+              },
+              "source": "spell"
+            },
+            "resolution": "on_acquire"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "c554b368-cd48-4318-83ce-4488b4f5414b",
+      "card_number": "EFFECT-0171",
+      "name": "Заклинания Клятвы древних",
+      "expected_description_hash": "sha256:5c1d4e85414a7998b6fe4979a264f12ce437b4aaf75598390c8d1106aa68f245",
+      "expected_before": "sha256:b06c369e8db9c871a8b856c240f5aa0ce51107022985cc9c52d2ce350d07f69c",
+      "expected_after": "sha256:4d6550432fb33ef6dea605a8dffc0a4fd0ba66164a1b20f23a16275b7fb46a01",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0247",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0277",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "misty_step",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0215",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "plant_growth",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "protection_from_energy",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "ice_storm",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "stoneskin",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "commune_with_nature",
+                "level_gate": 17,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "tree_stride",
+                "level_gate": 17,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "SPELL-0215",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "c585004c-4f93-425f-894c-06dba92afc80",
+      "card_number": "EFFECT-0105",
+      "name": "Заклинания Домена войны",
+      "expected_description_hash": "sha256:e3d8f9a8051a0f69daefa9e32e1d8ea853c43015046becceeac13125c16b3574",
+      "expected_before": "sha256:810b58f398d63193fbab8bb58f91f512a3a7129cbac9b3a4492a579eeb793fc6",
+      "expected_after": "sha256:2aca5c62d6dbeb60708b8873f30e83190545c773c60aec1bb74292d425d713e5",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0196",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0219",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0229",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0318",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "На 5-м уровне Жреца добавляются Духовные стражи и Мантия крестоносца, на 7-м — Огненный щит и Свобода перемещения, на 9-м — Удар стального ветра и Удержание чудовища; все они всегда подготовлены"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "spirit_guardians",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "crusaders_mantle",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "d6ba80d4-8389-461f-b9cf-95040c032679",
+      "card_number": "EFFECT-0084",
+      "name": "Звёздная карта",
+      "expected_description_hash": "sha256:494a0dc8e69ef679d76499640ad0f3dc51d6d0377b72aa78387c095fea6987bb",
+      "expected_before": "sha256:84ab5a9dc2f5f8ca26871efea6a26aff3d10274cf0a355d4383e314a2ca1a933",
+      "expected_after": "sha256:d24bf17bf4e841e6a32bba99a31a6b16f73836171c918efb39b78259abb5b0ea",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0230",
+                "label": "prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0229",
+                "label": "prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "Пока карта у вас: Направляющий снаряд можно сотворять без траты ячейки заклинаний число раз, равное модификатору Мудрости (мин. 1); восстанавливается после Долгого отдыха"
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "e6e832f5-6848-44ea-8a65-134816aa6fc0",
+      "card_number": "EFFECT-0119",
+      "name": "Заклинания Домена света",
+      "expected_description_hash": "sha256:cf3c47f6904e8c7cf38748e6dff154fe0e5d5005893079e655251b27f95d675b",
+      "expected_before": "sha256:ef88dc64946e981ecbdfada856e2c9e947767518632abced8edc60ac0f1179b6",
+      "expected_after": "sha256:6af0e6c9ccb408a5845576a2e60eb8ae3656cdb8c2d051ae05cec2c53fc2cdb3",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0242",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "faerie_fire",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0255",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0169",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "На 5-м уровне Жреца добавляются Дневной свет и Огненный шар, на 7-м — Магический глаз и Огненная стена, на 9-м — Наблюдение и Небесный огонь; все они всегда подготовлены"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "daylight",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "fireball",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "e75814ba-c608-47a8-8fe6-3f99822a3fe6",
+      "card_number": "EFFECT-0175",
+      "name": "Заклинания Клятвы преданности",
+      "expected_description_hash": "sha256:e2d1e5641e9397b25a1c92fac4d70305ac7ebc614468258570fa5ec668f58825",
+      "expected_before": "sha256:124b3be541a22a79e9b8ab6790aae66cf663a9c30ac9f6d02decde80e44f6912",
+      "expected_after": "sha256:45e144be2889011c9cc45ae958b56a49e497f112062d3b69c1ea1fcb83a602be",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0201",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0318",
+                "level_gate": 3,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0261",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0235",
+                "level_gate": 5,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "beacon_of_hope",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "dispel_magic",
+                "level_gate": 9,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "freedom_of_movement",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "guardian_of_faith",
+                "level_gate": 13,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "commune",
+                "level_gate": 17,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "value": "flame_strike",
+                "level_gate": 17,
+                "label": "always_prepared"
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "SPELL-0235",
+                "level_gate": 5
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "SPELL-0261",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    },
+    {
+      "id": "f514cf09-f963-4c83-849f-baf6bc0bf761",
+      "card_number": "EFFECT-0222",
+      "name": "Заклинания Сумрачного охотника",
+      "expected_description_hash": "sha256:3f9b4456d4dc73f71e8aacc36d9315b2587db85985c4aa575ace67767a89697f",
+      "expected_before": "sha256:dcd9be81095edf15ee2784e03ead41d41a3efaf9e640bfb2674a95e4396d1580",
+      "expected_after": "sha256:f2e10c546b9104e7798a74977b5d668d49541c67e321b7b94ca204a2d20e0aed",
+      "mechanics": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "grant_spell",
+                "value": "SPELL-0222",
+                "label": "always_prepared"
+              },
+              {
+                "kind": "narrative",
+                "description": "Всегда подготовлены: Маскировка (3), Трюк с верёвкой (5), Страх (9), Высшая невидимость (13), Притворство (17)."
+              },
+              {
+                "kind": "grant_spell",
+                "label": "always_prepared",
+                "value": "SPELL-0302",
+                "level_gate": 5
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "activation": {
+          "mode": "passive"
+        }
+      }
+    }
+  ],
+  "targets": [
+    {
+      "id": "0399a397-760b-4173-add5-104343ae87f1",
+      "card_number": "sending",
+      "name_en": "Sending"
+    },
+    {
+      "id": "06081bb4-643f-448b-b68e-01850918b884",
+      "card_number": "wall_of_fire",
+      "name_en": "Wall of Fire"
+    },
+    {
+      "id": "0a950103-6a94-4619-a715-c61816e0a8ec",
+      "card_number": "fount_of_moonlight",
+      "name_en": "Fount of Moonlight"
+    },
+    {
+      "id": "0b417882-a96c-4259-8198-e8f1284a2188",
+      "card_number": "insect_plague",
+      "name_en": "Insect Plague"
+    },
+    {
+      "id": "0f81f3e2-ff95-4629-9292-e81332a57282",
+      "card_number": "SPELL-0311",
+      "name_en": "Sleep"
+    },
+    {
+      "id": "13647e9e-4d53-4475-a108-4b31e759f7c6",
+      "card_number": "protection_from_energy",
+      "name_en": "Protection from Energy"
+    },
+    {
+      "id": "15ccec59-a913-44bf-bbe6-3f115f3b8aaa",
+      "card_number": "conjure_animals",
+      "name_en": "Conjure Animals"
+    },
+    {
+      "id": "1661dfe1-71c5-4b4a-92c9-660cc787ac5c",
+      "card_number": "haste",
+      "name_en": "Haste"
+    },
+    {
+      "id": "1701cf94-2c74-493d-8e3f-976ea57b207e",
+      "card_number": "stinking_cloud",
+      "name_en": "Stinking Cloud"
+    },
+    {
+      "id": "1a2af0c3-b0ee-4435-8678-2c49bae79edd",
+      "card_number": "SPELL-0302",
+      "name_en": "Rope Trick"
+    },
+    {
+      "id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+      "card_number": "light",
+      "name_en": "Light"
+    },
+    {
+      "id": "1fa19045-60f7-4d1f-b777-68d33dc18ec4",
+      "card_number": "SPELL-0169",
+      "name_en": "See Invisibility"
+    },
+    {
+      "id": "217bccc3-10de-4383-a72e-255d5d254a31",
+      "card_number": "mass_healing_word",
+      "name_en": "Mass Healing Word"
+    },
+    {
+      "id": "2a04f1ac-3c98-4c78-95f3-0c771238028e",
+      "card_number": "guardian_of_faith",
+      "name_en": "Guardian of Faith"
+    },
+    {
+      "id": "2a35ac80-7b05-4dba-8603-b154ed565691",
+      "card_number": "SPELL-0309",
+      "name_en": "Enhance Ability"
+    },
+    {
+      "id": "2c460cd4-fc9f-418c-8c14-c80ed403c54f",
+      "card_number": "SPELL-0235",
+      "name_en": "Zone of Truth"
+    },
+    {
+      "id": "312f385c-d61a-471e-ae7d-29875b080f72",
+      "card_number": "modify_memory",
+      "name_en": "Modify Memory"
+    },
+    {
+      "id": "323d7658-e77d-4da6-a4b1-131220bad52c",
+      "card_number": "commune",
+      "name_en": "Commune"
+    },
+    {
+      "id": "3300fa90-b693-4b5b-9f88-96611d311e3f",
+      "card_number": "fire_shield",
+      "name_en": "Fire Shield"
+    },
+    {
+      "id": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+      "card_number": "SPELL-0163",
+      "name_en": "Bless"
+    },
+    {
+      "id": "34518f38-b737-4a91-88ac-d5858d2d04a0",
+      "card_number": "SPELL-0171",
+      "name_en": "Thunderwave"
+    },
+    {
+      "id": "3e1ecb15-c8b0-4082-a7e5-975ffbf174ef",
+      "card_number": "hypnotic_pattern",
+      "name_en": "Hypnotic Pattern"
+    },
+    {
+      "id": "40fba01b-8a66-484c-9d54-ce389494e0f3",
+      "card_number": "pass_without_trace",
+      "name_en": "Pass without Trace"
+    },
+    {
+      "id": "42e4dbfa-78d4-47c0-8734-48edb6be16e2",
+      "card_number": "dimension_door",
+      "name_en": "Dimension Door"
+    },
+    {
+      "id": "4a616cea-f96b-46fb-86e1-07ec9e57ff14",
+      "card_number": "beacon_of_hope",
+      "name_en": "Beacon of Hope"
+    },
+    {
+      "id": "4abefac8-329b-4c70-a59a-84dca2d194d3",
+      "card_number": "SPELL-0199",
+      "name_en": "Tasha's Hideous Laughter"
+    },
+    {
+      "id": "4c68b89a-a7aa-4166-af42-8541baef3ce5",
+      "card_number": "water_breathing",
+      "name_en": "Water Breathing"
+    },
+    {
+      "id": "4e5e18a2-eb06-4ba2-87b3-1767ef9c9167",
+      "card_number": "legend_lore",
+      "name_en": "Legend Lore"
+    },
+    {
+      "id": "579a6237-8eb2-4aae-bc18-0de1acb7c0e1",
+      "card_number": "seeming",
+      "name_en": "Seeming"
+    },
+    {
+      "id": "5803f689-629f-4d83-ae5b-ba1961456f36",
+      "card_number": "dominate_beast",
+      "name_en": "Dominate Beast"
+    },
+    {
+      "id": "58fc2edb-7b90-4484-81ee-412e48abeec4",
+      "card_number": "summon_aberration",
+      "name_en": "Summon Aberration"
+    },
+    {
+      "id": "5a8cc8b7-8f5c-49d7-a66d-ba31a273c65c",
+      "card_number": "SPELL-0222",
+      "name_en": "Disguise Self"
+    },
+    {
+      "id": "5b887f4a-f13e-4d54-9e54-911779ffc998",
+      "card_number": "SPELL-0178",
+      "name_en": "Summon Beast"
+    },
+    {
+      "id": "5c7b2ed6-832a-4c99-8328-7e32ade94fc2",
+      "card_number": "confusion",
+      "name_en": "Confusion"
+    },
+    {
+      "id": "5e90e06d-99db-439c-86fc-b39393940b41",
+      "card_number": "mass_cure_wounds",
+      "name_en": "Mass Cure Wounds"
+    },
+    {
+      "id": "5eaf003c-8af9-43e4-815d-bebf63dcc866",
+      "card_number": "control_water",
+      "name_en": "Control Water"
+    },
+    {
+      "id": "656f3c28-9fdd-44c7-88df-ce032a501e52",
+      "card_number": "SPELL-0318",
+      "name_en": "Shield of Faith"
+    },
+    {
+      "id": "660ec8f9-6a3a-4dae-9781-981503268c71",
+      "card_number": "SPELL-0177",
+      "name_en": "Phantasmal Force"
+    },
+    {
+      "id": "68804a72-e20f-4373-a86d-7048bf263040",
+      "card_number": "SPELL-0249",
+      "name_en": "Mirror Image"
+    },
+    {
+      "id": "6da6b18d-7609-4fcd-8078-8f979c4ffdeb",
+      "card_number": "fireball",
+      "name_en": "Fireball"
+    },
+    {
+      "id": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+      "card_number": "SPELL-0230",
+      "name_en": "Guidance"
+    },
+    {
+      "id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "card_number": "SPELL-0173",
+      "name_en": "Mage Hand"
+    },
+    {
+      "id": "725ed0f6-99f8-4ebb-bbe2-87ac3e382d99",
+      "card_number": "hold_person",
+      "name_en": "Hold Person"
+    },
+    {
+      "id": "732c2287-dd4d-46cd-9315-67447549abfa",
+      "card_number": "SPELL-0242",
+      "name_en": "Burning Hands"
+    },
+    {
+      "id": "79592a19-39b6-4c33-a427-a2bb6460c1e5",
+      "card_number": "yolandes_regal_presence",
+      "name_en": "Yolande’s Regal Presence"
+    },
+    {
+      "id": "7b198519-bf73-4689-9b23-6e8ff4ba35f3",
+      "card_number": "geas",
+      "name_en": "Geas"
+    },
+    {
+      "id": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+      "card_number": "SPELL-0204",
+      "name_en": "Starry Wisp"
+    },
+    {
+      "id": "8147553b-a8da-4836-9b1c-6318208d261d",
+      "card_number": "summon_celestial",
+      "name_en": "Summon Celestial"
+    },
+    {
+      "id": "851027a9-0b6a-49d1-9f61-5eef831bf297",
+      "card_number": "SPELL-0229",
+      "name_en": "Guiding Bolt"
+    },
+    {
+      "id": "85b05dba-9662-43a2-afb9-050ce2bf6136",
+      "card_number": "SPELL-0201",
+      "name_en": "Protection from Evil and Good"
+    },
+    {
+      "id": "8821d595-ec03-42b8-aeaf-f50f7d72b726",
+      "card_number": "SPELL-0187",
+      "name_en": "Dissonant Whispers"
+    },
+    {
+      "id": "88e84740-222b-4f37-bae8-0fdaefea06f4",
+      "card_number": "SPELL-0197",
+      "name_en": "Dragon’s Breath"
+    },
+    {
+      "id": "8b2cec60-9b60-49e4-9284-e3a1c794a387",
+      "card_number": "hold_monster",
+      "name_en": "Hold Monster"
+    },
+    {
+      "id": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
+      "card_number": "SPELL-0223",
+      "name_en": "Hunter's Mark"
+    },
+    {
+      "id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+      "card_number": "SPELL-0286",
+      "name_en": "Sacred Flame"
+    },
+    {
+      "id": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+      "card_number": "SPELL-0214",
+      "name_en": "Cure Wounds"
+    },
+    {
+      "id": "8f0aedd6-5adb-44a6-a195-91efc5882b5e",
+      "card_number": "compulsion",
+      "name_en": "Compulsion"
+    },
+    {
+      "id": "8fefcacf-64ea-440e-a7bc-eef99f8a17f3",
+      "card_number": "hunger_of_hadar",
+      "name_en": "Hunger of Hadar"
+    },
+    {
+      "id": "9afc306d-3f3d-4a05-8cb8-dfcd53b10b50",
+      "card_number": "SPELL-0247",
+      "name_en": "Ensnaring Strike"
+    },
+    {
+      "id": "9ddc7328-e095-48f6-b6a7-3e80b9290617",
+      "card_number": "stoneskin",
+      "name_en": "Stoneskin"
+    },
+    {
+      "id": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+      "card_number": "SPELL-0181",
+      "name_en": "Heroism"
+    },
+    {
+      "id": "a6006b0d-f0e8-4bbe-b24f-4b0801230d85",
+      "card_number": "flame_strike",
+      "name_en": "Flame Strike"
+    },
+    {
+      "id": "a6c7db7d-f35c-4072-a5eb-29d4d58be93e",
+      "card_number": "SPELL-0251",
+      "name_en": "Charm Person"
+    },
+    {
+      "id": "a74d6207-7e68-46ec-b0a0-0c7f898c38d4",
+      "card_number": "conjure_elemental",
+      "name_en": "Conjure Elemental"
+    },
+    {
+      "id": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+      "card_number": "SPELL-0272",
+      "name_en": "Command"
+    },
+    {
+      "id": "a95b3e01-bac7-4eb4-bd88-5fc16ce73914",
+      "card_number": "nondetection",
+      "name_en": "Nondetection"
+    },
+    {
+      "id": "a9a4709d-2c86-4a0a-800f-d9ce521651c2",
+      "card_number": "crusaders_mantle",
+      "name_en": "Crusader's Mantle"
+    },
+    {
+      "id": "a9b6f853-95b3-4ca9-9d96-6d2f51d0f2a3",
+      "card_number": "greater_restoration",
+      "name_en": "Greater Restoration"
+    },
+    {
+      "id": "ac198b93-04d7-4633-831e-b0050330cccf",
+      "card_number": "SPELL-0288",
+      "name_en": "Alarm"
+    },
+    {
+      "id": "ac242cb2-3b97-4432-92c4-6fc4ca245d14",
+      "card_number": "dispel_magic",
+      "name_en": "Dispel Magic"
+    },
+    {
+      "id": "ae691b6c-6057-4b21-8fd7-e7b053ecdfa4",
+      "card_number": "SPELL-0219",
+      "name_en": "Magic Weapon"
+    },
+    {
+      "id": "afcbf721-48d9-4cbd-9ba5-5b5fad5779b4",
+      "card_number": "SPELL-0191",
+      "name_en": "Shatter"
+    },
+    {
+      "id": "b132a28e-f6c9-4832-924b-1a680390e7fb",
+      "card_number": "faerie_fire",
+      "name_en": "Faerie Fire"
+    },
+    {
+      "id": "b2ec2315-ca37-48e0-9406-1e532ef2a375",
+      "card_number": "freedom_of_movement",
+      "name_en": "Freedom of Movement"
+    },
+    {
+      "id": "b4686a0c-dba4-410f-9269-b80181eb733b",
+      "card_number": "SPELL-0261",
+      "name_en": "Aid"
+    },
+    {
+      "id": "b6254e87-7bd3-4aaa-b937-5b793926128b",
+      "card_number": "SPELL-0277",
+      "name_en": "Speak with Animals"
+    },
+    {
+      "id": "b6cb9612-8dea-4949-bbd5-595bd5501beb",
+      "card_number": "SPELL-0287",
+      "name_en": "Hex"
+    },
+    {
+      "id": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+      "card_number": "SPELL-0298",
+      "name_en": "Elementalism"
+    },
+    {
+      "id": "b8cf1df2-5801-4e36-bf58-22f97a8ef8c6",
+      "card_number": "fear",
+      "name_en": "Fear"
+    },
+    {
+      "id": "b9a008da-9a96-4473-95be-1527c719f5b2",
+      "card_number": "greater_invisibility",
+      "name_en": "Greater Invisibility"
+    },
+    {
+      "id": "bbf2e16e-962b-4d19-a3de-6704929ba596",
+      "card_number": "blink",
+      "name_en": "Blink"
+    },
+    {
+      "id": "bcfad1fc-ef46-4fe0-94da-a520397cf642",
+      "card_number": "banishment",
+      "name_en": "Banishment"
+    },
+    {
+      "id": "bdfcaf6f-093c-4d51-90d4-3a9fe5e9a411",
+      "card_number": "misty_step",
+      "name_en": "Misty Step"
+    },
+    {
+      "id": "bff3eeea-fcda-4393-858b-2edf276af8af",
+      "card_number": "fly",
+      "name_en": "Fly"
+    },
+    {
+      "id": "c1351257-a8fc-44f7-92c7-0316e6cacda7",
+      "card_number": "SPELL-0293",
+      "name_en": "Alter Self"
+    },
+    {
+      "id": "c3f63530-1d33-4f13-9c13-3023062d33c3",
+      "card_number": "summon_fey",
+      "name_en": "Summon Fey"
+    },
+    {
+      "id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "card_number": "SPELL-0281",
+      "name_en": "Mind Sliver"
+    },
+    {
+      "id": "c51dbf34-2bc5-4897-9f71-595195c1068e",
+      "card_number": "scrying",
+      "name_en": "Scrying"
+    },
+    {
+      "id": "c5bd7fd1-b3ca-49c2-82a8-e5bfc3442012",
+      "card_number": "telekinesis",
+      "name_en": "Telekinesis"
+    },
+    {
+      "id": "c97fa64a-ae75-4d69-96cb-2ec03aeea5bf",
+      "card_number": "SPELL-0196",
+      "name_en": "Spiritual Weapon"
+    },
+    {
+      "id": "cdff3708-ba14-4014-bf54-b3539b2c662e",
+      "card_number": "clairvoyance",
+      "name_en": "Clairvoyance"
+    },
+    {
+      "id": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+      "card_number": "SPELL-0303",
+      "name_en": "Fog Cloud"
+    },
+    {
+      "id": "d62ad03d-3cca-4e5d-b7eb-cd47cced69da",
+      "card_number": "SPELL-0310",
+      "name_en": "Calm Emotions"
+    },
+    {
+      "id": "d659e7f1-458c-4d04-890f-9c60c2265705",
+      "card_number": "SPELL-0221",
+      "name_en": "Lesser Restoration"
+    },
+    {
+      "id": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+      "card_number": "SPELL-0267",
+      "name_en": "Bane"
+    },
+    {
+      "id": "d7ab52ee-90dd-46aa-b535-2ed5ac8b7d9c",
+      "card_number": "revivify",
+      "name_en": "Revivify"
+    },
+    {
+      "id": "d98811c6-47e5-4250-96de-cc64ea893754",
+      "card_number": "SPELL-0231",
+      "name_en": "Invisibility"
+    },
+    {
+      "id": "daeacc7a-41c2-4ad7-be59-a0f2317b1063",
+      "card_number": "lightning_bolt",
+      "name_en": "Lightning Bolt"
+    },
+    {
+      "id": "dd5b5949-cc54-4919-938f-32194d4c204d",
+      "card_number": "SPELL-0215",
+      "name_en": "Moonbeam"
+    },
+    {
+      "id": "e485160c-2666-4086-ac50-e8dbe28d1d2d",
+      "card_number": "SPELL-0239",
+      "name_en": "Detect Thoughts"
+    },
+    {
+      "id": "e55272ca-ee6c-41dd-8a1d-220ef3effca8",
+      "card_number": "commune_with_nature",
+      "name_en": "Commune with Nature"
+    },
+    {
+      "id": "e61c2e7c-39d5-480d-947f-047a78f717b8",
+      "card_number": "SPELL-0170",
+      "name_en": "Suggestion"
+    },
+    {
+      "id": "e75790cb-b03f-4a24-98a3-ef86a4756535",
+      "card_number": "SPELL-0283",
+      "name_en": "Arms of Hadar"
+    },
+    {
+      "id": "eafc85a2-b029-4caa-b4bf-45efa2b4392d",
+      "card_number": "daylight",
+      "name_en": "Daylight"
+    },
+    {
+      "id": "ebdf2787-08ec-43e2-9f87-5962602d5fa7",
+      "card_number": "ice_storm",
+      "name_en": "Ice Storm"
+    },
+    {
+      "id": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+      "card_number": "SPELL-0218",
+      "name_en": "Ray of Frost"
+    },
+    {
+      "id": "ec267e79-8924-45d5-8dbe-7fa8d485124f",
+      "card_number": "dominate_person",
+      "name_en": "Dominate Person"
+    },
+    {
+      "id": "ecf1e58d-1eef-4d1d-a879-407ccd64a31a",
+      "card_number": "spirit_guardians",
+      "name_en": "Spirit Guardians"
+    },
+    {
+      "id": "f0256294-e692-4695-8e29-d8288139a7ad",
+      "card_number": "SPELL-0314",
+      "name_en": "Chromatic Orb"
+    },
+    {
+      "id": "f1037ba6-438f-4694-8634-116620aa9e0f",
+      "card_number": "SPELL-0255",
+      "name_en": "Scorching Ray"
+    },
+    {
+      "id": "f357aeda-43e1-45ad-b4da-89aed4e4ed98",
+      "card_number": "tree_stride",
+      "name_en": "Tree Stride"
+    },
+    {
+      "id": "f37b1258-0c69-4668-96c6-378aaaa09f56",
+      "card_number": "plant_growth",
+      "name_en": "Plant Growth"
+    },
+    {
+      "id": "fc6e3909-f617-4514-a09b-90dbd391b87b",
+      "card_number": "SPELL-0268",
+      "name_en": "Gust of Wind"
+    }
+  ]
+}

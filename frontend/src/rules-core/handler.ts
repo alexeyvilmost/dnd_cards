@@ -1,4 +1,5 @@
 import {recipientBindingEvents} from './recipientBindings';
+import {bindTriggeredAttackTargeting} from './triggeredAttackTargeting';
 import {changeEquipment} from './equipmentChange';
 import {inherentWeaponBondEvents,thrownWeaponEvents,deployedItemEvents} from './itemWeaponLifecycle';
 import {emitEvent as emitEngineEvent} from '../engine/execute';
@@ -4877,8 +4878,11 @@ function resolvePendingSave(
     return rejected(world, 'InvalidDecision', 'A saving throw requires a roll response');
   }
   const rollResponse = command.response;
-  const action = catalog.getAction(pending.actionId);
-  if (!action) return rejected(world, 'ActionNotFound', `Unknown action ${pending.actionId}`);
+  const declaredAction = catalog.getAction(pending.actionId);
+  if (!declaredAction) return rejected(world, 'ActionNotFound', `Unknown action ${pending.actionId}`);
+  const triggeredTargeting=bindTriggeredAttackTargeting(declaredAction,[pending.targetActorId],pending.triggeringAttack);
+  if(triggeredTargeting.issue)return rejected(world,'InvalidDecision',triggeredTargeting.issue);
+  const action=triggeredTargeting.action;
   const sequenceIssue = attackSequenceContinuationIssue(world, pending.attackSequence, pending, action);
   if (sequenceIssue) return rejected(world, 'InvalidDecision', sequenceIssue);
   const source = world.actors[pending.sourceActorId];
@@ -12460,10 +12464,13 @@ function executeCommand(
       > | undefined;
       let pactTomeFocusObjectId: string | undefined;
       const pactBladeFocusEvents: EventInput[] = [];
-      let executableAction = action;
-      if (action.kind === 'spell' && actor.spellcastingAccess) {
+      const triggeredTargeting=bindTriggeredAttackTargeting(action,command.targetIds,
+        command.type==='UseTriggeredAction'?command.triggeringAttack:undefined);
+      if(triggeredTargeting.issue)return rejected(world,'InvalidTargets',triggeredTargeting.issue);
+      let executableAction = triggeredTargeting.action;
+      if (executableAction.kind === 'spell' && actor.spellcastingAccess) {
         const preparation = prepareSpellExecution({
-          action,
+          action:executableAction,
           ...(variantParent?{accessActionId:variantParent.id}:{}),
           accessState: actor.spellcastingAccess,
           resources: availableResources(actor.runtime,actor.character,actor.passives),

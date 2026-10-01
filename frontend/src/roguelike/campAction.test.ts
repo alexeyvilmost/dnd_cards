@@ -19,6 +19,29 @@ async function input() {
   return { ...request, commandId: 'camp-action-test', seed: 'private-test-seed', actionId: action.id };
 }
 describe('authoritative self actions in camp', () => {
+  it.each(['5', '8'])('resolves a non-primitive %s healing action from the canonical declaration', async amount => {
+    const request = await input();
+    const action = structuredClone(request.catalog.entities.action[0]);
+    action.id = `qa-camp-healing-${amount}`; action.card_number = `qa-camp-healing-${amount}`;
+    action.name = `Camp healing ${amount}`;
+    action.mechanics = { activation: { mode: 'active', cost: [{ resource: 'action' }] },
+      targeting: { shape: 'self' },
+      effects: [{ resolution: 'auto', result: [{ kind: 'healing', amount }] }] };
+    request.catalog.entities.action.push(action);
+    request.character.action_ids = [action.id];
+    const prepared = await prepareRoguelikeCombatParticipant(request.character, request.catalog, request.basicActionIds);
+    if (prepared.status !== 'ready') throw new Error('Not ready');
+    request.actionId = prepared.participant.canonical.actions.find(entry => entry.sourceEntityIds.includes(action.id))!.id;
+    const before = structuredClone(request);
+    const result = await executeRoguelikeCampAction(request);
+    if (result.status !== 'ready') throw new Error('Not ready');
+    expect(result.patch.current_hp).toBe(4 + Number(amount));
+    expect(result.patch.resources.action).toBe(0);
+    expect(result.patch.resources.bonus_action).toBe(1);
+    expect(result.events).toContainEqual(expect.objectContaining({ type: 'healing', amount: Number(amount) }));
+    expect(await executeRoguelikeCampAction(request)).toEqual(result);
+    expect(request).toEqual(before);
+  });
   it.each(['2d4+2','4d4+4'])('administers a data-owned %s healing potion to an ally, debiting only the source', async dice => {
     const request=await input();
     const card=structuredClone(request.catalog.entities.card[0]);
