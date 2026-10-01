@@ -5,14 +5,14 @@ import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CardLibrary from '../../pages/CardLibrary';
 
-const mocks = vi.hoisted(() => ({ token: 'admin' as string | null, canManage: true, mobile: false, showReviewStatus: false, list: vi.fn(), detail: vi.fn(), bulk: vi.fn(), catalog: vi.fn(), effects: vi.fn(), feats: vi.fn(), classes: vi.fn(), races: vi.fn() }));
+const mocks = vi.hoisted(() => ({ token: 'admin' as string | null, canManage: true, mobile: false, showReviewStatus: false, list: vi.fn(), detail: vi.fn(), bulk: vi.fn(), catalog: vi.fn(), effects: vi.fn(), spells: vi.fn(), feats: vi.fn(), classes: vi.fn(), races: vi.fn() }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ token: mocks.token }) }));
 vi.mock('../../hooks/useContentPermissions', () => ({ useContentPermissions: () => ({ admin: mocks.canManage, canEdit: (entity: {author?: string}) => mocks.canManage || entity.author === 'player', canCreate: (kind: string) => Boolean(mocks.token && (mocks.canManage || kind === 'cards' || kind === 'spells')) }) }));
 vi.mock('../../settings', () => ({ useSiteSettings: () => ({ itemPreview: 'interface', showReviewStatus: mocks.showReviewStatus }) }));
 vi.mock('../../hooks/useIsMobile', () => ({ useIsMobile: () => mocks.mobile }));
 vi.mock('../../hooks/usePinMode', () => ({ usePinMode: () => ({ pinModeActive: false }) }));
 vi.mock('../../utils/resources', () => ({ useResourceOptions: () => [], resourceIcon: () => '', resourceLabel: () => '' }));
-vi.mock('../../api/client', () => ({ cardsApi: {}, effectsApi: { getEffects: mocks.effects }, actionsApi: {}, spellsApi: {}, featsApi: { getFeats: mocks.feats }, backgroundsApi: {}, racesApi: { getRaces: mocks.races }, classesApi: { getClasses: mocks.classes }, resourcesApi: {}, variablesApi: {}, conceptsApi: {} }));
+vi.mock('../../api/client', () => ({ cardsApi: {}, effectsApi: { getEffects: mocks.effects }, actionsApi: {}, spellsApi: { getSpells: mocks.spells }, featsApi: { getFeats: mocks.feats }, backgroundsApi: {}, racesApi: { getRaces: mocks.races }, classesApi: { getClasses: mocks.classes }, resourcesApi: {}, variablesApi: {}, conceptsApi: {} }));
 vi.mock('../../api/entityTags', () => ({ entityTagsApi: { list: mocks.catalog, bulk: mocks.bulk }, tagError: (e: Error) => e.message }));
 vi.mock('./itemLibraryApi', () => ({ itemLibraryApi: { list: mocks.list, detail: mocks.detail } }));
 vi.mock('../LibraryTagFilter', () => ({ default: ({value,onChange}:{value:string;onChange:(v:string)=>void}) => <select aria-label="Фильтр по тегу" value={value} onChange={e=>onChange(e.target.value)}><option value="">Все теги</option><option value="d2620000-0000-4000-8000-000000000001">Available for Players</option></select> }));
@@ -57,6 +57,7 @@ describe('item library interactions', () => {
     mocks.catalog.mockImplementation(async () => ({tags:[], can_manage:mocks.canManage}));
     mocks.list.mockResolvedValue({cards,total:2}); mocks.detail.mockResolvedValue(cards[0]); mocks.bulk.mockResolvedValue(undefined);
     mocks.effects.mockResolvedValue({ effects: [], total: 0 }); mocks.feats.mockResolvedValue({ feats: [], total: 0 });
+    mocks.spells.mockResolvedValue({ spells: [], total: 0 });
     mocks.classes.mockResolvedValue({ classes: [], total: 0 }); mocks.races.mockResolvedValue({ races: [], total: 0 });
     container=document.createElement('div'); document.body.append(container); root=createRoot(container);
   });
@@ -70,6 +71,50 @@ describe('item library interactions', () => {
   }
   async function click(label:string) { await act(async () => button(label).click()); }
   const location=()=>container.querySelector('[data-location]')!.textContent!;
+
+  it('refetches spells when the class changes and combines the remaining filters in API and URL', async () => {
+    await render('/library?type=spells&spellClass=cleric&spellLevel=1&spellSchool=evocation&concentration=false&ritual=true&tag=stable');
+    await click('Фильтры');
+    expect(mocks.spells).toHaveBeenLastCalledWith(expect.objectContaining({
+      page: 1, class: 'cleric', level: 1, school: 'evocation', concentration: 'false', ritual: 'true', tag: 'stable',
+    }));
+    const classSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Класс заклинания"]')!;
+    expect(classSelect.value).toBe('cleric');
+    await act(async () => {
+      classSelect.value = 'wizard'; classSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(mocks.spells).toHaveBeenLastCalledWith(expect.objectContaining({
+      page: 1, class: 'wizard', level: 1, school: 'evocation', concentration: 'false', ritual: 'true', tag: 'stable',
+    }));
+    expect(new URLSearchParams(location().split('?')[1]).get('spellClass')).toBe('wizard');
+    await act(async () => {
+      classSelect.value = ''; classSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(mocks.spells.mock.lastCall![0]).not.toHaveProperty('class');
+    expect(mocks.spells).toHaveBeenLastCalledWith(expect.objectContaining({ level: 1, school: 'evocation', tag: 'stable' }));
+    expect(new URLSearchParams(location().split('?')[1]).has('spellClass')).toBe(false);
+  });
+
+  it('replaces a previous class page and keeps the current class when loading more spells', async () => {
+    vi.useFakeTimers();
+    mocks.spells.mockImplementation(async (params: { class: string; page: number }) => ({
+      spells: Array.from({ length: 50 }, (_, index) => ({
+        id: `${params.class}-${params.page}-${index}`, name: `${params.class} ${index}`, level: 1,
+      })), total: 100,
+    }));
+    await render('/library?type=spells&spellClass=cleric');
+    await click('Фильтры');
+    await act(async () => {
+      const classSelect = container.querySelector<HTMLSelectElement>('select[aria-label="Класс заклинания"]')!;
+      classSelect.value = 'wizard'; classSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(container.textContent).not.toContain('cleric 0');
+    expect(container.textContent).toContain('wizard 0');
+    await act(async () => { window.dispatchEvent(new Event('scroll')); await vi.advanceTimersByTimeAsync(100); });
+    expect(mocks.spells).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2, class: 'wizard' }));
+    expect(container.querySelectorAll('.library-review-row')).toHaveLength(100);
+    expect(container.textContent).not.toContain('cleric 0');
+  });
 
   it.each(['list', 'grid'])('groups effects in the requested priority in %s view and sends server sorting', async view => {
     mocks.effects.mockResolvedValue({ effects: [

@@ -1600,7 +1600,7 @@ const CardLibrary = () => {
               <>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Уровень</label>
-                  <select value={spellLevel} onChange={(e) => setSpellLevel(e.target.value)} className="input-field">
+                  <select aria-label="Уровень заклинания" value={spellLevel} onChange={(e) => setSpellLevel(e.target.value)} className="input-field">
                     <option value="">Все уровни</option>
                     <option value="0">Заговор</option>
                     {Array.from({ length: 12 }, (_, i) => i + 1).map((lvl) => (
@@ -1611,7 +1611,7 @@ const CardLibrary = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Класс</label>
-                  <select value={spellClass} onChange={(e) => setSpellClass(e.target.value)} className="input-field">
+                  <select aria-label="Класс заклинания" value={spellClass} onChange={(e) => setSpellClass(e.target.value)} className="input-field">
                     <option value="">Все классы</option>
                     {SPELL_CLASS_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -1623,6 +1623,7 @@ const CardLibrary = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Подкласс</label>
                   <input
                     type="text"
+                    aria-label="Подкласс заклинания"
                     value={spellSubclass}
                     onChange={(e) => setSpellSubclass(e.target.value)}
                     placeholder="Например: Магия войны"
@@ -1632,7 +1633,7 @@ const CardLibrary = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Школа</label>
-                  <select value={spellSchool} onChange={(e) => setSpellSchool(e.target.value)} className="input-field">
+                  <select aria-label="Школа заклинания" value={spellSchool} onChange={(e) => setSpellSchool(e.target.value)} className="input-field">
                     <option value="">Все школы</option>
                     {SPELL_SCHOOL_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -1642,7 +1643,7 @@ const CardLibrary = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Концентрация</label>
-                  <select value={spellConcentration} onChange={(e) => setSpellConcentration(e.target.value)} className="input-field">
+                  <select aria-label="Концентрация заклинания" value={spellConcentration} onChange={(e) => setSpellConcentration(e.target.value)} className="input-field">
                     <option value="">Не важно</option>
                     <option value="true">Да</option>
                     <option value="false">Нет</option>
@@ -1651,7 +1652,7 @@ const CardLibrary = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Ритуал</label>
-                  <select value={spellRitual} onChange={(e) => setSpellRitual(e.target.value)} className="input-field">
+                  <select aria-label="Ритуальное заклинание" value={spellRitual} onChange={(e) => setSpellRitual(e.target.value)} className="input-field">
                     <option value="">Не важно</option>
                     <option value="true">Да</option>
                     <option value="false">Нет</option>

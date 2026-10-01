@@ -63,7 +63,17 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 
 	// Фильтрация по классу
 	if class := c.Query("class"); class != "" {
-		query = query.Where("classes::text ILIKE ?", "%"+class+"%")
+		aliases, err := spellClassFilterAliases(sc.db, class)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения заклинаний"})
+			return
+		}
+		query = query.Where(`EXISTS (
+			SELECT 1 FROM jsonb_array_elements_text(
+				CASE WHEN jsonb_typeof(classes) = 'array' THEN classes ELSE '[]'::jsonb END
+			) AS spell_class(value)
+			WHERE lower(btrim(spell_class.value)) IN ?
+		)`, aliases)
 	}
 
 	// Фильтрация по подклассу
