@@ -126,6 +126,34 @@ test('allows the dedicated registration smoke test without weakening credential 
   assert.equal(result.status, 0, result.stderr);
 });
 
+test('allows registration only in the loopback-only isolated paper QA service', () => {
+  const registrationPath = ['/api/auth', 'register'].join('/');
+  const guardedSource = [
+    'const paperQAAddress = "127.0.0.1:8082"',
+    'const paperQADatabase = "paper_sheet_20261002_qa"',
+    'http.DefaultTransport = paperQANoHTTP{}',
+    'if original.Hostname() != "localhost" && (ip == nil || !ip.IsLoopback())',
+    'Host: fmt.Sprintf("127.0.0.1:%d", *databasePort), Path: "/" + paperQADatabase',
+    'database != paperQADatabase || address != "127.0.0.1" || port != *databasePort || transactionMode != mode',
+    `authWrite := c.Request.Method == http.MethodPost && (path == "/api/auth/login" || path == "${registrationPath}")`,
+    `router.POST("${registrationPath}", authLimit.Handler(), JSONBodyLimitMiddleware(4096), authController.Register)`,
+    'server := &http.Server{Addr: paperQAAddress',
+  ].join('\n');
+  const accepted = runScanner({
+    'scripts/paper-sheet/document-qa-main.go': guardedSource,
+  });
+  assert.equal(accepted.status, 0, accepted.stderr);
+
+  const exposedServer = runScanner({
+    'scripts/paper-sheet/document-qa-main.go': guardedSource.replace(
+      'server := &http.Server{Addr: paperQAAddress',
+      'server := &http.Server{Addr: "0.0.0.0:8082"',
+    ),
+  });
+  assert.equal(exposedServer.status, 1);
+  assert.match(exposedServer.stderr, /must never auto-register/);
+});
+
 test('changed mode ignores inherited violations in clean tracked files', () => {
   const registrationPath = ['/api/auth', 'register'].join('/');
   const result = runScanner(

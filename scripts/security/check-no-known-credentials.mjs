@@ -88,6 +88,18 @@ const textExtensions = new Set([
 ]);
 const scannerPath = 'scripts/security/check-no-known-credentials.mjs';
 const explicitRegistrationTest = 'scripts/test_backend.py';
+const isolatedPaperQaRegistrationScript = 'scripts/paper-sheet/document-qa-main.go';
+const isolatedPaperQaRegistrationGuards = [
+  'const paperQAAddress = "127.0.0.1:8082"',
+  'const paperQADatabase = "paper_sheet_20261002_qa"',
+  'http.DefaultTransport = paperQANoHTTP{}',
+  'if original.Hostname() != "localhost" && (ip == nil || !ip.IsLoopback())',
+  'Host: fmt.Sprintf("127.0.0.1:%d", *databasePort), Path: "/" + paperQADatabase',
+  'database != paperQADatabase || address != "127.0.0.1" || port != *databasePort || transactionMode != mode',
+  'authWrite := c.Request.Method == http.MethodPost && (path == "/api/auth/login" || path == "/api/auth/register")',
+  'router.POST("/api/auth/register", authLimit.Handler(), JSONBodyLimitMiddleware(4096), authController.Register)',
+  'server := &http.Server{Addr: paperQAAddress',
+];
 const knownCredentialLiterals = [
   ['admin', '123'].join(''),
   ['password', '123'].join(''),
@@ -153,6 +165,11 @@ function isDocumentedDatabasePlaceholder(match) {
   );
 }
 
+function isIsolatedPaperQaRegistration(path, source) {
+  return path === isolatedPaperQaRegistrationScript
+    && isolatedPaperQaRegistrationGuards.every((guard) => source.includes(guard));
+}
+
 function lineNumberAt(text, offset) {
   return text.slice(0, offset).split('\n').length;
 }
@@ -208,6 +225,7 @@ for (const path of sourcePaths) {
     path.startsWith('scripts/')
     && !isUnitTest(path)
     && path !== explicitRegistrationTest
+    && !isIsolatedPaperQaRegistration(path, source)
     && /\/(?:api\/)?auth\/register\b/.test(source)
   ) {
     const offset = source.search(/\/(?:api\/)?auth\/register\b/);
