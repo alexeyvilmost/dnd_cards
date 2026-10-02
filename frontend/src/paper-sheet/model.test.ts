@@ -185,6 +185,40 @@ describe('editable paper document calculations', () => {
 });
 
 describe('paper document import and persistence', () => {
+  it('preserves optional catalogue identities and portable features together with manual notes', () => {
+    const sheet = createPaperSheet();
+    sheet.fields.species = 'Выбранный вид';
+    sheet.fields.subspecies = 'Подвид';
+    sheet.identity = { speciesId: 'species-one', subspeciesId: 'subspecies-one', classId: 'class-one', subclassId: 'subclass-one', backgroundId: 'background-one' };
+    sheet.identityFeatures = { key: 'selection-at-level-3', abilities: [
+      { type: 'effect', id: 'effect-one', name: 'Особенность вида' },
+      { type: 'action', id: 'action-two', name: 'Действие класса' },
+    ], traits: [{ type: 'feat', id: 'feat-three', name: 'Черта предыстории' }] };
+    sheet.sections.features = { text: '**Моя заметка**\n__Подчёркнутый текст__\n[[Моя черта|feat:manual-feat]]', fontSize: 13 };
+    expect(importPaperSheet(exportPaperSheet(sheet))).toEqual(sheet);
+    const stored = new Map<string, string>();
+    const storage = { getItem: (key: string) => stored.get(key) ?? null, setItem: (key: string, value: string) => { stored.set(key, value); } };
+    expect(savePaperSheet(sheet, storage)).toEqual({});
+    expect(loadPaperSheet(storage).document).toEqual(sheet);
+  });
+
+  it('keeps old free-text version-1 identities and notes intact without inventing catalogue selections', () => {
+    const old = { version: 1, fields: { name: 'Старый лист', class: 'Произвольный класс', species: 'Свой вид', background: 'Авторская предыстория', subclass: 'Своя специализация' }, sections: { features: { text: 'Давно записанная способность', fontSize: 12 } } };
+    const restored = importPaperSheet(JSON.stringify(old));
+    expect(restored.fields).toMatchObject(old.fields);
+    expect(restored.sections).toEqual(old.sections);
+    expect(restored.identity).toBeUndefined();
+    expect(restored.identityFeatures).toBeUndefined();
+    expect(importPaperSheet(exportPaperSheet(restored))).toEqual(restored);
+  });
+
+  it('rejects invalid generated feature metadata before changing the imported document', () => {
+    const sheet = createPaperSheet();
+    expect(() => importPaperSheet(JSON.stringify({ ...sheet, identity: { classId: 123 } }))).toThrow();
+    expect(() => importPaperSheet(JSON.stringify({ ...sheet, identityFeatures: { key: 'x', abilities: [{ type: 'unknown', id: 'x', name: 'x' }], traits: [] } }))).toThrow();
+    expect(() => importPaperSheet(JSON.stringify({ ...sheet, identityFeatures: { key: 'x', abilities: [], traits: [{ type: 'feat', id: 'bad|reference', name: 'x' }] } }))).toThrow();
+  });
+
   it('round trips edits, original formulas, training, portraits and section formatting', () => {
     const sheet = createPaperSheet();
     sheet.fields.name = 'Мира';

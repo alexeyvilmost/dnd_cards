@@ -33,8 +33,12 @@ func (paperCatalogNoHTTP) RoundTrip(*http.Request) (*http.Response, error) {
 
 func main() {
 	configFile := flag.String("config", "", "Local JSON file; only its DATABASE_URL credentials are read")
+	databasePort := flag.Int("database-port", 5434, "Existing local PostgreSQL port: 5432 or 5434")
 	checkOnly := flag.Bool("check-only", false, "Verify the read-only connection and exit")
 	flag.Parse()
+	if *databasePort != 5432 && *databasePort != 5434 {
+		log.Fatal("the local PostgreSQL port must be 5432 or 5434")
+	}
 	// No inherited API keys, cloud configuration, JWTs, proxy or database settings.
 	// Windows needs SystemRoot to locate its socket provider; it is an OS path.
 	systemRoot := os.Getenv("SystemRoot")
@@ -65,7 +69,7 @@ func main() {
 		log.Fatal("the source connection must already target a loopback host")
 	}
 	// Reconstruct, rather than inherit, host, port, database and connection options.
-	connection := &url.URL{Scheme: "postgres", User: original.User, Host: "127.0.0.1:5434", Path: "/" + paperCatalogDatabase}
+	connection := &url.URL{Scheme: "postgres", User: original.User, Host: fmt.Sprintf("127.0.0.1:%d", *databasePort), Path: "/" + paperCatalogDatabase}
 	query := url.Values{
 		"sslmode": {"disable"}, "connect_timeout": {"5"},
 		"application_name": {"paper-sheet-readonly-catalog"},
@@ -87,7 +91,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	var database, serverAddress, transactionReadOnly, defaultReadOnly string
-	err = sqlDB.QueryRowContext(ctx, "SELECT current_database(), host(inet_server_addr()), current_setting('transaction_read_only'), current_setting('default_transaction_read_only')").Scan(&database, &serverAddress, &transactionReadOnly, &defaultReadOnly)
+	var serverPort int
+	err = sqlDB.QueryRowContext(ctx, "SELECT current_database(), host(inet_server_addr()), inet_server_port(), current_setting('transaction_read_only'), current_setting('default_transaction_read_only')").Scan(&database, &serverAddress, &serverPort, &transactionReadOnly, &defaultReadOnly)
 	if err != nil {
 		var sqlState interface{ SQLState() string }
 		if errors.As(err, &sqlState) {
@@ -100,10 +105,10 @@ func main() {
 		log.Fatalf("local read-only database check failed: %s", message)
 	}
 	serverIP := net.ParseIP(serverAddress)
-	if database != paperCatalogDatabase || serverIP == nil || !serverIP.IsLoopback() || transactionReadOnly != "on" || defaultReadOnly != "on" {
-		log.Fatalf("database scope/read-only verification failed: database=%s address=%s transaction_read_only=%s default_transaction_read_only=%s", database, serverAddress, transactionReadOnly, defaultReadOnly)
+	if database != paperCatalogDatabase || serverIP == nil || !serverIP.IsLoopback() || serverPort != *databasePort || transactionReadOnly != "on" || defaultReadOnly != "on" {
+		log.Fatalf("database scope/read-only verification failed: database=%s address=%s port=%d transaction_read_only=%s default_transaction_read_only=%s", database, serverAddress, serverPort, transactionReadOnly, defaultReadOnly)
 	}
-	status := gin.H{"mode": "local-read-only-catalog", "database": database, "server_address": serverAddress, "transaction_read_only": transactionReadOnly, "default_transaction_read_only": defaultReadOnly}
+	status := gin.H{"mode": "local-read-only-catalog", "database": database, "server_address": serverAddress, "server_port": serverPort, "transaction_read_only": transactionReadOnly, "default_transaction_read_only": defaultReadOnly}
 	if *checkOnly {
 		_ = json.NewEncoder(os.Stdout).Encode(status)
 		return
@@ -131,6 +136,8 @@ func main() {
 	// Struct literals intentionally omit external-service constructors.
 	cards, spells := &CardController{db: db}, &SpellController{db: db}
 	actions, effects := &ActionController{db: db}, &EffectController{db: db}
+	feats, backgrounds := &FeatController{db: db}, &BackgroundController{db: db}
+	races, classes := &RaceController{db: db}, &ClassController{db: db}
 	resources, variables := &ResourceController{db: db}, &VariableController{db: db}
 	concepts := &ConceptController{db: db}
 	for _, route := range []struct {
@@ -139,6 +146,8 @@ func main() {
 	}{
 		{"cards", cards.GetCards, cards.GetCard}, {"spells", spells.GetSpells, spells.GetSpell},
 		{"actions", actions.GetActions, actions.GetAction}, {"effects", effects.GetEffects, effects.GetEffect},
+		{"feats", feats.GetFeats, feats.GetFeat}, {"backgrounds", backgrounds.GetBackgrounds, backgrounds.GetBackground},
+		{"races", races.GetRaces, races.GetRace}, {"classes", classes.GetClasses, classes.GetClass},
 		{"resources", resources.GetResources, resources.GetResource}, {"variables", variables.GetVariables, variables.GetVariable},
 		{"concepts", concepts.GetConcepts, concepts.GetConcept},
 	} {

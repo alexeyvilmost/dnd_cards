@@ -3,6 +3,25 @@ import { ABILITY_IDS, SKILL_IDS, SKILL_ABILITY, abilityMod, proficiencyBonusForL
 import { carryingCapacity, carrySizeMultiplier } from '../character/runtime';
 import { isPaperBlockId, type PaperBlockId } from './blocks';
 
+export interface PaperIdentity {
+  backgroundId?: string;
+  speciesId?: string;
+  subspeciesId?: string;
+  classId?: string;
+  subclassId?: string;
+}
+export interface PaperIdentityFeature {
+  type: 'action' | 'effect' | 'feat';
+  id: string;
+  name: string;
+}
+export interface PaperIdentityFeatures {
+  /** Exact selection and level used to assemble these portable display snapshots. */
+  key: string;
+  abilities: PaperIdentityFeature[];
+  traits: PaperIdentityFeature[];
+}
+
 /** An editable document, deliberately separate from a certified character or combat state. */
 export interface PaperSheetDocument {
   version: 1;
@@ -16,6 +35,9 @@ export interface PaperSheetDocument {
   weaponRows: number;
   spellRows: number;
   portrait: string;
+  /** Optional catalogue selections; free-text identity fields remain valid on older sheets. */
+  identity?: PaperIdentity;
+  identityFeatures?: PaperIdentityFeatures;
   /** Opaque source plus the initial projection: unchanged foreign data is never reconstructed. */
   exchange?: { format: 'lss'; source: string; baseline: string; spells?: string };
 }
@@ -313,6 +335,35 @@ function validateDocument(value: unknown): PaperSheetDocument {
     if (portrait && !/^data:image\/(?:png|jpeg|webp|gif|avif);base64,[a-zA-Z0-9+/=\r\n]+$/.test(portrait)
       && !/^https:\/\/[^\s]+$/i.test(portrait)) throw new Error('Портрет должен быть изображением или ссылкой HTTPS.');
     document.portrait = portrait;
+  }
+  if (input.identity !== undefined) {
+    const identity = record(input.identity, 'происхождение');
+    const selected: PaperIdentity = {};
+    for (const key of ['backgroundId', 'speciesId', 'subspeciesId', 'classId', 'subclassId'] as const) {
+      if (identity[key] !== undefined) {
+        const id = stringValue(identity[key], key, 200);
+        if (!/^[\w-]+$/.test(id)) throw new Error(`Некорректный ID происхождения «${key}».`);
+        selected[key] = id;
+      }
+    }
+    document.identity = selected;
+  }
+  if (input.identityFeatures !== undefined) {
+    const snapshot = record(input.identityFeatures, 'способности происхождения');
+    const entries = (value: unknown, label: string): PaperIdentityFeature[] => {
+      if (!Array.isArray(value) || value.length > 1_000) throw new Error(`Некорректный список «${label}».`);
+      return value.map(raw => {
+        const entry = record(raw, label);
+        if (!['action', 'effect', 'feat'].includes(String(entry.type))) throw new Error(`Некорректный тип сущности «${label}».`);
+        const id = stringValue(entry.id, `${label}: ID`, 200);
+        if (!/^[\w-]+$/.test(id)) throw new Error(`Некорректный ID сущности «${label}».`);
+        return { type: entry.type as PaperIdentityFeature['type'], id, name: stringValue(entry.name, `${label}: название`, 2_000) };
+      });
+    };
+    document.identityFeatures = {
+      key: stringValue(snapshot.key, 'источник способностей', 20_000),
+      abilities: entries(snapshot.abilities, 'умения и способности'), traits: entries(snapshot.traits, 'черты'),
+    };
   }
   if (input.exchange !== undefined) {
     const exchange = record(input.exchange, 'данные обмена');

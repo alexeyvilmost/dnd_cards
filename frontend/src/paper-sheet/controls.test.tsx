@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 
-import { act, StrictMode, useMemo, useState, type ReactNode } from 'react';
+import { act, StrictMode, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Field, Note, PaperSheetContext } from './controls';
+import { resetPaperNoteHistory } from './noteHistory';
+import type { PaperLibraryEntity } from './references';
 import {
   PAPER_SHEET_STORAGE_KEY, calculateSheet, createPaperSheet, exportPaperSheet,
   importPaperSheet, loadPaperSheet, savePaperSheet, type PaperSheetDocument,
@@ -11,10 +13,13 @@ import {
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
+vi.mock('./LibraryPicker', () => ({ LibraryPicker: ({ onSelect }: { onSelect: (entity: PaperLibraryEntity) => void }) => <div role="dialog" aria-label="Каталог для проверки"><button type="button" onClick={() => onSelect({ type: 'spell', id: 'spell-light', name: 'Свет' })}>Выбрать Свет</button></div> }));
+
 describe('editable paper sheet controls', () => {
   let container: HTMLDivElement;
   let root: Root;
   let currentDocument: PaperSheetDocument;
+  let setDocument: Dispatch<SetStateAction<PaperSheetDocument>>;
 
   beforeEach(() => {
     localStorage.clear();
@@ -43,6 +48,7 @@ describe('editable paper sheet controls', () => {
     function Harness() {
       const [doc, setDoc] = useState(initial);
       currentDocument = doc;
+      setDocument = setDoc;
       const calculations = useMemo(() => calculateSheet(doc), [doc]);
       const setField = (key: string, value: string) => setDoc(current => ({ ...current, fields: { ...current.fields, [key]: value } }));
       return <PaperSheetContext.Provider value={{ doc, setDoc, setField, calculations }}>{children}</PaperSheetContext.Provider>;
@@ -72,6 +78,24 @@ describe('editable paper sheet controls', () => {
 
   async function click(element: HTMLElement) {
     await act(async () => element.click());
+  }
+
+  async function key(element: HTMLElement, value: string, options: KeyboardEventInit = {}) {
+    const event = new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true, ...options });
+    await act(async () => element.dispatchEvent(event));
+    return event;
+  }
+
+  async function insertText(editor: HTMLTextAreaElement, text: string, inputType = 'insertText') {
+    await act(async () => {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const next = editor.value.slice(0, start) + text + editor.value.slice(end);
+      editor.dispatchEvent(new InputEvent('beforeinput', { inputType, data: text, bubbles: true, cancelable: true }));
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(editor, next);
+      editor.setSelectionRange(start + text.length, start + text.length);
+      editor.dispatchEvent(new InputEvent('input', { inputType, data: text, bubbles: true }));
+    });
   }
 
   async function importFile(content: string) {
@@ -146,7 +170,7 @@ describe('editable paper sheet controls', () => {
     const block = preview.closest('.ps-note')!;
     await click(preview);
     let editor = labelled<HTMLTextAreaElement>('Текст: Умения и способности');
-    expect(editor.closest('.ps-note-body')).toBe(preview.parentElement);
+    expect(editor.closest('.ps-note-manual')).toBe(preview.parentElement);
     expect(block.querySelector('[role="group"]')?.getAttribute('aria-label')).toBe('Редактирование: Умения и способности');
     expect(container.querySelector('dialog, [role="dialog"]')).toBeNull();
     expect(document.activeElement).toBe(editor);
@@ -183,7 +207,7 @@ describe('editable paper sheet controls', () => {
     await click(secondPreview);
     expect(container.querySelector('[aria-label="Текст: Первая заметка"]')).toBeNull();
     const secondEditor = labelled<HTMLTextAreaElement>('Текст: Вторая заметка');
-    expect(secondEditor.closest('.ps-note-body')).toBe(secondPreview.parentElement);
+    expect(secondEditor.closest('.ps-note-manual')).toBe(secondPreview.parentElement);
     expect(container.querySelectorAll('textarea')).toHaveLength(1);
     expect(document.activeElement).toBe(secondEditor);
     await input(secondEditor, 'Второй текст');
@@ -214,7 +238,7 @@ describe('editable paper sheet controls', () => {
     expect(container.querySelectorAll('.ps-inline-textarea')).toHaveLength(1);
     editor.select();
     expect([editor.selectionStart, editor.selectionEnd]).toEqual([0, source.length]);
-    expect(container.querySelector('.ps-inline-tools')?.parentElement).toBe(container.querySelector('.ps-note-text')?.parentElement);
+    expect(container.querySelector('.ps-inline-tools')?.parentElement).toBe(container.querySelector('.ps-note-text')?.closest('.ps-note-body'));
     expect(container.querySelector('dialog, [role="dialog"]')).toBeNull();
     await input(editor, source.replace('Первая строка', 'Первая строка изменена'));
     await click(button('Готово'));
@@ -364,6 +388,208 @@ describe('editable paper sheet controls', () => {
     expect(container.querySelector('dialog')).toBeNull();
     savePaperSheet(currentDocument);
     expect(loadPaperSheet().document.sections.features.text).toBe(currentDocument.sections.features.text);
+  });
+
+  it('undoes and redoes text after leaving the editor without rolling back another note, equipment or font size', async () => {
+    const sheet = createPaperSheet();
+    sheet.sections.first = { text: 'Первая\nВторая', fontSize: 12 };
+    sheet.sections.second = { text: 'Другая заметка', fontSize: 12 };
+    await controls(<><Note section="first" heading="Первая" /><Note section="second" heading="Вторая" /></>, sheet);
+    await click(labelled<HTMLButtonElement>('Редактировать: Первая'));
+    let editor = labelled<HTMLTextAreaElement>('Текст: Первая');
+    editor.setSelectionRange(0, 6, 'backward');
+    await insertText(editor, 'Новая');
+    expect(editor.value).toBe('Новая\nВторая');
+    await click(button('Готово'));
+    await act(async () => setDocument(current => ({ ...current,
+      fields: { ...current.fields, 'equipment.body': '[[Доспех|card:armor]]' },
+      sections: { ...current.sections, first: { ...current.sections.first, fontSize: 15 }, second: { text: 'Чужая новая запись', fontSize: 13 } },
+    })));
+    await click(labelled<HTMLButtonElement>('Редактировать: Первая'));
+    editor = labelled<HTMLTextAreaElement>('Текст: Первая');
+    expect((await key(editor, 'z', { ctrlKey: true })).defaultPrevented).toBe(true);
+    expect(editor.value).toBe('Первая\nВторая');
+    expect([editor.selectionStart, editor.selectionEnd, editor.selectionDirection]).toEqual([0, 6, 'backward']);
+    expect(currentDocument.fields['equipment.body']).toBe('[[Доспех|card:armor]]');
+    expect(currentDocument.sections.second).toEqual({ text: 'Чужая новая запись', fontSize: 13 });
+    expect(currentDocument.sections.first.fontSize).toBe(15);
+    await key(editor, 'z', { ctrlKey: true, shiftKey: true });
+    expect(editor.value).toBe('Новая\nВторая');
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([5, 5]);
+    await key(editor, 'z', { ctrlKey: true });
+    await key(editor, 'y', { ctrlKey: true });
+    expect(editor.value).toBe('Новая\nВторая');
+    savePaperSheet(currentDocument);
+    expect(loadPaperSheet().document.sections.first.text).toBe('Новая\nВторая');
+  });
+
+  it.each([
+    ['b', '**', 'strong', false], ['i', '_', 'em', true], ['u', '__', 'u', false],
+  ] as const)('applies %s formatting with a shortcut, renders it safely and restores selection through undo/redo', async (shortcut, marker, tag, metaKey) => {
+    const sheet = createPaperSheet();
+    const source = 'Слово <img src=x onerror=alert(1)>';
+    sheet.sections.features = { text: source, fontSize: 12 };
+    await controls(<Note section="features" heading="Умения" />, sheet);
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    let editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    editor.setSelectionRange(0, 5);
+    const modifiers = metaKey ? { metaKey: true } : { ctrlKey: true };
+    expect((await key(editor, shortcut, modifiers)).defaultPrevented).toBe(true);
+    const formatted = `${marker}Слово${marker} <img src=x onerror=alert(1)>`;
+    expect(editor.value).toBe(formatted);
+    await click(button('Готово'));
+    const preview = labelled<HTMLElement>('Умения');
+    expect(preview.querySelector(tag)?.textContent).toBe('Слово');
+    expect(preview.querySelector('img')).toBeNull();
+    await key(preview, 'z', modifiers);
+    editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    expect(editor.value).toBe(source);
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([0, 5]);
+    await key(editor, 'z', { ...modifiers, shiftKey: true });
+    expect(editor.value).toBe(formatted);
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([5 + marker.length * 2, 5 + marker.length * 2]);
+  });
+
+  it('keeps Enter native, undoes multiline insertion, and supports strike and list shortcuts', async () => {
+    const sheet = createPaperSheet();
+    sheet.sections.features = { text: 'Один', fontSize: 12 };
+    await controls(<Note section="features" heading="Умения" />, sheet);
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    editor.setSelectionRange(4, 4);
+    expect((await key(editor, 'Enter')).defaultPrevented).toBe(false);
+    await insertText(editor, '\n', 'insertLineBreak');
+    await insertText(editor, 'Два\nТри', 'insertFromPaste');
+    expect(editor.value).toBe('Один\nДва\nТри');
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe('Один\n');
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe('Один');
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([4, 4]);
+    await key(editor, 'y', { ctrlKey: true });
+    await key(editor, 'y', { ctrlKey: true });
+    editor.setSelectionRange(5, 8);
+    await key(editor, 'x', { ctrlKey: true, shiftKey: true });
+    expect(editor.value).toBe('Один\n~~Два~~\nТри');
+    await key(editor, '8', { code: 'Digit8', ctrlKey: true, shiftKey: true });
+    expect(editor.value).toBe('Один\n~~Два~~\n• \nТри');
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe('Один\n~~Два~~\nТри');
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe('Один\nДва\nТри');
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([5, 8]);
+  });
+
+  it.each([['i', 'u'], ['u', 'i']])('combines %s then %s formatting without literal markers in the preview', async (first, second) => {
+    const sheet = createPaperSheet();
+    sheet.sections.features = { text: 'Слово <img src=x>', fontSize: 12 };
+    await controls(<Note section="features" heading="Умения" />, sheet);
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    editor.setSelectionRange(0, 5);
+    await key(editor, first, { ctrlKey: true });
+    editor.setSelectionRange(0, first === 'i' ? 7 : 9);
+    await key(editor, second, { ctrlKey: true });
+    expect(editor.value).toBe('___Слово___ <img src=x>');
+    await click(button('Готово'));
+    const preview = labelled<HTMLElement>('Умения');
+    expect(preview.querySelector('u em')?.textContent).toBe('Слово');
+    expect(preview.textContent).toBe('Слово <img src=x>');
+    expect(preview.querySelector('img')).toBeNull();
+  });
+
+  it('formats selected lines independently and routes native undo/redo through the same text history', async () => {
+    const sheet = createPaperSheet();
+    const source = 'Первая\n\nВторая';
+    sheet.sections.features = { text: source, fontSize: 12 };
+    await controls(<Note section="features" heading="Умения" />, sheet);
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    let editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    editor.setSelectionRange(0, source.length);
+    await key(editor, 'u', { ctrlKey: true });
+    expect(editor.value).toBe('__Первая__\n\n__Вторая__');
+    await click(button('Готово'));
+    expect([...labelled<HTMLElement>('Умения').querySelectorAll('u')].map(element => element.textContent)).toEqual(['Первая', 'Вторая']);
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    const undo = new InputEvent('beforeinput', { inputType: 'historyUndo', bubbles: true, cancelable: true });
+    await act(async () => editor.dispatchEvent(undo));
+    expect(undo.defaultPrevented).toBe(true);
+    expect(editor.value).toBe(source);
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([0, source.length]);
+    const redo = new InputEvent('beforeinput', { inputType: 'historyRedo', bubbles: true, cancelable: true });
+    await act(async () => editor.dispatchEvent(redo));
+    expect(redo.defaultPrevented).toBe(true);
+    expect(editor.value).toBe('__Первая__\n\n__Вторая__');
+    await key(editor, 'z', { ctrlKey: true });
+    await insertText(editor, 'Новая ветка');
+    await key(editor, 'y', { ctrlKey: true });
+    expect(editor.value).toBe('Новая ветка');
+  });
+
+  it('groups consecutive typed characters and leaves composition shortcuts to the native input method', async () => {
+    await controls(<Note section="features" heading="Умения" />);
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    await insertText(editor, 'а');
+    await insertText(editor, 'б');
+    await insertText(editor, 'в');
+    expect((await key(editor, 'u', { ctrlKey: true, isComposing: true })).defaultPrevented).toBe(false);
+    expect(editor.value).toBe('абв');
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe('');
+    await key(editor, 'z', { metaKey: true, shiftKey: true });
+    expect(editor.value).toBe('абв');
+    expect([editor.selectionStart, editor.selectionEnd]).toEqual([3, 3]);
+  });
+
+  it('undoes library insertion while generated entities stay outside the editable text and its history', async () => {
+    const sheet = createPaperSheet();
+    const source = 'До место после\n{{ресурс:Кости|2|3}}';
+    sheet.sections.features = { text: source, fontSize: 12 };
+    await controls(<Note section="features" heading="Умения" generatedEntities={[{ type: 'card', id: 'generated-a', name: 'Автоматическая запись' }]} />, sheet);
+    const generated = container.querySelector('.ps-note-generated')!;
+    expect(generated.querySelector('.ps-entity-name strong')?.textContent).toBe('Автоматическая запись');
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    let editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    expect(editor.value).toBe(source);
+    expect(editor.closest('.ps-note-manual')?.contains(generated)).toBe(false);
+    editor.setSelectionRange(3, 8, 'backward');
+    await click(button('Из библиотеки'));
+    await click(button('Выбрать Свет'));
+    editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    expect(editor.value).toBe('До [[Свет|spell:spell-light]] после\n{{ресурс:Кости|2|3}}');
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe(source);
+    expect([editor.selectionStart, editor.selectionEnd, editor.selectionDirection]).toEqual([3, 8, 'backward']);
+    expect(generated.querySelector('.ps-entity-name strong')?.textContent).toBe('Автоматическая запись');
+    await key(editor, 'y', { ctrlKey: true });
+    expect(editor.value).toContain('[[Свет|spell:spell-light]]');
+    expect(currentDocument.sections.features.text).not.toContain('Автоматическая запись');
+  });
+
+  it('preserves section history through unmounting and clears it for an explicitly replaced document with the same text', async () => {
+    function ToggleNote() {
+      const [visible, setVisible] = useState(true);
+      return <><button type="button" onClick={() => setVisible(value => !value)}>Переключить заметку</button>{visible && <Note section="features" heading="Умения" />}</>;
+    }
+    await controls(<ToggleNote />);
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    await input(labelled<HTMLTextAreaElement>('Текст: Умения'), 'Текст');
+    await click(button('Переключить заметку'));
+    await click(button('Переключить заметку'));
+    await click(labelled<HTMLButtonElement>('Редактировать: Умения'));
+    const editor = labelled<HTMLTextAreaElement>('Текст: Умения');
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe('');
+    await key(editor, 'y', { ctrlKey: true });
+    expect(editor.value).toBe('Текст');
+    await act(async () => {
+      resetPaperNoteHistory(setDocument);
+      setDocument(current => importPaperSheet(exportPaperSheet(current)));
+    });
+    await key(editor, 'z', { ctrlKey: true });
+    expect(editor.value).toBe('Текст');
   });
 
   it('lets keyboard activation reach a nested resource button without opening the note editor', async () => {

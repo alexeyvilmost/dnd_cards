@@ -5,6 +5,7 @@ import { PAPER_BLOCKS, blockVisible, hideBlock, isPaperBlockId, type PaperBlockI
 import { EntityName } from './EntityName';
 import { LibraryPicker } from './LibraryPicker';
 import { PAPER_ENTITY_TOKEN_PATTERN, paperEntityToken, parsePaperEntityToken, type PaperLibraryEntity } from './references';
+import { paperNoteHistory, type NoteSelection } from './noteHistory';
 
 export interface PaperSheetContextValue {
   doc: PaperSheetDocument;
@@ -89,7 +90,15 @@ export function FormulaHelp() {
 
 // Notes are plain text with small, explicit tokens, never executable HTML.
 function StyledText({ text }: { text: string }) {
-  return <>{text.split(/(\*\*[^*]+\*\*|_[^_\n]+_|~~[^~]+~~)/g).map((part, i) => part.startsWith('**') && part.endsWith('**') ? <strong key={i}>{part.slice(2, -2)}</strong> : part.startsWith('_') && part.endsWith('_') ? <em key={i}>{part.slice(1, -1)}</em> : part.startsWith('~~') && part.endsWith('~~') ? <s key={i}>{part.slice(2, -2)}</s> : <span key={i}>{part}</span>)}</>;
+  return <>{text.split(/(\*\*[^*]+\*\*|___[^_\n]+___|__[^_\n]+__|_[^_\n]+_|~~[^~]+~~)/g).map((part, i) => {
+    const inner = (marker: string) => <StyledText text={part.slice(marker.length, -marker.length)} />;
+    if (part.length > 4 && part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{inner('**')}</strong>;
+    if (part.length > 6 && part.startsWith('___') && part.endsWith('___')) return <u key={i}><em>{inner('___')}</em></u>;
+    if (part.length > 4 && part.startsWith('__') && part.endsWith('__')) return <u key={i}>{inner('__')}</u>;
+    if (part.length > 4 && part.startsWith('~~') && part.endsWith('~~')) return <s key={i}>{inner('~~')}</s>;
+    if (part.length > 2 && part.startsWith('_') && part.endsWith('_')) return <em key={i}>{inner('_')}</em>;
+    return <span key={i}>{part}</span>;
+  })}</>;
 }
 
 function LinkedText({ text }: { text: string }) {
@@ -122,24 +131,50 @@ function NoteText({ text, onChange }: { text: string; onChange: (value: string) 
   })}</>;
 }
 
-export function Note({ section, heading, className = '', children }: { section: string; heading: string; className?: string; children?: ReactNode }) {
+export function Note({ section, heading, className = '', children, generatedEntities = [] }: { section: string; heading: string; className?: string; children?: ReactNode; generatedEntities?: PaperLibraryEntity[] }) {
   const { doc, setDoc, setField } = usePaperSheet();
   const [editing, setEditing] = useState(false);
   const [picking, setPicking] = useState(false);
   const [resourceOpen, setResourceOpen] = useState(false);
   const [resourceName, setResourceName] = useState('Ресурс');
   const [resourceMax, setResourceMax] = useState('3');
-  const insertion = useRef<{ start: number; end: number; fromEditor: boolean } | null>(null);
-  const selection = useRef<{ start: number; end: number } | null>(null);
+  const insertion = useRef<(NoteSelection & { fromEditor: boolean }) | null>(null);
+  const selection = useRef<NoteSelection | null>(null);
+  const pendingInput = useRef<{ selection: NoteSelection; kind: string } | null>(null);
   const returnFocus = useRef(false);
   const note = useRef<HTMLElement>(null);
   const preview = useRef<HTMLDivElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const data = doc.sections[section] ?? { text: '', fontSize: 12 };
+  const history = paperNoteHistory(setDoc, section, data.text);
   const lines = data.text.split('\n');
   const removable = isPaperBlockId(section);
 
   const change = (patch: Partial<typeof data>) => setDoc(current => ({ ...current, sections: { ...current.sections, [section]: { ...(current.sections[section] ?? { text: '', fontSize: 12 }), ...patch } } }));
+  const editorSelection = (): NoteSelection => ({ start: textarea.current?.selectionStart ?? data.text.length, end: textarea.current?.selectionEnd ?? data.text.length, direction: textarea.current?.selectionDirection ?? 'none' });
+  const rememberSelection = () => { if (textarea.current) history.remember(editorSelection()); };
+  const changeText = (text: string, after: NoteSelection, before?: NoteSelection, kind = 'edit') => {
+    history.record(text, after, before, kind);
+    change({ text });
+  };
+  const restoreHistory = (redo: boolean) => {
+    pendingInput.current = null;
+    const restored = redo ? history.redo() : history.undo();
+    if (!restored) return;
+    selection.current = restored;
+    setResourceOpen(false);
+    setEditing(true);
+    change({ text: restored.text });
+  };
+  const historyKey = (event: ReactKeyboardEvent<HTMLElement>): boolean => {
+    if (event.nativeEvent.isComposing || !(event.ctrlKey || event.metaKey) || event.altKey) return false;
+    const key = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+    if (key !== 'z' && key !== 'y') return false;
+    event.preventDefault();
+    event.stopPropagation();
+    restoreHistory(key === 'y' || event.shiftKey);
+    return true;
+  };
   const replaceLine = (index: number, value: string) => setDoc(current => {
     const old = current.sections[section] ?? { text: '', fontSize: 12 };
     const nextLines = old.text.split('\n');
@@ -152,6 +187,9 @@ export function Note({ section, heading, className = '', children }: { section: 
     setEditing(true);
   };
   const finishEditing = () => {
+    rememberSelection();
+    history.breakGroup();
+    pendingInput.current = null;
     returnFocus.current = true;
     setResourceOpen(false);
     setEditing(false);
@@ -159,8 +197,21 @@ export function Note({ section, heading, className = '', children }: { section: 
 
   useEffect(() => {
     if (!editing) return;
+    const element = textarea.current;
+    const beforeInput = (event: InputEvent) => {
+      if (event.inputType === 'historyUndo' || event.inputType === 'historyRedo') {
+        event.preventDefault();
+        restoreHistory(event.inputType === 'historyRedo');
+      } else {
+        pendingInput.current = { selection: editorSelection(), kind: event.inputType || 'edit' };
+      }
+    };
+    element?.addEventListener('beforeinput', beforeInput);
     const finishOutside = (event: Event) => {
       if (event.target instanceof Node && !note.current?.contains(event.target)) {
+        rememberSelection();
+        history.breakGroup();
+        pendingInput.current = null;
         setEditing(false);
         setResourceOpen(false);
       }
@@ -168,10 +219,11 @@ export function Note({ section, heading, className = '', children }: { section: 
     document.addEventListener('pointerdown', finishOutside);
     document.addEventListener('focusin', finishOutside);
     return () => {
+      element?.removeEventListener('beforeinput', beforeInput);
       document.removeEventListener('pointerdown', finishOutside);
       document.removeEventListener('focusin', finishOutside);
     };
-  }, [editing]);
+  }, [editing, history]);
 
   useLayoutEffect(() => {
     if (!editing) {
@@ -182,15 +234,19 @@ export function Note({ section, heading, className = '', children }: { section: 
     const element = textarea.current;
     if (element && document.activeElement !== element) element.focus({ preventScroll: true });
     if (element && selection.current) {
-      element.setSelectionRange(selection.current.start, selection.current.end);
+      element.setSelectionRange(selection.current.start, selection.current.end, selection.current.direction);
       selection.current = null;
     }
   }, [editing, data.text]);
 
   const openLibrary = (fromEditor: boolean) => {
+    rememberSelection();
+    history.breakGroup();
+    pendingInput.current = null;
     insertion.current = {
       start: fromEditor ? (textarea.current?.selectionStart ?? data.text.length) : data.text.length,
       end: fromEditor ? (textarea.current?.selectionEnd ?? data.text.length) : data.text.length,
+      direction: fromEditor ? textarea.current?.selectionDirection ?? 'none' : 'none',
       fromEditor,
     };
     setEditing(false);
@@ -199,7 +255,7 @@ export function Note({ section, heading, className = '', children }: { section: 
   const closeLibrary = (nextText = data.text) => {
     setPicking(false);
     if (insertion.current?.fromEditor) {
-      selection.current = { start: Math.min(insertion.current.start, nextText.length), end: Math.min(insertion.current.end, nextText.length) };
+      selection.current = { start: Math.min(insertion.current.start, nextText.length), end: Math.min(insertion.current.end, nextText.length), direction: insertion.current.direction };
       setEditing(true);
     }
     insertion.current = null;
@@ -209,37 +265,48 @@ export function Note({ section, heading, className = '', children }: { section: 
     const prefix = !at.fromEditor && data.text && !data.text.endsWith('\n') ? '\n' : '';
     const token = prefix + paperEntityToken(entity);
     const nextText = data.text.slice(0, at.start) + token + data.text.slice(at.end);
-    change({ text: nextText });
+    changeText(nextText, { start: at.start + token.length, end: at.start + token.length }, at, 'insertEntity');
     insertion.current = { ...at, start: at.start + token.length, end: at.start + token.length };
     closeLibrary(nextText);
   };
   const insert = (text: string) => {
     if (!editing) return;
+    pendingInput.current = null;
     const element = textarea.current;
     const start = element?.selectionStart ?? data.text.length;
     const end = element?.selectionEnd ?? start;
     const nextText = data.text.slice(0, start) + text + data.text.slice(end);
     if (nextText === data.text) {
       selection.current = null;
+      history.breakGroup();
+      history.remember({ start: start + text.length, end: start + text.length });
       element?.focus({ preventScroll: true });
       element?.setSelectionRange(start + text.length, start + text.length);
       return;
     }
     selection.current = { start: start + text.length, end: start + text.length };
-    change({ text: nextText });
+    changeText(nextText, selection.current, editorSelection(), 'format');
   };
   const format = (marker: string) => {
     if (!editing) return;
     const element = textarea.current;
     const start = element?.selectionStart ?? data.text.length;
     const end = element?.selectionEnd ?? start;
-    insert(`${marker}${data.text.slice(start, end) || 'текст'}${marker}`);
+    insert((data.text.slice(start, end) || 'текст').split('\n').map(line => line ? `${marker}${line}${marker}` : '').join('\n'));
   };
   const handleEditorKey = (event: ReactKeyboardEvent<HTMLTextAreaElement>) => {
     if (event.nativeEvent.isComposing) return;
-    if ((event.ctrlKey || event.metaKey) && ['b', 'i'].includes(event.key.toLowerCase())) {
+    if (historyKey(event)) return;
+    const key = /^Key[A-Z]$/.test(event.code) ? event.code.slice(3).toLowerCase() : event.key.toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && (['b', 'i', 'u'].includes(key) || (event.shiftKey && key === 'x'))) {
       event.preventDefault();
-      format(event.key.toLowerCase() === 'b' ? '**' : '_');
+      event.stopPropagation();
+      format(key === 'b' ? '**' : key === 'i' ? '_' : key === 'u' ? '__' : '~~');
+    } else if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.code === 'Digit8' || event.key === '*')) {
+      event.preventDefault();
+      insert('\n• ');
+    } else {
+      pendingInput.current = { selection: editorSelection(), kind: 'edit' };
     }
   };
   const clickColumn = (element: HTMLElement, raw: string, x: number, y: number) => {
@@ -255,24 +322,29 @@ export function Note({ section, heading, className = '', children }: { section: 
   if (removable && !blockVisible(doc, section)) return null;
 
   return <section ref={note} data-note-section={section} data-paper-block={removable ? section : undefined} className={`ps-frame ps-note ${editing ? 'ps-note-editing' : ''} ${className}`}
-    onKeyDown={event => { if (editing && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); finishEditing(); } }}>
+    onKeyDown={event => { if ((event.target as HTMLElement).closest('.ps-editor-tools') && historyKey(event)) return; if (editing && event.key === 'Escape' && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); finishEditing(); } }}>
     <div className="ps-heading ps-note-heading"><input aria-label={`Заголовок: ${heading}`} value={doc.fields[`heading.${section}`] ?? heading} onChange={event => setField(`heading.${section}`, event.target.value)} />
       <button type="button" className="ps-note-library" aria-label={`Добавить из библиотеки: ${heading}`} onClick={() => openLibrary(editing)}><BookOpen size={12} /></button>
       <button type="button" aria-label={`Редактировать: ${heading}`} onClick={() => activate(0)}><Pencil size={12} fill="currentColor" /></button>
       {removable && <button type="button" className="ps-note-remove" aria-label={`Убрать блок: ${PAPER_BLOCKS.find(block => block.id === section)?.label || heading}`} onClick={() => setDoc(current => hideBlock(current, section))}><Trash2 size={12} /></button>}</div>
     <div className={`ps-note-body ${doc.settings.grid ? 'ps-grid' : ''}`} style={{ fontSize: data.fontSize }}>
+      {generatedEntities.length > 0 && <div className="ps-note-generated" aria-label="От выбранного происхождения и уровня"><div className="ps-note-generated-label">От выбранного происхождения и уровня</div>{generatedEntities.map(entity => <div key={`${entity.type}:${entity.id}`}><EntityName entity={entity} /></div>)}</div>}
+      <div className="ps-note-manual">
       <div ref={preview} className="ps-note-text" tabIndex={editing ? -1 : 0} role="textbox" aria-label={heading} aria-multiline="true"
         onClick={event => { if (event.target === event.currentTarget) activate(); }}
-        onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); activate(0); } }}>
+        onKeyDown={event => { if (event.target !== event.currentTarget || historyKey(event)) return; if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activate(0); } }}>
         {lines.map((line, index) => <div key={index} className="ps-note-line"
           onClick={event => { if (!(event.target as HTMLElement).closest('button')) { const base = lines.slice(0, index).reduce((total, value) => total + value.length + 1, 0); activate(base + clickColumn(event.currentTarget, line, event.clientX, event.clientY)); } }}>
           <NoteText text={line} onChange={text => replaceLine(index, text)} />
         </div>)}
       </div>
       {editing && <textarea ref={textarea} className="ps-inline-textarea" aria-label={`Текст: ${heading}`} value={data.text}
-        onChange={event => change({ text: event.target.value })} onKeyDown={handleEditorKey} />}
+        onSelect={rememberSelection}
+        onChange={event => { const before = pendingInput.current; pendingInput.current = null; changeText(event.target.value, editorSelection(), before?.selection, before?.kind ?? 'edit'); }}
+        onKeyDown={handleEditorKey} />}
+      </div>
       {editing && <div className="ps-inline-tools" role="group" aria-label={`Редактирование: ${heading}`}>
-        <div className="ps-editor-tools"><button type="button" aria-label="Полужирный текст" onClick={() => format('**')}><b>Ж</b></button><button type="button" aria-label="Курсив" onClick={() => format('_')}><i>К</i></button><button type="button" aria-label="Зачёркнутый текст" onClick={() => format('~~')}><s>А</s></button><button type="button" aria-label="Маркированный список" onClick={() => insert('\n• ')}>☷</button><button type="button" onClick={() => insert('{{8 + [PROF] + [WIS]}}')}>ƒ Формула</button><button type="button" aria-expanded={resourceOpen} onClick={() => setResourceOpen(!resourceOpen)}>＋ Ресурс</button><button type="button" onClick={() => openLibrary(true)}><BookOpen size={12} /> Из библиотеки</button><button type="button" onClick={finishEditing}>Готово</button></div>
+        <div className="ps-editor-tools"><button type="button" aria-label="Полужирный текст" aria-description="Ctrl+B / ⌘B" onClick={() => format('**')}><b>Ж</b></button><button type="button" aria-label="Курсив" aria-description="Ctrl+I / ⌘I" onClick={() => format('_')}><i>К</i></button><button type="button" aria-label="Подчёркнутый текст" aria-description="Ctrl+U / ⌘U" onClick={() => format('__')}><u>Ч</u></button><button type="button" aria-label="Зачёркнутый текст" aria-description="Ctrl+Shift+X / ⌘⇧X" onClick={() => format('~~')}><s>А</s></button><button type="button" aria-label="Маркированный список" aria-description="Ctrl+Shift+8 / ⌘⇧8" onClick={() => insert('\n• ')}>☷</button><button type="button" onClick={() => insert('{{8 + [PROF] + [WIS]}}')}>ƒ Формула</button><button type="button" aria-expanded={resourceOpen} onClick={() => setResourceOpen(!resourceOpen)}>＋ Ресурс</button><button type="button" onClick={() => openLibrary(true)}><BookOpen size={12} /> Из библиотеки</button><button type="button" onClick={finishEditing}>Готово</button></div>
         {resourceOpen && <div className="ps-resource-editor"><input aria-label="Название ресурса" value={resourceName} onChange={event => setResourceName(event.target.value)} /><input aria-label="Максимум ресурса" type="number" min="0" value={resourceMax} onChange={event => setResourceMax(event.target.value)} /><button type="button" onClick={() => { const count = Math.max(0, Number(resourceMax) || 0); insert(`{{ресурс:${resourceName.replace(/[|{}]/g, '')}|${count}|${count}}}`); setResourceOpen(false); }}>Вставить</button></div>}
       </div>}
     </div>

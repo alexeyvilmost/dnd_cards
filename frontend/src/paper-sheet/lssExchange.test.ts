@@ -6,6 +6,7 @@ import customWizard from './fixtures/lss-custom-spell-2024.json';
 import { attachLssSpells, exportLssSheet, importSheetJSON, lssText, paperExtraSections, paperLssSpells, parseExchangeJSON } from './lssExchange';
 import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet } from './model';
 import { printSections, wrapPrintText } from './print';
+import { paperIdentitySourceKey } from './identity';
 
 describe('real Long Story Short exports', () => {
   it('parses valid exchange JSON larger than the old 10 MB quota', () => {
@@ -88,8 +89,127 @@ describe('real Long Story Short exports', () => {
     expect(paperLssSpells(doc)[0].school).toBe('evocation');
     const persisted = importPaperSheet(exportPaperSheet(doc));
     expect(paperLssSpells(persisted)).toEqual(paperLssSpells(doc));
-    expect(JSON.parse(exportLssSheet(persisted)).spells).toEqual(source.spells);
+    const exported = exportLssSheet(persisted);
+    expect(JSON.parse(exported).spells).toEqual(source.spells);
+    expect(importSheetJSON(exported).document.fields[`spellRow${index}Notes`]).toBe('Моя заметка');
     expect(paperExtraSections(doc).map(s => s.text).join('\n')).toContain('1d4 + @mod');
+  });
+  it('round-trips foreign spell table annotations by original ID without duplicate prepared spells or notes', () => {
+    const source = structuredClone(customWizard) as any;
+    const data = JSON.parse(source.data);
+    const manualContent = [{ type: 'paragraph', content: [{ type: 'text', text: 'Моя исходная заметка', marks: [{ type: 'bold' }] }] }, { type: 'resource', attrs: { id: 'foreign-resource', current: 2, max: 5 } }];
+    data.text['notes-6'] = { customLabel: 'Личные записи', value: { data: { type: 'doc', content: manualContent } } };
+    source.data = JSON.stringify(data);
+    const originalSource = JSON.stringify(source);
+    const doc = attachLssSpells(importSheetJSON(originalSource).document, JSON.stringify(grimoire));
+    const customId = grimoire[0]._id;
+    const unknownId = source.spells.prepared.find((id: string) => id !== customId);
+    const row = (id: string) => Object.keys(doc.fields).find(key => key.endsWith('LssId') && doc.fields[key] === id)!.replace('LssId', '');
+    const customRow = row(customId);
+    const unknownRow = row(unknownId);
+    Object.assign(doc.fields, { [`${customRow}Time`]: 'Реакция', [`${customRow}Range`]: '45 футов', [`${customRow}Notes`]: 'Моя заметка\nНе потерять вторую строку', [`${unknownRow}Name`]: 'Неизвестное LSS заклинание', [`${unknownRow}Level`]: '7', [`${unknownRow}Time`]: '10 минут', [`${unknownRow}Range`]: 'На себя', [`${unknownRow}Notes`]: 'Вторая сущность' });
+    Object.assign(doc.checks, { [`${customRow}Concentration`]: true, [`${customRow}Ritual`]: false, [`${customRow}Material`]: true, [`${unknownRow}Concentration`]: false, [`${unknownRow}Ritual`]: true, [`${unknownRow}Material`]: false });
+    const originalDoc = exportPaperSheet(doc);
+    const exported = JSON.parse(exportLssSheet(doc));
+    const exportedNotes = JSON.parse(exported.data).text['notes-6'];
+    expect(exportedNotes.value.data.content.slice(0, manualContent.length)).toEqual(manualContent);
+    expect(exportedNotes.customLabel).toBe('Личные записи');
+    expect(lssText(exportedNotes.value.data)).toContain('Реакция; 45 футов; Моя заметка\nНе потерять вторую строку');
+    expect(lssText(exportedNotes.value.data)).toContain('Ур. 7 — Неизвестное LSS заклинание — 10 минут; На себя; Вторая сущность — ритуал');
+    const reimported = importSheetJSON(JSON.stringify(exported)).document;
+    for (const prefix of [customRow, unknownRow]) {
+      for (const field of ['Name', 'Level', 'Time', 'Range', 'Notes', 'LssId']) expect(reimported.fields[`${prefix}${field}`]).toBe(doc.fields[`${prefix}${field}`] || '');
+      for (const field of ['Concentration', 'Ritual', 'Material']) expect(reimported.checks[`${prefix}${field}`]).toBe(doc.checks[`${prefix}${field}`]);
+    }
+    const reattached = attachLssSpells(reimported, JSON.stringify(grimoire));
+    for (const field of ['Name', 'Time', 'Range', 'Notes']) expect(reattached.fields[`${customRow}${field}`]).toBe(doc.fields[`${customRow}${field}`]);
+    for (const field of ['Concentration', 'Ritual', 'Material']) expect(reattached.checks[`${customRow}${field}`]).toBe(doc.checks[`${customRow}${field}`]);
+    // An untouched placeholder and absent flags can still be resolved by a later grimoire.
+    const blankId = source.spells.prepared.find((id: string) => id !== customId && id !== unknownId);
+    const blankRow = row(blankId);
+    const definition = structuredClone(grimoire[0]) as any;
+    definition._id = blankId; definition.name = 'Другое заклинание';
+    definition.system.properties = ['concentration', 'ritual', 'material'];
+    const hydrated = attachLssSpells(reimported, JSON.stringify([definition]));
+    expect(hydrated.fields[`${blankRow}Name`]).toBe('Другое заклинание');
+    expect(hydrated.fields[`${blankRow}Time`]).toBe('1 бонусное действие');
+    expect(hydrated.fields[`${blankRow}Range`]).toBe('видимость');
+    for (const field of ['Concentration', 'Ritual', 'Material']) expect(hydrated.checks[`${blankRow}${field}`]).toBe(true);
+    expect(reimported.sections.notes6.text).not.toContain('Заклинания LSS — заметки Bag of Holding');
+    // Exercise a real second export, not just the unchanged-source fast path.
+    reimported.fields.name += ' — снова';
+    const repeated = JSON.parse(exportLssSheet(reimported));
+    expect(JSON.parse(repeated.data).text['notes-6']).toEqual(exportedNotes);
+    expect(repeated.spells).toEqual(source.spells);
+    expect(Object.keys(importSheetJSON(JSON.stringify(repeated)).document.fields).filter(key => key.endsWith('LssId'))).toHaveLength(new Set([...source.spells.prepared, ...source.spells.granted.map((spell: any) => spell.id)]).size);
+    expect(JSON.stringify(source)).toBe(originalSource);
+    expect(exportPaperSheet(doc)).toBe(originalDoc);
+  });
+  it('retains a managed spell suffix edited in LSS as manual content on later exports', () => {
+    const doc = importSheetJSON(JSON.stringify(wizard)).document;
+    doc.fields.spellRow0Notes = 'Подготовить перед боем';
+    const first = JSON.parse(exportLssSheet(doc));
+    const data = JSON.parse(first.data);
+    const content = data.text['notes-6'].value.data.content;
+    content[content.length - 1] = { type: 'paragraph', content: [{ type: 'text', text: 'Ручная правка в LSS — оставить', marks: [{ type: 'italic' }] }] };
+    const editedContent = structuredClone(content);
+    first.data = JSON.stringify(data);
+    const imported = importSheetJSON(JSON.stringify(first)).document;
+    expect(imported.sections.notes6.text).toContain('_Ручная правка в LSS — оставить_');
+    imported.fields.spellRow0Notes = 'Обновлённое время';
+    const next = JSON.parse(exportLssSheet(imported));
+    const nextContent = JSON.parse(next.data).text['notes-6'].value.data.content;
+    expect(nextContent.slice(0, editedContent.length)).toEqual(editedContent);
+    expect(lssText({ content: nextContent })).toContain('Обновлённое время');
+    const finalDoc = importSheetJSON(JSON.stringify(next)).document;
+    expect(finalDoc.sections.notes6.text).toBe(imported.sections.notes6.text);
+    finalDoc.fields.name += ' — другой экспорт';
+    expect(JSON.parse(JSON.parse(exportLssSheet(finalDoc)).data).text['notes-6'].value.data.content).toEqual(nextContent);
+  });
+  it('restores only whitelisted spell columns for IDs already present in the foreign spell list', () => {
+    const source = structuredClone(wizard) as any;
+    const id = source.spells.prepared[0];
+    const data = JSON.parse(source.data);
+    data.text['spells-level-2'] = { value: { data: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Текстовая строка — 30 футов' }] }] } } };
+    source.data = JSON.stringify(data);
+    source.bohSpellRows = { version: 1, rows: [
+      { lssId: id, fields: { Name: 'Переименовано', Notes: 'Сохранено', Time: { invalid: true }, LssId: 'replacement', hpCurrent: '0' }, checks: { Ritual: true, Material: 'yes', inspiration: true } },
+      { lssId: 'not-prepared', fields: { Name: 'Не добавлять' }, checks: {} },
+    ] };
+    const doc = importSheetJSON(JSON.stringify(source)).document;
+    expect(doc.fields.spellRow0Name).toBe('Текстовая строка — 30 футов');
+    expect(doc.fields.spellRow0LssId).toBeUndefined();
+    expect(doc.fields.spellRow1LssId).toBe(id);
+    expect(doc.fields.spellRow1Name).toBe('Переименовано');
+    expect(doc.fields.spellRow1Notes).toBe('Сохранено');
+    expect(doc.fields.spellRow1Time).toBeUndefined();
+    expect(doc.fields.spellRow1hpCurrent).toBeUndefined();
+    expect(doc.checks.spellRow1Ritual).toBe(true);
+    expect(doc.checks.spellRow1Material).toBeUndefined();
+    expect(doc.checks.spellRow1inspiration).toBeUndefined();
+    expect(Object.values(doc.fields)).not.toContain('Не добавлять');
+    expect(JSON.parse(exportLssSheet(doc))).toEqual(source);
+  });
+  it('preserves explicit empty spell fields and false flags while leaving absent values available for grimoire hydration', () => {
+    const doc = importSheetJSON(JSON.stringify(wizard)).document;
+    // Even absent -> empty alone is an intentional annotation that must survive exchange.
+    doc.fields.spellRow0Time = '';
+    const first = JSON.parse(exportLssSheet(doc));
+    expect(first.bohSpellRows.rows[0].fields).toHaveProperty('Time', '');
+    expect(first.bohSpellRows.rows[0].fields).not.toHaveProperty('Range');
+    expect(first.bohSpellRows.rows[0].checks).toEqual({});
+    doc.fields.spellRow0Range = ''; doc.fields.spellRow0Notes = '';
+    Object.assign(doc.checks, { spellRow0Concentration: false, spellRow0Ritual: false, spellRow0Material: false });
+    const imported = importSheetJSON(exportLssSheet(doc)).document;
+    const definitions = [doc.fields.spellRow0LssId, doc.fields.spellRow1LssId].map((_id, index) => ({ ...grimoire[0], _id, name: `Запись ${index + 1}`, system: { ...grimoire[0].system, properties: ['concentration', 'ritual', 'material'] } }));
+    const attached = attachLssSpells(imported, JSON.stringify(definitions));
+    for (const key of ['Time', 'Range', 'Notes']) expect(attached.fields[`spellRow0${key}`]).toBe('');
+    for (const key of ['Concentration', 'Ritual', 'Material']) expect(attached.checks[`spellRow0${key}`]).toBe(false);
+    expect(attached.fields.spellRow0Name).toBe('Запись 1');
+    expect(attached.fields.spellRow1Time).toBe('1 бонусное действие');
+    expect(attached.fields.spellRow1Range).toBe('видимость');
+    expect(attached.fields.spellRow1Notes).toBe('мгновенно');
+    for (const key of ['Concentration', 'Ritual', 'Material']) expect(attached.checks[`spellRow1${key}`]).toBe(true);
   });
   it('exports new native equipment and spells as readable LSS text with flags', () => {
     const doc = createPaperSheet();
@@ -101,6 +221,42 @@ describe('real Long Story Short exports', () => {
     expect(lssText(data.text['spells-level-1'].value.data)).toContain('концентрация');
     expect(data.weaponsList[0].dmg.value).toBe('1d6 + 2'); expect(data.weaponsList[0].dmgType.value).toBe('дробящий');
     expect(importSheetJSON(JSON.stringify(result)).document.fields.spellAbility).toBe('wis');
+  });
+  it('exports all library types and generated origin features, preserving text marks and native metadata', () => {
+    const doc = createPaperSheet();
+    doc.identity = { classId: 'class-one', backgroundId: 'background-one' };
+    doc.identityFeatures = { key: paperIdentitySourceKey(doc), abilities: [{ type: 'action', id: 'action-one', name: 'Действие класса' }, { type: 'effect', id: 'effect-one', name: 'Особенность вида' }], traits: [{ type: 'feat', id: 'feat-one', name: 'Черта предыстории' }] };
+    doc.sections.features = { text: 'Моя **жирная** _курсивная_ __подчёркнутая__ ~~зачёркнутая~~ заметка\n[[Предмет|card:item-one]] [[Заклинание|spell:spell-one]] [[Ручная черта|feat:feat-two]]', fontSize: 11 };
+    const original = exportPaperSheet(doc);
+    const native = importSheetJSON(original).document;
+    expect(native).toEqual(doc);
+    const exported = JSON.parse(exportLssSheet(native));
+    const data = JSON.parse(exported.data);
+    const text = lssText(data.text.features.value.data);
+    for (const label of ['Действие класса', 'Особенность вида', 'Предмет', 'Заклинание', 'Ручная черта', '__подчёркнутая__', '**жирная**', '_курсивная_', '~~зачёркнутая~~']) expect(text).toContain(label);
+    expect(text).not.toMatch(/\[\[|(?:card|spell|action|effect|feat):/);
+    expect(lssText(data.text.feats.value.data)).toContain('Черта предыстории');
+    expect(importSheetJSON(JSON.stringify(exported)).document.sections.features.text).toContain('__подчёркнутая__');
+    expect(exportPaperSheet(doc)).toBe(original);
+  });
+  it('exports generated sections without manual notes and excludes snapshots for a previous level', () => {
+    const doc = createPaperSheet();
+    doc.identity = { speciesId: 'species-one' };
+    doc.identityFeatures = { key: paperIdentitySourceKey(doc), abilities: [{ type: 'effect', id: 'feature-one', name: 'Ночное зрение' }], traits: [] };
+    expect(lssText(JSON.parse(JSON.parse(exportLssSheet(doc)).data).text.features.value.data)).toContain('Ночное зрение');
+    doc.fields.level = '2';
+    expect(lssText(JSON.parse(JSON.parse(exportLssSheet(doc)).data).text.features.value.data)).not.toContain('Ночное зрение');
+  });
+  it.each([['italic', 'underline'], ['underline', 'italic']])('round-trips combined %s/%s marks as italic underlined text', (first, second) => {
+    const combined = lssText({ type: 'text', text: 'Совместно', marks: [{ type: first }, { type: second }] });
+    expect(combined).toBe('___Совместно___');
+    const doc = createPaperSheet();
+    doc.sections.features = { text: `${combined} и __Только подчёркнуто__`, fontSize: 12 };
+    const exported = exportLssSheet(doc);
+    const content = JSON.parse(JSON.parse(exported).data).text.features.value.data.content[0].content;
+    expect(content.find((node: any) => node.text === 'Совместно').marks).toEqual(expect.arrayContaining([{ type: 'italic' }, { type: 'underline' }]));
+    expect(content.find((node: any) => node.text === 'Только подчёркнуто').marks).toEqual([{ type: 'underline' }]);
+    expect(importSheetJSON(exported).document.sections.features.text).toBe(doc.sections.features.text);
   });
   it('supports old raw data and UTF-8 BOM exports', () => {
     const data = { ...JSON.parse(cleric.data), jsonType: 'character' }; data.vitality['hp-current'] = { value: 0 };

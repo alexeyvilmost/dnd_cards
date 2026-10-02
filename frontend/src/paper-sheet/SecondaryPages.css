@@ -48,12 +48,15 @@
 .paper-sheet .ps-spell-table-head > span:first-child, .paper-sheet .ps-spell-table-row > div:first-child { padding-left: 0; }
 .paper-sheet .ps-spell-table-head > span:last-child, .paper-sheet .ps-spell-table-row > div:last-child { border-right: 0; }
 .paper-sheet .ps-spell-table-body { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
-.paper-sheet .ps-spell-table-row { flex: 1 0 25px; }
-.paper-sheet .ps-spell-table-row > div { display: flex; align-items: stretch; }
+.paper-sheet .ps-spell-table-row { flex: 1 0 27px; min-height: 27px; }
+.paper-sheet .ps-spell-table-row > div { display: flex; align-items: center; min-height: 0; border-bottom: 1px solid #b7b7b9; }
 .paper-sheet .ps-spell-table-row .ps-field { width: 100%; min-width: 0; height: 100%; }
-.paper-sheet .ps-spell-table-row .ps-field input { width: 100%; min-width: 0; font-size: 12px; border-bottom: 1px solid #b7b7b9; border-radius: 0; align-self: stretch; height: 100%; padding: 0; }
+.paper-sheet .ps-spell-table-row .ps-field input { width: 100%; min-width: 0; font-size: 12px; line-height: 16px; border-bottom: 0; border-radius: 0; height: 100%; padding: 0; }
+.paper-sheet .ps-spell-table-row .ps-autofill-field, .paper-sheet .ps-spell-table-row .ps-entity-field { width: 100%; height: 100%; min-height: 0; display: flex; align-items: center; }
+.paper-sheet .ps-spell-table-row .ps-entity-field > .ps-entity-reference { display: flex; align-items: center; height: 100%; min-height: 0; border-bottom: 0; font-size: 12px; line-height: 16px; }
+.paper-sheet .ps-spell-table-row .ps-entity-name { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 16px; }
 .paper-sheet .ps-spell-table-row > div:first-child .ps-field input { text-align: center; }
-.paper-sheet .ps-spell-components { align-items: center !important; justify-content: space-between; gap: 4px; }
+.paper-sheet .ps-spell-components { align-items: center !important; justify-content: space-between; gap: 4px; border-bottom: 0 !important; }
 .paper-sheet .ps-spell-components label { display: flex; gap: 3px; align-items: center; font-size: 9px; color: #7b7b7b; }
 .paper-sheet .ps-spell-components .ps-check { flex-shrink: 0; }
 .paper-sheet .ps-table-row-tools { position: absolute; right: 2px; bottom: 1px; display: flex; gap: 3px; background: #eaeaea; padding: 4px; border-radius: 8px 0 0 0; opacity: 0; }

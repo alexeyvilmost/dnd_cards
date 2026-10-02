@@ -44,11 +44,12 @@ describe('formattedText: ссылки [[label|type:id]]', () => {
     expect(nodes.some((n) => n.type === 'link')).toBe(true);
   });
 
-  it('все пять типов сущностей распознаются', () => {
-    for (const t of ['card', 'spell', 'action', 'effect', 'concept']) {
+  it('все типы каноничного резолвера распознаются и превращаются в подпись при удалении форматирования', () => {
+    for (const t of ['card', 'spell', 'action', 'effect', 'concept', 'feat', 'race', 'class', 'background', 'resource', 'variable']) {
       const node = parseFormattedText(`[[X|${t}:id1]]`)[0] as unknown as AnyNode;
       expect(node.type).toBe('link');
       expect(node.refType).toBe(t);
+      expect(stripFormattingMarkers(`[[X|${t}:id1]]`)).toBe('X');
     }
   });
 });

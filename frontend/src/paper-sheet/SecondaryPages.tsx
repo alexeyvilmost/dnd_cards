@@ -109,7 +109,7 @@ function Attunement() {
   const count = Math.max(1, ...populated, Math.min(capacity, saved));
   return <div className="ps-attunement">
     <div className="ps-attunement-label"><span>Настройка на магические предметы · {capacity}</span><button type="button" aria-label="Добавить место настройки" disabled={count >= capacity} onClick={() => setField('attunementSlots', String(count + 1))}>+</button><button type="button" aria-label="Убрать место настройки" disabled={count <= 1} onClick={() => setField('attunementSlots', String(count - 1))}>−</button></div>
-    {Array.from({ length: count }, (_, index) => <div className="ps-attunement-row" key={index}><Check field={`attunement${index}`} label={`Настройка на предмет ${index + 1}`} diamond /><EntityField field={`attunementName${index}`} label={`Магический предмет ${index + 1}`} /></div>)}
+    {Array.from({ length: count }, (_, index) => <div className="ps-attunement-row" key={index}><Check field={`attunement${index}`} label={`Настройка на предмет ${index + 1}`} diamond /><EntityField field={`attunementName${index}`} label={`Магический предмет ${index + 1}`} allowedTypes={['card']} /></div>)}
   </div>;
 }
 
@@ -229,7 +229,7 @@ function Inventory({ busy, transferError, onEquip }: { busy: boolean; transferEr
         const entity = parsePaperEntityToken(doc.fields[itemKey] ?? '');
         const quantity = doc.fields[quantityKey] ?? (doc.fields[itemKey] ? '1' : '');
         return <div className="ps-inventory-row" key={index}>
-          <EntityField field={itemKey} label={`Инвентарь, предмет ${index + 1}`} onSelect={selected => selectItem(index, selected)} />
+          <EntityField field={itemKey} label={`Инвентарь, предмет ${index + 1}`} allowedTypes={['card']} onSelect={selected => selectItem(index, selected)} />
           <input className="ps-inventory-quantity" type="number" inputMode="numeric" min="0" step="1" aria-label={`Инвентарь, количество ${index + 1}`} disabled={busy} value={quantity} onChange={event => setField(quantityKey, String(paperInventoryQuantity(event.target.value)))} />
           <select className="ps-inventory-equip" aria-label={`Надеть предмет из строки ${index + 1}`} value="" disabled={busy || entity?.type !== 'card' || paperInventoryQuantity(quantity) <= 0} onChange={event => { const slot = EQUIPMENT_SLOTS.find(([key]) => key === event.target.value)?.[0]; if (slot && entity?.type === 'card') onEquip(entity, slot, index); }}>
             <option value="">Надеть</option>{EQUIPMENT_SLOTS.map(([slot, label]) => <option value={slot} key={slot}>{label}</option>)}
@@ -254,7 +254,7 @@ function Equipment({ busy, transferError, onEquip, onUnequip }: { busy: boolean;
   };
   return <Frame heading="Снаряжение" className="ps-equipped-items" blockId="equipped-items">
     <div className="ps-equipment-slots">{EQUIPMENT_SLOTS.map(([slot, label]) => <div className="ps-equipment-slot" key={slot}>
-      <span className="ps-equipment-slot-label">{label}</span><EntityField field={`equipment.${slot}`} label={`Снаряжение: ${label}`} onSelect={selected => selectItem(slot, selected)} onUnlink={() => onUnequip(slot)} /><button type="button" aria-label={`Снять предмет: ${label}`} disabled={busy || !doc.fields[`equipment.${slot}`]} onClick={() => onUnequip(slot)}>×</button>
+      <span className="ps-equipment-slot-label">{label}</span><EntityField field={`equipment.${slot}`} label={`Снаряжение: ${label}`} allowedTypes={['card']} onSelect={selected => selectItem(slot, selected)} onUnlink={() => onUnequip(slot)} /><button type="button" aria-label={`Снять предмет: ${label}`} disabled={busy || !doc.fields[`equipment.${slot}`]} onClick={() => onUnequip(slot)}>×</button>
     </div>)}</div>
     {busy && <p className="ps-equipment-loading" role="status">Загрузка предмета…</p>}
     {(error || transferError) && <p className="ps-equipment-error" role="alert">{error || transferError}</p>}

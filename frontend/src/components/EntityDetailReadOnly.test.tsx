@@ -14,6 +14,7 @@ import type { EntityRefType } from './EntityRefRegistry';
 const mocks = vi.hoisted(() => ({
   deleteCard: vi.fn(), deleteSpell: vi.fn(), deleteAction: vi.fn(), deleteEffect: vi.fn(),
   deleteConcept: vi.fn(), deleteResource: vi.fn(), deleteVariable: vi.fn(), update: vi.fn(),
+  deleteFeat: vi.fn(), deleteRace: vi.fn(), deleteClass: vi.fn(), deleteBackground: vi.fn(),
   generate: vi.fn(), generateCard: vi.fn(), upload: vi.fn(), tagList: vi.fn(), tagGet: vi.fn(), tagWrite: vi.fn(), evict: vi.fn(),
 }));
 
@@ -25,6 +26,10 @@ vi.mock('../api/client', () => ({
   conceptsApi: { deleteConcept: mocks.deleteConcept },
   resourcesApi: { deleteResource: mocks.deleteResource },
   variablesApi: { deleteVariable: mocks.deleteVariable },
+  featsApi: { deleteFeat: mocks.deleteFeat, updateFeat: mocks.update },
+  racesApi: { deleteRace: mocks.deleteRace },
+  classesApi: { deleteClass: mocks.deleteClass },
+  backgroundsApi: { deleteBackground: mocks.deleteBackground },
 }));
 vi.mock('../api/imagesApi', () => ({ imagesApi: { generateStandalone: mocks.generate, generateImage: mocks.generateCard, uploadImage: mocks.upload } }));
 vi.mock('../hooks/useContentPermissions', () => ({
@@ -46,6 +51,10 @@ vi.mock('./ItemPreview', () => ({ default: () => <div data-preview="card">Пре
 vi.mock('./SpellPreview', () => ({ default: () => <div data-preview="spell">Превью заклинания</div> }));
 vi.mock('./ActionPreview', () => ({ default: () => <div data-preview="action">Превью действия</div> }));
 vi.mock('./EffectPreview', () => ({ default: () => <div data-preview="effect">Превью эффекта</div> }));
+vi.mock('./FeatPreview', () => ({ default: () => <div data-preview="feat">Превью черты</div> }));
+vi.mock('./RacePreview', () => ({ default: () => <div data-preview="race">Превью вида</div> }));
+vi.mock('./ClassPreview', () => ({ default: () => <div data-preview="class">Превью класса</div> }));
+vi.mock('./BackgroundPreview', () => ({ default: () => <div data-preview="background">Превью предыстории</div> }));
 vi.mock('./ConceptPreview', () => ({ default: () => <div data-preview="concept">Превью понятия</div> }));
 vi.mock('./ResourcePreview', () => ({ default: () => <div data-preview="resource">Превью ресурса</div>, resourceCategoryLabel: () => 'Ресурс', resourceRechargeLabel: () => 'Отдых' }));
 vi.mock('./EntityRefPreview', () => ({ default: () => <div>Превью ссылки</div> }));
@@ -119,7 +128,7 @@ describe('canonical entity details in an inspection context', () => {
     expect(mocks.tagList).not.toHaveBeenCalled();
   }
 
-  it.each(['card', 'spell', 'action', 'effect', 'concept', 'resource'] as const)('keeps %s detail content and previews while removing every catalogue editor', async type => {
+  it.each(['card', 'spell', 'action', 'effect', 'concept', 'resource', 'feat', 'race', 'class', 'background'] as const)('keeps %s detail content and previews while removing every catalogue editor', async type => {
     await render(<EntityDetailProvider readOnly><Opener type={type} /></EntityDetailProvider>);
     await click(button('Открыть'));
     expect(document.body.textContent).toContain(`Сущность ${type}`);
@@ -131,7 +140,7 @@ describe('canonical entity details in an inspection context', () => {
     }
     expect(document.body.textContent).toContain('Метка библиотеки');
     expect([...document.querySelectorAll('a')].find(link => link.textContent === 'На полную страницу')?.getAttribute('href'))
-      .toBe(`/entity/${type === 'card' ? 'cards' : type === 'resource' ? 'resources' : type === 'concept' ? 'concepts' : `${type}s`}/${type}-one`);
+      .toBe(`/entity/${type === 'class' ? 'classes' : `${type}s`}/${type}-one`);
     expectNoAuthoring();
     expect(mocks.generate).not.toHaveBeenCalled();
     expect(mocks.update).not.toHaveBeenCalled();

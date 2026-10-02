@@ -10,7 +10,7 @@
 .ps-library-header p { margin: 5px 0 0; color: #727682; font-size: 12px; }
 .ps-library-close { border: 0; background: transparent; color: #737783; display: grid; place-items: center; width: 28px; height: 28px; padding: 3px; border-radius: 4px; }
 .ps-library-close:hover { background: #f0f2f7; }
-.ps-library-tabs { display: flex; gap: 20px; margin: 0 22px; border-bottom: 1px solid #e3e5e9; }
+.ps-library-tabs { display: flex; flex-wrap: wrap; column-gap: 20px; margin: 0 22px; border-bottom: 1px solid #e3e5e9; }
 .ps-library-tabs button { position: relative; border: 0; background: transparent; color: #797c86; padding: 10px 0; font-weight: 600; }
 .ps-library-tabs button[aria-selected="true"] { color: #365fd7; }
 .ps-library-tabs button[aria-selected="true"]::after { content: ''; position: absolute; height: 2px; background: #587eff; left: 0; right: 0; bottom: -1px; }
@@ -37,7 +37,7 @@
   .ps-library-backdrop { padding: 12px; }
   .ps-library-picker { max-height: calc(100dvh - 24px); }
   .ps-library-header { padding: 16px 15px 8px; }
-  .ps-library-tabs { margin: 0 15px; }
+  .ps-library-tabs { margin: 0 15px; column-gap: 14px; font-size: 12px; }
   .ps-library-search { margin: 13px 15px 10px; }
   .ps-library-footer { padding: 10px 15px; gap: 7px; }
   .ps-library-footer nav { gap: 6px; }

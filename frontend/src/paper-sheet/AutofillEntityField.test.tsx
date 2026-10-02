@@ -3,6 +3,7 @@ import { act, useMemo, useState, type Dispatch, type ReactNode, type SetStateAct
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Card, Spell } from '../types';
+import type { PaperLibraryEntity, PaperEntityType } from './references';
 import { AutofillEntityField } from './AutofillEntityField';
 import { Weapons } from './Weapons';
 import { Field, PaperSheetContext } from './controls';
@@ -11,10 +12,11 @@ import { calculateSheet, createPaperSheet, loadPaperSheet, savePaperSheet, type 
 const api = vi.hoisted(() => ({ card: vi.fn(), spell: vi.fn() }));
 vi.mock('../api/client', () => ({ cardsApi: { getCard: api.card }, spellsApi: { getSpell: api.spell } }));
 vi.mock('../components/EntityRefPreview', () => ({ default: () => <div>Каноничное превью</div> }));
-vi.mock('./LibraryPicker', () => ({ LibraryPicker: ({ onSelect }: { onSelect: (value: { type: 'card' | 'spell'; id: string; name: string }) => void }) => <div role="dialog">
+vi.mock('./LibraryPicker', () => ({ LibraryPicker: ({ onSelect, allowedTypes }: { onSelect: (value: PaperLibraryEntity) => void; allowedTypes?: readonly PaperEntityType[] }) => <div role="dialog" data-allowed-types={allowedTypes?.join(',')}>
   <button onClick={() => onSelect({ type: 'card', id: 'blade-a', name: 'Клинок' })}>Выбрать клинок</button>
   <button onClick={() => onSelect({ type: 'card', id: 'bow-b', name: 'Лук' })}>Выбрать лук</button>
   <button onClick={() => onSelect({ type: 'spell', id: 'spell-a', name: 'Заклинание' })}>Выбрать заклинание</button>
+  {(['action', 'feat', 'effect'] as const).map(type => <button key={type} onClick={() => onSelect({ type, id: `${type}-a`, name: type })}>Выбрать {type}</button>)}
 </div> }));
 
 const BLADE = { id: 'blade-a', name: 'Клинок', type: 'weapon', mechanics: { weapon_profile: {
@@ -147,5 +149,18 @@ describe('autofilling a paper library row', () => {
     expect(documentState).toEqual(initial);
     expect(api.card).not.toHaveBeenCalled();
     expect(container.querySelector('[role="alert"]')?.textContent).toContain('выберите заклинание');
+  });
+
+  it.each(['action', 'feat', 'effect'] as const)('rejects %s in weapon rows before fetching or changing any fields', async type => {
+    const initial = createPaperSheet();
+    initial.fields['weapon.0.name'] = 'Ручная запись';
+    await render(<Weapons />, initial);
+    await act(async () => label<HTMLButtonElement>('Из библиотеки: Название оружия 1').click());
+    expect(container.querySelector('[role="dialog"]')?.getAttribute('data-allowed-types')).toBe('card,spell');
+    await act(async () => [...container.querySelectorAll('button')].find(item => item.textContent === `Выбрать ${type}`)!.click());
+    expect(documentState).toEqual(initial);
+    expect(api.card).not.toHaveBeenCalled();
+    expect(api.spell).not.toHaveBeenCalled();
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('недоступен');
   });
 });

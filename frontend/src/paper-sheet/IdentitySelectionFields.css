@@ -1,0 +1,26 @@
+.paper-sheet .ps-identity-input { display: flex; align-items: center; min-width: 0; }
+.paper-sheet .ps-identity-input input { flex: 1; width: 0; min-width: 0; }
+.paper-sheet .ps-identity-input button { display: grid; place-items: center; flex: none; width: 16px; height: 20px; border: 0; padding: 0; color: #75757c; background: transparent; cursor: pointer; }
+.paper-sheet .ps-identity-input button:hover, .paper-sheet .ps-identity-input button:focus-visible { color: #315dcb; background: #edf2ff; }
+.paper-sheet .ps-identity-current-preview { flex: none; display: flex; }
+.paper-sheet .ps-identity-selection > label { font-size: 9px; text-transform: uppercase; line-height: 13px; }
+.ps-identity-suggestions { position: fixed; z-index: 9000; max-height: min(340px, 55vh); overflow: auto; border: 1px solid #b4b4ba; border-radius: 5px; background: white; color: #17171b; box-shadow: 0 8px 24px #0002; padding: 4px; font: 13px Arial, sans-serif; }
+.ps-identity-suggestions p { margin: 8px; font-size: 12px; line-height: 1.4; }
+.ps-identity-suggestions button { font: inherit; }
+.ps-identity-option-preview { display: block; }
+.ps-identity-option { display: block; border: 0; border-radius: 3px; width: 100%; padding: 8px 9px; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.ps-identity-option:hover, .ps-identity-option[aria-selected="true"] { background: #edf2ff; color: #224dab; }
+.ps-identity-dialog-backdrop { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; padding: 20px; background: #2228; }
+.ps-identity-dialog { box-sizing: border-box; width: min(440px, 100%); max-height: 85vh; overflow: auto; padding: 18px; border: 1px solid #aaa; border-radius: 7px; background: white; color: #1b1b20; box-shadow: 0 16px 50px #0004; font: 14px Arial, sans-serif; }
+.ps-identity-dialog header { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.ps-identity-dialog h2 { margin: 0; font-size: 17px; }
+.ps-identity-dialog p { color: #62626b; line-height: 1.4; }
+.ps-identity-dialog ul { list-style: none; margin: 16px 0; padding: 0; }
+.ps-identity-dialog li { margin: 5px 0; }
+.ps-identity-dialog button { border: 1px solid #c7c7cd; border-radius: 4px; background: white; color: inherit; padding: 7px 10px; cursor: pointer; font: inherit; }
+.ps-identity-dialog button:hover { background: #edf2ff; }
+.ps-identity-dialog .ps-identity-dialog-option { width: 100%; text-align: left; }
+.ps-identity-dialog footer { display: flex; justify-content: flex-end; }
+@media print {
+  .paper-sheet .ps-identity-input button, .ps-identity-suggestions, .ps-identity-dialog-backdrop { display: none !important; }
+}

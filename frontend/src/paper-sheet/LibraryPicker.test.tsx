@@ -6,9 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LibraryPicker } from './LibraryPicker';
 import { PinModeProvider } from '../hooks/usePinMode';
 import HoverCard from '../components/HoverCard';
+import type { PaperEntityType } from './references';
 
-const api = vi.hoisted(() => ({ cards: vi.fn(), spells: vi.fn(), preview: vi.fn() }));
-vi.mock('../api/client', () => ({ cardsApi: { getCards: api.cards }, spellsApi: { getSpells: api.spells } }));
+const api = vi.hoisted(() => ({ cards: vi.fn(), spells: vi.fn(), actions: vi.fn(), feats: vi.fn(), effects: vi.fn(), preview: vi.fn() }));
+vi.mock('../api/client', () => ({ cardsApi: { getCards: api.cards }, spellsApi: { getSpells: api.spells }, actionsApi: { getActions: api.actions }, featsApi: { getFeats: api.feats }, effectsApi: { getEffects: api.effects } }));
 vi.mock('../components/EntityRefPreview', () => ({ default: (props: { type: string; id: string }) => { api.preview(props); return <div>Каноничное превью {props.id}</div>; } }));
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -33,6 +34,9 @@ describe('paper sheet library picker', () => {
     vi.clearAllMocks();
     api.cards.mockResolvedValue(cards());
     api.spells.mockResolvedValue(spells());
+    api.actions.mockResolvedValue({ actions: [], total: 0 });
+    api.feats.mockResolvedValue({ feats: [], total: 0 });
+    api.effects.mockResolvedValue({ effects: [], total: 0 });
     container = document.createElement('div');
     trigger = document.createElement('button');
     trigger.textContent = 'Открыть библиотеку';
@@ -51,7 +55,7 @@ describe('paper sheet library picker', () => {
   const labelled = (label: string) => [...dialog().querySelectorAll<HTMLElement>('[aria-label]')].find(element => element.getAttribute('aria-label') === label)!;
   const button = (text: string) => [...dialog().querySelectorAll<HTMLButtonElement>('button')].find(element => element.textContent?.trim() === text)!;
   const click = async (element: HTMLElement) => { await act(async () => element.click()); };
-  const render = async (initialType: 'card' | 'spell' = 'card') => { await act(async () => root.render(<LibraryPicker initialType={initialType} onSelect={select} onClose={close} />)); };
+  const render = async (initialType: PaperEntityType = 'card', allowedTypes?: readonly PaperEntityType[]) => { await act(async () => root.render(<LibraryPicker initialType={initialType} allowedTypes={allowedTypes} onSelect={select} onClose={close} />)); };
   const input = async (value: string) => {
     await act(async () => {
       const search = labelled('Поиск в библиотеке');
@@ -74,6 +78,72 @@ describe('paper sheet library picker', () => {
     expect(select).toHaveBeenCalledExactlyOnceWith({ type: 'card', id: 'sword-2', name: 'Меч' });
     expect(close).not.toHaveBeenCalled();
     expect(api.cards).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['action', 'actions', 'Рывок'], ['feat', 'feats', 'Бдительный'], ['effect', 'effects', 'Защита'],
+  ] as const)('loads, previews and paginates %s using its canonical list API', async (type, collection, name) => {
+    const entity = { id: `${type}-two`, name };
+    api[collection].mockResolvedValue({ [collection]: [entity], total: 21 });
+    await render(type);
+    expect(api[collection]).toHaveBeenCalledExactlyOnceWith({ page: 1, limit: 20, fields: 'list', search: '' });
+    expect(dialog().querySelectorAll('[role="tab"]')).toHaveLength(5);
+    await click(labelled('Следующая страница библиотеки'));
+    expect(api[collection]).toHaveBeenLastCalledWith({ page: 2, limit: 20, fields: 'list', search: '' });
+    const result = dialog().querySelector<HTMLButtonElement>('.ps-library-result')!;
+    await act(async () => result.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })));
+    expect(api.preview).toHaveBeenCalledWith({ type, id: entity.id });
+    await click(result);
+    expect(select).toHaveBeenCalledExactlyOnceWith({ type, ...entity });
+    expect(api.cards).not.toHaveBeenCalled();
+    expect(api.spells).not.toHaveBeenCalled();
+  });
+
+  it.each([['action', 'actions'], ['feat', 'feats'], ['effect', 'effects']] as const)('keeps %s failures recoverable without falling back to another catalogue', async (type, collection) => {
+    api[collection].mockRejectedValueOnce(new Error('Network Error')).mockResolvedValueOnce({ [collection]: [], total: 0 });
+    await render(type);
+    expect(dialog().querySelector('[role="alert"]')?.textContent).toContain('локальный сервер');
+    await click(button('Повторить'));
+    expect(api[collection]).toHaveBeenCalledTimes(2);
+    expect(dialog().textContent).toContain('В этом разделе пока нет записей.');
+    expect(api.cards).not.toHaveBeenCalled();
+    expect(api.spells).not.toHaveBeenCalled();
+  });
+
+  it('falls back to an allowed initial type and keyboard navigation skips excluded tabs', async () => {
+    await render('feat', ['card', 'spell']);
+    expect([...dialog().querySelectorAll('[role="tab"]')].map(tab => tab.textContent)).toEqual(['Предметы', 'Заклинания']);
+    expect(api.cards).toHaveBeenCalledOnce();
+    expect(api.feats).not.toHaveBeenCalled();
+    await act(async () => button('Предметы').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })));
+    expect(document.activeElement).toBe(button('Заклинания'));
+    expect(api.spells).toHaveBeenCalledOnce();
+    await act(async () => button('Заклинания').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true })));
+    expect(document.activeElement).toBe(button('Предметы'));
+    expect(api.actions).not.toHaveBeenCalled();
+    expect(api.effects).not.toHaveBeenCalled();
+  });
+
+  it('ignores a removed type response when the allowed types change while loading', async () => {
+    const pending = deferred<{ effects: { id: string; name: string }[]; total: number }>();
+    api.effects.mockReturnValueOnce(pending.promise);
+    api.spells.mockResolvedValue(spells([{ id: 'light', name: 'Свет' }]));
+    await render('effect');
+    await render('effect', ['spell']);
+    await act(async () => pending.resolve({ effects: [{ id: 'old', name: 'Старый эффект' }], total: 1 }));
+    expect(dialog().querySelectorAll('[role="tab"]')).toHaveLength(1);
+    expect(dialog().textContent).not.toContain('Старый эффект');
+    await click(dialog().querySelector<HTMLButtonElement>('.ps-library-result')!);
+    expect(select).toHaveBeenCalledExactlyOnceWith({ type: 'spell', id: 'light', name: 'Свет' });
+  });
+
+  it('does not load or offer any type when none is allowed', async () => {
+    await render('card', []);
+    for (const method of [api.cards, api.spells, api.actions, api.feats, api.effects]) expect(method).not.toHaveBeenCalled();
+    expect(dialog().querySelectorAll('[role="tab"]')).toHaveLength(0);
+    expect(dialog().querySelectorAll('.ps-library-result')).toHaveLength(0);
+    expect(dialog().textContent).toContain('нет доступных типов');
+    expect((labelled('Поиск в библиотеке') as HTMLInputElement).disabled).toBe(true);
   });
 
   it('keeps picker previews passive and closes them on leave even when global pin mode is active', async () => {

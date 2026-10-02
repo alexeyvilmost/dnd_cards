@@ -1,19 +1,23 @@
 import { paperExtraSections } from './lssExchange';
-import type { PaperSheetDocument } from './model';
+import type { PaperSheetDocument, SheetCalculation } from './model';
+import { PAPER_BLOCKS } from './blocks';
+import { plainPaperEntities } from './references';
+import { paperSectionText } from './sectionText';
 
 export interface PrintSection { title: string; text: string }
-const plain = (text: string) => text.replace(/\[\[([^\]|]+)\|(?:card|spell):[\w-]+\]\]/g, '$1');
+const plain = plainPaperEntities;
 
 /** Keep the four classic pages; put clipped/hidden content on explicit continuation pages. */
-export function printSections(doc: PaperSheetDocument, clipped: string[]): PrintSection[] {
+export function printSections(doc: PaperSheetDocument, clipped: string[], calculations?: SheetCalculation): PrintSection[] {
   const result = paperExtraSections(doc);
-  for (const key of new Set([...clipped, 'goals', 'treasure'])) {
-    const text = doc.sections[key]?.text;
-    if (text) result.push({ title: doc.fields[`heading.${key}`] || key, text });
+  const continued = new Set([...clipped, ...doc.hiddenBlocks]);
+  for (const key of new Set([...continued, 'goals', 'treasure'])) {
+    const text = paperSectionText(doc, key, calculations);
+    if (text) result.push({ title: doc.fields[`heading.${key}`] || PAPER_BLOCKS.find(block => block.id === key)?.label || key, text });
   }
-  if (clipped.includes('inventory')) result.push({ title: 'Инвентарь — полный список', text: Object.entries(doc.fields).filter(([k, v]) => /^inventory\.\d+\.item$/.test(k) && v).map(([k, v]) => `${plain(v)} × ${doc.fields[k.replace(/item$/, 'quantity')] || '1'}`).join('\n') });
-  if (clipped.includes('weapons')) result.push({ title: 'Оружие и боевые заговоры — полный список', text: Array.from({ length: doc.weaponRows }, (_, i) => ['name', 'bonus', 'damage', 'notes'].map(k => doc.fields[`weapon.${i}.${k}`]).filter(Boolean).join(' · ')).filter(Boolean).join('\n') });
-  if (clipped.includes('spells')) result.push({ title: 'Заклинания — полный список', text: Array.from({ length: doc.spellRows }, (_, i) => {
+  if (continued.has('inventory')) result.push({ title: 'Инвентарь — полный список', text: Object.entries(doc.fields).filter(([k, v]) => /^inventory\.\d+\.item$/.test(k) && v).map(([k, v]) => `${plain(v)} × ${doc.fields[k.replace(/item$/, 'quantity')] || '1'}`).join('\n') });
+  if (continued.has('weapons')) result.push({ title: 'Оружие и боевые заговоры — полный список', text: Array.from({ length: doc.weaponRows }, (_, i) => ['name', 'bonus', 'damage', 'notes'].map(k => doc.fields[`weapon.${i}.${k}`]).filter(Boolean).join(' · ')).filter(Boolean).join('\n') });
+  if (continued.has('spells') || continued.has('prepared-spells')) result.push({ title: 'Заклинания — полный список', text: Array.from({ length: doc.spellRows }, (_, i) => {
     if (!doc.fields[`spellRow${i}Name`]) return '';
     const text = ['Level', 'Name', 'Time', 'Range', 'Notes'].map(k => doc.fields[`spellRow${i}${k}`]).filter(Boolean);
     for (const [key, name] of [['Concentration', 'концентрация'], ['Ritual', 'ритуал'], ['Material', 'материальный компонент']]) if (doc.checks[`spellRow${i}${key}`]) text.push(name);
@@ -36,7 +40,7 @@ export function wrapPrintText(text: string, fits: (line: string) => boolean): st
   return result;
 }
 
-export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocument): HTMLElement {
+export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocument, calculations?: SheetCalculation): HTMLElement {
   const host = document.createElement('div');
   host.className = 'paper-sheet ps-print-snapshot';
   host.setAttribute('aria-hidden', 'true');
@@ -71,8 +75,8 @@ export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocume
       }
       host.append(page);
       for (const note of page.querySelectorAll<HTMLElement>('[data-note-section]')) {
-        const body = note.querySelector<HTMLElement>('.ps-note-text');
-        if (body && (body.scrollHeight > body.clientHeight + 2 || body.scrollWidth > body.clientWidth + 2)) {
+        const bodies = note.querySelectorAll<HTMLElement>('.ps-note-text, .ps-note-generated');
+        if ([...bodies].some(body => body.scrollHeight > body.clientHeight + 2 || body.scrollWidth > body.clientWidth + 2)) {
           const key = note.dataset.noteSection!;
           clipped.push(key);
           const heading = note.querySelector<HTMLInputElement>('.ps-note-heading input')?.value;
@@ -110,7 +114,7 @@ export function buildPrintSnapshot(workspace: HTMLElement, doc: PaperSheetDocume
       }
       const p = document.createElement('p'); p.textContent = line || '\u00a0'; if (heading) p.className = 'ps-print-section-title'; appendix!.append(p); count++;
     };
-    for (const section of printSections(doc, clipped)) {
+    for (const section of printSections(doc, clipped, calculations)) {
       if (count > 54) count = 58;
       for (const line of wrapPrintText(section.title, line => context.measureText(line).width <= 750)) addLine(line, true);
       for (const line of wrapPrintText(section.text, line => context.measureText(line).width <= 780)) addLine(line);

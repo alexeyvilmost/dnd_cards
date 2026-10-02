@@ -4,8 +4,8 @@
  * затем рендерит нужную модалку. Удаление — реальный вызов API + закрытие.
  */
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
-import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi } from '../api/client';
+import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable, Feat, Race, CharacterClass, Background } from '../types';
+import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi, featsApi, racesApi, classesApi, backgroundsApi } from '../api/client';
 import type { EntityRefType } from './EntityRefRegistry';
 import { useEntityRef, evictEntity } from './EntityRefRegistry';
 import { EntityDetailContext, useEntityDetail } from '../contexts/entityDetail';
@@ -17,6 +17,10 @@ const CardDetailModal = lazy(() => import('./CardDetailModal'));
 const ConceptDetailModal = lazy(() => import('./ConceptDetailModal'));
 const ResourceDetailModal = lazy(() => import('./ResourceDetailModal'));
 const VariableDetailModal = lazy(() => import('./VariableDetailModal'));
+const FeatDetailModal = lazy(() => import('./FeatDetailModal'));
+const RaceDetailModal = lazy(() => import('./RaceDetailModal'));
+const ClassDetailModal = lazy(() => import('./ClassDetailModal'));
+const BackgroundDetailModal = lazy(() => import('./BackgroundDetailModal'));
 
 const DELETERS: Record<EntityRefType, (id: string) => Promise<void>> = {
   card: (id) => cardsApi.deleteCard(id),
@@ -26,6 +30,10 @@ const DELETERS: Record<EntityRefType, (id: string) => Promise<void>> = {
   concept: (id) => conceptsApi.deleteConcept(id),
   resource: (id) => resourcesApi.deleteResource(id),
   variable: (id) => variablesApi.deleteVariable(id),
+  feat: (id) => featsApi.deleteFeat(id),
+  race: (id) => racesApi.deleteRace(id),
+  class: (id) => classesApi.deleteClass(id),
+  background: (id) => backgroundsApi.deleteBackground(id),
 };
 
 const stateBackdrop: React.CSSProperties = {
@@ -97,6 +105,10 @@ const DetailHost = ({ type, id, onClose, readOnly }: { type: EntityRefType; id: 
     case 'concept': modal = <ConceptDetailModal concept={entity as Concept} isOpen onClose={onClose} onDelete={handleDelete} />; break;
     case 'resource': modal = <ResourceDetailModal resource={entity as ResourceDefinition} isOpen onClose={onClose} onDelete={handleDelete} />; break;
     case 'variable': modal = <VariableDetailModal variable={entity as Variable} isOpen onClose={onClose} onDelete={handleDelete} />; break;
+    case 'feat': modal = <FeatDetailModal feat={entity as Feat} isOpen onClose={onClose} onDelete={handleDelete} onUpdated={onImageUpdated} />; break;
+    case 'race': modal = <RaceDetailModal race={entity as Race} isOpen onClose={onClose} onDelete={handleDelete} />; break;
+    case 'class': modal = <ClassDetailModal characterClass={entity as CharacterClass} isOpen onClose={onClose} onDelete={handleDelete} />; break;
+    case 'background': modal = <BackgroundDetailModal background={entity as Background} isOpen onClose={onClose} onDelete={handleDelete} />; break;
   }
   return (
     <Suspense fallback={<DetailState onClose={onClose}><div role="status">Открываем карточку…</div></DetailState>}>

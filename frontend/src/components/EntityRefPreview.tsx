@@ -3,7 +3,7 @@
  * существующий *Preview. Единая точка «ссылка → превью» — без переписывания превью.
  */
 import type { CSSProperties } from 'react';
-import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
+import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable, Feat, Race, CharacterClass, Background } from '../types';
 import type { EntityRefType } from './EntityRefRegistry';
 import { useEntityRef } from './EntityRefRegistry';
 import { useSiteSettings } from '../settings';
@@ -15,6 +15,10 @@ import EffectPreview from './EffectPreview';
 import ConceptPreview from './ConceptPreview';
 import ResourcePreview from './ResourcePreview';
 import VariablePreview from './VariablePreview';
+import FeatPreview from './FeatPreview';
+import RacePreview from './RacePreview';
+import ClassPreview from './ClassPreview';
+import BackgroundPreview from './BackgroundPreview';
 
 interface EntityRefPreviewProps {
   type: EntityRefType;
@@ -41,6 +45,10 @@ const EntityRefPreview: React.FC<EntityRefPreviewProps> = ({ type, id }) => {
     case 'concept': return <ConceptPreview concept={entity as Concept} disableHover />;
     case 'resource': return <ResourcePreview resource={entity as ResourceDefinition} disableHover />;
     case 'variable': return <VariablePreview variable={entity as Variable} disableHover />;
+    case 'feat': return <FeatPreview feat={entity as Feat} disableHover />;
+    case 'race': return <RacePreview race={entity as Race} disableHover />;
+    case 'class': return <ClassPreview characterClass={entity as CharacterClass} disableHover />;
+    case 'background': return <BackgroundPreview background={entity as Background} disableHover />;
     default: return null;
   }
 };

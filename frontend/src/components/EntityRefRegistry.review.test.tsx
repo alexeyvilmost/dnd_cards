@@ -13,6 +13,8 @@ vi.mock('../api/client', () => ({
   actionsApi: { getAction: mocks.read }, effectsApi: { getEffect: mocks.read },
   conceptsApi: { getConcept: mocks.read }, resourcesApi: { getResource: mocks.read },
   variablesApi: { getVariable: mocks.read },
+  featsApi: { getFeat: mocks.read }, racesApi: { getRace: mocks.read },
+  classesApi: { getClass: mocks.read }, backgroundsApi: { getBackground: mocks.read },
 }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -31,6 +33,22 @@ describe('entity reference cache after a successful review update', () => {
     root = createRoot(host);
   });
   afterEach(async () => { await act(async () => root.unmount()); });
+
+  it.each([['feat', 'feats'], ['race', 'races'], ['class', 'classes'], ['background', 'backgrounds']] as const)('resolves and refreshes canonical %s references using the matching catalogue cache prefix', async (type, collection) => {
+    const first = { id: `${type}-id`, support: { status: 'not_verified' } };
+    const updated = { ...first, support: { status: 'verified' } };
+    mocks.read.mockResolvedValueOnce(first).mockResolvedValueOnce(updated);
+    await act(async () => root.render(<NestedReference type={type} id={`${type}-slug`} />));
+    expect(host.textContent).toBe('not_verified');
+    expect(mocks.read).toHaveBeenCalledExactlyOnceWith(`${type}-slug`);
+    expect(getCachedEntity(type, first.id)).toEqual(first);
+    await act(async () => root.render(null));
+    await act(async () => { bustPrefix(`/api/${collection}`); });
+    expect(getCachedEntity(type, first.id)).toBeNull();
+    await act(async () => root.render(<NestedReference type={type} id={first.id} />));
+    expect(host.textContent).toBe('verified');
+    expect(mocks.read).toHaveBeenLastCalledWith(first.id);
+  });
 
   it.each([false,true])('patches a nested preview without loading again (read pending=%s)', async pending => {
     const stale = { id: 'resource-one', support: { status: 'not_verified' } };

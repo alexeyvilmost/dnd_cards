@@ -7,7 +7,7 @@ import { EntityDetailContext } from '../contexts/entityDetail';
 import { EntityField } from './EntityField';
 import { Note, PaperSheetContext } from './controls';
 import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet, loadPaperSheet, savePaperSheet, type PaperSheetDocument } from './model';
-import { paperEntityToken, parsePaperEntityToken, type PaperEntityType, type PaperLibraryEntity } from './references';
+import { paperEntityToken, parsePaperEntityToken, plainPaperEntities, type PaperEntityType, type PaperLibraryEntity } from './references';
 
 const { previewCalls } = vi.hoisted(() => ({ previewCalls: vi.fn() }));
 
@@ -21,9 +21,9 @@ vi.mock('../components/EntityRefPreview', () => ({
 }));
 
 vi.mock('./LibraryPicker', () => ({
-  LibraryPicker: ({ initialType, onSelect, onClose }: {
-    initialType?: PaperEntityType; onSelect: (entity: PaperLibraryEntity) => void; onClose: () => void;
-  }) => <div role="dialog" aria-label="Каталог для проверки" data-initial-type={initialType}>
+  LibraryPicker: ({ initialType, allowedTypes, onSelect, onClose }: {
+    initialType?: PaperEntityType; allowedTypes?: readonly PaperEntityType[]; onSelect: (entity: PaperLibraryEntity) => void; onClose: () => void;
+  }) => <div role="dialog" aria-label="Каталог для проверки" data-initial-type={initialType} data-allowed-types={allowedTypes?.join(',')}>
     {ENTITIES.map(entity => <button key={entity.id} type="button" onClick={() => onSelect(entity)}>Выбрать {entity.name}</button>)}
     <button type="button" onClick={onClose}>Отмена выбора</button>
   </div>,
@@ -32,6 +32,9 @@ vi.mock('./LibraryPicker', () => ({
 const ENTITIES: PaperLibraryEntity[] = [
   { type: 'card', id: 'silver-blade', name: 'Серебряный клинок' },
   { type: 'spell', id: 'guiding-light', name: 'Путеводный свет' },
+  { type: 'action', id: 'dash', name: 'Рывок' },
+  { type: 'feat', id: 'alert', name: 'Бдительный' },
+  { type: 'effect', id: 'ward', name: 'Защита' },
 ];
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -120,9 +123,29 @@ describe('paper sheet library references', () => {
   it('escapes reference delimiters in name snapshots and does not parse malformed or unsupported references', () => {
     const token = paperEntityToken({ type: 'card', id: 'safe-id', name: 'Клинок [лунный] | особый\nредкий' });
     expect(parsePaperEntityToken(token)).toEqual({ type: 'card', id: 'safe-id', name: 'Клинок лунный особый редкий' });
-    for (const raw of ['[[Имя|card:]]', '[[Имя|action:ability]]', 'prefix [[Имя|spell:spell-id]]', '[[Имя|card:id]] tail', '[[Имя|spell:javascript:alert(1)]]']) {
+    for (const raw of ['[[Имя|card:]]', '[[Имя|concept:ability]]', 'prefix [[Имя|spell:spell-id]]', '[[Имя|card:id]] tail', '[[Имя|spell:javascript:alert(1)]]']) {
       expect(parsePaperEntityToken(raw), raw).toBeNull();
     }
+  });
+
+  it('converts all five reference types to names for external text, leaving other syntax intact', () => {
+    const extra = '{{[STR]}} {{ресурс:Заряды|1|3}} [[Вид|race:elf]]';
+    const text = `${ENTITIES.map(paperEntityToken).join('\n')}\n${extra}`;
+    expect(plainPaperEntities(text)).toBe(`${ENTITIES.map(entity => entity.name).join('\n')}\n${extra}`);
+    expect(plainPaperEntities(text)).toBe(plainPaperEntities(text));
+  });
+
+  it.each(['spell', 'action', 'feat', 'effect'] as const)('rejects a disallowed %s selection without changing the item field or invoking its callback', async type => {
+    const doc = createPaperSheet();
+    doc.fields.item = 'Исходное название';
+    const select = vi.fn();
+    await render(<EntityField field="item" label="Предмет" allowedTypes={['card']} onSelect={select} />, doc);
+    await click(labelled('Из библиотеки: Предмет'));
+    expect(labelled('Каталог для проверки').dataset.allowedTypes).toBe('card');
+    await click(button(`Выбрать ${ENTITIES.find(entity => entity.type === type)!.name}`));
+    expect(select).not.toHaveBeenCalled();
+    expect(currentDocument.fields.item).toBe('Исходное название');
+    expect(container.querySelector('[role="alert"]')?.textContent).toContain('выберите предмет');
   });
 
   it.each(ENTITIES)('shows $type names in bold, uses the canonical hover preview and opens canonical detail without editing the note', async entity => {

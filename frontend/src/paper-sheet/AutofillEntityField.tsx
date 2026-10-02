@@ -7,6 +7,8 @@ import HoverCard from '../components/HoverCard';
 import SpellPreview from '../components/SpellPreview';
 import type { PaperEntityType, PaperLibraryEntity } from './references';
 import { applyPaperRowPatch, canApplyPaperRowPatch, preparedSpellPatch, weaponCardPatch, weaponSpellPatch, type PaperRowKind } from './rowAutofill';
+const WEAPON_TYPES = ['card', 'spell'] as const;
+const PREPARED_SPELL_TYPES = ['spell'] as const;
 
 export function AutofillEntityField({ kind, row, field, label, initialType = 'card' }: { kind: PaperRowKind; row: number; field: string; label: string; initialType?: PaperEntityType }) {
   const { doc, setDoc } = usePaperSheet();
@@ -23,6 +25,7 @@ export function AutofillEntityField({ kind, row, field, label, initialType = 'ca
     const original = latestDocument.current;
     setMessage('');
     if (kind === 'preparedSpell' && entity.type !== 'spell') { setLoading(false); setMessage('Для этой строки выберите заклинание.'); return; }
+    if (entity.type !== 'card' && entity.type !== 'spell') { setLoading(false); setMessage('Для этой строки выберите предмет или заклинание.'); return; }
     setLoading(true);
     try {
       const patch = entity.type === 'card'
@@ -39,7 +42,7 @@ export function AutofillEntityField({ kind, row, field, label, initialType = 'ca
     }
   };
   return <div className="ps-autofill-field" style={{ minWidth: 0, position: 'relative' }} aria-busy={loading}>
-    <EntityField field={field} label={label} initialType={initialType} onSelect={entity => void select(entity)} />
+    <EntityField field={field} label={label} initialType={initialType} allowedTypes={kind === 'preparedSpell' ? PREPARED_SPELL_TYPES : WEAPON_TYPES} onSelect={entity => void select(entity)} />
     {lssSpell && <HoverCard content={<SpellPreview spell={lssSpell} disableHover />}><button type="button" className="ps-lss-preview" aria-label={`Описание LSS: ${lssSpell.name}`} onClick={() => setSpellOpen(true)}>LSS</button></HoverCard>}
     {spellOpen && lssSpell && <Dialog heading={lssSpell.name} onClose={() => setSpellOpen(false)}><SpellPreview spell={lssSpell} disableHover /></Dialog>}
     {loading && <span role="status" className="ps-autofill-status">Заполнение…</span>}

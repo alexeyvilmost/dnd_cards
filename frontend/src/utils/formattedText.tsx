@@ -59,7 +59,7 @@ const ICON_RE = new RegExp(`:(${ICON_TOKEN_NAMES.join('|')}):`);
 const COLOR_OPEN_RE = new RegExp(`\\[(${COLOR_TOKEN_NAMES.join('|')})\\]`);
 const colorClose = (dmg: string) => `[/${dmg}]`;
 // [[Очарование|concept:saving_throw]] — ссылка на сущность (label | type:id)
-const LINK_RE = /\[\[([^\]|]+)\|(card|spell|action|effect|concept):([^\]]+)\]\]/;
+const LINK_RE = /\[\[([^\]|]+)\|(card|spell|action|effect|concept|feat|race|class|background|resource|variable):([^\]]+)\]\]/;
 
 const findItalicIndex = (text: string, from: number): number => {
   for (let i = from; i < text.length; i++) {

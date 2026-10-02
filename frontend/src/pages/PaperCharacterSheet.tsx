@@ -11,6 +11,10 @@ import type { Card } from '../types';
 import { attachLssSpells, exportLssSheet, importSheetJSON, paperExtraSections } from '../paper-sheet/lssExchange';
 import { buildPrintSnapshot, downloadPaperPDF } from '../paper-sheet/print';
 import { PAPER_BLOCKS, blockVisible, restoreBlock, visibleBlocks } from '../paper-sheet/blocks';
+import { IdentitySelectionFields } from '../paper-sheet/IdentitySelectionFields';
+import { currentPaperIdentityFeatures, paperIdentityEntries } from '../paper-sheet/identity';
+import { usePaperIdentityFeatures } from '../paper-sheet/usePaperIdentityFeatures';
+import { resetPaperNoteHistory } from '../paper-sheet/noteHistory';
 import '../paper-sheet/PaperCharacterSheet.css';
 import '../paper-sheet/print.css';
 
@@ -18,7 +22,7 @@ function Identity() {
   const { doc, setField } = usePaperSheet();
   return <div className="ps-identity-row">
     <div className="ps-identity"><div className="ps-identity-fields">
-      {[['name', 'Имя персонажа'], ['background', 'Предыстория'], ['class', 'Класс'], ['species', 'Вид'], ['subclass', 'Подкласс']].map(([key, label]) => <label key={key} className={`ps-line-label ps-id-${key}`}><Field field={key} label={label} /><span>{label}</span></label>)}
+      <IdentitySelectionFields />
     </div><div className="ps-level"><label><Field field="level" label="Уровень" /><span>Уровень</span></label><label className="ps-xp"><Field field="xp" label="Опыт" /><span>Опыт</span></label></div></div>
     <div className="ps-armor"><div className="ps-shield"><h2>КД</h2><FieldSettings field="ac" label="КД" /><Field field="ac" label="КД" /><span>Щит</span><Check field="shield" label="Щит" diamond /></div></div>
     <div className="ps-vitals">
@@ -58,7 +62,7 @@ function Proficiencies() {
 }
 
 function MainPage() {
-  const { doc } = usePaperSheet();
+  const { doc, calculations } = usePaperSheet();
   const bottom = visibleBlocks(doc, ['attacks', 'traits']);
   const featuresVisible = blockVisible(doc, 'features');
   const proficienciesVisible = blockVisible(doc, 'proficiencies');
@@ -70,7 +74,7 @@ function MainPage() {
       <Frame heading="Героическое вдохновение" className="ps-inspiration"><div><Check field="inspiration" label="Героическое вдохновение" /></div></Frame>
     </div><div className="ps-mental"><Ability ability="int" /><Ability ability="wis" /><Ability ability="cha" /></div></div><Proficiencies /></div>
     <div className="ps-right-block"><div className="ps-quick-stats">{[['initiative', 'Инициатива'], ['speed', 'Скорость'], ['passive', 'П. восприятие']].map(([key, label]) => <Frame key={key} heading={label}><FieldSettings field={key} label={label} /><Field field={key} label={label} signed={key === 'initiative'} /></Frame>)}<Frame heading="Состояния"><Field field="conditions" label="Состояния" /></Frame></div>
-      <Weapons /><Note section="features" heading="Умения и способности" className="ps-main-features" />{bottom.length > 0 && <div className={`ps-bottom-notes ${bottom.length === 1 ? 'ps-bottom-notes-single' : ''} ${featuresVisible ? '' : 'ps-bottom-notes-expanded'}`}><Note section="attacks" heading="Атаки и заклинания" /><Note section="traits" heading="Черты" /></div>}
+      <Weapons /><Note section="features" heading="Умения и способности" className="ps-main-features" generatedEntities={paperIdentityEntries(doc, 'features', calculations)} />{bottom.length > 0 && <div className={`ps-bottom-notes ${bottom.length === 1 ? 'ps-bottom-notes-single' : ''} ${featuresVisible ? '' : 'ps-bottom-notes-expanded'}`}><Note section="attacks" heading="Атаки и заклинания" /><Note section="traits" heading="Черты" generatedEntities={paperIdentityEntries(doc, 'traits', calculations)} /></div>}
     </div></div>
   </>;
 }
@@ -85,6 +89,8 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
 } = {}) {
   const [initial] = useState(() => initialDocument ? { document: initialDocument, error: undefined } : loadPaperSheet());
   const [doc, setDoc] = useState(initial.document);
+  const latestDocument = useRef(doc);
+  latestDocument.current = doc;
   const [saveError, setSaveError] = useState(initial.error ?? '');
   const [message, setMessage] = useState('');
   const [activePage, setActivePage] = useState('main');
@@ -135,6 +141,7 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
   }, [effectsKey, effectReload]);
   const equipment = useMemo(() => projectPaperEquipment(doc, itemCards, grantedEffects), [doc, itemCards, grantedEffects]);
   const calculations = useMemo(() => calculateSheet(doc, equipment), [doc, equipment]);
+  const identityStatus = usePaperIdentityFeatures(doc, setDoc, calculations);
   const setField = (key: string, value: string) => setDoc(current => ({ ...current, fields: { ...current.fields, [key]: value } }));
   useEffect(() => {
     if (lastSavedDocument.current === doc) return;
@@ -152,11 +159,11 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
   const scale = Math.min(1, availableWidth / 880) * zoom / 100;
   useEffect(() => {
     const clear = () => { printSnapshot.current?.remove(); printSnapshot.current = null; };
-    const prepare = () => { clear(); if (workspace.current) printSnapshot.current = buildPrintSnapshot(workspace.current, doc); };
+    const prepare = () => { clear(); if (workspace.current) printSnapshot.current = buildPrintSnapshot(workspace.current, doc, calculations); };
     window.addEventListener('beforeprint', prepare);
     window.addEventListener('afterprint', clear);
     return () => { clear(); window.removeEventListener('beforeprint', prepare); window.removeEventListener('afterprint', clear); };
-  }, [doc]);
+  }, [doc, calculations]);
   const print = () => { if (document.activeElement instanceof HTMLElement) document.activeElement.blur(); requestAnimationFrame(() => window.print()); };
   const pdf = async () => {
     if (!workspace.current || pdfBusy) return;
@@ -166,7 +173,7 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
       if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
       await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
       await document.fonts.ready;
-      snapshot = buildPrintSnapshot(workspace.current, doc);
+      snapshot = buildPrintSnapshot(workspace.current, doc, calculations);
       await downloadPaperPDF(snapshot, doc.fields.name || 'Бумажный лист');
       setMessage('PDF сохранён. Неуместившиеся записи вынесены в приложение.');
     } catch (error) { setMessage(`Не удалось создать PDF: ${error instanceof Error ? error.message : 'повторите попытку'}. JSON сохраняет все данные.`); }
@@ -176,6 +183,7 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
   const download = (format: 'boh' | 'lss' = 'boh') => {
     try {
       if (format === 'lss' && (itemLoading || itemIds.some(id => !itemCards.has(id)) || grantedEffects?.key !== effectsKey || itemLoadError || effectLoadError)) throw new Error('Дождитесь загрузки снаряжения или устраните ошибку перед экспортом расчётов в LSS. JSON Bag of Holding доступен всегда.');
+      if (format === 'lss' && doc.identity && Object.values(doc.identity).some(Boolean) && !currentPaperIdentityFeatures(doc, calculations)) throw new Error('Дождитесь обновления особенностей происхождения и уровня перед экспортом в LSS. JSON Bag of Holding доступен всегда.');
       const url = URL.createObjectURL(new Blob([format === 'lss' ? exportLssSheet(doc, calculations) : exportPaperSheet(doc)], { type: 'application/json' }));
       const anchor = document.createElement('a');
       anchor.href = url; anchor.download = `${(doc.fields.name || 'Бумажный лист').replace(/[<>:"/\\|?*]/g, '_')}${format === 'lss' ? ' — LSS' : ''}.json`; anchor.click();
@@ -191,23 +199,24 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
     {(saveError || message) && <div className="ps-message" role={saveError ? 'alert' : 'status'}>{saveError || message}<button type="button" onClick={() => { setMessage(''); if (saveError) download(); }}>{saveError ? 'Скачать копию' : 'Закрыть'}</button></div>}
     {(itemLoading || itemLoadError) && <div className="ps-message" role={itemLoadError ? 'alert' : 'status'}>{itemLoadError || 'Загружаем бонусы снаряжения…'}{itemLoadError && <button type="button" onClick={() => setItemReload(value => value + 1)}>Повторить</button>}</div>}
     {effectLoadError && <div className="ps-message" role="alert">{effectLoadError}<button type="button" onClick={() => setEffectReload(value => value + 1)}>Повторить</button></div>}
+    {(identityStatus.loading || identityStatus.error) && <div className="ps-message" role={identityStatus.error ? 'alert' : 'status'}>{identityStatus.error || 'Обновляем особенности происхождения и уровня…'}{identityStatus.error && <button type="button" onClick={identityStatus.retry}>Повторить</button>}</div>}
     <div className="ps-workspace" ref={workspace}>{PAGES.map(({ id, name, Component }) => <div key={id} className={`ps-page-holder ${allPages || activePage === id ? '' : 'ps-page-hidden'}`} style={{ width: 880 * scale, height: 1272 * scale }}>
       <article className="paper-page" data-page={id} aria-label={`Страница: ${name}`} style={{ transform: `scale(${scale})` }}>{['tl', 'tr', 'bl', 'br'].map(corner => <span key={corner} className={`ps-corner ps-corner-${corner}`} aria-hidden="true" />)}<Component /></article>
     </div>)}</div>
     {extraSections.length > 0 && <details className="ps-lss-extra"><summary>Дополнительные данные LSS ({extraSections.length}) · включаются в PDF и печать</summary>{extraSections.map((section, i) => <section key={i}><h3>{section.title}</h3><pre>{section.text}</pre></section>)}</details>}
-    <div className="ps-bottom-bar"><span>Нажмите на поле, чтобы ввести текст. Книга — добавить предмет или заклинание.</span><label>Масштаб <select aria-label="Масштаб листа" value={zoom} onChange={event => setZoom(Number(event.target.value))}>{[75, 90, 100, 110, 125, 150].map(value => <option key={value} value={value}>{value}%</option>)}</select></label></div>
+    <div className="ps-bottom-bar"><span>Нажмите на поле, чтобы ввести текст. Книга — добавить сущность из библиотеки.</span><label>Масштаб <select aria-label="Масштаб листа" value={zoom} onChange={event => setZoom(Number(event.target.value))}>{[75, 90, 100, 110, 125, 150].map(value => <option key={value} value={value}>{value}%</option>)}</select></label></div>
     <input ref={importInput} type="file" accept="application/json,.json" hidden aria-label="Импорт листа JSON" onChange={async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { const result = importSheetJSON(await file.text()); setPendingImport(result.document); setImportWarnings(result.warnings); setSettingsOpen(false); } catch (error) { setMessage(error instanceof Error ? error.message : 'Не удалось прочитать файл.'); } }} />
-    <input ref={spellImportInput} type="file" accept="application/json,.json" hidden aria-label="Импорт гримуара LSS" onChange={async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { const next = attachLssSpells(doc, await file.text()); setDoc(next); setSettingsOpen(false); setMessage('Гримуар загружен. Заклинания сопоставлены по исходным ID; описания сохранены.'); } catch (error) { setMessage(error instanceof Error ? error.message : 'Не удалось прочитать гримуар.'); } }} />
+    <input ref={spellImportInput} type="file" accept="application/json,.json" hidden aria-label="Импорт гримуара LSS" onChange={async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { const text = await file.text(); const next = attachLssSpells(latestDocument.current, text); setDoc(next); setSettingsOpen(false); setMessage('Гримуар загружен. Заклинания сопоставлены по исходным ID; описания сохранены.'); } catch (error) { setMessage(error instanceof Error ? error.message : 'Не удалось прочитать гримуар.'); } }} />
     {settingsOpen && <Dialog heading="Настройки бумажного листа" onClose={() => setSettingsOpen(false)}><div className="ps-settings">
       <label><input type="checkbox" checked={doc.settings.grid} onChange={event => setDoc(current => ({ ...current, settings: { ...current.settings, grid: event.target.checked } }))} /> Сетка в текстовых полях</label>
       <label><input type="checkbox" checked={allPages} onChange={event => setAllPages(event.target.checked)} /> Показывать все четыре страницы</label>
       <button type="button" onClick={() => download()}><Download size={17} /> Скачать лист JSON</button><button type="button" onClick={() => download('lss')}><Download size={17} /> Скачать для Long Story Short</button><button type="button" onClick={() => importInput.current?.click()}><Upload size={17} /> Загрузить лист JSON / LSS</button>{doc.exchange && <button type="button" onClick={() => spellImportInput.current?.click()}><Upload size={17} /> Добавить гримуар LSS</button>}<button type="button" onClick={() => { setSettingsOpen(false); setNewOpen(true); }}><FilePlus2 size={17} /> Новый пустой лист</button>
-      <p className="ps-dialog-hint">JSON Bag of Holding сохраняет все ссылки и настройки. Для LSS новые заклинания и предметы передаются текстом; исходные ID LSS сохраняются. Гримуар LSS экспортируется отдельно на странице заклинаний.</p>
+      <p className="ps-dialog-hint">JSON Bag of Holding сохраняет все ссылки, выбранное происхождение и настройки. Для LSS записи библиотеки и особенности передаются текстом; исходные ID LSS сохраняются. Гримуар LSS экспортируется отдельно на странице заклинаний.</p>
       <p className="ps-dialog-hint">{onDocumentChange ? 'Изменения сохраняются на сервере. Файл JSON — независимая резервная копия.' : 'Изменения сохраняются в этом браузере. Файл JSON переносит лист между устройствами.'} Печать включает все четыре страницы.</p>
     </div></Dialog>}
     {blocksOpen && <Dialog heading="Блоки листа" onClose={() => setBlocksOpen(false)}><p className="ps-dialog-hint">Убранные блоки освобождают место на странице, но их данные не удаляются. Верните блок, чтобы снова увидеть его содержимое.</p>{doc.hiddenBlocks.length ? <div className="ps-hidden-blocks">{PAPER_BLOCKS.filter(block => doc.hiddenBlocks.includes(block.id)).map(block => <div key={block.id}><span><small>{block.page}</small>{block.label}</span><button type="button" onClick={() => setDoc(current => restoreBlock(current, block.id))}>Вернуть</button></div>)}</div> : <p>Все блоки отображаются.</p>}</Dialog>}
-    {helpOpen && <Dialog heading="Поля и формулы" onClose={() => setHelpOpen(false)}><FormulaHelp /><p className="ps-dialog-hint">Кружок навыка переключает владение и компетентность. Пустое производное поле возвращается к автоматическому расчёту. Названия разделов тоже можно менять.</p><p className="ps-dialog-hint">Заметки редактируются прямо на листе одним многострочным полем: нажмите на текст или карандаш, затем Ctrl+A выделит всю запись. Изменения сохраняются во время ввода. «Готово», Esc или переход к другому полю завершают редактирование.</p><p className="ps-dialog-hint">Значок книги добавляет предмет или заклинание из библиотеки. Наведите на жирное название для превью, нажмите для просмотра карточки. Ссылку в заметке можно переместить или удалить при редактировании текста.</p><p className="ps-dialog-hint">Корзина на блоке убирает его с листа, не удаляя содержимое. Восстановить блок можно через «Блоки» над листом. Остальные блоки займут свободное место.</p><p className="ps-dialog-hint">Предметы в снаряжении меняют расчёт характеристик по своим механикам. Обычная ссылка в заметке не считается надетым предметом. Этот лист не расходует ресурсы персонажа в боях.</p></Dialog>}
-    {newOpen && <Dialog heading="Новый пустой лист" onClose={() => setNewOpen(false)}><p>Текущий лист будет заменён. Скачайте его, если хотите сохранить копию.</p><div className="ps-dialog-actions"><button type="button" onClick={() => download()}>Скачать текущий</button><button type="button" className="ps-primary" onClick={() => { setDoc(createPaperSheet()); setNewOpen(false); setActivePage('main'); }}>Создать пустой лист</button></div></Dialog>}
-    {pendingImport && <Dialog heading="Загрузить лист" onClose={() => setPendingImport(null)}><p>Лист «{pendingImport.fields.name || 'Безымянный персонаж'}» заменит текущий. При необходимости сначала скачайте текущий лист.</p>{importWarnings.map(warning => <p key={warning} className="ps-dialog-hint">{warning}</p>)}<div className="ps-dialog-actions"><button type="button" onClick={() => download()}>Скачать текущий</button><button type="button" className="ps-primary" onClick={() => { setDoc(pendingImport); setPendingImport(null); setMessage(['Лист загружен.', ...importWarnings].join(' ')); }}>Загрузить</button></div></Dialog>}
+    {helpOpen && <Dialog heading="Поля и формулы" onClose={() => setHelpOpen(false)}><FormulaHelp /><p className="ps-dialog-hint">Кружок навыка переключает владение и компетентность. Пустое производное поле возвращается к автоматическому расчёту. Названия разделов тоже можно менять.</p><p className="ps-dialog-hint">Заметки редактируются прямо на листе одним многострочным полем: нажмите на текст или карандаш, затем Ctrl+A выделит всю запись. Изменения сохраняются во время ввода. Ctrl+Z отменяет изменение, Ctrl+Y или Ctrl+Shift+Z возвращает его. Ctrl+B, Ctrl+I и Ctrl+U задают жирный, курсив и подчёркивание; Ctrl+Shift+X — зачёркивание. «Готово», Esc или переход к другому полю завершают редактирование.</p><p className="ps-dialog-hint">Значок книги добавляет предмет, заклинание, действие, черту или эффект из библиотеки. Наведите на жирное название для превью, нажмите для просмотра карточки. Ссылку в заметке можно переместить или удалить при редактировании текста. Предысторию, класс, вид и подкласс можно выбрать из каталога или ввести вручную. Особенности выбранных сущностей обновляются с уровнем и отображаются отдельно от ручного текста.</p><p className="ps-dialog-hint">Корзина на блоке убирает его с листа, не удаляя содержимое. Восстановить блок можно через «Блоки» над листом. Остальные блоки займут свободное место.</p><p className="ps-dialog-hint">Предметы в снаряжении меняют расчёт характеристик по своим механикам. Обычная ссылка в заметке не считается надетым предметом. Этот лист не расходует ресурсы персонажа в боях.</p></Dialog>}
+    {newOpen && <Dialog heading="Новый пустой лист" onClose={() => setNewOpen(false)}><p>Текущий лист будет заменён. Скачайте его, если хотите сохранить копию.</p><div className="ps-dialog-actions"><button type="button" onClick={() => download()}>Скачать текущий</button><button type="button" className="ps-primary" onClick={() => { resetPaperNoteHistory(setDoc); setDoc(createPaperSheet()); setNewOpen(false); setActivePage('main'); }}>Создать пустой лист</button></div></Dialog>}
+    {pendingImport && <Dialog heading="Загрузить лист" onClose={() => setPendingImport(null)}><p>Лист «{pendingImport.fields.name || 'Безымянный персонаж'}» заменит текущий. При необходимости сначала скачайте текущий лист.</p>{importWarnings.map(warning => <p key={warning} className="ps-dialog-hint">{warning}</p>)}<div className="ps-dialog-actions"><button type="button" onClick={() => download()}>Скачать текущий</button><button type="button" className="ps-primary" onClick={() => { resetPaperNoteHistory(setDoc); setDoc(pendingImport); setPendingImport(null); setMessage(['Лист загружен.', ...importWarnings].join(' ')); }}>Загрузить</button></div></Dialog>}
   </div></PaperSheetContext.Provider>;
 }

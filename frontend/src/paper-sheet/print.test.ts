@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
-import { buildPrintSnapshot } from './print';
+import { buildPrintSnapshot, printSections } from './print';
 import { createPaperSheet } from './model';
+import { paperIdentitySourceKey } from './identity';
 
 afterEach(() => { document.body.replaceChildren(); vi.restoreAllMocks(); });
 
@@ -40,4 +41,33 @@ it('prints the formatted note preview instead of an active multiline editor', ()
   expect(snapshot.querySelector('.ps-inline-textarea')).toBeNull();
   expect(snapshot.querySelector('.ps-inline-tools')).toBeNull();
   expect(snapshot.querySelector('.ps-note-text')?.textContent).toBe('Текст для печати');
+});
+
+it('preserves clipped generated abilities and hidden origin feats together with manual notes', () => {
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ measureText: (s: string) => ({ width: s.length * 7 }) } as never);
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(30);
+  vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(function(this: HTMLElement) { return this.classList.contains('ps-note-generated') ? 300 : 30; });
+  const workspace = document.createElement('div');
+  workspace.innerHTML = '<article class="paper-page"><section class="ps-note" data-note-section="features"><div class="ps-note-generated">Действие класса</div><div class="ps-note-text">Моя заметка</div></section></article>';
+  document.body.append(workspace);
+  const doc = createPaperSheet();
+  doc.identity = { classId: 'class-one', backgroundId: 'background-one' };
+  doc.identityFeatures = { key: paperIdentitySourceKey(doc), abilities: [{ type: 'action', id: 'action-one', name: 'Действие класса' }, { type: 'effect', id: 'effect-one', name: 'Особенность подкласса' }], traits: [{ type: 'feat', id: 'feat-one', name: 'Черта предыстории' }] };
+  doc.sections.features = { text: 'Моя заметка', fontSize: 11 };
+  doc.hiddenBlocks = ['traits'];
+  const original = JSON.stringify(doc);
+  const appendix = buildPrintSnapshot(workspace, doc).querySelector('.ps-print-appendix');
+  for (const text of ['Действие класса', 'Особенность подкласса', 'Моя заметка', 'Черта предыстории']) expect(appendix?.textContent).toContain(text);
+  expect(appendix?.textContent).not.toMatch(/\[\[|(?:action|effect|feat):/);
+  expect(JSON.stringify(doc)).toBe(original);
+});
+
+it('exports hidden filled tables into the print appendix even when no DOM is clipped', () => {
+  const doc = createPaperSheet();
+  doc.hiddenBlocks = ['inventory', 'weapons', 'prepared-spells'];
+  Object.assign(doc.fields, { 'inventory.0.item': '[[Свеча|card:candle]]', 'inventory.0.quantity': '5', 'weapon.0.name': 'Кинжал', 'weapon.0.damage': '1d4 колющий', spellRow0Name: 'Свет', spellRow0Range: 'Касание' });
+  const text = printSections(doc, []).map(section => section.text).join('\n');
+  expect(text).toContain('Свеча × 5');
+  expect(text).toContain('Кинжал · 1d4 колющий');
+  expect(text).toContain('Свет · Касание');
 });

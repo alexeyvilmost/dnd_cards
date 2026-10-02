@@ -8,7 +8,7 @@ import EntityRefPreview from './EntityRefPreview';
 const mocks = vi.hoisted(() => ({
   settings: { itemPreview: 'interface' },
   entity: { id: 'library-entity', name: 'Сущность библиотеки' },
-  card: vi.fn(), item: vi.fn(), spell: vi.fn(),
+  card: vi.fn(), item: vi.fn(), spell: vi.fn(), feat: vi.fn(), race: vi.fn(), class: vi.fn(), background: vi.fn(),
 }));
 vi.mock('../settings', () => ({ useSiteSettings: () => mocks.settings }));
 vi.mock('./EntityRefRegistry', () => ({ useEntityRef: () => ({ entity: mocks.entity, loading: false, error: null }) }));
@@ -20,6 +20,10 @@ vi.mock('./EffectPreview', () => ({ default: () => null }));
 vi.mock('./ConceptPreview', () => ({ default: () => null }));
 vi.mock('./ResourcePreview', () => ({ default: () => null }));
 vi.mock('./VariablePreview', () => ({ default: () => null }));
+vi.mock('./FeatPreview', () => ({ default: (props: object) => { mocks.feat(props); return <div>Черта</div>; } }));
+vi.mock('./RacePreview', () => ({ default: (props: object) => { mocks.race(props); return <div>Вид</div>; } }));
+vi.mock('./ClassPreview', () => ({ default: (props: object) => { mocks.class(props); return <div>Класс</div>; } }));
+vi.mock('./BackgroundPreview', () => ({ default: (props: object) => { mocks.background(props); return <div>Предыстория</div>; } }));
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -54,5 +58,12 @@ describe('canonical entity reference previews', () => {
     expect(mocks.spell).toHaveBeenLastCalledWith({ spell: mocks.entity, disableHover: true });
     expect(mocks.item).not.toHaveBeenCalled();
     expect(mocks.card).not.toHaveBeenCalled();
+  });
+
+  it.each([['feat', 'feat'], ['race', 'race'], ['class', 'characterClass'], ['background', 'background']] as const)('uses the canonical %s preview without recursive hover', async (type, prop) => {
+    await act(async () => root.render(<EntityRefPreview type={type} id="library-entity" />));
+    expect(mocks[type]).toHaveBeenCalledExactlyOnceWith({ [prop]: mocks.entity, disableHover: true });
+    expect(mocks.item).not.toHaveBeenCalled();
+    expect(mocks.spell).not.toHaveBeenCalled();
   });
 });

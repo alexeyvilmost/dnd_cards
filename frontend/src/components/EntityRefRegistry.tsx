@@ -4,17 +4,18 @@
  * поэтому повторные наведения не перезапрашивают. Бэкенды принимают и UUID, и slug.
  */
 import { useEffect, useState } from 'react';
-import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable } from '../types';
-import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi } from '../api/client';
+import type { Card, Spell, Action, PassiveEffect, Concept, ResourceDefinition, Variable, Feat, Race, CharacterClass, Background } from '../types';
+import { cardsApi, spellsApi, actionsApi, effectsApi, conceptsApi, resourcesApi, variablesApi, featsApi, racesApi, classesApi, backgroundsApi } from '../api/client';
 import { subscribeApiCacheInvalidation } from '../api/apiCache';
 import { REVIEW_STATUS_CHANGED, type ReviewStatusChange } from '../api/contentReview';
 
-export type EntityRefType = 'card' | 'spell' | 'action' | 'effect' | 'concept' | 'resource' | 'variable';
-export type EntityData = Card | Spell | Action | PassiveEffect | Concept | ResourceDefinition | Variable;
+export type EntityRefType = 'card' | 'spell' | 'action' | 'effect' | 'concept' | 'resource' | 'variable' | 'feat' | 'race' | 'class' | 'background';
+export type EntityData = Card | Spell | Action | PassiveEffect | Concept | ResourceDefinition | Variable | Feat | Race | CharacterClass | Background;
 
 export const ENTITY_TYPE_LABEL: Record<EntityRefType, string> = {
   card: 'Предмет', spell: 'Заклинание', action: 'Действие', effect: 'Эффект', concept: 'Понятие',
   resource: 'Ресурс', variable: 'Переменная',
+  feat: 'Черта', race: 'Вид', class: 'Класс', background: 'Предыстория',
 };
 
 const FETCHERS: Record<EntityRefType, (id: string) => Promise<EntityData>> = {
@@ -25,6 +26,10 @@ const FETCHERS: Record<EntityRefType, (id: string) => Promise<EntityData>> = {
   concept: (id) => conceptsApi.getConcept(id),
   resource: (id) => resourcesApi.getResource(id),
   variable: (id) => variablesApi.getVariable(id),
+  feat: (id) => featsApi.getFeat(id),
+  race: (id) => racesApi.getRace(id),
+  class: (id) => classesApi.getClass(id),
+  background: (id) => backgroundsApi.getBackground(id),
 };
 
 type CacheEntry = {
@@ -42,6 +47,7 @@ const ENTITY_CACHE_TTL_MS = 60_000;
 const API_PREFIX_BY_TYPE: Record<EntityRefType, string> = {
   card: '/api/cards', spell: '/api/spells', action: '/api/actions', effect: '/api/effects',
   concept: '/api/concepts', resource: '/api/resources', variable: '/api/variables',
+  feat: '/api/feats', race: '/api/races', class: '/api/classes', background: '/api/backgrounds',
 };
 
 function notify(key: string): void {
