@@ -161,10 +161,11 @@ func (cc *CharacterV3Controller) loadCharacterV3ForAccess(
 	return nil, false
 }
 
-// isCharacterV3Administrator only trusts the administrator claim that Strict
-// Auth refreshed from the user record. Content editors are not character admins.
+// isCharacterV3Administrator matches the administrator capability shown in the
+// account UI: either the persistent user role or the server-side content-admin
+// allowlist. Client-supplied roles are never consulted.
 func isCharacterV3Administrator(c *gin.Context) bool {
-	return c.GetBool("is_admin")
+	return canManageEntityTags(c)
 }
 
 // characterV3OwnerScope restricts ordinary callers to their own rows while

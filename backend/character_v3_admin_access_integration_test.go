@@ -3,10 +3,58 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+func TestCharacterV3AdministratorMatchesAccountCapability(t *testing.T) {
+	allowlistedID, regularID := uuid.New(), uuid.New()
+	t.Setenv("CONTENT_ADMIN_USER_IDS", allowlistedID.String())
+
+	newContext := func(userID uuid.UUID, databaseAdmin bool) *gin.Context {
+		ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+		ctx.Set("user_id", userID)
+		ctx.Set("is_admin", databaseAdmin)
+		return ctx
+	}
+
+	if !isCharacterV3Administrator(newContext(allowlistedID, false)) {
+		t.Fatal("account capability administrator from the server allowlist must access direct character links")
+	}
+	if !isCharacterV3Administrator(newContext(uuid.New(), true)) {
+		t.Fatal("persistent database administrators must retain direct character access")
+	}
+	if isCharacterV3Administrator(newContext(regularID, false)) {
+		t.Fatal("ordinary users outside the administrator allowlist must not access foreign characters")
+	}
+}
+
+func TestCharacterV3ContentAdministratorCanOpenAnyCharacterByDirectLink(t *testing.T) {
+	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+	t.Setenv("CONTENT_ADMIN_USER_IDS", "")
+	fixture := openCharacterV3AccessFixture(t)
+
+	// This user is recognized as an administrator by the account UI's
+	// server-side content-admin capability, but does not have users.is_admin.
+	t.Setenv("CONTENT_ADMIN_USER_IDS", fixture.owner.ID.String())
+	adminToken := fixture.token(t, fixture.owner)
+	path := "/api/characters-v3/" + fixture.otherCharacter.ID.String()
+	response := performCharacterV3Request(t, fixture.router, http.MethodGet, path, adminToken, nil)
+	if response.Code != http.StatusOK {
+		t.Fatalf("content administrator direct read: got %d: %s", response.Code, response.Body.String())
+	}
+
+	var character CharacterV3
+	if err := json.Unmarshal(response.Body.Bytes(), &character); err != nil {
+		t.Fatal(err)
+	}
+	if character.ID != fixture.otherCharacter.ID || character.AccessMode != characterV3AccessOwner {
+		t.Fatalf("content administrator must receive the editable direct-link character: %#v", character)
+	}
+}
 
 func TestCharacterV3AdministratorCanEquipAndRemoveArmorAndShieldByDirectLink(t *testing.T) {
 	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
@@ -44,7 +92,7 @@ func TestCharacterV3AdministratorCanEquipAndRemoveArmorAndShieldByDirectLink(t *
 		Participants: []CharacterRuntimeCommandParticipant{{
 			CharacterID: fixture.otherCharacter.ID.String(), ExpectedRuntimeRevision: 0,
 			Patch: CharacterRuntimeCommandPatch{
-				Equipment: &JSONMap{"body": armor.ID.String(), "off_hand": shield.ID.String()},
+				Equipment:      &JSONMap{"body": armor.ID.String(), "off_hand": shield.ID.String()},
 				InventoryItems: &InventoryItemRows{},
 			},
 		}},
