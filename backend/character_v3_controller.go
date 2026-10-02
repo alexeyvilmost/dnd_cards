@@ -118,8 +118,9 @@ func requireCharacterV3UserID(c *gin.Context) (uuid.UUID, bool) {
 }
 
 // loadCharacterV3ForAccess implements the migration-period access policy:
-// owners have full access; authenticated users may read legacy rows owned by
-// the historical `public` account; every other cross-user access is forbidden.
+// owners and administrators have full access; authenticated users may read
+// legacy rows owned by the historical `public` account; every other
+// cross-user access is forbidden.
 func (cc *CharacterV3Controller) loadCharacterV3ForAccess(
 	c *gin.Context,
 	characterID uuid.UUID,
@@ -135,6 +136,12 @@ func (cc *CharacterV3Controller) loadCharacterV3ForAccess(
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения персонажа"})
 		}
 		return nil, false
+	}
+	if isCharacterV3Administrator(c) {
+		// Administrators opening a direct link get the same editor behavior as
+		// the owner. The caller identity remains unchanged for audit/idempotency.
+		character.AccessMode = characterV3AccessOwner
+		return &character, true
 	}
 	if character.User.Username == legacyPublicUsername {
 		if mode == characterV3Read {
@@ -152,6 +159,22 @@ func (cc *CharacterV3Controller) loadCharacterV3ForAccess(
 	}
 	c.JSON(http.StatusForbidden, gin.H{"error": "нет доступа к персонажу"})
 	return nil, false
+}
+
+// isCharacterV3Administrator only trusts the administrator claim that Strict
+// Auth refreshed from the user record. Content editors are not character admins.
+func isCharacterV3Administrator(c *gin.Context) bool {
+	return c.GetBool("is_admin")
+}
+
+// characterV3OwnerScope restricts ordinary callers to their own rows while
+// allowing the server-verified administrator to act on a directly addressed
+// character. It never trusts a client-supplied user ID or access mode.
+func characterV3OwnerScope(query *gorm.DB, c *gin.Context, userID uuid.UUID) *gorm.DB {
+	if isCharacterV3Administrator(c) {
+		return query
+	}
+	return query.Where("user_id = ?", userID)
 }
 
 func (cc *CharacterV3Controller) rejectLegacyPublicIdentity(c *gin.Context, userID uuid.UUID) bool {
@@ -511,9 +534,8 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
 		var roguelikeRun *RoguelikeRun
 		var locked CharacterV3
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ? AND user_id = ?", characterID, userID).
-			First(&locked).Error; err != nil {
+		if err := characterV3OwnerScope(tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID).
+			Where("id = ?", characterID).First(&locked).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errCharacterV3OwnerChanged
 			}
@@ -521,7 +543,7 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 		}
 		if locked.CharacterType == "dungeon_crawl" {
 			run, authErr := authorizeRoguelikeCharacterMutation(
-				tx, locked, userID, c.GetHeader(roguelikeRunHeader), c.GetHeader(roguelikeIntentHeader),
+				tx, locked, locked.UserID, c.GetHeader(roguelikeRunHeader), c.GetHeader(roguelikeIntentHeader),
 			)
 			if authErr != nil {
 				return authErr
@@ -604,8 +626,8 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 			return err
 		}
 
-		result := tx.Model(&CharacterV3{}).
-			Where("id = ? AND user_id = ?", characterID, userID).
+		result := characterV3OwnerScope(tx.Model(&CharacterV3{}), c, userID).
+			Where("id = ?", characterID).
 			Updates(map[string]interface{}{
 				"name":                       locked.Name,
 				"avatar_url":                 locked.AvatarURL,
@@ -690,9 +712,9 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 	}
 	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
 		var locked CharacterV3
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		if err := characterV3OwnerScope(tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID).
 			Select("id", "user_id", "current_encounter_id").
-			Where("id = ? AND user_id = ?", characterID, userID).
+			Where("id = ?", characterID).
 			First(&locked).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errCharacterV3OwnerChanged
@@ -709,7 +731,7 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 				CharacterID: locked.ID.String(),
 			}
 		}
-		result := tx.Where("id = ? AND user_id = ?", characterID, userID).Delete(&CharacterV3{})
+		result := characterV3OwnerScope(tx, c, userID).Where("id = ?", characterID).Delete(&CharacterV3{})
 		if result.Error != nil {
 			return result.Error
 		}
@@ -812,9 +834,8 @@ func (cc *CharacterV3Controller) PostCharacterEvents(c *gin.Context) {
 	}
 	defer tx.Rollback()
 	var lockedCharacter CharacterV3
-	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-		Select("id", "character_type").Where("id = ? AND user_id = ?", characterID, userID).
-		First(&lockedCharacter).Error; err != nil {
+	if err := characterV3OwnerScope(tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID).
+		Select("id", "character_type").Where("id = ?", characterID).First(&lockedCharacter).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusConflict, gin.H{"error": "владелец персонажа изменился; повторите запрос"})
 		} else {
@@ -896,9 +917,8 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
 		var roguelikeRun *RoguelikeRun
 		var locked CharacterV3
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id = ? AND user_id = ?", characterID, userID).
-			First(&locked).Error; err != nil {
+		if err := characterV3OwnerScope(tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID).
+			Where("id = ?", characterID).First(&locked).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return errCharacterV3OwnerChanged
 			}
@@ -906,7 +926,7 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 		}
 		var authErr error
 		roguelikeRun, authErr = authorizeRoguelikeCharacterMutation(
-			tx, locked, userID, c.GetHeader(roguelikeRunHeader), c.GetHeader(roguelikeIntentHeader),
+			tx, locked, locked.UserID, c.GetHeader(roguelikeRunHeader), c.GetHeader(roguelikeIntentHeader),
 		)
 		if authErr != nil {
 			return authErr
@@ -965,8 +985,8 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 		}
 		if len(updates) > 0 {
 			updates["runtime_revision"] = locked.RuntimeRevision + 1
-			result := tx.Model(&CharacterV3{}).
-				Where("id = ? AND user_id = ? AND runtime_revision = ?", characterID, userID, locked.RuntimeRevision).
+			result := characterV3OwnerScope(tx.Model(&CharacterV3{}), c, userID).
+				Where("id = ? AND runtime_revision = ?", characterID, locked.RuntimeRevision).
 				Updates(updates)
 			if result.Error != nil {
 				return result.Error

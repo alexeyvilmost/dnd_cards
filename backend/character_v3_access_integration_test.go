@@ -29,6 +29,7 @@ type characterV3AccessFixture struct {
 	owner           User
 	other           User
 	public          User
+	administrator   User
 	ownerCharacter  CharacterV3
 	deleteCharacter CharacterV3
 	otherCharacter  CharacterV3
@@ -103,7 +104,11 @@ func openCharacterV3AccessFixture(t *testing.T) characterV3AccessFixture {
 		ID: uuid.New(), Username: legacyPublicUsername, Email: "public@local",
 		PasswordHash: "disabled", DisplayName: "Public",
 	}
-	for _, user := range []*User{&fixture.owner, &fixture.other, &fixture.public} {
+	fixture.administrator = User{
+		ID: uuid.New(), Username: "administrator", Email: "admin@example.test",
+		PasswordHash: "disabled", DisplayName: "Administrator", IsAdmin: true,
+	}
+	for _, user := range []*User{&fixture.owner, &fixture.other, &fixture.public, &fixture.administrator} {
 		if err = db.Create(user).Error; err != nil {
 			t.Fatal(err)
 		}

@@ -555,9 +555,10 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 		}
 
 		var characters []CharacterV3
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("id IN ? AND user_id = ?", participantIDs, userID).
-			Order("id asc").Find(&characters).Error; err != nil {
+		participantQuery := characterV3OwnerScope(
+			tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID,
+		).Where("id IN ?", participantIDs)
+		if err := participantQuery.Order("id asc").Find(&characters).Error; err != nil {
 			return err
 		}
 		if len(characters) != len(participantIDs) {
@@ -588,7 +589,7 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 					intent = roguelikeIntentCamp
 				}
 				if _, err := authorizeRoguelikeCharacterMutation(
-					tx, character, userID, request.RoguelikeRunID, intent,
+					tx, character, character.UserID, request.RoguelikeRunID, intent,
 				); err != nil {
 					return err
 				}
@@ -626,8 +627,8 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 			if updateErr != nil {
 				return updateErr
 			}
-			result := tx.Model(&CharacterV3{}).
-				Where("id = ? AND user_id = ? AND runtime_revision = ?", character.ID, userID, participant.ExpectedRuntimeRevision).
+			result := characterV3OwnerScope(tx.Model(&CharacterV3{}), c, userID).
+				Where("id = ? AND runtime_revision = ?", character.ID, participant.ExpectedRuntimeRevision).
 				Updates(updates)
 			if result.Error != nil {
 				return result.Error

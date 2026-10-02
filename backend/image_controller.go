@@ -134,9 +134,8 @@ func (ic *ImageController) UploadCharacterAvatar(c *gin.Context) {
 	}
 
 	var character CharacterV3
-	if err := ic.db.Select("id", "user_id").
-		Where("id = ? AND user_id = ?", characterID, userID).
-		First(&character).Error; err != nil {
+	if err := characterV3OwnerScope(ic.db.Select("id", "user_id"), c, userID).
+		Where("id = ?", characterID).First(&character).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
 		} else {
@@ -165,8 +164,8 @@ func (ic *ImageController) UploadCharacterAvatar(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка загрузки изображения: %v", err)})
 		return
 	}
-	result := ic.db.Model(&CharacterV3{}).
-		Where("id = ? AND user_id = ?", characterID, userID).
+	result := characterV3OwnerScope(ic.db.Model(&CharacterV3{}), c, userID).
+		Where("id = ?", characterID).
 		Update("avatar_url", imageURL)
 	if result.Error != nil || result.RowsAffected != 1 {
 		_ = ic.yandexStorage.DeleteImage(ctx, storageID)

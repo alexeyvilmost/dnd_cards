@@ -78,7 +78,8 @@ func (cc *CharacterV3Controller) SellCharacterItem(c *gin.Context) {
 			return lookup.Error
 		}
 		var character CharacterV3
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
+		if err := characterV3OwnerScope(tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID).
+			Where("id = ?", characterID).First(&character).Error; err != nil {
 			return roguelikeError(403, "sale_forbidden", "Нет доступа к персонажу")
 		}
 		if character.CharacterType == "dungeon_crawl" {
