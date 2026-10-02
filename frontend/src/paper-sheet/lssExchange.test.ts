@@ -6,9 +6,86 @@ import customWizard from './fixtures/lss-custom-spell-2024.json';
 import { attachLssSpells, exportLssSheet, importSheetJSON, lssText, paperExtraSections, paperLssSpells, parseExchangeJSON } from './lssExchange';
 import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet } from './model';
 import { printSections, wrapPrintText } from './print';
-import { paperIdentitySourceKey } from './identity';
+import { PAPER_INLINE_LINEAGE_FIELD, paperIdentityDraft, paperIdentityEntries, paperIdentitySourceKey } from './identity';
+import { emptyDraft } from '../character/types';
 
 describe('real Long Story Short exports', () => {
+  function progressionSheet() {
+    const doc = createPaperSheet();
+    Object.assign(doc.fields, { name: 'Кузница', class: 'Воин', species: 'Вид', subspecies: 'Подвид', level: '5', str: '18' });
+    doc.identity = { classId: 'fighter', speciesId: 'species', subspeciesId: 'subspecies' };
+    doc.progression = { draft: { ...emptyDraft(), name: 'Кузница', classId: 'fighter', raceId: 'species', lineageId: 'subspecies', level: 5,
+      classLevels: { fighter: 3, wizard: 2 }, abilities: { str: 16, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+      resolvedChoices: { 'feature:choice:2': ['spell-choice'] }, featIds: ['chosen-feat'], spellIds: ['chosen-spell'],
+    }, baseline: { fields: { str: '18', level: '5' } } };
+    doc.sections.features = { text: 'Моя запись', fontSize: 14 };
+    doc.identityFeatures = { key: paperIdentitySourceKey(doc), abilities: [{ type: 'effect', id: 'ability', name: 'Особенность' }], traits: [{ type: 'feat', id: 'chosen-feat', name: 'Выбранная черта' }] };
+    return doc;
+  }
+  it('round-trips full forge choices and generated provenance through LSS without duplicating features', () => {
+    const doc = progressionSheet();
+    const exported = JSON.parse(exportLssSheet(doc));
+    expect(exported.bohProgression.version).toBe(1);
+    const imported = importSheetJSON(JSON.stringify(exported)).document;
+    expect(imported.progression).toEqual(doc.progression);
+    expect(imported.identity).toEqual(doc.identity);
+    expect(imported.fields.subspecies).toBe('Подвид');
+    expect(imported.sections.features).toEqual(doc.sections.features);
+    expect(imported.sections.traits).toBeUndefined();
+    expect(paperIdentityDraft(imported)?.classLevels).toEqual({ fighter: 3, wizard: 2 });
+    expect(paperIdentityDraft(imported)?.abilities.str).toBe(16);
+    expect(paperIdentityEntries(imported, 'features')).toEqual(doc.identityFeatures?.abilities);
+    const again = JSON.parse(exportLssSheet(imported));
+    expect(lssText(JSON.parse(again.data).text.features.value.data)).toBe('**Особенность**\nМоя запись\n');
+    expect(JSON.parse(exportLssSheet(createPaperSheet())).bohProgression).toBeUndefined();
+  });
+  it('retains LSS edits while detaching changed identity and restoring unchanged generated references', () => {
+    const source = JSON.parse(exportLssSheet(progressionSheet()));
+    const data = JSON.parse(source.data);
+    data.info.charClass.value = 'Самописный класс';
+    data.text.features.value.data.content.push({ type: 'paragraph', content: [{ type: 'text', text: 'Добавлено в LSS' }] });
+    source.data = JSON.stringify(data);
+    const imported = importSheetJSON(JSON.stringify(source)).document;
+    expect(imported.fields.class).toBe('Самописный класс');
+    expect(imported.identity?.classId).toBeUndefined();
+    expect(paperIdentityDraft(imported)?.classId).toBeNull();
+    expect(imported.progression?.draft.classId).toBe('fighter');
+    expect(imported.sections.features.text).toBe('[[Особенность|effect:ability]]\nМоя запись\nДобавлено в LSS');
+  });
+  it('rejects malformed forge metadata in LSS using the native draft validator', () => {
+    const source = JSON.parse(exportLssSheet(progressionSheet()));
+    source.bohProgression.progression.draft.resolvedChoices = { choice: [123] };
+    expect(() => importSheetJSON(JSON.stringify(source))).toThrow();
+  });
+  it('keeps paper base formulas across an effective-stat LSS export, but accepts external numeric edits', () => {
+    const doc = progressionSheet(); doc.fields.str = '=18+1'; doc.fields.level = '=4+1';
+    const source = JSON.parse(exportLssSheet(doc, calculateSheet(doc, { abilityScores: { str: 26 } })));
+    const data = JSON.parse(source.data);
+    expect(data.stats.str.score).toBe(26);
+    const restored = importSheetJSON(JSON.stringify(source)).document;
+    expect(restored.fields.str).toBe('=18+1');
+    expect(restored.fields.level).toBe('=4+1');
+    expect(paperIdentityDraft(restored)?.abilities.str).toBe(17);
+    data.stats.str.score = 20; source.data = JSON.stringify(data);
+    const externallyEdited = importSheetJSON(JSON.stringify(source)).document;
+    expect(externallyEdited.fields.str).toBe('20');
+    expect(paperIdentityDraft(externallyEdited)?.abilities.str).toBe(18);
+  });
+  it.each(['Лунная линия', '00000000-0000-4000-8000-000000000099'])('round-trips inline lineage provenance %s through LSS without reattaching a changed species', lineageId => {
+    const doc = progressionSheet(); delete doc.identity!.subspeciesId;
+    doc.fields.subspecies = 'Подпись варианта'; doc.fields[PAPER_INLINE_LINEAGE_FIELD] = lineageId;
+    doc.progression!.draft.lineageId = lineageId;
+    Object.assign(doc.progression!.baseline!.fields!, { subspecies: doc.fields.subspecies, [PAPER_INLINE_LINEAGE_FIELD]: lineageId });
+    const source = JSON.parse(exportLssSheet(doc));
+    const restored = importSheetJSON(JSON.stringify(source)).document;
+    expect(restored.fields.subspecies).toBe('Подпись варианта');
+    expect(restored.fields[PAPER_INLINE_LINEAGE_FIELD]).toBe(lineageId);
+    expect(paperIdentityDraft(restored)?.lineageId).toBe(lineageId);
+    const data = JSON.parse(source.data); data.info.race.value = 'Самописный вид'; source.data = JSON.stringify(data);
+    const changed = importSheetJSON(JSON.stringify(source)).document;
+    expect(paperIdentityDraft(changed)?.lineageId).toBeNull();
+    expect(changed.fields[PAPER_INLINE_LINEAGE_FIELD]).toBeUndefined();
+  });
   it('parses valid exchange JSON larger than the old 10 MB quota', () => {
     const imported = parseExchangeJSON(JSON.stringify({ text: 'A'.repeat(10_500_000) }));
     expect(imported.text).toHaveLength(10_500_000);

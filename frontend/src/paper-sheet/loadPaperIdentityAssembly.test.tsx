@@ -6,7 +6,10 @@ import { emptyDraft } from '../character/types';
 import { calculateSheet, createPaperSheet, type PaperSheetDocument } from './model';
 import { paperIdentitySourceKey } from './identity';
 import { usePaperIdentityFeatures } from './usePaperIdentityFeatures';
-import { loadPaperIdentityAssembly } from './loadPaperIdentityAssembly';
+import { loadPaperIdentityAssembly, loadPaperItemGrantedEffects } from './loadPaperIdentityAssembly';
+import { loadPaperEquipmentEffects } from './equipmentEffects';
+import { paperEntityToken } from './references';
+import type { Card } from '../types';
 
 const mocks = vi.hoisted(() => ({ getClass: vi.fn(), getEffect: vi.fn(), variables: vi.fn() }));
 vi.mock('../api/client', () => ({
@@ -17,6 +20,7 @@ vi.mock('../api/client', () => ({
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const base = { name: 'Запись', description: '', rarity: 'common', created_at: '', updated_at: '' };
 const effect = (id: string) => ({ ...base, id, card_number: id, name: `Особенность ${id}`, effect_type: 'passive' });
+const grants = (...values: string[]) => ({ activation: { mode: 'passive' }, effects: [{ resolution: 'auto', result: [{ kind: 'grant_effect', values }] }] });
 
 describe('strict canonical paper assembly loading', () => {
   let root: Root;
@@ -58,5 +62,40 @@ describe('strict canonical paper assembly loading', () => {
     const draft = { ...emptyDraft(), classId: 'class', classLevels: { class: 1 } };
     expect((await loadPaperIdentityAssembly(draft)).effects.map(entry => entry.effect.id)).toEqual(['first']);
     expect((await loadPaperIdentityAssembly({ ...draft, level: 3, classLevels: { class: 3 } })).effects.map(entry => entry.effect.id)).toEqual(['first', 'second']);
+  });
+
+  it.each(['rejection', 'empty response'])('rejects an incomplete item expansion after a %s and succeeds on a fresh retry', async failure => {
+    const items = [{ id: 'item', name: 'Предмет', mechanics: grants('first', 'second') }];
+    mocks.getEffect.mockImplementation(async (id: string) => {
+      if (id === 'second') {
+        if (failure === 'rejection') throw new Error('Network Error');
+        return null;
+      }
+      return effect(id);
+    });
+    await expect(loadPaperItemGrantedEffects(items, emptyDraft())).rejects.toThrow('Не все записи каталога');
+    expect(mocks.getEffect).toHaveBeenCalledWith('first');
+    expect(mocks.getEffect).toHaveBeenCalledWith('second');
+    mocks.getEffect.mockImplementation(async (id: string) => effect(id));
+    expect((await loadPaperItemGrantedEffects(items, emptyDraft())).map(entry => entry.id)).toEqual(['first', 'second']);
+  });
+
+  it('rejects a failed nested grant through the injected equipment loader and keeps canonical recursion on retry', async () => {
+    const doc = createPaperSheet();
+    const card: Card = { ...base, id: 'item', name: 'Предмет', type: 'cloak', card_number: 'item', properties: null, rarity: 'common', is_template: 'false', mechanics: grants('branch') };
+    doc.fields['equipment.cloak'] = paperEntityToken({ type: 'card', id: card.id, name: card.name });
+    const cards = new Map([[card.id, card]]);
+    const before = JSON.stringify(doc);
+    mocks.getEffect.mockImplementation(async (id: string) => {
+      if (id === 'leaf') throw new Error('Network Error');
+      return { ...effect(id), mechanics: grants('leaf') };
+    });
+    await expect(loadPaperEquipmentEffects(doc, cards, loadPaperItemGrantedEffects)).rejects.toThrow('Не все записи каталога');
+    expect(mocks.getEffect).toHaveBeenCalledWith('branch');
+    expect(mocks.getEffect).toHaveBeenCalledWith('leaf');
+    mocks.getEffect.mockImplementation(async (id: string) => ({ ...effect(id), mechanics: id === 'branch' ? grants('leaf') : grants('branch') }));
+    const snapshot = await loadPaperEquipmentEffects(doc, cards, loadPaperItemGrantedEffects);
+    expect(snapshot.effects.map(entry => entry.id)).toEqual(['branch', 'leaf']);
+    expect(JSON.stringify(doc)).toBe(before);
   });
 });

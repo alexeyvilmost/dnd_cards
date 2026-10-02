@@ -84,6 +84,7 @@ import CharacterSheetV2 from './CharacterSheetV2';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import SoloCombatSetupDialog from '../components/SoloCombatSetupDialog';
+import PaperExportButton from '../components/PaperExportButton';
 import { rollEvent } from '../engine/events';
 import { collectRollModifiers } from '../engine/modifiers';
 import { activeConditionsOf } from '../engine/circumstances';
@@ -1083,6 +1084,7 @@ const CharacterSheetMVP = () => {
           )}
         </div>
         <div className="sheet-header-actions">
+          <PaperExportButton characterId={character.id} />
           {!roguelikeRunId && !combatLocked && <StartRunFromSheet character={character} />}
           {allowSheetEntityAdditions && !readOnly && !roguelikeRunId && (
             <button

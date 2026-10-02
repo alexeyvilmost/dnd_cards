@@ -5,7 +5,7 @@ import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, 
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
-import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
+import { characterV3ErrorMessage, charactersV3Api, type PatchCharacterRuntimeRequest } from '../character/api';
 import { roguelikeApi } from '../roguelike/api';
 import { runHasCharacter } from '../roguelike/navigation';
 import { buildCharacterContext } from '../character/runtime';
@@ -29,6 +29,7 @@ import {
   type CharacterDraft,
   type AbilityKey,
   type ForgeCharacter,
+  type SaveForgeCharacterRequest,
 } from '../character/types';
 import { bonusOf, reapplyBonuses, reconcileBonusesForBackground } from '../character/pointBuy';
 import { computeMulticlassMaxHP } from '../character/derive';
@@ -99,6 +100,7 @@ import LevelUpSubclassAbilities from '../components/forge/LevelUpSubclassAbiliti
 import LevelUpResourceGains from '../components/forge/LevelUpResourceGains';
 import LevelUpSpellGrants from '../components/forge/LevelUpSpellGrants';
 import SubclassProgressionDialog from '../components/forge/SubclassProgressionDialog';
+import { loadPaperIdentityAssembly } from '../paper-sheet/loadPaperIdentityAssembly';
 import './CharacterForge.css';
 
 const EMPTY_BUNDLE: EntityBundle = { race: null, klass: null, background: null, feats: [], effects: [], actions: [], spells: [] };
@@ -111,10 +113,34 @@ const isDraftMeaningful = (d: CharacterDraft) =>
 // Вкладка «Общее» мобильного таб-бара = правый обзор (E6, сквозной шелл).
 const FORGE_OVERVIEW_ID = 'overview';
 
-const CharacterForge = () => {
+export interface PaperForgeSaveInput {
+  draft: CharacterDraft;
+  assembled: AssembledCharacter;
+  ruleState: CharacterRuleState;
+  payload: SaveForgeCharacterRequest;
+  initialRuntime?: PatchCharacterRuntimeRequest;
+}
+
+export interface PaperForgeSession {
+  draft: CharacterDraft;
+  documentId?: string;
+  anonymous?: boolean;
+  /** The saved, pre-upgrade draft; independent of the in-progress selections. */
+  levelUpFrom?: CharacterDraft;
+  returnURL: string;
+  onDraftChange: (draft: CharacterDraft) => void;
+  onSave: (input: PaperForgeSaveInput) => Promise<void>;
+}
+
+export interface CharacterForgeProps { paperMode?: boolean; paperSession?: PaperForgeSession }
+
+const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps = {}) => {
   const navigate = useNavigate();
-  const { id: editId } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
+  const { id: routeId } = useParams<{ id: string }>();
+  const editId = paperMode ? undefined : routeId;
+  const [routeSearchParams] = useSearchParams();
+  // Paper documents have no run membership or interactive-character runtime.
+  const searchParams = paperMode ? new URLSearchParams() : routeSearchParams;
   const { entityDisplay } = useSiteSettings();
   const choiceDialog = useChoiceDialog();
 
@@ -125,10 +151,15 @@ const CharacterForge = () => {
   const [feats, setFeats] = useState<Feat[]>([]);
   const [spells, setSpells] = useState<Spell[]>([]);
   const [catalogError, setCatalogError] = useState(false);
+  const [catalogRetry, setCatalogRetry] = useState(0);
   const [catalogsReady, setCatalogsReady] = useState(false);
   const [spellCatalogReady, setSpellCatalogReady] = useState(false);
 
-  const [draft, setDraft] = useState<CharacterDraft>(emptyDraft());
+  const [draft, setDraft] = useState<CharacterDraft>(() => paperMode && paperSession ? { ...structuredClone(paperSession.draft), id: undefined } : emptyDraft());
+  const latestDraft = useRef(draft);
+  latestDraft.current = draft;
+  const paperSaveGeneration = useRef(0);
+  useEffect(() => () => { paperSaveGeneration.current += 1; }, []);
   const [restorable, setRestorable] = useState<CharacterDraft | null>(null);
   const [loadedBundle, setLoadedBundle] = useState<{
     refsKey: string;
@@ -138,7 +169,14 @@ const CharacterForge = () => {
   const [active, setActive] = useState('race');
   const isMobile = useIsMobile();
   /** Режим повышения уровня: показываем только новое, база заблокирована. */
-  const [levelUp, setLevelUp] = useState<{ fromLevel: number; fromClassLevels: Record<string, number>; selectedClassId: string; committed?: boolean } | null>(null);
+  const [levelUp, setLevelUp] = useState<{ fromLevel: number; fromClassLevels: Record<string, number>; selectedClassId: string; committed?: boolean } | null>(() => {
+    const from = paperMode ? paperSession?.levelUpFrom : undefined;
+    if (!from) return null;
+    const fromClassLevels = draftClassLevels(from);
+    const selectedClassId = Object.entries(draftClassLevels(paperSession!.draft))
+      .find(([id, count]) => count > (fromClassLevels[id] ?? 0))?.[0] ?? from.classId ?? '';
+    return { fromLevel: from.level, fromClassLevels, selectedClassId };
+  });
   const [prevRefs, setPrevRefs] = useState<{
     effects: Set<string>;
     actions: Set<string>;
@@ -149,8 +187,9 @@ const CharacterForge = () => {
     maxResources: Record<string, number>;
     spellGrants: LevelUpSpellGrantSnapshot;
   } | null>(null);
-  const originalLevelChoices = useRef<Record<string, string[]>>({});
+  const originalLevelChoices = useRef<Record<string, string[]>>(structuredClone(paperSession?.levelUpFrom?.resolvedChoices ?? {}));
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [subclassComparisonOpen, setSubclassComparisonOpen] = useState(false);
@@ -218,7 +257,7 @@ const CharacterForge = () => {
         if (!stale) setCatalogError(true);
       });
     return () => { stale = true; };
-  }, [forgeSpellLevelCap]);
+  }, [forgeSpellLevelCap, catalogRetry]);
 
   const visibleRaces = races;
   const visibleClasses = classes;
@@ -226,6 +265,7 @@ const CharacterForge = () => {
   const visibleSpells = spells;
   // При входе в режим создания — предложить восстановить сохранённый черновик.
   useEffect(() => {
+    if (paperMode) return;
     if (editId) { setRestorable(null); return; }
     try {
       const raw = localStorage.getItem(FORGE_DRAFT_KEY);
@@ -233,22 +273,24 @@ const CharacterForge = () => {
       const parsed = { ...emptyDraft(), ...(JSON.parse(raw) as Partial<CharacterDraft>) };
       if (isDraftMeaningful(parsed)) setRestorable(parsed);
     } catch { /* ignore */ }
-  }, [editId]);
+  }, [editId, paperMode]);
 
   // Автосейв черновика (только создание): пустой не сохраняем, чтобы не затереть.
   useEffect(() => {
+    if (paperMode) { paperSession?.onDraftChange(draft); return; }
     if (editId) return;
     if (!isDraftMeaningful(draft)) return;
     const t = window.setTimeout(() => {
       try { localStorage.setItem(FORGE_DRAFT_KEY, JSON.stringify(draft)); } catch { /* ignore */ }
     }, 800);
     return () => window.clearTimeout(t);
-  }, [draft, editId]);
+  }, [draft, editId, paperMode, paperSession?.onDraftChange]);
 
   // Переход «редактирование → создание» без размонтирования (те же роуты
   // /character-forge/:id и /character-forge): сбросить черновик, иначе
   // сохранение перезапишет предыдущего персонажа.
   useEffect(() => {
+    if (paperMode) return;
     if (editId) return;
     setDraft(emptyDraft());
     setSavedId(null);
@@ -256,7 +298,7 @@ const CharacterForge = () => {
     restoredClassSkillsRef.current = false;
     savedHpRef.current = null;
     savedMaxHpRef.current = null;
-  }, [editId]);
+  }, [editId, paperMode]);
 
   // Загрузка существующего черновика для редактирования.
   // ?levelup=1 (кнопка «Поднять уровень» на листе) — особый режим: +1 уровень,
@@ -342,11 +384,12 @@ const CharacterForge = () => {
       if (!stale) {
         console.error('forge bundle', reason);
         setError(characterV3ErrorMessage(reason, 'Не удалось загрузить данные персонажа'));
+        if (paperMode) setCatalogError(true);
       }
     });
     return () => { stale = true; };
 
-  }, [refsKey]);
+  }, [refsKey, catalogRetry, paperMode]);
 
   const spellIndex = useMemo(() => indexSpells(spells), [spells]);
 
@@ -755,9 +798,12 @@ const CharacterForge = () => {
   // Диф уровня: какие эффекты/действия были ДО повышения (для показа только нового).
   useEffect(() => {
     if (!levelUp || !draft.classId) return;
+    if (paperMode) setPrevRefs(null);
     let stale = false;
     (async () => {
-      const oldDraft = { ...draft, level: levelUp.fromLevel, classLevels: levelUp.fromClassLevels };
+      const oldDraft = paperMode && paperSession?.levelUpFrom
+        ? paperSession.levelUpFrom
+        : { ...draft, level: levelUp.fromLevel, classLevels: levelUp.fromClassLevels };
       const oldBundle = await loadBundle(oldDraft);
       if (stale) return;
       // Идентификаторы выборов, существовавших НА СТАРОМ уровне — чтобы на уровень-апе отличать
@@ -777,10 +823,15 @@ const CharacterForge = () => {
         maxResources: oldRuntime.maxResources,
         spellGrants: {assembled:oldAssembled, grants:oldRules.appliedGrants, context:oldContext},
       });
-    })();
+    })().catch((cause) => {
+      if (stale) return;
+      console.error('forge previous level', cause);
+      setError(characterV3ErrorMessage(cause, 'Не удалось загрузить предыдущий уровень'));
+      if (paperMode) setCatalogError(true);
+    });
     return () => { stale = true; };
 
-  }, [levelUp?.fromLevel, levelUp?.selectedClassId, draft.classId, draft.raceId]);
+  }, [levelUp?.fromLevel, levelUp?.selectedClassId, draft.classId, draft.raceId, paperMode, paperSession?.levelUpFrom, catalogRetry]);
 
   const allSubclassIds = useMemo(
     () => normalizedSubclassIds(draft.subclassIds, draft.classId, draft.subclassId),
@@ -797,19 +848,77 @@ const CharacterForge = () => {
     ],
     [draft, assembled, ruleState, subclassSelectionProblems],
   );
-  const canCreate = bundleReady && issues.length === 0;
+  const canCreate = bundleReady && (!paperMode || (catalogsReady && spellCatalogReady)) && issues.length === 0;
 
   const save = async () => {
-    if (!bundleReady) return;
+    if (!bundleReady || savingRef.current) return;
+    savingRef.current = true;
     setSaving(true); setError(null);
     try {
+      if (paperMode) {
+        if (!paperSession) throw new Error('Не удалось открыть бумажный черновик. Обновите страницу.');
+        const generation = ++paperSaveGeneration.current;
+        const sourceDraft = draft;
+        const checkedDraft = structuredClone({ ...draft, id: undefined });
+        const loadComplete = async (snapshot: CharacterDraft) => {
+          try { return await loadPaperIdentityAssembly(snapshot); }
+          catch (cause) {
+            if (generation === paperSaveGeneration.current) setCatalogError(true);
+            throw cause;
+          }
+        };
+        let checkedAssembly = await loadComplete(checkedDraft);
+        let checkedRules = resolveCharacterRules({ draft: checkedDraft, assembled: checkedAssembly });
+        // A newly selected spell can still live only in resolvedChoices. Ask the
+        // same strict assembler to hydrate those references and automatic grants,
+        // without turning granted spells into player-owned draft selections.
+        const spellIds = [...new Set([...collectChosenSpellUuids(checkedDraft, checkedAssembly), ...(checkedDraft.manualSpellIds ?? []), ...checkedRules.spells.known.filter(isEntityUuid)])];
+        const grantedSpellSlugs = [...new Set([...(checkedDraft.grantedSpellSlugs ?? []), ...checkedRules.spells.known.filter(reference => !isEntityUuid(reference))])];
+        const loadedSpells = new Set(checkedAssembly.spells.flatMap(spell => [spell.id, spell.card_number]));
+        if ([...spellIds, ...grantedSpellSlugs].some(reference => !loadedSpells.has(reference))) {
+          checkedAssembly = await loadComplete({ ...checkedDraft, spellIds, grantedSpellSlugs });
+          checkedRules = resolveCharacterRules({ draft: checkedDraft, assembled: checkedAssembly });
+        }
+        if (generation !== paperSaveGeneration.current) return false;
+        if (latestDraft.current !== sourceDraft) throw new Error('Выборы изменились во время проверки. Сохраните текущий черновик ещё раз.');
+        const checkedClasses = [...new Map([
+          ...classes, ...(checkedAssembly.classes ?? []), ...(checkedAssembly.subclasses ?? []),
+          ...(checkedAssembly.klass ? [checkedAssembly.klass] : []),
+          ...(checkedAssembly.subclass ? [checkedAssembly.subclass] : []),
+        ].map(entry => [entry.id, entry])).values()];
+        const checkedIssues = [
+          ...(levelUp ? requiredChoiceIssues(checkedDraft, checkedAssembly) : completionIssues(checkedDraft, checkedAssembly, checkedRules)),
+          ...subclassSelectionIssues(checkedClasses, draftClassLevels(checkedDraft), normalizedSubclassIds(checkedDraft.subclassIds, checkedDraft.classId, checkedDraft.subclassId))
+            .map(issue => `${issue.className}: выберите допустимый подкласс`),
+        ];
+        if (levelUp && !levelUp.fromClassLevels[levelUp.selectedClassId]) {
+          const requiredIds = new Set([...Object.keys(levelUp.fromClassLevels), levelUp.selectedClassId]);
+          checkedIssues.push(...checkedClasses.filter(entry => requiredIds.has(entry.id)).flatMap(entry => multiclassPrerequisiteIssues(entry, checkedDraft.abilities).map(issue => `${entry.name}: ${issue}`)));
+        }
+        if (checkedIssues.length) {
+          // A previously omitted feature may introduce new choices. Refresh the
+          // canonical UI bundle so the player can actually finish those choices.
+          bundleCacheRef.current.clear(); setCatalogRetry(value => value + 1);
+          throw new Error(`Завершите выборы персонажа: ${[...new Set(checkedIssues)].join('; ')}`);
+        }
+        const payload = buildSavePayload(checkedDraft, checkedAssembly, checkedRules, savedHpRef.current ?? undefined, savedMaxHpRef.current ?? undefined);
+        const ctx = buildCharacterContext(checkedRules, checkedDraft, [], checkedAssembly.klass);
+        let initialRuntime: PatchCharacterRuntimeRequest = buildResourceRuntimePatch(
+          runtimeSeedFromSavePayload(payload), ctx, checkedAssembly, true, undefined, checkedRules.freeuseSpells,
+        ) ?? {};
+        if (!paperSession.documentId) {
+          initialRuntime = projectCharacterStartingEquipmentPatch(initialRuntime, checkedDraft, checkedAssembly);
+        }
+        await paperSession.onSave({ draft: checkedDraft, assembled: checkedAssembly, ruleState: checkedRules, payload, initialRuntime });
+        return true;
+      }
       const isCreate = !draft.id;
       const localAvatar = draft.avatarUrl?.startsWith('data:') ? draft.avatarUrl : null;
       const payload = buildSavePayload(draft, assembled, ruleState, savedHpRef.current ?? undefined, savedMaxHpRef.current ?? undefined);
+      const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
       // A data URL is only the local preview. The durable row receives the
       // object-storage URL after the owner-scoped upload below.
       if (localAvatar) payload.avatar_url = '';
-      const ctx = buildCharacterContext(ruleState, draft, [], assembled.klass);
       let res: ForgeCharacter;
       if (isCreate) {
         let runtimePatch = buildResourceRuntimePatch(
@@ -870,9 +979,10 @@ const CharacterForge = () => {
       return true;
     } catch (e) {
       console.error(e);
-      setError(characterV3ErrorMessage(e, 'Ошибка сохранения персонажа'));
+      setError(paperMode && e instanceof Error ? e.message : characterV3ErrorMessage(e, 'Ошибка сохранения персонажа'));
       return false;
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -968,7 +1078,7 @@ const CharacterForge = () => {
   const act = navSections.some((s) => s.id === active) ? active : 'race';
   const showOverviewInMain = isMobile && act === FORGE_OVERVIEW_ID;
   const sectionTitle = sections.find((s) => s.id === act)?.label ?? 'Вид';
-  const rootCls = paper ? 'forge sheet-paper' : 'forge';
+  const rootCls = paperMode ? 'forge sheet-paper paper-forge' : paper ? 'forge sheet-paper' : 'forge';
 
   // Обзор — переиспользуем и в правой колонке (десктоп), и во вкладке «Общее» (моб.).
   const overviewPanel = (
@@ -976,7 +1086,8 @@ const CharacterForge = () => {
       draft={draft} patch={patch} assembled={assembled} ruleState={ruleState} spells={selectedSpells}
       lineageName={lineageName} subChoices={raceSubChoices} subraces={subraces}
       issues={issues} canCreate={canCreate} saving={saving} onSave={save}
-      savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(`/characters-v3/${savedId}`)}
+      savedId={savedId} error={error} onOpenSheet={() => savedId && navigate(paperMode ? `/paper-sheet/${savedId}` : `/characters-v3/${savedId}`)}
+      paperMode={paperMode} paperEditing={!!paperSession?.documentId} paperAnonymous={!!paperSession?.anonymous}
     />
   );
   // ─── Режим повышения уровня: только новое, база заблокирована ───
@@ -997,7 +1108,7 @@ const CharacterForge = () => {
     const selectedLevelSubclassId = selectedLevelClass ? selectedSubclassIds[selectedLevelClass.id] : undefined;
     const selectedLevelSubclass = (assembled.subclasses ?? []).find(entry => entry.id === selectedLevelSubclassId)
       ?? selectedLevelSubclasses.find(entry => entry.id === selectedLevelSubclassId);
-    const returnURL = levelUpReturnURL(draft.id ?? '', searchParams.get('roguelike'));
+    const returnURL = paperMode ? paperSession?.returnURL ?? '/paper-sheet' : levelUpReturnURL(draft.id ?? '', searchParams.get('roguelike'));
     const selectedLevelSubclassUnlocked = selectedLevelClassLevel >= selectedLevelSubclassThreshold;
     const takingNewClass = selectedLevelClass && !levelUp.fromClassLevels[selectedLevelClass.id];
     const prerequisiteClasses = takingNewClass
@@ -1121,7 +1232,8 @@ const CharacterForge = () => {
       .filter((c) => c.severity === 'error')
       .map((c) => c.message);
     levelUpErrors.unshift(...multiclassIssues.map((issue) => `Требование мультикласса: ${issue}`));
-    const canConfirm = bundleReady && pendingChoiceHints.length === 0 && levelUpErrors.length === 0 && !!levelUp.selectedClassId;
+    const canConfirm = bundleReady && (!paperMode || (catalogsReady && spellCatalogReady && !!prevRefs))
+      && pendingChoiceHints.length === 0 && levelUpErrors.length === 0 && !!levelUp.selectedClassId;
     const isReplacementOnly = (choice: PendingChoice) => (replacementLimits[choice.id] ?? 0) > 0
       && (prevRefs?.choiceCounts.get(choice.id) ?? 0) >= choice.count;
     const replacementChoices = [...featLevelUpChoices, ...newSpellChoices].filter(isReplacementOnly);
@@ -1153,6 +1265,7 @@ const CharacterForge = () => {
     return (
       <CharacterFormulaProvider value={formulaCtx}>
       <div className={rootCls + ' levelup-screen'}>
+        {paperMode && catalogError && <div className="paper-forge-notice" role="alert">Не удалось загрузить данные персонажа. <button onClick={() => { setError(null); setCatalogRetry(value => value + 1); void loadCatalogs(); }}>Повторить загрузку</button></div>}
         <div className="forge-header sheet-header-bar">
           <button type="button" className="sheet-back" aria-label="Отмена" disabled={saving}
             onClick={() => navigate(returnURL)}>
@@ -1365,7 +1478,7 @@ const CharacterForge = () => {
                   type="button"
                   className="forge-btn forge-create-btn"
                   disabled={!canConfirm || saving}
-                  onClick={async () => { if (await save()) navigate(returnURL); }}
+                  onClick={async () => { if (await save() && !paperMode) navigate(returnURL); }}
                 >
                   {saving ? 'Сохранение…' : `Подтвердить уровень ${draft.level}`}
                 </button>
@@ -1401,7 +1514,7 @@ const CharacterForge = () => {
           <span>Не удалось загрузить справочники. Проверьте соединение.</span>
           <button
             type="button"
-            onClick={() => void loadCatalogs()}
+            onClick={() => { setError(null); setCatalogRetry(value => value + 1); void loadCatalogs(); }}
             style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #d8b978', background: 'transparent', color: '#d8b978', cursor: 'pointer', flex: '0 0 auto' }}
           >
             Повторить
@@ -1436,8 +1549,8 @@ const CharacterForge = () => {
         </div>
       )}
       <div className="forge-header sheet-header-bar forge-header-layout">
-        <Link to="/" className="forge-brand-link" aria-description="На главную страницу">Bag of Holding</Link>
-        <span className="forge-header-title">Создание персонажа</span>
+        <Link to={paperMode ? paperSession?.returnURL ?? '/paper-sheet' : '/'} className="forge-brand-link" aria-description={paperMode ? 'К бумажному листу' : 'На главную страницу'}>{paperMode ? '← Бумажный лист' : 'Bag of Holding'}</Link>
+        <span className="forge-header-title">{paperMode ? paperSession?.documentId ? 'Редактирование персонажа' : 'Создание бумажного персонажа' : 'Создание персонажа'}</span>
         <div className="sheet-header-actions">
           <button
             type="button"
@@ -1449,7 +1562,7 @@ const CharacterForge = () => {
             <Settings size={16} />
             <span className="sheet-header-btn-label">Настройки</span>
           </button>
-          <button
+          {!paperMode && <button
             type="button"
             className="sheet-header-btn"
             onClick={toggleTheme}
@@ -1458,9 +1571,9 @@ const CharacterForge = () => {
           >
             {paper ? <Moon size={16} /> : <Sun size={16} />}
             <span className="sheet-header-btn-label">{paper ? 'Тёмная' : 'Светлая'}</span>
-          </button>
-          {(savedId || draft.id) && (
-            <Link to={`/characters-v3/${savedId || draft.id}`} className="sheet-edit forge-header-sheet-link" aria-description="Открыть лист персонажа">
+          </button>}
+          {(savedId || draft.id || paperSession?.documentId) && (
+            <Link to={paperMode ? paperSession?.returnURL ?? '/paper-sheet' : `/characters-v3/${savedId || draft.id}`} className="sheet-edit forge-header-sheet-link" aria-description="Открыть лист персонажа">
               <FileText size={16} />
               <span>Лист</span>
             </Link>
@@ -1558,11 +1671,12 @@ const CharacterForge = () => {
 
 // ─── Правая панель обзора (имя + résumé + создание) ──────────────────────────
 
-function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName, subChoices, subraces, issues, canCreate, saving, onSave, savedId, error, onOpenSheet }: {
+function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName, subChoices, subraces, issues, canCreate, saving, onSave, savedId, error, onOpenSheet, paperMode = false, paperEditing = false, paperAnonymous = false }: {
   draft: CharacterDraft; patch: (p: Partial<CharacterDraft>) => void; assembled: AssembledCharacter; ruleState: CharacterRuleState; spells: Spell[];
   lineageName?: string; subChoices?: PendingChoice[]; subraces?: Race[];
   issues: string[]; canCreate: boolean; saving: boolean; onSave: () => void; savedId: string | null;
   error: string | null; onOpenSheet: () => void;
+  paperMode?: boolean; paperEditing?: boolean; paperAnonymous?: boolean;
 }) {
   // The editor controls stay immediate while the potentially long abilities /
   // spells summary is allowed to trail a rapid sequence of selections.
@@ -1593,13 +1707,13 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
           <button type="button" className="pb-btn" disabled={draft.level >= 20}
             onClick={() => patch({ level: Math.min(20, draft.level + 1) })}>+</button>
         </div>
-        <div className="forge-section-h" style={{ marginTop: 14 }}>Токен на поле боя</div>
+        <div className="forge-section-h" style={{ marginTop: 14 }}>{paperMode ? 'Портрет' : 'Токен на поле боя'}</div>
         <ImageUploader
           currentImageUrl={draft.avatarUrl}
           onImageUpload={(avatarUrl) => patch({ avatarUrl })}
           className="forge-token-uploader"
         />
-        <p className="forge-token-hint">Квадратное изображение лучше всего читается на сетке.</p>
+        <p className="forge-token-hint">{paperMode ? 'Изображение появится на странице портрета.' : 'Квадратное изображение лучше всего читается на сетке.'}</p>
       </div>
 
       <SummaryPanel
@@ -1625,7 +1739,7 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
         )}
         {error && <p className="issues" style={{ color: 'var(--forge-danger)' }}>{error}</p>}
         <button className="forge-btn forge-create-btn" disabled={!canCreate || saving} onClick={onSave}>
-          {saving ? 'Сохранение…' : draft.id ? 'Сохранить' : 'Создать персонажа'}
+          {saving ? 'Сохранение…' : paperMode ? paperEditing ? 'Сохранить в лист' : paperAnonymous ? 'Создать анонимный лист' : 'Создать бумажный лист' : draft.id ? 'Сохранить' : 'Создать персонажа'}
         </button>
       </div>
     </div>

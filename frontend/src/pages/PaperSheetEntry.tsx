@@ -11,7 +11,20 @@ import './PaperSheetEntry.css';
 
 function SavedEditor({ saved }: { saved: SavedPaperDocument }) {
   const session = useSavedPaperDocument(saved);
+  const navigate = useNavigate();
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [openingForge, setOpeningForge] = useState(false);
+  const openingForgeRef = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const openForge = async (levelUp = false) => {
+    if (openingForgeRef.current) return;
+    openingForgeRef.current = true;
+    setOpeningForge(true);
+    try {
+      if (await session.flushChanges() && mounted.current) navigate(`/paper-sheet/${saved.id}/${levelUp ? 'level-up' : 'forge'}`);
+    } finally { openingForgeRef.current = false; if (mounted.current) setOpeningForge(false); }
+  };
   return <>
     <div className="paper-access-bar"><Link to="/paper-sheet">← Все бумажные листы</Link>
       {saved.anonymous && <span>Анонимный лист. Сохраните ссылку: любой, у кого она есть, сможет редактировать этот лист.</span>}
@@ -19,7 +32,8 @@ function SavedEditor({ saved }: { saved: SavedPaperDocument }) {
     {session.error && <div className="paper-entry-error" role="alert">{session.error} {session.conflict
       ? <button onClick={() => setDiscardOpen(true)}>Загрузить серверную версию</button>
       : <button onClick={session.retry}>Повторить сохранение</button>}</div>}
-    <PaperCharacterSheet initialDocument={session.initialDocument} onDocumentChange={session.onDocumentChange} remoteSaveStatus={session.status} remoteSaveError={session.error} />
+    <PaperCharacterSheet initialDocument={session.initialDocument} onDocumentChange={session.onDocumentChange} remoteSaveStatus={session.status} remoteSaveError={session.error}
+      onOpenConstructor={() => { void openForge(); }} onLevelUp={() => { void openForge(true); }} progressionBusy={openingForge} />
     {discardOpen && <Dialog heading="Загрузить серверную версию?" onClose={() => setDiscardOpen(false)}><p>Сначала сохраните свой черновик через «Настройки листа → Скачать лист JSON». Несохранённые правки в этом браузере будут заменены серверной версией.</p><div className="ps-dialog-actions"><button onClick={() => setDiscardOpen(false)}>Вернуться к черновику</button><button onClick={session.discardDraft}>Заменить черновик</button></div></Dialog>}
   </>;
 }
@@ -77,7 +91,7 @@ export default function PaperSheetEntry() {
   return <div className="paper-entry">
     <section className="paper-entry-hero"><img src="/images/home/paper.jpg" alt="" /><div className="paper-entry-copy"><ScrollText size={32} strokeWidth={1.3} /><span className="paper-entry-eyebrow">ВАША ИСТОРИЯ НА БУМАГЕ</span><h1>Бумажные листы<br />персонажей</h1>
       {isAuthenticated ? <p>Создавайте героев, заполняйте листы и возвращайтесь к ним с любого устройства.</p> : <><p>Листами персонажей удобнее пользоваться после авторизации: они будут доступны в вашем аккаунте.</p><p>Можно создать и анонимный лист. Сохраните его ID из адресной строки, а лучше всю ссылку — только так вы сможете вернуться к нему. Не передавайте ссылку тем, кому не хотите разрешать редактирование.</p></>}
-      <div className="paper-entry-actions">{!isAuthenticated && <Link className="paper-entry-primary" to="/login" state={{ from: { pathname: '/paper-sheet' } }}><LogIn size={17} />Авторизоваться</Link>}<button className={isAuthenticated ? 'paper-entry-primary' : ''} disabled={creating} onClick={() => { void create(); }}><FilePlus2 size={17} />{creating ? 'Создаём…' : isAuthenticated ? 'Создать лист' : 'Создать анонимный'}</button></div>
+      <div className="paper-entry-actions">{!isAuthenticated && <Link className="paper-entry-primary" to="/login" state={{ from: { pathname: '/paper-sheet' } }}><LogIn size={17} />Авторизоваться</Link>}<Link className={isAuthenticated ? 'paper-entry-primary' : ''} to="/paper-sheet/create"><FilePlus2 size={17} />Конструктор персонажа</Link><button disabled={creating} onClick={() => { void create(); }}><ScrollText size={17} />{creating ? 'Создаём…' : isAuthenticated ? 'Создать лист' : 'Создать анонимный'}</button></div>
     </div></section>
     {error && <div className="paper-entry-error" role="alert">{error}<button onClick={() => setRetry(value => value + 1)}>Повторить загрузку</button></div>}
     {hasLegacy && <div className="paper-entry-legacy"><span>В этом браузере есть лист из прежней версии. Он остался без изменений.</span><button disabled={creating} onClick={() => { void create(true); }}>Сохранить его отдельным листом <ArrowRight size={15} /></button></div>}

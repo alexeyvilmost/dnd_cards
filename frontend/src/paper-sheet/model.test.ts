@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { emptyDraft } from '../character/types';
 import {
   PAPER_SHEET_STORAGE_KEY, calculateSheet, createPaperSheet, defaultFormula, evaluatePaperFormula,
   exportPaperSheet, fieldValue, importPaperSheet, loadPaperSheet, savePaperSheet,
@@ -185,6 +186,35 @@ describe('editable paper document calculations', () => {
 });
 
 describe('paper document import and persistence', () => {
+  it('round trips the complete optional forge draft and generation baseline without interactive server identity', () => {
+    const doc = createPaperSheet();
+    doc.progression = { draft: { ...emptyDraft(), id: 'interactive-character', classId: 'fighter', level: 5,
+      classLevels: { fighter: 3, wizard: 2 }, subclassId: 'champion', subclassIds: { fighter: 'champion' },
+      featIds: ['feat-one'], spellIds: ['spell-one'], actionIds: ['action-one'], effectIds: ['effect-one'], resourceIds: ['resource-one'],
+      manualSpellIds: ['spell-manual'], grantedSpellSlugs: ['spell-granted'], abilities: { str: 16, int: 14 },
+      classSkillChoices: ['athletics'], resolvedChoices: { ['choice-'.repeat(30)]: ['one', 'two'] }, swapFeat: true,
+    }, baseline: { fields: { str: '18', level: '5' }, checks: { inspiration: false }, training: { athletics: 1 }, sections: { traits: { text: 'Создано', fontSize: 11 } }, portrait: '', weaponRows: 1, spellRows: 38 } };
+    const restored = importPaperSheet(exportPaperSheet(doc));
+    expect(restored.progression).toEqual({ ...doc.progression, draft: { ...doc.progression.draft, id: undefined } });
+    expect(JSON.parse(exportPaperSheet(doc)).progression.draft).not.toHaveProperty('id');
+    expect(doc.progression.draft.id).toBe('interactive-character');
+  });
+  it('rejects malformed progression and dangerous map keys without adding metadata to older documents', () => {
+    const old = createPaperSheet();
+    expect(importPaperSheet(exportPaperSheet(old))).not.toHaveProperty('progression');
+    const doc = { ...old, progression: { draft: emptyDraft() } };
+    for (const draft of [
+      { ...emptyDraft(), level: 21 },
+      { ...emptyDraft(), resolvedChoices: { choice: [123] } },
+      { ...emptyDraft(), classId: 'fighter', classLevels: { fighter: 2 }, level: 1 },
+      { ...emptyDraft(), abilities: { str: '18' } },
+      { ...emptyDraft(), abilityMethod: 'unknown' },
+    ]) expect(() => importPaperSheet(JSON.stringify({ ...doc, progression: { draft } }))).toThrow();
+    const dangerous = JSON.stringify(doc).replace('"resolvedChoices":{}', '"resolvedChoices":{"__proto__":["bad"]}');
+    expect(() => importPaperSheet(dangerous)).toThrow('Недопустимое имя');
+    const safe = importPaperSheet(JSON.stringify({ ...doc, progression: { draft: { ...emptyDraft(), sourceCharacterId: 'external', unknown: true } } }));
+    expect(safe.progression?.draft).not.toHaveProperty('sourceCharacterId');
+  });
   it('preserves optional catalogue identities and portable features together with manual notes', () => {
     const sheet = createPaperSheet();
     sheet.fields.species = 'Выбранный вид';

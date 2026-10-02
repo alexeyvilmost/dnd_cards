@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createAssemblyRuntime } from '../character/assemblyFactory';
 import { createRegistry } from '../engine/registry';
+import { emptyDraft } from '../character/types';
 import type { Action, Background, CharacterClass, Feat, PassiveEffect, Race } from '../types';
 import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet } from './model';
-import { editPaperIdentityText, paperIdentityDraft, paperIdentityEntries, paperIdentitySourceKey, projectPaperIdentityFeatures, selectPaperIdentity } from './identity';
+import { editPaperIdentityText, PAPER_INLINE_LINEAGE_FIELD, paperIdentityDisplayName, paperIdentityDraft, paperIdentityEntries, paperIdentitySourceKey, projectPaperIdentityFeatures, selectPaperIdentity } from './identity';
 
 const entity = (number: number, name: string) => ({ id: `00000000-0000-4000-8000-${String(number).padStart(12, '0')}`, name, card_number: `fixture-${number}`, description: '', rarity: 'common' as const, created_at: '', updated_at: '' });
 const baseSpecies: Race = { ...entity(1, 'Первый вид'), related_effects: [entity(10, '').id] };
@@ -37,6 +38,70 @@ function assembler() {
 }
 
 describe('paper identity and canonical feature projection', () => {
+  it.each(['Звёздное наследие', '00000000-0000-4000-8000-000000000099'])('preserves a marked inline lineage %s through reload and level changes, but never after manual detach', lineageId => {
+    const doc = createPaperSheet();
+    doc.identity = { speciesId: baseSpecies.id };
+    Object.assign(doc.fields, { species: baseSpecies.name, subspecies: 'Название варианта', [PAPER_INLINE_LINEAGE_FIELD]: lineageId });
+    doc.progression = { draft: { ...emptyDraft(), raceId: baseSpecies.id, lineageId }, baseline: { fields: { ...doc.fields } } };
+    const restored = importPaperSheet(exportPaperSheet(doc));
+    expect(paperIdentityDraft(restored)?.lineageId).toBe(lineageId);
+    expect(paperIdentityDisplayName(restored, 'species')).toBe(`${baseSpecies.name} (Название варианта)`);
+    restored.fields.level = '3';
+    expect(paperIdentityDraft(restored)?.lineageId).toBe(lineageId);
+    expect(paperIdentityDraft(editPaperIdentityText(restored, 'subspecies', restored.fields.subspecies))?.lineageId).toBeNull();
+    expect(paperIdentityDraft(editPaperIdentityText(restored, 'species', restored.fields.species))?.lineageId).toBeNull();
+    const changedRace = selectPaperIdentity(restored, { kind: 'species', id: 'another-race', name: 'Другой вид' });
+    expect(paperIdentityDraft(changedRace)?.lineageId).toBeNull();
+    const changedLabel = { ...restored, fields: { ...restored.fields, subspecies: 'Свой вариант' } };
+    expect(paperIdentityDraft(changedLabel)?.lineageId).toBeNull();
+    delete restored.fields[PAPER_INLINE_LINEAGE_FIELD];
+    expect(paperIdentityDraft(restored)?.lineageId).toBeNull();
+  });
+  it('does not restore an unlinked catalogue subspecies from the retained full draft', () => {
+    const doc = createPaperSheet(); doc.identity = { speciesId: baseSpecies.id, subspeciesId: subSpecies.id };
+    doc.fields.subspecies = subSpecies.name;
+    doc.progression = { draft: { ...emptyDraft(), raceId: baseSpecies.id, lineageId: subSpecies.id }, baseline: { fields: { ...doc.fields } } };
+    expect(paperIdentityDraft(doc)?.lineageId).toBe(subSpecies.id);
+    const detached = editPaperIdentityText(doc, 'subspecies', subSpecies.name);
+    expect(paperIdentityDraft(importPaperSheet(exportPaperSheet(detached)))?.lineageId).toBeNull();
+  });
+  it('keeps the full build and multiclass allocation, overlays changed level on the primary class only', () => {
+    const doc = createPaperSheet();
+    doc.identity = { classId: firstClass.id, subclassId: subClass.id, speciesId: baseSpecies.id };
+    doc.fields.level = '5'; doc.fields.str = '18';
+    doc.progression = { draft: { ...emptyDraft(), id: 'source', classId: firstClass.id, level: 5,
+      classLevels: { [firstClass.id]: 3, [secondClass.id]: 2 }, subclassId: subClass.id, subclassIds: { [firstClass.id]: subClass.id },
+      raceId: baseSpecies.id, abilities: { str: 16 }, resolvedChoices: { 'build:choice': ['choice-a'] }, featIds: ['chosen-feat'], spellIds: ['chosen-spell'],
+    }, baseline: { fields: { str: '18', level: '5' } } };
+    const draft = paperIdentityDraft(doc)!;
+    expect(draft.id).toBeUndefined();
+    expect(draft.classLevels).toEqual({ [firstClass.id]: 3, [secondClass.id]: 2 });
+    expect(draft.abilities.str).toBe(16);
+    expect(draft.resolvedChoices).toEqual({ 'build:choice': ['choice-a'] });
+    expect(draft.featIds).toEqual(['chosen-feat']);
+    doc.fields.level = '6'; doc.fields.str = '=18+1';
+    const changed = paperIdentityDraft(doc)!;
+    expect(changed.classLevels).toEqual({ [firstClass.id]: 4, [secondClass.id]: 2 });
+    expect(changed.abilities.str).toBe(17);
+    expect(doc.fields.str).toBe('=18+1');
+    expect(paperIdentityDraft(doc, calculateSheet(doc, { abilityScores: { str: 26 } }))!.abilities.str).toBe(17);
+    doc.fields.level = '2';
+    expect(paperIdentityDraft(doc)).toBeNull();
+  });
+  it('never restores manually detached identity IDs and invalidates a build snapshot for changed choices', () => {
+    const doc = createPaperSheet(); doc.identity = { classId: firstClass.id, speciesId: baseSpecies.id };
+    doc.progression = { draft: { ...emptyDraft(), classId: firstClass.id, classLevels: { [firstClass.id]: 1 }, raceId: baseSpecies.id, resolvedChoices: { selected: ['a'] } } };
+    const initialKey = paperIdentitySourceKey(doc);
+    const reordered = structuredClone(doc);
+    reordered.progression!.draft = { ...doc.progression.draft, resolvedChoices: { selected: ['a'] } };
+    expect(paperIdentitySourceKey(reordered)).toBe(initialKey);
+    reordered.progression!.draft.resolvedChoices.selected = ['b'];
+    expect(paperIdentitySourceKey(reordered)).not.toBe(initialKey);
+    const detached = editPaperIdentityText(editPaperIdentityText(doc, 'class', 'Мой класс'), 'species', 'Мой вид');
+    const draft = paperIdentityDraft(detached)!;
+    expect(draft.classId).toBeNull(); expect(draft.raceId).toBeNull(); expect(draft.classLevels).toEqual({});
+    expect(detached.progression?.draft.classId).toBe(firstClass.id);
+  });
   it('keeps arbitrary text valid and detaches parent-dependent identities without modifying notes', () => {
     let doc = createPaperSheet();
     doc.sections.features = { text: 'Мои записи', fontSize: 13 };
@@ -76,6 +141,9 @@ describe('paper identity and canonical feature projection', () => {
     expect(levelOne.abilities.map(entry => entry.id)).toEqual([effects[0].id, effects[1].id, action.id]);
     expect(levelOne.traits).toEqual([{ type: 'feat', id: feat.id, name: feat.name }]);
     expect(levelOne.abilities.some(entry => entry.id === entity(16, '').id)).toBe(false);
+    const completeBuild = projectPaperIdentityFeatures(await runtime.loadAssembly(paperIdentityDraft(doc)!), paperIdentitySourceKey(doc), true);
+    expect(completeBuild.abilities.some(entry => entry.id === entity(16, '').id)).toBe(true);
+    expect(completeBuild.traits).toEqual(levelOne.traits);
     doc.fields.level = '3';
     const levelThree = await project();
     expect(levelThree.abilities.map(entry => entry.id)).toEqual([entity(10, '').id, entity(12, '').id, entity(13, '').id, entity(15, '').id, action.id]);

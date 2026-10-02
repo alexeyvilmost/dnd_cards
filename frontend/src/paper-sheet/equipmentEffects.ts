@@ -78,11 +78,15 @@ export function paperEquipmentEffectsKey(document: PaperSheetDocument, cards: Ma
 }
 
 /** The same recursive/deduplicating effect expansion used by CharacterSheetMVP. */
-export async function loadPaperEquipmentEffects(document: PaperSheetDocument, cards: Map<string, Card>): Promise<PaperGrantedEffectSnapshot> {
+export async function loadPaperEquipmentEffects(
+  document: PaperSheetDocument,
+  cards: Map<string, Card>,
+  expand: typeof expandItemGrantedEffects = expandItemGrantedEffects,
+): Promise<PaperGrantedEffectSnapshot> {
   const { draft, items, key } = paperEffectInput(document, cards);
   const hasGrants = items.some(item => collectEffectGrantRefs(item.mechanics, item.id,
     { kind: 'other', id: item.id, name: item.name }, draft).length > 0);
-  const effects = hasGrants ? await expandItemGrantedEffects(items, draft) : [];
+  const effects = hasGrants ? await expand(items, draft) : [];
   return { key, effects };
 }
 

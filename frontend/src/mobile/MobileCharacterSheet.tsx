@@ -45,6 +45,7 @@ import {
 } from './MobileEntityCard';
 import { useMobileCharacter } from './useMobileCharacter';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
+import PaperExportButton from '../components/PaperExportButton';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
 import ActiveEffectCard from '../components/ActiveEffectCard';
 import '../pages/CharacterForge.css';
@@ -621,6 +622,7 @@ export default function MobileCharacterSheet() {
         {page === 'more' && (
           <>
             <Section title="Лист персонажа">
+              <PaperExportButton characterId={character.id} mobile />
               <button type="button" className="m-settings-row" onClick={() => setSettingsOpen(true)}>
                 <Settings size={19} />
                 <span><strong>Настройки</strong><small>Отображение, броски и оригинальные названия</small></span>

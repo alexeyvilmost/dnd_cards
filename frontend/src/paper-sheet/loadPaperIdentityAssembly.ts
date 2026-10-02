@@ -9,7 +9,7 @@ import { createRegistry } from '../engine/registry';
  * response, so this request-scoped adapter records failures around the exact same
  * assembler and resolver operations. It owns no progression or mechanics rules.
  */
-export async function loadPaperIdentityAssembly(draft: CharacterDraft) {
+function checkedPaperRuntime() {
   const failures: unknown[] = [];
   const checked = <Args extends unknown[], Result>(load: (...args: Args) => Promise<Result>) => async (...args: Args): Promise<Result> => {
     try {
@@ -40,7 +40,26 @@ export async function loadPaperIdentityAssembly(draft: CharacterDraft) {
       resolveSpell: id => getSpell(id).catch(() => null),
     }),
   });
+  const assertComplete = () => {
+    if (failures.length) throw new Error('Не все записи каталога загрузились. Сохранённые особенности не изменены.');
+  };
+  return { runtime, assertComplete };
+}
+
+export async function loadPaperIdentityAssembly(draft: CharacterDraft) {
+  const { runtime, assertComplete } = checkedPaperRuntime();
   const assembly = await runtime.loadAssembly(draft);
-  if (failures.length) throw new Error('Не все записи каталога загрузились. Сохранённые особенности не изменены.');
+  assertComplete();
   return assembly;
+}
+
+/** Reject even swallowed recursive item-reference failures before persisting a conversion. */
+export async function loadPaperItemGrantedEffects(
+  items: Parameters<ReturnType<typeof createAssemblyRuntime>['expandItemGrantedEffects']>[0],
+  draft: CharacterDraft,
+) {
+  const { runtime, assertComplete } = checkedPaperRuntime();
+  const effects = await runtime.expandItemGrantedEffects(items, draft);
+  assertComplete();
+  return effects;
 }

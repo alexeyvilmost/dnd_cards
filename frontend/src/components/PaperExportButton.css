@@ -1,0 +1,4 @@
+.paper-export-control { position: relative; display: inline-flex; }
+.paper-export-error { position: absolute; z-index: 10; top: calc(100% + 8px); right: 0; width: min(290px, 85vw); padding: 10px; border: 1px solid #a33b32; background: var(--forge-panel); color: var(--forge-text); font: 12px/1.5 Arial, sans-serif; text-align: left; }
+.paper-export-control--mobile { display: block; width: 100%; }
+.paper-export-control--mobile .paper-export-error { position: static; display: block; box-sizing: border-box; width: 100%; margin-top: 8px; background: var(--m-panel); color: var(--m-text); }

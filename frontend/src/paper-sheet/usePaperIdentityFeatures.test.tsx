@@ -108,4 +108,27 @@ describe('paper identity feature synchronization', () => {
     expect(current.identityFeatures?.key).toBe(paperIdentitySourceKey(current, calculateSheet(current, equipment)));
     expect(paperIdentityEntries(current, 'features', calculateSheet(current, equipment)).map(entry => entry.id)).toEqual(['effective']);
   });
+
+  it('loads complete build choices, includes their abilities, and rejects stale build responses', async () => {
+    const old = deferred(); const next = deferred();
+    mocks.load.mockReturnValueOnce(old.promise).mockReturnValueOnce(next.promise);
+    const doc = createPaperSheet(); doc.identity = { classId: 'class' }; doc.fields.level = '3';
+    doc.progression = { draft: { ...emptyDraft(), classId: 'class', level: 3, classLevels: { class: 2, other: 1 },
+      featIds: ['selected-feat'], actionIds: ['manual-action'], resolvedChoices: { selected: ['old'] },
+    }, baseline: { fields: { level: '3' } } };
+    doc.sections.features = { text: 'Запись игрока', fontSize: 12 };
+    await render(doc);
+    expect(mocks.load).toHaveBeenLastCalledWith(expect.objectContaining({ classLevels: { class: 2, other: 1 }, featIds: ['selected-feat'], actionIds: ['manual-action'], resolvedChoices: { selected: ['old'] } }));
+    await act(async () => setDocument(previous => ({ ...previous, progression: { ...previous.progression!, draft: { ...previous.progression!.draft, resolvedChoices: { selected: ['next'] } } } })));
+    await act(async () => old.resolve(assemblyFor('stale')));
+    expect(current.identityFeatures).toBeUndefined();
+    const assembly = assemblyFor('feat-effect');
+    assembly.effects[0].origin = { kind: 'feat', id: 'selected-feat', name: 'Черта' };
+    assembly.feats = [{ id: 'selected-feat', card_number: 'selected-feat', name: 'Выбранная черта', description: '', rarity: 'common', category: 'general', repeatable: false, created_at: '', updated_at: '' }];
+    await act(async () => next.resolve(assembly));
+    expect(current.identityFeatures?.abilities.map(entry => entry.id)).toEqual(['feat-effect']);
+    expect(current.identityFeatures?.traits.map(entry => entry.id)).toEqual(['selected-feat']);
+    expect(current.sections.features.text).toBe('Запись игрока');
+    expect(current.identityFeatures?.key).toBe(paperIdentitySourceKey(current));
+  });
 });

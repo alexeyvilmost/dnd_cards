@@ -10,8 +10,8 @@
 .ps-save-state { display: flex; gap: 6px; align-items: center; color: #818681; font-size: 11px; white-space: nowrap; }
 .ps-save-state > span { width: 5px; height: 5px; background: #7d9c82; border-radius: 50%; }
 .ps-save-failed { color: #a23a33; }
-.ps-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin: 0 auto 22px; max-width: 980px; padding-bottom: 12px; border-bottom: 1px solid #dcdcd8; }
-.ps-page-tabs, .ps-toolbar-actions { display: flex; align-items: center; gap: 4px; }
+.ps-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; margin: 0 auto 22px; max-width: 980px; padding-bottom: 12px; border-bottom: 1px solid #dcdcd8; }
+.ps-page-tabs, .ps-toolbar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .ps-toolbar button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; color: #737476; background: transparent; border: 0; padding: 8px 10px; border-radius: 5px; font-size: 12px; white-space: nowrap; cursor: pointer; }
 .ps-toolbar button:hover { background: #e8e7e3; }
 .ps-page-tabs button > span { font-size: 10px; color: #a3a4a5; }

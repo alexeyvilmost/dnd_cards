@@ -1,9 +1,10 @@
 import { ABILITY_IDS, SKILL_IDS, SKILL_ABILITY } from '../character/rules/foundation';
-import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet, PAPER_DOCUMENT_SAFETY_BYTES, type PaperSheetDocument, type SheetCalculation } from './model';
+import { calculateSheet, createPaperSheet, exportPaperSheet, importPaperSheet, validatePaperProgression, PAPER_DOCUMENT_SAFETY_BYTES, type PaperSheetDocument, type SheetCalculation } from './model';
 import { PAPER_BLOCKS, isPaperBlockId } from './blocks';
 import type { Spell } from '../types';
-import { parsePaperEntityToken, plainPaperEntities } from './references';
+import { paperEntityToken, parsePaperEntityToken, plainPaperEntities } from './references';
 import { paperSectionText } from './sectionText';
+import { currentPaperIdentityFeatures, editPaperIdentityText, PAPER_INLINE_LINEAGE_FIELD, paperIdentityEntries, paperInlineLineageId } from './identity';
 
 type Obj = Record<string, any>;
 const object = (v: unknown): Obj => v !== null && typeof v === 'object' && !Array.isArray(v) ? v as Obj : {};
@@ -83,11 +84,84 @@ function envelope(input: unknown): { root: Obj; data: Obj } {
 }
 
 export interface PaperImportResult { document: PaperSheetDocument; warnings: string[]; format: 'boh' | 'lss' }
+
+const PROGRESSION_IDENTITY_FIELDS = ['background', 'class', 'subclass', 'species', 'subspecies', PAPER_INLINE_LINEAGE_FIELD] as const;
+const PROGRESSION_NUMERIC_FIELDS = [...ABILITY_IDS, 'level'] as const;
+
+/** Our optional extension carries build choices; ordinary LSS fields remain editable. */
+function restoreLssProgression(root: Obj, document: PaperSheetDocument): PaperSheetDocument {
+  if (root.bohProgression === undefined) return document;
+  const extension = object(root.bohProgression);
+  if (extension.version !== 1) throw new Error('Неизвестная версия данных развития Bag of Holding в LSS.');
+  const sectionMetadata = object(extension.sections);
+  const manualSections = Object.fromEntries(['features', 'traits'].flatMap(section => {
+    const entry = object(sectionMetadata[section]);
+    return entry.manual == null ? [] : [[section, entry.manual]];
+  }));
+  const numericMetadata = object(extension.numericFields);
+  const numericFields = Object.fromEntries(PROGRESSION_NUMERIC_FIELDS.flatMap(key => {
+    const entry = object(numericMetadata[key]);
+    return entry.raw === undefined ? [] : [[key, entry.raw]];
+  }));
+  // Reuse the same bounded metadata/identity/text validation as native files.
+  const stored = importPaperSheet(JSON.stringify({
+    ...createPaperSheet(), fields: { ...object(extension.identityFields), ...numericFields }, sections: manualSections,
+    progression: extension.progression, identity: extension.identity, identityFeatures: extension.identityFeatures,
+  }));
+  if (!stored.progression) throw new Error('В данных развития LSS отсутствует черновик кузницы.');
+  let doc: PaperSheetDocument = { ...document, progression: stored.progression,
+    ...(stored.identity ? { identity: stored.identity } : {}),
+    ...(stored.identityFeatures ? { identityFeatures: stored.identityFeatures } : {}),
+  };
+  for (const key of PROGRESSION_NUMERIC_FIELDS) {
+    const entry = object(numericMetadata[key]);
+    // LSS displays effective numbers. Restore the original base/formula only
+    // when that exported number was not edited in the other application.
+    if (entry.raw !== undefined && typeof entry.rendered === 'string' && doc.fields[key] === entry.rendered) doc.fields[key] = stored.fields[key];
+  }
+  for (const kind of ['background', 'class', 'subclass', 'species'] as const) {
+    if ((doc.fields[kind] ?? '') !== (stored.fields[kind] ?? '')) doc = editPaperIdentityText(doc, kind, doc.fields[kind] ?? '');
+  }
+  if (doc.identity?.subspeciesId) doc.fields.subspecies = stored.fields.subspecies ?? '';
+  else {
+    const candidate = { ...doc, fields: { ...doc.fields, subspecies: stored.fields.subspecies ?? '', [PAPER_INLINE_LINEAGE_FIELD]: stored.fields[PAPER_INLINE_LINEAGE_FIELD] ?? '' } };
+    if (paperInlineLineageId(candidate)) doc = candidate;
+  }
+  for (const section of ['features', 'traits'] as const) {
+    const entry = object(sectionMetadata[section]);
+    if (typeof entry.rendered !== 'string') continue;
+    const imported = doc.sections[section]?.text ?? '';
+    if (imported === entry.rendered) {
+      if (stored.sections[section]) doc.sections[section] = stored.sections[section];
+      else delete doc.sections[section];
+    } else if (stored.identityFeatures) {
+      // An unchanged generated line still has a known portable reference even
+      // when surrounding prose was edited in LSS. Preserve that reference so
+      // automatic features cannot duplicate it on the next assembly load.
+      const lines = imported.split('\n');
+      const snapshot = section === 'features' ? stored.identityFeatures.abilities : stored.identityFeatures.traits;
+      const generated = array(entry.generated).flatMap(raw => {
+        const candidate = object(raw);
+        const entity = snapshot.find(entity => entity.type === candidate.type && entity.id === candidate.id);
+        return entity ? [entity] : [];
+      });
+      for (const entity of generated) {
+        const token = paperEntityToken(entity);
+        const rendered = lssText(rich(token).value.data).trimEnd();
+        const index = lines.indexOf(rendered);
+        if (index >= 0) lines[index] = token;
+      }
+      if (doc.sections[section]) doc.sections[section] = { ...doc.sections[section], text: lines.join('\n') };
+    }
+  }
+  return doc;
+}
+
 export function importSheetJSON(text: string): PaperImportResult {
   const parsed = parseExchangeJSON(text);
   if (object(parsed).version === 1 && object(parsed).fields) return { document: importPaperSheet(text), warnings: [], format: 'boh' };
   const { root, data } = envelope(parsed);
-  const doc = createPaperSheet();
+  let doc = createPaperSheet();
   const warnings: string[] = [];
   const preservedSpellRows = readLssSpellRows(root);
   doc.fields.name = val(data.name);
@@ -182,6 +256,7 @@ export function importSheetJSON(text: string): PaperImportResult {
   if (Object.keys(object(data.resources)).length) warnings.push('Счётчики ресурсов LSS сохранены в оригинале и приложении к листу.');
   const portrait = str(data.avatar?.webp || data.avatar?.jpeg);
   if (/^(https:\/\/|data:image\/(png|jpeg|webp|gif);base64,)/.test(portrait)) doc.portrait = portrait;
+  doc = restoreLssProgression(root, doc);
   doc.exchange = { format: 'lss', source: JSON.stringify(root), baseline: exportPaperSheet(doc) };
   // Run the same validation as native files and server persistence before replacing any sheet.
   return { document: importPaperSheet(exportPaperSheet(doc)), warnings, format: 'lss' };
@@ -423,6 +498,25 @@ export function exportLssSheet(doc: PaperSheetDocument, calculations?: SheetCalc
     if (notesSuffix) data.text['notes-6'] = withSpellNotesSuffix(object(data.text['notes-6']), notesSuffix);
   }
   root.data = JSON.stringify(data);
+  if (doc.progression) {
+    root.bohProgression = {
+      version: 1, progression: validatePaperProgression(doc.progression),
+      ...(doc.identity ? { identity: doc.identity } : {}),
+      ...(currentPaperIdentityFeatures(doc, calc) ? { identityFeatures: currentPaperIdentityFeatures(doc, calc) } : {}),
+      identityFields: Object.fromEntries(PROGRESSION_IDENTITY_FIELDS.map(key => [key, doc.fields[key] ?? ''])),
+      numericFields: Object.fromEntries(PROGRESSION_NUMERIC_FIELDS.filter(key => doc.fields[key] !== undefined).map(key => [key, {
+        raw: doc.fields[key], rendered: key === 'level' ? val(data.info.level) : str(data.stats[key]?.score),
+      }])),
+      sections: Object.fromEntries((['features', 'traits'] as const).map(section => {
+        const lssKey = section === 'traits' ? 'feats' : section;
+        return [section, {
+          manual: doc.sections[section] ?? null,
+          rendered: lssText(object(data.text[lssKey]).value?.data).trimEnd(),
+          generated: paperIdentityEntries(doc, section, calc),
+        }];
+      })),
+    };
+  } else if (object(root.bohProgression).version === 1) delete root.bohProgression;
   const json = JSON.stringify(root, null, 2);
   parseExchangeJSON(json);
   return json;

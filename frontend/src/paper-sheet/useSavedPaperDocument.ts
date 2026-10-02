@@ -22,18 +22,21 @@ export function useSavedPaperDocument(saved: SavedPaperDocument) {
   const [conflict, setConflict] = useState(initial.conflict);
   const state = useRef({ revision: saved.revision, latest: initial.document, acknowledged: saved.document, pending: initial.pending, saving: false, blocked: initial.conflict });
   const timer = useRef<ReturnType<typeof setTimeout>>();
+  const inFlight = useRef<Promise<void> | null>(null);
   const mounted = useRef(true);
   const backup = useCallback(() => {
     const current = state.current;
     try { localStorage.setItem(draftKey(saved.id), JSON.stringify({ document: current.latest, revision: current.revision, pending: current.pending })); }
     catch { /* Server save remains available; errors never claim that a local copy exists. */ }
   }, [saved.id]);
-  const flush = useCallback(async () => {
+  const flush = useCallback((): Promise<void> => {
     const current = state.current;
-    if (current.saving || !current.pending || current.blocked) return;
+    if (inFlight.current) return inFlight.current;
+    if (!current.pending || current.blocked) return Promise.resolve();
     current.saving = true;
     if (mounted.current) { setStatus('Сохраняем…'); setError(''); }
     const document = current.latest;
+    const request = (async () => {
     try {
       current.revision = await paperDocumentApi.save(saved.id, document, current.revision);
       current.acknowledged = document;
@@ -48,7 +51,21 @@ export function useSavedPaperDocument(saved: SavedPaperDocument) {
       current.saving = false;
       if (current.pending && !current.blocked && mounted.current) timer.current = setTimeout(() => { void flush(); }, 500);
     }
+    })();
+    inFlight.current = request;
+    void request.then(() => { if (inFlight.current === request) inFlight.current = null; });
+    return request;
   }, [saved.id, backup]);
+  /** Navigation into the builder must use the acknowledged, complete sheet. */
+  const flushChanges = useCallback(async () => {
+    clearTimeout(timer.current);
+    do {
+      await flush();
+      if (state.current.blocked) return false;
+    } while (state.current.pending);
+    clearTimeout(timer.current);
+    return true;
+  }, [flush]);
   const onDocumentChange = useCallback((document: PaperSheetDocument) => {
     state.current.latest = document;
     state.current.pending = document !== state.current.acknowledged;
@@ -66,5 +83,5 @@ export function useSavedPaperDocument(saved: SavedPaperDocument) {
   }, [flush]);
   const retry = () => { if (conflict) return; state.current.blocked = false; void flush(); };
   const discardDraft = () => { localStorage.removeItem(draftKey(saved.id)); state.current.pending = false; window.location.reload(); };
-  return { initialDocument: initial.document, onDocumentChange, status, error, conflict, retry, discardDraft };
+  return { initialDocument: initial.document, onDocumentChange, status, error, conflict, retry, discardDraft, flushChanges };
 }

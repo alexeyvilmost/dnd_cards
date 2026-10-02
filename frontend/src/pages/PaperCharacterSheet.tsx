@@ -81,11 +81,14 @@ function MainPage() {
 
 const PAGES = [{ id: 'main', name: 'Персонаж', Component: MainPage }, { id: 'story', name: 'История', Component: StoryPage }, { id: 'notes', name: 'Заметки', Component: NotesPage }, { id: 'spells', name: 'Заклинания', Component: SpellPage }];
 
-export default function PaperCharacterSheet({ initialDocument, onDocumentChange, remoteSaveStatus, remoteSaveError }: {
+export default function PaperCharacterSheet({ initialDocument, onDocumentChange, remoteSaveStatus, remoteSaveError, onOpenConstructor, onLevelUp, progressionBusy }: {
   initialDocument?: PaperSheetDocument;
   onDocumentChange?: (document: PaperSheetDocument) => void;
   remoteSaveStatus?: string;
   remoteSaveError?: string;
+  onOpenConstructor?: () => void;
+  onLevelUp?: () => void;
+  progressionBusy?: boolean;
 } = {}) {
   const [initial] = useState(() => initialDocument ? { document: initialDocument, error: undefined } : loadPaperSheet());
   const [doc, setDoc] = useState(initial.document);
@@ -194,7 +197,7 @@ export default function PaperCharacterSheet({ initialDocument, onDocumentChange,
   return <PaperSheetContext.Provider value={{ doc, setDoc, setField, calculations, equipment }}><div className="paper-sheet">
     <div className="ps-page-top"><div><h1>Бумажный лист персонажа</h1><p>Классический лист · D&D 2024</p></div><div className={`ps-save-state ${saveError || remoteSaveError ? 'ps-save-failed' : ''}`} role="status"><span />{remoteSaveStatus || (saveError ? 'Не сохранено' : 'Сохранено в этом браузере')}</div></div>
     <div className="ps-toolbar"><div className="ps-page-tabs" aria-label="Страницы листа"><button type="button" aria-pressed={allPages} onClick={() => setAllPages(true)}>Все</button>{PAGES.map((page, index) => <button type="button" key={page.id} aria-current={!allPages && activePage === page.id ? 'page' : undefined} onClick={() => { setAllPages(false); setActivePage(page.id); }}><span>{index + 1}</span>{page.name}</button>)}</div>
-      <div className="ps-toolbar-actions"><button type="button" aria-label={`Скрытые блоки: ${doc.hiddenBlocks.length}`} onClick={() => setBlocksOpen(true)}><LayoutGrid size={17} /><span>Блоки{doc.hiddenBlocks.length ? ` (${doc.hiddenBlocks.length})` : ''}</span></button><button type="button" aria-label="Настройки листа" onClick={() => setSettingsOpen(true)}><Settings2 size={17} /></button><button type="button" aria-label="Справка по формулам" onClick={() => setHelpOpen(true)}><HelpCircle size={17} /></button><button type="button" onClick={print}><Printer size={16} /><span>Печать</span></button><button type="button" disabled={pdfBusy} onClick={() => void pdf()}><Download size={16} /><span>{pdfBusy ? 'Создаём PDF…' : 'Скачать PDF'}</span></button></div>
+      <div className="ps-toolbar-actions">{onOpenConstructor && <button type="button" disabled={progressionBusy} onClick={onOpenConstructor}>Конструктор персонажа</button>}{onLevelUp && <button type="button" disabled={progressionBusy || calculations.values.level >= 20} onClick={onLevelUp} aria-description={calculations.values.level >= 20 ? 'Достигнут максимальный уровень.' : 'Выбрать способности следующего уровня.'}>Повысить уровень</button>}<button type="button" aria-label={`Скрытые блоки: ${doc.hiddenBlocks.length}`} onClick={() => setBlocksOpen(true)}><LayoutGrid size={17} /><span>Блоки{doc.hiddenBlocks.length ? ` (${doc.hiddenBlocks.length})` : ''}</span></button><button type="button" aria-label="Настройки листа" onClick={() => setSettingsOpen(true)}><Settings2 size={17} /></button><button type="button" aria-label="Справка по формулам" onClick={() => setHelpOpen(true)}><HelpCircle size={17} /></button><button type="button" onClick={print}><Printer size={16} /><span>Печать</span></button><button type="button" disabled={pdfBusy} onClick={() => void pdf()}><Download size={16} /><span>{pdfBusy ? 'Создаём PDF…' : 'Скачать PDF'}</span></button></div>
     </div>
     {(saveError || message) && <div className="ps-message" role={saveError ? 'alert' : 'status'}>{saveError || message}<button type="button" onClick={() => { setMessage(''); if (saveError) download(); }}>{saveError ? 'Скачать копию' : 'Закрыть'}</button></div>}
     {(itemLoading || itemLoadError) && <div className="ps-message" role={itemLoadError ? 'alert' : 'status'}>{itemLoadError || 'Загружаем бонусы снаряжения…'}{itemLoadError && <button type="button" onClick={() => setItemReload(value => value + 1)}>Повторить</button>}</div>}

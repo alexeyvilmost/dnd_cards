@@ -3,7 +3,7 @@ import { loadPaperIdentityAssembly } from './loadPaperIdentityAssembly';
 import type { PaperSheetDocument, SheetCalculation } from './model';
 import { paperIdentityDraft, paperIdentitySourceKey, projectPaperIdentityFeatures } from './identity';
 
-const calculationInputs = (doc: PaperSheetDocument) => JSON.stringify([doc.identity, doc.fields, doc.training, doc.checks]);
+const calculationInputs = (doc: PaperSheetDocument) => JSON.stringify([doc.identity, doc.fields, doc.training, doc.checks, doc.progression]);
 
 /** Generation replaces only its own snapshot; editor text and unrelated state stay untouched. */
 export function usePaperIdentityFeatures(doc: PaperSheetDocument, setDoc: Dispatch<SetStateAction<PaperSheetDocument>>, calculations: SheetCalculation) {
@@ -17,19 +17,21 @@ export function usePaperIdentityFeatures(doc: PaperSheetDocument, setDoc: Dispat
     let current = true;
     const snapshot = latest.current;
     const draft = paperIdentityDraft(snapshot.doc, snapshot.calculations);
-    if (!snapshot.doc.identity || !Object.values(snapshot.doc.identity).some(Boolean)) {
+    if (!snapshot.doc.progression && (!snapshot.doc.identity || !Object.values(snapshot.doc.identity).some(Boolean))) {
       setStatus({ key, loading: false, error: '' });
-      setDoc(previous => !Object.values(previous.identity ?? {}).some(Boolean) && previous.identityFeatures ? { ...previous, identityFeatures: undefined } : previous);
+      setDoc(previous => !previous.progression && !Object.values(previous.identity ?? {}).some(Boolean) && previous.identityFeatures ? { ...previous, identityFeatures: undefined } : previous);
       return;
     }
     if (!draft) {
-      setStatus({ key, loading: false, error: 'Для автоматических особенностей укажите целый уровень от 1 до 20.' });
+      setStatus({ key, loading: false, error: snapshot.doc.progression
+        ? 'Проверьте уровень, распределение уровней классов и формулы характеристик перед обновлением способностей.'
+        : 'Для автоматических особенностей укажите целый уровень от 1 до 20.' });
       return;
     }
     setStatus({ key, loading: true, error: '' });
     void loadPaperIdentityAssembly(draft).then(assembly => {
       if (!current) return;
-      const projected = projectPaperIdentityFeatures(assembly, key);
+      const projected = projectPaperIdentityFeatures(assembly, key, !!snapshot.doc.progression);
       setDoc(previous => {
         // calculations may contain effective equipment values; recalculating
         // without that projection would reject valid formula-based levels.

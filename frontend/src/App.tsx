@@ -49,6 +49,7 @@ const AddItemToInventory = lazy(() => import('./pages/AddItemToInventory'));
 const CharacterForge = lazy(() => import('./pages/CharacterForge'));
 const CharacterSheetMVP = lazy(() => import('./pages/CharacterSheetMVP'));
 const PaperSheetEntry = lazy(() => import('./pages/PaperSheetEntry'));
+const PaperCharacterForge = lazy(() => import('./pages/PaperCharacterForge'));
 const CharactersForgeList = lazy(() => import('./pages/CharactersForgeList'));
 const InitiativeTracker = lazy(() => import('./pages/InitiativeTracker'));
 const CardTypeSelection = lazy(() => import('./pages/CardTypeSelection'));
@@ -108,7 +109,7 @@ const isRulesLabPath = (path: string) => path === '/rules-lab' || path.startsWit
 function AppContent() {
   const location = useLocation();
   const isRulesLab = isRulesLabPath(location.pathname);
-  const isPaperSheet = /^\/paper-sheet(?:\/[^/]+)?\/?$/.test(location.pathname);
+  const isPaperSheet = /^\/paper-sheet(?:\/[^/]+(?:\/(?:forge|level-up))?)?\/?$/.test(location.pathname);
   const isHome = location.pathname === '/';
   const [conditionsReady, setConditionsReady] = useState(false);
   const [conditionAuthority, setConditionAuthority] = useState<ConditionLoadResult | null>(null);
@@ -178,11 +179,16 @@ function AppContent() {
           <CharacterFormulaRoot>
             <PinModeProvider>
               <EntityDetailProvider readOnly>
-                <Suspense fallback={<div style={{ padding: '60px 24px', textAlign: 'center' }}>Загрузка листа…</div>}>
-                  <Routes>
-                    <Route path="/paper-sheet/:id?" element={<Layout><PaperSheetEntry /></Layout>} />
-                  </Routes>
-                </Suspense>
+                <ChoiceDialogProvider>
+                  <Suspense fallback={<div style={{ padding: '60px 24px', textAlign: 'center' }}>Загрузка листа…</div>}>
+                    <Routes>
+                      <Route path="/paper-sheet/create" element={<Layout><PaperCharacterForge /></Layout>} />
+                      <Route path="/paper-sheet/:id/forge" element={<Layout><PaperCharacterForge /></Layout>} />
+                      <Route path="/paper-sheet/:id/level-up" element={<Layout><PaperCharacterForge levelUp /></Layout>} />
+                      <Route path="/paper-sheet/:id?" element={<Layout><PaperSheetEntry /></Layout>} />
+                    </Routes>
+                  </Suspense>
+                </ChoiceDialogProvider>
               </EntityDetailProvider>
             </PinModeProvider>
           </CharacterFormulaRoot>
