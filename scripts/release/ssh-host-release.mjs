@@ -44,6 +44,7 @@ export async function executeHostGates({directory,packet,request,token,run=execu
   // authentication is never read or overwritten by this attempt.
   const env={PATH:process.env.PATH,HOME:process.env.HOME,LANG:'C.UTF-8',GITHUB_TOKEN:token,
     GITHUB_REPOSITORY:request.repository,GITHUB_SHA:request.controlCommit,GITHUB_EVENT_NAME:request.eventName,
+    GITHUB_RUN_ID:String(request.runId),GITHUB_RUN_ATTEMPT:String(request.attempt),DEPLOY_SOURCE_COMMIT:request.sourceCommit,
     DEPLOY_PRODUCTION_ENABLED:request.productionEnabled,DOCKER_CONFIG:dockerConfig};
   const stages=[];let cleaned=false,aborted=false;
   const cleanup=()=>{if(cleaned)return;if(path.dirname(dockerConfig)!==path.resolve(directory)||path.basename(dockerConfig)!=='docker-auth')throw Error('Invalid auth cleanup target');rmSync(dockerConfig,{recursive:true,force:true});cleaned=true;};
@@ -76,7 +77,10 @@ export async function executeHostGates({directory,packet,request,token,run=execu
     save(operation,result);
     await command('deployment-handoff.mjs',['receipt',operation,ready,receipt]);
     const manifest=read(path.join(receipt,'manifest.json')),deployment=read(path.join(receipt,'deployment.json'));
-    const publicResult=validatePublicReceipt({status:'succeeded',sourceCommit:request.sourceCommit,controlCommit:request.controlCommit,manifest,deployment},request);
+    const activeProjectionFile=path.join(receipt,'active-projection.json');
+    await command('active-projection.mjs',[pointers.host_config,operation,path.join(receipt,'manifest.json'),activeProjectionFile,directory]);
+    const activeProjection=read(activeProjectionFile);
+    const publicResult=validatePublicReceipt({status:'succeeded',sourceCommit:request.sourceCommit,controlCommit:request.controlCommit,manifest,deployment,activeProjection},request);
     cleanup();
     return publicResult;
   }finally{cleanup();for(const signal of signals)process.removeListener(signal,stop);}

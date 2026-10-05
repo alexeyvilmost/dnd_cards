@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-05T05:10:24.375Z",
+  "ci": {
+    "runId": 37264490549,
+    "commit": "1fced1fceb25bb19187084447c73afc6f322ba30",
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37264490549",
+    "publication": false,
+    "deployment": false
+  },
+  "lanes": [
+    {
+      "lane": "unit",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37264490549/all/local-suite-unit/report.json",
+        "sha256": "sha256:02e07e93dcb4c10907648b46dfba17148c8cbd5d0915590e949532cf80c81dc7"
+      },
+      "failedChecks": [],
+      "cleanup": {
+        "status": "not-required",
+        "errors": []
+      }
+    },
+    {
+      "lane": "backend",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37264490549/all/local-suite-backend/report.json",
+        "sha256": "sha256:100222800412a209c402fa637cb879526b257f0d83e2c7632869c9ffaef9a15f"
+      },
+      "failedChecks": [],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "lane": "flows",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37264490549/all/local-suite-flows/report.json",
+        "sha256": "sha256:c304e6dfe9314bfde554d5fb4a5ef129803682aa7428ef832795e3ea92c1e821"
+      },
+      "failedChecks": [],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "lane": "extended",
+      "status": "failed",
+      "receipt": {
+        "path": "outputs/ci/37264490549/all/local-suite-extended/report.json",
+        "sha256": "sha256:5307a9b98a49110c959853acd5cc8508db50cc7baa97053f7eeecd0e2ceff146"
+      },
+      "failedChecks": [
+        {
+          "id": "browser-ui-fixtures-battle3d",
+          "durationMs": 144112,
+          "diagnostics": {
+            "schemaVersion": 1,
+            "kind": "safe-browser-source-locations",
+            "failures": [
+              {
+                "file": "frontend/e2e/battle-3d.spec.ts",
+                "line": 78,
+                "column": 1,
+                "status": "failed",
+                "errorLocations": [
+                  {
+                    "file": "frontend/e2e/battle-3d.spec.ts",
+                    "line": 86,
+                    "column": 84
+                  }
+                ]
+              }
+            ],
+            "rawOutputIncluded": false
+          }
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    }
+  ],
+  "counts": {
+    "node": {
+      "tests": 672,
+      "passed": 672,
+      "skipped": 0
+    },
+    "vitest": {
+      "tests": 6462,
+      "passed": 6462,
+      "skipped": 0
+    },
+    "goRequiredPassed": 753,
+    "workerAndDatabaseNodePassed": 20,
+    "primaryBrowserPassed": 12,
+    "additionalProductionBrowserPassed": 48,
+    "battle3dSelected": 8,
+    "battle3dPassed": null
+  },
+  "localFullVitestReplay": {
+    "receipt": {
+      "path": "outputs/ci/final-linux-vitest-20261005/proof.json",
+      "sha256": "sha256:c477ec2df107567c44372090c435d7d147c8ecf1645bf22797e03e5f28469f05"
+    },
+    "result": {
+      "path": "outputs/ci/final-linux-vitest-20261005/vitest-result.json",
+      "sha256": "sha256:58078e62252ac3de3cdaf6b9d771ede3f31e97f634d7f6ed47835ab34b925f5b"
+    },
+    "baseSourceCommit": "be8a87f1948f36c2b45f0c4eca8d583b1adb4386",
+    "overlays": [
+      {
+        "file": "frontend/src/pages/rulesLabFixture.generated.test.ts",
+        "sha256": "sha256:2fef97b2357ae111873c29e6a4ae97f9549c2614c20a1a7b61de1f909e66dcb1"
+      }
+    ],
+    "profile": {
+      "CI": "1",
+      "cpuAffinity": "0-3",
+      "cpuQuota": 4,
+      "memoryGiB": 8,
+      "maxWorkers": 2,
+      "network": "none"
+    },
+    "counts": {
+      "total": 6462,
+      "passed": 6462,
+      "failed": 0,
+      "pending": 0
+    },
+    "sourceStillIdentical": true,
+    "cleanup": {
+      "status": "stopped"
+    }
+  },
+  "remainingFailure": {
+    "selectedTest": {
+      "file": "frontend/e2e/battle-3d.spec.ts",
+      "line": 78,
+      "column": 1,
+      "status": "failed",
+      "errorLocations": [
+        {
+          "file": "frontend/e2e/battle-3d.spec.ts",
+          "line": 86,
+          "column": 84
+        }
+      ]
+    },
+    "assertion": "First camera zoom expects the full projected label bounding box to change.",
+    "defaultAssertionBudgetMs": 5000,
+    "rawBrowserOutputRetained": false,
+    "localInvestigation": "Two independent zooms changed the real projection after3306 and3399ms; individual layout reads were fast. Bounded software-rendering wait under review, no lost keyboard event observed locally."
+  },
+  "localCameraRepair": {
+    "receipt": {
+      "path": "outputs/ci/battle3d-camera/repair-proof.json",
+      "sha256": "sha256:f8cdc292d45f95c2a79decb7a006e6c78f783837bcfd77108846b1a7245de7c8"
+    },
+    "source": {
+      "path": "frontend/e2e/battle-3d.spec.ts",
+      "sha256": "sha256:7357c0ac1edc1a3f82725e1d4b06cd8c0b489efe80667608ccb52c0ba9da8b97"
+    },
+    "actualRuns": [
+      {
+        "path": "outputs/ci/battle3d-camera/final-full/report.json",
+        "sha256": "sha256:1a445fc1aa24a73c68434cd2d233b27688ba5d18e1a7dbe8ed95817fadb290c5",
+        "stats": {
+          "startTime": "2026-10-05T05:02:57.261Z",
+          "duration": 256190.31600000002,
+          "expected": 8,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        }
+      },
+      {
+        "path": "outputs/ci/battle3d-camera/windows-final/report.json",
+        "sha256": "sha256:e95b7d1537b1f304f237ac04046976667a28e808f82d509c8aa20647d950a559",
+        "stats": {
+          "startTime": "2026-10-05T05:01:27.450Z",
+          "duration": 22023.498,
+          "expected": 1,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        }
+      }
+    ],
+    "oldDeadlineMs": 5000,
+    "newDeadlineMs": 30000,
+    "comparatorUnchanged": true,
+    "globalTestBudgetMs": 120000,
+    "retries": 0,
+    "productionSourceChanged": false,
+    "doesNotManufactureLocalRed": true,
+    "cleanup": {
+      "status": "stopped",
+      "owner": "camera_ci_1f",
+      "ownerVerified": true,
+      "remainingOwnedContainers": 0,
+      "imagesRetained": true
+    }
+  },
+  "nextGate": "Locally verified camera repair and public active-state transport bootstrap must pass a new full exact-commit CI before publication.",
+  "activeProjectionBootstrap": {
+    "status": "locally-passed",
+    "rootVerification": {
+      "tests": 43,
+      "passed": 43,
+      "failed": 0,
+      "skipped": 0,
+      "receipt": {
+        "path": "outputs/testing/writer-active-projection/root-focused.log",
+        "sha256": "sha256:144f57005f10944c1ae8657e3bea1f2c0a73cae0aec91c7a3323ac67c463e1c7"
+      }
+    },
+    "privatePatch": {
+      "path": "outputs/testing/writer-active-projection/active-projection.patch",
+      "sha256": "sha256:b76f919efe57c67cee9d286ea2f24b25d1d62a0892b98846e2e9cdc4c2ddc6c3"
+    },
+    "ownerReceipt": {
+      "path": "outputs/testing/writer-active-projection/receipt.json",
+      "sha256": "sha256:e92ae2436b1acc87cfde83ea4cddc288ab1f041ed0062ec7c1a6448623c5548b"
+    },
+    "sourceFiles": [
+      {
+        "path": "scripts/release/active-projection.mjs",
+        "sha256": "sha256:dcce59ca521dae7d03b10e835a0da1360218ebfce0105ef88cbdadb519d02ccc"
+      },
+      {
+        "path": "scripts/release/active-projection.test.mjs",
+        "sha256": "sha256:8772c984a3948d1402ba87df1f2c9bbdd93ebc8a0fb6bf6e7c5d563918fd610a"
+      },
+      {
+        "path": "scripts/release/ssh-host-release.mjs",
+        "sha256": "sha256:250b874f45d7c668fba02a188ca106fda02a6f10d60bcfc3a76459e0ede21ca6"
+      },
+      {
+        "path": "scripts/release/ssh-transport.mjs",
+        "sha256": "sha256:0dea3623194223e5a65f0635c938e30a5c52f0121fbaa8da73d1ab21f15d7fb4"
+      },
+      {
+        "path": "scripts/release/ssh-transport.test.mjs",
+        "sha256": "sha256:a22b37da20f4351995eb16d240081a763df5ca6aa18df2a03745b9e5ce4543ae"
+      }
+    ],
+    "alwaysCoreSelection": {
+      "path": "tests/suites.json",
+      "sha256": "sha256:2db9b280384d4a8729e7925d4e13e8628d8055d94057d4faccb234bce3a16204"
+    },
+    "scope": "Strict public recorded-state projection from the current succeeded operation under the deployment lock; actual component launches and accepted database metadata preserved.",
+    "freshHealthOrDatabaseProof": false,
+    "workflowChanged": false,
+    "writersEnabled": false,
+    "appliedToShared": true
+  }
+}

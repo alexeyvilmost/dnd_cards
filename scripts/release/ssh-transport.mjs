@@ -8,6 +8,7 @@ import path from 'node:path';
 import {verifyCandidateProvenance} from './deployment-handoff.mjs';
 import {evidenceHash,validateManifest} from './validate-manifest.mjs';
 import {unpackControlArchive} from './ssh-archive.mjs';
+import {validateActiveProjection} from './active-projection.mjs';
 
 export const transferFiles=['candidate.json','manifest.json','core-report.json','verified-release-run.json'];
 const hash=value=>'sha256:'+createHash('sha256').update(value).digest('hex');
@@ -74,10 +75,14 @@ export async function createTransfer({controlDirectory,candidateDirectory,reques
 export function attemptDirectory(request){validateSSHRequest(request);return `${request.attemptRoot}/deploy-${request.runId}-${request.attempt}`;}
 export function validatePublicReceipt(result,request){
   validateSSHRequest(request);validateManifest(result?.manifest);
+  const exact=(value,keys)=>value&&evidenceHash(Object.keys(value).sort())===evidenceHash([...keys].sort());
+  if(!exact(result,['status','sourceCommit','controlCommit','manifest','deployment','activeProjection'])
+    ||!exact(result.deployment,['schemaVersion','status','releaseId','releaseCommit','controlCommit','manifestHash']))throw Error('Unexpected public deployment receipt fields');
   if(result.status!=='succeeded'||result.controlCommit!==request.controlCommit||result.sourceCommit!==request.sourceCommit
     ||result.manifest.releaseCommit!==request.sourceCommit||result.deployment?.schemaVersion!==1||result.deployment.status!=='succeeded'
     ||result.deployment.releaseId!==result.manifest.releaseId||result.deployment.manifestHash!==evidenceHash(result.manifest)
     ||result.deployment.controlCommit!==request.controlCommit||result.deployment.releaseCommit!==request.sourceCommit)throw Error('Host returned an invalid deployment receipt');
+  validateActiveProjection(result.activeProjection,{request,manifest:result.manifest});
   return result;
 }
 export async function deployOverSSH({controlDirectory,candidateDirectory,outputDirectory,request,endpoint,privateKey,knownHosts,token,run=execute}){
@@ -102,6 +107,7 @@ export async function deployOverSSH({controlDirectory,candidateDirectory,outputD
     await mkdir(outputDirectory,{recursive:false});
     await writeFile(path.join(outputDirectory,'manifest.json'),JSON.stringify(result.manifest,null,2)+'\n',{flag:'wx'});
     await writeFile(path.join(outputDirectory,'deployment.json'),JSON.stringify(result.deployment,null,2)+'\n',{flag:'wx'});
+    await writeFile(path.join(outputDirectory,'active-projection.json'),JSON.stringify(result.activeProjection,null,2)+'\n',{flag:'wx'});
     return {status:'succeeded',attemptDirectory:remote,sourceCommit:request.sourceCommit,controlCommit:request.controlCommit};
   }catch(error){throw Error(`SSH deployment did not produce a verified receipt. Do not repeat apply blindly; inspect ${remote} and the existing deployment journal. ${error.message}`);}
   finally{if(path.dirname(path.resolve(local))!==path.resolve(tmpdir())||!path.basename(local).startsWith('bagofholding-ssh-'))throw Error('Invalid temporary cleanup target');await rm(local,{recursive:true,force:true});}

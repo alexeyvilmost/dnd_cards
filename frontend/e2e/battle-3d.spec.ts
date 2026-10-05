@@ -83,7 +83,9 @@ test('canvas raycasts the intended board cell, camera controls work and dragging
   const original = await heroLabel.boundingBox();
   await scene(page).focus();
   await page.keyboard.press('+');
-  await expect.poll(async () => JSON.stringify(await heroLabel.boundingBox())).not.toBe(JSON.stringify(original));
+  // Projected labels update on the next software WebGL frame, which can
+  // exceed Playwright's default 5s polling budget on a constrained runner.
+  await expect.poll(async () => JSON.stringify(await heroLabel.boundingBox()), {timeout:30_000}).not.toBe(JSON.stringify(original));
   await page.keyboard.press('Home');
   const reset = await heroLabel.boundingBox();
   await expect(page.getByRole('button', {name:/Повернуть камеру/})).toHaveCount(0);

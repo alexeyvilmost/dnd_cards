@@ -38,6 +38,7 @@
         "scripts/release/prepare-host-release.test.mjs",
         "scripts/release/candidate-rehearsal.test.mjs",
         "scripts/release/ssh-transport.test.mjs",
+        "scripts/release/active-projection.test.mjs",
         "scripts/release/docker-rehearsal.test.mjs",
         "scripts/release/rehearsal-scenarios.test.mjs",
         "scripts/release/migration-rehearsal.test.mjs",

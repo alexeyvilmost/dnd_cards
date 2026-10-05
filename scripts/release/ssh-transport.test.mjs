@@ -23,6 +23,11 @@ function fixture(req=request()){
  return {request:req,archiveHash:hash('0'),files:Object.fromEntries(Object.entries(data).map(([file,value])=>{const text=JSON.stringify(value);return [file,{text,sha256:digest(text)}];})),manifest};
 }
 async function temp(t){const root=await mkdtemp(path.join(tmpdir(),'ssh-release-test-'));t.after(async()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('ssh-release-test-'));await rm(root,{recursive:true,force:true});});return root;}
+function projection(manifest,req=request()){
+ const active={schemaVersion:1,status:'active',manifest,instances:Object.fromEntries(['frontend','backend','rulesWorker'].map(key=>[key,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]))};
+ const document={schemaVersion:1,kind:'recorded-active-deployment',status:'succeeded',scope:'recorded-active-only',deployment:{repository:req.repository,runId:Number(req.runId),runAttempt:Number(req.attempt),controlCommit:req.controlCommit,sourceCommit:req.sourceCommit},manifestHash:evidenceHash(manifest),activeHash:evidenceHash(active),operationHash:hash('9'),active};
+ return {...document,projectionHash:evidenceHash(document)};
+}
 async function sourceFixture(t){const root=await temp(t),control=path.join(root,'repo'),candidate=path.join(root,'candidate'),output=path.join(root,'transfer');await mkdir(control);await mkdir(candidate);await mkdir(output);
  await execute('git',['init','--quiet'],{cwd:control});await writeFile(path.join(control,'source.txt'),'exact source');await writeFile(path.join(control,'материал-'.repeat(8)+'.txt'),'Юникод 🎲');await execute('git',['add','.'],{cwd:control});await execute('git',['-c','user.name=Unit Fixture','-c','user.email=fixture@example.invalid','commit','--quiet','-m','synthetic transfer fixture'],{cwd:control});
  const req={...request(),controlCommit:(await execute('git',['rev-parse','HEAD'],{cwd:control})).trim()},packet=fixture(req);
@@ -40,9 +45,9 @@ test('candidate transfer rejects corruption, extra files and changed source befo
 });
 test('public receipt is bound to the exact successful manifest, release and control identities',()=>{
  const req=request(),{manifest}=fixture(req),receipt={status:'succeeded',sourceCommit:req.sourceCommit,controlCommit:req.controlCommit,manifest,
-  deployment:{schemaVersion:1,status:'succeeded',releaseId:manifest.releaseId,releaseCommit:req.sourceCommit,controlCommit:req.controlCommit,manifestHash:evidenceHash(manifest)}};
+  deployment:{schemaVersion:1,status:'succeeded',releaseId:manifest.releaseId,releaseCommit:req.sourceCommit,controlCommit:req.controlCommit,manifestHash:evidenceHash(manifest)},activeProjection:projection(manifest,req)};
  assert.equal(validatePublicReceipt(receipt,req),receipt);
- for(const mutate of [r=>r.deployment.status='failed',r=>r.deployment.schemaVersion=2,r=>r.deployment.releaseId='other',r=>r.deployment.manifestHash=hash('0'),r=>r.deployment.controlCommit='d'.repeat(40),r=>r.manifest.releaseCommit='e'.repeat(40),r=>delete r.manifest.components]){
+ for(const mutate of [r=>r.deployment.status='failed',r=>r.deployment.schemaVersion=2,r=>r.deployment.releaseId='other',r=>r.deployment.manifestHash=hash('0'),r=>r.deployment.controlCommit='d'.repeat(40),r=>r.manifest.releaseCommit='e'.repeat(40),r=>delete r.manifest.components,r=>delete r.activeProjection,r=>r.secret='PRIVATE_CANARY',r=>r.deployment.databaseURL='PRIVATE_CANARY',r=>r.activeProjection.deployment.runAttempt++]){
   const copy=structuredClone(receipt);mutate(copy);assert.throws(()=>validatePublicReceipt(copy,req));
  }
 });
@@ -74,12 +79,13 @@ test('host gates re-fetch workflow metadata, preserve every proof and return onl
   const script=path.basename(args[0]);if(script==='prepare-host-release.mjs')return 'capture_directory=/private/capture\nhost_config=/private/capture/host.json\nrehearsal_config=/private/capture/rehearsal.json\n';
   if(script==='deploy.mjs'){assert.equal(args[1],'adopt');return JSON.stringify({status:'succeeded',plan:{candidateHash:evidenceHash(packet.manifest)}});}
   if(script==='deployment-handoff.mjs'&&args[1]==='receipt'){await mkdir(path.join(directory,'deployed-release'));await writeFile(path.join(directory,'deployed-release','manifest.json'),JSON.stringify(packet.manifest));await writeFile(path.join(directory,'deployed-release','deployment.json'),JSON.stringify({schemaVersion:1,status:'succeeded',releaseId:packet.manifest.releaseId,releaseCommit:request().sourceCommit,controlCommit:request().controlCommit,manifestHash:evidenceHash(packet.manifest)}));}
+  if(script==='active-projection.mjs'){assert.equal(args[1],'/private/capture/host.json');assert.equal(args[2],path.join(directory,'deployment-operation.json'));assert.equal(args.at(-1),directory);assert.equal(options.env.GITHUB_RUN_ID,'42');assert.equal(options.env.GITHUB_RUN_ATTEMPT,'1');assert.equal(options.env.DEPLOY_SOURCE_COMMIT,request().sourceCommit);await writeFile(args[4],JSON.stringify(projection(packet.manifest)));}
   return '';
  };
- const result=await executeHostGates({directory,packet,request:request(),token,run});assert.deepEqual(Object.keys(result).sort(),['controlCommit','deployment','manifest','sourceCommit','status']);assert.equal(existsSync(path.join(directory,'docker-auth')),false);assert.ok(!JSON.stringify(result).includes(token));
+ const result=await executeHostGates({directory,packet,request:request(),token,run});assert.deepEqual(Object.keys(result).sort(),['activeProjection','controlCommit','deployment','manifest','sourceCommit','status']);assert.equal(existsSync(path.join(directory,'docker-auth')),false);assert.ok(!JSON.stringify(result).includes(token));
  assert.deepEqual(calls.filter(row=>row.bin!=='docker').map(row=>[path.basename(row.args[0]),row.args[1]]),[
   ['ci-release.mjs','verify-run'],['deployment-handoff.mjs','candidate'],['automatic-release.mjs','check-current'],['prepare-host-release.mjs','/opt/app/config/deployment.json'],
-  ['candidate-rehearsal.mjs','run'],['assemble-bundle.mjs',path.join(directory,'candidate')],['deployment-handoff.mjs','verify'],['automatic-release.mjs','check-current'],['deploy.mjs','adopt'],['deployment-handoff.mjs','receipt']]);
+  ['candidate-rehearsal.mjs','run'],['assemble-bundle.mjs',path.join(directory,'candidate')],['deployment-handoff.mjs','verify'],['automatic-release.mjs','check-current'],['deploy.mjs','adopt'],['deployment-handoff.mjs','receipt'],['active-projection.mjs','/private/capture/host.json']]);
  assert.ok(calls.find(row=>path.basename(row.args[0])==='deployment-handoff.mjs'&&row.args[1]==='verify').args.includes(path.join(directory,'verified-release-run.json')));
 });
 test('every host gate failure cleans attempt credentials and never retries cutover',async t=>{
@@ -87,6 +93,18 @@ test('every host gate failure cleans attempt credentials and never retries cutov
   await assert.rejects(executeHostGates({directory,packet,request:request(),token:'unit-read-token',run:async(bin,args)=>{if(path.basename(args[0])==='deploy.mjs')applies++;if(calls++===failure)throw Error('injected gate failure');if(path.basename(args[0])==='prepare-host-release.mjs')return 'capture_directory=/private/capture\nhost_config=/private/capture/host.json\nrehearsal_config=/private/capture/rehearsal.json\n';if(path.basename(args[0])==='deploy.mjs')return '{}';return '';}}));
   assert.equal(existsSync(path.join(directory,'docker-auth')),false);assert.ok(applies<=1);assert.equal(existsSync(path.join(directory,'deployed-release')),false);
  }
+});
+test('projection failure after successful apply retains operation but does not emit public success or retry',async t=>{
+ const directory=await temp(t),packet=fixture();let applies=0;
+ await assert.rejects(executeHostGates({directory,packet,request:request(),token:'unit-read-token',run:async(bin,args)=>{
+  const script=path.basename(args[0]);if(script==='prepare-host-release.mjs')return 'capture_directory=/private/capture\nhost_config=/private/capture/host.json\nrehearsal_config=/private/capture/rehearsal.json\n';
+  if(script==='deploy.mjs'){applies++;return JSON.stringify({schemaVersion:1,status:'succeeded',releaseId:packet.manifest.releaseId,plan:{candidateHash:evidenceHash(packet.manifest)}});}
+  if(script==='deployment-handoff.mjs'&&args[1]==='receipt'){const dir=path.join(directory,'deployed-release');await mkdir(dir);await writeFile(path.join(dir,'manifest.json'),JSON.stringify(packet.manifest));await writeFile(path.join(dir,'deployment.json'),'{}');}
+  if(script==='active-projection.mjs')throw Error('Changed protected active state');
+  return '';
+ }}),/Changed protected active/);
+ assert.equal(applies,1);assert.equal(JSON.parse(await readFile(path.join(directory,'deployment-operation.json'),'utf8')).status,'succeeded');
+ assert.equal(existsSync(path.join(directory,'docker-auth')),false);assert.equal(existsSync(path.join(directory,'deployed-release','active-projection.json')),false);
 });
 test('interruption waits for in-flight credential writer before cleanup and never starts the next gate',async t=>{
  const directory=await temp(t),packet=fixture(),previousExitCode=process.exitCode;let login=false,prepared=false;
@@ -111,6 +129,16 @@ test('uncertain SSH result is not retried or uploaded; hosted credentials are cl
   endpoint:{host:'host.example',user:'deploy',port:22},privateKey:'UNIT PRIVATE KEY',knownHosts:'host.example ssh-ed25519 unit',token:'unit-read-token',
   run:async(bin,args,options)=>{if(bin!=='ssh')return execute(bin,args,options);sshCalls++;keyFile=args[args.indexOf('-i')+1];if(args.at(-1).includes('ssh-host-release.mjs'))return JSON.stringify({status:'succeeded'});return '';}}),/Do not repeat apply blindly/);
  assert.equal(sshCalls,5);assert.equal(existsSync(keyFile),false);assert.equal(existsSync(path.join(f.root,'public')),false);
+});
+test('verified SSH response publishes exact active projection beside existing receipt files',async t=>{
+ const f=await sourceFixture(t),manifest=f.packet.manifest,outputDirectory=path.join(f.root,'public');let applies=0,keyFile;
+ const result={status:'succeeded',sourceCommit:f.request.sourceCommit,controlCommit:f.request.controlCommit,manifest,
+  deployment:{schemaVersion:1,status:'succeeded',releaseId:manifest.releaseId,releaseCommit:f.request.sourceCommit,controlCommit:f.request.controlCommit,manifestHash:evidenceHash(manifest)},activeProjection:projection(manifest,f.request)};
+ await deployOverSSH({controlDirectory:f.control,candidateDirectory:f.candidate,outputDirectory,request:f.request,
+  endpoint:{host:'host.example',user:'deploy',port:22},privateKey:'UNIT PRIVATE KEY',knownHosts:'host.example ssh-ed25519 unit',token:'unit-read-token',
+  run:async(bin,args,options)=>{if(bin!=='ssh')return execute(bin,args,options);keyFile=args[args.indexOf('-i')+1];if(args.at(-1).includes('ssh-host-release.mjs')){applies++;return JSON.stringify(result);}return '';}});
+ assert.equal(applies,1);assert.equal(existsSync(keyFile),false);
+ for(const [file,value] of [['manifest.json',manifest],['deployment.json',result.deployment],['active-projection.json',result.activeProjection]])assert.deepEqual(JSON.parse(await readFile(path.join(outputDirectory,file),'utf8')),value);
 });
 test('public repository deployment uses hosted runner and environment-only SSH secrets',async()=>{
  const yaml=createRequire(new URL('../../frontend/package.json',import.meta.url))('js-yaml'),workflow=yaml.load(await readFile(new URL('../../.github/workflows/deploy.yml',import.meta.url),'utf8'));
