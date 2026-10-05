@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "kind": "bounded-reviewed-first-adoption-chain-local-integration",
+  "recordedAt": "2026-10-05T09:34:57.913Z",
+  "status": "local-and-readonly-host-preflight-passed-exact-commit-ci-pending",
+  "baseCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+  "patch": {
+    "file": "recovery-chain-bf79.patch",
+    "sha256": "sha256:2f2d299abbd69d0f3997db5e5c9097979061568d9b78142b640f9666bf4253b0",
+    "paths": 4,
+    "applyCheck": "passed-on-shared-bf79-read-only"
+  },
+  "sourceFiles": [
+    {
+      "path": "scripts/release/first-adoption-recovery.mjs",
+      "sha256": "sha256:c31ee952309ca204629689b926157cf1b742627e124fb03e4cb56c96d7cddf28"
+    },
+    {
+      "path": "scripts/release/first-adoption-recovery-host.mjs",
+      "sha256": "sha256:5e2306bfdb5d1278a24e3a71c3ccb4d22ca5edefcbf4d7755002b4281b0cf9db"
+    },
+    {
+      "path": "scripts/release/first-adoption-recovery.test.mjs",
+      "sha256": "sha256:910b4d6569a8dff9cbf6b920373c68c54f3846ecc5719ee28a3649e753a0e32f"
+    },
+    {
+      "path": "scripts/release/first-adoption-recovery-host.test.mjs",
+      "sha256": "sha256:af7e42822eee7e4a75d12c6aa14cf8675667e4cce1d3e3d48e8d5aaf99e5dbd4"
+    }
+  ],
+  "trustedProof": {
+    "path": "infra/first-adoption-recoveries/37287164307-1.json",
+    "sha256": "sha256:fed485a2d7a371558f0df0b1dc936b1db929d2c23bc375119f00b2d51857e2ce",
+    "proofHash": "sha256:70de9114593cc1a553930416986a4bea38807c112763b65b4724b1f55801b957",
+    "reviewedAttempts": [
+      {
+        "runId": 37273035754,
+        "runAttempt": 1,
+        "stage": "rehearsal-start-refusal"
+      },
+      {
+        "runId": 37287164307,
+        "runAttempt": 1,
+        "stage": "pre-capture-recovery-refusal"
+      }
+    ]
+  },
+  "localChecks": {
+    "rootWindows": {
+      "tests": 81,
+      "passed": 78,
+      "failed": 0,
+      "skipped": 3,
+      "skipScope": "Linux-specific permission/packet filesystem checks are separately executed on Linux.",
+      "actualResult": "Root actual TAP command exited0; full raw console log not separately saved.",
+      "files": [
+        "first-adoption-recovery.test.mjs",
+        "first-adoption-recovery-host.test.mjs",
+        "automatic-release.test.mjs",
+        "ci-release.test.mjs",
+        "deployment-handoff.test.mjs",
+        "deploy-state.test.mjs",
+        "ssh-transport.test.mjs",
+        "active-projection.test.mjs"
+      ]
+    },
+    "linux": {
+      "passed": 16,
+      "skipped": 0,
+      "failed": 0,
+      "log": "linux-focused.log",
+      "execution": "linux-execution.json",
+      "cleanup": {
+        "exitCode": 0,
+        "remainingOwnedContainers": 0,
+        "cleanup": "stopped"
+      }
+    }
+  },
+  "actualReadOnlyPreflight": {
+    "workflowAuthority": {
+      "requests": 45,
+      "mutations": 0,
+      "reviewedAttempts": [
+        {
+          "runId": 37273035754,
+          "runAttempt": 1
+        },
+        {
+          "runId": 37287164307,
+          "runAttempt": 1
+        }
+      ],
+      "receiptHash": "sha256:0445efbcadb4df90fcb21f6d535990da03391f175bce263b49a83a9c4b74ea0d"
+    },
+    "host": {
+      "schemaVersion": 1,
+      "observedAt": "2026-10-05T09:31:25.118Z",
+      "kind": "actual-host-readonly-reviewed-chain-preflight",
+      "status": "passed",
+      "reference": {
+        "id": "37287164307-1",
+        "proofHash": "sha256:70de9114593cc1a553930416986a4bea38807c112763b65b4724b1f55801b957",
+        "controlCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2"
+      },
+      "observation": {
+        "status": "verified-pre-cutover-refusal",
+        "activeHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9"
+      },
+      "sourceFiles": [
+        {
+          "file": "scripts/release/first-adoption-recovery-host.mjs",
+          "sha256": "sha256:5e2306bfdb5d1278a24e3a71c3ccb4d22ca5edefcbf4d7755002b4281b0cf9db"
+        },
+        {
+          "file": "scripts/release/first-adoption-recovery.mjs",
+          "sha256": "sha256:c31ee952309ca204629689b926157cf1b742627e124fb03e4cb56c96d7cddf28"
+        },
+        {
+          "file": "scripts/release/validate-manifest.mjs",
+          "sha256": "sha256:d3e6d3c52a5ba13904e1b75cfb79eb42f959a12f0a43855433f1d4ae5fad0fd4"
+        },
+        {
+          "file": "scripts/release/write-build-identity.mjs",
+          "sha256": "sha256:22ec15839b21df9a9b95aacd404da3abe36e6ab64d38f22c9a85c8f16c0ead29"
+        },
+        {
+          "file": "scripts/release/legacy-baseline.mjs",
+          "sha256": "sha256:53f2c001c312c6d11979493135e969b3f45e94a33d3d1bb54ff0760cb955568a"
+        },
+        {
+          "file": "scripts/release/ssh-host-release.mjs",
+          "sha256": "sha256:4dc86a5c04d4f4722b22e6117515cccb9cfa6a2f28b17ab559cfee9e0f057100"
+        },
+        {
+          "file": "scripts/release/ssh-transport.mjs",
+          "sha256": "sha256:0dea3623194223e5a65f0635c938e30a5c52f0121fbaa8da73d1ab21f15d7fb4"
+        },
+        {
+          "file": "scripts/release/ssh-archive.mjs",
+          "sha256": "sha256:3b490ff533068cf18d0f3434f8a83e5f4c10f6814e70e7e0293e86cf40f85d65"
+        },
+        {
+          "file": "scripts/release/active-projection.mjs",
+          "sha256": "sha256:dcce59ca521dae7d03b10e835a0da1360218ebfce0105ef88cbdadb519d02ccc"
+        },
+        {
+          "file": "scripts/release/deploy-state.mjs",
+          "sha256": "sha256:2e0494cf6066e8b1e9126c117dc5597aae477ce66d9ab371597fed352a9d9486"
+        },
+        {
+          "file": "scripts/release/migration-transition.mjs",
+          "sha256": "sha256:dfb49ee2ff17e976531ed976d4ce99f7f25a0092c6e6a1dbdc2123150e3215a4"
+        },
+        {
+          "file": "scripts/release/deployment-handoff.mjs",
+          "sha256": "sha256:4c3ea31e0dd16074e170b6fa0c8b1e3f42893fffcc54bfdabac810d7618462e6"
+        },
+        {
+          "file": "infra/release-manifest.schema.json",
+          "sha256": "sha256:93540024c90fa51df5e69dfe59dbdb06d87d7cb741b871b72696838e30301a98"
+        },
+        {
+          "file": "infra/first-adoption-recoveries/37273035754-1.json",
+          "sha256": "sha256:9b25056b76e0431d55eed773605c5a5b079f4147d1994afa36634a0dd2fc4f7d"
+        },
+        {
+          "file": "infra/first-adoption-recoveries/37287164307-1.json",
+          "sha256": "sha256:fed485a2d7a371558f0df0b1dc936b1db929d2c23bc375119f00b2d51857e2ce"
+        }
+      ],
+      "originalActiveBeforeAfterEqual": true,
+      "actualPriorPacketsAndPhases": true,
+      "originalProofFileUnchanged": true,
+      "cleanup": {
+        "status": "stopped",
+        "ownedToolFilesRemoved": 15,
+        "ownedToolDirectoriesRemoved": 5
+      },
+      "applicationMutations": 0,
+      "paidProviderRequests": 0,
+      "productionDatabaseQueries": 0,
+      "backupOrRehearsalClaim": false,
+      "receiptHash": "sha256:2f04efb8017924078eec964bb7a7135dd136d8f7b015877eb58cdfa1791c6d7d"
+    }
+  },
+  "independentReview": {
+    "path": "outputs/testing/recovery-chain-independent-review/report.json",
+    "sha256": "sha256:df36b3495e78ecf624036ff02042948ffcc6d153b371195b15ef047a760dc478"
+  },
+  "preserved": [
+    "schema1 proof bytes/hash/API result",
+    "normal canonical deployed-baseline discovery",
+    "current-main rechecks before capture and under lock",
+    "private0700/closed typed phase checks",
+    "all existing fresh30min/candidate/history/replay/rollback gates",
+    "old failed outcomes and snapshot dates"
+  ],
+  "productionAdopted": false,
+  "automationEnabled": false,
+  "writersEnabled": false,
+  "limitations": [
+    "Local focused and original-live-state preflight do not authorize a dirty or uncommitted production candidate.",
+    "New exact full CI and publication remain required before the next actual fresh adoption.",
+    "No new backup/rehearsal, application replacement, DB query, provider charge or rollback was performed by preflight."
+  ]
+}

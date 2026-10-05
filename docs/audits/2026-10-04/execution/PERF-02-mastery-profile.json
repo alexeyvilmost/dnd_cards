@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "kind": "private-mastery-grants-profile-rejected-general-latency",
+  "recordedAt": "2026-10-05T09:37:25.315Z",
+  "status": "correctness_passed_performance_not_accepted",
+  "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+  "productApplied": false,
+  "flagsChanged": false,
+  "patchHash": "sha256:02a909bc7c7a5719ce8c04a1bd37d960f19fb1332185e85144b3e4091faddcdb",
+  "tests": {
+    "originalNewContractsFailed": 7,
+    "candidateTargetedPassed": 34,
+    "fullTypecheckPassed": true,
+    "coherentUIWorkerBuildPassed": true,
+    "observerContractsPassed": 2,
+    "actualBrowserSamples": 128,
+    "measuredSamples": 120,
+    "warmupSamples": 8,
+    "fullFixedInputSeedArtifactEquality": 4,
+    "exactRetryChecks": 128,
+    "retryWorkerCalls": 0,
+    "readOnlyDisabledOffers": 4
+  },
+  "pins": {
+    "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+    "sourceHash": "0bb54d376015feec52a3a7cb582a28226acb4ee8c0cda5d26c9116e8126904e7",
+    "candidateSourceHash": "dfa6580186ebbc525e65d79bdb1e583ece927225e15622360e238852c22091e9",
+    "binaryHash": "sha256:45710eb630134951a3008993dec262534dea6b99f9b698fbc0eb4245dd899802",
+    "artifactHashes": {
+      "BASE": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+      "CANDIDATE": "sha256:a8ef64a386605b40cc933923e4ecc930b851ff9e07d47ab1ca10bd45a5927122"
+    },
+    "uiManifestHashes": {
+      "BASE": "02c63259d152dfcbf536a2b44ec7abf49b75cf04f9b08fbf5ea7c466df2fb38b",
+      "CANDIDATE": "f598a6828a021d09dd4767959efa4e1ee9c29a6c6135fb0f5bb8f695eeb8e8ee"
+    },
+    "profiles": {
+      "BASE": {
+        "label": "bf79 canonical preparation, default initiative/cache OFF",
+        "initiativeOptions": false,
+        "catalogBatch": true,
+        "workerMirrors": true,
+        "preparationCache": false,
+        "catalogPrefetch": false
+      },
+      "CANDIDATE": {
+        "label": "parallel mastery and grant reads, default initiative/cache OFF",
+        "initiativeOptions": false,
+        "catalogBatch": true,
+        "workerMirrors": true,
+        "preparationCache": false,
+        "catalogPrefetch": false
+      }
+    }
+  },
+  "actors": {
+    "line": {
+      "initiative": {
+        "baseline": {
+          "n": 30,
+          "mean": 173.46000000014902,
+          "p50": 166.30000000447035,
+          "p95": 212,
+          "min": 141.70000000298023,
+          "max": 215.5
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 174.843333333234,
+          "p50": 169.70000000298023,
+          "p95": 220.5,
+          "min": 145.69999999552965,
+          "max": 246.19999999552965
+        },
+        "paired": {
+          "medianRatio": 1.020444978944188,
+          "medianRatioBootstrap95": [
+            0.938251366136504,
+            1.08891671886899
+          ],
+          "meanPairedDelta": 1.3833333330849806,
+          "meanPairedDeltaBootstrap95": [
+            -7.060000000149012,
+            10.679999999205272
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      },
+      "battle": {
+        "baseline": {
+          "n": 30,
+          "mean": 410.1566666672627,
+          "p50": 295.29999999701977,
+          "p95": 578.2999999970198,
+          "min": 254,
+          "max": 586.1000000014901
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 416.72000000004965,
+          "p50": 530.3000000044703,
+          "p95": 583.3999999985099,
+          "min": 247.40000000596046,
+          "max": 629.1000000014901
+        },
+        "paired": {
+          "medianRatio": 1.7958008804938106,
+          "medianRatioBootstrap95": [
+            0.4847982310669713,
+            2.001865671641791
+          ],
+          "meanPairedDelta": 6.563333332786957,
+          "meanPairedDeltaBootstrap95": [
+            -55.6866666679581,
+            72.3500000009934
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      },
+      "workerCalls": [
+        6,
+        6
+      ],
+      "needsRounds": [
+        5,
+        5
+      ],
+      "workerWireBytes": [
+        531221.3,
+        531157.7333333333
+      ]
+    },
+    "archer": {
+      "initiative": {
+        "baseline": {
+          "n": 30,
+          "mean": 248.92333333417773,
+          "p50": 245.80000000447035,
+          "p95": 287.70000000298023,
+          "min": 208,
+          "max": 297.30000000447035
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 243.17999999970198,
+          "p50": 239.59999999403954,
+          "p95": 300.1000000014901,
+          "min": 208.30000000447035,
+          "max": 330.6000000014901
+        },
+        "paired": {
+          "medianRatio": 0.974776240804239,
+          "medianRatioBootstrap95": [
+            0.9184220605227652,
+            1.0292096219806994
+          ],
+          "meanPairedDelta": -5.743333334475755,
+          "meanPairedDeltaBootstrap95": [
+            -14.553333334376415,
+            3.4433333314955235
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      },
+      "battle": {
+        "baseline": {
+          "n": 30,
+          "mean": 420.76666666716335,
+          "p50": 360.70000000298023,
+          "p95": 661.9000000059605,
+          "min": 300.80000000447035,
+          "max": 663.8000000044703
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 412.789999999851,
+          "p50": 359.5,
+          "p95": 635.8999999985099,
+          "min": 297.6000000014901,
+          "max": 1155.4000000059605
+        },
+        "paired": {
+          "medianRatio": 0.9966731355614906,
+          "medianRatioBootstrap95": [
+            0.9485488126649076,
+            1.0307482993318922
+          ],
+          "meanPairedDelta": -7.976666667312384,
+          "meanPairedDeltaBootstrap95": [
+            -66.8900000003477,
+            63.48999999935428
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      },
+      "workerCalls": [
+        7,
+        6
+      ],
+      "needsRounds": [
+        6,
+        5
+      ],
+      "workerWireBytes": [
+        821311.0333333333,
+        700637.4333333333
+      ]
+    }
+  },
+  "cleanup": [
+    {
+      "arm": "CANDIDATE",
+      "runId": "test_93f97e89d3367ec436bc841d",
+      "status": "stopped",
+      "errors": [],
+      "ownedChildrenExited": true
+    },
+    {
+      "arm": "BASE",
+      "runId": "test_80cad0ad8f71c8b21b52682a",
+      "status": "stopped",
+      "errors": [],
+      "ownedChildrenExited": true
+    }
+  ],
+  "sourceStable": {
+    "unchanged": true,
+    "files": 4419,
+    "sha256": "0bb54d376015feec52a3a7cb582a28226acb4ee8c0cda5d26c9116e8126904e7"
+  },
+  "candidateSourceStable": {
+    "unchanged": true,
+    "files": 4413,
+    "sha256": "dfa6580186ebbc525e65d79bdb1e583ece927225e15622360e238852c22091e9"
+  },
+  "limitations": [
+    "Independent authoritative initialization entropy; results are not asserted equal across arms.",
+    "30 observations per actor/arm: p95 exploratory; bootstrap intervals are descriptive, not production SLO evidence.",
+    "Windows native PostgreSQL/Go/Node plus installed Chrome; no Linux OCI or production-latency claim.",
+    "Both arms use the exact same freshly built bf79 backend, initiative/cache OFF and batch/mirrors ON. Only the mastery/grants read join changes coherently in worker and UI; exact distinct artifact hashes are recorded. Full fixed-input/seed outcome equality is a separate pure artifact check using a common explicitly synthetic artifact namespace. No production flags changed.",
+    "Local quiet window coordinated with other agents; shared desktop scheduler was not reserved exclusively.",
+    "Battle click-to-ready includes the automated second presentation click and browser scheduling. The line distribution is bimodal: p50 changes substantially while paired mean uncertainty spans both signs; it is not a server-only latency measure.",
+    "Kind traces identify categories and counts only; they do not disclose selectors or prove a particular semantic grant source by name."
+  ],
+  "evidence": {
+    "path": "outputs/testing/perf02-mastery-grants-bf79/receipt.json",
+    "sha256": "sha256:98a8967ae842b2ca36ffb3c7a164d9f02d47622333c6f33ef7c50fa3cb3492c1"
+  },
+  "decision": "Do not integrate on a general latency claim; no further optimization in this experiment."
+}

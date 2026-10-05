@@ -25,7 +25,7 @@
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "Manual build/publication/deploy gates enabled after CI9. First host attempt stopped before cutover; no healthy adoption. AUTO release/deploy/reconciliation/selective remain disabled."
+    "production_enablement_status": "Manual build/publication/deploy gates enabled. CI10/all3 publication passed; second host attempt failed before capture and rootpermissions corrected. No healthy adoption; auto/selective/reconcile remainOFF."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -1032,13 +1032,14 @@
       "execution_result": {
         "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
         "demonstrated": [
-          "222 Solo corpus cases cover 17 durable fields; actual API has 220 positive cases and 2 explicit rejection cases with separate positive phase coverage. 15 canonical pending variants, immutable replay, crash, Linux race, Urvin owned journeys and dedicated migration routes passed CI9."
+          "222 Solo corpus cases cover 17 durable fields; actual API has 220 positive cases and 2 explicit rejection cases with separate positive phase coverage. 15 canonical pending variants, immutable replay, crash, Linux race, Urvin owned journeys and dedicated migration routes passed CI9.",
+          "Authentic102/103+119preimages recovered from unchanged authorizedcapture; exactpublicGit122preimage, source-bound guards, unchangedmigrator through123, allownedcleanup0/sourceunchanged. docs/audits/2026-10-04/execution/TEST-05-genuine-preimages.json"
         ],
         "limitations": [
-          "Trusted pre-102 historical preimage and a full fresh 001→current chain are not reconstructed. 297/298/299 upgrade fixtures and observed 302-row ledger→305 proof do not substitute for that chain."
+          "Authentic pre102 data is now recovered; complete historicalfresh chain remains incomplete at124 requiredpublicentities16→15. The originalv4certification run is still not replayed; explicit historical hydration is not an empty catalog bootstrap."
         ],
         "nextAcceptance": [
-          "Recover genuine provenance-bearing pre-102 data; execute the unchanged historical chain on an owned DB. Preserve old certificates/guards and prior failed receipts."
+          "Complete provenance-bound historical source seeding through current on an owned DB, then unchanged repeat and full ledger/data/manual-status hashes. Preserve original guards, revoked certifications and failed receipts."
         ],
         "evidence": [
           "docs/audits/2026-10-04/execution/TEST-05.md",
@@ -1320,7 +1321,8 @@
         "demonstrated": [
           "Canonical intent prepares outside locks and validates fresh ownership/content/revision before atomic write; lost-response/reload/retry gates passed. Latest current-cfe9 counterbalanced browser measurement: 30 paired samples each line/archer, batch+mirrors ON in both arms and cache OFF, restored pre-init data, 128 exact retries with zero additional worker dispatch and unchanged source/RNG fingerprints; cleanup stopped.",
           "A quiet current-default OFF/OFF versus desired combined ON/ON comparison passed all128 correctness checks, but initiative medians regressed164.9→209.4 ms and247.4→263.8 ms; latency acceptance was rejected. Exact report: docs/audits/2026-10-04/execution/PERF-02-default-profile.json.",
-          "Default OFF/OFF parallel canonical root preparation passed25 focused tests,128 actual samples and4 complete fixed-input artifact comparisons. Latency remains mixed:155.8→163.1 ms and242.2→229.2 ms; general latency acceptance is not met. Private patch is not integrated. See PERF-02-parallel-profile.json."
+          "Default OFF/OFF parallel canonical root preparation passed25 focused tests,128 actual samples and4 complete fixed-input artifact comparisons. Latency remains mixed:155.8→163.1 ms and242.2→229.2 ms; general latency acceptance is not met. Private patch is not integrated. See PERF-02-parallel-profile.json.",
+          "Third private coherent defaultOFF/OFF paired30×2actor profile:34targeted/TSC,128browser+retry,4fullinput/seed parityPASS; archer7→6worker calls andwire−14.7%, latency intervals span no gain. Patchunapplied/flagsunchanged. docs/audits/2026-10-04/execution/PERF-02-mastery-profile.json"
         ],
         "limitations": [
           "Current initiative median line165.5→198.5 ms (+19.9%) and archer238.1→257.7 ms (+8.2%); worker calls6→12/7→14, dependency waves5→10/6→12. Correctness passed, latency did not. Equipment intent and initiative options remain OFF, so the default path still retains old UI preparation. Older uncontrolled 30+30 profile stays historical.",
@@ -2095,7 +2097,9 @@
         "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
         "demonstrated": [
           "Immutable mixed manifest, baked source/input/image identity and per-component launch state; local exact 014f image adoption/rollback and readers tested. cfe9 images actually published after CI9.",
-          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json.",
+          "Exact bf79 full CI10 and all3 immutable publications passed. Secondactual adoption37287164307 failed before capture on root0755; exact root changed to0700, protected bytes unchanged, original actual host observation and edges passed. Both failed outcomes preserved; no healthy firstadoption. Record: docs/audits/2026-10-04/execution/CI-10-second-publication.json",
+          "Bounded reviewed chain2 integrated;78Windows focused PASS plus16Linux zero-skip PASS, independent review,45actual readonlyGH queries and actual host canonical prior-packets/phase checks PASS. No fresh capture/deployment yet. docs/audits/2026-10-04/execution/REL-06-reviewed-chain.json"
         ],
         "limitations": [
           "Current publication is not a healthy application deployment. Saved active projection will become usable only after actual successful protected-state adoption.",
@@ -2284,7 +2288,9 @@
         "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
         "demonstrated": [
           "Hosted SSH handoff, fresh captured backup, typed CJS/source-cert inventory, 7 migration scenarios, per-component health and journal rollback implemented. Local exact images passed full collector + adapter rollback.",
-          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json.",
+          "Exact bf79 full CI10 and all3 immutable publications passed. Secondactual adoption37287164307 failed before capture on root0755; exact root changed to0700, protected bytes unchanged, original actual host observation and edges passed. Both failed outcomes preserved; no healthy firstadoption. Record: docs/audits/2026-10-04/execution/CI-10-second-publication.json",
+          "Bounded reviewed chain2 integrated;78Windows focused PASS plus16Linux zero-skip PASS, independent review,45actual readonlyGH queries and actual host canonical prior-packets/phase checks PASS. No fresh capture/deployment yet. docs/audits/2026-10-04/execution/REL-06-reviewed-chain.json"
         ],
         "limitations": [
           "First real deploy 37273035754 was operator-stopped after snapshot expiry, before cutover. The 123-path rebased selective/auto/writer package and separate retained-launch compatibility fixes are private and unapplied. Local contracts and OCI foundations do not prove production selective delivery or automatic convergence.",
@@ -2381,7 +2387,9 @@
         "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
         "demonstrated": [
           "Native and OCI full restore, pending/duplicate/media reference preservation, hash inventory and typed historical source proof passed in owned local trials. First host capture and clone restoration completed, but the expired rehearsal was operator-stopped during schema proof; successful host release acceptance remains pending.",
-          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json.",
+          "Exact bf79 full CI10 and all3 immutable publications passed. Secondactual adoption37287164307 failed before capture on root0755; exact root changed to0700, protected bytes unchanged, original actual host observation and edges passed. Both failed outcomes preserved; no healthy firstadoption. Record: docs/audits/2026-10-04/execution/CI-10-second-publication.json",
+          "Bounded reviewed chain2 integrated;78Windows focused PASS plus16Linux zero-skip PASS, independent review,45actual readonlyGH queries and actual host canonical prior-packets/phase checks PASS. No fresh capture/deployment yet. docs/audits/2026-10-04/execution/REL-06-reviewed-chain.json"
         ],
         "limitations": [
           "Production-sized complete restore time/RTO, off-host durability and remote media object availability not yet established. Read-only scan ~490 s and metadata ~0.505 s are phases, not total recovery. No scheduled retention/GC or RPO guarantee.",
@@ -3390,65 +3398,65 @@
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
-    "recordedAt": "2026-10-05T07:28:06.311Z",
-    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "recordedAt": "2026-10-05T09:23:46.930Z",
+    "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
     "ci": {
-      "id": 37271099509,
-      "attempt": 1,
+      "id": 37284665492,
       "status": "completed",
       "conclusion": "success",
-      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
       "workflow": ".github/workflows/ci.yml",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37271099509",
-      "startedAt": "2026-10-05T06:10:38Z",
-      "completedAt": "2026-10-05T06:26:18Z",
-      "aggregate": "outputs/ci/37271099509/all/local-suite-results/report.json",
-      "aggregateHash": "sha256:fe5a587d03dfa00090da086274d2bf75b4edbbdb555cf609c8d1160eb4ff0a45",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37284665492",
+      "startedAt": "2026-10-05T08:36:17Z",
+      "completedAt": "2026-10-05T08:51:43Z",
+      "aggregate": "outputs/operations/first-publish-bf79b52c3c5b/verification/report.json",
+      "aggregateHash": "sha256:c7815272f3ed1acf6925bd21cf7ab67c4f0c5983337a0e57ad2a7e9752f74a00",
       "counts": {
-        "node": 689,
+        "node": 709,
         "vitest": 6462,
         "go": 753,
         "workerAndDatabase": 20,
         "realBrowserFlows": 12,
         "browserUiFixtures": 48,
-        "battle3d": 8
+        "battle3d": 8,
+        "nativeCursor": 18
       },
-      "aggregateWallMs": 857336,
+      "aggregateWallMs": 845329,
+      "workflowWallMs": 926000,
       "cleanup": "stopped",
-      "workflowWallMs": 940000,
-      "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is the actual GitHub workflow start-to-completion interval, including setup and artifact handling."
+      "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is actual GitHub workflow start-to-completion including setup/artifacts.",
+      "attempt": 1
     },
     "publication": {
-      "id": 37272499962,
-      "attempt": 1,
+      "id": 37286552233,
       "status": "completed",
       "conclusion": "success",
-      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
       "workflow": ".github/workflows/release.yml",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37272499962",
-      "startedAt": "2026-10-05T06:27:20Z",
-      "completedAt": "2026-10-05T06:32:46Z"
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37286552233",
+      "attempt": 1
     },
     "deployment": {
-      "id": 37273035754,
+      "id": 37287164307,
       "attempt": 1,
       "status": "completed",
       "conclusion": "failure",
-      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
-      "workflow": ".github/workflows/deploy.yml",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37273035754",
-      "startedAt": "2026-10-05T06:33:38Z",
-      "completedAt": "2026-10-05T07:14:00Z",
-      "outcome": "operator-stopped-expired-rehearsal-before-cutover",
+      "controlCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37287164307",
+      "jobId": 111688849917,
+      "jobConclusion": "failure",
+      "jobCompletedAt": "2026-10-05T09:01:45Z",
+      "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+      "outcome": "refused-before-capture-root-mode-0755",
       "productionSuccess": false,
-      "audit": "outputs/operations/first-refused-deploy-2026-10-05T07-20-33.079Z/report.json",
-      "auditHash": "sha256:301c660b87aa92b0e1a8f9480056aef318a10d69bfcf48670aaa1ec2d62cb953",
+      "audit": "outputs/operations/second-pre-capture-audit-2026-10-05T09-15-44.561Z/report.json",
+      "auditHash": "sha256:e3dced365e1627da322c63ef7c33380818d02ce48a4a87e90ab0b5171537376b",
       "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
       "originalLiveHealthy": true,
       "remainingOwnedResources": 0,
       "dockerAuthRemoved": true,
       "journalCreated": false,
-      "automaticTtlRejectionClaimed": false
+      "captureCreated": false
     },
     "manualVariables": {
       "RELEASE_BUILD_ENABLED": true,
@@ -3462,8 +3470,88 @@
       "sha256": "sha256:e191aef9eaa2351dab02c61d4bbc2228b5f35c8a4356dc54f476c6e42131d583",
       "recordedAt": "2026-10-05T07:03:09.765Z"
     },
-    "next": "Commit and verify the integrated thin/manual recovery with exact full CI, then new initial publication and fresh full legacy adoption. Selective/writer opt-in require a genuine successful predecessor.",
+    "next": "Complete bounded reviewed chain of the two actual pre-cutover failures, locally verify and commit; exact full CI/publication then fresh first adoption. Genuine healthy predecessor remains required for writer/selective/auto followups.",
     "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
-    "record": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
-  }
+    "record": "docs/audits/2026-10-04/execution/CI-10-second-publication.json"
+  },
+  "execution_history": [
+    {
+      "recordedAt": "2026-10-05T07:28:06.311Z",
+      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "ci": {
+        "id": 37271099509,
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "workflow": ".github/workflows/ci.yml",
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37271099509",
+        "startedAt": "2026-10-05T06:10:38Z",
+        "completedAt": "2026-10-05T06:26:18Z",
+        "aggregate": "outputs/ci/37271099509/all/local-suite-results/report.json",
+        "aggregateHash": "sha256:fe5a587d03dfa00090da086274d2bf75b4edbbdb555cf609c8d1160eb4ff0a45",
+        "counts": {
+          "node": 689,
+          "vitest": 6462,
+          "go": 753,
+          "workerAndDatabase": 20,
+          "realBrowserFlows": 12,
+          "browserUiFixtures": 48,
+          "battle3d": 8
+        },
+        "aggregateWallMs": 857336,
+        "cleanup": "stopped",
+        "workflowWallMs": 940000,
+        "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is the actual GitHub workflow start-to-completion interval, including setup and artifact handling."
+      },
+      "publication": {
+        "id": 37272499962,
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "workflow": ".github/workflows/release.yml",
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37272499962",
+        "startedAt": "2026-10-05T06:27:20Z",
+        "completedAt": "2026-10-05T06:32:46Z"
+      },
+      "deployment": {
+        "id": 37273035754,
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "workflow": ".github/workflows/deploy.yml",
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37273035754",
+        "startedAt": "2026-10-05T06:33:38Z",
+        "completedAt": "2026-10-05T07:14:00Z",
+        "outcome": "operator-stopped-expired-rehearsal-before-cutover",
+        "productionSuccess": false,
+        "audit": "outputs/operations/first-refused-deploy-2026-10-05T07-20-33.079Z/report.json",
+        "auditHash": "sha256:301c660b87aa92b0e1a8f9480056aef318a10d69bfcf48670aaa1ec2d62cb953",
+        "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+        "originalLiveHealthy": true,
+        "remainingOwnedResources": 0,
+        "dockerAuthRemoved": true,
+        "journalCreated": false,
+        "automaticTtlRejectionClaimed": false
+      },
+      "manualVariables": {
+        "RELEASE_BUILD_ENABLED": true,
+        "RELEASE_PUBLICATION_ENABLED": true,
+        "PRODUCTION_DEPLOY_ENABLED": true
+      },
+      "automationEnabled": false,
+      "firstLiveWritersEnabled": false,
+      "privateStatusMatrix": {
+        "file": "outputs/testing/recommendations-status-matrix/status-matrix.json",
+        "sha256": "sha256:e191aef9eaa2351dab02c61d4bbc2228b5f35c8a4356dc54f476c6e42131d583",
+        "recordedAt": "2026-10-05T07:03:09.765Z"
+      },
+      "next": "Commit and verify the integrated thin/manual recovery with exact full CI, then new initial publication and fresh full legacy adoption. Selective/writer opt-in require a genuine successful predecessor.",
+      "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
+      "record": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+    }
+  ],
+  "updated_at": "2026-10-05T09:34:57.913Z"
 }

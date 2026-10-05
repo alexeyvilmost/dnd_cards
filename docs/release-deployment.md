@@ -166,3 +166,5 @@ additive rehearsal. Семь migration scenarios исполняют тот же 
 OCI acceptance и отдельного enablement запрещён policy.
 
 После первого отказа подготовлен явный manual first_adoption_recovery для точной попытки 37273035754-1. Он требует trusted control proof, полного CI, всех трёх новых images и свежей проверки main/истории/защищённого host до capture и под lock. Успешного predecessor ещё нет; старый capture и failed rehearsal не заменяют новый bundle. Обычный deployed discovery не изменён. [Локальная интеграция](audits/2026-10-04/execution/REL-06-thin-recovery.md).
+
+CI10 и публикация bf79 успешны; второй actual deploy37287164307 отказал до capture из-за root0755. Точный существующий root исправлен на0700, read-only original-host guard и healthPASS. История обоихfailedactual attempts сохраняется, следующий manual recovery должен явно связать обе проверенные попытки. AUTO/selective/writersOFF; новый source требует нового exactCI и свежего полного bundle. [Точная запись](audits/2026-10-04/execution/CI-10-second-publication.md).

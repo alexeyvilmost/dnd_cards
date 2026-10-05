@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "kind": "genuine-historical-preimages-partial-fresh-chain",
+  "recordedAt": "2026-10-05T09:37:25.317Z",
+  "status": "partial-through123",
+  "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+  "executedUnchangedThrough": "123_repair_sleep_2024_lifecycle",
+  "nextGuard": "124_repair_mini_mvp_base_styles_origin_runtime",
+  "nextGuardReason": {
+    "kind": "required-public-entity-cardinality",
+    "expected": 16,
+    "actual": 15
+  },
+  "authenticHydrationCount": 3,
+  "publicGitMechanicsHydrationCount": 1,
+  "binding": {
+    "migration119ExactIdentityMechanicsSupport": true,
+    "updatesUseExactRowHash": true,
+    "sourceDerivedBeforeProjection": {
+      "sourceMechanicsHash": "sha256:d33cf392a050631ab6b59f19ebb7010e6ff4a0b2ce19658b7da29d63f4a77748",
+      "expectedMechanicsHash": "sha256:5c34483313e1ed2f513b96fa9917be90b8756a9d3f111b4d50051bc7c5f31c9c",
+      "expectedSupport": null,
+      "classCount": 3,
+      "publicSpellsHash": "sha256:da763e12c75177ef0e85bcd5ca3157e3cfd8404eb51a0984855b13d71456e495",
+      "publicClassesHash": "sha256:2124cffa17579481185c30454bdd7139c52f9e48f45376417d05a1070a879cf7",
+      "migrations": [
+        {
+          "path": "backend/migrations/normalize_spell_targeting_ranges.go",
+          "sha256": "sha256:2c40c64f63ba736fd5703120267e4a7167847a39a2bab4e7f2cd642fc094a444"
+        },
+        {
+          "path": "backend/migrations/normalize_live_happy_path_content.go",
+          "sha256": "sha256:945a716ed35b4031d9ef3961a83aa239d8ea01e18e1aadc68647169b77ebb6bb"
+        }
+      ]
+    }
+  },
+  "checks": {
+    "sourceACL": true,
+    "childACL": true,
+    "sourceHashBefore": true,
+    "isolation": true,
+    "authenticClosedSource": true,
+    "sourceHashAfter": true,
+    "sourceCodeUnchanged": true
+  },
+  "guardTests": {
+    "path": "outputs/testing/test05-historical-source-audit/hydrate-preserved-revocation.test.mjs",
+    "passed": 3
+  },
+  "cleanup": {
+    "status": "stopped",
+    "resources": [
+      {
+        "kind": "container",
+        "status": "stopped"
+      },
+      {
+        "kind": "volume",
+        "status": "stopped"
+      }
+    ],
+    "remaining": {
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    }
+  },
+  "fullFreshChainPassed": false,
+  "sourceCertificateReplay": false,
+  "revokedCertificateRehabilitated": false,
+  "productionDataChanged": false,
+  "evidence": [
+    {
+      "path": "outputs/testing/test05-historical-source-audit/status-through123.json",
+      "sha256": "sha256:ced1951361aaee2b74cb28317c5f8425d33bd47b3cece2ed089a706bfe52b971"
+    },
+    {
+      "path": "outputs/testing/test05-historical-source-audit/fresh102_73f251c6fe72266e40b4/report.json",
+      "sha256": "sha256:e7d1c74ffb5f62a8c31cdd036464637a19690b48f7ec364074586e8947da01cb"
+    },
+    {
+      "path": "outputs/testing/test05-historical-source-audit/migration122-git-source-metadata.json",
+      "sha256": "sha256:564d0120c198a2918a3d3d3d13ca2950d63bf497862bb53d3257babff69c1296"
+    }
+  ],
+  "limitations": [
+    "The full fresh chain has not passed.",
+    "The database used existing fresh installer DDL and checked-in public catalog seeding at exact pre083.",
+    "Historical source hydrations were explicit; this is not an empty-catalog install.",
+    "Authentic revoked support was replayed only to exercise unchanged revocations; no historical certificate was revalidated.",
+    "No source guards, migrations, ledger rows or production data were changed."
+  ]
+}

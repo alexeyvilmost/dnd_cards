@@ -1,11 +1,13 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,readdirSync,rmSync} from 'node:fs';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,readdirSync,rmSync,chmodSync,existsSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {observeRecoveredFirstHost} from './first-adoption-recovery-host.mjs';
 import {legacyRuntimeFingerprint} from './legacy-baseline.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
+import {reviewedRecoveryAttempts} from './first-adoption-recovery.mjs';
 const hash=c=>'sha256:'+c.repeat(64),commit='a'.repeat(40);
 function fixture(t) {
   const directory=mkdtempSync(path.join(tmpdir(),'first-recovery-'));t.after(()=>{assert.equal(path.dirname(directory),path.resolve(tmpdir()));assert.ok(path.basename(directory).startsWith('first-recovery-'));rmSync(directory,{recursive:true,force:true});});
@@ -20,7 +22,8 @@ function fixture(t) {
   const rollback={services:{unit:{environment:{PRIVATE_SENTINEL:'not-public'}}}};
   const body={schemaVersion:1,kind:'observed-legacy-baseline',status:'observed',provenance:'runtime-observation-only',deployable:false,observedAt:'2026-10-05T06:00:00.000Z',claimedReleaseCommit:commit,components,rulesArtifactHash:hash('c'),rollbackConfigurationHash:evidenceHash(rollback),databaseIdentityHash:hash('d'),schemaFingerprint:hash('e'),migrationIds:['001_fixture'],artifactHashes:[hash('c')],historicalChecksums:'unavailable',bakedIdentity:'unavailable'};
   const active={...body,observationHash:evidenceHash(body)},request={attemptRoot,hostConfig:'/protected/config.json'},config={root,legacyBaselineDirectory:legacy};
-  const proof={activeHash:evidenceHash(active),claimedReleaseCommit:commit,failedDeployment:{runId:5,runAttempt:1,controlCommit:commit},repository:'fixture/project',components:publicComponents,observedAt:'2026-10-05T08:00:00.000Z'};
+  const proof={schemaVersion:1,kind:'manual-first-adoption-recovery',status:'reviewed-pre-cutover-refusal',id:'5-1',auditHash:hash('a'),activeHash:evidenceHash(active),claimedReleaseCommit:commit,failedDeployment:{runId:5,runAttempt:1,controlCommit:commit,conclusion:'failure'},repository:'fixture/project',components:publicComponents,observedAt:'2026-10-05T08:00:00.000Z',
+    cleanup:{remainingOwnedResources:0,validatorStopped:true,dockerAuthRemoved:true,deploymentJournalCreated:false,deployLockPresent:false,operatorApplicationMutations:0}};
   const save=(file,data)=>writeFileSync(file,JSON.stringify(data),{mode:0o600});
   save(path.join(legacy,'baseline.json'),active);save(path.join(legacy,'rollback.compose.json'),rollback);
   save(path.join(old,'transfer.json'),{request:{...request,runId:'5',attempt:'1',controlCommit:commit,repository:proof.repository,eventName:'workflow_dispatch',mode:'adopt'}});
@@ -63,4 +66,47 @@ test('under-lock check requires the current process owner and still refuses old 
   const f=fixture(t),lock=path.join(f.root,'deploy.lock');mkdirSync(lock,{mode:0o700});f.save(path.join(lock,'owner.json'),{pid:process.pid});
   await assert.rejects(f.invoke(),/Existing deployment lock/);await f.invoke({underLock:true});
   f.save(path.join(lock,'owner.json'),{pid:process.pid+1});await assert.rejects(f.invoke({underLock:true}),/ownership/);
+});
+
+function chainFixture(t){
+ const f=fixture(t),second=path.join(f.request.attemptRoot,'deploy-6-1'),later='b'.repeat(40);mkdirSync(second,{mode:0o700});
+ const row={runId:6,runAttempt:1,controlCommit:later,conclusion:'failure',mode:'adopt',stage:'pre-capture-recovery-refusal',observedAt:'2026-10-05T09:00:00.000Z',auditHash:hash('b'),recoveryReference:{id:f.proof.id,proofHash:evidenceHash(f.proof),controlCommit:later}};
+ const {failedDeployment,...base}=f.proof,proof={...base,schemaVersion:2,id:'6-1',observedAt:row.observedAt,auditHash:row.auditHash,failedDeployments:[...reviewedRecoveryAttempts(f.proof),row]};
+ const digest=text=>'sha256:'+createHash('sha256').update(text).digest('hex');
+ function packet(item){
+  const req={schemaVersion:1,...f.request,runId:String(item.runId),attempt:'1',controlCommit:item.controlCommit,sourceCommit:item.controlCommit,repository:proof.repository,actor:'fixture',eventName:'workflow_dispatch',mode:'adopt',rehearsalConfig:'/protected/rehearsal.json',nodePath:'/usr/local/bin/node',productionEnabled:'true'};
+  const manifest={schemaVersion:1,releaseId:'attempt-'+item.runId,releaseCommit:req.sourceCommit,previousReleaseId:null,createdAt:'2026-10-05T00:00:00Z',
+   components:Object.fromEntries(['frontend','backend','rulesWorker'].map((key,i)=>[key,{sourceCommit:req.sourceCommit,inputFingerprint:hash(String(i+1)),imageDigest:`example.test/${key.toLowerCase()}@${hash(String(i+4))}`} ])),
+   rulesArtifactHash:hash('a'),contentManifestHash:hash('b'),apiProtocolVersion:1,workerProtocolVersion:1,supportedWorldSchemaVersions:[5],workerRuntime:{name:'node',version:'24.19.0'},capabilities:['pinned-artifact-routing','pending-decision-pass-through'],migrationSet:[{id:'001',checksum:hash('c')}],validationEvidence:[{gate:'core',status:'passed',reportHash:hash('d'),inputFingerprint:hash('e'),completedAt:'2026-10-05T00:00:00Z'}]};
+  const provenance={schemaVersion:1,releaseRunId:9,controlCommit:req.controlCommit,sourceCommit:req.sourceCommit,planHash:hash('f'),manifestHash:evidenceHash(manifest),...(item.recoveryReference?{firstAdoptionRecovery:item.recoveryReference}:{})};
+  const files={'candidate.json':{manifest,provenance},'manifest.json':manifest,'core-report.json':{status:'passed'},'verified-release-run.json':{id:9,workflow:'.github/workflows/release.yml',controlCommit:req.controlCommit}};
+  return {request:req,archiveHash:hash('0'),files:Object.fromEntries(Object.entries(files).map(([file,value])=>{const text=JSON.stringify(value);return [file,{text,sha256:digest(text)}];}))};
+ }
+ const oldPacket=packet(proof.failedDeployments[0]),newPacket=packet(row);
+ f.save(path.join(f.old,'transfer.json'),oldPacket);f.save(path.join(second,'transfer.json'),newPacket);
+ for(const [directory,scripts] of [[f.old,['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs','prepare-host-release.mjs','candidate-rehearsal.mjs']],[second,['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs','first-adoption-recovery-host.mjs']]])scripts.forEach((script,i)=>f.save(path.join(directory,`phase-${String(i+1).padStart(2,'0')}.json`),{script,status:'started'}));
+ return {...f,proof,second,newPacket,digest,invoke:(extra={})=>f.invoke({proof,...extra})};
+}
+test('Linux schema2 validates real transferred packets and exact typed phase prefixes without inventing a rehearsal', {skip:process.platform!=='linux'},async t=>{
+ const f=chainFixture(t),before=readFileSync(path.join(f.second,'transfer.json')),seen=[];
+ assert.equal((await f.invoke({assertValidatorAbsent:directory=>seen.push(directory)})).status,'verified-pre-cutover-refusal');
+ assert.deepEqual(seen,[f.old,f.second]);assert.equal(existsSync(path.join(f.second,'rehearsal')),false);assert.deepEqual(readFileSync(path.join(f.second,'transfer.json')),before);
+ const lock=path.join(f.root,'deploy.lock');mkdirSync(lock,{mode:0o700});f.save(path.join(lock,'owner.json'),{pid:process.pid});await f.invoke({underLock:true});
+ f.save(path.join(lock,'owner.json'),{pid:process.pid+1});await assert.rejects(f.invoke({underLock:true}),/ownership/);
+});
+test('Linux recovery keeps actual0700 requirement;0755root or old attempt is refused', {skip:process.platform!=='linux'},async t=>{
+ const f=chainFixture(t);await f.invoke();
+ for(const directory of [f.root,f.old,f.second]){chmodSync(directory,0o755);await assert.rejects(f.invoke(),/Protected recovery directories/);chmodSync(directory,0o700);await f.invoke();}
+});
+test('Linux pre-capture chain rejects later phases/capture, altered packet authority and changed phase records', {skip:process.platform!=='linux'},async t=>{
+ const f=chainFixture(t),backupRoot=path.join(f.root,'backups');mkdirSync(backupRoot,{mode:0o700});
+ for(const target of [path.join(f.second,'phase-05.json'),path.join(f.second,'ready'),path.join(f.second,'deployment-operation.json'),path.join(f.second,'docker-auth'),path.join(f.second,'rehearsal'),path.join(backupRoot,'capture-6-1')]){
+  f.save(target,{});await assert.rejects(f.invoke());rmSync(target);await f.invoke();
+ }
+ const phase=path.join(f.second,'phase-04.json');for(const value of [{script:'prepare-host-release.mjs',status:'started'},{script:'first-adoption-recovery-host.mjs',status:'passed'},{script:'first-adoption-recovery-host.mjs',status:'started',private:'PRIVATE_CANARY'}]){f.save(phase,value);await assert.rejects(f.invoke(),/phase record differs/);}
+ f.save(phase,{script:'first-adoption-recovery-host.mjs',status:'started'});
+ const transferred=structuredClone(f.newPacket),candidate=JSON.parse(transferred.files['candidate.json'].text);candidate.provenance.firstAdoptionRecovery.proofHash=hash('0');const text=JSON.stringify(candidate);transferred.files['candidate.json']={text,sha256:f.digest(text)};f.save(path.join(f.second,'transfer.json'),transferred);
+ await assert.rejects(f.invoke(),/authority changed/);f.save(path.join(f.second,'transfer.json'),f.newPacket);
+ const oldRehearsal=path.join(f.old,'rehearsal','rehearsal.json'),saved=readFileSync(oldRehearsal);f.save(oldRehearsal,{status:'failed',failureStage:'start',activeHash:f.proof.activeHash,completedAt:'2026-10-05T07:00:00Z',cleanup:{status:'incomplete',errors:[]}});await assert.rejects(f.invoke(),/cleanup differs/);writeFileSync(oldRehearsal,saved);await f.invoke();
+ const wrong=structuredClone(f.proof);wrong.failedDeployments[0].stage='pre-capture-recovery-refusal';await assert.rejects(f.invoke({proof:wrong}));
 });

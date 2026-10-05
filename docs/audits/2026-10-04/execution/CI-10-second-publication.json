@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-ci10-publication-and-second-pre-capture-refusal",
+  "recordedAt": "2026-10-05T09:23:46.930Z",
+  "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+  "ci": {
+    "id": 37284665492,
+    "status": "completed",
+    "conclusion": "success",
+    "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+    "workflow": ".github/workflows/ci.yml",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37284665492",
+    "startedAt": "2026-10-05T08:36:17Z",
+    "completedAt": "2026-10-05T08:51:43Z",
+    "aggregate": "outputs/operations/first-publish-bf79b52c3c5b/verification/report.json",
+    "aggregateHash": "sha256:c7815272f3ed1acf6925bd21cf7ab67c4f0c5983337a0e57ad2a7e9752f74a00",
+    "counts": {
+      "node": 709,
+      "vitest": 6462,
+      "go": 753,
+      "workerAndDatabase": 20,
+      "realBrowserFlows": 12,
+      "browserUiFixtures": 48,
+      "battle3d": 8,
+      "nativeCursor": 18
+    },
+    "aggregateWallMs": 845329,
+    "workflowWallMs": 926000,
+    "cleanup": "stopped",
+    "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is actual GitHub workflow start-to-completion including setup/artifacts.",
+    "attempt": 1
+  },
+  "sourceSnapshot": {
+    "sha256": "a2866f240748ea0ffd40f681fb56ee984c4e94efa485ad80a0068e1ce35e48b1",
+    "files": 4419
+  },
+  "publication": {
+    "id": 37286552233,
+    "status": "completed",
+    "conclusion": "success",
+    "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+    "workflow": ".github/workflows/release.yml",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37286552233",
+    "attempt": 1
+  },
+  "manifest": {
+    "releaseId": "candidate-bf79b52c3c5b-f0640d5a0d82",
+    "hash": "sha256:cc1c928114235620db5a83a79b57ff1182de04d4c22e9f583a1f5dd6a5c0d4c5",
+    "components": {
+      "backend": {
+        "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+        "inputFingerprint": "sha256:d3998ef62f39ee4bf849a0af89631115a49f5d618c78593bc1038fd21b3d93ae",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:606488b0356a62624ad52f42f88806b0d5f9fa4ffafd009b3daf79ab8c758f6a"
+      },
+      "frontend": {
+        "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+        "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:e25a32773af13124b7a37fdd988ffd6e60ff71ba9a44ade8d419baa4f1eff98f"
+      },
+      "rulesWorker": {
+        "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+        "inputFingerprint": "sha256:0ae0f6963a8cfa291f4623a366135be995917e6caaef1fedfcb7f2df06ccfb01",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:e030072c389f955a121deae1e997d235552ea2e8327f84fb48ebb5c12d97fc1f"
+      }
+    },
+    "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+    "workerRuntime": {
+      "name": "node",
+      "version": "24.21.0"
+    },
+    "migrationIds": 305
+  },
+  "deployment": {
+    "id": 37287164307,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "controlCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37287164307",
+    "jobId": 111688849917,
+    "jobConclusion": "failure",
+    "jobCompletedAt": "2026-10-05T09:01:45Z",
+    "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+    "outcome": "refused-before-capture-root-mode-0755",
+    "productionSuccess": false,
+    "audit": "outputs/operations/second-pre-capture-audit-2026-10-05T09-15-44.561Z/report.json",
+    "auditHash": "sha256:e3dced365e1627da322c63ef7c33380818d02ce48a4a87e90ab0b5171537376b",
+    "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+    "originalLiveHealthy": true,
+    "remainingOwnedResources": 0,
+    "dockerAuthRemoved": true,
+    "journalCreated": false,
+    "captureCreated": false
+  },
+  "hostRepair": {
+    "operation": "exact-existing-root-permission-755-to-700",
+    "protectedFilesUnchanged": true,
+    "applicationMutations": 0,
+    "postRepairOriginalHostGuard": "passed",
+    "receipt": "outputs/operations/deployment-root-permissions-result.json",
+    "receiptHash": "sha256:7848f37ad0a6467c6f5264082ed3bf76a4f30286c557e4d6e2c5126c5106de1c"
+  },
+  "firstSuccessfulProductionAdoption": false,
+  "automationEnabled": false,
+  "writersEnabled": false,
+  "paidProviderRequests": 0,
+  "limitations": [
+    "CI10 verifies bf79, not a future recovery-chain source commit.",
+    "The second attempt never created a snapshot or ran candidate rehearsal.",
+    "Successful read-only host observation is not deployed application acceptance.",
+    "New recovery needs both reviewed actual failures, a new exact CI and all normal fresh capture/rehearsal gates.",
+    "Original failed workflow conclusions and capture dates remain unchanged."
+  ]
+}

@@ -5,7 +5,7 @@ import {execFileSync} from 'node:child_process';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {evidenceHash} from './validate-manifest.mjs';
-import {loadControlRecovery,assertRecoveredInitialHistory} from './first-adoption-recovery.mjs';
+import {loadControlRecovery,assertRecoveredInitialHistory,reviewedRecoveryAttempts} from './first-adoption-recovery.mjs';
 import {deploymentStateFile,validateLegacyBaseline,legacyRuntimeFingerprint,legacyServices} from './legacy-baseline.mjs';
 import {validateHostPacket} from './ssh-host-release.mjs';
 
@@ -27,23 +27,43 @@ function validatorAbsent(oldDirectory) {
   }
 }
 export async function observeRecoveredFirstHost({proof,request,config,underLock=false,command=docker,assertValidatorAbsent=validatorAbsent}) {
-  const root=path.resolve(config.root),oldDirectory=path.join(request.attemptRoot,`deploy-${proof.failedDeployment.runId}-${proof.failedDeployment.runAttempt}`);
-  for(const directory of [root,oldDirectory])if(realpathSync(directory)!==directory||lstatSync(directory).isSymbolicLink()||process.platform!=='win32'&&(lstatSync(directory).mode&0o077)!==0)throw Error('Protected recovery directories required');
-  const old=read(path.join(oldDirectory,'transfer.json'));
-  const previous=old.request;
-  if(previous?.runId!==proof.failedDeployment.runId&&String(previous?.runId)!==String(proof.failedDeployment.runId)||Number(previous?.attempt)!==proof.failedDeployment.runAttempt
-    ||previous.controlCommit!==proof.failedDeployment.controlCommit||previous.repository!==proof.repository||previous.eventName!=='workflow_dispatch'||previous.mode!=='adopt'
-    ||previous.attemptRoot!==request.attemptRoot||previous.hostConfig!==request.hostConfig)throw Error('Protected refused attempt does not match reviewed workflow');
+  const root=path.resolve(config.root),attempts=reviewedRecoveryAttempts(proof);
+  const privateDirectory=directory=>{if(realpathSync(directory)!==directory||!lstatSync(directory).isDirectory()||lstatSync(directory).isSymbolicLink()||process.platform!=='win32'&&(lstatSync(directory).mode&0o077)!==0)throw Error('Protected recovery directories required');};
+  privateDirectory(root);
   const lock=path.join(root,'deploy.lock');
   if(underLock) {
     if(realpathSync(lock)!==lock||read(path.join(lock,'owner.json'),4096).pid!==process.pid)throw Error('Current deployment lock ownership differs');
   } else if(existsSync(lock))throw Error('Existing deployment lock requires explicit recovery');
-  if(existsSync(path.join(root,'active.json'))||existsSync(path.join(oldDirectory,'docker-auth'))||existsSync(path.join(oldDirectory,'deployment-operation.json'))||existsSync(path.join(oldDirectory,'phase-06.json'))||existsSync(path.join(oldDirectory,'ready')))throw Error('Prior attempt reached an unreviewed stage');
+  if(existsSync(path.join(root,'active.json')))throw Error('Prior attempt reached an unreviewed stage');
   const operations=path.join(root,'operations');
   if(existsSync(operations)&&(realpathSync(operations)!==operations||readdirSync(operations).length))throw Error('First adoption already has a deployment journal');
-  const rehearsal=read(path.join(oldDirectory,'rehearsal','rehearsal.json'));
-  if(rehearsal.status!=='failed'||rehearsal.failureStage!=='start'||rehearsal.activeHash!==proof.activeHash||rehearsal.cleanup?.status!=='stopped'||!Array.isArray(rehearsal.cleanup.errors)||rehearsal.cleanup.errors.length||!Number.isFinite(Date.parse(rehearsal.completedAt))||Date.parse(rehearsal.completedAt)>Date.parse(proof.observedAt))throw Error('Prior rehearsal refusal or cleanup differs');
-  assertValidatorAbsent(oldDirectory);
+  for(const row of attempts){
+    const oldDirectory=path.join(request.attemptRoot,`deploy-${row.runId}-${row.runAttempt}`);privateDirectory(oldDirectory);
+    const old=read(path.join(oldDirectory,'transfer.json')),previous=old.request;
+    if(String(previous?.runId)!==String(row.runId)||Number(previous?.attempt)!==row.runAttempt
+      ||previous.controlCommit!==row.controlCommit||previous.repository!==proof.repository||previous.eventName!=='workflow_dispatch'||previous.mode!==row.mode
+      ||previous.attemptRoot!==request.attemptRoot||previous.hostConfig!==request.hostConfig)throw Error('Protected refused attempt does not match reviewed workflow');
+    if(proof.schemaVersion===2){
+      validateHostPacket(old,oldDirectory);
+      const candidate=JSON.parse(old.files['candidate.json'].text),ref=candidate.provenance?.firstAdoptionRecovery??null;
+      if(previous.sourceCommit!==row.controlCommit||!same(ref,row.recoveryReference))throw Error('Prior transferred recovery authority changed');
+      const scripts=['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs',...(row.stage==='rehearsal-start-refusal'?['prepare-host-release.mjs','candidate-rehearsal.mjs']:['first-adoption-recovery-host.mjs'])];
+      const phases=scripts.map((_,i)=>`phase-${String(i+1).padStart(2,'0')}.json`);
+      if(!same(readdirSync(oldDirectory).filter(name=>name.startsWith('phase-')).sort(),phases))throw Error('Prior attempt phase prefix differs');
+      for(const [i,file]of phases.entries())if(!same(read(path.join(oldDirectory,file),4096),{script:scripts[i],status:'started'}))throw Error('Prior attempt phase record differs');
+    }
+    if(['docker-auth','deployment-operation.json','phase-06.json','ready'].some(name=>existsSync(path.join(oldDirectory,name))))throw Error('Prior attempt reached an unreviewed stage');
+    if(row.stage==='pre-capture-recovery-refusal'){
+      // Preparation writes outside the attempt. Absence of its local output is
+      // insufficient: independently refuse the deterministic protected capture.
+      if(['rehearsal','phase-05.json'].some(name=>existsSync(path.join(oldDirectory,name)))
+        ||existsSync(path.join(root,'backups',`capture-${row.runId}-${row.runAttempt}`)))throw Error('Pre-capture refusal has later-stage evidence');
+    }else{
+      const rehearsal=read(path.join(oldDirectory,'rehearsal','rehearsal.json'));
+      if(rehearsal.status!=='failed'||rehearsal.failureStage!=='start'||rehearsal.activeHash!==proof.activeHash||rehearsal.cleanup?.status!=='stopped'||!Array.isArray(rehearsal.cleanup.errors)||rehearsal.cleanup.errors.length||!Number.isFinite(Date.parse(rehearsal.completedAt))||Date.parse(rehearsal.completedAt)>Date.parse(row.observedAt))throw Error('Prior rehearsal refusal or cleanup differs');
+    }
+    assertValidatorAbsent(oldDirectory);
+  }
   const endpoint=JSON.parse(await command(['context','inspect','--format','{{json .Endpoints.docker.Host}}']));
   if(!/^(unix:\/\/|npipe:\/\/)/.test(endpoint)||process.env.DOCKER_HOST||process.env.DOCKER_CONTEXT)throw Error('Local Docker context required');
   // Refuse *any* outstanding rehearsal/inspection owner, not only names guessed

@@ -1,9 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {validateFirstAdoptionRecovery,loadControlRecovery,assertRecoveredInitialHistory,recoveryFields} from './first-adoption-recovery.mjs';
+import {validateFirstAdoptionRecovery,loadControlRecovery,assertRecoveredInitialHistory,recoveryFields,reviewedRecoveryAttempts} from './first-adoption-recovery.mjs';
 import {resolveReleaseRequest} from './automatic-release.mjs';
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
@@ -67,4 +68,58 @@ test('host recovery refuses a main push after planning before either protected o
     assert.equal(await verifyRecoveredHostAuthority({proof,request,get:fresh,observe:()=>{observed++;return boundary;}}),boundary);
     assert.equal(observed,1);
   }
+});
+
+function chainProof(){
+ const {failedDeployment,...base}=proof;
+ const row={runId:37287164307,runAttempt:1,controlCommit,conclusion:'failure',mode:'adopt',stage:'pre-capture-recovery-refusal',observedAt:'2026-10-05T08:30:00.000Z',auditHash:'sha256:'+'8'.repeat(64),
+  recoveryReference:{id:proof.id,proofHash:evidenceHash(proof),controlCommit}};
+ return {...base,schemaVersion:2,id:`${row.runId}-1`,observedAt:row.observedAt,auditHash:row.auditHash,failedDeployments:[...reviewedRecoveryAttempts(proof),row]};
+}
+function controlFixture(t){
+ const root=mkdtempSync(path.join(tmpdir(),'recovery-chain-'));
+ t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('recovery-chain-'));rmSync(root,{recursive:true,force:true});});
+ const directory=path.join(root,'infra','first-adoption-recoveries');mkdirSync(directory,{recursive:true});
+ const save=value=>writeFileSync(path.join(directory,value.id+'.json'),JSON.stringify(value)+'\n');save(proof);
+ return {root,save,original:path.join(directory,proof.id+'.json')};
+}
+test('schema2 loads exact trusted predecessor proof without rewriting schema1 bytes or hashes',t=>{
+ const f=controlFixture(t),original=readFileSync(f.original),hash=evidenceHash(proof),chain=chainProof();f.save(chain);
+ const loaded=loadControlRecovery({id:chain.id,controlRoot:f.root,controlCommit,repository});
+ assert.equal(loaded.proof.schemaVersion,2);assert.equal(loaded.reference.proofHash,evidenceHash(chain));
+ assert.deepEqual(readFileSync(f.original),original);assert.equal(evidenceHash(JSON.parse(original)),hash);
+ for(const mutate of [p=>p.observedAt='2026-10-05T08:31:00.000Z',p=>p.auditHash='sha256:'+'9'.repeat(64),p=>p.failedDeployments[1].runId=p.failedDeployments[0].runId,p=>p.failedDeployments[1].mode='apply',p=>p.failedDeployments[1].stage='rehearsal-start-refusal',p=>p.failedDeployments[1].recoveryReference.controlCommit='e'.repeat(40)]){
+  const bad=structuredClone(chain);mutate(bad);assert.throws(()=>validateFirstAdoptionRecovery(bad));
+ }
+ for(const mutate of [p=>p.failedDeployments[0].auditHash='sha256:'+'7'.repeat(64),p=>p.components.backend.imageId='sha256:'+'6'.repeat(64),p=>p.failedDeployments[1].recoveryReference.proofHash='sha256:'+'5'.repeat(64)]){
+  const bad=structuredClone(chain);mutate(bad);f.save(bad);assert.throws(()=>loadControlRecovery({id:bad.id,controlRoot:f.root,controlCommit,repository}));
+ }
+});
+test('complete two-failure history is accepted only by the explicit chain, never normal discovery',async()=>{
+ const chain=chainProof(),second=chain.failedDeployments[1],rows=[run(proof.failedDeployment.runId),run(second.runId,{head_sha:controlCommit})];
+ await assert.rejects(assertRecoveredInitialHistory(metadata(rows),{proof,now}),/unreviewed/);
+ await assert.rejects(selectLatestDeployedRun(metadata(rows),{repository,now}),/recovery is required/);
+ const result=await assertRecoveredInitialHistory(metadata(rows),{proof:chain,now});assert.equal(result.reviewedFailedDeployments.length,2);
+ const current=run(77,{status:'in_progress',conclusion:null,head_sha:controlCommit});
+ for(const boundary of ['before-capture','under-lock']){
+  let observed=0;const request={runId:77,attempt:1,controlCommit},get=metadata([...rows,current]);
+  assert.equal(await verifyRecoveredHostAuthority({proof:chain,request,get,observe:()=>{observed++;return boundary;}}),boundary);
+  assert.equal(observed,1);await assert.rejects(verifyRecoveredHostAuthority({proof:chain,request,get:r=>r==='commits/main'?{sha:'e'.repeat(40)}:get(r),observe:()=>{observed++;}}),/superseded/);assert.equal(observed,1);
+ }
+ for(const extra of [run(56),run(56,{conclusion:'success'}),run(56,{status:'in_progress',conclusion:null}),run(56,{run_attempt:2})])await assert.rejects(assertRecoveredInitialHistory(metadata([...rows,extra]),{proof:chain,now}));
+ for(const only of [[rows[0]],[rows[1]]])await assert.rejects(assertRecoveredInitialHistory(metadata(only),{proof:chain,now}),/absent/);
+ await assert.rejects(assertRecoveredInitialHistory(metadata([rows[0],{...rows[1],run_attempt:2}]),{proof:chain,now}));
+ await assertRecoveredInitialHistory(metadata([...rows,run(56,{conclusion:'success',jobConclusion:'skipped'})]),{proof:chain,now});
+ const changing=metadata(rows);let freshReads=0;
+ await assert.rejects(assertRecoveredInitialHistory(async route=>{const value=await changing(route);return route===`actions/runs/${rows[0].id}`&&++freshReads===2?{...value,run_attempt:2}:value;},{proof:chain,now}),/changed/);
+ await assert.rejects(assertRecoveredInitialHistory(metadata(rows,{[`actions/runs/${second.runId}/jobs?filter=latest&per_page=100&page=1`]:{total_count:0,jobs:[]}}),{proof:chain,now}),/absent/);
+});
+test('trusted recovery file cycles are bounded before recursively following repeated proof IDs',t=>{
+ const f=controlFixture(t),template=chainProof();
+ const make=(first,last)=>{
+  const value=structuredClone(template);value.id=`${last}-1`;value.failedDeployments[0].runId=first;value.failedDeployments[1].runId=last;value.failedDeployments[1].recoveryReference.id=`${first}-1`;return value;
+ };
+ const b=make(20,10),a=make(10,20);a.failedDeployments[1].recoveryReference.proofHash=evidenceHash(b);f.save(a);f.save(b);
+ assert.throws(()=>loadControlRecovery({id:a.id,controlRoot:f.root,controlCommit,repository}),/cyclic or exceeds/);
+ const tooLong=chainProof();tooLong.failedDeployments=Array.from({length:9},(_,i)=>({...tooLong.failedDeployments[1],runId:100+i}));assert.throws(()=>validateFirstAdoptionRecovery(tooLong),/Bounded/);
 });
