@@ -220,7 +220,13 @@ for (const component of ['frontend', 'backend', 'rulesWorker']) test(`${componen
   assert.deepEqual(s.calls, ['backup', 'prepare', 'backup', `next:${component}`]);
   for (const key of Object.keys(s.active.instances)) assert.equal(s.store.active().instances[key].releaseId, key === component ? 'next' : 'old');
   assert.equal((await deploy(s)).repeated, true); assert.equal(s.calls.length, 4);
-  const env = deploymentEnvironment(s.store.active()); assert.equal(env.BACKEND_RELEASE_ID, component === 'backend' ? 'next' : 'old');
+  const env = deploymentEnvironment(s.store.active());
+  assert.equal(env.RELEASE_ID, 'next');assert.equal(env.RELEASE_COMMIT, s.candidate.releaseCommit);
+  for(const [key,prefix] of [['backend','BACKEND'],['frontend','FRONTEND'],['rulesWorker','RULES_WORKER']]){
+    assert.equal(env[`${prefix}_RELEASE_ID`],key===component?'next':'old');
+    assert.equal(env[`${prefix}_RELEASE_COMMIT`],key===component?s.candidate.releaseCommit:s.active.manifest.releaseCommit);
+    assert.equal(env[`${prefix}_IMAGE`],s.store.active().manifest.components[key].imageDigest);
+  }
 });
 
 test('backup, missing evidence, corrupt digest or schema change blocks all replacements', async t => {

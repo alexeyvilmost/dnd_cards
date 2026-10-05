@@ -41,7 +41,10 @@ export function planDeployment(candidate, bundle, active) {
 export function deploymentEnvironment(active) {
   validateActive(active);
   if(isLegacyBaseline(active))throw Error('Legacy rollback uses its observed private Compose document, not generated manifest environment');
-  const env = {};
+  // Compose 2.40 evaluates required expressions inside nested defaults even
+  // when the component variable is present. Supply the composition fallback;
+  // each component's explicit launch identity below still takes precedence.
+  const env = {RELEASE_ID: active.manifest.releaseId, RELEASE_COMMIT: active.manifest.releaseCommit};
   for (const [key, prefix] of [['backend', 'BACKEND'], ['frontend', 'FRONTEND'], ['rulesWorker', 'RULES_WORKER']]) {
     env[`${prefix}_IMAGE`] = active.manifest.components[key].imageDigest;
     env[`${prefix}_RELEASE_ID`] = active.instances[key].releaseId;

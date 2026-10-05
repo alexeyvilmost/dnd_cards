@@ -10,7 +10,14 @@ import {evidenceHash,compositionFingerprint} from './validate-manifest.mjs';
 import {rehearsalInput} from './candidate-rehearsal.mjs';
 import {migrationScenarios} from './migration-transition.mjs';
 import {reviewedRecoveryAttempts} from './first-adoption-recovery.mjs';
+import {attachUnitRehearsal} from './unit-rehearsal-fixture.mjs';
+import {assembleDeploymentBundle} from './assemble-bundle.mjs';
+import {planDeployment} from './deploy-state.mjs';
+import {databaseIdentityHash} from './database-binding.mjs';
+import {validateReviewedPreCutoverRefusal} from './reviewed-pre-cutover-refusal.mjs';
 const hash=c=>'sha256:'+c.repeat(64),commit='a'.repeat(40);
+const fixtureURL=new URL('postgres://127.0.0.1:49123/owned_fixture?sslmode=disable');
+fixtureURL.username='fixture';fixtureURL.password='owned_fixture_dummy';const fixtureDSN=fixtureURL.toString();
 function fixture(t) {
   const directory=mkdtempSync(path.join(tmpdir(),'first-recovery-'));t.after(()=>{assert.equal(path.dirname(directory),path.resolve(tmpdir()));assert.ok(path.basename(directory).startsWith('first-recovery-'));rmSync(directory,{recursive:true,force:true});});
   const root=path.join(directory,'protected'),attemptRoot=path.join(directory,'attempts'),old=path.join(attemptRoot,'deploy-5-1'),legacy=path.join(root,'legacy-observation-unit');
@@ -18,12 +25,12 @@ function fixture(t) {
   const containers={},components={},publicComponents={};
   for(const [i,key] of ['backend','frontend','rulesWorker'].entries()) {
     const id=String(i+1).repeat(64),service=key==='rulesWorker'?'rules-worker':key,imageId=hash(String(i+4));
-    const c={Id:id,Image:imageId,State:{Running:true,Health:{Status:'healthy'}},Config:{Env:['SOURCE_COMMIT='+commit,'PRIVATE_SENTINEL=not-public'],Labels:{'com.docker.compose.service':service}},HostConfig:{},Mounts:[],NetworkSettings:{Networks:{}}};
+    const c={Id:id,Image:imageId,State:{Running:true,Health:{Status:'healthy'}},Config:{Env:['SOURCE_COMMIT='+commit,'PRIVATE_SENTINEL=not-public',...(key==='backend'?['DATABASE_URL='+fixtureDSN]:[])],Labels:{'com.docker.compose.service':service}},HostConfig:{},Mounts:[],NetworkSettings:{Networks:{}}};
     containers[id]=c;components[key]={containerId:id,imageReference:'fixture/'+key,imageId,healthy:true,runtimeClaim:commit,configurationHash:legacyRuntimeFingerprint(c)};publicComponents[key]={containerId:id,imageId,health:'healthy'};
   }
   const rollback={services:{unit:{environment:{PRIVATE_SENTINEL:'not-public'}}}};
-  const body={schemaVersion:1,kind:'observed-legacy-baseline',status:'observed',provenance:'runtime-observation-only',deployable:false,observedAt:'2026-10-05T06:00:00.000Z',claimedReleaseCommit:commit,components,rulesArtifactHash:hash('c'),rollbackConfigurationHash:evidenceHash(rollback),databaseIdentityHash:hash('d'),schemaFingerprint:hash('e'),migrationIds:['001_fixture'],artifactHashes:[hash('c')],historicalChecksums:'unavailable',bakedIdentity:'unavailable'};
-  const active={...body,observationHash:evidenceHash(body)},request={attemptRoot,hostConfig:'/protected/config.json'},config={root,legacyBaselineDirectory:legacy};
+  const body={schemaVersion:1,kind:'observed-legacy-baseline',status:'observed',provenance:'runtime-observation-only',deployable:false,observedAt:'2026-10-05T06:00:00.000Z',claimedReleaseCommit:commit,components,rulesArtifactHash:hash('c'),rollbackConfigurationHash:evidenceHash(rollback),databaseIdentityHash:databaseIdentityHash(fixtureDSN),schemaFingerprint:hash('e'),migrationIds:['001_fixture'],artifactHashes:[hash('c')],historicalChecksums:'unavailable',bakedIdentity:'unavailable'};
+  const active={...body,observationHash:evidenceHash(body)},request={attemptRoot,hostConfig:'/protected/config.json'},config={root,legacyBaselineDirectory:legacy,project:'owned',postgresImage:'postgres@'+hash('1')};
   const proof={schemaVersion:1,kind:'manual-first-adoption-recovery',status:'reviewed-pre-cutover-refusal',id:'5-1',auditHash:hash('a'),activeHash:evidenceHash(active),claimedReleaseCommit:commit,failedDeployment:{runId:5,runAttempt:1,controlCommit:commit,conclusion:'failure'},repository:'fixture/project',components:publicComponents,observedAt:'2026-10-05T08:00:00.000Z',
     cleanup:{remainingOwnedResources:0,validatorStopped:true,dockerAuthRemoved:true,deploymentJournalCreated:false,deployLockPresent:false,operatorApplicationMutations:0}};
   const save=(file,data)=>writeFileSync(file,JSON.stringify(data),{mode:0o600});
@@ -39,7 +46,7 @@ function fixture(t) {
     throw Error('Forbidden non-read-only Docker call');
   };
   const invoke=(extra={})=>observeRecoveredFirstHost({proof,request,config,command,assertValidatorAbsent:()=>{if(processLive)throw Error('live');},...extra});
-  return {root,old,legacy,active,proof,request,config,containers,calls,save,invoke,setOwned:v=>owned=v,setProcess:v=>processLive=v};
+  return {root,old,legacy,active,proof,request,config,containers,calls,save,invoke,command,setOwned:v=>owned=v,setProcess:v=>processLive=v};
 }
 test('real protected files and live read-only identities permit only original pre-cutover state',async t=>{
   const f=fixture(t),before=readFileSync(path.join(f.legacy,'baseline.json'));
@@ -151,4 +158,57 @@ test('Linux third refusal binds exact six started phases, complete failed replay
   const changed=structuredClone(f.report);mutate(changed);changed.additiveMigrations.approval.reportHash=evidenceHash(changed.additiveMigrations.report);const forged=structuredClone(f.proof);forged.failedDeployments[2].rehearsalHash=evidenceHash(changed);f.save(reportFile,changed);await assert.rejects(f.invoke({proof:forged}));
  }writeFileSync(reportFile,original);await f.invoke();
  const changed=structuredClone(f.report);changed.completedAt='2026-10-05T10:21:00.000Z';f.save(reportFile,changed);await assert.rejects(f.invoke(),/refusal differs/);
+});
+
+function preparationFixture(t){
+ const f=replayFailureFixture(t),fourth=path.join(f.request.attemptRoot,'deploy-8-1'),source='d'.repeat(40);
+ for(const folder of [fourth,path.join(fourth,'rehearsal'),path.join(fourth,'ready'),path.join(f.root,'operations')])mkdirSync(folder,{mode:0o700});
+ const row={runId:8,runAttempt:1,controlCommit:source,conclusion:'failure',mode:'adopt',stage:'deployment-pre-cutover-refusal',observedAt:'2026-10-05T11:30:00.000Z',auditHash:hash('8'),rehearsalHash:hash('9'),operationHash:hash('0'),releaseId:'attempt-8',recoveryReference:{id:f.proof.id,proofHash:evidenceHash(f.proof),controlCommit:source}};
+ const packet=f.packet(row),candidate=JSON.parse(packet.files['candidate.json'].text),m=candidate.manifest;
+ m.migrationSet=structuredClone(f.input.manifest.migrationSet);
+ const core={status:'passed',compositionFingerprint:compositionFingerprint(m)};m.validationEvidence[0]={...m.validationEvidence[0],reportHash:evidenceHash(core),inputFingerprint:core.compositionFingerprint};
+ candidate.status='candidate-only';candidate.deployable=false;candidate.reports={core};candidate.provenance.manifestHash=evidenceHash(m);
+ for(const [file,value]of Object.entries({'candidate.json':candidate,'manifest.json':m,'core-report.json':core})){const text=JSON.stringify(value);packet.files[file]={text,sha256:f.digest(text)};}
+ const input=rehearsalInput(candidate,f.active,f.input.backup);
+ const identities=Object.fromEntries(Object.entries(m.components).map(([key,c])=>[key,{identitySchemaVersion:1,component:key,provenance:'baked',sourceCommit:c.sourceCommit,inputFingerprint:c.inputFingerprint,releaseId:m.releaseId,releaseCommit:m.releaseCommit,apiProtocolVersion:1}]));
+ Object.assign(identities.rulesWorker,{artifactHash:m.rulesArtifactHash,workerRuntime:m.workerRuntime,workerProtocolVersion:1,supportedWorldSchemaVersions:[5],capabilities:m.capabilities});
+ const unit={reports:{core,'image-contract':{},'pinned-artifacts':{}},images:Object.fromEntries(Object.entries(m.components).map(([key,c])=>[key,c.imageDigest])),identities,historicalArtifactHashes:input.historicalArtifactHashes};attachUnitRehearsal(m,unit);
+ const report=unit.rehearsalReceipt;Object.assign(report,{candidateHash:input.candidateHash,activeHash:input.activeHash,backupHash:input.backupHash,startedAt:'2026-10-05T11:00:00.000Z',completedAt:'2026-10-05T11:20:00.000Z',additiveMigrations:structuredClone(f.report.additiveMigrations)});
+ Object.assign(report.checks.find(c=>c.id==='snapshot'),{backupHash:input.backupHash,schemaFingerprint:input.backup.schemaFingerprint});
+ const migration=report.additiveMigrations.report;Object.assign(migration,{candidateHash:input.candidateHash,candidateSourceCommit:source,candidateInputFingerprint:m.components.backend.inputFingerprint,target:m.migrationSet,compositionFingerprint:input.compositionFingerprint});
+ Object.assign(report.additiveMigrations.approval,{target:m.migrationSet,compositionFingerprint:input.compositionFingerprint,reportHash:evidenceHash(migration)});
+ const {manifest,bundle}=assembleDeploymentBundle(candidate,input,report),operation={schemaVersion:1,releaseId:row.releaseId,status:'failed_before_cutover',plan:planDeployment(manifest,bundle,f.active),touched:[],createdAt:'2026-10-05T11:21:00.000Z',updatedAt:'2026-10-05T11:22:00.000Z',backup:{status:'verified',manifestHash:input.activeHash,backupHash:input.backupHash,restoreReportHash:hash('1'),restoreDrillPassed:true},failure:'docker-step-failed'};
+ row.rehearsalHash=evidenceHash(report);row.operationHash=evidenceHash(operation);
+ const proof={...f.proof,schemaVersion:3,id:'8-1',observedAt:row.observedAt,auditHash:row.auditHash,failedDeployments:[...f.proof.failedDeployments,row],cleanup:{...f.proof.cleanup,deploymentJournalCreated:true}};
+ const journalFile=path.join(f.root,'operations',row.releaseId+'.json');f.save(journalFile,operation);f.save(path.join(fourth,'transfer.json'),packet);
+ for(const [file,value]of Object.entries({'rehearsal/input.json':input,'rehearsal/rehearsal.json':report,'ready/manifest.json':manifest,'ready/bundle.json':bundle}))f.save(path.join(fourth,file),value);
+ ['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs','first-adoption-recovery-host.mjs','prepare-host-release.mjs','candidate-rehearsal.mjs','assemble-bundle.mjs','deployment-handoff.mjs','automatic-release.mjs','deploy.mjs'].forEach((script,i)=>f.save(path.join(fourth,`phase-${String(i+1).padStart(2,'0')}.json`),{script,status:'started'}));
+ const command=async(args,options)=>{
+  if(args[0]==='image'&&args[1]==='inspect')return JSON.stringify([{Id:f.active.components.backend.imageId}]);
+  if(args[0]==='network'&&args[1]==='inspect')return JSON.stringify([{Labels:{'com.docker.compose.project':'owned','com.docker.compose.network':'edge'}}]);
+  return f.command(args,options);
+ };
+ const readSchemaLedgerProof=async options=>{assert.equal(options.dsn,fixtureDSN);return {migrations:f.active.migrationIds,schemaFingerprint:f.active.schemaFingerprint};};
+ return {...f,fourth,row,proof,candidate,input,report,manifest,bundle,operation,journalFile,invoke:extra=>f.invoke({proof,command,readSchemaLedgerProof,...extra})};
+}
+test('terminal preparation validator requires the complete original rehearsal, plan and untouched journal',t=>{
+ const f=preparationFixture(t),before=JSON.stringify(f.operation);
+ assert.equal(validateReviewedPreCutoverRefusal(f).status,'verified-terminal-preparation-refusal');assert.equal(JSON.stringify(f.operation),before);
+ for(const mutate of [s=>s.operation.status='recovery_required',s=>s.operation.touched.push('backend'),s=>s.operation.migrationStarted=false,s=>s.operation.migrationReceipt={},s=>s.operation.cutoverBackup={},s=>s.operation.plan.rollbackState={},s=>s.operation.backup.backupHash=hash('0'),s=>s.operation.createdAt='2026-10-05T11:19:00.000Z',s=>s.operation.updatedAt='2026-10-05T11:31:00.000Z',s=>s.report.checks.pop(),s=>s.report.cleanup.errors.push('owned-leftover'),s=>s.report.additiveMigrations.report.checks[0].status='failed',s=>s.bundle.identities.backend.sourceCommit=commit,s=>s.manifest.releaseCommit=commit,s=>s.candidate.provenance.firstAdoptionRecovery.proofHash=hash('0')]){
+  const s=structuredClone({candidate:f.candidate,input:f.input,report:f.report,manifest:f.manifest,bundle:f.bundle,operation:f.operation,row:f.row,proof:f.proof});mutate(s);
+  // Rehashing a forged row is insufficient: substantive invariants still fail.
+  s.row.operationHash=evidenceHash(s.operation);s.row.rehearsalHash=evidenceHash(s.report);assert.throws(()=>validateReviewedPreCutoverRefusal(s));
+ }
+});
+test('Linux reviewed terminal journal remains immutable and missing, extra or touched journals refuse recovery',{skip:process.platform!=='linux'},async t=>{
+ const f=preparationFixture(t),bytes=readFileSync(f.journalFile),seen=[];
+ await f.invoke({assertValidatorAbsent:directory=>seen.push(directory)});assert.deepEqual(seen,[f.old,f.second,f.third,f.fourth]);assert.deepEqual(readFileSync(f.journalFile),bytes);
+ rmSync(f.journalFile);await assert.rejects(f.invoke(),/journal/);writeFileSync(f.journalFile,bytes);
+ const extra=path.join(f.root,'operations','unexpected.json');f.save(extra,{});await assert.rejects(f.invoke(),/journal/);rmSync(extra);
+ const changed=structuredClone(f.operation);changed.touched.push('backend');f.save(f.journalFile,changed);await assert.rejects(f.invoke(),/journal/);writeFileSync(f.journalFile,bytes);
+ for(const name of ['phase-11.json','docker-auth','deployment-operation.json']){const file=path.join(f.fourth,name);f.save(file,{});await assert.rejects(f.invoke());rmSync(file);}
+ const phase=path.join(f.fourth,'phase-10.json');f.save(phase,{script:'deploy.mjs',status:'passed'});await assert.rejects(f.invoke(),/phase record/);f.save(phase,{script:'deploy.mjs',status:'started'});
+ await assert.rejects(f.invoke({readSchemaLedgerProof:async()=>({migrations:[...f.active.migrationIds,'298_compact_command_receipts'],schemaFingerprint:f.active.schemaFingerprint})}),/Actual original database/);
+ await assert.rejects(f.invoke({readSchemaLedgerProof:async()=>({migrations:f.active.migrationIds,schemaFingerprint:hash('0')})}),/Actual original database/);
+ await f.invoke();assert.deepEqual(readFileSync(f.journalFile),bytes);
 });

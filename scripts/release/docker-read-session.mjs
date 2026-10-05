@@ -13,7 +13,7 @@ export async function withDockerReadSession({command,cleanupCommand=command,conf
  const maxLineBytes=limits.maxLineBytes??64*1024*1024,maxMetadataBytes=limits.maxMetadataBytes??16*1024*1024,statementMilliseconds=limits.statementMilliseconds??70000;
  if(!Number.isSafeInteger(maxLineBytes)||maxLineBytes<1||maxLineBytes>64*1024*1024||!Number.isSafeInteger(maxMetadataBytes)||maxMetadataBytes<1||maxMetadataBytes>16*1024*1024||!Number.isSafeInteger(statementMilliseconds)||statementMilliseconds<1||statementMilliseconds>70000)throw Error('Bounded read-session limits required');
  const client=`${name}_stream`,nonce=randomBytes(16).toString('hex');
- let child,active,buffer='',failed,closed=false,sequence=0,exitPromise,bodyError,answer;
+ let child,active,buffer='',bufferBytes=0,failed,closed=false,sequence=0,exitPromise,bodyError,answer;
  const fail=error=>{failed??=error;if(active){clearTimeout(active.timer);active.reject(error);active=null;}};
  const cleanup=async()=>{
   const listed=await cleanupCommand(['container','ls','-a','--filter',`label=${label}`,'--format','{{.Names}}']);
@@ -44,16 +44,22 @@ export async function withDockerReadSession({command,cleanupCommand=command,conf
   const decoder=new TextDecoder('utf-8',{fatal:true});
   child.stdout.on('data',chunk=>{
    try{
-    try{buffer+=decoder.decode(chunk,{stream:true});}catch{throw fixedError('CURSOR_INVALID_UTF8');}let position;
-    while((position=buffer.indexOf('\n'))>=0){
-     const line=buffer.slice(0,position).replace(/\r$/,'');buffer=buffer.slice(position+1);
-     if(Buffer.byteLength(line)>maxLineBytes)throw fixedError('CURSOR_ROW_LIMIT');
+    let decoded;try{decoded=decoder.decode(chunk,{stream:true});}catch{throw fixedError('CURSOR_INVALID_UTF8');}
+    let start=0,position;
+    // Search only the new decoded text. A partial row stays as an unscanned
+    // string rope until its newline arrives, with an incremental UTF-8 budget.
+    while((position=decoded.indexOf('\n',start))>=0){
+     const line=(buffer+decoded.slice(start,position)).replace(/\r$/,'');
+     buffer='';bufferBytes=0;start=position+1;
+     const lineBytes=Buffer.byteLength(line);
+     if(lineBytes>maxLineBytes)throw fixedError('CURSOR_ROW_LIMIT');
      if(!active)throw fixedError('CURSOR_UNEXPECTED_OUTPUT');
      if(line===active.marker){const complete=active;active=null;clearTimeout(complete.timer);complete.resolve(complete.lines?.join('\n')??'');}
      else if(active.consume){const consumed=active.consume(line);if(consumed&&typeof consumed.then==='function')throw fixedError('CURSOR_ASYNC_CONSUMER');}
-     else{active.bytes+=Buffer.byteLength(line);if(active.bytes>maxMetadataBytes)throw fixedError('CURSOR_METADATA_LIMIT');active.lines.push(line);}
+     else{active.bytes+=lineBytes;if(active.bytes>maxMetadataBytes)throw fixedError('CURSOR_METADATA_LIMIT');active.lines.push(line);}
     }
-    if(Buffer.byteLength(buffer)>maxLineBytes)throw fixedError('CURSOR_ROW_LIMIT');
+    const tail=decoded.slice(start);buffer+=tail;bufferBytes+=Buffer.byteLength(tail);
+    if(bufferBytes>maxLineBytes)throw fixedError('CURSOR_ROW_LIMIT');
    }catch(error){fail(error);child.kill();}
   });
   child.on('error',()=>fail(fixedError('CURSOR_SUBPROCESS_UNAVAILABLE')));

@@ -77,3 +77,31 @@ test('unframed trailing output and mismatched owner cannot become successful cle
  await assert.rejects(withDockerReadSession(owner.input,async()=>{owner.resources.set('legacy_inspect_session_test_stream','someone_else');return true;}),/cleanup failed/);
  assert.equal(owner.removed,0);assert.equal(owner.resources.size,1);
 });
+
+test('linear reader additional: complete multibyte and CRLF rows preserve exact limits under one-byte chunks',async()=>{
+ const text='Ж😀'.repeat(15),bytes=Buffer.from(text+'\r\n');
+ const f=fixture({limits:{maxLineBytes:128,maxMetadataBytes:256},response:sql=>sql.includes('SELECT value')?[...bytes].map(b=>Buffer.from([b])):''});
+ const rows=await withDockerReadSession(f.input,async db=>{const values=[];await db.rows('SELECT value;',line=>values.push(line));return values;});
+ assert.deepEqual(rows,[text]);assert.equal(f.removed,1);assert.equal(f.resources.size,0);
+});
+test('linear reader additional: many complete rows in one chunk do not share a row budget',async()=>{
+ const expected=Array.from({length:100},(_,i)=>'Ж😀'+i),f=fixture({limits:{maxLineBytes:128,maxMetadataBytes:256},response:sql=>sql.includes('SELECT value')?expected.join('\n')+'\n':''});
+ const rows=await withDockerReadSession(f.input,async db=>{const values=[];await db.rows('SELECT value;',line=>values.push(line));return values;});
+ assert.deepEqual(rows,expected);assert.equal(f.removed,1);
+});
+test('linear reader additional: byte rather than character bounds reject oversized split multibyte rows',async()=>{
+ const bytes=Buffer.from('Ж'.repeat(65)),f=fixture({limits:{maxLineBytes:128,maxMetadataBytes:256},response:sql=>sql.includes('SELECT value')?[...bytes].map(b=>Buffer.from([b])):''});
+ await assert.rejects(withDockerReadSession(f.input,db=>db.rows('SELECT value;',()=>{})),e=>e.code==='CURSOR_ROW_LIMIT');assert.equal(f.removed,1);assert.equal(f.resources.size,0);
+});
+test('linear reader additional: async consumers and cumulative metadata remain bounded',async()=>{
+ for(const mode of ['async','metadata']){
+  const f=fixture({limits:{maxLineBytes:128,maxMetadataBytes:16},response:sql=>sql.includes('SELECT value')?'123456789\n123456789\n':''});
+  await assert.rejects(withDockerReadSession(f.input,db=>mode==='async'?db.rows('SELECT value;',async()=>{}):db.query('SELECT value;')),e=>e.code===(mode==='async'?'CURSOR_ASYNC_CONSUMER':'CURSOR_METADATA_LIMIT'));assert.equal(f.removed,1);assert.equal(f.resources.size,0);
+ }
+});
+test('linear reader additional: large UTF8 rows survive many chunks with exact per-line checks',async()=>{
+ const text='Ж😀'.repeat(512*1024),bytes=Buffer.from(text+'\n'),chunks=[];for(let i=0;i<bytes.length;i+=8191)chunks.push(bytes.subarray(i,i+8191));
+ const f=fixture({response:sql=>sql.includes('SELECT value')?chunks:''});
+ const rows=await withDockerReadSession(f.input,async db=>{const values=[];await db.rows('SELECT value;',line=>values.push(line));return values;});
+ assert.deepEqual(rows,[text]);assert.equal(f.removed,1);assert.equal(f.resources.size,0);
+});

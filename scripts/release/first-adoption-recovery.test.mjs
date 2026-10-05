@@ -134,3 +134,22 @@ test('third reviewed historical replay refusal preserves the exact trusted chain
  assert.equal((await assertRecoveredInitialHistory(metadata(rows),{proof:third,now:later})).reviewedFailedDeployments.length,3);
  await assert.rejects(assertRecoveredInitialHistory(metadata(rows),{proof:chain,now:later}),/unreviewed/);await assert.rejects(selectLatestDeployedRun(metadata(rows),{repository,now:later}),/recovery is required/);
 });
+
+test('schema3 binds a terminal preparation journal while retaining every trusted prior proof',async()=>{
+ const prior=JSON.parse(readFileSync(path.join(controlRoot,'infra/first-adoption-recoveries/37362805287-1.json'),'utf8'));
+ const file=path.join(controlRoot,'infra/first-adoption-recoveries/37380712101-1.json'),bytes=readFileSync(file),journal=JSON.parse(bytes);
+ const originalBytes=readFileSync(path.join(controlRoot,'infra/first-adoption-recoveries',prior.id+'.json'));
+ const loaded=loadControlRecovery({id:journal.id,controlRoot,controlCommit,repository});
+ assert.equal(loaded.proof.schemaVersion,3);assert.deepEqual(journal.failedDeployments.slice(0,-1),prior.failedDeployments);
+ assert.equal(journal.cleanup.deploymentJournalCreated,true);assert.deepEqual(readFileSync(file),bytes);
+ assert.deepEqual(readFileSync(path.join(controlRoot,'infra/first-adoption-recoveries',prior.id+'.json')),originalBytes);
+ for(const mutate of [p=>p.schemaVersion=2,p=>p.cleanup.deploymentJournalCreated=false,p=>delete p.failedDeployments.at(-1).operationHash,
+  p=>p.failedDeployments.at(-1).releaseId='../escape',p=>p.failedDeployments.at(-1).operationHash='invalid',p=>p.failedDeployments.at(-1).stage='recovery_required',
+  p=>p.failedDeployments.at(-1).migrationStarted=false,p=>{p.failedDeployments.at(-1).stage='rehearsal-historical-replay-refusal';delete p.failedDeployments.at(-1).releaseId;delete p.failedDeployments.at(-1).operationHash;}]){
+  const bad=structuredClone(journal);mutate(bad);assert.throws(()=>validateFirstAdoptionRecovery(bad));
+ }
+ const rows=journal.failedDeployments.map(row=>run(row.runId,{head_sha:row.controlCommit}));
+ assert.equal((await assertRecoveredInitialHistory(metadata(rows),{proof:journal,now:Date.parse(journal.observedAt)+1000})).reviewedFailedDeployments.length,5);
+ await assert.rejects(assertRecoveredInitialHistory(metadata(rows),{proof:prior,now:Date.parse(journal.observedAt)+1000}),/unreviewed/);
+ await assert.rejects(selectLatestDeployedRun(metadata(rows),{repository,now:Date.parse(journal.observedAt)+1000}),/recovery is required/);
+});

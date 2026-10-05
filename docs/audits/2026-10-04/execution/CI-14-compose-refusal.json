@@ -1,0 +1,279 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-ci14-full-rehearsal-and-terminal-compose-refusal",
+  "recordedAt": "2026-10-05T23:06:25.200Z",
+  "sourceCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+  "ci": {
+    "id": 37378116413,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37378116413",
+    "status": "completed",
+    "conclusion": "success",
+    "aggregateHash": "sha256:4220082810b0af978f5fd3b18f0a3f05c5c0d5696d53fdf5b2ccf7c23f93dc0b",
+    "durationMs": 848471,
+    "sourceSnapshot": {
+      "sha256": "1fb76f048235d1d13c226559aa9d811f01bd4854645ef3a543f5e371eb1ac968",
+      "files": 4428
+    },
+    "globalCoverageComplete": true,
+    "counts": {
+      "node": 723,
+      "vitest": 6462,
+      "goPackageCases": 754,
+      "workerAndDatabase": 25,
+      "cursorChecks": 22,
+      "browserFlows": 12,
+      "uiFixtures": 48,
+      "battle3d": 8
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "publication": {
+    "id": 37380069376,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380069376",
+    "status": "completed",
+    "conclusion": "success",
+    "allThreeNewImmutableImages": true
+  },
+  "deployment": {
+    "id": 37380712101,
+    "attempt": 1,
+    "status": "failed_before_cutover",
+    "conclusion": "failure",
+    "controlCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380712101",
+    "jobCompletedAt": "2026-10-05T22:40:32Z",
+    "releaseId": "candidate-ab94ada2bbf8-1f3a396e803c",
+    "operationHash": "sha256:3355c11b7b62c7476018edc261af5293472e41ebd66ad1c07c58bd4ec77a5d65",
+    "touched": [],
+    "migrationStarted": false,
+    "rehearsal": {
+      "status": "passed",
+      "startedAt": "2026-10-05T22:22:30.327Z",
+      "completedAt": "2026-10-05T22:39:51.633Z",
+      "checks": [
+        {
+          "id": "snapshot",
+          "status": "passed"
+        },
+        {
+          "id": "migrations",
+          "status": "passed"
+        },
+        {
+          "id": "full-candidate-health",
+          "status": "passed"
+        },
+        {
+          "id": "image-contract",
+          "status": "passed"
+        },
+        {
+          "id": "historical-inventory",
+          "status": "passed"
+        },
+        {
+          "id": "historical-replay",
+          "status": "passed"
+        },
+        {
+          "id": "pending-decision",
+          "status": "passed"
+        },
+        {
+          "id": "duplicate-command",
+          "status": "passed"
+        }
+      ],
+      "migrationChecks": [
+        {
+          "id": "atomic-ddl-ledger",
+          "status": "passed"
+        },
+        {
+          "id": "crash-before-ledger",
+          "status": "passed"
+        },
+        {
+          "id": "repeat-after-commit",
+          "status": "passed"
+        },
+        {
+          "id": "same-connection-lock",
+          "status": "passed"
+        },
+        {
+          "id": "unknown-migration-rejected",
+          "status": "passed"
+        },
+        {
+          "id": "schema-proof",
+          "status": "passed"
+        },
+        {
+          "id": "old-readers-after-expansion",
+          "status": "passed"
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "resourceCount": 26
+      }
+    },
+    "auditHash": "sha256:952edefd07a84316daaac3b717a26b0256580c469de8514b8d4dcdc364de3a70",
+    "activeHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+    "actualDatabase": {
+      "schemaFingerprint": "sha256:6d00949de56ee849345194c42e0326a73a49cdb62b1df69251541807648dbc58",
+      "migrationsHash": "sha256:540de66c370c26d69541c32250030b727b957a4074c705a1f57e15cb1cd87009",
+      "migrationCount": 302
+    },
+    "cleanup": {
+      "remainingOwnedResources": 0,
+      "validatorStopped": true,
+      "dockerAuthRemoved": true,
+      "deploymentJournalCreated": true,
+      "deployLockPresent": false,
+      "operatorApplicationMutations": 0
+    },
+    "edge": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "path": "/build-info.json",
+        "status": 200
+      }
+    ],
+    "expiredSnapshotReusableForProduction": false
+  },
+  "repair": {
+    "status": "local-contracts-passed-new-exact-ci-required",
+    "compose": {
+      "version": "2.40.3+ds1-0ubuntu1~24.04.1",
+      "readOnlyHostCases": [
+        {
+          "retained": null,
+          "status": "passed",
+          "allLaunchesAndDigestsMatched": true
+        },
+        {
+          "retained": "backend",
+          "status": "passed",
+          "allLaunchesAndDigestsMatched": true
+        },
+        {
+          "retained": "frontend",
+          "status": "passed",
+          "allLaunchesAndDigestsMatched": true
+        },
+        {
+          "retained": "rulesWorker",
+          "status": "passed",
+          "allLaunchesAndDigestsMatched": true
+        }
+      ],
+      "serverConfigChanged": false,
+      "secretChanges": false,
+      "globalFallbackPreservesPerComponentLaunch": true
+    },
+    "recovery": {
+      "schemaVersion": 3,
+      "id": "37380712101-1",
+      "proofHash": "sha256:e1cf07f9d6ae7306b0888d005369c46e1e692acb7c3d7fa88117630384351e92",
+      "reviewedFailedDeployments": 5,
+      "originalFourProofFilesUnchanged": true,
+      "originalJournalRetained": true,
+      "requiresFreshCaptureAndRehearsal": true
+    },
+    "local": {
+      "windowsAllReleaseContracts": {
+        "tests": 258,
+        "pass": 253,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 5,
+        "todo": 0
+      },
+      "actualLinuxFocusedContracts": {
+        "tests": 75,
+        "pass": 75,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    }
+  },
+  "linearReader": {
+    "status": "integrated-locally-verified",
+    "oldSeconds": 162.9077199,
+    "newSeconds": 121.62330060000002,
+    "completeResultHash": "sha256:e33a496eb06fb25736fcbbc0db7cb0fade2f8c7a5c7063c507a59e2af17e40ca",
+    "transportBytes": 4118333794,
+    "completeScans": true,
+    "actualPinnedReadSession": true,
+    "oldAndCandidateContracts": 20,
+    "pairedSamples": 1,
+    "counterbalanced": false,
+    "productionTimingClaim": false,
+    "cleanup": {
+      "errors": [],
+      "unrelatedInspectionResourcesObserved": 0,
+      "status": "stopped"
+    }
+  },
+  "ownerBatchHypothesis": {
+    "status": "declined-no-material-canonical-init-latency-gain",
+    "integrated": false,
+    "party6OldMs": 186.4155,
+    "party6NewMs": 186.5853
+  },
+  "futurePrivate": {
+    "base": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+    "principalPaths": 127,
+    "combinedPaths": 137,
+    "windowsNode": 139,
+    "windowsDeclaredLinuxSkips": 4,
+    "actualLinuxNode": 143,
+    "actualLinuxSkips": 0,
+    "freeze": "outputs/testing/future-release-ab94ada2/FREEZE.json",
+    "sharedSourceApplied": false,
+    "rebaseRequiredAfterThisRepair": true
+  },
+  "historicalFresh": {
+    "lastCompletedMigration": 277,
+    "refusingMigration": 278,
+    "conditions": 1656,
+    "passingConditions": 1045,
+    "refusingConditions": 611,
+    "status": "authentic-pre278-inputs-required"
+  },
+  "policy": {
+    "writers": false,
+    "automatic": false,
+    "selective": false,
+    "reconcile": false
+  },
+  "productionApplicationMutations": 0,
+  "paidProviderRequests": 0,
+  "nextSteps": [
+    "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
+    "Publish new exact immutable images using the five-attempt reviewed recovery.",
+    "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
+    "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
+  ]
+}

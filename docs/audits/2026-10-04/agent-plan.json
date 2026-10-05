@@ -25,7 +25,7 @@
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "Exact64 CI13 passed; publication37377337224 refused a stale conservative source manifest before images/host. Canonical manifest and early CI guard verified locally. New exact CI14/publication and fresh first adoption remain required; auto/selective/reconcile/writers OFF."
+    "production_enablement_status": "Exact ab94 CI14 and all3images passed; full host rehearsal8+7 passed. Compose preparation failed before migration/cutover. Exact schema3 recovery preserves original journal; local repair75Linux verified. New exact CI/publication/fresh first adoption required; auto/selective/reconcile/writers OFF."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -619,7 +619,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "TEST-02",
@@ -736,7 +736,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "TEST-03",
@@ -840,7 +840,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "TEST-04",
@@ -946,7 +946,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "TEST-05",
@@ -1064,7 +1064,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "OBS-01",
@@ -1152,7 +1152,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "PERF-01",
@@ -1248,7 +1248,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "PERF-02",
@@ -1274,7 +1274,7 @@
         3,
         6
       ],
-      "status": "initialization_authority_locally_verified_new_ci_and_latency_pending",
+      "status": "initialization_authority_ci14_verified_default_latency_open",
       "steps": [
         "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
         "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
@@ -1324,19 +1324,19 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceBaseCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
-        "status": "initialization_authority_locally_verified_new_ci_and_latency_pending",
+        "sourceBaseCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+        "status": "initialization_authority_ci14_verified_default_latency_open",
         "demonstrated": [
-          "Initialization commit authority integrated: real PostgreSQL60race/adjacent checks passed on root; actual canonical worker5equivalence checks passed privately.",
-          "Exact64 CI13 complete extended report passed, including initialization authority and22native history/cursor checks."
+          "Initialization commit authority and all required supported scenarios passed exact CI14.",
+          "Owner-query batching privately passed canonical equivalence and rights/race tests; full canonical init measurement found no material default-path improvement, so it was declined."
         ],
         "limitations": [
-          "New exact-source Linux CI pending. No latency acceptance; rejected optional preparation cache remainsOFF."
+          "No default UI/API latency acceptance; slower optional preparation cache stays OFF."
         ],
         "nextAcceptance": [
-          "Run final-source full CI and measured canonical UI/API latency profiles."
+          "Measure and improve the actual canonical default UI/API initialization path."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "latest_execution_result": {
@@ -1354,7 +1354,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "PERF-03",
@@ -1456,7 +1456,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "PERF-04",
@@ -1565,7 +1565,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "PERF-05",
@@ -1656,7 +1656,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REF-01",
@@ -1754,7 +1754,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REF-02",
@@ -1846,7 +1846,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REL-01",
@@ -1931,7 +1931,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REL-02",
@@ -2029,7 +2029,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REL-03",
@@ -2058,7 +2058,7 @@
         2,
         4
       ],
-      "status": "ci13_verified_publication_manifest_refused_local_repair_new_ci_pending",
+      "status": "ci14_full_rehearsal_passed_compose_refused_local_repair_ci15_pending",
       "steps": [
         "Зафиксировать различие release SHA, component source SHA, immutable image digest, input fingerprint, worker executable artifact hash и schema/protocol compatibility. Проверить актуальные файлы реализации health/build identity перед изменением.",
         "Создать versioned manifest schema и validator. Старые single-SHA releases читать через явный адаптер; неизвестная версия, некорректный digest или несовместимый protocol должны отклоняться до mutation.",
@@ -2109,19 +2109,23 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceBaseCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
-        "status": "ci13_verified_publication_manifest_refused_local_repair_new_ci_pending",
         "demonstrated": [
-          "Exact529 CI12 and all three OCI publication passed; four real failed attempts reviewed and chained without cutover.",
-          "Exact64 CI13 complete extended report passed, including initialization authority and22native history/cursor checks."
+          "Exact CI14 and all3new immutable images passed.",
+          "Actual host candidate rehearsal8stages and7migration scenarios passed.",
+          "Terminal preparation refusal independently confirmed original component IDs/health and unchanged actual schema/302ledger; original journal retained.",
+          "Compose fix verified read-only on actual2.40 host; schema3 recovery and linear reader passed75focused Linux contracts."
         ],
         "limitations": [
-          "Publication refused before component build/upload or host; stale manifest now regenerated locally, requires new exact CI/publication."
+          "First healthy adoption remains unaccepted; new exact source requires fresh CI/publication/capture/rehearsal.",
+          "Automatic/selective/reconcile/writers remain OFF; frozen future packet must be rebased after this repair."
         ],
         "nextAcceptance": [
-          "Exact new CI/images and fresh full rehearsal within30minutes, then independent actual host identity verification."
+          "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
+          "Publish new exact immutable images using the five-attempt reviewed recovery.",
+          "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
+          "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
       },
       "previous_status": "fourth_adoption_refused_utf8_locally_fixed_new_exact_ci_pending",
       "latest_execution_result": {
@@ -2139,7 +2143,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REL-04",
@@ -2230,7 +2234,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REL-05",
@@ -2304,20 +2308,23 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceBaseCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
-        "status": "first_adoption_open_future_packet_reviewed_not_integrated",
         "demonstrated": [
-          "Frozen future136path packet root closure475pins and18critical files reviewed conditionally; current host policy remainsOFF.",
-          "Exact64 CI13 complete extended report passed, including initialization authority and22native history/cursor checks.",
-          "Private64 packet127/137paths applied exact488file closures,137WindowsPASS/4declared skips and141LinuxPASS/0skip; shared source not applied."
+          "Exact CI14 and all3new immutable images passed.",
+          "Actual host candidate rehearsal8stages and7migration scenarios passed.",
+          "Terminal preparation refusal independently confirmed original component IDs/health and unchanged actual schema/302ledger; original journal retained.",
+          "Compose fix verified read-only on actual2.40 host; schema3 recovery and linear reader passed75focused Linux contracts."
         ],
         "limitations": [
-          "First healthy predecessor absent; current manifest/guard repair requires new rebase. Actual future writer/selective/rollback/auto receipts remain mandatory."
+          "First healthy adoption remains unaccepted; new exact source requires fresh CI/publication/capture/rehearsal.",
+          "Automatic/selective/reconcile/writers remain OFF; frozen future packet must be rebased after this repair."
         ],
         "nextAcceptance": [
-          "First healthy baseline; rebasefollow-on; genuine writer compatibility, UI-only selective images, owned failure rollback and actual auto-convergence gates."
+          "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
+          "Publish new exact immutable images using the five-attempt reviewed recovery.",
+          "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
+          "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
       },
       "previous_status": "first_rehearsal_stopped_selective_auto_private",
       "latest_execution_result": {
@@ -2336,7 +2343,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "REL-06",
@@ -2359,7 +2366,7 @@
         1,
         3
       ],
-      "status": "full_local_137_replay_verified_host_acceptance_pending",
+      "status": "full_host_rehearsal_verified_first_healthy_adoption_pending",
       "steps": [
         "Инвентаризировать backup categories: PostgreSQL snapshot, referenced executable artifacts, release manifest, media manifest и необходимая конфигурация. Текущий pg_dump не содержит /artifacts; не считать его доказательством полного восстановления боя.",
         "Создать backup manifest с хэшами/размерами/временем и проверкой ссылок DB snapshot на artifacts. Секреты не помещать в обычный manifest, логи или Git; отдельно описать защищённый recovery канал конфигурации.",
@@ -2405,20 +2412,23 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceBaseCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
-        "status": "full_local_137_replay_verified_host_acceptance_pending",
         "demonstrated": [
-          "All136fourth-capture groups match original source. Published exactOCI corrected stdin consumer replay137combats/2210commands passed130.932s; no history rewritten.",
-          "Complete row-hash query with two workers matched all36468rows on protected snapshot and fell from47to51seconds to29to32seconds;22actualPG17contracts passed. No snapshot/history gates skipped.",
-          "Exact64 CI13 complete extended report passed, including initialization authority and22native history/cursor checks."
+          "Exact CI14 and all3new immutable images passed.",
+          "Actual host candidate rehearsal8stages and7migration scenarios passed.",
+          "Terminal preparation refusal independently confirmed original component IDs/health and unchanged actual schema/302ledger; original journal retained.",
+          "Compose fix verified read-only on actual2.40 host; schema3 recovery and linear reader passed75focused Linux contracts."
         ],
         "limitations": [
-          "Fourth rehearsal completed after30minute freshness; old capture localdiagnosis only. Alternative complete history grouping13%slower and rejected."
+          "First healthy adoption remains unaccepted; new exact source requires fresh CI/publication/capture/rehearsal.",
+          "Automatic/selective/reconcile/writers remain OFF; frozen future packet must be rebased after this repair."
         ],
         "nextAcceptance": [
-          "Measured complete inventory acceleration; new fresh full successful host rehearsal; independent verification, external backup/RPO/RTO remain explicit."
+          "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
+          "Publish new exact immutable images using the five-attempt reviewed recovery.",
+          "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
+          "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
       },
       "previous_status": "owned_restore_verified_host_rehearsal_incomplete",
       "latest_execution_result": {
@@ -2437,7 +2447,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "DB-01",
@@ -2526,7 +2536,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "DB-02",
@@ -2626,7 +2636,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "DB-03",
@@ -2725,7 +2735,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "DB-04",
@@ -2828,7 +2838,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "AI-01",
@@ -2903,7 +2913,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "AI-02",
@@ -2990,7 +3000,7 @@
           "firstHealthyDeployment": false
         }
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "AI-03",
@@ -3075,7 +3085,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "CLEAN-01",
@@ -3156,7 +3166,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "CLEAN-02",
@@ -3236,7 +3246,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     },
     {
       "id": "CLEAN-03",
@@ -3319,7 +3329,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
     }
   ],
   "external_sources": [
@@ -3439,25 +3449,24 @@
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
     "schemaVersion": 1,
-    "kind": "exact-ci13-and-pre-build-source-manifest-refusal",
-    "recordedAt": "2026-10-05T21:44:39.459Z",
-    "sourceCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
+    "kind": "exact-ci14-full-rehearsal-and-terminal-compose-refusal",
+    "recordedAt": "2026-10-05T23:06:25.200Z",
+    "sourceCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
     "ci": {
-      "id": 37374888145,
+      "id": 37378116413,
       "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37374888145",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37378116413",
       "status": "completed",
       "conclusion": "success",
-      "aggregateHash": "sha256:5f6e356a6c7574a48c14c18269abe14faa29b990d00ebedec00f3351520fbecc",
-      "durationMs": 869799,
-      "maxShardDurationMs": 866521,
+      "aggregateHash": "sha256:4220082810b0af978f5fd3b18f0a3f05c5c0d5696d53fdf5b2ccf7c23f93dc0b",
+      "durationMs": 848471,
       "sourceSnapshot": {
-        "sha256": "72fc0385d2ea3b7c2be16b364495a7f5faa9b13e9b6046a287b04e3de3b3bf64",
+        "sha256": "1fb76f048235d1d13c226559aa9d811f01bd4854645ef3a543f5e371eb1ac968",
         "files": 4428
       },
       "globalCoverageComplete": true,
       "counts": {
-        "node": 722,
+        "node": 723,
         "vitest": 6462,
         "goPackageCases": 754,
         "workerAndDatabase": 25,
@@ -3472,78 +3481,227 @@
       }
     },
     "publication": {
-      "id": 37377337224,
+      "id": 37380069376,
       "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37377337224",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380069376",
       "status": "completed",
-      "conclusion": "failure",
-      "stage": "prepare/source-content-manifest",
-      "errorCategory": "Source catalog manifest/config drift",
-      "componentBuildJobs": "skipped",
-      "imagePublicationJobs": "skipped",
-      "candidateUploaded": false,
-      "hostJobStarted": false
+      "conclusion": "success",
+      "allThreeNewImmutableImages": true
     },
-    "repair": {
-      "status": "locally-verified-new-exact-ci-required",
-      "producer": "scripts/release/source-content-manifest.mjs write .",
-      "manifestFiles": 434,
-      "oldManifestHash": "sha256:b038f735f9162dbb10074c33d48dd865a1dd2833e84876eba7938804ee6424d8",
-      "newManifestHash": "sha256:792705aca1d66e2ed086a649ea5783b953bfb7c6130e1861bc79c3b205a79121",
-      "changedSourceRows": [
+    "deployment": {
+      "id": 37380712101,
+      "attempt": 1,
+      "status": "failed_before_cutover",
+      "conclusion": "failure",
+      "controlCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380712101",
+      "jobCompletedAt": "2026-10-05T22:40:32Z",
+      "releaseId": "candidate-ab94ada2bbf8-1f3a396e803c",
+      "operationHash": "sha256:3355c11b7b62c7476018edc261af5293472e41ebd66ad1c07c58bd4ec77a5d65",
+      "touched": [],
+      "migrationStarted": false,
+      "rehearsal": {
+        "status": "passed",
+        "startedAt": "2026-10-05T22:22:30.327Z",
+        "completedAt": "2026-10-05T22:39:51.633Z",
+        "checks": [
+          {
+            "id": "snapshot",
+            "status": "passed"
+          },
+          {
+            "id": "migrations",
+            "status": "passed"
+          },
+          {
+            "id": "full-candidate-health",
+            "status": "passed"
+          },
+          {
+            "id": "image-contract",
+            "status": "passed"
+          },
+          {
+            "id": "historical-inventory",
+            "status": "passed"
+          },
+          {
+            "id": "historical-replay",
+            "status": "passed"
+          },
+          {
+            "id": "pending-decision",
+            "status": "passed"
+          },
+          {
+            "id": "duplicate-command",
+            "status": "passed"
+          }
+        ],
+        "migrationChecks": [
+          {
+            "id": "atomic-ddl-ledger",
+            "status": "passed"
+          },
+          {
+            "id": "crash-before-ledger",
+            "status": "passed"
+          },
+          {
+            "id": "repeat-after-commit",
+            "status": "passed"
+          },
+          {
+            "id": "same-connection-lock",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-migration-rejected",
+            "status": "passed"
+          },
+          {
+            "id": "schema-proof",
+            "status": "passed"
+          },
+          {
+            "id": "old-readers-after-expansion",
+            "status": "passed"
+          }
+        ],
+        "cleanup": {
+          "status": "stopped",
+          "errors": [],
+          "resourceCount": 26
+        }
+      },
+      "auditHash": "sha256:952edefd07a84316daaac3b717a26b0256580c469de8514b8d4dcdc364de3a70",
+      "activeHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+      "actualDatabase": {
+        "schemaFingerprint": "sha256:6d00949de56ee849345194c42e0326a73a49cdb62b1df69251541807648dbc58",
+        "migrationsHash": "sha256:540de66c370c26d69541c32250030b727b957a4074c705a1f57e15cb1cd87009",
+        "migrationCount": 302
+      },
+      "cleanup": {
+        "remainingOwnedResources": 0,
+        "validatorStopped": true,
+        "dockerAuthRemoved": true,
+        "deploymentJournalCreated": true,
+        "deployLockPresent": false,
+        "operatorApplicationMutations": 0
+      },
+      "edge": [
         {
-          "path": "backend/roguelike_initialization_preparation.go",
-          "added": true
+          "path": "/",
+          "status": 200
         },
         {
-          "path": "backend/roguelike_party_worker.go",
-          "added": false
+          "path": "/api/health",
+          "status": 200
         },
         {
-          "path": "backend/roguelike_worker_catalog.go",
-          "added": false
-        },
-        {
-          "path": "backend/roguelike_worker_client.go",
-          "added": false
-        },
-        {
-          "path": "backend/roguelike_worker_controller.go",
-          "added": false
+          "path": "/build-info.json",
+          "status": 200
         }
       ],
-      "allOtherBuildConfigFieldsPreserved": true,
-      "ciGuard": "Existing source-hygiene now checks canonical current source manifest before builds in CI mode.",
-      "local": {
-        "node": 56,
-        "skipped": 0,
-        "failed": 0,
-        "files": [
-          "scripts/release/source-content-manifest.test.mjs",
-          "scripts/release/ci-release.test.mjs",
-          "scripts/testing/runtime.test.mjs",
-          "scripts/testing/shards.test.mjs",
-          "scripts/testing/suites.test.mjs"
-        ]
+      "expiredSnapshotReusableForProduction": false
+    },
+    "repair": {
+      "status": "local-contracts-passed-new-exact-ci-required",
+      "compose": {
+        "version": "2.40.3+ds1-0ubuntu1~24.04.1",
+        "readOnlyHostCases": [
+          {
+            "retained": null,
+            "status": "passed",
+            "allLaunchesAndDigestsMatched": true
+          },
+          {
+            "retained": "backend",
+            "status": "passed",
+            "allLaunchesAndDigestsMatched": true
+          },
+          {
+            "retained": "frontend",
+            "status": "passed",
+            "allLaunchesAndDigestsMatched": true
+          },
+          {
+            "retained": "rulesWorker",
+            "status": "passed",
+            "allLaunchesAndDigestsMatched": true
+          }
+        ],
+        "serverConfigChanged": false,
+        "secretChanges": false,
+        "globalFallbackPreservesPerComponentLaunch": true
       },
-      "applicationCodeChanged": false
+      "recovery": {
+        "schemaVersion": 3,
+        "id": "37380712101-1",
+        "proofHash": "sha256:e1cf07f9d6ae7306b0888d005369c46e1e692acb7c3d7fa88117630384351e92",
+        "reviewedFailedDeployments": 5,
+        "originalFourProofFilesUnchanged": true,
+        "originalJournalRetained": true,
+        "requiresFreshCaptureAndRehearsal": true
+      },
+      "local": {
+        "windowsAllReleaseContracts": {
+          "tests": 258,
+          "pass": 253,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 5,
+          "todo": 0
+        },
+        "actualLinuxFocusedContracts": {
+          "tests": 75,
+          "pass": 75,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      }
+    },
+    "linearReader": {
+      "status": "integrated-locally-verified",
+      "oldSeconds": 162.9077199,
+      "newSeconds": 121.62330060000002,
+      "completeResultHash": "sha256:e33a496eb06fb25736fcbbc0db7cb0fade2f8c7a5c7063c507a59e2af17e40ca",
+      "transportBytes": 4118333794,
+      "completeScans": true,
+      "actualPinnedReadSession": true,
+      "oldAndCandidateContracts": 20,
+      "pairedSamples": 1,
+      "counterbalanced": false,
+      "productionTimingClaim": false,
+      "cleanup": {
+        "errors": [],
+        "unrelatedInspectionResourcesObserved": 0,
+        "status": "stopped"
+      }
+    },
+    "ownerBatchHypothesis": {
+      "status": "declined-no-material-canonical-init-latency-gain",
+      "integrated": false,
+      "party6OldMs": 186.4155,
+      "party6NewMs": 186.5853
     },
     "futurePrivate": {
-      "base": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
+      "base": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
       "principalPaths": 127,
       "combinedPaths": 137,
-      "windowsNode": 137,
+      "windowsNode": 139,
       "windowsDeclaredLinuxSkips": 4,
-      "actualLinuxNode": 141,
+      "actualLinuxNode": 143,
       "actualLinuxSkips": 0,
-      "freeze": "outputs/testing/future-release-64cb14ee/FREEZE.json",
+      "freeze": "outputs/testing/future-release-ab94ada2/FREEZE.json",
       "sharedSourceApplied": false,
       "rebaseRequiredAfterThisRepair": true
-    },
-    "recovery": {
-      "id": "37362805287-1",
-      "reviewedFailedDeployments": 4,
-      "newFailedDeployment": false
     },
     "historicalFresh": {
       "lastCompletedMigration": 277,
@@ -3562,10 +3720,10 @@
     "productionApplicationMutations": 0,
     "paidProviderRequests": 0,
     "nextSteps": [
-      "Commit locally verified manifest and early CI guard; require exact-source CI14.",
-      "Publish all3new exact images; four-attempt recovery remains unchanged because failed publication never reached a host.",
-      "Fresh capture/full rehearsal within30minutes, then independent first healthy adoption verification.",
-      "Rebase the private next-stage packet, regenerate its final source manifest and validate actual writer/selective/rollback/automatic acceptance."
+      "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
+      "Publish new exact immutable images using the five-attempt reviewed recovery.",
+      "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
+      "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
     ]
   },
   "execution_history": [
@@ -4169,7 +4327,138 @@
       ],
       "productionApplicationMutations": 0,
       "paidProviderRequests": 0
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "exact-ci13-and-pre-build-source-manifest-refusal",
+      "recordedAt": "2026-10-05T21:44:39.459Z",
+      "sourceCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
+      "ci": {
+        "id": 37374888145,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37374888145",
+        "status": "completed",
+        "conclusion": "success",
+        "aggregateHash": "sha256:5f6e356a6c7574a48c14c18269abe14faa29b990d00ebedec00f3351520fbecc",
+        "durationMs": 869799,
+        "maxShardDurationMs": 866521,
+        "sourceSnapshot": {
+          "sha256": "72fc0385d2ea3b7c2be16b364495a7f5faa9b13e9b6046a287b04e3de3b3bf64",
+          "files": 4428
+        },
+        "globalCoverageComplete": true,
+        "counts": {
+          "node": 722,
+          "vitest": 6462,
+          "goPackageCases": 754,
+          "workerAndDatabase": 25,
+          "cursorChecks": 22,
+          "browserFlows": 12,
+          "uiFixtures": 48,
+          "battle3d": 8
+        },
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      "publication": {
+        "id": 37377337224,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37377337224",
+        "status": "completed",
+        "conclusion": "failure",
+        "stage": "prepare/source-content-manifest",
+        "errorCategory": "Source catalog manifest/config drift",
+        "componentBuildJobs": "skipped",
+        "imagePublicationJobs": "skipped",
+        "candidateUploaded": false,
+        "hostJobStarted": false
+      },
+      "repair": {
+        "status": "locally-verified-new-exact-ci-required",
+        "producer": "scripts/release/source-content-manifest.mjs write .",
+        "manifestFiles": 434,
+        "oldManifestHash": "sha256:b038f735f9162dbb10074c33d48dd865a1dd2833e84876eba7938804ee6424d8",
+        "newManifestHash": "sha256:792705aca1d66e2ed086a649ea5783b953bfb7c6130e1861bc79c3b205a79121",
+        "changedSourceRows": [
+          {
+            "path": "backend/roguelike_initialization_preparation.go",
+            "added": true
+          },
+          {
+            "path": "backend/roguelike_party_worker.go",
+            "added": false
+          },
+          {
+            "path": "backend/roguelike_worker_catalog.go",
+            "added": false
+          },
+          {
+            "path": "backend/roguelike_worker_client.go",
+            "added": false
+          },
+          {
+            "path": "backend/roguelike_worker_controller.go",
+            "added": false
+          }
+        ],
+        "allOtherBuildConfigFieldsPreserved": true,
+        "ciGuard": "Existing source-hygiene now checks canonical current source manifest before builds in CI mode.",
+        "local": {
+          "node": 56,
+          "skipped": 0,
+          "failed": 0,
+          "files": [
+            "scripts/release/source-content-manifest.test.mjs",
+            "scripts/release/ci-release.test.mjs",
+            "scripts/testing/runtime.test.mjs",
+            "scripts/testing/shards.test.mjs",
+            "scripts/testing/suites.test.mjs"
+          ]
+        },
+        "applicationCodeChanged": false
+      },
+      "futurePrivate": {
+        "base": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
+        "principalPaths": 127,
+        "combinedPaths": 137,
+        "windowsNode": 137,
+        "windowsDeclaredLinuxSkips": 4,
+        "actualLinuxNode": 141,
+        "actualLinuxSkips": 0,
+        "freeze": "outputs/testing/future-release-64cb14ee/FREEZE.json",
+        "sharedSourceApplied": false,
+        "rebaseRequiredAfterThisRepair": true
+      },
+      "recovery": {
+        "id": "37362805287-1",
+        "reviewedFailedDeployments": 4,
+        "newFailedDeployment": false
+      },
+      "historicalFresh": {
+        "lastCompletedMigration": 277,
+        "refusingMigration": 278,
+        "conditions": 1656,
+        "passingConditions": 1045,
+        "refusingConditions": 611,
+        "status": "authentic-pre278-inputs-required"
+      },
+      "policy": {
+        "writers": false,
+        "automatic": false,
+        "selective": false,
+        "reconcile": false
+      },
+      "productionApplicationMutations": 0,
+      "paidProviderRequests": 0,
+      "nextSteps": [
+        "Commit locally verified manifest and early CI guard; require exact-source CI14.",
+        "Publish all3new exact images; four-attempt recovery remains unchanged because failed publication never reached a host.",
+        "Fresh capture/full rehearsal within30minutes, then independent first healthy adoption verification.",
+        "Rebase the private next-stage packet, regenerate its final source manifest and validate actual writer/selective/rollback/automatic acceptance."
+      ]
     }
   ],
-  "updated_at": "2026-10-05T09:34:57.913Z"
+  "updated_at": "2026-10-05T23:06:25.200Z"
 }
