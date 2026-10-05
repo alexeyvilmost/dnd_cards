@@ -31,10 +31,13 @@ export async function verifyBackup(directory) {
   await verifyBackupSourceReleases(directory,manifest.sourceReleaseReferences??[],manifest.sourceReleases??[],manifest.files);
   return manifest;
 }
-export async function verifyDeploymentBackup(directory, releaseManifest, {now = Date.now(), maximumAgeMs = 30 * 60_000} = {}) {
+export async function verifyDeploymentBackup(directory, releaseManifest, {now, maximumAgeMs = 30 * 60_000} = {}) {
   const manifest = await verifyBackup(directory);
-  if (manifest.releaseManifestHash !== evidenceHash(releaseManifest) || now - Date.parse(manifest.createdAt) > maximumAgeMs
-    || !Number.isFinite(Date.parse(manifest.createdAt)) || Date.parse(manifest.createdAt) > now) throw Error('Fresh backup of active release required');
+  // Hashing captured files takes time; an implicit clock must describe the
+  // verified bytes now, not the instant before their verification began.
+  const verifiedAt = now === undefined ? Date.now() : now;
+  if (manifest.releaseManifestHash !== evidenceHash(releaseManifest) || verifiedAt - Date.parse(manifest.createdAt) > maximumAgeMs
+    || !Number.isFinite(Date.parse(manifest.createdAt)) || Date.parse(manifest.createdAt) > verifiedAt) throw Error('Fresh backup of active release required');
   const report = JSON.parse(readFileSync(backupFile(directory, 'restore-report.json'), 'utf8'));
   const releaseFile = manifest.files.filter(file => file.category === 'release-manifest');
   if (releaseFile.length !== 1 || evidenceHash(JSON.parse(readFileSync(backupFile(directory, releaseFile[0].path), 'utf8'))) !== evidenceHash(releaseManifest)) throw Error('Backed-up release manifest differs from active release');

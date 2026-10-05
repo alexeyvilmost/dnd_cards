@@ -16,6 +16,7 @@ import {shardPlan,assignShard,assertShardCoverage} from './shards.mjs';
 import {suiteWorkload} from './workload.mjs';
 import {safeNodeFailureDiagnostics} from './node-failure-diagnostics.mjs';
 import {safeVitestFailureDiagnostics} from './vitest-failure-diagnostics.mjs';
+import {supplementVitestFailureDiagnostics} from './vitest-suite-error-reporter.mjs';
 
 export function suiteOptions(args) {
   const result = {suite:'core', mode:'local', candidate:'HEAD'};
@@ -118,13 +119,17 @@ export async function runSuite(argv) {
     }
     if (vitestFiles.length) await check('vitest',async()=>{
       const selectionFile=path.join(directory,'vitest-selection.json'), resultFile=path.join(directory,'vitest-result.json');
+      const diagnosticsFile=path.join(directory,'vitest-suite-errors.json'), diagnosticsSettingsFile=path.join(directory,'vitest-diagnostics-settings.json');
+      const diagnosticSettings={root:repositoryRoot,files:vitestFiles,runId:randomUUID(),outputFile:diagnosticsFile};
       await writeFile(selectionFile,JSON.stringify(vitestFiles.map(file=>file.replace(/^frontend\//,''))));
+      await writeFile(diagnosticsSettingsFile,JSON.stringify(diagnosticSettings),{mode:0o600});
       try {
-        await invoke('vitest',process.execPath,['node_modules/vitest/vitest.mjs','run','--config','vitest.suites.config.ts','--reporter=json',`--outputFile=${resultFile}`],{
-          cwd:path.join(repositoryRoot,'frontend'),env:{...environment,TEST_VITEST_SELECTION:selectionFile},timeout:3_600_000});
+        await invoke('vitest',process.execPath,['node_modules/vitest/vitest.mjs','run','--config','vitest.suites.config.ts','--reporter=json',`--reporter=${path.join(repositoryRoot,'scripts/testing/vitest-suite-error-reporter.mjs')}`,`--outputFile=${resultFile}`],{
+          cwd:path.join(repositoryRoot,'frontend'),env:{...environment,TEST_VITEST_SELECTION:selectionFile,TEST_VITEST_DIAGNOSTICS_SETTINGS:diagnosticsSettingsFile},timeout:3_600_000});
         return verifyVitestResult(JSON.parse(readFileSync(resultFile,'utf8')),vitestFiles);
       } catch(error) {
         try {error.vitestDiagnostics=safeVitestFailureDiagnostics(JSON.parse(readFileSync(resultFile,'utf8')),{files:vitestFiles,root:repositoryRoot});} catch { /* Preserve the original failure when no usable report exists. */ }
+        try {error.vitestDiagnostics=supplementVitestFailureDiagnostics(JSON.parse(readFileSync(resultFile,'utf8')),JSON.parse(readFileSync(diagnosticsFile,'utf8')),diagnosticSettings);} catch { /* Missing, stale or malformed supplement cannot replace the original failure or JSON diagnostics. */ }
         throw error;
       }
     });

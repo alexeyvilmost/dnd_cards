@@ -1,9 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, mkdirSync, writeFileSync, rmSync} from 'node:fs';
+import {mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {backupFile, checksum, verifyBackup, verifyDeploymentBackup} from './backup-manifest.mjs';
+import {evidenceHash} from './validate-manifest.mjs';
 const hash = c => `sha256:${c.repeat(64)}`;
 async function fixture(t) {
   const directory = mkdtempSync(path.join(tmpdir(), 'backup-contract-'));
@@ -37,4 +38,42 @@ test('unsafe backup paths and synthetic restore proof cannot authorize deploymen
   for (const value of ['../database.dump', '/absolute.dump', 'artifacts/../../database.dump', 'a\\b']) assert.throws(() => backupFile(f.directory, value));
   await assert.rejects(verifyDeploymentBackup(f.directory, {releaseId: 'not-backed-up'}), /Fresh backup/);
   f.manifest.schemaVersion = 2; f.save(); await assert.rejects(verifyBackup(f.directory), /Incomplete/);
+});
+
+async function deploymentFixture(t) {
+  const f = await fixture(t), release = {releaseId: 'owned-clock-fixture'};
+  const absolute = path.join(f.directory, 'release.json'), text = JSON.stringify(release);
+  writeFileSync(absolute, text);
+  f.manifest.files.push({path: 'release.json', category: 'release-manifest', sha256: await checksum(absolute), bytes: Buffer.byteLength(text)});
+  f.manifest.createdAt = '2026-10-05T00:00:00.000Z'; f.manifest.releaseManifestHash = evidenceHash(release); f.save();
+  const report = {status: 'passed', scope: 'accepted-deployment-recovery', backupHash: evidenceHash(f.manifest), schemaFingerprint: f.manifest.schemaFingerprint,
+    checks: ['snapshot', 'artifacts', 'migrations', 'pending-decision', 'duplicate-command', 'media-references'].map(id => ({id, status: 'passed'}))};
+  writeFileSync(path.join(f.directory, 'restore-report.json'), JSON.stringify(report));
+  return {...f, release, capturedAt: Date.parse(f.manifest.createdAt)};
+}
+
+test('default age rejects crossing thirty minutes while real captured bytes are being verified', async t => {
+  const f = await deploymentFixture(t), maximumAge = 30 * 60_000;
+  const original = readFileSync(path.join(f.directory, 'backup.json'));
+  let clock = f.capturedAt + maximumAge - 1;
+  t.mock.method(Date, 'now', () => clock);
+  // verifyBackup is already awaiting actual checksum streams. Advancing only
+  // the clock at the microtask boundary is deterministic; no sleeps or fake
+  // successful verifier/restore result replace the real file checks.
+  const pending = verifyDeploymentBackup(f.directory, f.release);
+  queueMicrotask(() => { clock += 2; });
+  await assert.rejects(pending, /Fresh backup of active release required/);
+  assert.equal(clock, f.capturedAt + maximumAge + 1);
+  assert.deepEqual(readFileSync(path.join(f.directory, 'backup.json')), original);
+});
+
+test('default current age and explicit deterministic timestamps retain the exact thirty-minute boundary', async t => {
+  const f = await deploymentFixture(t), boundary = f.capturedAt + 30 * 60_000;
+  t.mock.method(Date, 'now', () => boundary);
+  assert.equal((await verifyDeploymentBackup(f.directory, f.release)).status, 'verified');
+  // Explicit now remains an authoritative test clock, including equality at
+  // the limit. It must never consult the process clock as a second policy.
+  t.mock.method(Date, 'now', () => { throw Error('Explicit timestamp unexpectedly consulted the clock'); });
+  assert.equal((await verifyDeploymentBackup(f.directory, f.release, {now: boundary})).status, 'verified');
+  await assert.rejects(verifyDeploymentBackup(f.directory, f.release, {now: boundary + 1}), /Fresh backup/);
 });

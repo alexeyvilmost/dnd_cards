@@ -1,0 +1,401 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-05T06:06:28.076Z",
+  "ci": {
+    "runId": 37269128668,
+    "commit": "0125f4c8e7cb8abf1a73028503e31f2fe8a518e7",
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37269128668",
+    "publication": false,
+    "deployment": false
+  },
+  "lanes": [
+    {
+      "lane": "unit",
+      "status": "failed",
+      "receipt": {
+        "path": "outputs/ci/37269128668/all/local-suite-unit/report.json",
+        "sha256": "sha256:d0833083041aa4e97d459f85b5a14a745b7de34a6413fe0da9ab709b3d63960f"
+      },
+      "cleanup": {
+        "status": "not-required",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2144
+        },
+        {
+          "id": "node-contracts",
+          "status": "passed",
+          "durationMs": 40374
+        },
+        {
+          "id": "vitest",
+          "status": "failed",
+          "durationMs": 499307,
+          "diagnostics": {
+            "schemaVersion": 1,
+            "kind": "safe-vitest-source-locations",
+            "failures": [
+              {
+                "file": "frontend/src/character/sheetCombatCertifiedCatalog.test.ts",
+                "status": "failed",
+                "failedAssertions": 0
+              }
+            ],
+            "rawOutputIncluded": false
+          }
+        }
+      ]
+    },
+    {
+      "lane": "backend",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37269128668/all/local-suite-backend/report.json",
+        "sha256": "sha256:cdcb933b39d51ee8b816990f181d2887fa8ce62112d387a550b872360007f396"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2458
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 140777
+        },
+        {
+          "id": "worker-and-database-node",
+          "status": "passed",
+          "durationMs": 3583
+        },
+        {
+          "id": "backend-compile",
+          "status": "passed",
+          "durationMs": 15922
+        },
+        {
+          "id": "go-backend",
+          "status": "passed",
+          "durationMs": 157001
+        },
+        {
+          "id": "go-animationpresentation",
+          "status": "passed",
+          "durationMs": 1595
+        },
+        {
+          "id": "go-audiopresentation",
+          "status": "passed",
+          "durationMs": 1576
+        },
+        {
+          "id": "go-charactertemplates",
+          "status": "passed",
+          "durationMs": 61
+        },
+        {
+          "id": "go-itemsource",
+          "status": "passed",
+          "durationMs": 1886
+        },
+        {
+          "id": "go-itemsource-cmd-audit",
+          "status": "passed",
+          "durationMs": 114
+        },
+        {
+          "id": "go-migrations",
+          "status": "passed",
+          "durationMs": 36435
+        },
+        {
+          "id": "go-passivepresentation",
+          "status": "passed",
+          "durationMs": 62
+        },
+        {
+          "id": "go-roguelikecontent",
+          "status": "passed",
+          "durationMs": 1453
+        },
+        {
+          "id": "go-weapondata",
+          "status": "passed",
+          "durationMs": 1495
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 492
+        }
+      ]
+    },
+    {
+      "lane": "flows",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37269128668/all/local-suite-flows/report.json",
+        "sha256": "sha256:a9f1d25c510d88048dbaac687b00e2c4d86a37d285d95b72c34ded0d72196e83"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 1797
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 133439
+        },
+        {
+          "id": "local-api-spine",
+          "status": "passed",
+          "durationMs": 880
+        },
+        {
+          "id": "local-browser-flows",
+          "status": "passed",
+          "durationMs": 57913
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 463
+        }
+      ]
+    },
+    {
+      "lane": "extended",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37269128668/all/local-suite-extended/report.json",
+        "sha256": "sha256:dbf35314d350cc075345d2113a1887951fe32a3fb5fd165f903b3ad458c62d7e"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 1983
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 139499
+        },
+        {
+          "id": "process-crash-recovery",
+          "status": "passed",
+          "durationMs": 12140
+        },
+        {
+          "id": "supported-upgrade-baselines",
+          "status": "passed",
+          "durationMs": 42674
+        },
+        {
+          "id": "observed-legacy-baseline",
+          "status": "passed",
+          "durationMs": 4412
+        },
+        {
+          "id": "candidate-rehearsal-api",
+          "status": "passed",
+          "durationMs": 1744
+        },
+        {
+          "id": "catalog-equivalence",
+          "status": "passed",
+          "durationMs": 50169
+        },
+        {
+          "id": "preparation-cache-equivalence",
+          "status": "passed",
+          "durationMs": 13677
+        },
+        {
+          "id": "worker-wire-mirror-equivalence",
+          "status": "passed",
+          "durationMs": 23299
+        },
+        {
+          "id": "equipment-authority-flow",
+          "status": "passed",
+          "durationMs": 1346
+        },
+        {
+          "id": "initiative-options-flow",
+          "status": "passed",
+          "durationMs": 2449
+        },
+        {
+          "id": "library-review-pages",
+          "status": "passed",
+          "durationMs": 549
+        },
+        {
+          "id": "equipment-runtime-browser",
+          "status": "passed",
+          "durationMs": 16751
+        },
+        {
+          "id": "pwa-offline-shell",
+          "status": "passed",
+          "durationMs": 1352
+        },
+        {
+          "id": "urvin-owned-journey",
+          "status": "passed",
+          "durationMs": 49273
+        },
+        {
+          "id": "solo-durable-continuations",
+          "status": "passed",
+          "durationMs": 123461
+        },
+        {
+          "id": "image-egress-isolation",
+          "status": "passed",
+          "durationMs": 3659
+        },
+        {
+          "id": "browser-ui-fixtures-production",
+          "status": "passed",
+          "durationMs": 185951
+        },
+        {
+          "id": "browser-ui-fixtures-battle3d",
+          "status": "passed",
+          "durationMs": 208104
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 508
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "nodePassed": 681,
+    "requiredGoPassed": 753,
+    "workerAndDatabaseNodePassed": 20,
+    "primaryBrowserPassed": 12,
+    "productionUiPassed": 48,
+    "battle3dPassed": 8,
+    "vitestPassed": null
+  },
+  "remainingFailure": {
+    "file": "frontend/src/character/sheetCombatCertifiedCatalog.test.ts",
+    "failedAssertions": 0,
+    "actualCiRawVitestOutputAvailable": false,
+    "cause": "unknown"
+  },
+  "controlledLocalReproduction": {
+    "receipt": {
+      "path": "outputs/testing/ci8-catalog-edge/receipt-1.5cpu.json",
+      "sha256": "sha256:1c64baaebd1629b8870a1e9a0bfe91bd8cdbd5f5efb9cf0eacb597d67b573a7c"
+    },
+    "comparison": {
+      "path": "outputs/testing/ci8-catalog-edge/comparison.json",
+      "sha256": "sha256:0c973ca2432c127124983cd411382a63f1b79423ceeec0d694d638f012811dcc"
+    },
+    "resources": {
+      "cpus": 1.5,
+      "memoryGiB": 4,
+      "workers": 2,
+      "network": "none"
+    },
+    "original": {
+      "hookBudgetMs": 30000,
+      "exitCode": 1,
+      "passed": 4,
+      "skipped": 15,
+      "hookFailure": true
+    },
+    "candidate": {
+      "hookBudgetMs": 60000,
+      "exitCode": 0,
+      "passed": 19,
+      "skipped": 0
+    },
+    "assertionBudgetMs": 30000,
+    "scope": "Actual constrained Linux RED→GREEN for setup only; not proof of the unreported hosted failure cause. Catalog assertions, generators and fixture bytes unchanged."
+  },
+  "followup": {
+    "nestedSuiteReporter": "integrated: public Vitest module/suite error API supplements only failed-run diagnostics; fixed categories, exact selected source coordinates and nonce-bound strict allowlist; success verification unchanged",
+    "backupAge": "Fix implicit age sampling after real checksum verification; maximum age remains thirty minutes, captured timestamp immutable.",
+    "nextGate": "New full exact-source aggregate PASS before publication or deployment.",
+    "coreSelectors": [
+      "scripts/release/backup-manifest.test.mjs",
+      "scripts/testing/vitest-suite-error-reporter.test.mjs"
+    ],
+    "localValidation": {
+      "windows": {
+        "passed": 60,
+        "skipped": 0,
+        "receipt": {
+          "path": "outputs/ci/ci9-focused-windows.log",
+          "sha256": "sha256:54b6d63e88c1f4eae02c66af1be8dcbee688c1aa878e6681cef28c8f86bd0c0b"
+        }
+      },
+      "nestedReporterLinux": {
+        "passed": 6,
+        "skipped": 0,
+        "receipt": {
+          "path": "outputs/testing/vitest-nested-diagnostics-draft/linux-1791180354462/report.json",
+          "sha256": "sha256:15ac48fa6ea9448622890e11ca05d839b0031a1bc7bf80d230a423c3216a6d64"
+        }
+      },
+      "nestedReporterActualFailingChild": "JSON loses nested beforeAll error; public reporter preserves hook-timeout and same-file coordinates while child remains exit1; private text and foreign paths excluded",
+      "sources": [
+        {
+          "path": "frontend/src/character/sheetCombatCertifiedCatalog.test.ts",
+          "sha256": "sha256:c778919e762264db6bc302f9ec8d573d8dc3de47397c819d0ae5ed1e2f140528"
+        },
+        {
+          "path": "scripts/release/backup-manifest.mjs",
+          "sha256": "sha256:7b1365db0ba5ff4a37e82b9e7cf4910c3489cc3a4791ca1314f3cfef545f37a7"
+        },
+        {
+          "path": "scripts/release/backup-manifest.test.mjs",
+          "sha256": "sha256:af5ec4f98ae3f4adde7cd5c902d2ba4e8063bf97960e37b3d273ef8297c09ad7"
+        },
+        {
+          "path": "scripts/testing/vitest-suite-error-reporter.mjs",
+          "sha256": "sha256:e520d4f490879af4396236b8a928772d1abca957d8e5bbbddc1911ceb6c6e25b"
+        },
+        {
+          "path": "scripts/testing/vitest-suite-error-reporter.test.mjs",
+          "sha256": "sha256:c15f6b608e10281cd9082f88b5a12eb0e06ce2fa2b482f4433177ec799406d50"
+        },
+        {
+          "path": "scripts/testing/run.mjs",
+          "sha256": "sha256:85d32f391fa81ba1aa51932e9a5f8a7e92021de1890cab06b12c75596ab14509"
+        },
+        {
+          "path": "tests/suites.json",
+          "sha256": "sha256:f3e4b21c0ec582e5bed6d786bedb0861b62a77736a62247cfb23b653d72ddac3"
+        }
+      ]
+    }
+  }
+}

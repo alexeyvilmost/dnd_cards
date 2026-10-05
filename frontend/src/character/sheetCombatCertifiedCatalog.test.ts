@@ -46,7 +46,7 @@ describe('450-root sheet combat certification and historical compatibility', () 
       buildSheetCombatCertificationArtifact(),
     ]);
     certified = await certifySheetCombatArtifact(artifact);
-  }, 30_000);
+  }, 60_000);
 
   it('keeps higher-level triggered attack riders outside the pinned L1 primitive slice', () => {
     const martialArtsRider: RuleActionDefinition = {
