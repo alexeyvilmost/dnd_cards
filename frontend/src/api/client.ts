@@ -1,8 +1,13 @@
+import { generateImageRequest } from './imageJobs';
+import type { CatalogPageQuery } from './catalogReview';
 import axios from 'axios';
+import {clientPerformanceEnabled, emitClientPerformance, numericServerPerformance} from './performanceTelemetry';
 import { bustPrefix } from './apiCache';
+import {createCatalogMutationScope} from './catalogMutationScope';
 import { readPersistedAuthToken, signalUnauthorized } from './authSession';
 import { cachedCatalogRead as cached, cachedItemRead } from './ownedItemCache';
 import { shouldAttachAuthToken } from './authPolicy';
+import { imageAPIError } from './imageErrors';
 import {
   isTransientReadFailure,
   SAFE_READ_MAX_ATTEMPTS,
@@ -54,8 +59,7 @@ import type {
   Concept,
   ConceptsResponse,
   CreateConceptRequest,
-  UpdateConceptRequest,
-  ActiveEffect
+  UpdateConceptRequest
 } from '../types';
 
 // Production is served through a same-origin reverse proxy (`/api/*`).  This
@@ -72,6 +76,16 @@ export const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+const requestStarts = new WeakMap<object, number>();
+function finishRequestTiming(config: object | undefined, headers: Record<string, unknown> | undefined, status: number) {
+  if (!config) return;
+  const start = requestStarts.get(config);
+  if (start === undefined) return;
+  requestStarts.delete(config);
+  emitClientPerformance('api_response', {duration_ms: performance.now() - start, status,
+    ...numericServerPerformance(headers?.['x-performance-metrics'])}, String(headers?.['x-request-id'] ?? ''));
+}
 
 function catalogListCacheKey(path: string, params?: object): string {
   const query = Object.entries(params ?? {})
@@ -104,6 +118,11 @@ export class ApiRequestError extends Error {
 // Интерцептор для добавления токена авторизации
 apiClient.interceptors.request.use(
   (config) => {
+    if (!config.headers['X-Request-ID']) config.headers['X-Request-ID'] = crypto.randomUUID();
+    if (clientPerformanceEnabled()) {
+      config.headers['X-Performance-Trace'] = '1';
+      requestStarts.set(config, performance.now());
+    }
     const token = readPersistedAuthToken();
     if (token && shouldAttachAuthToken(config.method, config.url)) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -115,23 +134,27 @@ apiClient.interceptors.request.use(
   }
 );
 
+const runtimeCatalogUnchanged = createCatalogMutationScope();
 // Интерцептор для обработки ошибок
 apiClient.interceptors.response.use(
   (response) => {
+    finishRequestTiming(response.config, response.headers, response.status);
     // B7: любой успешный не-GET сбрасывает кэш затронутой сущности
     // (напр. PUT /api/cards/<id> → сброс префикса '/api/cards') — правки видны сразу.
     const method = (response.config.method || 'get').toLowerCase();
     const requestURL = response.config.url || '';
+    const runtimeOnly = runtimeCatalogUnchanged({method, url: requestURL, data: response.data, session: readPersistedAuthToken()});
     const referencePreview = /\/api\/entity-references\/[^/]+\/preview$/.test(requestURL);
     if (method !== 'get' && !referencePreview) {
       const m = (response.config.url || '').match(/\/api\/[^/?]+/);
-      if (m) bustPrefix(m[0]);
+      if (m) bustPrefix(m[0], runtimeOnly);
       // A mechanic edit changes reverse references in catalogs of other types.
       if (/\/api\/(cards|actions|effects|spells|feats|backgrounds|races|classes|resources|variables|concepts|monsters|passive-presentations|entity-references)(?:\/|$)/.test(requestURL)) bustPrefix('/api/');
     }
     return response;
   },
   async (error) => {
+    finishRequestTiming(error.config, error.response?.headers, error.response?.status ?? 0);
     const status = typeof error.response?.status === 'number'
       ? error.response.status
       : undefined;
@@ -146,6 +169,9 @@ apiClient.interceptors.response.use(
     }
     if (status === 401) {
       signalUnauthorized();
+    }
+    if (/\/api\/cards\/generate-image(?:[?#]|$)/.test(config?.url || '')) {
+      throw imageAPIError(status, error.response?.data, error.response?.headers?.['x-request-id'], error.code);
     }
     const responseData = error.response?.data;
     const responseMessage = typeof responseData?.error === 'string'
@@ -162,6 +188,34 @@ apiClient.interceptors.response.use(
 );
 
 export const cardsApi = {
+  // Canonical runtime hydration reads current visibility for an explicit set;
+  // it must not reuse a warm catalog after same-session grant revocation.
+  getCardsByIds: async (ids: readonly string[]): Promise<Card[]> => {
+    const unique = [...new Set(ids)];
+    if (!unique.length) return [];
+    if (unique.length > 128) throw new Error('Слишком много предметов в одном запросе');
+    const canonicalIds = [...unique].sort();
+    const rows = await cachedItemRead(`/api/cards/runtime/resolve?ids=${canonicalIds.join(',')}`, async () => {
+      let loaded: Card[];
+      try {
+        loaded = (await apiClient.get<{cards: Card[]}>('/api/cards/runtime/resolve', {params: {ids: canonicalIds.join(',')}})).data.cards;
+      } catch (error) {
+        // Older backend versions have no additive route. Missing/private rows on
+        // the new endpoint have their own code and must not trigger a fallback.
+        if (!(error instanceof ApiRequestError) || error.status !== 404 || error.code) throw error;
+        loaded = await Promise.all(canonicalIds.map(id => cardsApi.getCard(id)));
+      }
+      const expected = new Set(canonicalIds);
+      if (!Array.isArray(loaded) || loaded.some(row => !row?.id || !expected.delete(row.id)) || expected.size) {
+        throw new Error('Каталог не вернул точный список предметов');
+      }
+      return loaded;
+    });
+    // Pending requests share an identity-scoped ID set, but each consumer keeps
+    // its requested order. Completed private reads are never retained.
+    const byId = new Map(rows.map(row => [row.id, row]));
+    return unique.map(id => byId.get(id)!);
+  },
   // Runtime-only additions; CardLibrary must continue to use the public list.
   getMyItemCatalog: async (params: { page: number; limit: number; fields: 'list' }): Promise<CardsResponse> => {
     const response = await apiClient.get<CardsResponse>('/api/my-item-catalog', { params });
@@ -213,9 +267,8 @@ export const cardsApi = {
   },
 
   // Генерация изображения
-  generateImage: async (data: GenerateImageRequest): Promise<{ image_url: string; message: string }> => {
-    const response = await apiClient.post<{ image_url: string; message: string }>('/api/cards/generate-image', data);
-    return response.data;
+  generateImage: async (data: GenerateImageRequest, options: { signal?: AbortSignal } = {}): Promise<{ image_url: string; message: string }> => {
+    return generateImageRequest(apiClient, '/api/cards/generate-image', data, options);
   },
 
   // Экспорт карточек
@@ -514,7 +567,7 @@ export const classesApi = {
 };
 
 export const resourcesApi = {
-  getResources: async (params?: { category?: string; fields?: 'list';tag?:string }): Promise<ResourcesResponse> => cached(
+  getResources: async (params?: CatalogPageQuery & { category?: string; fields?: 'list';tag?:string }): Promise<ResourcesResponse> => cached(
     catalogListCacheKey('/api/resources', params),
     60_000,
     async () => {
@@ -544,7 +597,7 @@ export const resourcesApi = {
 };
 
 export const variablesApi = {
-  getVariables: async (params?: { var_type?: string;tag?:string }): Promise<VariablesResponse> =>
+  getVariables: async (params?: CatalogPageQuery & { var_type?: string;tag?:string }): Promise<VariablesResponse> =>
     cached(catalogListCacheKey('/api/variables',params), 60000, async () => {
       const response = await apiClient.get<VariablesResponse>('/api/variables', { params });
       return response.data;
@@ -568,7 +621,7 @@ export const variablesApi = {
 };
 
 export const conceptsApi = {
-  getConcepts: async (params?:{tag?:string}): Promise<ConceptsResponse> => {
+  getConcepts: async (params?: CatalogPageQuery & {tag?:string}): Promise<ConceptsResponse> => {
     const response = await apiClient.get<ConceptsResponse>('/api/concepts',{params});
     return response.data;
   },
@@ -598,15 +651,6 @@ export const shopsApi = {
     const response = await apiClient.get(`/api/shops/${slug}`);
     return response.data;
   }
-};
-
-export const charactersV2Api = {
-  // Получение активных эффектов (единственный живой v2-эндпоинт; боевые методы
-  // v2 удалены вместе с легаси-интерпретатором — вся боёвка идёт через v3+движок).
-  getActiveEffects: async (characterId: string): Promise<{ active_effects: ActiveEffect[] }> => {
-    const response = await apiClient.get<{ active_effects: ActiveEffect[] }>(`/api/characters-v2/${characterId}/active-effects`);
-    return response.data;
-  },
 };
 
 export default apiClient;

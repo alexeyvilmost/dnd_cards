@@ -2,6 +2,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Dices, LogOut, User, Users, ChevronDown, Menu, X, MoreHorizontal, ScrollText, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSiteSettings } from '../settings';
 import { WORKSPACE_EXPANDED_KEY, WorkspaceNavigationContext } from './WorkspaceNavigation';
 import './WorkspaceNavigation.css';
 
@@ -17,6 +18,7 @@ type NavItem = { label: string; icon: LucideIcon; path?: string; submenu?: SubIt
 const Layout = ({ children, landing = false, workspace = false }: LayoutProps) => {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { showAdditionalSections } = useSiteSettings();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expanded, setExpanded] = useState(() => { try { return sessionStorage.getItem(WORKSPACE_EXPANDED_KEY) === 'true'; } catch { return false; } });
   const navigation = useRef<HTMLElement>(null);
@@ -49,8 +51,9 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
     {
       label: 'Ещё', icon: MoreHorizontal,
       submenu: [
-        { path: '/templates', label: 'Шаблоны' },
+        ...(showAdditionalSections ? [{ path: '/templates', label: 'Шаблоны' }] : []),
         { path: '/export', label: 'Экспорт' },
+        { path: '/initiative', label: 'Инициатива' },
         ...(!user ? [{ path: '/settings', label: 'Настройки' }] : []),
       ],
     },
@@ -58,8 +61,10 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
       label: 'Аккаунт', icon: User,
       submenu: [
         { path: '/account', label: 'Профиль' },
-        { path: '/groups', label: 'Мои группы' },
-        { path: '/inventory', label: 'Инвентарь' },
+        ...(showAdditionalSections ? [
+          { path: '/groups', label: 'Мои группы' },
+          { path: '/inventory', label: 'Инвентарь' },
+        ] : []),
         { path: '/settings', label: 'Настройки' },
         { label: 'Выйти', onClick: logout },
       ],

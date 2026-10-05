@@ -9,7 +9,7 @@ import { applySourceTurnBoundary } from './sourceTurnExpiry';
 import type { ExecuteContext, RuntimeState } from '../mvp/contracts';
 import type { PassiveEffect } from '../types';
 
-const related = JSON.parse(readFileSync('../scripts/content/data/item-completion-high-related-20260929.json','utf8')).entities;
+const related = JSON.parse(readFileSync(new URL('../../../scripts/content/data/item-completion-high-related-20260929.json', import.meta.url), 'utf8')).entities;
 const haste = related.find((entry: {card_number:string})=>entry.card_number==='EFFECT-item-completion-high-883-haste').patch as PassiveEffect;
 const state = ():RuntimeState => ({...equippedFighterState(),hp:{current:5,max:30,temp:0}});
 const ctx: ExecuteContext = { character:FIGHTER_CTX_EQUIPPED, selfId:'owner',rng:()=>{throw Error('No RNG expected');}, grantedEffects:{[haste.card_number!]:haste} };

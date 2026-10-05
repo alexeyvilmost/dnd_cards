@@ -1,4 +1,4 @@
-import { parseResourceRestRecovery } from '../engine/actionUses';
+import { parseResourceRestRecovery } from './legacy/engineAdapter';
 import { isDamageCalculation, resolveDamageCalculation } from './legacy/engineAdapter';
 import {
   defaultAttackProfile,

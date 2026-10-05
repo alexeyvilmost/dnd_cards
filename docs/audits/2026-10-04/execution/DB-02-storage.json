@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "scope": "owned-synthetic-receipt-storage",
+  "runId": "test_c0d67bf2844e51a37a0054ec",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "1000-real-commands",
+      "status": "passed"
+    },
+    {
+      "id": "1000-exact-retries",
+      "status": "passed"
+    },
+    {
+      "id": "1000-same-response-legacy-comparisons",
+      "status": "passed"
+    },
+    {
+      "id": "bounded-reference-inventory",
+      "status": "passed"
+    },
+    {
+      "id": "physical-storage-improvement",
+      "status": "passed"
+    }
+  ],
+  "outcome": {
+    "commandCount": 1000,
+    "committedCommands": 1000,
+    "replayRequests": 1000,
+    "partySize": 1,
+    "beforeRevision": 0,
+    "afterRevision": 1000,
+    "commandOutcomeDigest": "sha256:e3e443730956e0b137fb5c3865069aad63e4e920aa06e5b1f26d59f47da45980",
+    "verification": {
+      "runId": "502d7923-735b-44c7-9a5a-7a9bc444e216",
+      "revision": 1000,
+      "outcomeHash": "sha256:60eb799899435944f14b61fef13b76fdf51bbb385560bf5721975c6eb673ec15",
+      "sourceUnchanged": true,
+      "exactRetry": true
+    }
+  },
+  "timings": {
+    "camp_turn_party_1": {
+      "count": 1000,
+      "median_ms": 71.76989999999932,
+      "p95_ms": 91.40380000000005,
+      "p95_preliminary": false,
+      "min_ms": 52.48120000000199,
+      "max_ms": 460.12570000000414,
+      "phase_means": {
+        "backend_first_write_uncompressed_bytes": 94323.147,
+        "backend_to_first_write_ms": 62.71343199999992,
+        "backend_worker_body_read_ms": 0.4573050000000001,
+        "backend_worker_marshal_ms": 5.991857999999994,
+        "backend_worker_unmarshal_ms": 0.8227719999999995,
+        "catalog_fulfill_ms": 5.490918000000004,
+        "catalog_needs_count": 25,
+        "catalog_needs_rounds": 5,
+        "catalog_unique_needs_count": 25,
+        "lock_acquired_to_tx_return_ms": 16.27007800000001,
+        "lock_statement_ms": 2.2606239999999986,
+        "persist_sql_ms": 5.428419999999997,
+        "receipt_encode_ms": 1.4712680000000002,
+        "receipt_encoded_bytes": 24522.644,
+        "sql_count": 26,
+        "sql_operation_ms": 18.092391000000006,
+        "sql_rows": 58,
+        "transaction_ms": 16.968175999999993,
+        "worker_artifact_cache_hit": 5.999,
+        "worker_artifact_load_ms": 0.07049500000000065,
+        "worker_body_read_ms": 0.6970439999999999,
+        "worker_callback_to_send_ms": 21.627426000000014,
+        "worker_calls": 6,
+        "worker_client_total_ms": 30.63135000000002,
+        "worker_correlated_calls": 6,
+        "worker_execute_ms": 17.179433999999997,
+        "worker_http_headers_ms": 23.21084099999999,
+        "worker_parse_ms": 3.327704999999999,
+        "worker_process_cpu_ms": 17.843,
+        "worker_request_bytes": 837245.964,
+        "worker_response_bytes": 87893.341,
+        "worker_stringify_ms": 0.25168600000000013
+      }
+    }
+  },
+  "storage": {
+    "logicalBytes": 94323147,
+    "encodedBytes": 24522644,
+    "relations": [
+      {
+        "relation": "roguelike_command_receipts",
+        "rows": 1000,
+        "totalBytes": 26492928,
+        "tableBytes": 26288128,
+        "indexBytes": 204800,
+        "toastBytes": 25968640
+      },
+      {
+        "relation": "receipt_storage_legacy",
+        "rows": 1000,
+        "totalBytes": 44507136,
+        "tableBytes": 44285952,
+        "indexBytes": 221184,
+        "toastBytes": 44023808
+      }
+    ],
+    "savingFraction": 0.4047487575924903
+  },
+  "limitations": [
+    "Synthetic camp-turn workload only, not production size/saving.",
+    "Legacy comparison stores identical accepted response values in a new table with matching indexes; no separate legacy API latency run.",
+    "Timings are diagnostic under concurrent local builds.",
+    "Writer remains opt-in; historical rows untouched; no expiration or GC."
+  ],
+  "cleanup": "stopped"
+}

@@ -23,11 +23,19 @@ describe('shared settings categories',()=>{
     await click('Лист и редактирование');
     expect(container.querySelector('#settings-section-editing input')).not.toBeNull();
   });
-  it('explains the temporary mute and preserves personal sound settings',async()=>{
+  it('persists sound enablement without losing independent channel levels',async()=>{
     const before=getSettings();
     await click('Звук и музыка');
-    expect(container.textContent).toContain('Звук временно отключён');
-    expect(container.querySelector('#settings-section-audio input')).toBeNull();
+    expect(container.textContent).toContain('Включить звук');
+    const enabled=()=>container.querySelector<HTMLInputElement>('#settings-section-audio input[type="checkbox"]')!;
+    await act(async()=>enabled().click());
+    expect(getSettings()).toEqual({...before,audioEnabled:false});
+    expect([...container.querySelectorAll<HTMLInputElement>('#settings-section-audio input[type="range"]')].every(input=>input.disabled)).toBe(true);
+    await act(async()=>root.unmount());
+    root=createRoot(container);
+    await act(async()=>root.render(<SettingsPanel initialPage="audio"/>));
+    expect(enabled().checked).toBe(false);
+    await act(async()=>enabled().click());
     expect(getSettings()).toEqual(before);
   });
   it('saves the coin-board choice across settings panel remounts',async()=>{

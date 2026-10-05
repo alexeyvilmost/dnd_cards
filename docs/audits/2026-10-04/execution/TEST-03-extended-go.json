@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "run_id": "test_26263643efd58a20bda95fae",
+  "results": [
+    {
+      "package": ".",
+      "status": "failed",
+      "failures": [
+        {
+          "test": "TestDecodeCharacterRuntimeCommandRejectsAmbiguousAndUnknownJSON/unknown_patch_field",
+          "result": "fail"
+        },
+        {
+          "test": "TestDecodeCharacterRuntimeCommandRejectsAmbiguousAndUnknownJSON",
+          "result": "fail"
+        },
+        {
+          "test": "TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres",
+          "result": "fail"
+        },
+        {
+          "test": "TestExactUpdateValidationPreservesIdentityAndServerFields",
+          "result": "fail"
+        },
+        {
+          "test": "TestOAuthIntegration/state_cookie_provider_binding_and_replay",
+          "result": "fail"
+        },
+        {
+          "test": "TestOAuthIntegration",
+          "result": "fail"
+        }
+      ],
+      "reason": "go.exe exited 1; see C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_26263643efd58a20bda95fae\\required-go.jsonl"
+    },
+    {
+      "package": "./animationpresentation",
+      "status": "passed",
+      "required": 4,
+      "passed": 4
+    },
+    {
+      "package": "./audiopresentation",
+      "status": "passed",
+      "required": 3,
+      "passed": 3
+    },
+    {
+      "package": "./charactertemplates",
+      "tests": 0
+    },
+    {
+      "package": "./itemsource",
+      "status": "passed",
+      "required": 5,
+      "passed": 5
+    },
+    {
+      "package": "./itemsource/cmd/audit",
+      "tests": 0
+    },
+    {
+      "package": "./migrations",
+      "status": "failed",
+      "failures": [
+        {
+          "test": "TestAccountAdminStatus268DefaultsExistingAndNewAccountsToNonAdmin",
+          "result": "skip"
+        },
+        {
+          "test": "TestAnimation287PreservesCustomPresentationAndDeletedAssignments",
+          "result": "skip"
+        },
+        {
+          "test": "TestAnimation287RepairsOnlyOriginalUnarmedAssignment",
+          "result": "skip"
+        },
+        {
+          "test": "TestAnimation288UpdatesAuthoredForceButPreservesCustomProfiles",
+          "result": "skip"
+        },
+        {
+          "test": "TestAnimation290AddsCriticalProfilesWithoutChangingCustomPresentation",
+          "result": "skip"
+        },
+        {
+          "test": "TestAnimation292AddsMagicCriticalProfilesWithoutChangingCustomPresentation",
+          "result": "skip"
+        },
+        {
+          "test": "TestAudio289PreservesCustomAssignmentsAndRetiresOnlyUnchangedProceduralCues",
+          "result": "skip"
+        },
+        {
+          "test": "TestExpandedMusic291PreservesBindingsEffectsAndLegacy",
+          "result": "skip"
+        },
+        {
+          "test": "TestExpandedMusic291RollsBackIfExpectedThemeIsMissing",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification278PreservesMechanicsReviewHistoryAndFutureEdits",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification278RejectsConflictsAtomically/type",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification278RejectsConflictsAtomically/identity",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification278PreservesExactReviewTriggerState/O",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification278PreservesExactReviewTriggerState/D",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification278PreservesExactReviewTriggerState/R",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification278PreservesExactReviewTriggerState/A",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification285PreservesDataAndFutureEdits",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification285RollsBackConflicts/type",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification285RollsBackConflicts/identity",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification285RollsBackConflicts/protected_data",
+          "result": "skip"
+        },
+        {
+          "test": "TestEffectClassification285SkipsAbsentAndRemovedEffects",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferenceCoverage284ExtractsDeclaredFormulasAndItemVariants",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferenceCoverage284RejectsAmbiguousStableAliases",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferenceCoverage284ReindexesWithoutChangingCatalogOrHistory",
+          "result": "skip"
+        },
+        {
+          "test": "TestReferenceLevels279RetainOnlyExplicitLevels",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferenceMigrationsFollowProductionCatalogMigrations",
+          "result": "fail"
+        },
+        {
+          "test": "TestEntityReferences277ExtractsMechanicsAcrossDifferentEntities",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferences277BackfillsEveryCatalogWithoutChangingHistory",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferences277TracksUpdateDeleteRestoreAndLateAliasTargets",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferences277ResolvesConditionResourceAndFormulaIdentities",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferences277SeparatesRuntimePrimitivesFromLibraryIdentities",
+          "result": "skip"
+        },
+        {
+          "test": "TestEntityReferences277UsesDeclaredClassAndSpellAliasesWithoutAmbiguity",
+          "result": "skip"
+        },
+        {
+          "test": "TestItemSource262TransactionalAndIdempotent",
+          "result": "skip"
+        },
+        {
+          "test": "TestItemSource262RollsBackUnexpectedTriggerChanges/NEW.support=NULL;",
+          "result": "skip"
+        },
+        {
+          "test": "TestItemSource262RollsBackUnexpectedTriggerChanges/NEW.price=1;",
+          "result": "skip"
+        },
+        {
+          "test": "TestItemSource262TagConflictsAndCatalogDrift/same_name_other_ID",
+          "result": "skip"
+        },
+        {
+          "test": "TestItemSource262TagConflictsAndCatalogDrift/same_ID_other_name",
+          "result": "skip"
+        },
+        {
+          "test": "TestItemSource262TagConflictsAndCatalogDrift/changed_catalog_after_application",
+          "result": "skip"
+        },
+        {
+          "test": "TestOwnedItemGrants265SnapshotIsOneTimeAndNarrow",
+          "result": "skip"
+        },
+        {
+          "test": "TestPaperDocumentTrash266PreservesExistingSheets",
+          "result": "skip"
+        },
+        {
+          "test": "TestRecommendedSpellChoicesValidateOnSnapshotWithoutChangingMechanics",
+          "result": "skip"
+        },
+        {
+          "test": "TestUrvinMigrationRegistrationAndSourceUpgrade",
+          "result": "skip"
+        },
+        {
+          "test": "TestUrvinMigrationSeedsManualReviewAndPreservesExistingRunsAndEdits",
+          "result": "skip"
+        },
+        {
+          "test": "TestUrvinMigrationRejectsConflictingIdentityAtomically",
+          "result": "skip"
+        }
+      ],
+      "reason": "go.exe exited 1; see C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_26263643efd58a20bda95fae\\required-go.jsonl"
+    },
+    {
+      "package": "./passivepresentation",
+      "tests": 0
+    },
+    {
+      "package": "./roguelikecontent",
+      "status": "passed",
+      "required": 1,
+      "passed": 1
+    },
+    {
+      "package": "./weapondata",
+      "status": "passed",
+      "required": 1,
+      "passed": 1
+    }
+  ],
+  "cleanup": "stopped"
+}

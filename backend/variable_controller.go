@@ -28,6 +28,7 @@ func (vc *VariableController) GetVariables(c *gin.Context) {
 	var variables []Variable
 	query := vc.db.Model(&Variable{}).Where("deleted_at IS NULL")
 	query = entityTagFilter(query, c, "variable", "variables")
+	query = referenceCatalogSearch(query, c, "name, name_en, variable_id, description")
 	if varType := c.Query("var_type"); varType != "" {
 		query = query.Where("var_type = ?", varType)
 	}
@@ -35,6 +36,11 @@ func (vc *VariableController) GetVariables(c *gin.Context) {
 	// page/limit while exposing an explicit bounded contract to exporters.
 	explicitPagination := c.Query("page") != "" || c.Query("limit") != ""
 	page, limit, offset := parseListPaginationWithDefault(c, maxListLimit)
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "variables")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения переменных"})
@@ -52,12 +58,12 @@ func (vc *VariableController) GetVariables(c *gin.Context) {
 		page = 1
 		limit = len(variables)
 	}
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{
 		"variables": variables,
 		"total":     total,
 		"page":      page,
 		"limit":     limit,
-	})
+	}))
 }
 
 func (vc *VariableController) GetVariable(c *gin.Context) {

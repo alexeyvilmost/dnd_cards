@@ -1,0 +1,1223 @@
+{
+  "format": 1,
+  "profile": "integration-baseline",
+  "schema": "schema.sql",
+  "schemaSha256": "296d25beb5723f77b91f418f96d57add118438b49ae539071354ef681dce2cc2",
+  "migrationBaseline": "297_retain_generic_spell_free_uses",
+  "historicalChainVerified": false,
+  "provenance": {
+    "kind": "schema-only-from-disposable-local-catalog",
+    "sourceSha256": "3f71ec68da6a23b32032d8e6409efa07eb5573f4bbae3393dfdf86302b9755a1",
+    "postgres": "psql (PostgreSQL) 17.11"
+  },
+  "migrations": [
+    {
+      "version": "001_create_image_library",
+      "description": "Create image_library table"
+    },
+    {
+      "version": "002_add_extended_fields",
+      "description": "Add extended fields to cards and weapon_templates"
+    },
+    {
+      "version": "003_add_armor_support",
+      "description": "Add armor support to weapon_templates table"
+    },
+    {
+      "version": "004_add_is_template_field",
+      "description": "Add is_template field to cards table"
+    },
+    {
+      "version": "005_remove_weapon_templates_table",
+      "description": "Remove weapon_templates table as templates are now handled by cards table"
+    },
+    {
+      "version": "006_add_detailed_description",
+      "description": "Add detailed_description field to cards table"
+    },
+    {
+      "version": "007_add_slot_field",
+      "description": "Add slot field to cards table for equipment slots"
+    },
+    {
+      "version": "008_add_is_equipped_field",
+      "description": "Add is_equipped field to inventory_items table"
+    },
+    {
+      "version": "009_create_characters_v2_table",
+      "description": "Create characters_v2 table for new simplified character system"
+    },
+    {
+      "version": "010_add_text_formatting_fields",
+      "description": "Add text_alignment and text_font_size fields to cards table"
+    },
+    {
+      "version": "011_add_detailed_description_formatting",
+      "description": "Add detailed_description_alignment and detailed_description_font_size fields to cards table"
+    },
+    {
+      "version": "011_add_detailed_description_toggle",
+      "description": "Add show_detailed_description, detailed_description_alignment and detailed_description_font_size fields to cards table"
+    },
+    {
+      "version": "012_fix_character_v2_foreign_key",
+      "description": "Fix foreign key constraint for character_id in inventories table to reference characters_v2"
+    },
+    {
+      "version": "013_add_performance_indexes",
+      "description": "Add performance indexes for inventory operations"
+    },
+    {
+      "version": "014_add_equipped_slot",
+      "description": "Add equipped_slot field to inventory_items table"
+    },
+    {
+      "version": "015_add_effects",
+      "description": "Add effects field to cards table"
+    },
+    {
+      "version": "016_create_shops",
+      "description": "Create shops table to persist generated shop assortments"
+    },
+    {
+      "version": "017_create_actions",
+      "description": "Create actions table for D&D actions"
+    },
+    {
+      "version": "018_create_effects",
+      "description": "Create effects table for D&D passive effects"
+    },
+    {
+      "version": "019_add_weapon_type",
+      "description": "Add weapon_type field to cards table"
+    },
+    {
+      "version": "020_add_character_v3_proficiencies",
+      "description": "Add weapon_proficiencies, damage_resistances, language_proficiencies, armor_proficiencies fields to characters table"
+    },
+    {
+      "version": "021_add_image_library_item_fields",
+      "description": "Add item_type, weapon_type, armor_type, slot fields to image_library table"
+    },
+    {
+      "version": "022_remove_actions_resource_check",
+      "description": "Remove CHECK constraint from actions.resource column to support multiple resources"
+    },
+    {
+      "version": "023_add_action_distance",
+      "description": "Add distance field to actions table"
+    },
+    {
+      "version": "024_add_effects_resources_to_characters_v2",
+      "description": "Add active_effects, resources, max_resources fields to characters_v2 table"
+    },
+    {
+      "version": "025_update_rage_action",
+      "description": "Update action_barbarian_rage_2 with script and resources"
+    },
+    {
+      "version": "026_add_attunement_range_fields",
+      "description": "Add requires_attunement and range fields to cards table"
+    },
+    {
+      "version": "027_add_elemental_damage_fields",
+      "description": "Add elemental_damage_value and elemental_damage_type fields to cards table"
+    },
+    {
+      "version": "028_add_battle_profile_field",
+      "description": "Add battle_profile jsonb field to cards table"
+    },
+    {
+      "version": "029_add_custom_rarity_color",
+      "description": "Add custom_rarity_color field to cards table for custom rarity"
+    },
+    {
+      "version": "030_create_spells",
+      "description": "Create spells table for D&D spells"
+    },
+    {
+      "version": "031_spells_arrays_to_jsonb",
+      "description": "Convert spells array columns (classes/subclasses/save_types/tags) from text[] to jsonb"
+    },
+    {
+      "version": "032_spells_widen_text_columns",
+      "description": "Widen spells casting_time/range/duration/area to TEXT (long reaction triggers)"
+    },
+    {
+      "version": "033_create_feats",
+      "description": "Create feats table for D&D feats"
+    },
+    {
+      "version": "034_create_backgrounds",
+      "description": "Create backgrounds table for D&D backgrounds"
+    },
+    {
+      "version": "035_containers_and_bg_equipment",
+      "description": "Add container fields to cards and equipment_options to backgrounds"
+    },
+    {
+      "version": "036_card_price_currency",
+      "description": "Make cards.price numeric, add price_currency and price_abbreviated"
+    },
+    {
+      "version": "037_create_races",
+      "description": "Create races table for D&D species"
+    },
+    {
+      "version": "038_mechanics_and_race_abilities",
+      "description": "Add mechanics jsonb to effects/actions and related abilities to races"
+    },
+    {
+      "version": "039_create_classes",
+      "description": "Create classes table and add race level progression"
+    },
+    {
+      "version": "040_create_characters_v3",
+      "description": "Create characters_v3 table (entity-referencing character storage)"
+    },
+    {
+      "version": "041_feat_related_abilities",
+      "description": "Add related_effects/related_actions jsonb to feats"
+    },
+    {
+      "version": "042_forge_mvp_content",
+      "description": "Seed forge MVP class abilities, feat effects, normalize background skills"
+    },
+    {
+      "version": "043_character_rule_state",
+      "description": "Add rule state and derived rule fields to characters_v3"
+    },
+    {
+      "version": "044_wizard_spell_choices",
+      "description": "Make wizard spellcasting grant spell choices"
+    },
+    {
+      "version": "045_create_resources",
+      "description": "Create resource definitions for actions and mechanics"
+    },
+    {
+      "version": "046_expand_effect_types",
+      "description": "Allow semantic effect type categories"
+    },
+    {
+      "version": "047_spell_resources",
+      "description": "Add resources jsonb to spells (multi-resource cost)"
+    },
+    {
+      "version": "048_character_events",
+      "description": "Create character_events table for engine event log"
+    },
+    {
+      "version": "049_character_runtime",
+      "description": "Add runtime jsonb fields to characters_v3 (equipment, inventory, resources)"
+    },
+    {
+      "version": "050_mvp_equipment",
+      "description": "Seed MVP equipment cards for inventory testing"
+    },
+    {
+      "version": "051_race_subrace",
+      "description": "Add is_subrace and parent_race_id to races"
+    },
+    {
+      "version": "052_race_subrace_level",
+      "description": "Add subrace_level to races"
+    },
+    {
+      "version": "053_migrate_legacy_subraces",
+      "description": "Convert legacy subfeature lineage choices into subrace race entities"
+    },
+    {
+      "version": "054_elf_subrace_content",
+      "description": "Fill Drow and Wood Elf subrace descriptions and traits (PHB 2024)"
+    },
+    {
+      "version": "055_dragonborn_subraces",
+      "description": "Create 10 Dragonborn ancestry subraces (PHB 2024)"
+    },
+    {
+      "version": "056_spell_mechanics",
+      "description": "Add mechanics jsonb to spells (unified mechanics, G8-G9)"
+    },
+    {
+      "version": "057_class_recommended_abilities",
+      "description": "Add recommended_abilities jsonb to classes (point-buy defaults)"
+    },
+    {
+      "version": "058_card_mechanics",
+      "description": "Add mechanics jsonb to cards (unified item mechanics)"
+    },
+    {
+      "version": "059_class_subclasses",
+      "description": "Add subclass fields to classes (is_subclass, parent_class_id, subclass_level, related_effects/actions)"
+    },
+    {
+      "version": "060_resource_spent_image",
+      "description": "Add image_url_spent to resources (spent-charge look)"
+    },
+    {
+      "version": "061_class_equipment_options",
+      "description": "Add equipment_options jsonb to classes (starting gear variants A/B/C)"
+    },
+    {
+      "version": "062_basic_actions",
+      "description": "Seed core PHB actions (unarmed/weapon/offhand/dodge) as editable Action entities (type='basic')"
+    },
+    {
+      "version": "063_create_variables",
+      "description": "Create variables table (name, type number|dice, default_value) + seed core variable definitions"
+    },
+    {
+      "version": "064_create_conditions",
+      "description": "Create conditions table (self/projected modifiers + note as data) + seed 13 PHB 2024 conditions"
+    },
+    {
+      "version": "065_conditions_as_effects",
+      "description": "Unify conditions into effects (effect_type='condition' + scoped-modifier mechanics); drop conditions table"
+    },
+    {
+      "version": "066_drop_spell_legacy_fields",
+      "description": "Drop legacy spell columns attack_roll/saving_throw/save_types (превью выводится из mechanics)"
+    },
+    {
+      "version": "067_card_enchant_bonus",
+      "description": "Add cards.enchant_bonus (магический бонус оружия +N к атаке/урону); backfill из имени '+N'"
+    },
+    {
+      "version": "068_dash_disengage_actions",
+      "description": "Seed базовых действий Рывок (Dash) и Отход (Disengage) как редактируемые Action(type='basic')"
+    },
+    {
+      "version": "069_fix_dash_disengage",
+      "description": "Убрать дубли Рывок/Отход; Рывок даёт +Скорость до начала след. хода (модификатор), оба type='basic', без ограничения использований"
+    },
+    {
+      "version": "070_create_concepts",
+      "description": "Create concepts dictionary (глоссарий понятий: пояснения, не выражаемые сущностью)"
+    },
+    {
+      "version": "071_widen_cards_damage_type_check",
+      "description": "Расширить cards_damage_type_check: разрешить стихийные типы (acid/fire/…) как основной damage_type"
+    },
+    {
+      "version": "072_widen_actions_action_type_check",
+      "description": "Расширить actions_action_type_check: добавить species_ability (тип действия «Умение вида»)"
+    },
+    {
+      "version": "073_add_effects_repeatable",
+      "description": "Флаг repeatable у эффектов (повторяемый: складывается, можно выбрать несколько раз в конструкторе)"
+    },
+    {
+      "version": "074_create_encounters",
+      "description": "Серверная сущность боя (encounters) + журнал изменений (encounter_events) для онлайн-синхронизации через SSE/LISTEN-NOTIFY"
+    },
+    {
+      "version": "075_character_current_encounter",
+      "description": "Связь персонаж→бой (current_encounter_id) для отображения «в бою» и правила «один бой на персонажа»"
+    },
+    {
+      "version": "076_add_card_mastery",
+      "description": "Свойство искусности оружия (Weapon Mastery, PHB 2024): структурная ссылка card.mastery → id эффекта-мастерства (раньше связь жила только текстом в description)"
+    },
+    {
+      "version": "077_add_name_en",
+      "description": "Оригинальное (английское) название сущностей: name_en на всех 11 каталожных таблицах — показывается под основным названием в интерфейсных отображениях при включённой настройке"
+    },
+    {
+      "version": "078_restore_feat_slot_effects",
+      "description": "Восстановление слотов-пикеров черт (pf_1..pf_7, asi_ability_choice): их soft-удаление оставило 51 битую ссылку в level_progression всех 12 классов — черты на 8/12/16/19 уровнях молча не выдавались"
+    },
+    {
+      "version": "079_expand_card_rarities",
+      "description": "Разрешить relic и custom для карточек предметов"
+    },
+    {
+      "version": "080_character_manual_entities",
+      "description": "Ручные действия, эффекты и ресурсы в листе characters_v3"
+    },
+    {
+      "version": "081_content_support_certification",
+      "description": "Статус и версия механической поддерживаемости каталожных сущностей с автоматической инвалидизацией после редактирования"
+    },
+    {
+      "version": "082_character_system_metadata",
+      "description": "Принадлежность characters_v3 игровой системе, версии правил, типу владения и версии схемы"
+    },
+    {
+      "version": "083_certify_micro_micro_content",
+      "description": "Сертификация 37 сущностей acceptance-среза micro-micro-MVP"
+    },
+    {
+      "version": "084_certify_micro_micro_qa_fixes",
+      "description": "Повторная сертификация исправлений ручной приёмки и механических подвидов эльфа/драконорождённого"
+    },
+    {
+      "version": "085_refresh_transitive_micro_micro_certifications",
+      "description": "Обновление транзитивных хэшей Волшебника, Человека, Солдата и Преступника после исправления зависимостей"
+    },
+    {
+      "version": "086_repair_content_mechanics",
+      "description": "Добавить passive-activation состояниям и честные narrative/частичные механики фичам Кулачника"
+    },
+    {
+      "version": "087_idempotent_character_events",
+      "description": "Идемпотентная пакетная запись журнала персонажа по клиентскому UUID"
+    },
+    {
+      "version": "088_normalize_spell_targeting_ranges",
+      "description": "Строковые дистанции Наставления, Благословения и Усыпления по правилам 2024"
+    },
+    {
+      "version": "089_repair_spell_targeting_certifications",
+      "description": "Восстановить support-статусы и production-хэши после нормализации дистанций"
+    },
+    {
+      "version": "090_create_canonical_runtime",
+      "description": "Additive canonical rules runtime: sessions, commands, jobs, events, snapshots, decisions and outbox"
+    },
+    {
+      "version": "091_add_attack_runtime_v4",
+      "description": "Additive schema-v4 Attack-action and grapple snapshot guards and indexes"
+    },
+    {
+      "version": "092_add_world_runtime_v5",
+      "description": "Fail-closed schema-v5 world, release, lifecycle, item and Warlock Pact snapshot guards"
+    },
+    {
+      "version": "093_add_content_migration_receipts",
+      "description": "Server-issued ledger for exact guarded content create/rollback"
+    },
+    {
+      "version": "094_harden_canonical_transport",
+      "description": "Fail-closed canonical transport identities, release/serializer bindings, ACLs and event adjacency"
+    },
+    {
+      "version": "095_add_character_runtime_commands",
+      "description": "Atomic idempotent multi-character runtime persistence with revision CAS"
+    },
+    {
+      "version": "096_lock_certified_content_mechanics",
+      "description": "Необратимый DB-guard для полностью сертифицированных действий, эффектов и заклинаний"
+    },
+    {
+      "version": "096_register_micro_mvp_rules_release",
+      "description": "Register the immutable checked-in micro-MVP rules worker release"
+    },
+    {
+      "version": "097_repair_live_mvp_content_contracts",
+      "description": "Исправить ссылки и явную экономику live-MVP механик до сертификации"
+    },
+    {
+      "version": "097_repair_micro_mvp_rules_release_identity",
+      "description": "Bind the micro-MVP release row to its WorldState ruleset.releaseId"
+    },
+    {
+      "version": "098_repair_magic_initiate_2024",
+      "description": "Exact guarded 2024 Magic Initiate spellcasting, preparation and free-use mechanics"
+    },
+    {
+      "version": "098_restore_live_mvp_starting_equipment",
+      "description": "Восстановить soft-deleted карточки стартовых доспехов, на которые ссылаются live-MVP классы"
+    },
+    {
+      "version": "099_apply_disengage_runtime_effect",
+      "description": "Выразить Отход общим deny-модификатором до начала следующего хода"
+    },
+    {
+      "version": "100_create_data_driven_monsters",
+      "description": "Каталог data-driven монстров и стартовые SRD 5.2.1 существа ближнего боя"
+    },
+    {
+      "version": "101_pin_tactical_basic_action_targets",
+      "description": "Закрепить явные self-targeting факты базовых действий для тактической доски"
+    },
+    {
+      "version": "102_revoke_invalid_feather_fall_certification",
+      "description": "Отозвать ложную полную сертификацию narrative-only механики Падения пёрышком"
+    },
+    {
+      "version": "103_revoke_invalid_mage_hand_certification",
+      "description": "Отозвать ложную полную сертификацию narrative-only механики Волшебной руки"
+    },
+    {
+      "version": "104_seed_recommended_skill_choices",
+      "description": "Добавить sidecar-рекомендации навыков без изменения сертифицированного контента"
+    },
+    {
+      "version": "105_repair_active_action_targeting",
+      "description": "Добавить явные actor-target контракты активным расовым и предметным действиям"
+    },
+    {
+      "version": "106_repair_preserved_locked_action_targeting",
+      "description": "Отозвать устаревший сертификат и исправить actor-target контракт, пропущенный ранней версией 105"
+    },
+    {
+      "version": "107_normalize_live_happy_path_content",
+      "description": "Материализовать legacy-подвиды, оружие, расходники и class-id заклинаний до строгого rules runtime"
+    },
+    {
+      "version": "108_split_weapon_actions_and_unlock_metadata",
+      "description": "Разделить рукопашную и дальнобойную атаку и ограничить lock только mechanics-блоком"
+    },
+    {
+      "version": "109_normalize_goliath_ancestry",
+      "description": "Восстановить шесть вариантов Наследия великанов и их событийные способности"
+    },
+    {
+      "version": "110_deduplicate_goliath_ancestry",
+      "description": "Перенести выборы на канонические варианты Наследия великанов и скрыть краткоживущие дубликаты"
+    },
+    {
+      "version": "111_align_ranged_weapon_action_declaration",
+      "description": "Выровнять метаданные дальнобойной атаки с единым декларативным release-источником"
+    },
+    {
+      "version": "112_inherit_lineage_source",
+      "description": "Наследовать отсутствующий источник варианта вида от его родительского вида"
+    },
+    {
+      "version": "113_repair_goliath_reaction_authority",
+      "description": "Закрепить единственный Action-источник Каменной стойкости и удалить реакцию-дубль эффекта"
+    },
+    {
+      "version": "114_repair_class_starting_equipment_references",
+      "description": "Перевыпустить наборы снаряжения пяти классов через каноничные PHB 2024 идентичности"
+    },
+    {
+      "version": "115_repair_goliath_stone_targeting_contract",
+      "description": "Выровнять self-target Каменной стойкости со строгим контрактом компилятора"
+    },
+    {
+      "version": "116_repair_half_caster_spellcasting_contract",
+      "description": "Добавить каноничные характеристики колдовства паладина и следопыта"
+    },
+    {
+      "version": "117_align_certified_metadata_projection",
+      "description": "Согласовать сертификацию и блокировку с редактируемыми полями представления"
+    },
+    {
+      "version": "118_repair_bard_spellcasting_contract",
+      "description": "Добавить каноничную характеристику колдовства барда и отозвать ложный сертификат"
+    },
+    {
+      "version": "119_repair_sleep_spell_class_list_contract",
+      "description": "Добавить каноничные списки классов Усыплению и отозвать ложный сертификат"
+    },
+    {
+      "version": "120_repair_bardic_inspiration_boon_contract",
+      "description": "Выдать союзнику механическую кость Вдохновения барда и отозвать ложный сертификат"
+    },
+    {
+      "version": "121_repair_spear_weapon_profile",
+      "description": "Материализовать ��трогий профиль копья для боя и межлистовых действий"
+    },
+    {
+      "version": "122_repair_mage_hand_control_narrative",
+      "description": "Заменить внутреннюю заметку Волшебной руки инструкцией игроку"
+    },
+    {
+      "version": "123_repair_sleep_2024_lifecycle",
+      "description": "Исправить двухступенчатый цикл Усыпления и добавить пробуждение через Помощь"
+    },
+    {
+      "version": "124_repair_fire_bolt_upcast_description",
+      "description": "Исправить кость усиления Огненного снаряда в карточке"
+    },
+    {
+      "version": "124_repair_mini_mvp_base_styles_origin_runtime",
+      "description": "Материализовать исполняемые контракты базовых механик, боевых стилей и черт происхождения"
+    },
+    {
+      "version": "125_repair_mini_mvp_limited_action_uses",
+      "description": "Связать ограниченные действия базовых механик и черт происхождения с их uses-пулами"
+    },
+    {
+      "version": "126_repair_crafter_in_play_choice",
+      "description": "Сделать выбор предмета Самоделкина явным выбором во время игры"
+    },
+    {
+      "version": "127_repair_missing_weapon_mastery_profiles",
+      "description": "Материализовать строгие профили оружия для мастерств Рассечение и Толчок"
+    },
+    {
+      "version": "128_repair_level_one_species_runtime_contracts",
+      "description": "Исправить доступ Лесного гнома к Разговору с животными и формулу Целебных рук Аасимара"
+    },
+    {
+      "version": "129_repair_level_one_monk_runtime_contracts",
+      "description": "Перенести Фокус монаха на 2 уровень и материализовать Боевые искусства"
+    },
+    {
+      "version": "130_repair_barbarian_rage_stacking",
+      "description": "Сделать повторную Ярость обновлением длительности без удвоения её эффектов"
+    },
+    {
+      "version": "131_repair_wood_elf_speed",
+      "description": "Исправить бонус скорости лесного эльфа с 35 до +5 фт."
+    },
+    {
+      "version": "132_repair_cloud_goliath_teleport",
+      "description": "Нормализовать телепортацию облачного голиафа к каноническому movement.value"
+    },
+    {
+      "version": "133_repair_friends_mind_sliver_cantrips",
+      "description": "Исправить автоуспех Дружбы и одноразовый штраф спасброска Расщепления разума"
+    },
+    {
+      "version": "134_repair_true_strike_cantrip",
+      "description": "Исправить оружейную атаку и выбор типа урона Меткого удара"
+    },
+    {
+      "version": "135_suppress_true_strike_zero_damage",
+      "description": "Скрыть неактивную нулевую строку усиления Меткого удара"
+    },
+    {
+      "version": "136_repair_mini_mvp_spell_clarity",
+      "description": "Исправить списки классов заговоров и понятность результатов заклинаний 1 уровня"
+    },
+    {
+      "version": "137_repair_mini_mvp_spell_trigger_timing",
+      "description": "Исправить окна реакций и заклинаний после попадания 1 уровня"
+    },
+    {
+      "version": "138_repair_mini_mvp_post_hit_spell_targets",
+      "description": "Исправить цели заклинаний 1 уровня после попадания"
+    },
+    {
+      "version": "139_repair_mini_mvp_ranged_post_hit_spell_ranges",
+      "description": "Исправить дальность post-hit заклинаний следопыта"
+    },
+    {
+      "version": "140_materialize_runtime_boons_and_acid_splash_area",
+      "description": "Материализовать милости как эффекты библиотеки и исправить сферу Брызг кислоты"
+    },
+    {
+      "version": "141_materialize_polymorphed_condition",
+      "description": "Материализовать библиотечное состояние Превращённый"
+    },
+    {
+      "version": "142_repair_mini_mvp_area_targeting",
+      "description": "Исправить оставшиеся области заклинаний mini-MVP"
+    },
+    {
+      "version": "143_materialize_condition_library_icons",
+      "description": "Материализовать недостающие иконки библиотечных состояний"
+    },
+    {
+      "version": "144_materialize_mini_mvp_runtime_effects",
+      "description": "Материализовать длительные эффекты mini-MVP в библиотеке"
+    },
+    {
+      "version": "145_fill_runtime_effect_icons",
+      "description": "Заполнить отсутствующие иконки runtime-эффектов"
+    },
+    {
+      "version": "146_materialize_base_equipment_2024",
+      "description": "Материализовать каноничные профили оружия и доспехов PHB 2024"
+    },
+    {
+      "version": "147_repair_base_equipment_descriptions",
+      "description": "Заменить устаревшие тексты базовых доспех правилами 2024"
+    },
+    {
+      "version": "148_repair_base_equipment_runtime",
+      "description": "Исправить runtime-механику расходников и зон снаряжения"
+    },
+    {
+      "version": "149_repair_base_equipment_sheet_utilities",
+      "description": "Включить листовые действия базового снаряжения без несуществующего free-action ресурса"
+    },
+    {
+      "version": "150_repair_base_equipment_healers_kit_targeting",
+      "description": "Исправить выбор цели комплекта целителя"
+    },
+    {
+      "version": "151_repair_base_equipment_healers_kit_ownership",
+      "description": "Привязать проверку стабилизации к выбранной цели"
+    },
+    {
+      "version": "152_materialize_combat_areas",
+      "description": "Материализовать эффекты предметов и событийные области боя"
+    },
+    {
+      "version": "153_add_character_class_levels",
+      "description": "Persist per-class levels for level-up and multiclass characters"
+    },
+    {
+      "version": "154_materialize_level_two_class_features",
+      "description": "Materialize executable D&D 2024 level-two class feature contracts"
+    },
+    {
+      "version": "155_repair_level_two_actor_targeting",
+      "description": "Repair explicit actor targeting on level-two self actions"
+    },
+    {
+      "version": "156_repair_wizard_level_two_spellbook",
+      "description": "Scale Wizard prepared spells and merge level-up spellbook additions"
+    },
+    {
+      "version": "157_repair_retired_starting_equipment",
+      "description": "Replace retired MVP weapon and shield identities in characters and class equipment"
+    },
+    {
+      "version": "158_repair_wild_companion_targeting",
+      "description": "Repair Wild Companion world targeting contracts"
+    },
+    {
+      "version": "159_repair_ranger_favored_enemy_2024",
+      "description": "Replace obsolete Ranger Favored Enemy with its 2024 Hunter's Mark contract"
+    },
+    {
+      "version": "160_repair_wild_companion_runtime",
+      "description": "Replace generic Wild Companion marker with canonical familiar runtime"
+    },
+    {
+      "version": "161_repair_help_action_advantage",
+      "description": "Replace malformed Help die boon with exact one-roll Advantage"
+    },
+    {
+      "version": "162_repair_level_two_runtime_contracts",
+      "description": "Repair exact level-2 action timing and Wild Shape runtime choices"
+    },
+    {
+      "version": "163_reapply_level_two_runtime_contracts",
+      "description": "Reapply exact Wild Shape runtime choices after production verification"
+    },
+    {
+      "version": "164_certify_level_two_classes",
+      "description": "Certify the twelve level-two base classes and repair Turn Undead emanation targeting"
+    },
+    {
+      "version": "165_materialize_level_three_core",
+      "description": "Materialize executable level-three base-class features and resources"
+    },
+    {
+      "version": "166_materialize_level_five_spells",
+      "description": "Normalize executable PHB level-two and level-three spell contracts"
+    },
+    {
+      "version": "167_materialize_level_five_progression",
+      "description": "Materialize level-four and level-five class, subclass, and species progression"
+    },
+    {
+      "version": "168_multiclass_subclasses",
+      "description": "Persist and validate one subclass selection per owning class"
+    },
+    {
+      "version": "169_harden_level_five_runtime",
+      "description": "Harden level-five attack, spell-grant, reaction, and trigger contracts"
+    },
+    {
+      "version": "170_materialize_level_four_general_feats",
+      "description": "Materialize level-four General-feat choices and missing class gates"
+    },
+    {
+      "version": "171_materialize_general_spell_feat_signatures",
+      "description": "Materialize spell-linked General-feat signature mechanics"
+    },
+    {
+      "version": "172_materialize_general_feat_signatures",
+      "description": "Materialize non-spell General-feat signature mechanics"
+    },
+    {
+      "version": "173_repair_species_levelled_spell_access",
+      "description": "Repair levelled species spell access labels"
+    },
+    {
+      "version": "174_clarify_general_feat_effect_cards",
+      "description": "Expose complete General-feat rules on linked sheet effect cards"
+    },
+    {
+      "version": "175_repair_general_feat_action_payloads",
+      "description": "Repair General-feat action payloads for the shared executor"
+    },
+    {
+      "version": "176_repair_wizard_cantrip_growth",
+      "description": "Repair the Wizard level-four cantrip growth grant"
+    },
+    {
+      "version": "177_repair_level_five_strict_conditions",
+      "description": "Replace level-five spell and subclass generic conditions with exact library effects"
+    },
+    {
+      "version": "178_repair_general_feat_choice_integrity",
+      "description": "Repair atomic and repeat-instance General-feat choices"
+    },
+    {
+      "version": "179_repair_level_five_base_progression",
+      "description": "Repair level-five spell, resource, invocation and Sneak Attack progression"
+    },
+    {
+      "version": "180_materialize_warlock_invocations_level_five",
+      "description": "Materialize the complete Warlock invocation catalog through level five"
+    },
+    {
+      "version": "181_repair_level_five_subclass_actions",
+      "description": "Repair level-five subclass action costs, uses and strict condition grants"
+    },
+    {
+      "version": "182_repair_general_feat_runtime_integrity",
+      "description": "Repair level-four General-feat runtime mechanics and duration ownership"
+    },
+    {
+      "version": "183_repair_species_level_five_integrity",
+      "description": "Repair species features and damage riders through level five"
+    },
+    {
+      "version": "184_materialize_d20_interrupts",
+      "description": "Materialize persisted Cutting Words and Warding Flare d20 interrupts"
+    },
+    {
+      "version": "185_repair_class_level_five_integrity",
+      "description": "Repair audited class and subclass mechanics through level five"
+    },
+    {
+      "version": "186_repair_level_five_spell_integrity",
+      "description": "Repair audited level-two and level-three spell targeting and semantics"
+    },
+    {
+      "version": "187_materialize_remaining_level_five_general_feats",
+      "description": "Materialize the remaining level-five General feat runtime mechanics"
+    },
+    {
+      "version": "188_materialize_wizard_memorize_spell",
+      "description": "Materialize Wizard Memorize Spell as a short-rest preparation decision"
+    },
+    {
+      "version": "189_repair_species_transformation_runtime",
+      "description": "Repair level-five Aasimar and Goliath transformation runtime mechanics"
+    },
+    {
+      "version": "190_repair_sorcerer_level_five_runtime",
+      "description": "Repair Sorcerer level-five spell ownership and rest-bound restoration"
+    },
+    {
+      "version": "191_repair_level_five_spell_area_runtime",
+      "description": "Repair level-five Heat Metal cost and cylinder area runtime"
+    },
+    {
+      "version": "192_repair_level_five_spell_interactions",
+      "description": "Repair level-five secondary spell interactions and long casting times"
+    },
+    {
+      "version": "193_repair_draconic_sorcery_spell_ability",
+      "description": "Repair explicit casting ability on Draconic Sorcery spell grants"
+    },
+    {
+      "version": "194_repair_subclass_primary_runtime",
+      "description": "Repair executable primary mechanics for selected level-three subclasses"
+    },
+    {
+      "version": "195_materialize_owned_summon_lifecycle",
+      "description": "Materialize owned summon actor lifecycle for selected level-two and level-three spells"
+    },
+    {
+      "version": "196_materialize_mobile_emanations",
+      "description": "Materialize source-following combat emanations"
+    },
+    {
+      "version": "197_repair_second_wind_scaling",
+      "description": "Scale Second Wind uses by Fighter level"
+    },
+    {
+      "version": "198_create_roguelike_runs",
+      "description": "Create authoritative roguelike run aggregates and command receipts"
+    },
+    {
+      "version": "199_materialize_roguelike_monsters",
+      "description": "Materialize the SRD roguelike monster pool and executable attacks"
+    },
+    {
+      "version": "200_roguelike_wolf_riders",
+      "description": "Execute SRD wolf size-gated prone riders and perceptive senses"
+    },
+    {
+      "version": "201_roguelike_attack_ranges",
+      "description": "Declare monster ranged distances and melee thrown-weapon modes"
+    },
+    {
+      "version": "202_roguelike_trusted_combat",
+      "description": "Store private pinned combat envelopes and catalogs"
+    },
+    {
+      "version": "203_roguelike_combat_journal",
+      "description": "Persist private replay baselines and accepted combat decisions atomically"
+    },
+    {
+      "version": "204_roguelike_parry",
+      "description": "Materialize single-attack Parry reactions and held NPC weapons"
+    },
+    {
+      "version": "205_roguelike_defenses",
+      "description": "Materialize undead and animated armor condition immunities and senses"
+    },
+    {
+      "version": "206_roguelike_senses_skills",
+      "description": "Materialize SRD monster senses and skill/save proficiencies"
+    },
+    {
+      "version": "207_fighter_tactical_shift",
+      "description": "Bind Tactical Shift to Second Wind and immediate additional movement"
+    },
+    {
+      "version": "208_champion_critical_movement",
+      "description": "Materialize Champion movement after critical hits"
+    },
+    {
+      "version": "209_battle_master_foundations",
+      "description": "Bind superiority dice to subclass rest resources and Student of War to real choices"
+    },
+    {
+      "version": "210_battle_master_evasive",
+      "description": "Materialize Evasive Footwork with a single persisted superiority roll"
+    },
+    {
+      "version": "211_battle_master_menacing",
+      "description": "Materialize Menacing Attack with saved original attack damage context"
+    },
+    {
+      "version": "212_battle_master_trip",
+      "description": "Materialize Battle Master Trip Attack"
+    },
+    {
+      "version": "213_battle_master_goading",
+      "description": "Materialize Battle Master Goading Attack"
+    },
+    {
+      "version": "214_battle_master_choices",
+      "description": "Choose learned Battle Master maneuvers through existing Forge"
+    },
+    {
+      "version": "215_battle_master_distracting",
+      "description": "Materialize source-owned Distracting Strike opening"
+    },
+    {
+      "version": "216_battle_master_parry",
+      "description": "Materialize Battle Master Parry in held-damage reaction window"
+    },
+    {
+      "version": "217_battle_master_rally",
+      "description": "Materialize Battle Master Rally and learned maneuver choice"
+    },
+    {
+      "version": "218_battle_master_pushing",
+      "description": "Materialize Battle Master Pushing Attack with distance choice"
+    },
+    {
+      "version": "219_battle_master_feint",
+      "description": "Materialize Battle Master Feinting Attack"
+    },
+    {
+      "version": "220_battle_master_checks",
+      "description": "Materialize Battle Master skill check maneuvers"
+    },
+    {
+      "version": "221_battle_master_ambush",
+      "description": "Materialize Battle Master Ambush and initiative choice"
+    },
+    {
+      "version": "222_battle_master_precision",
+      "description": "Materialize Battle Master Precision Attack and post-miss continuation"
+    },
+    {
+      "version": "223_battle_master_lunging",
+      "description": "Materialize Battle Master Lunging Attack and immediate movement facts"
+    },
+    {
+      "version": "224_battle_master_sweeping",
+      "description": "Materialize learned Sweeping Attack"
+    },
+    {
+      "version": "225_battle_master_riposte",
+      "description": "Materialize learned Riposte with melee counterattacks"
+    },
+    {
+      "version": "226_battle_master_bait_switch",
+      "description": "Materialize Bait and Switch with authoritative position exchange"
+    },
+    {
+      "version": "227_battle_master_commander",
+      "description": "Materialize Commander Strike with an Attack entry and ally reaction"
+    },
+    {
+      "version": "228_battle_master_maneuvering",
+      "description": "Materialize Maneuvering Attack with ally reaction movement"
+    },
+    {
+      "version": "229_battle_master_disarming",
+      "description": "Materialize Disarming Attack with physical held-item drops"
+    },
+    {
+      "version": "230_psi_warrior_foundations",
+      "description": "Materialize separate Psi Warrior dice and rest recovery"
+    },
+    {
+      "version": "231_psi_warrior_strike",
+      "description": "Materialize own-turn Psionic Strike after weapon damage"
+    },
+    {
+      "version": "232_psi_warrior_protective_field",
+      "description": "Materialize Protective Field with damage observer reactions"
+    },
+    {
+      "version": "233_psi_warrior_movement",
+      "description": "Materialize Telekinetic Movement creature transport and recharge"
+    },
+    {
+      "version": "234_psi_warrior_objects",
+      "description": "Extend Telekinetic Movement to loose physical objects"
+    },
+    {
+      "version": "235_psi_warrior_hands",
+      "description": "Materialize Tiny healing-potion size and Telekinetic hand transport"
+    },
+    {
+      "version": "236_eldritch_knight_casting",
+      "description": "Declare Eldritch Knight Intelligence and level-four spell preparation"
+    },
+    {
+      "version": "237_eldritch_knight_replacement",
+      "description": "Declare one spell and cantrip replacement per Fighter level"
+    },
+    {
+      "version": "238_warrior_weapon_bond",
+      "description": "Declare two physical Fighter weapon bonds and one-hour ritual"
+    },
+    {
+      "version": "239_roguelike_camp_clock",
+      "description": "Preserve exact camp casting duration and rest clock remainders"
+    },
+    {
+      "version": "240_roguelike_magic_weapons",
+      "description": "Declare executable +1 weapon profiles and scope enchantments to their weapon"
+    },
+    {
+      "version": "241_fighter_style_replacement",
+      "description": "Allow Fighter fighting style replacement on class level gain"
+    },
+    {
+      "version": "242_fighter_tactical_mind_timing",
+      "description": "Offer Tactical Mind after a failed ability check"
+    },
+    {
+      "version": "243_dash_movement_allotment",
+      "description": "Declare Dash as extra movement without changing Speed"
+    },
+    {
+      "version": "244_canonical_hide_action",
+      "description": "Share canonical Hide eligibility and lifecycle across action costs"
+    },
+    {
+      "version": "245_goblin_nimble_escape",
+      "description": "Materialize Goblin Nimble Escape and advantage damage"
+    },
+    {
+      "version": "246_giant_wolf_spider_movement",
+      "description": "Declare Giant Wolf Spider movement modes and Spider Climb"
+    },
+    {
+      "version": "247_monster_weapon_loadouts",
+      "description": "Bind Bandit Captain and Warrior Veteran attacks to carried weapons"
+    },
+    {
+      "version": "248_bugbear_grab",
+      "description": "Declare Bugbear Grab, hammer Advantage, and Abduct movement"
+    },
+    {
+      "version": "249_roguelike_shop_items",
+      "description": "Executable merchant items and separately priced run copies with audited preimages"
+    },
+    {
+      "version": "250_character_templates",
+      "description": "Ownerless character templates and three Forge-validated fighter run presets"
+    },
+    {
+      "version": "251_archer_alert_template",
+      "description": "Forge-validated Criminal/Alert Archer, preserving existing player copies"
+    },
+    {
+      "version": "252_template_portraits",
+      "description": "Preset portraits and copy provenance; preserve personal artwork and combat history"
+    },
+    {
+      "version": "253_passive_presentations",
+      "description": "Editable presentation catalog for data-owned combat toggles"
+    },
+    {
+      "version": "254_roguelike_party",
+      "description": "Immutable party membership; preserve solo runs and their archived combat artifacts"
+    },
+    {
+      "version": "255_party_potion_targets",
+      "description": "Allow healing potions to target an adjacent ally through canonical actions"
+    },
+    {
+      "version": "256_martial_classes",
+      "description": "Barbarian and Monk run progression and shared action contracts"
+    },
+    {
+      "version": "257_glossary_concepts",
+      "description": "Seed 5e24 glossary concepts with formatted descriptions and cross references"
+    },
+    {
+      "version": "258_entity_tags_shop",
+      "description": "Registered entity tags, archived legacy metadata, tag-driven run pools and merchant settings"
+    },
+    {
+      "version": "259_merchant_copper",
+      "description": "Unit ammunition prices and copper-denominated merchant offers"
+    },
+    {
+      "version": "260_audio_presentations",
+      "description": "Audio library and entity sound metadata independent of certified mechanics"
+    },
+    {
+      "version": "261_card_price_contract",
+      "description": "Align numeric card prices with the public editor contract"
+    },
+    {
+      "version": "262_item_source_classification",
+      "description": "Classify reviewed PH equipment sources and seed player availability tag"
+    },
+    {
+      "version": "263_oauth_identities",
+      "description": "Add provider identities and single-use OAuth login flows"
+    },
+    {
+      "version": "264_paper_documents",
+      "description": "Persistent paper documents with private ownership and anonymous edit links"
+    },
+    {
+      "version": "265_owned_item_grants",
+      "description": "Preserve existing item access for owned sheets separately from the public library"
+    },
+    {
+      "version": "266_paper_document_trash",
+      "description": "Recoverable deletion of owned paper sheets"
+    },
+    {
+      "version": "267_content_entity_authorship",
+      "description": "Authorship on all library entities for owner editing"
+    },
+    {
+      "version": "268_account_admin_status",
+      "description": "Persistent administrator status granted only by server-side password verification"
+    },
+    {
+      "version": "269_restore_certified_guard_projection",
+      "description": "Restore certified support guard to the versioned metadata projection after later content migrations"
+    },
+    {
+      "version": "270_readable_catalog_metadata",
+      "description": "Readable spell, feat, action, and effect text, English names, and classified sources"
+    },
+    {
+      "version": "271_readable_catalog_local_variants",
+      "description": "Format prior local feat prose and fill English labels omitted by snapshot preimage guards"
+    },
+    {
+      "version": "272_readable_catalog_compatibility",
+      "description": "Fill empty English labels and shorten remaining historical feat descriptions"
+    },
+    {
+      "version": "273_urvin_run",
+      "description": "Urvin route saves, mode definitions, aura effects and guardians"
+    },
+    {
+      "version": "274_manual_content_review",
+      "description": "Archive certification, unlock library mechanics and reset manual review statuses"
+    },
+    {
+      "version": "275_seed_recommended_spell_choices",
+      "description": "Forge spell recommendation defaults for caster classes"
+    },
+    {
+      "version": "276_reusable_run_sources",
+      "description": "Allow independent run copies of a reusable source character"
+    },
+    {
+      "version": "277_partial_narrative_review",
+      "description": "Add partial narrative review with partially verified mechanics without resetting saved assessments"
+    },
+    {
+      "version": "278_catalog_mechanics_audit",
+      "description": "Apply guarded catalog mechanics and explicit audit assessments atomically"
+    },
+    {
+      "version": "279_item_mechanics_completion",
+      "description": "Complete guarded item mechanics and manual review assessments from the audited production snapshot"
+    },
+    {
+      "version": "280_catalog_variants_and_multitarget",
+      "description": "Add guarded spell/action variants and multi-target mechanics"
+    },
+    {
+      "version": "281_entity_references",
+      "description": "Index mechanical library references and level-aware inverse links"
+    },
+    {
+      "version": "282_effect_classification",
+      "description": "Apply reviewed library effect categories without changing mechanics or manual review"
+    },
+    {
+      "version": "283_explicit_reference_levels",
+      "description": "Keep levels only on explicitly level-bound class and species references"
+    },
+    {
+      "version": "284_entity_reference_coverage",
+      "description": "Index current formula, item and variant references and reject ambiguous aliases"
+    },
+    {
+      "version": "285_production_effect_classification",
+      "description": "Review new production effects and classify the spell-bond by its mechanical source"
+    },
+    {
+      "version": "286_combat_animation_metadata",
+      "description": "Separate 2D animation profiles and authored entity bindings from immutable rules"
+    },
+    {
+      "version": "287_combat_animation_coverage",
+      "description": "Assign reviewed monster attacks, first-level spells and breath areas without overriding custom presentation"
+    },
+    {
+      "version": "288_force_animation_palette",
+      "description": "Render authored force animations and their circles in red while preserving custom presentation"
+    },
+    {
+      "version": "289_selected_combat_audio",
+      "description": "Install approved sound recordings and phase assignments while retaining custom entity presentation"
+    },
+    {
+      "version": "290_critical_weapon_animations",
+      "description": "Add data-owned critical weapon variants without changing entity bindings or custom presentation"
+    },
+    {
+      "version": "291_expanded_fantasy_music",
+      "description": "Replace the 17 short menu, run and map themes with approved extended compositions"
+    },
+    {
+      "version": "292_critical_spell_animations",
+      "description": "Add data-owned critical beam and spell projectile variants while preserving custom presentation"
+    },
+    {
+      "version": "293_combat_spell_repairs",
+      "description": "Repair four guarded combat spells, archive previous mechanics and invalidate manual review without changing combat history"
+    },
+    {
+      "version": "294_explicit_resource_declarations",
+      "description": "Declare stable ability resource bindings and register data-owned resource metadata while retaining generic spell free uses and saved charges"
+    },
+    {
+      "version": "295_stable_spell_grant_references",
+      "description": "Repair reviewed spell grant references and access labels while preserving resource pool identities and historical snapshots"
+    },
+    {
+      "version": "296_explicit_spell_grant_abilities",
+      "description": "Declare source-owned spell grant casting abilities from guarded class metadata without changing historical snapshots"
+    },
+    {
+      "version": "297_retain_generic_spell_free_uses",
+      "description": "Retain generic spell free uses and archive unshipped per-spell resource declarations without changing saved charges or historical receipts"
+    }
+  ]
+}

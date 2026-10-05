@@ -1,9 +1,7 @@
 package main
 
 import (
-	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -84,7 +82,7 @@ func (ic *InventoryController) GetInventories(c *gin.Context) {
 	var inventories []Inventory
 
 	// Получаем личные инвентари пользователя
-	if err := ic.db.Preload("Items.Card").Where("user_id = ?", userID).Find(&inventories).Error; err != nil {
+	if err := ic.db.Preload("Items.Card").Where("user_id = ? AND type = ?", userID, InventoryTypePersonal).Find(&inventories).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения личных инвентарей"})
 		return
 	}
@@ -130,6 +128,9 @@ func (ic *InventoryController) GetInventory(c *gin.Context) {
 		return
 	}
 
+	if !supportedInventoryType(c, inventory.Type) {
+		return
+	}
 	// Проверяем права доступа
 	if inventory.Type == InventoryTypePersonal {
 		if inventory.UserID == nil || *inventory.UserID != userID {
@@ -185,6 +186,9 @@ func (ic *InventoryController) AddItemToInventory(c *gin.Context) {
 		return
 	}
 
+	if !supportedInventoryType(c, inventory.Type) {
+		return
+	}
 	// Проверяем права доступа
 	if inventory.Type == InventoryTypePersonal {
 		if inventory.UserID == nil || *inventory.UserID != userID {
@@ -283,6 +287,9 @@ func (ic *InventoryController) UpdateInventoryItem(c *gin.Context) {
 		return
 	}
 
+	if !supportedInventoryType(c, item.Inventory.Type) {
+		return
+	}
 	// Проверяем права доступа к инвентарю
 	if item.Inventory.Type == InventoryTypePersonal {
 		if item.Inventory.UserID == nil || *item.Inventory.UserID != userID {
@@ -350,6 +357,9 @@ func (ic *InventoryController) RemoveItemFromInventory(c *gin.Context) {
 		return
 	}
 
+	if !supportedInventoryType(c, item.Inventory.Type) {
+		return
+	}
 	// Проверяем права доступа к инвентарю
 	if item.Inventory.Type == InventoryTypePersonal {
 		if item.Inventory.UserID == nil || *item.Inventory.UserID != userID {
@@ -377,55 +387,6 @@ func (ic *InventoryController) RemoveItemFromInventory(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "предмет успешно удален из инвентаря"})
-}
-
-// GetCharacterInventories - получение инвентарей персонажа
-func (ic *InventoryController) GetCharacterInventories(c *gin.Context) {
-	startTime := time.Now()
-	log.Println("🚀 [PERF] GetCharacterInventories: Начало")
-
-	userID, err := GetCurrentUserID(c)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "пользователь не авторизован"})
-		return
-	}
-
-	characterIDStr := c.Param("id")
-	characterID, err := uuid.Parse(characterIDStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID персонажа"})
-		return
-	}
-
-	// Проверяем, что персонаж принадлежит пользователю
-	checkStartTime := time.Now()
-	var character CharacterV2
-	if err := ic.db.Where("id = ? AND user_id = ?", characterID, userID).First(&character).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "персонаж не найден"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения персонажа"})
-		return
-	}
-	log.Printf("⏱️ [PERF] GetCharacterInventories: Проверка персонажа - %v", time.Since(checkStartTime))
-
-	// Получаем инвентари персонажа
-	queryStartTime := time.Now()
-	var inventories []Inventory
-	if err := ic.db.Preload("Items.Card").Where("character_id = ?", characterID).Find(&inventories).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "ошибка получения инвентарей персонажа"})
-		return
-	}
-	log.Printf("⏱️ [PERF] GetCharacterInventories: Запрос инвентарей - %v", time.Since(queryStartTime))
-	log.Printf("📊 [PERF] GetCharacterInventories: Найдено инвентарей: %d", len(inventories))
-
-	for i, inv := range inventories {
-		log.Printf("📦 [PERF] GetCharacterInventories: Инвентарь %d - предметов: %d", i, len(inv.Items))
-	}
-
-	log.Printf("✅ [PERF] GetCharacterInventories: Общее время - %v", time.Since(startTime))
-	c.JSON(http.StatusOK, inventories)
 }
 
 // EquipItemRequest - запрос на экипировку предмета
@@ -465,6 +426,9 @@ func (ic *InventoryController) EquipItem(c *gin.Context) {
 		return
 	}
 
+	if !supportedInventoryType(c, item.Inventory.Type) {
+		return
+	}
 	// Проверяем права доступа к инвентарю
 	if item.Inventory.Type == InventoryTypePersonal {
 		if item.Inventory.UserID == nil || *item.Inventory.UserID != userID {
@@ -491,24 +455,6 @@ func (ic *InventoryController) EquipItem(c *gin.Context) {
 		return
 	}
 
-	// Если экипируем предмет, снимаем другие предметы в том же слоте
-	if req.IsEquipped && item.Card.Slot != nil {
-		// Находим все предметы в инвентарях персонажа с тем же слотом
-		var conflictingItems []InventoryItem
-		if err := ic.db.Preload("Card").
-			Joins("JOIN inventories ON inventory_items.inventory_id = inventories.id").
-			Where("inventories.character_id = ? AND inventory_items.is_equipped = true", item.Inventory.CharacterID).
-			Find(&conflictingItems).Error; err == nil {
-
-			for _, conflictItem := range conflictingItems {
-				if conflictItem.Card.Slot != nil && *conflictItem.Card.Slot == *item.Card.Slot && conflictItem.ID != item.ID {
-					conflictItem.IsEquipped = false
-					ic.db.Save(&conflictItem)
-				}
-			}
-		}
-	}
-
 	// Обновляем статус экипировки
 	item.IsEquipped = req.IsEquipped
 
@@ -518,4 +464,13 @@ func (ic *InventoryController) EquipItem(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, item)
+}
+
+// Stored rows from retired character generations are not standalone inventories.
+func supportedInventoryType(c *gin.Context, kind InventoryType) bool {
+	if kind == InventoryTypePersonal || kind == InventoryTypeGroup {
+		return true
+	}
+	c.JSON(http.StatusNotFound, gin.H{"error": "инвентарь не найден"})
+	return false
 }

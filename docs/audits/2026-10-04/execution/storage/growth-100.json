@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "run_id": "test_498532269b2304c2863729e8",
+  "commands": 100,
+  "replay_requests": 100,
+  "fixture": {
+    "profile": "integration-baseline",
+    "schemaHash": "1aa941fb0f5fdc3bea0016e5352ddacc1767b83be7f6710f9ad22e82aa237b0a",
+    "migrationBaseline": "297_retain_generic_spell_free_uses",
+    "historicalChainVerified": false,
+    "catalog": [
+      {
+        "source": "officials/canon/prod-snapshot/classes.json",
+        "rows": 60,
+        "sha256": "2124cffa17579481185c30454bdd7139c52f9e48f45376417d05a1070a879cf7"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/races.json",
+        "rows": 39,
+        "sha256": "6a34f538f03db6f5f2665dee1b840337f6b471e437457e7e1aef7bdf347d7e1c"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/effects.json",
+        "rows": 452,
+        "sha256": "0e4a5edd1dc7e536106aabf68b9a1c63cd1a824e65ac2754f02c87101af74523"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/actions.json",
+        "rows": 40,
+        "sha256": "f3702a0dca6f4dc784f714cbded73a044185ecbba006b1fc759d6ffb3c530bd5"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/spells.json",
+        "rows": 393,
+        "sha256": "da763e12c75177ef0e85bcd5ca3157e3cfd8404eb51a0984855b13d71456e495"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/feats.json",
+        "rows": 77,
+        "sha256": "769295768512a3c490c41d3580284b56e4935b4077e0967006b5663fa04b83fa"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/backgrounds.json",
+        "rows": 16,
+        "sha256": "b356a2abe7381d3109a18d98081b84e93c47e9ffdc4c59b3ae63c108b5fb7161"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/cards.json",
+        "rows": 768,
+        "sha256": "c110a67bbf2e3b5707a1e65abde62f5a84860da2f101704fd1aca4666e36ebd5"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/resources.json",
+        "rows": 26,
+        "sha256": "ab1aa68dd3ef5f059c4176daff815c27c5ed5b481c767cd0ecae6970db0571d6"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/variables.json",
+        "rows": 5,
+        "sha256": "c204da89f22044950548b51034dd799ade6944c700615e2e923fc77172b9c0a5"
+      },
+      {
+        "source": "frontend/src/roguelike/pinnedFighter.fixture.json",
+        "sha256": "0803e14781eb81aef18b7f8897c5bf5f64e55bb0cb588926a3eb39d8dc3f3c49",
+        "projection": "catalog.entities only; no character/owner"
+      }
+    ],
+    "syntheticMonsters": 2,
+    "source": "checked-in canonical catalog plus synthetic test creatures",
+    "templates": {
+      "source": "backend/charactertemplates/presets.json",
+      "rows": 3,
+      "sha256": "099be9fe5499d34db2d0173d6d467e6deacaef497c762ac1773e7e7b9eb7d4cb"
+    }
+  },
+  "artifact_hash": "sha256:97e8d25465ba0ad7411f12fef7bab5f178bd4a123b1f26a92b257a9ea9d3b4b8",
+  "counts_before": {
+    "receipts": 0,
+    "character_events": 0
+  },
+  "counts_after": {
+    "receipts": 100,
+    "character_events": 200
+  },
+  "database_growth_bytes": 5431296,
+  "wal_growth_bytes": 5287939,
+  "wal_same_stats_window": true,
+  "relation_deltas": [
+    {
+      "relation": "roguelike_command_receipts",
+      "total_bytes": 2498560,
+      "table_bytes": 2473984,
+      "index_bytes": 24576,
+      "toast_with_index_bytes": 2424832
+    },
+    {
+      "relation": "characters_v3",
+      "total_bytes": 2433024,
+      "table_bytes": 2433024,
+      "index_bytes": 0,
+      "toast_with_index_bytes": 2211840
+    },
+    {
+      "relation": "roguelike_runs",
+      "total_bytes": 434176,
+      "table_bytes": 434176,
+      "index_bytes": 0,
+      "toast_with_index_bytes": 434176
+    },
+    {
+      "relation": "character_events",
+      "total_bytes": 65536,
+      "table_bytes": 49152,
+      "index_bytes": 16384,
+      "toast_with_index_bytes": 0
+    }
+  ],
+  "timings": {
+    "camp_turn_party_1": {
+      "count": 100,
+      "median_ms": 68.81390000000101,
+      "p95_ms": 94.9168000000027,
+      "p95_preliminary": false,
+      "min_ms": 50.92240000000311,
+      "max_ms": 161.14359999999942,
+      "phase_means": {
+        "backend_first_write_uncompressed_bytes": 54705.34,
+        "backend_to_first_write_ms": 60.40230000000001,
+        "backend_worker_body_read_ms": 0.14411,
+        "backend_worker_marshal_ms": 5.355540000000001,
+        "backend_worker_unmarshal_ms": 0.6027300000000001,
+        "catalog_fulfill_ms": 8.068149999999996,
+        "catalog_needs_count": 25,
+        "catalog_needs_rounds": 5,
+        "lock_acquired_to_tx_return_ms": 13.11805,
+        "lock_statement_ms": 1.664089999999999,
+        "persist_sql_ms": 6.368010000000001,
+        "sql_count": 40,
+        "sql_operation_ms": 19.904889999999995,
+        "sql_rows": 58,
+        "transaction_ms": 13.821710000000001,
+        "worker_artifact_cache_hit": 5.99,
+        "worker_artifact_load_ms": 0.4999800000000006,
+        "worker_body_read_ms": 0.8067799999999997,
+        "worker_callback_to_send_ms": 21.57354,
+        "worker_calls": 6,
+        "worker_client_total_ms": 29.25986,
+        "worker_correlated_calls": 6,
+        "worker_execute_ms": 16.944269999999996,
+        "worker_http_headers_ms": 22.974770000000007,
+        "worker_parse_ms": 3.0272699999999992,
+        "worker_process_cpu_ms": 18.44,
+        "worker_request_bytes": 597368.42,
+        "worker_response_bytes": 48278.39,
+        "worker_stringify_ms": 0.16190000000000002
+      }
+    }
+  },
+  "outcome": {
+    "commandCount": 100,
+    "committedCommands": 100,
+    "replayRequests": 100,
+    "partySize": 1,
+    "beforeRevision": 0,
+    "afterRevision": 100,
+    "commandOutcomeDigest": "sha256:19294320757770a67f4f5ab111062beee16ddfb47453dd339b0934a6a1c1bed0",
+    "verification": {
+      "runId": "d3d6174f-fad7-47a0-a3bc-8af93d7de8a1",
+      "revision": 100,
+      "outcomeHash": "sha256:b3ae6c6972eaedc86ed499f20e3eba6791b5e6e0722f865b9fe4819d08beb768",
+      "sourceUnchanged": true,
+      "exactRetry": true
+    }
+  },
+  "limitations": [
+    "Only a local synthetic line-fighter camp-turn workload; no production size or saving is inferred.",
+    "Each paid-free gameplay command was retried exactly; persisted responses matched within this run.",
+    "Backend allocates fresh RNG and wall-clock timestamps per camp turn. Full state equality across fresh runs is NOT established by this report.",
+    "Other local agent builds may contend for CPU. Timings are diagnostic, not an uncontended performance baseline.",
+    "PostgreSQL table/TOAST/index growth is allocated physical bytes, including page granularity; column samples are bounded and separate."
+  ]
+}

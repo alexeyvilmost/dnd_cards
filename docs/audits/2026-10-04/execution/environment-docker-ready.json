@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-04T22:40:44.985Z",
+  "docker": {
+    "status": "available",
+    "serverVersion": "29.8.1",
+    "osType": "linux",
+    "architecture": "x86_64",
+    "context": "desktop-linux"
+  },
+  "authorization": "Пользователь сообщил: Запустил Docker Engine, продолжай",
+  "operatingSystemChangedByAgent": false,
+  "productionMutated": false,
+  "boundary": "Engine readiness is not OCI build/rehearsal/race acceptance"
+}

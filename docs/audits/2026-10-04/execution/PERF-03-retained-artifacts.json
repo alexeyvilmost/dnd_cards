@@ -1,0 +1,592 @@
+{
+  "retained": {
+    "runtime": {
+      "node": "v24.19.0",
+      "platform": "win32",
+      "arch": "x64"
+    },
+    "before": {
+      "rssBytes": 65642496,
+      "heapUsedBytes": 8027936,
+      "heapTotalBytes": 13361152,
+      "externalBytes": 6939128,
+      "arrayBuffersBytes": 2904311,
+      "maxRSSLifetimeBytes": 99303424,
+      "v8CodeStatistics": {
+        "code_and_metadata_size": 2499459,
+        "bytecode_and_metadata_size": 930056,
+        "external_script_source_size": 4034861,
+        "cpu_profiler_metadata_size": 0
+      }
+    },
+    "samples": [
+      {
+        "artifactHash": "sha256:97e8d25465ba0ad7411f12fef7bab5f178bd4a123b1f26a92b257a9ea9d3b4b8",
+        "sourceBytes": 2690373,
+        "cacheHit": 0,
+        "loadMs": 52.367,
+        "memory": {
+          "rssBytes": 75304960,
+          "heapUsedBytes": 15227976,
+          "heapTotalBytes": 24768512,
+          "externalBytes": 7127411,
+          "arrayBuffersBytes": 2958789,
+          "maxRSSLifetimeBytes": 99303424,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2603498,
+            "bytecode_and_metadata_size": 1196616,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 1,
+        "liveExports": 1
+      },
+      {
+        "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+        "sourceBytes": 2708335,
+        "cacheHit": 0,
+        "loadMs": 36.605,
+        "memory": {
+          "rssBytes": 82444288,
+          "heapUsedBytes": 21651072,
+          "heapTotalBytes": 39358464,
+          "externalBytes": 7127666,
+          "arrayBuffersBytes": 2959045,
+          "maxRSSLifetimeBytes": 104562688,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2683920,
+            "bytecode_and_metadata_size": 1278776,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 2,
+        "liveExports": 2
+      },
+      {
+        "artifactHash": "sha256:5eedc099bbfc8e6e7641b9a07cbe9548e53b1881b6a1ae82d7c132300a4e697f",
+        "sourceBytes": 2705569,
+        "cacheHit": 0,
+        "loadMs": 51.664,
+        "memory": {
+          "rssBytes": 88768512,
+          "heapUsedBytes": 28426624,
+          "heapTotalBytes": 45817856,
+          "externalBytes": 7127922,
+          "arrayBuffersBytes": 2959301,
+          "maxRSSLifetimeBytes": 104562688,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2783970,
+            "bytecode_and_metadata_size": 1359400,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 3,
+        "liveExports": 3
+      },
+      {
+        "artifactHash": "sha256:dd14f24b4fac79b1b815ecf69182d7a83e426d622deceefcbebea3f33c1aacae",
+        "sourceBytes": 2705645,
+        "cacheHit": 0,
+        "loadMs": 34.402,
+        "memory": {
+          "rssBytes": 96059392,
+          "heapUsedBytes": 34468608,
+          "heapTotalBytes": 69054464,
+          "externalBytes": 7128180,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 104562688,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2846791,
+            "bytecode_and_metadata_size": 1440024,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:b59a1f04700f196b5cb210bd1b24dcd84d3ccea1e1c9b6772876bacd82f59955",
+        "sourceBytes": 2704571,
+        "cacheHit": 0,
+        "loadMs": 37.144,
+        "memory": {
+          "rssBytes": 102895616,
+          "heapUsedBytes": 40957408,
+          "heapTotalBytes": 76034048,
+          "externalBytes": 7128436,
+          "arrayBuffersBytes": 2959813,
+          "maxRSSLifetimeBytes": 108515328,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2983578,
+            "bytecode_and_metadata_size": 1520576,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 5,
+        "liveExports": 5
+      },
+      {
+        "artifactHash": "sha256:a6f82c7a74a9ec4caa2c3e3cddf230da27a2723cb70cc2cf0400fbae65dd54ef",
+        "sourceBytes": 2706180,
+        "cacheHit": 0,
+        "loadMs": 40.788,
+        "memory": {
+          "rssBytes": 109015040,
+          "heapUsedBytes": 47353512,
+          "heapTotalBytes": 82231296,
+          "externalBytes": 7128692,
+          "arrayBuffersBytes": 2960069,
+          "maxRSSLifetimeBytes": 115056640,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3050282,
+            "bytecode_and_metadata_size": 1601576,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 6,
+        "liveExports": 6
+      },
+      {
+        "artifactHash": "sha256:284c13adbbbeee740805f495ec1be6e82f33dbea092bbdf04abc098bce25a636",
+        "sourceBytes": 2690262,
+        "cacheHit": 0,
+        "loadMs": 41.804,
+        "memory": {
+          "rssBytes": 116944896,
+          "heapUsedBytes": 53672040,
+          "heapTotalBytes": 122212352,
+          "externalBytes": 7128948,
+          "arrayBuffersBytes": 2960325,
+          "maxRSSLifetimeBytes": 121487360,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3098188,
+            "bytecode_and_metadata_size": 1681616,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 7,
+        "liveExports": 7
+      },
+      {
+        "artifactHash": "sha256:2ea153b2470da18b21a6f9571b20c4c74b199b46b303537566eb79145c40b6f0",
+        "sourceBytes": 2700341,
+        "cacheHit": 0,
+        "loadMs": 34.19,
+        "memory": {
+          "rssBytes": 124010496,
+          "heapUsedBytes": 60028112,
+          "heapTotalBytes": 128397312,
+          "externalBytes": 7129203,
+          "arrayBuffersBytes": 2960581,
+          "maxRSSLifetimeBytes": 129572864,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3158188,
+            "bytecode_and_metadata_size": 1762024,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 8,
+        "liveExports": 8
+      },
+      {
+        "artifactHash": "sha256:ddd56dec5121d4ce076b2f90df3e8bcf76b88537ed1b72e6784ad3874974ca00",
+        "sourceBytes": 2704647,
+        "cacheHit": 0,
+        "loadMs": 35.924,
+        "memory": {
+          "rssBytes": 130408448,
+          "heapUsedBytes": 66725240,
+          "heapTotalBytes": 135114752,
+          "externalBytes": 7129460,
+          "arrayBuffersBytes": 2960837,
+          "maxRSSLifetimeBytes": 136024064,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3444268,
+            "bytecode_and_metadata_size": 1842576,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 9,
+        "liveExports": 9
+      },
+      {
+        "artifactHash": "sha256:d08a3588f6aa3b03162b666b787d5a9ed625c4a96798203d7ff10c4b2365767f",
+        "sourceBytes": 2706005,
+        "cacheHit": 0,
+        "loadMs": 36.408,
+        "memory": {
+          "rssBytes": 136667136,
+          "heapUsedBytes": 73092544,
+          "heapTotalBytes": 141312000,
+          "externalBytes": 7129716,
+          "arrayBuffersBytes": 2961093,
+          "maxRSSLifetimeBytes": 143228928,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3485494,
+            "bytecode_and_metadata_size": 1923216,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 10,
+        "liveExports": 10
+      },
+      {
+        "artifactHash": "sha256:7b49031518c7f2b848918b986d661e0c17e0129dc04a6af0ad9f64fe65a0b9af",
+        "sourceBytes": 2692033,
+        "cacheHit": 0,
+        "loadMs": 36.627,
+        "memory": {
+          "rssBytes": 143749120,
+          "heapUsedBytes": 79403120,
+          "heapTotalBytes": 147480576,
+          "externalBytes": 7129971,
+          "arrayBuffersBytes": 2961349,
+          "maxRSSLifetimeBytes": 149491712,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3515551,
+            "bytecode_and_metadata_size": 2003312,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 11,
+        "liveExports": 11
+      },
+      {
+        "artifactHash": "sha256:97e8d25465ba0ad7411f12fef7bab5f178bd4a123b1f26a92b257a9ea9d3b4b8",
+        "sourceBytes": 2690373,
+        "cacheHit": 1,
+        "loadMs": 0.039,
+        "memory": {
+          "rssBytes": 143818752,
+          "heapUsedBytes": 79415200,
+          "heapTotalBytes": 147480576,
+          "externalBytes": 7129969,
+          "arrayBuffersBytes": 2961349,
+          "maxRSSLifetimeBytes": 149491712,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3524103,
+            "bytecode_and_metadata_size": 2003432,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 11,
+        "liveExports": 11
+      }
+    ],
+    "uniqueArtifacts": 11,
+    "configuredLimit": 64,
+    "forcedGC": true,
+    "limitations": [
+      "Actual immutable artifacts; invalid commands intentionally stop after load. No gameplay acceptance is claimed.",
+      "Forced GC isolates retained references; RSS is allocator high-water and need not shrink immediately.",
+      "This is bounded local history, not a production OOM prediction."
+    ]
+  },
+  "bounded": {
+    "runtime": {
+      "node": "v24.19.0",
+      "platform": "win32",
+      "arch": "x64"
+    },
+    "before": {
+      "rssBytes": 65802240,
+      "heapUsedBytes": 8027896,
+      "heapTotalBytes": 13623296,
+      "externalBytes": 6939128,
+      "arrayBuffersBytes": 2904311,
+      "maxRSSLifetimeBytes": 99254272,
+      "v8CodeStatistics": {
+        "code_and_metadata_size": 2499459,
+        "bytecode_and_metadata_size": 930056,
+        "external_script_source_size": 4034861,
+        "cpu_profiler_metadata_size": 0
+      }
+    },
+    "samples": [
+      {
+        "artifactHash": "sha256:97e8d25465ba0ad7411f12fef7bab5f178bd4a123b1f26a92b257a9ea9d3b4b8",
+        "sourceBytes": 2690373,
+        "cacheHit": 0,
+        "loadMs": 39.821,
+        "memory": {
+          "rssBytes": 75816960,
+          "heapUsedBytes": 15227832,
+          "heapTotalBytes": 24768512,
+          "externalBytes": 7127412,
+          "arrayBuffersBytes": 2958789,
+          "maxRSSLifetimeBytes": 99254272,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2603498,
+            "bytecode_and_metadata_size": 1196616,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 1,
+        "liveExports": 1
+      },
+      {
+        "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+        "sourceBytes": 2708335,
+        "cacheHit": 0,
+        "loadMs": 32.633,
+        "memory": {
+          "rssBytes": 82915328,
+          "heapUsedBytes": 21650960,
+          "heapTotalBytes": 39620608,
+          "externalBytes": 7127668,
+          "arrayBuffersBytes": 2959045,
+          "maxRSSLifetimeBytes": 105390080,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2683920,
+            "bytecode_and_metadata_size": 1278776,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 2,
+        "liveExports": 2
+      },
+      {
+        "artifactHash": "sha256:5eedc099bbfc8e6e7641b9a07cbe9548e53b1881b6a1ae82d7c132300a4e697f",
+        "sourceBytes": 2705569,
+        "cacheHit": 0,
+        "loadMs": 34.371,
+        "memory": {
+          "rssBytes": 89448448,
+          "heapUsedBytes": 28496272,
+          "heapTotalBytes": 46080000,
+          "externalBytes": 7127924,
+          "arrayBuffersBytes": 2959301,
+          "maxRSSLifetimeBytes": 105390080,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2783970,
+            "bytecode_and_metadata_size": 1359400,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 3,
+        "liveExports": 3
+      },
+      {
+        "artifactHash": "sha256:dd14f24b4fac79b1b815ecf69182d7a83e426d622deceefcbebea3f33c1aacae",
+        "sourceBytes": 2705645,
+        "cacheHit": 0,
+        "loadMs": 32.802,
+        "memory": {
+          "rssBytes": 97316864,
+          "heapUsedBytes": 34468464,
+          "heapTotalBytes": 69054464,
+          "externalBytes": 7128179,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 105390080,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2846791,
+            "bytecode_and_metadata_size": 1440024,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:b59a1f04700f196b5cb210bd1b24dcd84d3ccea1e1c9b6772876bacd82f59955",
+        "sourceBytes": 2704571,
+        "cacheHit": 0,
+        "loadMs": 34.223,
+        "memory": {
+          "rssBytes": 103010304,
+          "heapUsedBytes": 40642752,
+          "heapTotalBytes": 75509760,
+          "externalBytes": 7128179,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 109314048,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 2982882,
+            "bytecode_and_metadata_size": 1520992,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:a6f82c7a74a9ec4caa2c3e3cddf230da27a2723cb70cc2cf0400fbae65dd54ef",
+        "sourceBytes": 2706180,
+        "cacheHit": 0,
+        "loadMs": 36.591,
+        "memory": {
+          "rssBytes": 109236224,
+          "heapUsedBytes": 46701464,
+          "heapTotalBytes": 81444864,
+          "externalBytes": 7128179,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 115605504,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3035303,
+            "bytecode_and_metadata_size": 1601632,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:284c13adbbbeee740805f495ec1be6e82f33dbea092bbdf04abc098bce25a636",
+        "sourceBytes": 2690262,
+        "cacheHit": 0,
+        "loadMs": 35.619,
+        "memory": {
+          "rssBytes": 116523008,
+          "heapUsedBytes": 52698608,
+          "heapTotalBytes": 121425920,
+          "externalBytes": 7128180,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 121647104,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3079537,
+            "bytecode_and_metadata_size": 1682032,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:2ea153b2470da18b21a6f9571b20c4c74b199b46b303537566eb79145c40b6f0",
+        "sourceBytes": 2700341,
+        "cacheHit": 0,
+        "loadMs": 35.175,
+        "memory": {
+          "rssBytes": 122589184,
+          "heapUsedBytes": 58736336,
+          "heapTotalBytes": 127086592,
+          "externalBytes": 7128179,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 128929792,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3137830,
+            "bytecode_and_metadata_size": 1762440,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:ddd56dec5121d4ce076b2f90df3e8bcf76b88537ed1b72e6784ad3874974ca00",
+        "sourceBytes": 2704647,
+        "cacheHit": 0,
+        "loadMs": 33.75,
+        "memory": {
+          "rssBytes": 128925696,
+          "heapUsedBytes": 65098536,
+          "heapTotalBytes": 133541888,
+          "externalBytes": 7128178,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 135417856,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3409696,
+            "bytecode_and_metadata_size": 1842992,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:d08a3588f6aa3b03162b666b787d5a9ed625c4a96798203d7ff10c4b2365767f",
+        "sourceBytes": 2706005,
+        "cacheHit": 0,
+        "loadMs": 33.666,
+        "memory": {
+          "rssBytes": 134955008,
+          "heapUsedBytes": 71137712,
+          "heapTotalBytes": 139476992,
+          "externalBytes": 7128179,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 141545472,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3443021,
+            "bytecode_and_metadata_size": 1923632,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:7b49031518c7f2b848918b986d661e0c17e0129dc04a6af0ad9f64fe65a0b9af",
+        "sourceBytes": 2692033,
+        "cacheHit": 0,
+        "loadMs": 37.023,
+        "memory": {
+          "rssBytes": 141041664,
+          "heapUsedBytes": 77130144,
+          "heapTotalBytes": 145383424,
+          "externalBytes": 7128180,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 147509248,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3471190,
+            "bytecode_and_metadata_size": 2003848,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      },
+      {
+        "artifactHash": "sha256:97e8d25465ba0ad7411f12fef7bab5f178bd4a123b1f26a92b257a9ea9d3b4b8",
+        "sourceBytes": 2690373,
+        "cacheHit": 0,
+        "loadMs": 9.762,
+        "memory": {
+          "rssBytes": 140673024,
+          "heapUsedBytes": 77139496,
+          "heapTotalBytes": 145907712,
+          "externalBytes": 7128179,
+          "arrayBuffersBytes": 2959557,
+          "maxRSSLifetimeBytes": 151535616,
+          "v8CodeStatistics": {
+            "code_and_metadata_size": 3478668,
+            "bytecode_and_metadata_size": 2003848,
+            "external_script_source_size": 4034861,
+            "cpu_profiler_metadata_size": 0
+          }
+        },
+        "loadedModuleCount": 4,
+        "liveExports": 4
+      }
+    ],
+    "uniqueArtifacts": 11,
+    "configuredLimit": 4,
+    "forcedGC": true,
+    "limitations": [
+      "Actual immutable artifacts; invalid commands intentionally stop after load. No gameplay acceptance is claimed.",
+      "Forced GC isolates retained references; RSS is allocator high-water and need not shrink immediately.",
+      "This is bounded local history, not a production OOM prediction."
+    ]
+  }
+}

@@ -100,6 +100,19 @@ const isolatedPaperQaRegistrationGuards = [
   'router.POST("/api/auth/register", authLimit.Handler(), JSONBodyLimitMiddleware(4096), authController.Register)',
   'server := &http.Server{Addr: paperQAAddress',
 ];
+const ownedRehearsalRegistrationScript='scripts/release/rehearsal-scenarios.mjs';
+const ownedRehearsalRegistrationGuards=[
+  'const authorizedRehearsals=new WeakMap();',
+  'export async function createCanonicalPendingScenario(capability,{label})',
+  "if(!authorizedRehearsals.has(capability))throw Error('Live owned rehearsal capability required before registration');",
+  'const access=authorizedRehearsals.get(capability);await access.assertOwned();',
+  'const context=await localAcceptanceContext(stack.env);',
+  "FROM test_run_ownership;",
+  "if(network.Internal!==true||network.Labels?.['bagofholding.rehearsal']!==owner)",
+  "container.Config?.Labels?.['bagofholding.rehearsal']!==owner",
+  "target.hostname!=='postgres'||target.port!=='5432'||target.pathname!=='/rehearsal'",
+  "import {dockerCommand} from './rehearsal-command.mjs';",
+];
 const knownCredentialLiterals = [
   ['admin', '123'].join(''),
   ['password', '123'].join(''),
@@ -169,6 +182,9 @@ function isIsolatedPaperQaRegistration(path, source) {
   return path === isolatedPaperQaRegistrationScript
     && isolatedPaperQaRegistrationGuards.every((guard) => source.includes(guard));
 }
+function isOwnedRehearsalRegistration(path,source){
+  return path===ownedRehearsalRegistrationScript&&ownedRehearsalRegistrationGuards.every(guard=>source.includes(guard));
+}
 
 function lineNumberAt(text, offset) {
   return text.slice(0, offset).split('\n').length;
@@ -226,6 +242,7 @@ for (const path of sourcePaths) {
     && !isUnitTest(path)
     && path !== explicitRegistrationTest
     && !isIsolatedPaperQaRegistration(path, source)
+    && !isOwnedRehearsalRegistration(path, source)
     && /\/(?:api\/)?auth\/register\b/.test(source)
   ) {
     const offset = source.search(/\/(?:api\/)?auth\/register\b/);

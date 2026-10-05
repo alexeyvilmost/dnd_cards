@@ -412,7 +412,7 @@ describe('mandatory two-PC sequential PHB 2024 Weapon Mastery scenarios', () => 
     }
 
     if (type === 'push') {
-      expect(engineEvents(primary.result)).toContainEqual({ type: 'movement', mode: 'push', distanceFt: 10 });
+      expect(engineEvents(primary.result)).toContainEqual({ type: 'movement', mode: 'push', distanceFt: 10, recipientActorId: 'pc:defender', relativeToActorId: 'pc:attacker' });
     }
 
     if (type === 'graze') {

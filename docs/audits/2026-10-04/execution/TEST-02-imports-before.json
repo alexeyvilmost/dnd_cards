@@ -1,0 +1,523 @@
+[
+  {
+    "file": "activeSlotRecovery.ts",
+    "line": 3,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "CharacterContext",
+      "RuntimeState",
+      "EngineEvent"
+    ]
+  },
+  {
+    "file": "attackActionBudget.ts",
+    "line": 1,
+    "module": "../engine/actionCostPolicy",
+    "typeOnly": false,
+    "symbols": [
+      "availableActionCostPolicies"
+    ]
+  },
+  {
+    "file": "attackActionBudget.ts",
+    "line": 3,
+    "module": "../engine/modifiers",
+    "typeOnly": false,
+    "symbols": [
+      "collectModifiers",
+      "foldModifiers"
+    ]
+  },
+  {
+    "file": "attackActionBudget.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      "activeConditionsOf"
+    ]
+  },
+  {
+    "file": "attackRedirection.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "RollLog"
+    ]
+  },
+  {
+    "file": "attackRedirection.ts",
+    "line": 3,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "attackRedirection.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      "activeConditionsOf",
+      "matchesWhen"
+    ]
+  },
+  {
+    "file": "bondLifecycle.ts",
+    "line": 2,
+    "module": "../engine/actionRequirements",
+    "typeOnly": false,
+    "symbols": [
+      "itemSourceRequirementIssue"
+    ]
+  },
+  {
+    "file": "conditionsRuntime.ts",
+    "line": 1,
+    "module": "../engine/runtimeCharacterProjection",
+    "typeOnly": false,
+    "symbols": [
+      "projectRuntimeCharacter"
+    ]
+  },
+  {
+    "file": "damageTransfer.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "EngineEvent"
+    ]
+  },
+  {
+    "file": "deathRecovery.ts",
+    "line": 2,
+    "module": "../engine/lifePolicies",
+    "typeOnly": false,
+    "symbols": [
+      "actorIsDead",
+      "resurrectionPermitted"
+    ]
+  },
+  {
+    "file": "deathRecovery.ts",
+    "line": 3,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "deathRecovery.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      "matchesWhen"
+    ]
+  },
+  {
+    "file": "deathRecovery.ts",
+    "line": 5,
+    "module": "../engine/cost",
+    "typeOnly": false,
+    "symbols": [
+      "canPay",
+      "pay"
+    ]
+  },
+  {
+    "file": "deathRecovery.ts",
+    "line": 6,
+    "module": "../engine/turn",
+    "typeOnly": false,
+    "symbols": [
+      "longRest"
+    ]
+  },
+  {
+    "file": "deathRecovery.ts",
+    "line": 7,
+    "module": "../engine/deathSaves",
+    "typeOnly": false,
+    "symbols": [
+      "emptyDeathSaves"
+    ]
+  },
+  {
+    "file": "domain.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "CharacterContext",
+      "TriggeringAttackContext",
+      "EngineEvent",
+      "RollLog",
+      "RuntimeState",
+      "SpellCastContext",
+      "SpellComponents"
+    ]
+  },
+  {
+    "file": "effectReceived.ts",
+    "line": 1,
+    "module": "../engine/conditions",
+    "typeOnly": false,
+    "symbols": [
+      "conditionRule"
+    ]
+  },
+  {
+    "file": "effectReceived.ts",
+    "line": 2,
+    "module": "../engine/modifiers",
+    "typeOnly": false,
+    "symbols": [
+      "deniedCapabilities"
+    ]
+  },
+  {
+    "file": "effectReceived.ts",
+    "line": 3,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "ActiveEffectEntry"
+    ]
+  },
+  {
+    "file": "equipmentChange.ts",
+    "line": 4,
+    "module": "../engine/itemEquipmentPolicy",
+    "typeOnly": false,
+    "symbols": [
+      "itemEquipmentChangeIssue"
+    ]
+  },
+  {
+    "file": "equipmentChange.ts",
+    "line": 5,
+    "module": "../engine/execute",
+    "typeOnly": false,
+    "symbols": [
+      "emitEvent"
+    ]
+  },
+  {
+    "file": "equipmentChange.ts",
+    "line": 6,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "EngineEvent"
+    ]
+  },
+  {
+    "file": "equipmentChange.ts",
+    "line": 7,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "equipmentChange.ts",
+    "line": 8,
+    "module": "../engine/runtimeCharacterProjection",
+    "typeOnly": false,
+    "symbols": [
+      "projectRuntimeCharacter"
+    ]
+  },
+  {
+    "file": "generalFeatDamageRuntime.ts",
+    "line": 3,
+    "module": "../engine/actionRequirements",
+    "typeOnly": false,
+    "symbols": [
+      "itemSourceRequirementIssue"
+    ]
+  },
+  {
+    "file": "generalFeatReactionRuntime.ts",
+    "line": 249,
+    "module": "../engine/lifePolicies",
+    "typeOnly": false,
+    "symbols": [
+      "actorHasConsciousVitality"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 5,
+    "module": "../engine/execute",
+    "typeOnly": false,
+    "symbols": [
+      "emitEngineEvent"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 8,
+    "module": "../engine/effectRollFacts",
+    "typeOnly": false,
+    "symbols": [
+      "effectRollFacts"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 10,
+    "module": "../engine/elapsedTime",
+    "typeOnly": false,
+    "symbols": [
+      "advanceEffectTime"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 11,
+    "module": "../engine/effectLifecycle",
+    "typeOnly": false,
+    "symbols": [
+      "reconcileEndedEffects"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 12,
+    "module": "../engine/temporaryResourceGrants",
+    "typeOnly": false,
+    "symbols": [
+      "reconcileTemporaryResourceGrants"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 18,
+    "module": "../engine/itemSpellProjectiles",
+    "typeOnly": false,
+    "symbols": [
+      "applyItemSpellProjectiles"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 23,
+    "module": "../engine/runtimeCharacterProjection",
+    "typeOnly": false,
+    "symbols": [
+      "projectRuntimeCharacter"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 24,
+    "module": "../engine/resourceRestrictions",
+    "typeOnly": false,
+    "symbols": [
+      "availableResources"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 25,
+    "module": "../engine/weapon",
+    "typeOnly": false,
+    "symbols": [
+      "weaponActionAvailability",
+      "weaponAttackKind"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 29,
+    "module": "../engine/actionCostPolicy",
+    "typeOnly": false,
+    "symbols": [
+      "availableActionCostPolicies",
+      "applyActionCostPolicies"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 30,
+    "module": "../engine/lifePolicies",
+    "typeOnly": false,
+    "symbols": [
+      "collectLifePolicies",
+      "actorHasConsciousVitality"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 31,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 32,
+    "module": "../engine/itemExecutionCapabilities",
+    "typeOnly": false,
+    "symbols": [
+      "applyItemActionTargetLimit"
+    ]
+  },
+  {
+    "file": "handler.ts",
+    "line": 35,
+    "module": "../engine/concentration",
+    "typeOnly": false,
+    "symbols": [
+      "concentrationProtectedUntilDeath"
+    ]
+  },
+  {
+    "file": "itemWeaponLifecycle.ts",
+    "line": 4,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "itemWeaponLifecycle.ts",
+    "line": 5,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      "matchesWhen"
+    ]
+  },
+  {
+    "file": "itemWeaponLifecycle.ts",
+    "line": 6,
+    "module": "../engine/itemEquipmentPolicy",
+    "typeOnly": false,
+    "symbols": [
+      "itemEquipmentChangeIssue"
+    ]
+  },
+  {
+    "file": "magicSuppression.ts",
+    "line": 3,
+    "module": "../engine/magic",
+    "typeOnly": false,
+    "symbols": [
+      "isAntimagicField",
+      "isMagicalMechanics"
+    ]
+  },
+  {
+    "file": "magicSuppression.ts",
+    "line": 4,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "magicSuppression.ts",
+    "line": 5,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      "matchesWhen"
+    ]
+  },
+  {
+    "file": "projectileReflection.ts",
+    "line": 2,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "projectileReflection.ts",
+    "line": 3,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      "activeConditionsOf",
+      "matchesWhen"
+    ]
+  },
+  {
+    "file": "projectileReflection.ts",
+    "line": 4,
+    "module": "../engine/triggerChance",
+    "typeOnly": false,
+    "symbols": [
+      "triggerChance"
+    ]
+  },
+  {
+    "file": "projectileReflection.ts",
+    "line": 5,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "EngineEvent"
+    ]
+  },
+  {
+    "file": "recipientBindings.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      "ActiveEffectEntry"
+    ]
+  },
+  {
+    "file": "recipientBindings.ts",
+    "line": 3,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      "payloadsOf"
+    ]
+  },
+  {
+    "file": "recipientBindings.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      "matchesWhen"
+    ]
+  },
+  {
+    "file": "recipientBindings.ts",
+    "line": 5,
+    "module": "../engine/actionRequirements",
+    "typeOnly": false,
+    "symbols": [
+      "itemSourceRequirementIssue"
+    ]
+  },
+  {
+    "file": "worldMigration.ts",
+    "line": 1,
+    "module": "../engine/actionUses",
+    "typeOnly": false,
+    "symbols": [
+      "parseResourceRestRecovery"
+    ]
+  }
+]

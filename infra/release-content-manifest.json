@@ -1,0 +1,2179 @@
+{
+  "schemaVersion": 1,
+  "scope": "source-catalog-data",
+  "liveDatabase": false,
+  "rules": [
+    "backend: non-test .go, .json and .sql (conservative superset of all embedded seeds/migration data)",
+    "frontend/src and frontend/charges: .json data and .md raw rule documents",
+    "engine/data and officials/canon: .json, .sql, .yaml, .yml, .md and .txt catalog source",
+    "exclude hidden directories, node_modules, outputs, output, tmp, backups, dist, testdata, fixtures and test files; reject symlinks",
+    "hash UTF-8 text with CRLF normalized to LF, matching Git/Docker source checkout semantics; paths use forward slashes"
+  ],
+  "files": [
+    {
+      "path": "backend/ai_mechanics_controller.go",
+      "sha256": "sha256:f27efdf4a4c24e6d18e2b6f29deff0516da9a99bc8e1366a6f45791ba6d22de7",
+      "bytes": 9181
+    },
+    {
+      "path": "backend/animation_controller.go",
+      "sha256": "sha256:1fce4edfa6d0ef6fef1f15a87927136b8fc22b5d9c1428e0b24c0b7cd0086bb3",
+      "bytes": 2690
+    },
+    {
+      "path": "backend/animationpresentation/catalog.go",
+      "sha256": "sha256:9f939ee37f3b95faf88fa9500efe45c3dbe83266c99c3eae85a72482a8d7ebb7",
+      "bytes": 1055
+    },
+    {
+      "path": "backend/animationpresentation/catalog.json",
+      "sha256": "sha256:5c7a4cd75852344acc9acd8608261d7fdddd664fab4b6dceac0b57180aeeb73e",
+      "bytes": 151174
+    },
+    {
+      "path": "backend/audio_controller.go",
+      "sha256": "sha256:5898be4ebbb9553fbfc22d0a47f56831610004092cc020b23d5a30228af2a035",
+      "bytes": 5656
+    },
+    {
+      "path": "backend/audiopresentation/catalog.go",
+      "sha256": "sha256:dd43dd8e8325a08000cf4d6410df9c93bebb262bcdeacc85ee5263404cbbab9d",
+      "bytes": 4242
+    },
+    {
+      "path": "backend/audiopresentation/catalog.json",
+      "sha256": "sha256:5589d897fc366816de9812fcc67901da950bb537942cd25d632bc01f40e23443",
+      "bytes": 138701
+    },
+    {
+      "path": "backend/audiopresentation/music-provenance-v3.json",
+      "sha256": "sha256:d2454e4e1c207b72503ffb1524ccbcfea4a269fcd396a2bdf29b9faf54e7d938",
+      "bytes": 224220
+    },
+    {
+      "path": "backend/audiopresentation/music-provenance.json",
+      "sha256": "sha256:1e5d0fc3d83e9d5c3c0e077acf11b90373c1e17ad277f407d05fe919885c399b",
+      "bytes": 26321
+    },
+    {
+      "path": "backend/audiopresentation/provenance.json",
+      "sha256": "sha256:2f295f4eb785ed0a7b1a56a18183a47d539f79f3a4d6e75160e92660f72ea5f3",
+      "bytes": 83900
+    },
+    {
+      "path": "backend/auth_controller.go",
+      "sha256": "sha256:c965a3acae0b0daca5a6d37ece137cf03be8c89dc7ef8f098547d568b30eb38a",
+      "bytes": 7322
+    },
+    {
+      "path": "backend/auth_service.go",
+      "sha256": "sha256:8f9b24a5fa65b64efecf189c92efe2e9e5eafb9eca419a25d1dabbf0c85f392e",
+      "bytes": 9028
+    },
+    {
+      "path": "backend/build_info.go",
+      "sha256": "sha256:6a76292cd35478ea4377060e55930b310b42504fcac1648ddf1624cb879b61c0",
+      "bytes": 2942
+    },
+    {
+      "path": "backend/canonical_json.go",
+      "sha256": "sha256:55a88ba48fcc48c854dd1b4cb0aad16ea046cc454f8dd5d013df61030b48b395",
+      "bytes": 6696
+    },
+    {
+      "path": "backend/canonical_session_controller.go",
+      "sha256": "sha256:a355f61539cf44558816c26121c3de16c288eaeb1122328af265e58bb4daeb2b",
+      "bytes": 73127
+    },
+    {
+      "path": "backend/canonical_session_routes.go",
+      "sha256": "sha256:8e8af0433e0778c3a0b22ae90b9a6255c3e957141e8506369330d33543fc1189",
+      "bytes": 1163
+    },
+    {
+      "path": "backend/card_runtime_catalog.go",
+      "sha256": "sha256:6732481fe613ce22f367ca8ddbd7de6efb5d12d5d4cbdd288e8d556811e1d9fb",
+      "bytes": 2122
+    },
+    {
+      "path": "backend/catalog_group_order.go",
+      "sha256": "sha256:f2a8c5616f0f0a6e9429a0c83375ce1ebab8140b88fd001d9be933683b3963b4",
+      "bytes": 926
+    },
+    {
+      "path": "backend/character_capacity_reconciliation.go",
+      "sha256": "sha256:4e62ea90ed1b8fb28f707275fd9ee2ad79431b3cad9fa53671941c5285a470a7",
+      "bytes": 4653
+    },
+    {
+      "path": "backend/character_equipment_intent.go",
+      "sha256": "sha256:718be324f8daf9a951ff70c11ea844dc6f963a5e54a5ac97a97ace5c49f5d605",
+      "bytes": 21618
+    },
+    {
+      "path": "backend/character_event_validation.go",
+      "sha256": "sha256:57e40a66c4957cba8d957522c38b50af494f7654e5e9094b4d8465844b50c202",
+      "bytes": 21239
+    },
+    {
+      "path": "backend/character_item_sale.go",
+      "sha256": "sha256:b8831c10038acd687bff69115e21847f4b07470762f75b11daf32f34d245f52e",
+      "bytes": 5398
+    },
+    {
+      "path": "backend/character_preparation_cache.go",
+      "sha256": "sha256:92e9948fa3b15bd799208ffffe7ac8fba9f1bb354824cfa33b89ac1ea5a207cf",
+      "bytes": 12870
+    },
+    {
+      "path": "backend/character_preparation_flights.go",
+      "sha256": "sha256:870acf90b3af81a64e856764814cbbd0c7427228baf07b203d859abfb355975e",
+      "bytes": 2067
+    },
+    {
+      "path": "backend/character_runtime_command.go",
+      "sha256": "sha256:48aa4c9d1bf7449efb9874c28518882a7e790f81b02da0e1b34d7b6706f71ade",
+      "bytes": 25412
+    },
+    {
+      "path": "backend/character_spell_acquisition.go",
+      "sha256": "sha256:1e7a85e18f75e1c6171de5a0d1b2fa6e2b3d31529419fd91e922b6c3fc23ea46",
+      "bytes": 2913
+    },
+    {
+      "path": "backend/character_template_controller.go",
+      "sha256": "sha256:7abef0a2d1d8787c346dacbff973d42fa357b6e7e627464296d39244e673af46",
+      "bytes": 7678
+    },
+    {
+      "path": "backend/character_v3_controller.go",
+      "sha256": "sha256:5b7a6eddaf38a8bf9db66d394561260c6953b4782e4c38d46fff0864dacae9f3",
+      "bytes": 37260
+    },
+    {
+      "path": "backend/character_v3_routes.go",
+      "sha256": "sha256:7c8df65f7e1ae2cb23a3555c4f947b8b923ce06b9d2cecc3e67ebfec18f28c5b",
+      "bytes": 1689
+    },
+    {
+      "path": "backend/charactertemplates/presets.go",
+      "sha256": "sha256:4e4ae5a7162888793a4095c3ebf7fc51fa6a1918fba24392bf35d8a42908bbdc",
+      "bytes": 488
+    },
+    {
+      "path": "backend/charactertemplates/presets.json",
+      "sha256": "sha256:099be9fe5499d34db2d0173d6d467e6deacaef497c762ac1773e7e7b9eb7d4cb",
+      "bytes": 51956
+    },
+    {
+      "path": "backend/class_controller.go",
+      "sha256": "sha256:4e354dc3df07c8711f1e304ac1d643fc273f6fad4460ca9f8095ff86ec575bd2",
+      "bytes": 9649
+    },
+    {
+      "path": "backend/class_equipment_integrity.go",
+      "sha256": "sha256:f0982a4cb460b5a95ad12b6dc18d252525c6d457efef665e09a7672724dd02a0",
+      "bytes": 1886
+    },
+    {
+      "path": "backend/concept_controller.go",
+      "sha256": "sha256:21f88cd140bd646eae05116cb6d0c7a491db6e20f308ec7064f36b4ddcd20c6b",
+      "bytes": 5650
+    },
+    {
+      "path": "backend/config.go",
+      "sha256": "sha256:ce1c75db17ca89c7d5229180ecef733ba99b5a1ddb9b77c578465f999f32a13c",
+      "bytes": 2527
+    },
+    {
+      "path": "backend/content_choice_recommendations.go",
+      "sha256": "sha256:e653dadb93dced40637e598a0f7ee8222e5f9ae8172b28a52343a55cb9c73a84",
+      "bytes": 1673
+    },
+    {
+      "path": "backend/content_entity_permissions.go",
+      "sha256": "sha256:d428ac2b04169b096521afbde1ac40f0c65f2656213f6ae3a2677f8c6b7470ac",
+      "bytes": 4508
+    },
+    {
+      "path": "backend/content_image_controller.go",
+      "sha256": "sha256:7c2bf0d8bf0818ba06286fa696b49c7a9006f4dd015789a62afbba6ff123a90a",
+      "bytes": 4141
+    },
+    {
+      "path": "backend/content_mechanics_lock.go",
+      "sha256": "sha256:752b606b89f7784fd3dcb07e1108bd0dc00a95ee5f4a66f2524cf73f9f7f5da7",
+      "bytes": 514
+    },
+    {
+      "path": "backend/content_migration_controller.go",
+      "sha256": "sha256:f542216a740223588c2a78a662083d6bb9a552fff31381c213a7c35ad4e5482c",
+      "bytes": 39256
+    },
+    {
+      "path": "backend/content_migration_exact_update.go",
+      "sha256": "sha256:d4722abb50979ccb816bff5fd22ca21bbf616a15549f690c67fedb33c3d48d05",
+      "bytes": 17641
+    },
+    {
+      "path": "backend/content_review_controller.go",
+      "sha256": "sha256:261444d161ea58ca4f5cb06327a8acf49567903305eeccf43797f34608b039a2",
+      "bytes": 5567
+    },
+    {
+      "path": "backend/content_review_query.go",
+      "sha256": "sha256:97a9a57cebe22e899c9286327491dbca4d582ea6533a4d673a93711b0942d169",
+      "bytes": 3939
+    },
+    {
+      "path": "backend/content_support_batch_controller.go",
+      "sha256": "sha256:8d6dda53edd8d1e2ab1009bdc695128cc8bfcb39bc411bb3dc4bd9ab0d518d18",
+      "bytes": 11166
+    },
+    {
+      "path": "backend/content_support_controller.go",
+      "sha256": "sha256:f436cdcc2367c578ede835d85366b51322496b88ebd738272661014f459511f3",
+      "bytes": 15056
+    },
+    {
+      "path": "backend/controller.go",
+      "sha256": "sha256:725ed23f6a242574509700f1ce8eba1f097fafdbb72a1d20de4d85f0665c3fdb",
+      "bytes": 63851
+    },
+    {
+      "path": "backend/cors_config.go",
+      "sha256": "sha256:2ab5a6cf59fa514b36cbb75d6672a9e4b9220fb83831cfccc3e6c0a8305b780e",
+      "bytes": 1387
+    },
+    {
+      "path": "backend/deployment_entity_create_smoke.go",
+      "sha256": "sha256:7ea6002ba4c98ca9e3e69a3d6d3e3c9861c7ed64aab293878514c302b0a1377c",
+      "bytes": 7517
+    },
+    {
+      "path": "backend/effects_utils.go",
+      "sha256": "sha256:9bd020867c8241ebbe9e50bed9f5043502b6ce0c78fd0293de6de619510821e0",
+      "bytes": 9302
+    },
+    {
+      "path": "backend/encounter_apply_validation.go",
+      "sha256": "sha256:63582f5e34817c48d73e6dd2219ffa2aee6edd0b0aaef0d4222d0c93e53c8b49",
+      "bytes": 2035
+    },
+    {
+      "path": "backend/encounter_authorization.go",
+      "sha256": "sha256:b6d218747bc005ffd670fba7516441ac3a103e6ca6f0abaacbefb7ee0a7bf703",
+      "bytes": 22388
+    },
+    {
+      "path": "backend/encounter_controller.go",
+      "sha256": "sha256:0b2f6c12f4a5082cdc65083cb4bfd141ab16b19eaa2856037cbee940cb05fd4d",
+      "bytes": 33827
+    },
+    {
+      "path": "backend/encounter_invite.go",
+      "sha256": "sha256:f72faf0a8f57b0156466d2b52e229db855cb9ed783818a96f672998f026434e7",
+      "bytes": 6354
+    },
+    {
+      "path": "backend/entity_create_errors.go",
+      "sha256": "sha256:c648724fd3d25923d9e4330c7197899a86ef5fe723f61c90b1905e5013d591c3",
+      "bytes": 8031
+    },
+    {
+      "path": "backend/entity_references.go",
+      "sha256": "sha256:f0e46cd09e2aab6183ce50cf8c08d3699fb4a293f2ea36eee0ecbcc7808bb7d5",
+      "bytes": 15131
+    },
+    {
+      "path": "backend/entity_tags.go",
+      "sha256": "sha256:3bcf0ee1d1b1c31461f67c7d5888d47cfb1a56e8e3b04ab64d95b9ba7ae5b46d",
+      "bytes": 7249
+    },
+    {
+      "path": "backend/entity_tags_bulk.go",
+      "sha256": "sha256:f3cdde62873e4dcdaccf1272065cecce5780166ae1c7a52f073da7280ea16fa4",
+      "bytes": 4208
+    },
+    {
+      "path": "backend/feat_background_controller.go",
+      "sha256": "sha256:e1a487a7e74fdd7698745d717162effd14eeafcd9cd5c8f61846335d4da8efd0",
+      "bytes": 14979
+    },
+    {
+      "path": "backend/generated_image_service.go",
+      "sha256": "sha256:7b0452d3ee2578d37100fb2bced3b595bd748e9026583198f215bc8d294a5d7c",
+      "bytes": 8511
+    },
+    {
+      "path": "backend/generated_number.go",
+      "sha256": "sha256:ed4d279f10dd591f3c7ac617f730c7f30abf3a952807e4068ff6e45b93223a43",
+      "bytes": 1275
+    },
+    {
+      "path": "backend/group_controller.go",
+      "sha256": "sha256:e7997e3e428e5f9a0e0665c6672fb3550666569dd3397ea9bfbe8e2e3b7e4ce7",
+      "bytes": 8504
+    },
+    {
+      "path": "backend/image_controller.go",
+      "sha256": "sha256:b865be521dbeb37cacb54df7a75bf550ad9433e2e8a5302c0e622e6882f2e1cc",
+      "bytes": 25169
+    },
+    {
+      "path": "backend/image_errors.go",
+      "sha256": "sha256:465e71328a37651a5430736d0bd92bb307fecd7fafee62c3e3d2776ce6169748",
+      "bytes": 8005
+    },
+    {
+      "path": "backend/image_jobs.go",
+      "sha256": "sha256:1b45d5d4c63f521e3eeddca9a5869ab8d3befe44ecc974403b3470ed1d6a4a48",
+      "bytes": 13931
+    },
+    {
+      "path": "backend/image_library_controller.go",
+      "sha256": "sha256:44c8965ab2802f7436c09b7bad3813d09af786a42985fea648ec952142466756",
+      "bytes": 12670
+    },
+    {
+      "path": "backend/image_library_tags.go",
+      "sha256": "sha256:ec8676ecbf4084e89d4d50a0446e45d5e20142af88187f00b26fdc3f1d525b31",
+      "bytes": 4216
+    },
+    {
+      "path": "backend/inventory_controller.go",
+      "sha256": "sha256:0faf6102d34a23332758472aebc80cfe17a9384c5ec29346e86e31e49ca1f857",
+      "bytes": 18284
+    },
+    {
+      "path": "backend/item_attunement_capacity.go",
+      "sha256": "sha256:3ad596a742dda843ae54df9d873a68afec342b4ba18188c6ddcfdf4e566ca951",
+      "bytes": 2394
+    },
+    {
+      "path": "backend/item_equipment_policy.go",
+      "sha256": "sha256:93d783913c96f569a3a8e6fefeadecafed825856bca1d0bd2290d612f81f2b9d",
+      "bytes": 1267
+    },
+    {
+      "path": "backend/item_library_policy.go",
+      "sha256": "sha256:b78eb7cd215780c047a32e0e570a4e8e9754f8308d70a70106f328c3d24dfec9",
+      "bytes": 2035
+    },
+    {
+      "path": "backend/item_purchase_price.go",
+      "sha256": "sha256:fbb86f3f2508aa34b1cd4213a6f9391be5b45e45a80745f33ac404f96046df87",
+      "bytes": 2099
+    },
+    {
+      "path": "backend/itemsource/classifier.go",
+      "sha256": "sha256:8b5b84991d934ff87588cd8a98c2694d35aa7f635fede62885c7e599b16aca59",
+      "bytes": 5801
+    },
+    {
+      "path": "backend/itemsource/cmd/audit/main.go",
+      "sha256": "sha256:821bbf05d7ecaa0fc6d12f4fc4cf0c9626c2597df593b0cd5d247dcc41a00b2c",
+      "bytes": 3333
+    },
+    {
+      "path": "backend/itemsource/postgres.go",
+      "sha256": "sha256:dd5192250c62bc1918445fb9f1e178f2ac4ee1983c94befe0414a4bf6dc5d859",
+      "bytes": 2448
+    },
+    {
+      "path": "backend/itemsource/reviewed_equipment.v1.json",
+      "sha256": "sha256:1979f941f514cf3d3f8b1923b7caaefb1bcbc01e7f24a5650eb8fa85bcc2c349",
+      "bytes": 180533
+    },
+    {
+      "path": "backend/main.go",
+      "sha256": "sha256:82b9990a866dccd3de3214148a46eed45b3617e8f276524d76cd8fdad675a940",
+      "bytes": 25761
+    },
+    {
+      "path": "backend/middleware.go",
+      "sha256": "sha256:5a07011a3b01572c701b67f9b54aef92488b8d2d98cd5f609074a38d4c1f84c1",
+      "bytes": 6631
+    },
+    {
+      "path": "backend/migrations/account_admin_status_268.go",
+      "sha256": "sha256:15cfe2385594de244456c3eb92bc89a2c2123bfe0b453e72dbc73077d768cc27",
+      "bytes": 360
+    },
+    {
+      "path": "backend/migrations/add_attack_runtime_v4.go",
+      "sha256": "sha256:1aed83bc3beec072c1d83c575629ca4bbcbd50eb44a92e96bc3e0c2659ecbd65",
+      "bytes": 2145
+    },
+    {
+      "path": "backend/migrations/add_character_class_levels.go",
+      "sha256": "sha256:5af6859ea6efcd3b7856c6d6b4694ddd631ec1eb24d0c910c8089f05178d1aa4",
+      "bytes": 3124
+    },
+    {
+      "path": "backend/migrations/add_character_runtime_commands.go",
+      "sha256": "sha256:eba976acb08ead4b94aaaaf872f3995796d885f1805f030075d49b755aa69e64",
+      "bytes": 1928
+    },
+    {
+      "path": "backend/migrations/add_content_migration_receipts.go",
+      "sha256": "sha256:4fd5f7c40195eed0e6f7d23df98e7ae16256ee30efe2d81b38b3cf4dc4400e05",
+      "bytes": 2587
+    },
+    {
+      "path": "backend/migrations/add_multiclass_subclasses.go",
+      "sha256": "sha256:5dbd1cf4039f796bfc4d678819288b83e4ae5e56d1e7f14d467564db0e5b3a7e",
+      "bytes": 1152
+    },
+    {
+      "path": "backend/migrations/add_world_runtime_v5.go",
+      "sha256": "sha256:fae48ac4ceb2b2feac9a63dbfb7a237e46ea688a956a8989aebb48f26acd1a80",
+      "bytes": 36455
+    },
+    {
+      "path": "backend/migrations/align_certified_metadata_projection.go",
+      "sha256": "sha256:33a5b296da4b3a9f0974b84f26f983b063609450959d09fb96b79562756b110f",
+      "bytes": 4626
+    },
+    {
+      "path": "backend/migrations/align_ranged_weapon_action_declaration.go",
+      "sha256": "sha256:19b6cb9397450f024882ad5181a7adaba137cc57a608b1ef446e22b445e18953",
+      "bytes": 1549
+    },
+    {
+      "path": "backend/migrations/animation_286.go",
+      "sha256": "sha256:a5e88b4342e846f531e450e0ed3b62a5b3244624da55aa697fca9c919e6b663e",
+      "bytes": 1886
+    },
+    {
+      "path": "backend/migrations/animation_287.go",
+      "sha256": "sha256:d2200f2b201a18469014e448f12e27e2416391a124e21117ea5a6231120e77f7",
+      "bytes": 2775
+    },
+    {
+      "path": "backend/migrations/animation_287_catalog_delta.json",
+      "sha256": "sha256:afa92e8c9337159675366afcfc877ce91b05358471315dfbaf43cd79b150e283",
+      "bytes": 56242
+    },
+    {
+      "path": "backend/migrations/animation_288.go",
+      "sha256": "sha256:c5550fd5663151fea969f901bcaae8f56f8aff632bcebf6f3dc39595648b95a7",
+      "bytes": 1384
+    },
+    {
+      "path": "backend/migrations/animation_288_force_delta.json",
+      "sha256": "sha256:baec5ac2b9e9100c99cbd133c61f2dd2fe87afd3368183dfad17b5766e664258",
+      "bytes": 12327
+    },
+    {
+      "path": "backend/migrations/animation_290.go",
+      "sha256": "sha256:579ce9256becc3168abb53e13bc2d980153316c312d73aa8ab1c501ddcb24535",
+      "bytes": 1336
+    },
+    {
+      "path": "backend/migrations/animation_290_critical_profiles.json",
+      "sha256": "sha256:f7baff9cbfa36377d3f42347453d976a8f2dd9a3d7893bcb6d645f542526241c",
+      "bytes": 7289
+    },
+    {
+      "path": "backend/migrations/animation_292.go",
+      "sha256": "sha256:38ed42e1456b6450fc1b0943acf4b0174c6da843967a7424e8ab498b4e09163a",
+      "bytes": 1145
+    },
+    {
+      "path": "backend/migrations/animation_292_critical_spell_profiles.json",
+      "sha256": "sha256:f2085aefe97888c4bf8b0dd8109232a0fd98849bbb67378ec1cc3e6d52d333c0",
+      "bytes": 13703
+    },
+    {
+      "path": "backend/migrations/apply_disengage_runtime_effect.go",
+      "sha256": "sha256:6e4d55eea2b3805cf10b3f1d064e1a21abf0b4c99ea5a23ebbafad5347ed9cbb",
+      "bytes": 1310
+    },
+    {
+      "path": "backend/migrations/archer_template_251.go",
+      "sha256": "sha256:5894b0a4d20c3eeb3a4486c2d187b3310aad17c1a68cee1c58411123314d721b",
+      "bytes": 708
+    },
+    {
+      "path": "backend/migrations/audio_260.go",
+      "sha256": "sha256:3b4b35c7076d3b7a3550e5293f56eef4f91a51ea8a0c01c4df7ecda45345b1e5",
+      "bytes": 1887
+    },
+    {
+      "path": "backend/migrations/audio_260_seed.json",
+      "sha256": "sha256:5dee0dc43c557897fc21b7f542707c0045250bf4c022c2489a7d49449e35024f",
+      "bytes": 14137
+    },
+    {
+      "path": "backend/migrations/audio_289.go",
+      "sha256": "sha256:a6f232db1fd8e85e5f4537620aba7af28196debf29f107d0a8d061f4a8e32e8e",
+      "bytes": 3123
+    },
+    {
+      "path": "backend/migrations/audio_289_seed.json",
+      "sha256": "sha256:9c1a820dc34bd7dbb2d6dca26761b1e97b53516c7a11d3dd874e446f22aa8b20",
+      "bytes": 138650
+    },
+    {
+      "path": "backend/migrations/audio_291.go",
+      "sha256": "sha256:d5d7e97f00a4c59e6350325301b4fcc52ceb4f9b50981c1ffc57103ab622e5e7",
+      "bytes": 3422
+    },
+    {
+      "path": "backend/migrations/audio_291_seed.json",
+      "sha256": "sha256:4c38ae6057bdf9868994992f6fefda1003713981d4aeb5da76d8724879d6d029",
+      "bytes": 6511
+    },
+    {
+      "path": "backend/migrations/battle_master_ambush_221.go",
+      "sha256": "sha256:f938b1c0c25e1cb8cfd71f749e87eebaad9d1bd95cf8e705fc8bc59f330fb513",
+      "bytes": 2961
+    },
+    {
+      "path": "backend/migrations/battle_master_bait_switch_226.go",
+      "sha256": "sha256:beae7a0e9bf5bdd91b01c3b568941b5ab2f997cda5abf8b7bfdb7c2e037cc012",
+      "bytes": 3371
+    },
+    {
+      "path": "backend/migrations/battle_master_checks_220.go",
+      "sha256": "sha256:2c199640a9360a9b10aa98a61dafa929b17ccb06cf3ea8f405ddca3adb39b13e",
+      "bytes": 3928
+    },
+    {
+      "path": "backend/migrations/battle_master_choices_214.go",
+      "sha256": "sha256:8ef30218f20f6e09d346daa4a940ee4e277f3b9d0cb766b1073557d1684f6218",
+      "bytes": 1461
+    },
+    {
+      "path": "backend/migrations/battle_master_commander_227.go",
+      "sha256": "sha256:3958f2f63bf5159d7153fff669d5b29aa09e2a9faeafae9556b669cdb330cf4b",
+      "bytes": 3066
+    },
+    {
+      "path": "backend/migrations/battle_master_disarming_229.go",
+      "sha256": "sha256:a4e0e14d6483606f16187857ed5da49e70cb8944b6e5b3f85262a0e364dcc90d",
+      "bytes": 3712
+    },
+    {
+      "path": "backend/migrations/battle_master_distracting_215.go",
+      "sha256": "sha256:cf7acf524fabff3eb8cfb85f2669413aa52f54943c3edeb6c89d771c3a7c109f",
+      "bytes": 2896
+    },
+    {
+      "path": "backend/migrations/battle_master_evasive_210.go",
+      "sha256": "sha256:22589bb84b81045436e31c118ca7349cd746d6480ce7f86f2c29bf7485bb835f",
+      "bytes": 3008
+    },
+    {
+      "path": "backend/migrations/battle_master_feint_219.go",
+      "sha256": "sha256:929bf3738778b781720f5ed48e6cb53158256a58a4fb24ccefbb6fc040d2dfc9",
+      "bytes": 3103
+    },
+    {
+      "path": "backend/migrations/battle_master_foundations_209.go",
+      "sha256": "sha256:e5cdf680283511a1b6d7b88443a38373b321bb8ccc399fd883ee2db69a9d9274",
+      "bytes": 3334
+    },
+    {
+      "path": "backend/migrations/battle_master_goading_213.go",
+      "sha256": "sha256:2a25c6441b88f55a22dd3e798a5e7f021e01714e304b6fc27d5e2e9ac28ce8b4",
+      "bytes": 2398
+    },
+    {
+      "path": "backend/migrations/battle_master_lunging_223.go",
+      "sha256": "sha256:083e6023d0f5dc09cc99e3dc4dc624a84efc8e313dd609b52963df55bc9b846f",
+      "bytes": 2747
+    },
+    {
+      "path": "backend/migrations/battle_master_maneuvering_228.go",
+      "sha256": "sha256:6b63ef1283bbd44a2f32d47a0be328de594e258770ee5edabbe2217bc3af9bcb",
+      "bytes": 2825
+    },
+    {
+      "path": "backend/migrations/battle_master_menacing_211.go",
+      "sha256": "sha256:67b7dfcecf81b6840a4e9f09fc8df692c05c5dd878dc2e5bf730ef10053848ed",
+      "bytes": 2188
+    },
+    {
+      "path": "backend/migrations/battle_master_parry_216.go",
+      "sha256": "sha256:2a2021d3101ddb7288c95635daf080c5a15e5981f7827ab245af522d6f34cda1",
+      "bytes": 2607
+    },
+    {
+      "path": "backend/migrations/battle_master_precision_222.go",
+      "sha256": "sha256:3cbb8c172735ec6bf6f16467896c04b63574688281a6ad7ddbaa8f36ff3bbeb2",
+      "bytes": 2518
+    },
+    {
+      "path": "backend/migrations/battle_master_pushing_218.go",
+      "sha256": "sha256:6bd10373a3d6e7140e69273165cb5f5f50660a137e65acef9655dbe0e9eafe51",
+      "bytes": 3477
+    },
+    {
+      "path": "backend/migrations/battle_master_rally_217.go",
+      "sha256": "sha256:97d7136a8235539a6d7cf07f3747ff2d49b8bacd37d5ce36c5b1375cbe26d403",
+      "bytes": 2491
+    },
+    {
+      "path": "backend/migrations/battle_master_riposte_225.go",
+      "sha256": "sha256:742195465779879f35e883901631ccd3ee436897b23ab9a39c5cf4a62a10a540",
+      "bytes": 2844
+    },
+    {
+      "path": "backend/migrations/battle_master_sweeping_224.go",
+      "sha256": "sha256:d8cae212923a1762452e3ac28919db88e4e2f3c80805bb95cd90efa5828b3515",
+      "bytes": 2878
+    },
+    {
+      "path": "backend/migrations/battle_master_trip_212.go",
+      "sha256": "sha256:59cb8ab491cc6510daa3363d9d28c742319a9a9560a8962c245d885578194e53",
+      "bytes": 2283
+    },
+    {
+      "path": "backend/migrations/bugbear_grab_248.go",
+      "sha256": "sha256:701dbf125459b982a3d61c5fa664051f8d92851044ac01614ca4c97107b3c9ed",
+      "bytes": 3518
+    },
+    {
+      "path": "backend/migrations/card_price_contract_261.go",
+      "sha256": "sha256:32a62f8023c7c4fed665f11774b604d54ab491660174eec6fbd71a0996973934",
+      "bytes": 1150
+    },
+    {
+      "path": "backend/migrations/catalog_completion_279.go",
+      "sha256": "sha256:10c7d10b84d9625dcc75a973f2f13c1237c0478b1165368522389a378997cf62",
+      "bytes": 995
+    },
+    {
+      "path": "backend/migrations/catalog_mechanics_278.go",
+      "sha256": "sha256:683dc139ed609fe363a4d558d66d5869c521ac8c144e2cfc73dca50b240cd9c1",
+      "bytes": 21043
+    },
+    {
+      "path": "backend/migrations/catalog_variants_280.go",
+      "sha256": "sha256:e0ffa9b19f23afd83cbae7485be4fe23a9b83c99104f9da7ff3a8a0fc1a12d3f",
+      "bytes": 997
+    },
+    {
+      "path": "backend/migrations/certified_mutable_metadata_fields.v1.json",
+      "sha256": "sha256:1eac63df5ae3bdb8cc10c9d1db4212863ba31b4b67221a62dc2d8b8464dd45c4",
+      "bytes": 572
+    },
+    {
+      "path": "backend/migrations/certify_level_two_classes.go",
+      "sha256": "sha256:4daafb449dc0b8825e7cecae5a2626bf55f1d2798710069cdbdd0915c3790bfe",
+      "bytes": 5399
+    },
+    {
+      "path": "backend/migrations/certify_micro_micro_content.go",
+      "sha256": "sha256:ae47b4a9b1427ab265ef318344293da22ff1e6441fec2cceb7aab83582952622",
+      "bytes": 12377
+    },
+    {
+      "path": "backend/migrations/certify_micro_micro_qa_fixes.go",
+      "sha256": "sha256:44f150570b7851e121b3bae764478c2dea0d86ebb847a1f40be8356a6b326ad8",
+      "bytes": 8400
+    },
+    {
+      "path": "backend/migrations/champion_critical_movement_208.go",
+      "sha256": "sha256:d3eb53f25ce4428632ea6a6ffb7fa1c4f32062cdebde4f4ccc0935e103bbad99",
+      "bytes": 2554
+    },
+    {
+      "path": "backend/migrations/character_event_idempotency.go",
+      "sha256": "sha256:f7e59d1a533a3932d416a5bfba96012ac81fe5d7f57b3387487d8677aca9975d",
+      "bytes": 865
+    },
+    {
+      "path": "backend/migrations/character_templates_250.go",
+      "sha256": "sha256:7dcaf78faeae156325d0b8783c1f93560b85e3cc767fb6eb51c5ab508c293a3d",
+      "bytes": 1523
+    },
+    {
+      "path": "backend/migrations/clarify_general_feat_effect_cards.go",
+      "sha256": "sha256:a2fd6cb2a637cbe79f603c0a2aa44606a0f3ed39c75888ea855b5f2f8e9a7f67",
+      "bytes": 3614
+    },
+    {
+      "path": "backend/migrations/combat_spell_repairs_293.go",
+      "sha256": "sha256:619e331237536d5a3e563ffc8352dc3cb85bce10048be6c31f239f8ab6cb57cd",
+      "bytes": 11562
+    },
+    {
+      "path": "backend/migrations/combat_spell_repairs_293_manifest.json",
+      "sha256": "sha256:c814ab136833910476f9f96825df561609815096137767e133f95ea72ba096f3",
+      "bytes": 10208
+    },
+    {
+      "path": "backend/migrations/compact_receipts_298.go",
+      "sha256": "sha256:0a789ad4f566b0c2806c806bfc8ee896b06ba9421e71c0090c64d6e00370f7a6",
+      "bytes": 1434
+    },
+    {
+      "path": "backend/migrations/content_entity_authorship_267.go",
+      "sha256": "sha256:80c7cf1d3f12e25f42d6f72e62d3c4625184d7864b2c0ad0fe458aa963d5ccdd",
+      "bytes": 1001
+    },
+    {
+      "path": "backend/migrations/create_canonical_runtime.go",
+      "sha256": "sha256:eab07afd4680e61b00da596d3572b47bc8e83201fe37e0be373a27175dd27bac",
+      "bytes": 33964
+    },
+    {
+      "path": "backend/migrations/create_roguelike_runs_198.go",
+      "sha256": "sha256:c29c9526641126cc134f2e93c1e891e99623e8651f0c57ffce077656f171047f",
+      "bytes": 2849
+    },
+    {
+      "path": "backend/migrations/dash_movement_243.go",
+      "sha256": "sha256:3df973f014efed12046cad249de36e8e7525b177de577aff02359e39c7f89bc1",
+      "bytes": 1789
+    },
+    {
+      "path": "backend/migrations/data/catalog-audit-20260929/feats.json",
+      "sha256": "sha256:09470686d0ddb946a38e6e2f398ae51d45ee6fd2b0758a5a9b32b012d68d4a42",
+      "bytes": 722194
+    },
+    {
+      "path": "backend/migrations/data/catalog-audit-20260929/item-influences.json",
+      "sha256": "sha256:daa4e647bcb959cdfb5188ffb3c2ed1d3bcd0bf167aa5dd8104bc941d3ca9cec",
+      "bytes": 43852
+    },
+    {
+      "path": "backend/migrations/data/catalog-audit-20260929/items.json",
+      "sha256": "sha256:e1b352e4f009f3cd330a7944ba0c1bc9d40e325eed31e33914bc952159997857",
+      "bytes": 2459653
+    },
+    {
+      "path": "backend/migrations/data/catalog-audit-20260929/spells.json",
+      "sha256": "sha256:4bb1192d1cbfb578741c993661ccab959ec0048eff68e093d919e4e4dba4b281",
+      "bytes": 2540835
+    },
+    {
+      "path": "backend/migrations/data/catalog-variants-280/entities.json",
+      "sha256": "sha256:ef94f4f11cbdddc74aa9c3f5b0a78993190f7796d2d03984eebf72ea8da4563e",
+      "bytes": 1005586
+    },
+    {
+      "path": "backend/migrations/data/item-completion-279/items.json",
+      "sha256": "sha256:e31c2d0bdd81027bae1508174d35130d61f8e4bf077ec6db55a290c57e131bc5",
+      "bytes": 8335155
+    },
+    {
+      "path": "backend/migrations/deduplicate_goliath_ancestry.go",
+      "sha256": "sha256:03a2c1c9e2ed598513b259498d21b67698422c6fbddaf16e23ebbcce0c43c769",
+      "bytes": 3242
+    },
+    {
+      "path": "backend/migrations/effect_classification_278.go",
+      "sha256": "sha256:32d3d59578aa8f80be6ce808deb7b813d401347659c91e08a61992cab358a4ad",
+      "bytes": 8715
+    },
+    {
+      "path": "backend/migrations/effect_classification_278_manifest.json",
+      "sha256": "sha256:e031dad90de0404c19ff7b9ac820c4c2a4b98075f13e43dbe5266cd3e9929d60",
+      "bytes": 252597
+    },
+    {
+      "path": "backend/migrations/effect_classification_285.go",
+      "sha256": "sha256:a3cfc0b36cd77c182284eb7f58ec83eea94f68e1d702741671cfd1779022a8e4",
+      "bytes": 5884
+    },
+    {
+      "path": "backend/migrations/effect_classification_285_manifest.json",
+      "sha256": "sha256:63389e35b5fc157ed6fa0793fe08dbb354e7e3022d52a26d90d0314f044b93bc",
+      "bytes": 76380
+    },
+    {
+      "path": "backend/migrations/eldritch_knight_casting_236.go",
+      "sha256": "sha256:05115069c5da23f74b4b6543a2585c19b51e0df712efc11e8a405ccfb795f1bc",
+      "bytes": 1752
+    },
+    {
+      "path": "backend/migrations/eldritch_knight_replacement_237.go",
+      "sha256": "sha256:ef7da8becbf64e62fa8bb942c642c6f4af12e3663bed0c39df8a749238676f80",
+      "bytes": 480
+    },
+    {
+      "path": "backend/migrations/entity_reference_coverage_284.go",
+      "sha256": "sha256:5f02202e3a8f362a69d2059dc11b1917c81bf93cdd02e00968a87c6af11d6922",
+      "bytes": 1437
+    },
+    {
+      "path": "backend/migrations/entity_reference_coverage_284.sql",
+      "sha256": "sha256:25f628dc3837689ece3fef8d18a03f275fcd022fbf9ac009d108a932cbcf7234",
+      "bytes": 13386
+    },
+    {
+      "path": "backend/migrations/entity_reference_levels_279.go",
+      "sha256": "sha256:936df0a2f27d2ec8b68b29a207e0a9845466a7349bcd2dde15bf934349c26066",
+      "bytes": 916
+    },
+    {
+      "path": "backend/migrations/entity_reference_levels_279.sql",
+      "sha256": "sha256:0f0346702a53ce1e87b8c22f3750b3ad8daceab92b2adcd123899a6201e02a8f",
+      "bytes": 1445
+    },
+    {
+      "path": "backend/migrations/entity_references_277.go",
+      "sha256": "sha256:3e8fa49a6beb806f701b99e0d61f07635ebe104b0a31ae5c6e6a4cf897350e1d",
+      "bytes": 1519
+    },
+    {
+      "path": "backend/migrations/entity_references_277.sql",
+      "sha256": "sha256:043d613a7aea94aa2444b46b1dafb5573c50a5e5e921bcbd5d33247649694d83",
+      "bytes": 16222
+    },
+    {
+      "path": "backend/migrations/entity_tags_258.go",
+      "sha256": "sha256:c836c8a51db34a607b54e21cae25602e03f9bc33bad9943bf0fb5cbb175cee29",
+      "bytes": 7345
+    },
+    {
+      "path": "backend/migrations/entity_tags_258_seed.json",
+      "sha256": "sha256:afe1bec1adfda75c829c2fc085a376a15e6e9fe22845689fc8d19870c92e1d51",
+      "bytes": 5842
+    },
+    {
+      "path": "backend/migrations/fighter_style_replacement_241.go",
+      "sha256": "sha256:1590a94239c4c726da5c25d02859248feb296c0ec8369202ecc2a5a60f032059",
+      "bytes": 1474
+    },
+    {
+      "path": "backend/migrations/fighter_tactical_mind_242.go",
+      "sha256": "sha256:1ca13cdd31e78b73c54d23280b7010a97c6f3f3888355675d7d46cd3b74c82ee",
+      "bytes": 1296
+    },
+    {
+      "path": "backend/migrations/fighter_tactical_shift_207.go",
+      "sha256": "sha256:60b2f9181c393bb631a13c4e3be0060ed6ab37696ed4c422be8aef18e16848b6",
+      "bytes": 1055
+    },
+    {
+      "path": "backend/migrations/fill_runtime_effect_icons.go",
+      "sha256": "sha256:10410561c42279e159d58be1973fae4ed9366b54ceaf0cf750eed8b0c739a390",
+      "bytes": 1357
+    },
+    {
+      "path": "backend/migrations/frozen_catalogs_299.go",
+      "sha256": "sha256:a0a915749feaa3c14f2568e77d7127fb00104e04762549933eb0130291fb9887",
+      "bytes": 1814
+    },
+    {
+      "path": "backend/migrations/generic_spell_freeuses_297.go",
+      "sha256": "sha256:a43f488b3a85e2d879cc154c0295c77dd838b3f964e5aa6fab9f6f9f8ed21224",
+      "bytes": 10987
+    },
+    {
+      "path": "backend/migrations/generic_spell_freeuses_297_manifest.json",
+      "sha256": "sha256:2926f0264534669439bfd8219fea445274d373667bca8b8819d920f1d3fb64a5",
+      "bytes": 301506
+    },
+    {
+      "path": "backend/migrations/giant_wolf_spider_movement_246.go",
+      "sha256": "sha256:8fb7a2f36508a6be89654af37f43bf09f7665cf7561ae9dffd2eafc563f9f4a3",
+      "bytes": 1881
+    },
+    {
+      "path": "backend/migrations/glossary_257.go",
+      "sha256": "sha256:0a77c9fcbbb575388794a842cce69da16e7aec09604d46e1f53bfc3d62bb5973",
+      "bytes": 1142
+    },
+    {
+      "path": "backend/migrations/glossary_257.json",
+      "sha256": "sha256:acdc754b7a834695103d635feab62863dbb2d7297e8e9228b9b4fa5c9b267d34",
+      "bytes": 153910
+    },
+    {
+      "path": "backend/migrations/goblin_nimble_escape_245.go",
+      "sha256": "sha256:2aceca7527df5d1b7c729e7d41ffe7023d2fc56054f72ba929829f1f9d9f2a7d",
+      "bytes": 5409
+    },
+    {
+      "path": "backend/migrations/harden_canonical_transport.go",
+      "sha256": "sha256:03e175bf57ce9bb322473e26f29228e072fc7e347e9bbe83a5da489140ebc7ce",
+      "bytes": 10818
+    },
+    {
+      "path": "backend/migrations/harden_level_five_runtime.go",
+      "sha256": "sha256:1278b50c618a840f9a4bdb0a38f3ec3027daae45b29c4ebe30a660ee254a0f24",
+      "bytes": 9605
+    },
+    {
+      "path": "backend/migrations/hide_action_244.go",
+      "sha256": "sha256:2a59a677ff0838d8b10cfc8b3fae3d896ac65d002ba22a51fc6743093159bd20",
+      "bytes": 4406
+    },
+    {
+      "path": "backend/migrations/image_jobs_300.go",
+      "sha256": "sha256:36a1c567eee001cfbdc67bf9fd3caea300419fa02d60393a9f2d51d5d002db69",
+      "bytes": 1130
+    },
+    {
+      "path": "backend/migrations/inherit_lineage_source.go",
+      "sha256": "sha256:4b3ca345660087b83ce3135965acec6fc93b448b010969fb9f9d27e108b53d90",
+      "bytes": 771
+    },
+    {
+      "path": "backend/migrations/item_source_classification_262.go",
+      "sha256": "sha256:bd6ba27d4fedf355d676560eb48b32a90450959ca99fa1c7bc57406436478ab1",
+      "bytes": 5534
+    },
+    {
+      "path": "backend/migrations/lock_certified_content_mechanics.go",
+      "sha256": "sha256:c3a6bf9fbc84d08894e968dbb5734c878fa07a76405e83edc889b27067c92233",
+      "bytes": 2189
+    },
+    {
+      "path": "backend/migrations/manual_content_review_274.go",
+      "sha256": "sha256:777222763c50246a0311402e79532fcfd70f9e54d62af7b820feb6e9730acb40",
+      "bytes": 3344
+    },
+    {
+      "path": "backend/migrations/manual_content_review_status_277.go",
+      "sha256": "sha256:01e82872331a96073e21ba3e4b1a8276da450bac74a23439e6792123a73e70b7",
+      "bytes": 1386
+    },
+    {
+      "path": "backend/migrations/martial_classes_256.go",
+      "sha256": "sha256:fd121e06f9c6895717c3e735f97ec1287446b4490c869d944d5fcb4faf224a97",
+      "bytes": 7028
+    },
+    {
+      "path": "backend/migrations/materialize_base_equipment_2024.go",
+      "sha256": "sha256:19f9cea41cd669bc3e640da7ed4c5b6a59d5c806942cd93f74e45f77b319340c",
+      "bytes": 30641
+    },
+    {
+      "path": "backend/migrations/materialize_combat_areas.go",
+      "sha256": "sha256:2ada3853ea60b971dfef6ffa0f7ed505cafb8b1c6db4616efc58a7008f2ae41a",
+      "bytes": 10770
+    },
+    {
+      "path": "backend/migrations/materialize_condition_library_icons.go",
+      "sha256": "sha256:60dbe78da6e6395e55aa5891a38d53079de4c0f788d1720bc73adbc8c748064f",
+      "bytes": 2100
+    },
+    {
+      "path": "backend/migrations/materialize_d20_interrupts_184.go",
+      "sha256": "sha256:5e1a1153f735b5bd53051d4e0d44b7129bd8169aa09569b08b3b084fbab60aa7",
+      "bytes": 3805
+    },
+    {
+      "path": "backend/migrations/materialize_general_feat_signatures.go",
+      "sha256": "sha256:9d5f1beefc845de608c7d673bd5f020979e8097d4721fc9b617b96cbfdaf7fa6",
+      "bytes": 21206
+    },
+    {
+      "path": "backend/migrations/materialize_general_spell_feat_signatures.go",
+      "sha256": "sha256:98f496c97454d416095b13352cc1476114b0a75e2f4cf62e0fa5ebe2201be3eb",
+      "bytes": 22118
+    },
+    {
+      "path": "backend/migrations/materialize_level_five_progression.go",
+      "sha256": "sha256:090fe6093c0462b3a712f57c2d21438ac577427d909ac37b80efd0ada01b0582",
+      "bytes": 53160
+    },
+    {
+      "path": "backend/migrations/materialize_level_five_spells.go",
+      "sha256": "sha256:afa7e79ebe51702223c888ee2c9f4106b604d498b2441f9a8569deeb36ec5e39",
+      "bytes": 47969
+    },
+    {
+      "path": "backend/migrations/materialize_level_four_general_feats.go",
+      "sha256": "sha256:83dbbb149bbe9a00d59a1a65735d8cb59c30a3228e1b1fda723b5135b6bbb335",
+      "bytes": 7013
+    },
+    {
+      "path": "backend/migrations/materialize_level_three_core.go",
+      "sha256": "sha256:2da40e3c2afb6af14ac28d3fa896b09ca8bb5d0e6270d540e1fd63a53f6968a0",
+      "bytes": 13004
+    },
+    {
+      "path": "backend/migrations/materialize_level_two_class_features.go",
+      "sha256": "sha256:ec9b716a648026e29add799eb95cdc19b73f14506a7295a3fb007ff870a877f8",
+      "bytes": 33820
+    },
+    {
+      "path": "backend/migrations/materialize_mini_mvp_runtime_effects.go",
+      "sha256": "sha256:edaee7515bce5afcc2bcb4a67f07e4b1459f6bf5194d460ecf512c437a543ae7",
+      "bytes": 11969
+    },
+    {
+      "path": "backend/migrations/materialize_mobile_emanations_196.go",
+      "sha256": "sha256:62df766901a00b6d12e6a368ad14eac2ed336d727d3c73f9d058874ac405d430",
+      "bytes": 4828
+    },
+    {
+      "path": "backend/migrations/materialize_owned_summons_195.go",
+      "sha256": "sha256:e64cc293eafcc1ae251269a83adabd4543cefa7d2fe33dd891a70caad7539242",
+      "bytes": 3750
+    },
+    {
+      "path": "backend/migrations/materialize_polymorphed_condition.go",
+      "sha256": "sha256:4d7b749bd05fc16b8544ca0268b1531769ef104bfa91be42c7b83c05e4b93a6a",
+      "bytes": 4301
+    },
+    {
+      "path": "backend/migrations/materialize_remaining_level_five_general_feats_187.go",
+      "sha256": "sha256:d8162ac75fa3a6d81e4ab3dc18279a4200d0ce924f30dc70775ef04a6529a079",
+      "bytes": 7479
+    },
+    {
+      "path": "backend/migrations/materialize_roguelike_monsters_199.go",
+      "sha256": "sha256:ed715db7342830dbd3e0e4c567eb3dfb6d23c7b81d72005879fac40eeea4939f",
+      "bytes": 19664
+    },
+    {
+      "path": "backend/migrations/materialize_runtime_boons_and_acid_splash_area.go",
+      "sha256": "sha256:bbcd7b12eb01c00107fbda26640c98bf7974fdc650fa10f08e12d326f8c249ed",
+      "bytes": 7542
+    },
+    {
+      "path": "backend/migrations/materialize_warlock_invocations_180.go",
+      "sha256": "sha256:9d15cc7262a0eced76f7ca933e2242a571f57e21d008f29da283d032d07dc71c",
+      "bytes": 9262
+    },
+    {
+      "path": "backend/migrations/materialize_wizard_memorize_spell_188.go",
+      "sha256": "sha256:90d58ce705fb486e3513b45a20ad3f9afd3efc4641b92cc1c095a57b7a75571d",
+      "bytes": 1940
+    },
+    {
+      "path": "backend/migrations/merchant_copper_259.go",
+      "sha256": "sha256:9de38a0577e7949be395110af9bf0c0e9a608feb55c95e5eece6a584b81205a2",
+      "bytes": 2267
+    },
+    {
+      "path": "backend/migrations/migration.go",
+      "sha256": "sha256:6f2918caca88354e6142e36957659a3d5b386b062e98fd082de265703a154589",
+      "bytes": 4351
+    },
+    {
+      "path": "backend/migrations/migrations.go",
+      "sha256": "sha256:7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+      "bytes": 230745
+    },
+    {
+      "path": "backend/migrations/monster_weapon_loadouts_247.go",
+      "sha256": "sha256:a0ea0d2df6ef4a4ba9ea558ff77a4dad58d50cbed0ed6eb66125f8e81a31ff81",
+      "bytes": 3987
+    },
+    {
+      "path": "backend/migrations/normalize_goliath_ancestry.go",
+      "sha256": "sha256:cf5a0542e01dd7c7fdf3a71c2b7a2492aa5670ff6f48dd4fe9c36dd2aed28ab1",
+      "bytes": 6912
+    },
+    {
+      "path": "backend/migrations/normalize_live_happy_path_content.go",
+      "sha256": "sha256:945a716ed35b4031d9ef3961a83aa239d8ea01e18e1aadc68647169b77ebb6bb",
+      "bytes": 10213
+    },
+    {
+      "path": "backend/migrations/normalize_spell_targeting_ranges.go",
+      "sha256": "sha256:2c40c64f63ba736fd5703120267e4a7167847a39a2bab4e7f2cd642fc094a444",
+      "bytes": 4891
+    },
+    {
+      "path": "backend/migrations/oauth_263.go",
+      "sha256": "sha256:b1223b95e25110c402bfb6418148335e0159d1996589962ba4cfd612de0bc18b",
+      "bytes": 1927
+    },
+    {
+      "path": "backend/migrations/owned_item_grants_265.go",
+      "sha256": "sha256:a7476490a57283a638d014ffffc2221f4e9e8f836ef28e9052287f535609e23c",
+      "bytes": 2964
+    },
+    {
+      "path": "backend/migrations/paper_document_trash_266.go",
+      "sha256": "sha256:edd9e9541c9052741a25648176284f5d12bd2f47f0540074d5be2f2ecae8833a",
+      "bytes": 484
+    },
+    {
+      "path": "backend/migrations/paper_documents_264.go",
+      "sha256": "sha256:34311e2a0ce693c87de9499c1f9cd26ea4e6d701ac93c781c518c828b5df1ed8",
+      "bytes": 792
+    },
+    {
+      "path": "backend/migrations/party_potion_targets_255.go",
+      "sha256": "sha256:ace2cedb6afe5848f6438b487862453e6280fec4d60e8aa13a79cc909f407071",
+      "bytes": 997
+    },
+    {
+      "path": "backend/migrations/passive_presentations_253.go",
+      "sha256": "sha256:410f5da8848b48fdf59ac87d13be010aad33b2cdcd6b556478d52eb91a94e58b",
+      "bytes": 1075
+    },
+    {
+      "path": "backend/migrations/psi_warrior_foundations_230.go",
+      "sha256": "sha256:81703c017b7862f1082c0ea50e26fd61129e663ba59ebc09f9bc42b25b6c0e26",
+      "bytes": 3432
+    },
+    {
+      "path": "backend/migrations/psi_warrior_hands_235.go",
+      "sha256": "sha256:b313b0cf97feb77aad5fb99f1e91cb9bf9148c60c577940b5ce1f56be17e0f74",
+      "bytes": 833
+    },
+    {
+      "path": "backend/migrations/psi_warrior_movement_233.go",
+      "sha256": "sha256:7f1ddcf688166a6cafe6521607185808dcd0b09183334d4985639fd2cbb39395",
+      "bytes": 4090
+    },
+    {
+      "path": "backend/migrations/psi_warrior_objects_234.go",
+      "sha256": "sha256:2b02009e62d8d5eb0b3749bd55695fb3878c371056eaed8621137ec792338b53",
+      "bytes": 1023
+    },
+    {
+      "path": "backend/migrations/psi_warrior_protective_field_232.go",
+      "sha256": "sha256:d760c6c30d3313484aca4051689985695ffb1c215bae4e21954a9d5dd71568a3",
+      "bytes": 2181
+    },
+    {
+      "path": "backend/migrations/psi_warrior_strike_231.go",
+      "sha256": "sha256:9716cb07cf9d649ed945d5a50a13a32d1362ee771200528479a3d5a0ac2ed0a4",
+      "bytes": 2291
+    },
+    {
+      "path": "backend/migrations/readable_catalog_270.go",
+      "sha256": "sha256:c0886d64d6190f5104ae6acddead46f6d9e19ff13663f6ea24fd549039174de9",
+      "bytes": 2581
+    },
+    {
+      "path": "backend/migrations/readable_catalog_270.json",
+      "sha256": "sha256:c7c75a8b7357a97f142d5157e59a05228a3172e921eb6f9779cb80c29bd02bf6",
+      "bytes": 2546745
+    },
+    {
+      "path": "backend/migrations/readable_catalog_271.go",
+      "sha256": "sha256:5b0ad0cd616747533cb0bebdc0844e652a94ad9ed93529a85b50021bdd34a304",
+      "bytes": 384
+    },
+    {
+      "path": "backend/migrations/readable_catalog_271.json",
+      "sha256": "sha256:e90807556ace87db3e6c2999e1dfe1c39a6094d8bc3c2e139215d0dbfcf744b3",
+      "bytes": 383370
+    },
+    {
+      "path": "backend/migrations/readable_catalog_272.go",
+      "sha256": "sha256:f45ff911e96f87fbc5c124be11557064a52741dd7d18395df0564369a96e86c1",
+      "bytes": 398
+    },
+    {
+      "path": "backend/migrations/readable_catalog_272.json",
+      "sha256": "sha256:c7ac7389113b1328528ccce11618321a03895581b1c35f238cbdc0da9925b78e",
+      "bytes": 244671
+    },
+    {
+      "path": "backend/migrations/reapply_level_two_runtime_contracts.go",
+      "sha256": "sha256:c1c77eda2f8bd7d327d25dd950dcd512b526e65f02750357db709bedd471f309",
+      "bytes": 667
+    },
+    {
+      "path": "backend/migrations/refresh_transitive_micro_micro_certifications.go",
+      "sha256": "sha256:72299a70edab96d12cab0c1275474955b9f0811503a94a75836e45da10e202a2",
+      "bytes": 2903
+    },
+    {
+      "path": "backend/migrations/release_additive.go",
+      "sha256": "sha256:c6a5729c6cd44880d8c49a89b21eb1b803517d03ce9ece883590203cde65d2ee",
+      "bytes": 13241
+    },
+    {
+      "path": "backend/migrations/release_schema_proof.go",
+      "sha256": "sha256:6bd9262a0baa5cd15e4355bc40d36fe0e399d37b0829617928da908ac1dd0421",
+      "bytes": 6384
+    },
+    {
+      "path": "backend/migrations/repair_active_action_targeting.go",
+      "sha256": "sha256:e3debab15b6cbb152040d3a9f8c7e612a8f9a44d9279aadccbc51fd1a4349c1a",
+      "bytes": 9251
+    },
+    {
+      "path": "backend/migrations/repair_barbarian_rage_stacking.go",
+      "sha256": "sha256:a45c71c5fa7ce92451e95d3ef0daa0895d5863c6662cac0b4407a726cc0aef4a",
+      "bytes": 3213
+    },
+    {
+      "path": "backend/migrations/repair_bard_spellcasting_contract.go",
+      "sha256": "sha256:24a3b0f3ee4bcca256d26ad8d262b97800a8ade57ed6458a2cb005b25717f5ce",
+      "bytes": 7913
+    },
+    {
+      "path": "backend/migrations/repair_bardic_inspiration_boon_contract.go",
+      "sha256": "sha256:a7302031eac73d433e53b46e5a0e90edc016d8ef0e8cba9480937dbb9e3659ac",
+      "bytes": 6997
+    },
+    {
+      "path": "backend/migrations/repair_base_equipment_descriptions.go",
+      "sha256": "sha256:211591e77aee9a8a4fe1389361d806c651375fec106f5a04e1f8923c88a111b0",
+      "bytes": 1649
+    },
+    {
+      "path": "backend/migrations/repair_base_equipment_healers_kit_ownership.go",
+      "sha256": "sha256:7f7b704c4bb208603ef4475698a15b4c38361d99033d1db3d5851788ad3b4f5f",
+      "bytes": 256
+    },
+    {
+      "path": "backend/migrations/repair_base_equipment_healers_kit_targeting.go",
+      "sha256": "sha256:a3f66ce4ddd2dee89ee4d73abcdf56fec228c24648356340f89559b4ee73799b",
+      "bytes": 256
+    },
+    {
+      "path": "backend/migrations/repair_base_equipment_runtime.go",
+      "sha256": "sha256:46c1f85a4a61aac6e3e2752a5d5a3abe7816d210f231516895a6f277496713b3",
+      "bytes": 1084
+    },
+    {
+      "path": "backend/migrations/repair_base_equipment_sheet_utilities.go",
+      "sha256": "sha256:f6a6f0f72ddf115860b4bc31e93ea96e84b17529b5f0743623b159b19da29526",
+      "bytes": 238
+    },
+    {
+      "path": "backend/migrations/repair_class_level_five_integrity_185.go",
+      "sha256": "sha256:62c8e52601f74987985eaf45389516b10303afb1a648f6e65fa52cb25cffc629",
+      "bytes": 9530
+    },
+    {
+      "path": "backend/migrations/repair_class_starting_equipment_references.go",
+      "sha256": "sha256:3687a21c90f9f9b9a64f1cf68f15b9fc98ca1661ec2f18256edd8de69dc19822",
+      "bytes": 11096
+    },
+    {
+      "path": "backend/migrations/repair_cloud_goliath_teleport.go",
+      "sha256": "sha256:bdf9f8200f3067aeeb6a18f7906885e43bac45af94dc4ce445a59177d80fabdf",
+      "bytes": 3045
+    },
+    {
+      "path": "backend/migrations/repair_content_mechanics.go",
+      "sha256": "sha256:068eac09b25855c229f7afd87fa2baa5202734bc34cc093e1553d7d03228550c",
+      "bytes": 4914
+    },
+    {
+      "path": "backend/migrations/repair_crafter_in_play_choice.go",
+      "sha256": "sha256:560f4b542340a3b0a57d363fdfa1b1710b8ef9c3cc74ac56f154d23d987fea13",
+      "bytes": 1469
+    },
+    {
+      "path": "backend/migrations/repair_draconic_sorcery_spell_ability_193.go",
+      "sha256": "sha256:0de9d5ea46ec0db4e0266b7b51a833588dcf665594699beaa1356138a2529d8d",
+      "bytes": 2539
+    },
+    {
+      "path": "backend/migrations/repair_fire_bolt_upcast_description.go",
+      "sha256": "sha256:7a4bc946191afa10ad6a66cd349b2bf4ab171153984e34946abf6fc808947ddc",
+      "bytes": 5282
+    },
+    {
+      "path": "backend/migrations/repair_friends_mind_sliver_cantrips.go",
+      "sha256": "sha256:2adc1845a65fb655c87cde1bd5abc29fabb803eb3df120c1fb300150fb509e55",
+      "bytes": 4547
+    },
+    {
+      "path": "backend/migrations/repair_general_feat_action_payloads_175.go",
+      "sha256": "sha256:d7d3106adb7e6ca73a2b146c202a806bebf7996d58a65d0d5adaabfca20ba883",
+      "bytes": 389
+    },
+    {
+      "path": "backend/migrations/repair_general_feat_choice_integrity_178.go",
+      "sha256": "sha256:741178800263b22032aa7600b5cff59b9bfeede9c0cd186158ad6e0fe085983c",
+      "bytes": 5092
+    },
+    {
+      "path": "backend/migrations/repair_general_feat_runtime_integrity_182.go",
+      "sha256": "sha256:23ae0c92a5c36bc448d389ddee9c9b25f6776e562572199a067743034741fee1",
+      "bytes": 23828
+    },
+    {
+      "path": "backend/migrations/repair_goliath_reaction_authority.go",
+      "sha256": "sha256:e9b456138b2cd8b90fa1a2a281cdf95de9d159fa20e6ab012a591e1d72d8c7bf",
+      "bytes": 5411
+    },
+    {
+      "path": "backend/migrations/repair_goliath_stone_targeting_contract.go",
+      "sha256": "sha256:bbb746cdc8fc55c538fe0910db6161e39d96f8cd3022c65cab26b580f57ac2d8",
+      "bytes": 2008
+    },
+    {
+      "path": "backend/migrations/repair_half_caster_spellcasting_contract.go",
+      "sha256": "sha256:fb0f207af4057c3d2dbe9ea429155c249d30a049e4a0dfa46f744c642e2ae078",
+      "bytes": 10009
+    },
+    {
+      "path": "backend/migrations/repair_help_action_advantage.go",
+      "sha256": "sha256:2199d70515e4e78cf138c4ea36336c49ca0e895c7f9da40084d5f40e2a0026a0",
+      "bytes": 2607
+    },
+    {
+      "path": "backend/migrations/repair_level_five_base_progression_179.go",
+      "sha256": "sha256:14c9c4d1cfc17a44b45d284a0fcc840c9d573f65fca8c9c3b9fecd3aed59ee07",
+      "bytes": 8968
+    },
+    {
+      "path": "backend/migrations/repair_level_five_spell_area_runtime_191.go",
+      "sha256": "sha256:b2372e0750a87bfc342cec22b262098cf23bd53b25a83702cb16ecf75fe59061",
+      "bytes": 4190
+    },
+    {
+      "path": "backend/migrations/repair_level_five_spell_interactions_192.go",
+      "sha256": "sha256:7b805ba7608b282e683056e3bc88fa6361480b28b60915b4931514c192315193",
+      "bytes": 9844
+    },
+    {
+      "path": "backend/migrations/repair_level_five_spell_targeting_186.go",
+      "sha256": "sha256:327a44ac9194aeb4b77e60c8b1e0b8b440836176b30012e3e0d814d061c584a7",
+      "bytes": 21034
+    },
+    {
+      "path": "backend/migrations/repair_level_five_strict_conditions_177.go",
+      "sha256": "sha256:7ad8ca6c64d76a3442f1b6b73f332e53476f5f9874d127fe5df8b6ba77d95d20",
+      "bytes": 8322
+    },
+    {
+      "path": "backend/migrations/repair_level_five_subclass_actions_181.go",
+      "sha256": "sha256:6612a938453c09e8fd5590810841b527c879245f36387df4a0ad606bf7101b55",
+      "bytes": 21869
+    },
+    {
+      "path": "backend/migrations/repair_level_one_monk_runtime_contracts.go",
+      "sha256": "sha256:2fc68a65488548a6bc79561d3b884b68d9f6d16ab4700d0646948f2a206f20ad",
+      "bytes": 7836
+    },
+    {
+      "path": "backend/migrations/repair_level_one_species_runtime_contracts.go",
+      "sha256": "sha256:d8918d661bf4aed2d31f6691ee95bbaef6fcdc1bbea347a7ed9bc5db0264c711",
+      "bytes": 5603
+    },
+    {
+      "path": "backend/migrations/repair_level_two_actor_targeting.go",
+      "sha256": "sha256:37e33e8f61d90e57a476d6b52b5f90008dc8361bac5be9b132e40885903e1844",
+      "bytes": 1193
+    },
+    {
+      "path": "backend/migrations/repair_level_two_runtime_contracts.go",
+      "sha256": "sha256:c9d49e486d3d7391a9750cead598b564f3dabb8a64b00834700bb7d3c1528cfd",
+      "bytes": 30738
+    },
+    {
+      "path": "backend/migrations/repair_live_mvp_content_contracts.go",
+      "sha256": "sha256:fbc70fcf5cd9b694683117c2d9df5865edc681a3f2ac638ee5ca169e3dff9ed0",
+      "bytes": 4063
+    },
+    {
+      "path": "backend/migrations/repair_mage_hand_control_narrative.go",
+      "sha256": "sha256:fe575706683784bd06cfb468e1736a7884647b5117bf3b81afd957d360bd2613",
+      "bytes": 4924
+    },
+    {
+      "path": "backend/migrations/repair_mini_mvp_area_targeting.go",
+      "sha256": "sha256:c42a14bf008d3927fb6658ef4551d0b356847bf9860c00cf1ec4c317a36dba3b",
+      "bytes": 3696
+    },
+    {
+      "path": "backend/migrations/repair_mini_mvp_base_styles_origin_runtime.go",
+      "sha256": "sha256:90b094487d9af7c52247e07aeb8a8578ccc66be840981069481b0a1df44561d7",
+      "bytes": 20533
+    },
+    {
+      "path": "backend/migrations/repair_mini_mvp_limited_action_uses.go",
+      "sha256": "sha256:917870349c03a3641999701a492e8bee7cbb5f86e3763bc38e682ed0c1173495",
+      "bytes": 1532
+    },
+    {
+      "path": "backend/migrations/repair_mini_mvp_post_hit_spell_targets.go",
+      "sha256": "sha256:68ea307703df678368186ee3a9f2edc15f23da42de6e84812cdb845b5a96495e",
+      "bytes": 2448
+    },
+    {
+      "path": "backend/migrations/repair_mini_mvp_ranged_post_hit_spell_ranges.go",
+      "sha256": "sha256:ef4c21fe8606f501b580ac5343c0c01c256050565b6cccfba4c508c491f77c72",
+      "bytes": 2198
+    },
+    {
+      "path": "backend/migrations/repair_mini_mvp_spell_clarity.go",
+      "sha256": "sha256:262128514bed89ef5181d1d028d34fd491e98f521c2fd953706d73277f23c615",
+      "bytes": 6129
+    },
+    {
+      "path": "backend/migrations/repair_mini_mvp_spell_trigger_timing.go",
+      "sha256": "sha256:4e0394b85569e7b60bfd4c6badf593f1df494d0b408c5d016c0fac393d932edc",
+      "bytes": 3707
+    },
+    {
+      "path": "backend/migrations/repair_missing_weapon_mastery_profiles.go",
+      "sha256": "sha256:b54dca70e3512bdc8f1d9b1cc2e4ec5c3a48256006535fc048d64c0558160744",
+      "bytes": 4471
+    },
+    {
+      "path": "backend/migrations/repair_ranger_favored_enemy_2024.go",
+      "sha256": "sha256:f05bdb02fc88946a3144fc471fa848620134a32808c3eb6015415625c1d95374",
+      "bytes": 1824
+    },
+    {
+      "path": "backend/migrations/repair_retired_starting_equipment.go",
+      "sha256": "sha256:665989fc0939fee29a5fd25865ec4f2bd1324a420e519df853c2055344d702a1",
+      "bytes": 3467
+    },
+    {
+      "path": "backend/migrations/repair_second_wind_scaling_197.go",
+      "sha256": "sha256:511b014fb8341a884f81ce6b8358e8a7fd35ee68b9359fa00d72c38d9a53ffbd",
+      "bytes": 2203
+    },
+    {
+      "path": "backend/migrations/repair_sleep_2024_lifecycle.go",
+      "sha256": "sha256:2a3a7f03b2ffa6f50be3144de69a21111053a60776dbb50de5d1ad2e8f939e41",
+      "bytes": 10263
+    },
+    {
+      "path": "backend/migrations/repair_sleep_spell_class_list_contract.go",
+      "sha256": "sha256:025be4e941f7bf0645bfcb3f017bac4dee30d50e64642a3a03c200d39c061e69",
+      "bytes": 6565
+    },
+    {
+      "path": "backend/migrations/repair_sorcerer_level_five_runtime_190.go",
+      "sha256": "sha256:bbed7fa62741c75a14f1a6c72b8b728fcf39fec06b5fbcbe714ff9692e727228",
+      "bytes": 5478
+    },
+    {
+      "path": "backend/migrations/repair_spear_weapon_profile.go",
+      "sha256": "sha256:098d9aefc5645ffebc1fa840cba405234555c172b13efc13ebc0286024638267",
+      "bytes": 4064
+    },
+    {
+      "path": "backend/migrations/repair_species_level_five_integrity_183.go",
+      "sha256": "sha256:ec9182e6223c25c4fb3118b4fec7ef157dc845e74189db5656ed737566d3de05",
+      "bytes": 12114
+    },
+    {
+      "path": "backend/migrations/repair_species_levelled_spell_access.go",
+      "sha256": "sha256:93dbc78b59dd800d40ca2e617086932e07d2e0401a38e693700aec1da3e83b4b",
+      "bytes": 6969
+    },
+    {
+      "path": "backend/migrations/repair_species_transformation_runtime_189.go",
+      "sha256": "sha256:e5715343d43ba84a19002f0370dc8a4e233970b9379430cfdfbbe00dca88d5cd",
+      "bytes": 5347
+    },
+    {
+      "path": "backend/migrations/repair_spell_targeting_certifications.go",
+      "sha256": "sha256:13cb8a39176115c88280e161af653d0e4b7cf98d1016a98ff2022942410229fb",
+      "bytes": 5422
+    },
+    {
+      "path": "backend/migrations/repair_subclass_primary_runtime_194.go",
+      "sha256": "sha256:26ee8cebd972243cd06eeb0ed3c43be49875986605d1d262f2fe34a74b93615d",
+      "bytes": 4899
+    },
+    {
+      "path": "backend/migrations/repair_true_strike_cantrip.go",
+      "sha256": "sha256:6135e56d14ec1fadf7783c2bd71e9065736920fdca625d9c5a0367dd72b2f212",
+      "bytes": 3814
+    },
+    {
+      "path": "backend/migrations/repair_wild_companion_runtime.go",
+      "sha256": "sha256:31df7abdebdff64e741bf2a8fa225cf90180d72207a7fa0770368e8c5e1d7ff2",
+      "bytes": 2019
+    },
+    {
+      "path": "backend/migrations/repair_wild_companion_targeting.go",
+      "sha256": "sha256:1a7122100af0f769058b84962f15f453804b85f8ba6825468e77be5414aa5088",
+      "bytes": 1031
+    },
+    {
+      "path": "backend/migrations/repair_wizard_cantrip_growth_176.go",
+      "sha256": "sha256:eb492c72d0e3e59c7988569ac1fb219971f6f2a30139a3906c0b67ddc41bec60",
+      "bytes": 1478
+    },
+    {
+      "path": "backend/migrations/repair_wizard_level_two_spellbook.go",
+      "sha256": "sha256:28e693ab9d8aa5b711760376211a29d13028449345f21b1eee5f681932059bea",
+      "bytes": 2532
+    },
+    {
+      "path": "backend/migrations/repair_wood_elf_speed.go",
+      "sha256": "sha256:3e75176a5fc97af1cb7bd6371bc88b31c79d3c4bb51a74096bd32b5fb417a3c9",
+      "bytes": 2829
+    },
+    {
+      "path": "backend/migrations/resource_declarations_294.go",
+      "sha256": "sha256:8d747a63e035e57761798951258b241edcf79d9578341e491ea05a7e302bcab5",
+      "bytes": 15439
+    },
+    {
+      "path": "backend/migrations/resource_declarations_294.json",
+      "sha256": "sha256:8f4f93eecab686894b68fe75c6977b9c1278cef5c6e0b6d014737c72c5f97c5e",
+      "bytes": 22787
+    },
+    {
+      "path": "backend/migrations/restore_live_mvp_starting_equipment.go",
+      "sha256": "sha256:b21e20f1643f4219353d955a8e1fd44d365a6c7e87638a6a3658321d3fc2a690",
+      "bytes": 1460
+    },
+    {
+      "path": "backend/migrations/reusable_run_sources_276.go",
+      "sha256": "sha256:3d85e074054e58348530c1d30cf5f734004751b55dbfe14509cf25eba49025f5",
+      "bytes": 342
+    },
+    {
+      "path": "backend/migrations/revoke_invalid_feather_fall_certification.go",
+      "sha256": "sha256:0c02fb50536e77d0f9bc2e853db85fc3ecf1be52f99c4d3de393967434a83295",
+      "bytes": 5630
+    },
+    {
+      "path": "backend/migrations/revoke_invalid_mage_hand_certification.go",
+      "sha256": "sha256:8bd9da1434634982291b24ca7c98d66f722eeaf2083a6e472d8e0bf6f92d4c15",
+      "bytes": 4715
+    },
+    {
+      "path": "backend/migrations/roguelike_attack_ranges_201.go",
+      "sha256": "sha256:cc7ad1ddae2b51de865b537d092376757f36393104e711abfca5dfcf79786856",
+      "bytes": 3014
+    },
+    {
+      "path": "backend/migrations/roguelike_defenses_205.go",
+      "sha256": "sha256:df961ba81dd9de77fd83cea5298c14e759dc563ed1b10622bfd11d435754d01d",
+      "bytes": 1078
+    },
+    {
+      "path": "backend/migrations/roguelike_magic_weapons_240.go",
+      "sha256": "sha256:8a06db68279f5a9996bf8f4561003813a865c8411acf2a4d35a0df06d43ee86d",
+      "bytes": 3308
+    },
+    {
+      "path": "backend/migrations/roguelike_parry_204.go",
+      "sha256": "sha256:85a3c3e694db6549a96c7cdb8d241fdb7c9133b524ee4cf4edfff2882382e1bd",
+      "bytes": 2288
+    },
+    {
+      "path": "backend/migrations/roguelike_party_254.go",
+      "sha256": "sha256:8edf6bbcaeb1c5d9cddc352655ec5569670bff4c9ff226486b9e10711b82789e",
+      "bytes": 384
+    },
+    {
+      "path": "backend/migrations/roguelike_senses_skills_206.go",
+      "sha256": "sha256:daf3befff5c1b95ad174d47f9e6c7d64abd9a3657d6167190574ccf07c60bf03",
+      "bytes": 1644
+    },
+    {
+      "path": "backend/migrations/roguelike_shop_items_249.go",
+      "sha256": "sha256:736ba8b870194ec86878ce4efa41c9728ead0e59a142a9b43f7ceef75e7b98fa",
+      "bytes": 5116
+    },
+    {
+      "path": "backend/migrations/roguelike_wolf_riders_200.go",
+      "sha256": "sha256:02e159407ae667d13f9770ae0935c12e2049af48f61169d16b0db20e95d6f189",
+      "bytes": 1756
+    },
+    {
+      "path": "backend/migrations/seed_forge_mvp.go",
+      "sha256": "sha256:6b139350581c8704f6732dd1642296512f67644cbd667ec68ec0545b5a0946e0",
+      "bytes": 11939
+    },
+    {
+      "path": "backend/migrations/seed_mvp_equipment.go",
+      "sha256": "sha256:db57861cc5f5320dc5b7ed11fac55cca7e4f818a44af5e22ca53a621d461c3c6",
+      "bytes": 2850
+    },
+    {
+      "path": "backend/migrations/seed_recommended_skill_choices.go",
+      "sha256": "sha256:778c2e6f9f8a25b5189ee5f873128b4b27036219f98cbdca00d5a343dea03994",
+      "bytes": 8614
+    },
+    {
+      "path": "backend/migrations/seed_recommended_spell_choices.go",
+      "sha256": "sha256:0fff2a35454086d6ef06bfd0778245be840214f91d3969787107b92cf1945e80",
+      "bytes": 6190
+    },
+    {
+      "path": "backend/migrations/spell_grant_abilities_296.go",
+      "sha256": "sha256:6211014c23e95e1b509e2dd997068637070ce3983dea87bebff0a9a6fcb806c0",
+      "bytes": 13620
+    },
+    {
+      "path": "backend/migrations/spell_grant_abilities_296_hash.go",
+      "sha256": "sha256:461460b144dc8f6ba3c70058193b7290f0c6a0206ddeb8c7b64b2ecc2439c39b",
+      "bytes": 3603
+    },
+    {
+      "path": "backend/migrations/spell_grant_abilities_296_manifest.json",
+      "sha256": "sha256:310047ba934a9fed8bba48476eee4491670be698fe07bf9391762664d7580add",
+      "bytes": 176651
+    },
+    {
+      "path": "backend/migrations/spell_grant_refs_295.go",
+      "sha256": "sha256:4d4595994a0b67c7035ff2300688ac3980fd8f0df55fb5c7d0d1ae0c11cee16a",
+      "bytes": 10237
+    },
+    {
+      "path": "backend/migrations/spell_grant_refs_295_manifest.json",
+      "sha256": "sha256:0669ffc9e14d4116a200b8830e6f38b0e529ad2cc178afd29dbe1a2e05f92e24",
+      "bytes": 70486
+    },
+    {
+      "path": "backend/migrations/split_weapon_actions_and_unlock_metadata.go",
+      "sha256": "sha256:00992f0ef4126ba237018cd3bc01bede505066a9c21aadf9c2a7186570972961",
+      "bytes": 6222
+    },
+    {
+      "path": "backend/migrations/suppress_true_strike_zero_damage.go",
+      "sha256": "sha256:de9ebb26e42c47882bfb68dd235699fb88c698ebd0e496a0a823529f97e8a747",
+      "bytes": 2655
+    },
+    {
+      "path": "backend/migrations/template_portraits_252.go",
+      "sha256": "sha256:8b963dde18f54b68ac3f3778bd9ad786d08dfc4c8268b29993e53f3e47e293b3",
+      "bytes": 3622
+    },
+    {
+      "path": "backend/migrations/urvin_run_273.go",
+      "sha256": "sha256:e5bfa02e631304929d3406915050836f96e0ebf043756fd6597325979d96f4c0",
+      "bytes": 5399
+    },
+    {
+      "path": "backend/migrations/warrior_weapon_bond_238.go",
+      "sha256": "sha256:443d0165d5649c542753878b627f3cecc77083dfbe6a06a6ccacc60afbc9d09d",
+      "bytes": 994
+    },
+    {
+      "path": "backend/models.go",
+      "sha256": "sha256:57a14a5699a2437e98d7fa44a426f8dde722f569375a4ef2be37ee10804228ad",
+      "bytes": 101363
+    },
+    {
+      "path": "backend/models_character_event.go",
+      "sha256": "sha256:edd06052cbf2c667dd07a48a6121178a75af0c87b605566bd7b3458bec5681c7",
+      "bytes": 1643
+    },
+    {
+      "path": "backend/models_character_v3.go",
+      "sha256": "sha256:86ce94968373eda7d31e2ea82eb51214bcd6b509ebf11d3e2a772404396670a7",
+      "bytes": 22042
+    },
+    {
+      "path": "backend/models_classes.go",
+      "sha256": "sha256:3b6a6bc73536091265d3f1244e3fa355e7831fc55cdbb0805eb651356abb9245",
+      "bytes": 12904
+    },
+    {
+      "path": "backend/models_encounter.go",
+      "sha256": "sha256:55fdf72ae1ce1eefa94973488f7a7960525a18dc8fb95b3bcca38c97061f2c7a",
+      "bytes": 4852
+    },
+    {
+      "path": "backend/models_feats.go",
+      "sha256": "sha256:a3520a0c1664ecf18a256fd59e79ecb55eb7623a3ff5208c61fd62fc4c563357",
+      "bytes": 15634
+    },
+    {
+      "path": "backend/models_monster.go",
+      "sha256": "sha256:d7e15b86108a9910fea4afeac2fc53799b83a9b66db54a0f0d66364270ce2fab",
+      "bytes": 3492
+    },
+    {
+      "path": "backend/models_races.go",
+      "sha256": "sha256:a6dd979cf775fc95b9d19eeddad28a251c1bf6250d0166d4f449c4a15cb58ca7",
+      "bytes": 10045
+    },
+    {
+      "path": "backend/models_roguelike.go",
+      "sha256": "sha256:3a430eff8b169c3553f71e732bfe9ced061faf62d308720b8a66978df586b6e9",
+      "bytes": 6001
+    },
+    {
+      "path": "backend/monster_controller.go",
+      "sha256": "sha256:939bafd3fd94fcddad298354263a0aba65c5e9ef96a213ca39f11d367bfbbd73",
+      "bytes": 8669
+    },
+    {
+      "path": "backend/oauth_config.go",
+      "sha256": "sha256:93a55219819b3a883eb02b10845741d4e26e84a2760962c3a1332c307cd50d9f",
+      "bytes": 4277
+    },
+    {
+      "path": "backend/oauth_controller.go",
+      "sha256": "sha256:6f7e87143808d805f6aed8f7ed698ce4e2fd2ea7363f47f8d33ba092f22f4a47",
+      "bytes": 6002
+    },
+    {
+      "path": "backend/oauth_provider.go",
+      "sha256": "sha256:2c3c8d8f4696c61736976fc5d8ac823012748e5d37bd9eff141a5280b8437e83",
+      "bytes": 3430
+    },
+    {
+      "path": "backend/oauth_routes.go",
+      "sha256": "sha256:46ad1dbd93127a1c1ba25b7bd381c38d9712a239ce35292f8f4ea002805bb384",
+      "bytes": 613
+    },
+    {
+      "path": "backend/oauth_store.go",
+      "sha256": "sha256:4191316549b853499d53c13b0a5f20e3c36933328eb74a62fb8f7d2b889085bc",
+      "bytes": 5599
+    },
+    {
+      "path": "backend/openai_service.go",
+      "sha256": "sha256:e6f92569466571610293cfc030de663aa0ea951a16b983e3fc6250735755daa7",
+      "bytes": 28940
+    },
+    {
+      "path": "backend/owned_item_access.go",
+      "sha256": "sha256:f5e82d957f6a870a45ce18146320a536f7d27fbdee7db99a5c6ca18d0a497095",
+      "bytes": 6788
+    },
+    {
+      "path": "backend/paper_documents.go",
+      "sha256": "sha256:980039154902bed960b446b01191edbf0e674af74560c350d7826c9d5a379bd4",
+      "bytes": 8040
+    },
+    {
+      "path": "backend/passive_presentation_controller.go",
+      "sha256": "sha256:5884e2127fa2579b6d30fd7156ea8732fa55214ad5908a61da8df41df49d9bf5",
+      "bytes": 3787
+    },
+    {
+      "path": "backend/passivepresentation/catalog.go",
+      "sha256": "sha256:71332d63f0f4e445eef65700af85d6ff572f16e04709aa956a213da2b94857ed",
+      "bytes": 829
+    },
+    {
+      "path": "backend/passivepresentation/catalog.json",
+      "sha256": "sha256:816549dee8ffe3d675a1935dce4fecbc94f8a1b9c4d35142c8bc4a639e3bf63d",
+      "bytes": 4387
+    },
+    {
+      "path": "backend/performance_observability.go",
+      "sha256": "sha256:4b7f17067f33dc9c3e616005c73a380375249d51a22513a109e7d608d0f333dd",
+      "bytes": 6543
+    },
+    {
+      "path": "backend/race_controller.go",
+      "sha256": "sha256:82bfb95549bdb1b7b52cff363000c4609ba755af5403ce8311c3841e2cb4c72b",
+      "bytes": 7866
+    },
+    {
+      "path": "backend/release_migration_command.go",
+      "sha256": "sha256:005525edd43e349e6ea47484865867de27c276cbc24cfd582f63bfde9a5fba58",
+      "bytes": 2625
+    },
+    {
+      "path": "backend/resource_controller.go",
+      "sha256": "sha256:b7e03ce927d8caa9b942c50658836ac831b84eae1e753036b19d7d24f426f815",
+      "bytes": 6428
+    },
+    {
+      "path": "backend/roguelike_camp_inventory.go",
+      "sha256": "sha256:b1f26daa908ab082820f43aa934c394d3fb3bd5d78c7e6b356453907598d8b9b",
+      "bytes": 12357
+    },
+    {
+      "path": "backend/roguelike_cart.go",
+      "sha256": "sha256:2af4d1936d70e36a674bec847de27d47a058ec79a04004369de4a0080039fa58",
+      "bytes": 3200
+    },
+    {
+      "path": "backend/roguelike_catalog_batch.go",
+      "sha256": "sha256:39ecb444f487992a262e103cfe76b5778f1c94e13b53acf4994f53bac53db985",
+      "bytes": 7709
+    },
+    {
+      "path": "backend/roguelike_catalog_prefetch.go",
+      "sha256": "sha256:84500e98d767e81690330e416e65fea49eee6fe93931b7fb26c6ec1d5a08d9f4",
+      "bytes": 4565
+    },
+    {
+      "path": "backend/roguelike_character_guard.go",
+      "sha256": "sha256:03ddf5dbb59b1cecc398d3a0f1dac0226591a47d9fc5bb36dd02daa736dbab63",
+      "bytes": 13686
+    },
+    {
+      "path": "backend/roguelike_combat_conclusion.go",
+      "sha256": "sha256:5948142e59eaebc28a5d2fbf4ef777b2e3ca0420dbb06200fe66bb23d164b1fb",
+      "bytes": 442
+    },
+    {
+      "path": "backend/roguelike_combat_journal.go",
+      "sha256": "sha256:283b6fc242bbf944d1596178feefa0ac26d5eea2ab3bea44f19be1e311b8b419",
+      "bytes": 2836
+    },
+    {
+      "path": "backend/roguelike_compositions.go",
+      "sha256": "sha256:d735a50adbcc4f3603b951d943d557b711378cf3c151b1ff27911bb4a41cb684",
+      "bytes": 3509
+    },
+    {
+      "path": "backend/roguelike_controller.go",
+      "sha256": "sha256:2527df859ddec8680e944140b5942e8f8ac74a7747aeb443d6441db259208600",
+      "bytes": 59054
+    },
+    {
+      "path": "backend/roguelike_domain.go",
+      "sha256": "sha256:4fa252bd1b30afafb0f23703eec44a4c2247c230c61abb09e29c113ae410f581",
+      "bytes": 4966
+    },
+    {
+      "path": "backend/roguelike_encounter_catalog.go",
+      "sha256": "sha256:e9c34b437b1aa2113a7b6674fd98db1c170bf806e58a649f113af7be121d92b8",
+      "bytes": 1518
+    },
+    {
+      "path": "backend/roguelike_initiative_options.go",
+      "sha256": "sha256:779c22b47ef59f3c9e669d4db37bb54f0a1fa035bd2537d3132ee9a00e48ed0f",
+      "bytes": 2702
+    },
+    {
+      "path": "backend/roguelike_level_choices.go",
+      "sha256": "sha256:c0fa3e1ebc7893e7bdee01287e3a52bee216c583b709e51684438d719205b86f",
+      "bytes": 2514
+    },
+    {
+      "path": "backend/roguelike_party.go",
+      "sha256": "sha256:ec9d44083f989a08a2c3cab351c6cedb3609e7ace4e2b04a541ba3489fee6867",
+      "bytes": 9960
+    },
+    {
+      "path": "backend/roguelike_party_worker.go",
+      "sha256": "sha256:a018ce8932f838fee810c57d6d3a1eb81ee68b970647bd7bbfd1a3aef16ed38b",
+      "bytes": 10488
+    },
+    {
+      "path": "backend/roguelike_routes.go",
+      "sha256": "sha256:713262cbbbc46a61bd62a4cc49b288d9170cc4f47062dddb967c19c3e1afa829",
+      "bytes": 514
+    },
+    {
+      "path": "backend/roguelike_shop.go",
+      "sha256": "sha256:dd0a790c5e4615dc5a616ca7fecd7f722b7753502baee8d0dcada5e80d21d61a",
+      "bytes": 2044
+    },
+    {
+      "path": "backend/roguelike_shop_settings.go",
+      "sha256": "sha256:5d8426e155679ed4b943717c53ff0a45137ce7114cf64fc18fc0d438f47466b5",
+      "bytes": 9191
+    },
+    {
+      "path": "backend/roguelike_urvin.go",
+      "sha256": "sha256:aa4ba2e533c5128ce9bf40166f85dc0024c6634aebad1aa10d8c874df785cda4",
+      "bytes": 29156
+    },
+    {
+      "path": "backend/roguelike_urvin_events.go",
+      "sha256": "sha256:a49c263cd57d3963fd19a1143270c295ba6e588c66514924aee18c71cc018066",
+      "bytes": 8036
+    },
+    {
+      "path": "backend/roguelike_worker_admission.go",
+      "sha256": "sha256:8c3541b73d6a230fa778e4a51cdc28bea48aeb38824e357e559d52f046984336",
+      "bytes": 1606
+    },
+    {
+      "path": "backend/roguelike_worker_catalog.go",
+      "sha256": "sha256:860ba37a94a88d2edfbbca31cc80bea9bea6fae0247644667cbfbcaf7ed475be",
+      "bytes": 12337
+    },
+    {
+      "path": "backend/roguelike_worker_client.go",
+      "sha256": "sha256:9926c5696f9907d39764611c0c76f855ecbc6beb83179b12efdf19820dfbeda9",
+      "bytes": 23746
+    },
+    {
+      "path": "backend/roguelike_worker_controller.go",
+      "sha256": "sha256:232be55301e4d8a4c3fac23490b599750295d4b8a0d152131a833f4c4c6033e2",
+      "bytes": 10657
+    },
+    {
+      "path": "backend/roguelike_worker_mirrors.go",
+      "sha256": "sha256:3f72ce05d283940e26dc6a3763b9f4343344ea5e8ccb56d73a0ee178eb5da6a9",
+      "bytes": 4340
+    },
+    {
+      "path": "backend/roguelikecontent/classes.go",
+      "sha256": "sha256:fe7fb7f40ee64aaed59871168476fa3bef78a923612d136e80850b93fc2452d6",
+      "bytes": 478
+    },
+    {
+      "path": "backend/roguelikecontent/classes.json",
+      "sha256": "sha256:fa1f162bb39b8ce28844dc983930e71ff95a4d15fa57150dc5fc7c2f32748209",
+      "bytes": 26
+    },
+    {
+      "path": "backend/roguelikecontent/shop.go",
+      "sha256": "sha256:a1b2a08355e7c4cbc13c499520a52760145f5a1e09f65294f03ac4d83e53794f",
+      "bytes": 1198
+    },
+    {
+      "path": "backend/roguelikecontent/shop_items.json",
+      "sha256": "sha256:1cfe582c56f3437c164906be6a85cb1e37449d1a9c167a804f8d5e948d02c69a",
+      "bytes": 45797
+    },
+    {
+      "path": "backend/roguelikecontent/urvin.go",
+      "sha256": "sha256:1304fdbb0ce5e9edc7a3648375acdb4d79b6e075d35da3497b12d0ad39877010",
+      "bytes": 259
+    },
+    {
+      "path": "backend/roguelikecontent/urvin.json",
+      "sha256": "sha256:9ad6b8a8eac4b0b121253011a192bd18446624f4d17e444f62e43aa34fbcbadb",
+      "bytes": 20490
+    },
+    {
+      "path": "backend/runtime_equipment_command.go",
+      "sha256": "sha256:3baa10bea4d29331a6bb64ef4096ee5a745629a7bb960ba7b53004b89b6ece42",
+      "bytes": 1984
+    },
+    {
+      "path": "backend/security_middleware.go",
+      "sha256": "sha256:a2f6ee1b461da17883deba9554947a0b80910963bc378742036b9052d069a85a",
+      "bytes": 7409
+    },
+    {
+      "path": "backend/shop_controller.go",
+      "sha256": "sha256:57ce9bae3a151a0504f29cb6ad7c2e284c1021e9bb1fef438d7ea00861d816f6",
+      "bytes": 9326
+    },
+    {
+      "path": "backend/spell_class_filter.go",
+      "sha256": "sha256:3d8bf0ec39028187db732128fdbf5a1cca6898ae61a694b7c9cbd4fee6bfa3ac",
+      "bytes": 1927
+    },
+    {
+      "path": "backend/spell_controller.go",
+      "sha256": "sha256:71502817ad8a686eb1f32bb76a051ae96f8b85c6d27cbd24b2b54d58f0531358",
+      "bytes": 15741
+    },
+    {
+      "path": "backend/storage_catalog.go",
+      "sha256": "sha256:51e7ce5c5353891ef2cef0f6b09299cf921342407d3acbdab74d7ac79b123bcc",
+      "bytes": 7914
+    },
+    {
+      "path": "backend/storage_receipt.go",
+      "sha256": "sha256:cd5b216ba7c8c56b174795119c5b2c54a9e5739d84531d1d276b3096929e342e",
+      "bytes": 4309
+    },
+    {
+      "path": "backend/trusted_proxies.go",
+      "sha256": "sha256:950f10bb03286e8c6252a825eba21bdfabc25c799851891f9d8d6882d64f0e99",
+      "bytes": 2510
+    },
+    {
+      "path": "backend/ttg_bestiary_controller.go",
+      "sha256": "sha256:98778749019723fb2fa930497000547b537261f58f2dbe84c749402301a4829b",
+      "bytes": 18816
+    },
+    {
+      "path": "backend/variable_controller.go",
+      "sha256": "sha256:cd54e24b90982a5b1c32ddd9865ab4f2b7a52c84bf1de67ec90753180532d056",
+      "bytes": 5913
+    },
+    {
+      "path": "backend/weapondata/catalog.go",
+      "sha256": "sha256:d070df8dbaa22df4bd8c3b454ea8bb068461a0db87fa4df4b33b3c7f744ecd50",
+      "bytes": 667
+    },
+    {
+      "path": "backend/weapondata/weapon_types.generated.json",
+      "sha256": "sha256:3a39eda82e5ed6ba21d2b41da80879b96d38de93204c08756bee3e1f4a78598b",
+      "bytes": 5971
+    },
+    {
+      "path": "backend/yandex_storage_service.go",
+      "sha256": "sha256:09cfdb6dca6d63a2fe2fe4941ece28c9e0a786c148c73e4f4dd3f2ba341444e2",
+      "bytes": 9402
+    },
+    {
+      "path": "frontend/charges/charges.json",
+      "sha256": "sha256:32c06e5711e261bc9259b82c4886c425b30153f0db6a1bc71ccc2ccc28ca0afa",
+      "bytes": 1778
+    },
+    {
+      "path": "frontend/src/auth/AUTH_UI_HANDOFF.md",
+      "sha256": "sha256:f9ca3b6fb7884889c4e49125a5ba0bd8079e04737ac27f70bbaa12df0270ee50",
+      "bytes": 3225
+    },
+    {
+      "path": "frontend/src/battle3d/miniatures/catalog.snapshot.json",
+      "sha256": "sha256:91fc244ac2ea2d5da068665e6e30b1737bc8cfe8eef339eda9c8f68bfe6ba94c",
+      "bytes": 4405
+    },
+    {
+      "path": "frontend/src/canon/data/certified_mutable_metadata_fields.v1.json",
+      "sha256": "sha256:1eac63df5ae3bdb8cc10c9d1db4212863ba31b4b67221a62dc2d8b8464dd45c4",
+      "bytes": 572
+    },
+    {
+      "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.schema.json",
+      "sha256": "sha256:bdfd0e3ddf71eab3d554a992f1ee09eb951af5598af5ba58a504be657f20fd02",
+      "bytes": 4681
+    },
+    {
+      "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+      "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+      "bytes": 284784
+    },
+    {
+      "path": "frontend/src/canon/data/micro-mvp-reviewed-superseding-postimages.v1.json",
+      "sha256": "sha256:5d0083093056aae9e7600811d4c9e23bc6fdb78a2857f6056715fe6f55d9ef51",
+      "bytes": 2687
+    },
+    {
+      "path": "frontend/src/canon/data/mini-mvp-fighting-style-fixture.v1.json",
+      "sha256": "sha256:62bb1bd0ae14461eea94fc875b33dcb4ebf6060ac35f5de54c35c4dedb8fac7a",
+      "bytes": 18225
+    },
+    {
+      "path": "frontend/src/canon/data/mini-mvp-forge-sheet-fixture.v1.json",
+      "sha256": "sha256:161d8897699542b77068ddeac82da73ddf62e409b90314054d2707301cb19956",
+      "bytes": 84288
+    },
+    {
+      "path": "frontend/src/character/__fixtures__/repaired-subclass-spells-20261001.json",
+      "sha256": "sha256:782bbf5c6bee26f06c2da690370f64dcbaa90bc6efee60fed5c0144add95fcb8",
+      "bytes": 30182
+    },
+    {
+      "path": "frontend/src/character/sheetCombatCertification.generated.json",
+      "sha256": "sha256:2d0223520018d285250e88182d4e82df4c89cd80a3a0836e1ef580439d012c86",
+      "bytes": 257511
+    },
+    {
+      "path": "frontend/src/content/engine-guide.md",
+      "sha256": "sha256:7fd49149a4aeb5dfaf3437e1f0dfe71648735f6f3da022d2f9489022889ad6b5",
+      "bytes": 81365
+    },
+    {
+      "path": "frontend/src/docs/mechanics-guide.md",
+      "sha256": "sha256:d5ca92afabe50b8640d0d4d439c90ebeed41cef3650b4e779691950d788744a4",
+      "bytes": 37827
+    },
+    {
+      "path": "frontend/src/engine/data/combatPassivePresentation.json",
+      "sha256": "sha256:aacfc1e7a3f9b3bd513bdeb0e281c958c25e1b3c1ab25e7d5efe158c1f8f6535",
+      "bytes": 1845
+    },
+    {
+      "path": "frontend/src/engine/data/conditionActions.json",
+      "sha256": "sha256:31a2ad8ebb52ae446e11c60638f46e41ba70d588049145865e85f4355f0fd80e",
+      "bytes": 638
+    },
+    {
+      "path": "frontend/src/engine/data/decisionPolicies.json",
+      "sha256": "sha256:acbb75c95f9d6ad72d4bbcaeaa75d8e2ad6e6ab05f65f89bf7c0ee355e001292",
+      "bytes": 4291
+    },
+    {
+      "path": "frontend/src/engine/data/resources.json",
+      "sha256": "sha256:8f4f93eecab686894b68fe75c6977b9c1278cef5c6e0b6d014737c72c5f97c5e",
+      "bytes": 22787
+    },
+    {
+      "path": "frontend/src/engine/data/rollInfluences.json",
+      "sha256": "sha256:821a043d6d1cdffbd59aac1a963d781d6f9df0dc8b799a7816cab2d3471378b6",
+      "bytes": 772
+    },
+    {
+      "path": "frontend/src/mechanics/contentSweep.fixtures.json",
+      "sha256": "sha256:4b36c906df37f7b6597fd87104399b6408631e3090cd9ff4e2cde1f3014a8d95",
+      "bytes": 4302
+    },
+    {
+      "path": "frontend/src/pages/rulesLabFixture.generated.json",
+      "sha256": "sha256:db7fea317b72b74483fbd2bbeb34f107265faaf7c981e0c146058a4963667770",
+      "bytes": 358811
+    },
+    {
+      "path": "frontend/src/pages/rulesLabFixture.v6.generated.json",
+      "sha256": "sha256:53edb13eb1f3dc54c1ca389aec8aa348ec9749f2c7d05a2d9609692ae10186b1",
+      "bytes": 365376
+    },
+    {
+      "path": "frontend/src/roguelike/data/classes.json",
+      "sha256": "sha256:fa1f162bb39b8ce28844dc983930e71ff95a4d15fa57150dc5fc7c2f32748209",
+      "bytes": 26
+    },
+    {
+      "path": "frontend/src/roguelike/pinnedFighter.fixture.json",
+      "sha256": "sha256:0803e14781eb81aef18b7f8897c5bf5f64e55bb0cb588926a3eb39d8dc3f3c49",
+      "bytes": 221047
+    },
+    {
+      "path": "frontend/src/schemas/mechanics.schema.json",
+      "sha256": "sha256:2c9c82543ba1e667a7d0d6fec02f415e6dc5e48aeb7eb8c598d0db6aaf4f4308",
+      "bytes": 167179
+    },
+    {
+      "path": "frontend/src/solo-combat/data/battleMapSprites.json",
+      "sha256": "sha256:876c18fbb677649030daa6d8fe35b753f4f407046684263fbd46a534f8b8ea8b",
+      "bytes": 2392
+    },
+    {
+      "path": "frontend/src/solo-combat/data/battleMaps.json",
+      "sha256": "sha256:4d25b0a701a5aa10ae929b19ed903f9264cffb7637acaa0ae15d987ad69e53cd",
+      "bytes": 18450
+    },
+    {
+      "path": "frontend/src/solo-combat/data/urvinMaps.json",
+      "sha256": "sha256:3b5b5ec1885669a8426617ab085e153060a6c90fd2dd68f264ad1cc34aa8d305",
+      "bytes": 6126
+    },
+    {
+      "path": "officials/canon/phb2024/class-barbarian.json",
+      "sha256": "sha256:7eb7890673aaae5c9e6d81c4ff31c5f2304ef16307dd220ccb42f1d8a409a3b1",
+      "bytes": 21071
+    },
+    {
+      "path": "officials/canon/prod-snapshot/actions.json",
+      "sha256": "sha256:f3702a0dca6f4dc784f714cbded73a044185ecbba006b1fc759d6ffb3c530bd5",
+      "bytes": 864910
+    },
+    {
+      "path": "officials/canon/prod-snapshot/backgrounds.json",
+      "sha256": "sha256:b356a2abe7381d3109a18d98081b84e93c47e9ffdc4c59b3ae63c108b5fb7161",
+      "bytes": 366615
+    },
+    {
+      "path": "officials/canon/prod-snapshot/cards.json",
+      "sha256": "sha256:c110a67bbf2e3b5707a1e65abde62f5a84860da2f101704fd1aca4666e36ebd5",
+      "bytes": 1297422
+    },
+    {
+      "path": "officials/canon/prod-snapshot/classes.json",
+      "sha256": "sha256:2124cffa17579481185c30454bdd7139c52f9e48f45376417d05a1070a879cf7",
+      "bytes": 960686
+    },
+    {
+      "path": "officials/canon/prod-snapshot/effects.json",
+      "sha256": "sha256:0e4a5edd1dc7e536106aabf68b9a1c63cd1a824e65ac2754f02c87101af74523",
+      "bytes": 2922665
+    },
+    {
+      "path": "officials/canon/prod-snapshot/feats.json",
+      "sha256": "sha256:769295768512a3c490c41d3580284b56e4935b4077e0967006b5663fa04b83fa",
+      "bytes": 1753814
+    },
+    {
+      "path": "officials/canon/prod-snapshot/index.json",
+      "sha256": "sha256:339a9a084d480586ec4cde8aa0afa4831401959b96578402345479ac3fba8b21",
+      "bytes": 762
+    },
+    {
+      "path": "officials/canon/prod-snapshot/races.json",
+      "sha256": "sha256:6a34f538f03db6f5f2665dee1b840337f6b471e437457e7e1aef7bdf347d7e1c",
+      "bytes": 831868
+    },
+    {
+      "path": "officials/canon/prod-snapshot/resources.json",
+      "sha256": "sha256:ab1aa68dd3ef5f059c4176daff815c27c5ed5b481c767cd0ecae6970db0571d6",
+      "bytes": 428472
+    },
+    {
+      "path": "officials/canon/prod-snapshot/spells.json",
+      "sha256": "sha256:da763e12c75177ef0e85bcd5ca3157e3cfd8404eb51a0984855b13d71456e495",
+      "bytes": 1338080
+    },
+    {
+      "path": "officials/canon/prod-snapshot/variables.json",
+      "sha256": "sha256:c204da89f22044950548b51034dd799ade6944c700615e2e923fc77172b9c0a5",
+      "bytes": 2683
+    }
+  ]
+}

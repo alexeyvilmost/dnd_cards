@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "pure fixed production helpers and local temporary journal; no Docker",
+  "checks": [
+    "stale-recovery-rejected",
+    "current-active-preserved",
+    "application-immutable-with-db-observation",
+    "three-enabled-writers-rejected",
+    "writers-off-accepted"
+  ]
+}

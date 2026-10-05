@@ -90,6 +90,7 @@ export interface AssemblyDataSource {
   resourcesApi: Pick<typeof import('../api/client')['resourcesApi'], 'getResource'>;
   variablesApi: Pick<typeof import('../api/client')['variablesApi'], 'getVariables'>;
   entityRegistry: ReturnType<typeof createRegistry>;
+  memoizeAssembly?: (bundle: EntityBundle, draft: CharacterDraft, build: () => AssembledCharacter) => AssembledCharacter;
 }
 
 /** The browser and pinned worker provide different data sources to the same assembler. */
@@ -332,6 +333,12 @@ function bundleDependencyKey(
 
 // Чистая сборка из уже загруженных сущностей.
 function assemble(bundle: EntityBundle, draft: CharacterDraft): AssembledCharacter {
+  return dependencies.memoizeAssembly
+    ? dependencies.memoizeAssembly(bundle, draft, () => assembleUncached(bundle, draft))
+    : assembleUncached(bundle, draft);
+}
+
+function assembleUncached(bundle: EntityBundle, draft: CharacterDraft): AssembledCharacter {
   const scores = draft.abilities;
   const pb = proficiencyBonusForLevel(draft.level);
 
@@ -885,30 +892,24 @@ function collectFeatChoiceRefs(
 }
 
 
-// Кэш «тип эффекта → список эффектов» на время одной сборки.
-const effectTypeCache = new Map<string, { id: string; name: string; card_number: string }[]>();
-
-
-async function effectsOfType(type: string): Promise<{ id: string; name: string; card_number: string }[]> {
-  if (effectTypeCache.has(type)) return effectTypeCache.get(type)!;
-  try {
-    const res = await dependencies.effectsApi.getEffects({ type, limit: 200, fields: 'list' });
-    const list = (res.effects || []).map((e) => ({ id: e.id, name: e.name, card_number: e.card_number }));
-    effectTypeCache.set(type, list);
-    return list;
-  } catch {
-    effectTypeCache.set(type, []);
-    return [];
-  }
-}
-
-
 /**
  * Разворачивает choice(dependencies:"effect_type") в choice(dependencies:"effect") со
- * списком эффектов заданного типа. Мутирует mechanics загруженных эффектов
- * (объекты одноразовые, из свежего fetch). count:"all" → все эффекты типа.
+ * списком эффектов заданного типа. Материализация принадлежит одной сборке:
+ * API-объекты остаются неизменными, следующий loadBundle заново проверяет состав.
+ * count:"all" → все эффекты типа.
  */
 async function materializeEffectTypeChoices(effects: OriginEffect[]): Promise<void> {
+  const effectTypeReads = new Map<string, Promise<{ id: string; name: string; card_number: string }[]>>();
+  const effectsOfType = (type: string) => {
+    let pending = effectTypeReads.get(type);
+    if (!pending) {
+      pending = dependencies.effectsApi.getEffects({ type, limit: 200, fields: 'list' })
+        .then(res => (res.effects || []).map(e => ({id: e.id, name: e.name, card_number: e.card_number})))
+        .catch(() => []);
+      effectTypeReads.set(type, pending);
+    }
+    return pending;
+  };
   const scanTargets: RefDict[] = [];
   const collect = (mech: unknown) => {
     if (!mech || typeof mech !== 'object') return;
@@ -923,7 +924,10 @@ async function materializeEffectTypeChoices(effects: OriginEffect[]): Promise<vo
       }
     }
   };
-  for (const { effect } of effects) collect(effect.mechanics);
+  for (const entry of effects) {
+    entry.effect = {...entry.effect, mechanics: structuredClone(entry.effect.mechanics)};
+    collect(entry.effect.mechanics);
+  }
   if (!scanTargets.length) return;
 
   await Promise.all(scanTargets.map(async (choice) => {

@@ -45,6 +45,8 @@ export interface SiteSettings {
   showReviewStatus: boolean;
   /** Разрешить вручную добавлять предметы, действия, эффекты, заклинания и черты из листа. */
   allowSheetEntityAdditions: boolean;
+  /** Дополнительные разделы для прежних групп, отдельных инвентарей и шаблонов карточек. */
+  showAdditionalSections: boolean;
 }
 
 const KEY = 'site-settings';
@@ -77,6 +79,7 @@ const DEFAULTS: SiteSettings = {
   showOriginalNames: false,
   showReviewStatus: false,
   allowSheetEntityAdditions: true,
+  showAdditionalSections: false,
 };
 
 export function getSettings(): SiteSettings {
@@ -96,6 +99,7 @@ export function getSettings(): SiteSettings {
       merged[key] = typeof merged[key] === 'number' && Number.isFinite(merged[key]) ? Math.max(0,Math.min(1,merged[key])) : DEFAULTS[key];
     }
     if (typeof merged.showReviewStatus !== 'boolean') merged.showReviewStatus = false;
+    if (typeof merged.showAdditionalSections !== 'boolean') merged.showAdditionalSections = false;
     if (typeof merged.audioEnabled !== 'boolean') merged.audioEnabled = DEFAULTS.audioEnabled;
     if (typeof merged.combat3d !== 'boolean') merged.combat3d = DEFAULTS.combat3d;
     // Keep the former global preference for both sides when migrating.

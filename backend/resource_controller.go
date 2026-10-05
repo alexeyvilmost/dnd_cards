@@ -26,6 +26,7 @@ func (rc *ResourceController) GetResources(c *gin.Context) {
 	var resources []ResourceDefinition
 	query := rc.db.Model(&ResourceDefinition{}).Where("deleted_at IS NULL")
 	query = entityTagFilter(query, c, "resource", "resources")
+	query = referenceCatalogSearch(query, c, "name, resource_id, description, category, recharge")
 	if category := c.Query("category"); category != "" {
 		query = query.Where("category = ?", category)
 	}
@@ -33,6 +34,11 @@ func (rc *ResourceController) GetResources(c *gin.Context) {
 	// reference catalog when they omit page/limit. Explicit pagination is bounded.
 	explicitPagination := c.Query("page") != "" || c.Query("limit") != ""
 	page, limit, offset := parseListPaginationWithDefault(c, maxListLimit)
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "resources")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения ресурсов"})
@@ -68,12 +74,12 @@ func (rc *ResourceController) GetResources(c *gin.Context) {
 		page = 1
 		limit = len(resources)
 	}
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{
 		"resources": resources,
 		"total":     total,
 		"page":      page,
 		"limit":     limit,
-	})
+	}))
 }
 
 func (rc *ResourceController) GetResource(c *gin.Context) {

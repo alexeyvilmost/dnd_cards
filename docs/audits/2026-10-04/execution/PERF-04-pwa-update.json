@@ -1,0 +1,58 @@
+{
+  "status": "passed",
+  "runId": "test_20703e67ee6019b29652e920",
+  "previousRunId": "test_22b875c9d2f46f4833e5b51d",
+  "candidateRunId": "test_84e3129763ed412fd5aea3af",
+  "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+  "oldBuild": {
+    "reused": false,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_22b875c9d2f46f4833e5b51d\\ui-dist",
+    "indexHash": "a9a926a63c65838e8144897a70b2773243788e5ba8e795948a8b3bb105d14f06",
+    "manifestHash": "2a562f13aab53051d724f6c8b5aaf88dc2136f816a10795dd202a98ba392fe83",
+    "files": 628,
+    "bytes": 169187399
+  },
+  "newBuild": {
+    "reused": false,
+    "isolatedBuild": true,
+    "reactProfile": false,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_84e3129763ed412fd5aea3af\\ui-dist",
+    "indexHash": "55764c912bec4964350eb8205fb5c957a9a2530766580a160ff2c7faa0e89ada",
+    "manifestHash": "7857a429897a5f9c8138a03e815e0249a4312e0155aa53ba43a2e1fecf0f46d9",
+    "files": 631,
+    "bytes": 169173472
+  },
+  "retention": {
+    "copied": 339,
+    "reused": 0,
+    "count": 339
+  },
+  "retainedRequests": [
+    "/assets/CardExport-Dg68OBh-.js",
+    "/assets/jspdf.es.min-CJn4U-u5.js",
+    "/assets/minus-eyJoYWcz.js"
+  ],
+  "oldWorkerControlled": true,
+  "newWorkerControlled": true,
+  "newEntryLoaded": true,
+  "unseenOldLazyRoute": "export",
+  "pageErrors": [],
+  "preexistingAssetMisses": [
+    {
+      "path": "/icons/fire.png",
+      "status": 404,
+      "phase": "before"
+    },
+    {
+      "path": "/icons/fire.png",
+      "status": 404,
+      "phase": "before"
+    }
+  ],
+  "newMissingAssets": [],
+  "mutations": [],
+  "fullBuildManifestsUnchanged": true,
+  "scope": "Two genuine immutable application builds, local stable origin, real service worker install/update and retained lazy import. No fabricated API responses; not a paid pending-command crash test.",
+  "raw": "outputs/testing/runs/test_20703e67ee6019b29652e920/pwa-update/result.json",
+  "cleanup": "stopped"
+}

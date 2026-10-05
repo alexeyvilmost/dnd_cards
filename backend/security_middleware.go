@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"io"
@@ -51,6 +52,7 @@ func RequestIDMiddleware() gin.HandlerFunc {
 			requestID = newRequestID()
 		}
 		c.Set(requestIDContextKey, requestID)
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), requestCorrelationKey{}, requestID))
 		c.Header("X-Request-ID", requestID)
 		c.Next()
 	}

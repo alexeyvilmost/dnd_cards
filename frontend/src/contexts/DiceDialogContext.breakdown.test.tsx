@@ -56,6 +56,7 @@ describe('DiceDialog breakdown preview', () => {
       );
     });
 
+    await act(async () => { await import('./DiceDialogHost'); });
     const preview = container.querySelector<HTMLElement>('.dice-dialog-preview');
     expect(preview?.textContent).toContain('Проверка (Восприятие)');
     expect(preview?.textContent).toContain('модификатор характеристики');
@@ -66,5 +67,15 @@ describe('DiceDialog breakdown preview', () => {
       container.querySelector<HTMLButtonElement>('.dice-dialog-btn.ghost')!.click();
       await pending;
     });
+  });
+
+  it('settles cancellation on unmount without rolling or orphaning the caller', async () => {
+    const roll = vi.fn();
+    let pending!: Promise<unknown>;
+    await act(async () => { pending = api.request([{ sides: 20, label: 'Проверка' }], 'Проверка', undefined,
+      { compactCheck: { kind: 'check', roll } }); });
+    await act(async () => root.render(null));
+    await expect(pending).resolves.toEqual({ mode: 'cancel' });
+    expect(roll).not.toHaveBeenCalled();
   });
 });

@@ -65,7 +65,6 @@ import {
 import { clearSheetCombatSession } from '../character/sheetCombatSession';
 import { writeSoloCombatState } from '../solo-combat/persistence';
 import { fetchBasicActions } from '../character/basicActions';
-import { getCardsIndex } from '../utils/cardsIndex';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import { newSheetRuntimeCommandId } from '../character/sheetCombatSession';
 import {
@@ -340,8 +339,8 @@ export default function SheetRestButtons({
       } else if (restType) {
         let pending = pendingRest;
         if (!pending) {
-          const [cards, basicActions] = await Promise.all([getCardsIndex(), fetchBasicActions()]);
-          const participant = await loadSheetCombatParticipant({ character, cards, basicActions });
+          const basicActions = await fetchBasicActions();
+          const participant = await loadSheetCombatParticipant({ character, cards: new Map(), basicActions });
           const actor = participant.canonical.world.actors[character.id];
           const context = { ...actor.character, selfId: actor.id, passives: actor.passives, rng: () => Math.random() };
           const result = restType === 'short_rest' ? shortRest(actor.runtime, context) : longRest(actor.runtime, context);
@@ -492,13 +491,12 @@ export default function SheetRestButtons({
       }
       const externalIds = persistedSourceTurnCharacterIds(character.turn_state, character.id);
       if (externalIds.length) {
-        const [characters, cards, basicActions] = await Promise.all([
+        const [characters, basicActions] = await Promise.all([
           Promise.all([character.id, ...externalIds].map(charactersV3Api.get)),
-          getCardsIndex(),
           fetchBasicActions(),
         ]);
         const participants = await Promise.all(characters.map((selected) => (
-          loadSheetCombatParticipant({ character: selected, basicActions, cards })
+          loadSheetCombatParticipant({ character: selected, basicActions, cards: new Map() })
         )));
         const source = participants.find((participant) => participant.character.id === character.id);
         if (!source) throw new Error('Не удалось загрузить источник нового хода');

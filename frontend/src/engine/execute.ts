@@ -5274,7 +5274,9 @@ export const EMITTED_EVENTS = [
   // it observes the exact Sneak Attack once-per-turn ledger transition.
   'action_resolved', 'hit', 'sneak_attack_hit', 'crit', 'damage_taken', 'miss', 'spell_cast', 'reduced_to_0_hp',
   'physical_interaction', 'equipment_changed', 'movement_exhausted', 'resource_spent', 'healing_given', 'healing_received', 'encounter_start', 'encounter_end',
-  'attack_roll_made', 'attacked', 'damage_dealt', 'kill', 'condition_applied', 'condition_received', 'forced_save',
+  'attack_roll_made', 'attack_dice_followup', 'attacked', 'damage_dealt', 'kill', 'condition_applied', 'condition_received', 'forced_save',
+  // rules-core/effectReceived emits this after applying a negative effect.
+  'effect_received',
   // Ход и отдыхи через шину (C3 слайс 2 — turn.ts startTurn/endTurn/shortRest/longRest):
   'turn_start', 'turn_end', 'short_rest', 'long_rest',
 ] as const;

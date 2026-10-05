@@ -4,6 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CardLibrary from '../../pages/CardLibrary';
+import { ENTITY_SUPPORT_STATUSES } from '../../content/supportStatus';
 
 const mocks = vi.hoisted(() => ({ token: 'admin' as string | null, canManage: true, mobile: false, showReviewStatus: false, list: vi.fn(), detail: vi.fn(), bulk: vi.fn(), catalog: vi.fn(), effects: vi.fn(), spells: vi.fn(), feats: vi.fn(), classes: vi.fn(), races: vi.fn() }));
 vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => ({ token: mocks.token }) }));
@@ -45,6 +46,7 @@ vi.mock('../../utils/formattedText', () => ({ FormattedText: () => null }));
 
 (globalThis as typeof globalThis & {IS_REACT_ACT_ENVIRONMENT:boolean}).IS_REACT_ACT_ENVIRONMENT = true;
 const cards = [{id:'first',name:'Первый предмет',rarity:'common',card_number:'A'}, {id:'second',name:'Второй предмет',rarity:'rare',card_number:'B'}];
+const summary = (statuses: string[]) => ({ total: statuses.length, counts: Object.fromEntries(ENTITY_SUPPORT_STATUSES.map(status => [status, statuses.filter(value => value === status).length])) });
 function NavigationProbe() {
   const location = useLocation(), navigate = useNavigate();
   return <><output data-location>{location.pathname}{location.search}</output><button onClick={() => navigate(-1)}>Назад в тесте</button><button onClick={() => navigate(1)}>Вперёд в тесте</button><button onClick={() => navigate('/library?rarity=rare')}>Внешняя ссылка</button></>;
@@ -263,23 +265,24 @@ describe('item library interactions', () => {
   });
 
 
-  it('loads all filtered pages for status counts, combines statuses, and patches counts and filtered rows without fetching again', async () => {
+  it('loads one filtered page with complete server counts and refreshes only metadata after saving a status', async () => {
     mocks.showReviewStatus = true;
     const rows = [
       {...cards[0], support:{status:'verified'}},
       {...cards[1], support:{status:'not_verified'}},
       {...cards[1], id:'third', name:'Третий предмет', support:{status:'narrative'}},
     ];
-    mocks.list.mockImplementation(async ({page}: {page:number}) => ({cards:[rows[page-1]], total:3}));
+    mocks.list.mockImplementation(async ({limit}: {limit:number}) => ({cards:rows.filter(row => ['not_verified', 'narrative'].includes(row.support.status)).slice(0,limit), total:rows.filter(row => ['not_verified', 'narrative'].includes(row.support.status)).length, review_summary:summary(rows.map(row => row.support.status))}));
     await render('/library?tag=stable&status=not_verified,narrative');
-    expect(mocks.list).toHaveBeenCalledTimes(3);
-    expect(mocks.list).toHaveBeenLastCalledWith(expect.objectContaining({page:3,tag:'stable'}));
+    expect(mocks.list).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({page:1,limit:50,tag:'stable',review_status:'not_verified,narrative',review_summary:true}));
     expect(container.querySelectorAll('.library-item-row')).toHaveLength(2);
     expect(container.querySelector('.library-review-summary p')?.textContent).toContain('3 сущностей');
     expect(container.querySelector('.library-review-summary [data-status=verified] strong')?.textContent).toBe('1');
     expect(container.querySelectorAll('.library-item-row .review-status-corner')).toHaveLength(2);
+    rows[1].support.status = 'partial_narrative_verified_partial';
     await act(async()=>{window.dispatchEvent(new CustomEvent('entity-review-status-changed',{detail:{entity_type:'card',entity_id:rows[1].id,support:{status:'partial_narrative_verified_partial'}}}));});
-    expect(mocks.list).toHaveBeenCalledTimes(3);
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    expect(mocks.list).toHaveBeenLastCalledWith(expect.objectContaining({page:1,limit:1,tag:'stable',review_status:'not_verified,narrative',review_summary:true}));
     expect(container.querySelectorAll('.library-item-row')).toHaveLength(1);
     expect(container.querySelector('.library-review-summary [data-status=verified] strong')?.textContent).toBe('1');
     expect(container.querySelector('.library-review-summary [data-status=partial_narrative_verified_partial] strong')?.textContent).toBe('1');
@@ -287,10 +290,10 @@ describe('item library interactions', () => {
   });
 
 
-  it.each(['verified', 'partial_narrative_verified_partial'])('keeps the open detail and scroll position while saving %s without a catalog reload', async status => {
+  it.each(['verified', 'partial_narrative_verified_partial'])('keeps the open detail and scroll position while saving %s with a background metadata refresh', async status => {
     mocks.showReviewStatus=true;
     const card={...cards[0],support:{status:'not_verified'}};
-    mocks.list.mockResolvedValue({cards:[card],total:1});
+    mocks.list.mockImplementation(async () => ({cards:[card],total:1,review_summary:summary([card.support.status])}));
     mocks.detail.mockResolvedValue(card);
     await render();
     await click('Первый предмет');
@@ -300,13 +303,15 @@ describe('item library interactions', () => {
     container.scrollTop=480;
     dialog.scrollTop=125;
     const url=location();
+    card.support.status = status;
     await act(async()=>window.dispatchEvent(new CustomEvent('entity-review-status-changed', {detail:{entity_type:'card',entity_id:card.id,support:{status}}})));
     expect(container.querySelector('[role=dialog]')).toBe(dialog);
     expect(container.querySelector('.library-item-row')).toBe(row);
     expect(container.scrollTop).toBe(480);
     expect(dialog.scrollTop).toBe(125);
     expect(location()).toBe(url);
-    expect(mocks.list).toHaveBeenCalledTimes(1);
+    expect(mocks.list).toHaveBeenCalledTimes(2);
+    expect(mocks.list).toHaveBeenLastCalledWith(expect.objectContaining({page:1,limit:1,review_summary:true}));
     expect(container.querySelector('[role=dialog]')?.getAttribute('data-support-status')).toBe(status);
     expect(container.querySelector('.library-item-row .review-status-corner')?.getAttribute('data-review-status')).toBe(status);
   });

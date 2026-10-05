@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "kind": "actual-oci-chunk-origin",
+  "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+  "inputFingerprint": "sha256:0a2608a11e205a3b3fcccc8edbf293c2fb5e6c3ec7ea1c5500994811da6885d9",
+  "originalImageId": "sha256:80e0f6c2b52c6a618ebda5da16ba3872394848be09436bf253b4ca6b18104a13",
+  "exactChunkBytes": true,
+  "trackedSourceSnapshotModules": true,
+  "scriptExecution": "Vite compiler only; compiled handler not executed",
+  "windowsHandlerWritten": false,
+  "file": "assets/handler-vj37PAi8.js",
+  "sha256": "sha256:f749856c65666f9c2fdb99290a044218a0754485a56abc149f77be55cb0943e3",
+  "bytes": 471548,
+  "modules": [
+    {
+      "path": "frontend/src/character/sheetRestDecisions.ts",
+      "sha256": "e9a3fce134f5871eb83e4f5bd309ca085d25fa389d4d3efb7983ab63f825c8af",
+      "bytes": 4167
+    },
+    {
+      "path": "frontend/src/engine/actionCostPolicy.ts",
+      "sha256": "a5a5967c133cf501b0f9015562eb010121ef43019492cdba84dd698c8790e04a",
+      "bytes": 7754
+    },
+    {
+      "path": "frontend/src/engine/actionSurge.ts",
+      "sha256": "581033ed0e416b31d9fce7826b80e065e037a1d4a9db903861f18f465d5bf72f",
+      "bytes": 2534
+    },
+    {
+      "path": "frontend/src/engine/boons.ts",
+      "sha256": "2de792e8d61820089932090d70988459ea7c2dfcb2db73cbd263c3f7bec96fd0",
+      "bytes": 4482
+    },
+    {
+      "path": "frontend/src/engine/elapsedTime.ts",
+      "sha256": "b928d6ef59b30c727607b8e09cc8969652f2be018bc8121707ab4c7b7a309331",
+      "bytes": 1363
+    },
+    {
+      "path": "frontend/src/engine/encounter.ts",
+      "sha256": "d6ab27a4505591c27be3b2e65e807e27d12e097659a8387122380fa2379486b6",
+      "bytes": 2186
+    },
+    {
+      "path": "frontend/src/engine/restPolicies.ts",
+      "sha256": "246a51f0d96299851d8f7d4f64ce837e4cdf30bf1eb40b2b07d2bc2604013e6b",
+      "bytes": 2193
+    },
+    {
+      "path": "frontend/src/engine/sourceTurnExpiry.ts",
+      "sha256": "f0985a18fde91bff29594e2a65b61ef2901fb699e9063b00a7e688a5a21a83c7",
+      "bytes": 1840
+    },
+    {
+      "path": "frontend/src/engine/turn.ts",
+      "sha256": "7bbbb9783eeeb461c292c67c0875dcd8fe036ae2aa8122645a237bcae6e2f57d",
+      "bytes": 28691
+    },
+    {
+      "path": "frontend/src/rules-core/activationCastTime.ts",
+      "sha256": "8491811d8ee9b4edbb01d7de0857e7b6281844d0aad9ef41e8acc460ec871785",
+      "bytes": 2427
+    },
+    {
+      "path": "frontend/src/rules-core/activeSlotRecovery.ts",
+      "sha256": "504255895a3acc318a307e724d4a08a56c8f61243c712d7d9621766cb8598d82",
+      "bytes": 2025
+    },
+    {
+      "path": "frontend/src/rules-core/actorTraits.ts",
+      "sha256": "c19d93fef93b5a8d4e77a0ebda7d2d889e76a6248678eb8b42eeda311add57c8",
+      "bytes": 2446
+    },
+    {
+      "path": "frontend/src/rules-core/attackActionBudget.ts",
+      "sha256": "86df3196e1cfc59b7fca0263227b3b33b0b449bc1e192b409243714f250e1087",
+      "bytes": 1688
+    },
+    {
+      "path": "frontend/src/rules-core/attackDamageContinuations.ts",
+      "sha256": "e95607856bcdfac4dd572c3f50fabf242c4f9fcc8cd88a069d74e43c1531908e",
+      "bytes": 37666
+    },
+    {
+      "path": "frontend/src/rules-core/attackDefenseRuntime.ts",
+      "sha256": "78e5d678371254d3d234eb71ac74f1bd0cd3d6f4a56278cf0e08a4f9ea949376",
+      "bytes": 1211
+    },
+    {
+      "path": "frontend/src/rules-core/attackDefinitions.ts",
+      "sha256": "33d4e9f8f68593ea0010f3e5560ddc7cdf99abff8be5880536db5c76372d3e6e",
+      "bytes": 3261
+    },
+    {
+      "path": "frontend/src/rules-core/attackRedirection.ts",
+      "sha256": "e7c8ef6895a2cb2d4ed967c82374cc3015e58214f87535716c3b38a6e857bad3",
+      "bytes": 3110
+    },
+    {
+      "path": "frontend/src/rules-core/bondLifecycle.ts",
+      "sha256": "877a91f747c8e87487fbcba4aceb51e81fb816ded680ecfebff13a395fcd6ee1",
+      "bytes": 2162
+    },
+    {
+      "path": "frontend/src/rules-core/combatHistory.ts",
+      "sha256": "91bcbd27ebf8d117a7ed146c7514f457e5bcad350fc08b84626d3ddbb71e713c",
+      "bytes": 1436
+    },
+    {
+      "path": "frontend/src/rules-core/commandDispatch.ts",
+      "sha256": "1aba83a5a083298ae6acd43ade3d5e050396c815beb58f1b1513be525e57a416",
+      "bytes": 5266
+    },
+    {
+      "path": "frontend/src/rules-core/conditionsRuntime.ts",
+      "sha256": "37069874681a576715cce587f7a781218725f3e17fc02cd03ada1b303bb1d0aa",
+      "bytes": 7303
+    },
+    {
+      "path": "frontend/src/rules-core/damageTransfer.ts",
+      "sha256": "8e8aee8b082df1dd86c8935acaf7056b12c884dbb7c09c9099f18097e55d789b",
+      "bytes": 2671
+    },
+    {
+      "path": "frontend/src/rules-core/deathRecovery.ts",
+      "sha256": "7bb840e16457ef9313d8764d4c62d6e49ce9c1b4d2d294e9e3aa4fa1b9451727",
+      "bytes": 2537
+    },
+    {
+      "path": "frontend/src/rules-core/decisionDispatch.ts",
+      "sha256": "5ed6eb180f278e85d5858e942721e63c227dc9619bdf9df15210957ef3af828d",
+      "bytes": 1127
+    },
+    {
+      "path": "frontend/src/rules-core/effectReceived.ts",
+      "sha256": "1265809b47c62078ff4bfcfeb9c742ee84e7875c32a6a4d1bc5d2ca2522d27a2",
+      "bytes": 3051
+    },
+    {
+      "path": "frontend/src/rules-core/equipmentChange.ts",
+      "sha256": "ef140cc38f2299652b6abe1585d452c202b89aa0bd8e9c50605bf71e93070747",
+      "bytes": 3574
+    },
+    {
+      "path": "frontend/src/rules-core/eventReactionQueue.ts",
+      "sha256": "79e64ea6f73547cb8aa1026f76990c53d73f210d26bcdcfb7cce99e5fdb03e39",
+      "bytes": 5980
+    },
+    {
+      "path": "frontend/src/rules-core/failedCheckBoost.ts",
+      "sha256": "bcbf4b9a66d44a45edbfeb6a701a7899b3cf1100b3e1fcad3b0390cdf0c524e4",
+      "bytes": 3467
+    },
+    {
+      "path": "frontend/src/rules-core/generalFeatAttackDeclaration.ts",
+      "sha256": "f447a327c45be0e26df68295cfa794b129354bfd4826630b288a5fb8567c7d39",
+      "bytes": 869
+    },
+    {
+      "path": "frontend/src/rules-core/generalFeatDamageRuntime.ts",
+      "sha256": "310cacb055031311a1d5445b387a881b74cd9009cad74c7bb09c600303756345",
+      "bytes": 6225
+    },
+    {
+      "path": "frontend/src/rules-core/generalFeatReactionRuntime.ts",
+      "sha256": "174104df57d52abb45b47c1723b4f33444227f92ded399d10b3731b8eb9dd94a",
+      "bytes": 10230
+    },
+    {
+      "path": "frontend/src/rules-core/handler.ts",
+      "sha256": "1431f4c8f605ac26c6abc4aea44a7d9f1e0aa9fa01298328a1fd380b1585b480",
+      "bytes": 556806
+    },
+    {
+      "path": "frontend/src/rules-core/heldItemWorld.ts",
+      "sha256": "ee3102a6ca59245648e73b67c8feb1aaed8a0541f0ed6fb8e4f5cd922d90fada",
+      "bytes": 4154
+    },
+    {
+      "path": "frontend/src/rules-core/hide.ts",
+      "sha256": "ef038646e966aa0d9b9238776ebb7729fc0ff28a5704cef1e8247feb88aca3ab",
+      "bytes": 3595
+    },
+    {
+      "path": "frontend/src/rules-core/itemMaterialFocus.ts",
+      "sha256": "1fad798bb39c41eacd7d8f8407468ea5a0c19eb0ed48c6088d33b0b4560fb0a5",
+      "bytes": 2651
+    },
+    {
+      "path": "frontend/src/rules-core/lightWeaponExtraAttack.ts",
+      "sha256": "dfceebbb37d13975d105c20c9f737665db95a3c4174b0f46d4dba81ba96cd0b8",
+      "bytes": 6602
+    },
+    {
+      "path": "frontend/src/rules-core/pactBladeRuntime.ts",
+      "sha256": "7d6be3ec99ed83b17b1f27276e70b4057b4889773a5a6c46309272238dd6aa72",
+      "bytes": 45606
+    },
+    {
+      "path": "frontend/src/rules-core/pactBladeWorldAdapter.ts",
+      "sha256": "e512b05c73a3e554d63eef6d86554d9b8fcdcbdf99346f8a610afba0b5f8a27d",
+      "bytes": 48594
+    },
+    {
+      "path": "frontend/src/rules-core/pactTomeRuntime.ts",
+      "sha256": "791b7189fb1c1d7fb4f01c0fd792d16841a00a8bdd3ec120e03a8a228d15c543",
+      "bytes": 30573
+    },
+    {
+      "path": "frontend/src/rules-core/pactTomeWorldAdapter.ts",
+      "sha256": "812c94606c932204fd4896a06f32b0937b12c0fe85414093c4aa73d7cec1275c",
+      "bytes": 27330
+    },
+    {
+      "path": "frontend/src/rules-core/projectileReflection.ts",
+      "sha256": "5998f87b86bdc46906353a6b795c02a812d81a49d60ade358574a9ee9fe8a705",
+      "bytes": 1877
+    },
+    {
+      "path": "frontend/src/rules-core/recipientBindings.ts",
+      "sha256": "c474f26be7a2422a261b647265f427ed019b578e548d1d7b5e679f94153bf688",
+      "bytes": 4409
+    },
+    {
+      "path": "frontend/src/rules-core/reducer.ts",
+      "sha256": "ba2f59f483b8c97c2a22bae6b2364a6b03b4cbc0041b809389943b8ae1bee520",
+      "bytes": 35995
+    },
+    {
+      "path": "frontend/src/rules-core/restDecisions.ts",
+      "sha256": "f943640f6740188869afda2725104ef568ffdf26e5178eec7245b1a880386686",
+      "bytes": 5559
+    },
+    {
+      "path": "frontend/src/rules-core/spellcastingExecution.ts",
+      "sha256": "bc37ce42fe6e5285988a8e04cbad908534612a2a534bdf9d9a8d2bba33ccee8d",
+      "bytes": 8078
+    },
+    {
+      "path": "frontend/src/rules-core/telekineticMovement.ts",
+      "sha256": "5be74ad3c472f0f1a47f24e3d8fc6e2a7f08a4fe83ff59a19e1b8cc2559dc6ff",
+      "bytes": 5578
+    },
+    {
+      "path": "frontend/src/rules-core/teleportDestination.ts",
+      "sha256": "bb26d7ff4efa56bf19ecf3905843f402578d2dc829fb89fc1fe83a819b5df6f5",
+      "bytes": 1340
+    },
+    {
+      "path": "frontend/src/rules-core/triggerOwnership.ts",
+      "sha256": "6590c9505f2527012e859f85272ac66b0960ae6b7868a35f03b1d45fa9a442a1",
+      "bytes": 2911
+    },
+    {
+      "path": "frontend/src/rules-core/triggeredAttackTargeting.ts",
+      "sha256": "0409c30d3ef64f85638b98dd732b7853cf96d8fcc43f17db3be71d1f03e7b19f",
+      "bytes": 1469
+    },
+    {
+      "path": "frontend/src/rules-core/weaponBond.ts",
+      "sha256": "34d851b1490c88af2d02863844c9b6ed5bf057c064ffae17bc08c7222663d2eb",
+      "bytes": 8918
+    },
+    {
+      "path": "frontend/src/rules-core/worldItemActions.ts",
+      "sha256": "0cb822f3bde71a90f96be5c204c3506e8422956a9527979b68d38d92a6e209b2",
+      "bytes": 2464
+    },
+    {
+      "path": "frontend/src/rules-core/worldSpellPrimitives.ts",
+      "sha256": "791dcaf5b72c4454897deeae8b8e1171bbc7e70d5642d5911b59d138d05ec603",
+      "bytes": 26143
+    }
+  ]
+}

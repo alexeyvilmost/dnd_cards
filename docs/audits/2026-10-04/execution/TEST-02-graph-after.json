@@ -1,0 +1,12 @@
+{
+  "inputCount": 267,
+  "cycles": [],
+  "forbidden": [],
+  "sharedPrimitives": [
+    "src/rules-primitives/effectRollFacts.ts",
+    "src/rules-primitives/mechanicsView.ts",
+    "src/rules-primitives/runtimeActionGrants.ts",
+    "src/rules-primitives/sensePerception.ts"
+  ],
+  "testHelpers": []
+}

@@ -40,6 +40,10 @@ describe('combat roll dialog', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     let stored: string | null = null;
     vi.stubGlobal('localStorage', {getItem: () => stored, setItem: (_key: string, value: string) => {stored = value;}});
+    // These cases exercise the visible roll dialog. The product default now
+    // skips presentation; choose the tested policy explicitly in each fixture.
+    setSetting('combatRollMode', 'standard');
+    setSetting('enemyCombatRollMode', 'standard');
     container = document.createElement('div'); document.body.append(container); root = createRoot(container);
   });
   it('keeps the dialog and attack die mounted when accepting a held roll, then rolls only damage', async () => {

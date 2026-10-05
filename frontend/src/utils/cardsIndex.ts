@@ -4,20 +4,19 @@ import { subscribeApiCacheInvalidation } from '../api/apiCache';
 import type { Card } from '../types';
 
 // Кэш индекса карт (id -> Card) для резолва ссылок (контейнеры, снаряжение предысторий).
-let cache: Map<string, Card> | null = null;
 let inflight: Promise<Map<string, Card>> | null = null;
 let sessionKey: string | null | undefined;
 let generation = 0;
 
 function invalidateIndex() {
   generation++;
-  cache = null;
   inflight = null;
 }
 
 // Acquisitions, templates and shop/reward changes can alter private additions
 // without changing the signed-in user. Public HTTP pages keep their own cache.
-const unsubscribe = subscribeApiCacheInvalidation(({ prefix }) => {
+const unsubscribe = subscribeApiCacheInvalidation(({ prefix, runtimeOnly }) => {
+  if (runtimeOnly) return;
   if (prefix === null || prefix === '/api/' || ['/api/cards', '/api/characters-v3',
     '/api/character-templates', '/api/roguelike', '/api/entity-tags', '/api/my-item-catalog'].includes(prefix)) invalidateIndex();
 });
@@ -34,7 +33,7 @@ function syncSession() {
 
 export async function getCardsIndex(force = false): Promise<Map<string, Card>> {
   const requestSession = syncSession();
-  if (cache && !force) return cache;
+  if (force) invalidateIndex();
   if (inflight) return inflight;
   const requestGeneration = generation;
   const stale = () => generation !== requestGeneration || readPersistedAuthToken() !== requestSession;
@@ -72,8 +71,9 @@ export async function getCardsIndex(force = false): Promise<Map<string, Card>> {
       // A response started by an administrator cannot populate a player's index
       // after logout or an account switch, even if the old request finishes last.
       if (stale()) return getCardsIndex();
-      cache = new Map(all.map((c) => [c.id, c]));
-      return cache;
+      // A selector may share this request, but another invocation must recheck
+      // live rights. Runtime preparation uses the bounded detail endpoint.
+      return new Map(all.map((c) => [c.id, c]));
     } finally {
       // A transient request failure must not poison the process-wide resolver
       // with the same rejected promise for the rest of the browser session.
@@ -85,5 +85,6 @@ export async function getCardsIndex(force = false): Promise<Map<string, Card>> {
 
 export function getCachedCardsIndex(): Map<string, Card> | null {
   syncSession();
-  return cache;
+  // Compatibility accessor: there is no cross-request authorized index.
+  return null;
 }

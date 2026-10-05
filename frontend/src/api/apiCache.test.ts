@@ -1,11 +1,35 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { bustPrefix, cached, clearApiCache } from './apiCache';
+import { bustPrefix, cached, clearApiCache, patchCachedValues } from './apiCache';
 
 afterEach(() => {
   clearApiCache();
 });
 
 describe('apiCache', () => {
+  it('coalesces zero-TTL reads without retaining completed private values', async () => {
+    let finish!: (value: string) => void;
+    const loader = vi.fn<() => Promise<string>>().mockImplementationOnce(() => new Promise(resolve => { finish = resolve; }))
+      .mockResolvedValueOnce('fresh');
+    const first = cached('/api/cards/private', 0, loader);
+    const second = cached('/api/cards/private', 0, loader);
+    finish('private');
+    expect(await Promise.all([first, second])).toEqual(['private', 'private']);
+    expect(loader).toHaveBeenCalledOnce();
+    const patch = vi.fn(value => value);
+    patchCachedValues('/api/cards', patch);
+    expect(patch).not.toHaveBeenCalled();
+    expect(await cached('/api/cards/private', 0, loader)).toBe('fresh');
+    expect(loader).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not reuse an older positive-TTL value when the caller requires a fresh read', async () => {
+    await cached('/api/cards/private', 60_000, async () => 'old');
+    expect(await cached('/api/cards/private', 0, async () => 'fresh')).toBe('fresh');
+    const patch = vi.fn(value => value);
+    patchCachedValues('/api/cards', patch);
+    expect(patch).not.toHaveBeenCalled();
+  });
+
   it('coalesces concurrent misses for the same detail URL', async () => {
     let resolve!: (value: { id: string }) => void;
     const loader = vi.fn(() => new Promise<{ id: string }>((done) => { resolve = done; }));

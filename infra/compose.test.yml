@@ -1,0 +1,89 @@
+# Container profile under validation; runtime acceptance is not yet claimed.
+# scripts/testing/check-compose.mjs validates with generated values, no app .env.
+name: ${TEST_RUN_ID:?runner-issued ID is required}
+services:
+  postgres:
+    image: ${TEST_POSTGRES_IMAGE:-postgres:17-alpine}
+    environment:
+      POSTGRES_DB: ${TEST_RUN_ID:?}
+      POSTGRES_USER: test_runner
+      POSTGRES_PASSWORD: ${TEST_DB_PASSWORD:?}
+    ports:
+      - "127.0.0.1:${TEST_DB_PORT:?}:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+      - ${TEST_BOOTSTRAP_FILE:?}:/docker-entrypoint-initdb.d/00-bootstrap.sql:ro
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U test_runner -d "$${POSTGRES_DB}"']
+      interval: 1s
+      timeout: 3s
+      retries: 60
+    networks: [isolated]
+  rules-worker:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.rules-worker
+    environment:
+      PORT: "8090"
+      RULES_WORKER_TOKEN: ${TEST_WORKER_TOKEN:?}
+      RULES_ARTIFACTS_DIR: /tmp/test-rules-artifacts
+      SOURCE_COMMIT: local-test
+    ports:
+      - "127.0.0.1:${TEST_WORKER_PORT:?}:8090"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:8090/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 1s
+      timeout: 3s
+      retries: 60
+    networks: [isolated]
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    environment:
+      PORT: "8080"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: test_runner
+      DB_PASSWORD: ${TEST_DB_PASSWORD:?}
+      DB_NAME: ${TEST_RUN_ID:?}
+      DB_SSLMODE: disable
+      JWT_SECRET: ${TEST_JWT_SECRET:?}
+      CONTENT_ADMIN_USER_IDS: ${TEST_ADMIN_ID:?}
+      RULES_WORKER_TOKEN: ${TEST_WORKER_TOKEN:?}
+      RULES_WORKER_URL: http://rules-worker:8090
+      OPENAI_API_KEY: ""
+      OPENAI_BASE_URL: http://127.0.0.1:1/v1
+      SOURCE_COMMIT: local-test
+    ports:
+      - "127.0.0.1:${TEST_API_PORT:?}:8080"
+    depends_on:
+      postgres: {condition: service_healthy}
+      rules-worker: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://127.0.0.1:8080/api/health]
+      interval: 1s
+      timeout: 3s
+      retries: 90
+    networks: [isolated]
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+      args: {VITE_API_URL: ""}
+    environment: {PORT: "3000"}
+    networks: [isolated]
+  gateway:
+    image: nginx:alpine
+    ports:
+      - "127.0.0.1:${TEST_UI_PORT:?}:8080"
+    volumes:
+      - ../scripts/testing/nginx.test.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [backend, frontend]
+    networks: [isolated]
+networks:
+  isolated: {internal: true}
+volumes:
+  database:
+    labels:
+      test-run-owner: ${TEST_RUN_ID:?}

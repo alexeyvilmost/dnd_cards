@@ -1,7 +1,7 @@
 import type {ActorState,RuleActionDefinition} from './domain';
-import {payloadsOf} from '../engine/mechanicsView';
-import {activeConditionsOf,matchesWhen} from '../engine/circumstances';
-import {triggerChance} from '../engine/triggerChance';
+import {payloadsOf} from '../rules-primitives/mechanicsView';
+import {activeConditionsOf,matchesWhen} from './legacy/engineAdapter';
+import {triggerChance} from './legacy/engineAdapter';
 import type {EngineEvent} from '../mvp/contracts';
 type Dict=Record<string,unknown>;
 

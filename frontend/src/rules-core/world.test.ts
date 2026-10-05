@@ -308,7 +308,7 @@ describe('WorldState command/event facade', () => {
       expect.objectContaining({
         actorId: 'wizard', actionId: 'spell.test-poison', actionKind: 'spell',
         sourceEntityIds: ['spell.test-poison'], targetIds: ['fighter'], timing: 'active',
-        spell: { baseLevel: 1, castLevel: 1, sourceClass: 'test-caster' },
+        spell: { baseLevel: 1, castLevel: 1, sourceClass: 'test-caster', concentration: false },
       }),
     ]);
     expect(foldEvents(initial, session.getEvents())).toEqual(final);
@@ -569,7 +569,7 @@ describe('WorldState command/event facade', () => {
     expect(resolved.status === 'accepted' ? resolved.events : []).toContainEqual(expect.objectContaining({
       payload: expect.objectContaining({
         type: 'ActionDeclared', actorId: 'wizard', actionId: 'spell.test-shield',
-        actionKind: 'spell', timing: 'reaction', spell: { baseLevel: 1, castLevel: 1, sourceClass: 'wizard' },
+        actionKind: 'spell', timing: 'reaction', spell: { baseLevel: 1, castLevel: 1, sourceClass: 'wizard', concentration: false },
       }),
     }));
     const finalAttack = resolved.status === 'accepted'

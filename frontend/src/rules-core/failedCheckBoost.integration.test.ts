@@ -15,14 +15,14 @@ const embeddedAction: RuleActionDefinition = {
   id:'embedded-check', name:'Проверяемое действие', kind:'nonSpell', sourceEntityIds:['test:embedded-check'],
   targeting:{minTargets:1,maxTargets:1,rangeFt:5,requiresLineOfSight:true,allowedRelations:['enemy']},
   mechanics:{activation:{mode:'active',cost:[{resource:'action'}]},effects:[{
-    resolution:'ability_check',ability:'int',dc:13,who:'target',on_success:[{kind:'condition',value:'prone'}],
+    resolution:'ability_check',ability:'int',dc:13,on_success:[{kind:'condition',value:'prone'}],
   }]},
 };
 const embeddedContestAction:RuleActionDefinition={
   ...embeddedAction,id:'embedded-contest',name:'Состязательное действие',sourceEntityIds:['test:embedded-contest'],
   mechanics:{...embeddedAction.mechanics,effects:[{
     resolution:'ability_check',ability:'str',skill:'athletics',contest_vs:['athletics','acrobatics'],
-    who:'target',on_success:[{kind:'condition',value:'prone'}],
+    on_success:[{kind:'condition',value:'prone'}],
   }]},
 };
 const catalog = {getAction: (id: string) => id === action.id ? action

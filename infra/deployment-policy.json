@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "productionEnabled": true,
+  "autoDeployMain": false,
+  "status": "authorized-manual-adoption-awaiting-final-local-gates",
+  "migrationMode": "additive-298-300",
+  "retainAllReferencedArtifacts": true,
+  "deleteBackupsImagesAssets": false
+}

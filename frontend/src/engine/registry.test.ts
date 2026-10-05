@@ -19,6 +19,14 @@ describe('ids', () => {
 });
 
 describe('registry', () => {
+  it('lets the identity-aware browser resolver own freshness when permanent caching is disabled', async () => {
+    let version = 'first';
+    const registry = createRegistry({resolveSpell: async () => ({id: version}), resolveAction: async () => null,
+      resolveEffect: async () => null, resolveFeat: async () => null}, {cache: false});
+    expect(await registry.resolve('spell', 'same-declaration')).toEqual({id: 'first'});
+    version = 'second';
+    expect(await registry.resolve('spell', 'same-declaration')).toEqual({id: 'second'});
+  });
   it('кэширует резолв', async () => {
     let calls = 0;
     const registry = createRegistry({

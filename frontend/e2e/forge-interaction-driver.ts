@@ -35,7 +35,7 @@ export async function openForgeSection(page: Page, label: string): Promise<void>
 
 export async function selectForgeEntity(page: Page, name: string): Promise<void> {
   const button = page.locator('.forge-editor').getByRole('button', {
-    name: new RegExp(`^${escapeRegExp(name)}(?:\\s|$)`),
+    name: new RegExp(`^(?:\\?\\s+)?${escapeRegExp(name)}(?:\\s|$)`),
   }).first();
   await expect(button, `Forge entity ${name}`).toBeVisible();
   await button.click();

@@ -1,0 +1,473 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-05T02:15:18.973Z",
+  "sourceAudits": [
+    "completion-audit-runtime.json",
+    "completion-audit-tests.json",
+    "completion-audit-release.json"
+  ],
+  "historicalAuditUnchanged": true,
+  "productionMutated": true,
+  "rows": [
+    {
+      "id": "PERF-01.S3",
+      "task": "PERF-01",
+      "requirement": "Предварительно собрать известное транзитивное замыкание ссылок через общий reference registry. Не считать синтаксическое замыкание полным для динамических правил: сохранить bounded needs fallback и измерять его срабатывание.",
+      "originalFinding": "Known transitive reference-registry prefetch is absent; bounded dynamic needs fallback is retained.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Bounded request-local advisory registry prefetch added with fresh item rights and canonical needs fallback; native transitive/cycle and actual worker differential passed. Flag remains OFF.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-01.S6",
+      "task": "PERF-01",
+      "requirement": "Установить лимиты байтов/entries и LRU eviction, in-flight deduplication, безопасный cache miss fallback и метрики hit/miss. Исторический бой всегда читает его pinned catalog/artifact, не текущий каталог.",
+      "originalFinding": "Byte/entry limits, LRU, copies, miss fallback and telemetry are proven. Separate in-flight dedup is absent; cross-RR snapshot I/O deliberately is not merged. Publication under mutex is not request deduplication.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Only immutable serialization/hash work coalesces after each request establishes its own exact content/rights proof. Mutable worker results and repeatable-read DB I/O are never shared; bounded clones/failure/cancel behavior tested.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-01.V1",
+      "task": "PERF-01",
+      "requirement": "Два класса и два предмета на одних общих примитивах с разными данными; party 1/2/6.",
+      "originalFinding": "Items with grants3/5 and party1/2/6 proven; actual cache differential uses line+swordsman fighter presets, not two different classes.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Actual API-created line fighter and wizard, two generic grant items, cold/warm/evicted/prefetched full worker results passed. Earlier party1/2/6 receipts retained; a new common suite after the last cache fix is pending.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-02.S6",
+      "task": "PERF-02",
+      "requirement": "Переиспользовать статическую сборку в клиентском preview по корректному ключу зависимостей. После принятия применить authoritative postimage; на replay загрузить актуальное состояние, не откатывая его старым receipt.",
+      "originalFinding": "Authoritative postimage and replay reload proven. Keyed reuse of static client preview assembly result is absent; compatibility SheetEquipmentPanel:163 still calls participant builder. Server immutable declarations cache is not that result cache.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Browser static assembly memo uses exact freshly loaded dependency bundle plus draft/session, bounded entries and bytes, cloned outputs. No command/RNG/result cache. Four new red-to-green regressions close stale effect-type membership and TTL0 retained responses; targeted40/40 and TypeScript passed.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-04.S5",
+      "task": "PERF-04",
+      "requirement": "Для gameplay и rest заменить full cardsIndex traversal на bulk hydration нужных owned/equipped/referenced IDs. Полный индекс оставить только потребителям, которым он необходим; canonical closure достраивается общим resolver.",
+      "originalFinding": "Full public/private cardsIndex traversal remains at SheetRestButtons:343/497, useSoloCombatBootstrap:131/167, SoloCombatPage:354. SheetActionsPanel now loads referenced container IDs only.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Sheet/rest/bootstrap/add-scene hydration now requests only referenced IDs with bounded canonical container closure; all-or-fail ownership checks. Full selector index is fresh/in-flight only.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-04.S6",
+      "task": "PERF-04",
+      "requirement": "Разделить invalidation ownership/catalog metadata и обычных HP/turn mutations. Private acquisition, sale/reward, изменение тега/механики, logout/account switch и отзыв прав должны обновлять соответствующий кеш.",
+      "originalFinding": "Any successful non-GET characters-v3/roguelike request busts cardsIndex. HP/turn invalidation is not separated from ownership/catalog changes.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Known unchanged membership/runtime postimages avoid broad reference invalidation. Acquisition, unknown receipts, catalog and session mutations invalidate; subsequent item/selector reads always recheck rights.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-04.S8",
+      "task": "PERF-04",
+      "requirement": "Уточнить PWA precache manifest: glob index-*.js захватывает shared chunks с похожим именем. Проверить cold install, update и imports старой открытой вкладки; не нарушать согласованность release identity.",
+      "originalFinding": "One-build install/offline login and retained file unit tests proven; actual two-version SW update and old-open-tab lazy import not executed.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Real Chrome controlled old build A to new build B: installed SW, old unvisited Export lazy chunks served from retained A assets, new SW/entry activated, no new missing assets or API writes, full UI manifests unchanged.",
+      "evidence": [
+        "PERF-04-pwa-update.md",
+        "PERF-04-pwa-update.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-04.V3",
+      "task": "PERF-04",
+      "requirement": "Equip/rest после purchase/sale/reward и после смены пользователя; никаких stale private cards.",
+      "originalFinding": "Acquisition and account invalidation tests exist; remaining whole-index consumers and same-session external rights revocation are not fully verified.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Bulk ownership/denial and canonical container fixtures plus acquisition/runtime mutation/session revocation targeteds passed. Fresh common real gameplay suite after these changes remains pending.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-04.V4",
+      "task": "PERF-04",
+      "requirement": "PWA install/update, retained old chunks, несовместимый rules bootstrap fail-closed.",
+      "originalFinding": "Rules bootstrap fail-closed is tested; actual PWA update/old-tab import remains unverified.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Actual two-version SW update/old-tab lazy imports passed; existing rules-bootstrap fail-closed checks remain in required suites.",
+      "evidence": [
+        "PERF-04-pwa-update.md",
+        "PERF-04-pwa-update.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-04.A2",
+      "task": "PERF-04",
+      "requirement": "Gameplay не загружает полный общий cards index, если достаточно owned/referenced closure.",
+      "originalFinding": "Gameplay/rest still call full getCardsIndex; page-limited CardLibrary does not satisfy this acceptance.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Whole-index consumers removed from sheet/rest/bootstrap/add-scene gameplay. Canonical builder expands referenced containers, bounded bulk endpoint validates every requested ID.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-04.A4",
+      "task": "PERF-04",
+      "requirement": "Кеш остаётся согласованным и изолированным по правам/сессии.",
+      "originalFinding": "Session/account and explicit acquisition invalidation proven; externally revoked rights with unchanged token and an already warm index is not covered. This is missing evidence, not a newly demonstrated exploit.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Fresh reads with identity epoch protect changed/revoked rights; no completed private value retained for TTL0. Request-local effect-type membership no longer survives into the next bundle and shared API mechanics remain unchanged. Four reproduced failures are now green; common suite pending.",
+      "evidence": [
+        "PERF-01-catalog-followup.md",
+        "PERF-01-catalog-followup.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-05.S1",
+      "task": "PERF-05",
+      "requirement": "Записать CPU/React profile для hover, движения, смены цели и animation beats на большой карте с несколькими световыми областями и существами разного footprint.",
+      "originalFinding": "Profile covers hover/selection24x18/fourlights in JSDOM, not full CPU/browser-frame movement/target/animation comparison on large-map mixed-footprint fixture.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "Real Chrome profiling completed for hover, target, presentation movement and animation on the same24x18/four-light/mixed-footprint fixture. Renderer-only harness, not an authoritative API move benchmark.",
+      "evidence": [
+        "PERF-05-browser-map.md",
+        "PERF-05-browser-map.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "PERF-05.S7",
+      "task": "PERF-05",
+      "requirement": "Сравнить длительность render/long tasks и кадры на тех же fixtures; не делать широкие замены механизмов без профиля.",
+      "originalFinding": "Same-fixture JSDOM render measurements exist; required broader browser long-task/frame comparison absent.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "runtime_performance",
+      "resolution": "30 samples per scenario/arm with React durations, CPU profiles, long tasks and RAF; exact fixture/projection parity, hover/target/animation lighting work removed and movement recalculates once. No production SLA claim.",
+      "evidence": [
+        "PERF-05-browser-map.md",
+        "PERF-05-browser-map.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "AI-03.S5",
+      "task": "AI-03",
+      "requirement": "Проверить на тестовом стенде TLS/DNS/NO_PROXY, внутренний worker/DB/storage traffic, потерю egress и откат. API key не передавать произвольному relay, TLS не отключать.",
+      "originalFinding": "Two local CONNECT/TLS/NO_PROXY tests prove client isolation. No combined DNS/egress outage+recovery and unaffected gameplay/DB/worker/storage scenario receipt found.",
+      "status": "proven_local",
+      "owner": "root",
+      "evidence": "AI-03-egress-isolation.json"
+    },
+    {
+      "id": "AI-03.S6",
+      "task": "AI-03",
+      "requirement": "Поддерживаемое размещение/правомерный доступ пользователей подтвердить до реальной настройки. Не описывать иностранный IP как гарантию обхода регионального ограничения. Внешнее изменение выполняется только по отдельному запросу.",
+      "originalFinding": "Actual permitted placement/account/users and external gateway configuration require a separately authorized target; no TimeWeb/VPN change performed.",
+      "status": "real_image_generation_passed_backend_cutover_pending",
+      "owner": "root",
+      "evidence": [
+        "AI-03-sota-provider-probe.json",
+        "AI-03-egress-isolation.json",
+        "AI-03-sota-permanent-provider-probe.json",
+        "AI-03-sota-image-probe.json"
+      ],
+      "scope": "Permanent private nonroot Sota gateway onTimeWeb with single actual ImagesPOST/200; backend cutoverpending.",
+      "resolution": "Permanent private Sota gateway healthy; exact TimeWeb provider key generated one low-quality1024x1024 PNG through verifiedTLS:200,1326241 bytes, about11s, no retry. Provider routing/permission confirmed. Staged backend configuration prepared; running application unchanged, application production endpoint not yet exercised."
+    },
+    {
+      "id": "AI-03.V3",
+      "task": "AI-03",
+      "requirement": "Недоступность генерации не блокирует игровые команды.",
+      "originalFinding": "Gameplay remains on separate clients by code; no concurrent real game command while generation egress fails/restarts is demonstrated.",
+      "status": "proven_local",
+      "owner": "root",
+      "evidence": "AI-03-egress-isolation.json"
+    },
+    {
+      "id": "AI-03.A3",
+      "task": "AI-03",
+      "requirement": "Региональный отказ либо разрешённый доступ установлен отдельно, не скрыт под network retry.",
+      "originalFinding": "Actual region/permission cause remains unknown as documented; external diagnostic gate, not concealed network retry.",
+      "status": "real_image_generation_passed_backend_cutover_pending",
+      "owner": "root",
+      "evidence": [
+        "AI-03-provider-diagnostic.json",
+        "AI-03-sota-provider-probe.json"
+      ],
+      "resolution": "Причина прямого403 установлена; затем постоянный private gateway дал фактический paid Images POST HTTP200,PNG1024x1024,одна попытка,TLS verified. Это больше read-only probe, но applicationEndpointTested=false: backend ещё не переключён.",
+      "current_evidence": [
+        "AI-03-provider-diagnostic.json",
+        "AI-03-sota-image-probe.json"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S1",
+      "task": "CLEAN-02",
+      "requirement": "Составить route/API/data dependency map и измерение использования без личного содержания. Название старого каталога не доказывает неиспользуемость.",
+      "originalFinding": "Route/API/data map exists. Real route usage and external consumer evidence require read-only production/operator input not gathered locally.",
+      "status": "partially_superseded_by_explicit_legacy_removal",
+      "owner": "root",
+      "resolution": "Пользователь прямо отменил consumer/deprecation ожидание для V1/V2; его нельзя оставлять blocker их code removal. Dependency map и V3 preservation проверены. Реальное usage measurement остальных скрываемых частей не заявлено. Read-only production dependencies:21 V1+12 V2 rows,671744 bytes combined;10 bound inventories/45 items are preserved. No incoming character FK or dependent view was found.",
+      "current_evidence": [
+        "CLEAN-02-retired-characters.json",
+        "CLEAN-02-production-dependencies.json"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S4",
+      "task": "CLEAN-02",
+      "requirement": "Для v1/v2 characters обеспечить экспорт/перенос, redirect/deprecation и проверить внешние API callers. Backend endpoints сегодня зарегистрированы.",
+      "originalFinding": "V1 export and old redirects exist. V2 export/verified transfer is not implemented; it remains a local transition prerequisite before removal, with consumer discovery external.",
+      "status": "superseded_by_explicit_legacy_removal",
+      "owner": "root",
+      "evidence": [
+        "CLEAN-02-retired-characters.md",
+        "CLEAN-02-retired-characters.json"
+      ],
+      "scope": "V1/V2 routes/controllers/client support/export UI removed by explicit instruction; current V3/paper/run and shared inventory remain. Native PG11/11, fresh private UI+worker13/13 passed. Physical retired tables retained pending separately verified DB cutover; no waiting deprecation period is required for the authorized code removal.",
+      "latestUserDirection": "All character versions except current V3 may be removed, including support"
+    },
+    {
+      "id": "CLEAN-02.S5",
+      "task": "CLEAN-02",
+      "requirement": "Удалять UI/routes/controllers только после переходного периода и подтверждения отсутствия consumers. Данные/таблицы сохранять до отдельного DB решения.",
+      "originalFinding": "Deletion intentionally waits for external usage/consumer/deprecation-period evidence; no deletion is a valid conditional outcome, not a failed cleanup action.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "root",
+      "latestUserDirection": "All character versions except current V3 may be removed, including support",
+      "evidence": [
+        "CLEAN-02-retired-characters.md",
+        "CLEAN-02-retired-characters.json"
+      ],
+      "scope": "V1/V2 routes/controllers/client support/export UI removed by explicit instruction; current V3/paper/run and shared inventory remain. Native PG11/11, fresh private UI+worker13/13 passed. Physical retired tables retained pending separately verified DB cutover; no waiting deprecation period is required for the authorized code removal.",
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "CLEAN-03.S4",
+      "task": "CLEAN-03",
+      "requirement": "Сравнить clone/archive/context/image/pull bytes отдельно от initial browser transfer. public примерно 155 MB не скачивается при каждом входе.",
+      "originalFinding": "Archive/local source inventory and selected browser transfer known. Actual Docker context/image/pull bytes absent; enabled dist grows29.4MB because originals retained.",
+      "status": "partial_actual_oci_measurement_optin_pair_pending",
+      "owner": "root",
+      "resolution": "Docker доступен и default media-OFF images/pull/reuse реально измерены. Для media-enabled v2 отдельный до/после OCI pair не подтверждён, producer его пока отклоняет; local browser transfer и preserved originals не являются доказательством сокращения image/pull.",
+      "current_evidence": [
+        "REL-04-local-registry-current.json",
+        "CLEAN-03-oci-media-inputs.json"
+      ]
+    },
+    {
+      "id": "CLEAN-03.V3",
+      "task": "CLEAN-03",
+      "requirement": "Image/pull bytes до/после.",
+      "originalFinding": "Requires actual OCI daemon/image/pull measurement; not provided by native browser evidence.",
+      "status": "partial_actual_oci_measurement_optin_pair_pending",
+      "owner": "root",
+      "resolution": "Docker доступен и default media-OFF images/pull/reuse реально измерены. Для media-enabled v2 отдельный до/после OCI pair не подтверждён, producer его пока отклоняет; local browser transfer и preserved originals не являются доказательством сокращения image/pull.",
+      "current_evidence": [
+        "REL-04-local-registry-current.json",
+        "CLEAN-03-oci-media-inputs.json"
+      ]
+    },
+    {
+      "id": "CLEAN-03.A1",
+      "task": "CLEAN-03",
+      "requirement": "Сокращение передаваемого дистрибутива измерено.",
+      "originalFinding": "Selected image bodies42.82->29.45MB and PWA install shrink are measured. Full transferred image/pull distribution reduction is not proven; enabled OCI input contract is a local code prerequisite, actual measurements external.",
+      "status": "measured_browser_gain_full_distribution_gain_unproven",
+      "owner": "root",
+      "resolution": "Снижение отдельных image bodies/PWA измерено; сохранение оригиналов увеличивает opted-in dist. Full distribution reduction не доказано; флаг не включать только ради browser-size процента.",
+      "current_evidence": [
+        "CLEAN-03-real-flows.json",
+        "CLEAN-03-real-map.json",
+        "REL-04-local-registry-current.json",
+        "CLEAN-03-oci-media-inputs.json"
+      ]
+    },
+    {
+      "id": "GAP-OBS-METRICS",
+      "task": "OBS-01",
+      "requirement": "Full INP and equipment component profiling remain unmeasured. Later hover JSDOM profiling and equipment DOM+2RAF timings are useful but different evidence. Acquisition/hold-to-return/persist already have separate numeric proxies with documented RTT/scan/commit-ack error; the original plan does not require exact PostgreSQL server time. Worker callback/process CPU must not be presented as a measured pre-callback queue.",
+      "status": "proven_local",
+      "owner": "root",
+      "evidence": "OBS-01-equipment-browser-profile.json",
+      "resolution": "Оставить локальное подтверждение. Отдельно acquisition/hold/persist proxies и worker queue/CPU boundaries;120 equipment samples,1074 React records,page-lifetime INP152ms, after-only diagnostic build.",
+      "current_evidence": [
+        "OBS-01-equipment-browser-profile.json"
+      ]
+    },
+    {
+      "id": "GAP-REF-PHASES",
+      "task": "REF-01",
+      "requirement": "The event queue first slice passes; remaining generic command dispatch and attack/damage continuations are still in handler.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "tests_architecture",
+      "resolution": "Typed44-command/15-decision routers и cohesive attack/damage modules подтверждены immutable before/after replay84, targeted100. Старые artifacts/certificates не изменены; обновление общего статуса только после новых согласованных receipts.",
+      "evidence": [
+        "REF-01-continuations.md",
+        "REF-01-continuations.json"
+      ],
+      "current_evidence": [
+        "REF-01-continuations.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "GAP-SOLO-PENDING",
+      "task": "TEST-05",
+      "requirement": "Exhaustiveness checks all 15 rules-core PendingResolution variants, but not additional persisted SoloCombatState continuations. Existing scattered reload tests do not provide a complete phase-to-restart/retry matrix.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "tests_architecture",
+      "resolution": "222 fixture cases:220 accepted with440 exact retries and2 boundary rejections, all17 phases. The full extended lane passed again in extended2, including solo-durable-continuations. This does not change the failed overall extended2 result.",
+      "evidence": [
+        "TEST-05-solo-durable.md",
+        "TEST-05-solo-durable.json"
+      ],
+      "current_evidence": [
+        "TEST-05-solo-durable.json",
+        "outputs/testing/final-v3-extended/extended/report.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "GAP-SHARDS",
+      "task": "TEST-03,TEST-05",
+      "requirement": "One CI job and sequential runner stages. Native duration budgets already achieved; this is an unimplemented original operational step, not a correctness failure.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "tests_architecture",
+      "resolution": "Fresh core6 passed with exact-once aggregate coverage. Extended2 unit/flows/extended passed; sole backend routing failure fixed and full backend shard plus dedicated owned observed-baseline test passed. Original full aggregate remains failed. Exact commit full Linux CI remains mandatory.",
+      "evidence": [
+        "TEST-05-shards.md",
+        "TEST-05-shards.json"
+      ],
+      "current_evidence": [
+        "verification-20261005.json"
+      ],
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "REL04-LOCAL-REGISTRY",
+      "task": "REL-04",
+      "requirement": "Добавить отдельный owned loopback registry producer и caller build/save/publish/pull/reuse/fault matrix. Изолировать его plan/receipt от production-ready identity; не подставлять фиктивные GitHub runs. Закрепить реальный registry/base image digest, зарегистрировать owned resources/cleanup; actual build/run после появления локального daemon.",
+      "status": "actual_local_oci_passed",
+      "owner": "deployment_database",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json",
+        "docs/audits/2026-10-04/execution/REL-04-local-registry.json"
+      ],
+      "resolution": "Сохранить passed9/9 для exact fixture014f7208 с reader metadata; фактический OCI collector уже подтверждён отдельной квитанцией8+7. External CI authority отсутствует.",
+      "current_evidence": [
+        "REL-04-local-registry-current.json",
+        "REL-05-oci-rehearsal.json"
+      ]
+    },
+    {
+      "id": "DB01-REPEATABLE-SERIES",
+      "task": "DB-01",
+      "requirement": "Создать один реальный owned бой с закреплённым artifact/seed, снять frozen snapshot ДО workload и восстановить его в две отдельные owned DB. Выполнить один и тот же список legal command IDs/revisions/inputs через реальный API/worker; сравнить authoritative game state, RNG, journal и exact receipts плюс logical growth. Не использовать camp_turn с новой entropy на каждом запросе и не подменять RNG после init. Если server-generated semantic time всё ещё меняет результат — сначала явная test-only clock/entropy dependency injection до старта source, без production env fault knob; operational timestamp whitelist документировать отдельно, semantic fields не отбрасывать. Добавить bounded per-run-class command counts, неизвестный QA scope явно отмечать.",
+      "status": "proven",
+      "owner": "root",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/DB-01-seeded-series.json"
+      ]
+    },
+    {
+      "id": "DB03-LATENCY-ACCEPTANCE",
+      "task": "DB-03",
+      "requirement": "Повторить OFF/ON comparison на одинаковой восстановленной базе/inputs с численной дисперсией и idle CPU либо явно оставить storage-only эксперимент OFF. Не называть текущие30samples отсутствием регрессии; оптимизацию повторных catalog lookups делать только при сохранении integrity/privacy.",
+      "status": "experimental_off_latency_acceptance_not_met",
+      "owner": "root",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/DB-03-latency100.json",
+        "docs/audits/2026-10-04/execution/DB-03-latency100-optimized.json"
+      ],
+      "resolution": "Two quiet100 matched OFF/ON series completed; init p95 +5.78% then +6.24%, latency acceptance failed. Frozen catalog writer remains OFF; storage correctness is a separate proof."
+    },
+    {
+      "id": "DB04-IDEMPOTENT-APPLY",
+      "task": "DB-04",
+      "requirement": "Добавить hash-bound owned operation receipt/reconciliation: absent drop-index плюс неизменный keep-index и совпадающий exact export дают already-applied/no-op; чужое изменение/несовпадение fail-closed. Проверить повтор, потерянный ack, restart, changed preimage; добавить EXPLAIN и bounded before/after query timing на clone.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "deployment_database",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/DB-04-followup.json"
+      ],
+      "resolution": "Owned native PostgreSQL apply/repeat/restart reconciliation and restore/no-op passed; exact keep/drop preimages and owner changes fail closed. EXPLAIN preserves result and surviving eligible index; tiny-fixture times are diagnostic only.",
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "DB04-INLINE-EXPORT",
+      "task": "DB-04",
+      "requirement": "Подготовить owned local-only export/verify/restore fixture для найденного synthetic inline image: exact decoded bytes/hash, MIME/access/reference preimages, отсутствие удаления исходного значения и воспроизводимый rollback. Внешний object storage/production apply не включать; если scope сознательно оставляется scan-only, зафиксировать явно неисполненный V4, а не done полного исходного плана.",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "owner": "deployment_database",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/DB-04-followup.json"
+      ],
+      "resolution": "Owned inline export/verify/restore preserves original entity and exact image bytes; repeat, changed blob/reference/owner and missing marker fail closed. No remote object upload or original data deletion.",
+      "current_verification": "verification-20261005.json"
+    },
+    {
+      "id": "REL05-LEGACY-ADOPTION",
+      "task": "REL-05",
+      "requirement": "Observed legacy baseline, backup/rollback to exact old image IDs/config, local first cutover rehearsal; schema1 active only after new release succeeds.",
+      "status": "actual_local_legacy_transition_passed",
+      "owner": "deployment_database",
+      "resolution": "Actual Linux collector8+7 and adapter all-three cutover, stopped-candidate recovery, exact old images/config, three exact retries in both readers, preserved expanded DB and V1/V2 canaries passed. Owned services stopped; fixture014f7208 is not the future CI candidate.",
+      "current_evidence": [
+        "REL-05-linux-owned-drill.json",
+        "REL-05-cutover-backup-age.json"
+      ]
+    }
+  ],
+  "productionMutationScope": "Permanent private Sota gateway, protected host configuration and historical certificate recovery, dedicated main-only GitHub SSH environment; one paid ImagesPOST successful. Existing application4549fb3c unchanged.",
+  "productionApplicationDeployed": false,
+  "productionOperationalChanges": [
+    "protected inspection and deployment tools/configuration",
+    "permanent private Sota gateway; temporary containers removed",
+    "main-only GitHub publication/production environments, encrypted SSH secrets; release variables disabled",
+    "exact historical source certification preserved privately",
+    "one low-quality ImagesPOST, provider200; application unchanged"
+  ]
+}

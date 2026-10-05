@@ -143,7 +143,7 @@ describe('Attack/grapple reducer integrity guards', () => {
     delete actorWithoutAttackProfile.actors.a.attackProfile;
     expectEventRejected(actorWithoutAttackProfile, {
       type: 'AttackActionStarted', attackAction: valid,
-    }, /Invalid Attack/);
+    }, /Actor has no valid attack profile/);
     const once = startedWorld();
     expectEventRejected(once, { type: 'AttackActionStarted', attackAction: valid }, /Invalid Attack/);
     expectEventRejected(once, {

@@ -1,0 +1,291 @@
+[
+  {
+    "id": "TEST-01",
+    "title": "Создать воспроизводимый локальный тестовый стенд и изолировать старые опасные сценарии",
+    "priority": "P0",
+    "owner": "agent-test-infrastructure",
+    "depends_on": [],
+    "scope": [
+      "docker-compose.yml",
+      "frontend/Dockerfile",
+      "backend/Dockerfile",
+      "infra/Dockerfile.rules-worker",
+      "infra/compose.test.yml (new)",
+      "scripts/testing/ (new)",
+      "backend/tests/conftest.py",
+      "backend/migrations/postgres_integration_test.go",
+      "backend/canonical_session_transport_integration_test.go",
+      "scripts/run_tests.sh",
+      "scripts/run_tests.bat",
+      "scripts/roguelike/templates-local-acceptance.mjs",
+      "scripts/roguelike/polish-local-acceptance.mjs"
+    ],
+    "effort_workdays": [2, 4],
+    "status": "not_started",
+    "steps": [
+      "Зафиксировать drift текущего локального Compose: PostgreSQL закомментирован, backend по умолчанию подключается к host.docker.internal/dnd_cards, rules-worker отсутствует, frontend build context ./frontend несовместим с COPY frontend/... в актуальном Dockerfile. Не запускать этот compose как disposable test stack без исправления.",
+      "Создать отдельный compose.test.yml или эквивалентный supervisor с PostgreSQL, Go API, rules-worker и production frontend preview. Использовать уникальный project/run ID, непересекающиеся локальные порты, отдельную БД/schema и отдельный каталог артефактов правил. Исправить общий локальный Compose либо явно направить тестовый runner в новую конфигурацию; не менять production Compose ради тестового стенда.",
+      "Определить версию PostgreSQL из текущего поддерживаемого production baseline; отдельно поддержать CI-версию и upgrade matrix. Ввести readiness для БД, миграций, API, worker artifact и UI, проверяя совместимость протокола, а не только открытый TCP-порт.",
+      "До любого обращения к сети валидировать origins и DSN: loopback либо точный локальный Docker service из созданной конфигурации, обязательное имя/marker тестовой БД, запрет production host и перехода redirect на другой origin. Уникальный namespace должен быть создан самим runner; наличие localhost само по себе не разрешает очищать произвольную рабочую БД.",
+      "Вынести минимальный каталог и создание тестовых аккаунтов в общий fixture lifecycle. Секреты генерировать для одного запуска и передавать через env; реальный production snapshot использовать только после обезличивания в отдельном расширенном профиле. Сохранить hash fixture и список созданных ресурсов в отчёте без credentials.",
+      "Поместить Python autouse DELETE FROM cards в явный карантин до переноса на disposable namespace; убрать небезопасную старую точку входа из общего запуска. Перед архивированием сохранить таблицу уникальных assertions и их новых мест. Не считать requests-проверку Vite HTML полноценной браузерной проверкой.",
+      "Устранить producer/consumer mismatch локальных acceptance scripts: templates пишет {created}, polish пытается login по username/password из этого же файла. Передавать обоим один fixture context через env/API, записывать в acceptance.json только несекретные IDs/результаты. Каждый сценарий должен запускаться самостоятельно после fresh setup.",
+      "Реализовать cleanup на success/failure/interruption по registry точных ресурсов запуска. На Windows проверять абсолютные пути перед рекурсивным удалением и удалять только внутри выделенного каталога. Не использовать blanket DELETE/TRUNCATE или удаление общего Docker volume.",
+      "Добавить preflight обязательных integration suites: отсутствие DSN, недоступность БД или полный skip обязательных PostgreSQL tests завершают runner ошибкой. Отличать допустимый skip явно необязательного сценария от пропуска основного контракта."
+    ],
+    "verification": [
+      "Проверить docker compose -f infra/compose.test.yml config и построение из фактического общего корня; это локальный стенд без production env-файлов.",
+      "Дважды последовательно создать fresh stack, seed fixtures, выполнить узкий PostgreSQL contract, закрыть stack; проверить отсутствие оставшихся объектов первого запуска и неизменность контрольной рабочей БД.",
+      "Прервать запуск после seed и после принятия игровой команды; cleanup удаляет только ресурсы текущего run, отчёт не содержит токенов/паролей.",
+      "Подставить production URL, произвольную localhost DB, отсутствующий DSN и неверный artifact hash; получить предсказуемую ошибку до мутации.",
+      "Запустить templates и polish независимо через новые fixtures; consumer не требует сохранённого файла credentials от старого задания."
+    ],
+    "acceptance": [
+      "Есть одна документированная локальная команда для создания и завершения полного тестового стека.",
+      "Ни один обязательный integration suite не получает успешный статус при отсутствии БД или полном skip.",
+      "Все испытуемые игровые команды идут через реальный API/worker; внешние OAuth/OpenAI/storage заменены локальными ответами без платных запросов.",
+      "Два последовательных запуска и аварийное завершение не повреждают общие локальные данные и не зависят от прежних acceptance artifacts.",
+      "Опасный Python cleanup больше недостижим из стандартной команды тестирования."
+    ],
+    "risks": [
+      "Слепое использование текущего docker-compose.yml может подключить тесты к рабочей БД или не собрать frontend.",
+      "Изоляция schema не помогает, если cleanup удаляет таблицы вне search_path либо fixture выполняет глобальные DDL; такие операции требуют отдельной БД.",
+      "Упрощённый test seed может потерять важные декларации текущего каталога; минимальный набор должен проходить тот же сборщик сущностей.",
+      "Хранение test credentials в JSON, trace или stdout создаёт ненужный долг даже для локальных аккаунтов."
+    ],
+    "rollback": [
+      "Сохранить прежние конфигурации и диагностические команды в явно ручном архиве, не возвращая небезопасный автозапуск DELETE.",
+      "При сбое нового lifecycle завершить только процессы, БД и каталоги из registry текущего run; приложение и production конфигурация не затрагиваются."
+    ]
+  },
+  {
+    "id": "TEST-02",
+    "title": "Восстановить согласованную архитектурную границу движка",
+    "priority": "P0",
+    "owner": "agent-rules-architecture",
+    "depends_on": [],
+    "scope": [
+      "frontend/src/rules-core/importBoundary.test.ts",
+      "frontend/src/rules-core/legacy/engineAdapter.ts",
+      "frontend/src/rules-core/handler.ts",
+      "frontend/src/rules-core/worldMigration.ts",
+      "frontend/src/rules-core/activeSlotRecovery.ts",
+      "frontend/src/rules-core/attackActionBudget.ts",
+      "frontend/src/rules-core/attackRedirection.ts",
+      "frontend/src/rules-core/bondLifecycle.ts",
+      "frontend/src/rules-core/conditionsRuntime.ts",
+      "frontend/src/rules-core/damageTransfer.ts",
+      "frontend/src/rules-core/deathRecovery.ts",
+      "frontend/src/rules-core/effectReceived.ts",
+      "frontend/src/rules-core/equipmentChange.ts",
+      "frontend/src/rules-core/generalFeatDamageRuntime.ts",
+      "frontend/src/rules-core/generalFeatReactionRuntime.ts",
+      "frontend/src/rules-core/itemWeaponLifecycle.ts",
+      "frontend/src/rules-core/magicSuppression.ts",
+      "frontend/src/rules-core/projectileReflection.ts",
+      "frontend/src/rules-core/recipientBindings.ts",
+      "frontend/worker/build.mjs",
+      "docs/data-driven-rules.md"
+    ],
+    "effort_workdays": [2, 4],
+    "status": "not_started",
+    "steps": [
+      "Воспроизвести текущий failure importBoundary.test.ts: 17 modules напрямую импортируют engine/mvp вне adapter. Сохранить полный список импортируемых символов, циклов и их фактических исполнителей, отличая type-only imports от runtime dependencies.",
+      "Документировать разрешённое направление зависимостей: shared pure primitives, command orchestration, legacy compatibility adapter, transport/UI. Выбрать для каждого нарушения adapter либо перенос действительно общего примитива; не создавать копии механик и не вводить blanket allowlist на весь engine.",
+      "Переносить небольшими группами импортов с сохранением public API и runtime поведения. Не переименовывать/пересобирать исторические artifacts и не переписывать artifact hash начатых боёв. Контракты из mvp и projections из canon остаются активными до доказанного переноса всех потребителей.",
+      "Уточнить import boundary test для фактически выбранной архитектуры: тест должен обнаруживать запрещённый direct/transitive UI/HTTP/storage dependency, циклы и выбор поведения по literal entity UUID. Удаление упавшей проверки или исключение всех 17 modules не является исправлением.",
+      "Сохранить headless worker boundary и проверить esbuild metafile: React, browser API transport и UI не попадают в artifact. Разрешённые pure modules могут переиспользоваться без отдельного упрощённого источника истины.",
+      "На одних seeded inputs сравнить состояние, events, RNG position, pending decisions и captured breakdown до/после переноса. Для затронутого примитива выполнить сценарий второй сущности с иным ресурсом/порогом и проверить отказ неизвестной операции."
+    ],
+    "verification": [
+      "Из frontend выполнить node node_modules/vitest/vitest.mjs run src/rules-core/importBoundary.test.ts src/engine/rollInfluence.test.ts src/engine/conditionActions.test.ts src/character/sheetEquipmentCommit.test.ts src/character/useSheetEquipmentSave.test.tsx --reporter=dot.",
+      "Выполнить production TypeScript check и npm run test:rules-worker после затронутых переносов; не использовать старый dist worker как доказательство новой сборки.",
+      "Проверить differential replay corpus для перенесённых операций, включая reload сохранённого решения и точный повтор command id.",
+      "Контрольным временным fixture импорта подтвердить, что новая boundary-проверка отклоняет запрещённый путь; не оставлять отрицательный fixture в production imports."
+    ],
+    "acceptance": [
+      "Выявленный общий архитектурный тест проходит по осмысленному контракту и защищает его от повторного нарушения.",
+      "Worker остаётся headless, общие механики не дублируются в UI/Go/тестовом mock.",
+      "Одинаковый вход сохраняет порядок событий, кости, стоимость, финальное состояние и сохранённый расчёт КД.",
+      "Исторические боевые артефакты и журналы не изменены; старый pinned artifact доступен для продолжения."
+    ],
+    "risks": [
+      "Формальное протаскивание всех экспортов через adapter может скрыть цикл вместо восстановления границы.",
+      "Перемещение кода меняет bundle hash; новый artifact допустим для новых боёв, но не подменяет старый автоматически.",
+      "Неверное объявление mvp/canon устаревшими приведёт к удалению активных runtime contracts и projections."
+    ],
+    "rollback": [
+      "Возвращать последнюю небольшую группу переносов вместе с её boundary changes; сохранять диагностический failing test и фактическую карту зависимостей.",
+      "Не откатывать или переписывать данные боёв; поддерживать доступность предыдущего worker artifact."
+    ]
+  },
+  {
+    "id": "TEST-03",
+    "title": "Объединить основной набор, расширенный набор и выбор проверок в одном манифесте",
+    "priority": "P0",
+    "owner": "agent-test-selection",
+    "depends_on": ["TEST-01", "TEST-02", "REL-01"],
+    "scope": [
+      "tests/suites.json (new)",
+      "scripts/testing/run.mjs (new)",
+      "frontend/package.json",
+      "frontend/vitest.config.ts",
+      "frontend/vitest.rules-core.config.ts",
+      "frontend/vitest.rules-primitives.config.ts",
+      "scripts/release/quick-gate.ps1",
+      ".github/workflows/ci.yml",
+      "scripts/security/check-no-database-dumps.mjs",
+      "scripts/security/check-no-known-credentials.mjs"
+    ],
+    "effort_workdays": [2, 4],
+    "status": "not_started",
+    "steps": [
+      "Каталогизировать tracked tests по runner, владельцу, функциональному контракту, потребности в БД/сети, стоимости и tier: core, extended, legacy-manual. Использовать начальный manifest из tests-findings.md; каждый excluded historical suite получает причину. Старый возраст или папка mvp сами по себе не делают общий контракт необязательным.",
+      "Подключить общий dependency planner REL-01. Выбор должен учитывать удаления, rename, shared JSON, package lock, build configuration, транзитивные inputs worker и изменение реализации без изменения test file. Не повторять отдельную эвристику только frontend/worker/* в тестовом runner.",
+      "Всегда запускать короткие auth/ownership/manifest checks, а остальное выбирать по продуктовой границе с консервативным core fallback для неизвестного изменения. Отдельно описать docs-only поведение. Указывать выбранные и пропущенные suites с машинной причиной.",
+      "Разрешать test selectors в реальные имена/файлы до запуска. В обязательной группе отсутствие файла, сбор 0 тестов, отсутствие БД и полный skip — ошибки. Убрать passWithNoTests с обязательных путей; сверять ожидаемые PostgreSQL cases с go test JSON output и не маскировать их compile-only запуском.",
+      "Создать команды core/extended/legacy-manual с единым машинным отчётом: SHA и dirty diff hash, fixture/lock/manifest hashes, версии runtime, pass/fail/skip, длительности, причины selection, пути diagnostics. Legacy-manual требует явного suite ID; никогда не присваивает ручной verified status.",
+      "Переключить CI и quick-gate на один runner. Собирать frontend/worker один раз на профиль и переиспользовать результат в browser/worker tests; исключить скрытые повторные build через вложенные npm scripts.",
+      "Измерить основной набор на стандартном runner и разделить независимые Go/Vitest/browser jobs, сохраняя изоляцию fixtures. Бюджет 5–8 минут использовать как цель настройки; не добиваться его удалением атомарности, авторизации или второй сущности.",
+      "Добавить проверки самого selection planner: реализация без test diff, удаление файла, общий engine change, backend JSON import, lockfile, неизвестная область и пустой обязательный selector."
+    ],
+    "verification": [
+      "В новом runner выполнить --suite core на fresh локальном стенде; в JSON report должны присутствовать ненулевые counts обязательных UI/API/worker/PostgreSQL контрактов.",
+      "На синтетических diff-manifests проверить, что изменение engine выбирает worker tests, а удаление/rename не выпадает из dependency closure.",
+      "Убрать DSN, выбрать несуществующий suite, исключить обязательный test конфигурацией и вызвать полный DB skip: во всех случаях exit code ненулевой и причина понятна.",
+      "Сравнить локальный выбор suites и выбор CI для одинаковых base/head; список и manifest hash должны совпасть.",
+      "Проверить, что legacy entity/certification suites не запускаются автоматически и текущие manual review статусы не изменяются тестовым pipeline."
+    ],
+    "acceptance": [
+      "Единый manifest определяет тесты локально и в CI; dependency planning согласован со сборкой/выкаткой.",
+      "Обязательная группа не может дать зелёный результат при 0 selected tests или skipped PostgreSQL contracts.",
+      "Изменения реализации запускают соответствующие проверки без обязательной правки самого test file.",
+      "Основной набор защищает актуальные общие контракты, а старые certificates имеют отдельный ручной режим.",
+      "Опубликованы реальные durations и границы покрытия; целевой бюджет времени не объявлен достигнутым без измерения."
+    ],
+    "risks": [
+      "Слишком узкий граф test dependencies может пропустить динамические импорты и данные; неизвестные входы требуют консервативного расширения.",
+      "Тесты на уровне Go package выбираются regex, а не файлами; проверка непустого совпадения и учёт skipped names обязательны.",
+      "Одинаковый SHA без dirty diff hash может ошибочно выдать локальную проверку изменённого дерева за проверку commit."
+    ],
+    "rollback": [
+      "Временно включить консервативный полный актуальный core при проблеме selection, сохраняя обязательную проверку БД и отчётность.",
+      "Вернуть прежнюю CI entry point только вместе с явным перечнем недостающих контрактов; не восстанавливать passWithNoTests или автоматические live production mutations."
+    ]
+  },
+  {
+    "id": "TEST-04",
+    "title": "Покрыть основные пользовательские сценарии реальным локальным E2E",
+    "priority": "P1",
+    "owner": "agent-product-e2e",
+    "depends_on": ["TEST-01", "TEST-03"],
+    "scope": [
+      "frontend/playwright.local.config.ts (new)",
+      "frontend/e2e-local/ (new)",
+      "frontend/e2e/forge-interaction-driver.ts",
+      "frontend/e2e/forge-real-interaction.spec.ts",
+      "frontend/e2e/sheet-combat.spec.ts",
+      "frontend/e2e/paper-sheet-blocks.spec.ts",
+      "frontend/e2e-live/real-backend-canary.spec.ts",
+      "frontend/liveCanaryTargets.ts",
+      "tests/suites.json",
+      "scripts/testing/"
+    ],
+    "effort_workdays": [4, 7],
+    "status": "not_started",
+    "steps": [
+      "Создать локальный full-stack Playwright profile на lifecycle TEST-01. Переиспользовать реальные UI drivers из forge-interaction-driver и real-backend-canary, извлекая общие helpers. Не включать production-mutating canary и certification-readiness как условие обычного local/CI run.",
+      "Сохранить существующие API-fixture browser tests отдельным UI integration слоем. В новом профиле запрещать перехват продуктовых /api/** ради подмены успешного результата; mock допустим только для явно внешних OAuth/OpenAI/storage зависимостей.",
+      "Добавить вход и библиотеку: авторизация, bounded pagination/search/filter, каноничное preview, переключение иконка/строка, проверка editor rights. Проверить отсутствие неожиданных JS/console ошибок и дублирующихся одновременных чтений при одном действии.",
+      "Добавить создание персонажа из пустого мастера и копии шаблона: реальные выборы происхождения/класса/характеристик/навыков/экипировки, сохранение, reload, владелец и соответствие значений на листе. Исходный шаблон остаётся неизменным; сценарий не требует старого сертификата конкретного UUID.",
+      "Добавить экипировку: надеть/снять/переставить предмет, изменение КД и доступных ресурсов, отказ недопустимого действия без частичной записи. Потерять ответ после успешного POST и повторить тот же command id; проверить сохранение количества предметов, ресурса и одного receipt.",
+      "Добавить забег: создать → начать бой → дождаться авторитетной инициализации → движение/действие → pending influence → reload → подтвердить → закончить ход/бой. Проверить, что исход не применён до выбора, RNG и расчёт КД сохранены, расход один, история/journal/receipt согласованы.",
+      "Добавить бумажный лист: создать, изменить и сохранить поле, reload, скрыть/показать блок без потери данных, подготовить печатный экспорт. Конфликт ревизий должен быть явным и не затирать новую запись молча.",
+      "Добавить короткие общие проверки shop/rest и доступа: атомарная покупка/продажа, восстановление ресурсов/подготовка, чужой лист/бой, истёкшая сессия, конкурирующие команды. Распределить дорогие варианты в extended, сохраняя в core хотя бы один реальный контракт каждой критичной границы.",
+      "Для нового или расширенного механического примитива использовать вторую сущность с иным ID/названием/ресурсом/порогом. Ожидания формировать из инвариантов и явных входов, не из параллельного упрощённого движка."
+    ],
+    "verification": [
+      "Выполнить все новые core E2E на fresh stack дважды; каждый test создаёт собственные entities и не зависит от порядка или acceptance.json предыдущего теста.",
+      "Проверить по request/DB/worker observations, что игровые команды действительно прошли Go API, worker и PostgreSQL, а UI fixture не подменил путь.",
+      "Отдельно прогнать loss-after-commit, stale revision, forged choice и две команды с одинаковым id: проверять persisted result и число receipt/events, а не только текст UI.",
+      "Повторить основной путь с другой декларацией источника и параметров; видимость/preview/стоимость работают без новой UI ветки.",
+      "При failure сохранять trace/screenshot только локального disposable аккаунта, санитизируя headers и credential steps; отчёт связывает UI failure с request id backend/worker."
+    ],
+    "acceptance": [
+      "Основной набор проверяет четыре главных раздела: Библиотека, Персонажи, Бумажный лист и Забеги через настоящую локальную серверную цепочку.",
+      "Создание, экипировка и сохранённое боевое решение переживают reload; retry не создаёт новый бросок или повторный расход.",
+      "Недоступное или подделанное действие отклоняется авторитетно, чужие данные не изменяются.",
+      "Во вложенных диалогах сохранены каноничные entity previews и настройки отображения.",
+      "Отчёт явно отделяет UI-fixture tests от full-stack tests и не выдаёт первый слой за проверку транзакций."
+    ],
+    "risks": [
+      "Старый real-backend canary тесно связан с historical certificate fixtures; перенос helpers не должен переносить эту зависимость в новый product smoke.",
+      "Случайная инициатива и нестабильный внешний контент сделают сценарии flaky; использовать seeded inputs и версионированный минимальный fixture.",
+      "Проверка только видимого результата может пропустить двойной расход; нужны persisted receipts/events и контроль revision/RNG.",
+      "Слишком широкий единый browser test даёт плохую диагностику; разделять сценарии по пользовательским контрактам и независимо восстанавливать fixtures."
+    ],
+    "rollback": [
+      "Сохранить новые E2E как отдельный явно вызываемый профиль при стабилизации инфраструктуры; отключать только конкретный flaky case с issue/owner, не весь слой атомарности.",
+      "Возвращать изменения drivers отдельно от продуктового кода; существующие UI-fixture tests остаются работоспособны."
+    ]
+  },
+  {
+    "id": "TEST-05",
+    "title": "Добавить расширенную регрессию, replay/migration matrix и контроль производительности",
+    "priority": "P2",
+    "owner": "agent-regression-performance",
+    "depends_on": ["TEST-04", "OBS-01"],
+    "scope": [
+      "tests/suites.json",
+      "scripts/testing/",
+      "frontend/vitest.rules-core.config.ts",
+      "frontend/vitest.rules-primitives.config.ts",
+      "frontend/worker/server.test.mjs",
+      "frontend/worker/replay.test.mjs",
+      "frontend/e2e-local/",
+      "frontend/e2e/battle-3d.spec.ts",
+      "backend/character_runtime_command_integration_test.go",
+      "backend/canonical_session_transport_integration_test.go",
+      "backend/migrations/",
+      ".github/workflows/ci.yml"
+    ],
+    "effort_workdays": [4, 8],
+    "status": "not_started",
+    "steps": [
+      "Сформировать расширенный manifest всех актуальных offline suites и отдельный ручной перечень historical certification suites. Общие replay/authorization/migration contracts не переносить в legacy только из-за старого имени или включения в прежний coverage pipeline.",
+      "Добавить сценарии melee/ranged/caster, разные уровни и multiclass, reactions/saving throws/damage/effects/death/movement, геометрию крупных существ и area delivery, party, camp/shop/loot/journey, короткий/долгий отдых и подготовку. Новые механики проверять второй сущностью на том же примитиве.",
+      "Построить таблицу сохранённых pending phases и прогонять reload/restart/retry для каждой поддерживаемой фазы. В worker replay corpus хранить версию и hash артефакта, исходное состояние, команду, RNG position и ожидаемый outcome; продолжать старый бой старым артефактом после обновления нового.",
+      "Расширить PostgreSQL concurrency/failure tests: одинаковый id, разные конкурирующие команды, stale revision, запись journal/receipt падает после расчёта, смена доступа перед commit. Проверять атомарный rollback всех проекций и отсутствие повторного платежа; race запускать на Linux.",
+      "Проверять fresh migration install и upgrade обезличенных локальных baseline нескольких поддерживаемых версий. Верифицировать locks, повторный запуск миграций, historical artifacts и manual review statuses. В обязательной migration группе skipped DB или 0 selected tests — failure.",
+      "Добавить mobile 390px, keyboard/focus, иконка/строка с preview, бумажный экспорт, 2D/3D equivalence и fallback при отсутствии WebGL. Визуальные изменения не должны вызывать игровые команды или повторный бросок.",
+      "Используя OBS-01, собирать воспроизводимые cold/warm performance profiles: page-ready/character-ready/combat-ready, command accepted→rendered, p50/p95 API/worker/lock, SQL count, bytes и long tasks. Зафиксировать dataset/network/CPU/runtime hashes; thresholds установить по baseline и учитывать шум, не вводя произвольное обещание ускорения.",
+      "Добавить property-based или параметризованные metamorphic invariants для сохранения предметов/ресурсов, determinism, повторов команд, стоимости, второй сущности и неизвестных operations. Не требовать 100% UI line coverage; узкие coverage thresholds replay-critical ядра поддерживать вместе с семантическими сценариями.",
+      "Разбить независимые suites на shards с изолированными ресурсами, отдельным отчётом flaky и понятным owner. Запускать nightly либо вручную; при изменении критического контракта соответствующий expanded suite становится блокирующим до релиза, а не откладывается до ночи."
+    ],
+    "verification": [
+      "Выполнить полный extended профиль на свежем стенде и на поддерживаемом обезличенном upgrade fixture; отчёт содержит ненулевые counts всех обязательных групп и не скрывает skip.",
+      "Повторить worker restart и старый artifact replay после обновления текущего artifact; pending decision, RNG и outcome сохраняются.",
+      "Запустить Linux Go race для concurrency suites и подтвердить отсутствие partial projections при инъекции journal/receipt failures.",
+      "Провести серию одинаковых performance прогонов, опубликовать baseline, разброс и длительность; сравнить регрессию по установленным budgets.",
+      "Проверить nightly/ручной selection: historical certification остаётся explicit opt-in, manual review статусы не повышаются автоматически."
+    ],
+    "acceptance": [
+      "Extended набор покрывает поддерживаемые фазы продолжения, старые artifacts, миграции, concurrency, mobile и performance с воспроизводимыми fixtures.",
+      "Критичный failure блокирует соответствующее изменение до релиза независимо от того, где suite обычно расписан.",
+      "Длительность, skips и flaky failures видимы; повторная попытка не превращает нестабильность в незаметный зелёный результат.",
+      "История и хэши существующих боёв не переписываются, а tests не присваивают ручные verification statuses.",
+      "Целевое время 20–40 минут после шардирования представлено как бюджет; фактически достигнутое время указано отдельно."
+    ],
+    "risks": [
+      "Комбинаторный рост сценариев может вернуть многочасовой gate; использовать риск-ориентированную матрицу и shared fixtures, сохраняя уникальные контракты.",
+      "Performance thresholds на шумном shared runner дают ложные отказы; отделять стабильные bytes/request counts от шумных latency metrics и хранить серию измерений.",
+      "Удаление старых artifacts ради экономии CI-диска разрушает replay-проверку; corpus должен явно удерживать нужные версии.",
+      "Race, browser GPU и migration DDL имеют разные требования к среде и не должны бесконтрольно делить одну БД/процесс."
+    ],
+    "rollback": [
+      "При проблеме расписания временно оставить extended ручным запуском и сохранить обязательные expanded gates затронутого контракта.",
+      "Нестабильные performance budgets временно перевести в диагностический режим с owner и сроком исправления; не отключать correctness/replay/authorization проверки.",
+      "Удалять только артефакты disposable test run по registry; исторический corpus и production данные не затрагивать."
+    ]
+  }
+]

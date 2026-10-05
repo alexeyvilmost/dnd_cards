@@ -1,0 +1,156 @@
+{
+  "baseline": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "source_note": "Tracked HEAD archive plus the same existing local officials/Книга игрока 2024.txt required by compiler fixture source-hash checks. Local text was not added to Git.",
+  "baseline_counts": {
+    "total": 405,
+    "failed": 44,
+    "passed": 361,
+    "pending": 0
+  },
+  "rows": [
+    {
+      "file": "frontend/src/canon/declarativeMechanicsPatch.test.ts",
+      "baseline_failures": [
+        "versioned declarative micro-MVP L1 content patch compiles an already materialized catalog through verify-only mode"
+      ],
+      "current_failures": [
+        "versioned declarative micro-MVP L1 content patch compiles an already materialized catalog through verify-only mode"
+      ],
+      "same_failed_cases": true
+    },
+    {
+      "file": "frontend/src/canon/liveMicroMvpCompiledCertification.test.ts",
+      "baseline_failures": [
+        "live micro-MVP compiled certification boundary ignores HTTP reference metadata without changing the live compiled release",
+        "live micro-MVP compiled certification boundary attests the exact migration 241 upgrade without changing the L1 fighting style",
+        "live micro-MVP compiled certification boundary rejects a changed executable primitive outside the materialization patch",
+        "live micro-MVP compiled certification boundary records source presentation drift without redefining compiler semantics",
+        "live micro-MVP compiled certification boundary allows an unrelated global catalog extra while recording full-catalog drift",
+        "live micro-MVP compiled certification boundary treats backend-assigned UUIDs for declared creates as surrogate identities",
+        "live micro-MVP compiled certification boundary binds Goliath, repaired equipment and both split attacks outside compiler roots",
+        "live micro-MVP compiled certification boundary binds fetched catalog bytes, compiled release, denominator and evidence protocol"
+      ],
+      "current_failures": [
+        "live micro-MVP compiled certification boundary ignores HTTP reference metadata without changing the live compiled release",
+        "live micro-MVP compiled certification boundary attests the exact migration 241 upgrade without changing the L1 fighting style",
+        "live micro-MVP compiled certification boundary rejects a changed executable primitive outside the materialization patch",
+        "live micro-MVP compiled certification boundary records source presentation drift without redefining compiler semantics",
+        "live micro-MVP compiled certification boundary allows an unrelated global catalog extra while recording full-catalog drift",
+        "live micro-MVP compiled certification boundary treats backend-assigned UUIDs for declared creates as surrogate identities",
+        "live micro-MVP compiled certification boundary binds Goliath, repaired equipment and both split attacks outside compiler roots",
+        "live micro-MVP compiled certification boundary binds fetched catalog bytes, compiled release, denominator and evidence protocol"
+      ],
+      "same_failed_cases": true
+    },
+    {
+      "file": "frontend/src/canon/microMvpL1Overlay.test.ts",
+      "baseline_failures": [
+        "versioned deterministic micro-MVP L1 content overlay pins overlay, compiled content, and release hashes independently from the raw release"
+      ],
+      "current_failures": [
+        "versioned deterministic micro-MVP L1 content overlay pins overlay, compiled content, and release hashes independently from the raw release"
+      ],
+      "same_failed_cases": true
+    },
+    {
+      "file": "frontend/src/character/sheetActionOrchestrator.differential.test.ts",
+      "baseline_failures": [
+        "real-sheet deterministic action orchestration parity matches a failed target save and its condition after canonical continuation resolution"
+      ],
+      "current_failures": [
+        "real-sheet deterministic action orchestration parity matches a failed target save and its condition after canonical continuation resolution"
+      ],
+      "same_failed_cases": true
+    },
+    {
+      "file": "frontend/src/character/sheetCombatCertifiedCatalog.test.ts",
+      "baseline_failures": [
+        "450-root sheet combat certification is byte-for-byte generated from the complete current compiler output",
+        "450-root sheet combat certification certifies every compiled and ruleset-global root/action occurrence"
+      ],
+      "current_failures": [
+        "450-root sheet combat certification is byte-for-byte generated from the complete current compiler output",
+        "450-root sheet combat certification certifies every compiled and ruleset-global root/action occurrence"
+      ],
+      "same_failed_cases": true
+    },
+    {
+      "file": "frontend/src/solo-combat/soloCombat.engine.integration.test.ts",
+      "baseline_failures": [
+        "solo combat engine vertical integration persists an inspiration decision before applying damage, use=true",
+        "solo combat engine vertical integration persists an inspiration decision before applying damage, use=false",
+        "solo combat engine vertical integration rolls a present camp familiar once, excludes a dismissed one and respects initiative (present=true)",
+        "solo combat engine vertical integration projects a Wild Companion into the tactical map, initiative, allegiance, and player-controlled turn",
+        "solo combat engine vertical integration casts an owned Touch spell through the present familiar from its board position",
+        "solo combat engine vertical integration opens and resolves a generic owned post-hit rider instead of exposing it proactively",
+        "solo combat engine vertical integration resolves a level-one post-hit spell against the creature that was hit",
+        "solo combat engine vertical integration lets Sentinel ignore Disengage and stop movement with an exact library effect",
+        "solo combat engine vertical integration offers Crusher only after qualifying damage and once per turn with log cursor 0",
+        "solo combat engine vertical integration offers Crusher only after qualifying damage and once per turn with log cursor 160",
+        "solo combat engine vertical integration offers a post-hit feat after a Protection pre-roll reaction continuation",
+        "solo combat engine vertical integration offers Polearm Master butt strike only after the qualifying Attack closes, and on entry",
+        "preserves original damage type and critical=false with save=false across reload",
+        "preserves original damage type and critical=true with save=false across reload",
+        "preserves original damage type and critical=false with save=true across reload",
+        "preserves original damage type and critical=true with save=true across reload",
+        "Trip Attack is offered only after weapon or unarmed hits: weapon_melee",
+        "Trip Attack is offered only after weapon or unarmed hits: weapon_ranged",
+        "Trip Attack is offered only after weapon or unarmed hits: unarmed",
+        "Pushing Attack carries a saved distance through the triggered command: 0",
+        "Pushing Attack carries a saved distance through the triggered command: 5",
+        "Pushing Attack carries a saved distance through the triggered command: 10",
+        "Pushing Attack carries a saved distance through the triggered command: 15",
+        "Precision Attack preserves the held attack roll resumes the canonical Attack-action ledger without charging another action",
+        "Precision Attack preserves the held attack roll offers defender interruption after Precision, preserves the original roll: false",
+        "Precision Attack preserves the held attack roll resumes exactly once: hit",
+        "Psionic Strike eligibility and separate noncritical damage: hit",
+        "Psionic Strike eligibility and separate noncritical damage: critical",
+        "routes a newly scoped spell through ordinary solo rules while keeping the certified session strict"
+      ],
+      "current_failures": [
+        "solo combat engine vertical integration persists an inspiration decision before applying damage, use=true",
+        "solo combat engine vertical integration persists an inspiration decision before applying damage, use=false",
+        "solo combat engine vertical integration rolls a present camp familiar once, excludes a dismissed one and respects initiative (present=true)",
+        "solo combat engine vertical integration projects a Wild Companion into the tactical map, initiative, allegiance, and player-controlled turn",
+        "solo combat engine vertical integration casts an owned Touch spell through the present familiar from its board position",
+        "solo combat engine vertical integration opens and resolves a generic owned post-hit rider instead of exposing it proactively",
+        "solo combat engine vertical integration resolves a level-one post-hit spell against the creature that was hit",
+        "solo combat engine vertical integration lets Sentinel ignore Disengage and stop movement with an exact library effect",
+        "solo combat engine vertical integration offers Crusher only after qualifying damage and once per turn with log cursor 0",
+        "solo combat engine vertical integration offers Crusher only after qualifying damage and once per turn with log cursor 160",
+        "solo combat engine vertical integration offers a post-hit feat after a Protection pre-roll reaction continuation",
+        "solo combat engine vertical integration offers Polearm Master butt strike only after the qualifying Attack closes, and on entry",
+        "preserves original damage type and critical=false with save=false across reload",
+        "preserves original damage type and critical=true with save=false across reload",
+        "preserves original damage type and critical=false with save=true across reload",
+        "preserves original damage type and critical=true with save=true across reload",
+        "Trip Attack is offered only after weapon or unarmed hits: weapon_melee",
+        "Trip Attack is offered only after weapon or unarmed hits: weapon_ranged",
+        "Trip Attack is offered only after weapon or unarmed hits: unarmed",
+        "Pushing Attack carries a saved distance through the triggered command: 0",
+        "Pushing Attack carries a saved distance through the triggered command: 5",
+        "Pushing Attack carries a saved distance through the triggered command: 10",
+        "Pushing Attack carries a saved distance through the triggered command: 15",
+        "Precision Attack preserves the held attack roll resumes the canonical Attack-action ledger without charging another action",
+        "Precision Attack preserves the held attack roll offers defender interruption after Precision, preserves the original roll: false",
+        "Precision Attack preserves the held attack roll resumes exactly once: hit",
+        "Psionic Strike eligibility and separate noncritical damage: hit",
+        "Psionic Strike eligibility and separate noncritical damage: critical",
+        "routes a newly scoped spell through ordinary solo rules while keeping the certified session strict"
+      ],
+      "same_failed_cases": true
+    },
+    {
+      "file": "frontend/src/rules-core/world.test.ts",
+      "baseline_failures": [
+        "WorldState command/event facade runs one strict round for two player characters and replays to the same state",
+        "WorldState command/event facade pauses a hit before damage and lets Shield turn it into a miss after JSON reload"
+      ],
+      "current_failures": [
+        "WorldState command/event facade runs one strict round for two player characters and replays to the same state",
+        "WorldState command/event facade pauses a hit before damage and lets Shield turn it into a miss after JSON reload"
+      ],
+      "same_failed_cases": true
+    }
+  ]
+}

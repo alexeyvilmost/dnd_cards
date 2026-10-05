@@ -9,12 +9,14 @@ import (
 	"testing"
 	"time"
 
+	"dnd-cards-backend/migrations"
+
 	"github.com/google/uuid"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-// Run against an isolated restored dump after migration 093 with
+// Run against an isolated current manual-review schema (migration 277) with
 // CONTENT_MIGRATION_TEST_DSN. It proves transaction behavior that a mocked
 // handler cannot: receipt failure rolls create back and hard-delete retains the
 // audit receipt while physically removing the ledger-owned Effect.
@@ -166,7 +168,7 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 		t.Fatal(mapErr)
 	}
 	if exactMap["description"] != exactDescription ||
-		!reflect.DeepEqual(exactMap["mechanics"], exactMechanics) || exactMap["support"] != nil ||
+		!reflect.DeepEqual(exactMap["mechanics"], exactMechanics) || !reflect.DeepEqual(exactMap["support"], map[string]any{"status": "not_verified"}) ||
 		exactMap["id"] != supportEffect.ID.String() || exactMap["card_number"] != supportEffect.CardNumber {
 		t.Fatalf("exact content postimage changed identity/support semantics: %#v", exactMap)
 	}
@@ -198,7 +200,7 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 	}
 	beforeSupportMap = exactMap
 	legacySupport := map[string]any{
-		"status": "legacy",
+		"status": "verified_partial",
 		"legacy_field": map[string]any{
 			"nested": []any{"preserved", true, nil},
 		},
@@ -263,7 +265,7 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 			t.Fatal(mapErr)
 		}
 		adapterSupport := map[string]any{
-			"status": "legacy", "adapter": entityType,
+			"status": "verified_partial", "adapter": entityType,
 			"nested": map[string]any{"preserved": true},
 		}
 		already, restoreErr := controller.restoreExactSupport(
@@ -317,7 +319,7 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 			EntityType: identity.entityType, EntityID: identity.entityID,
 			ExpectedCurrent: current,
 			Support: map[string]any{
-				"status": "verified_mechanical", "batch": identity.entityType,
+				"status": "verified", "batch": identity.entityType,
 			},
 		})
 	}
@@ -393,7 +395,7 @@ func TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres(t *testing.T) 
 		driftEntries = append(driftEntries, preparedContentSupportBatchEntry{
 			EntityType: identity.entityType, EntityID: identity.entityID,
 			ExpectedCurrent: loadMap(identity.entityType, identity.entityID),
-			Support:         map[string]any{"status": "verified_mechanical", "drift_test": true},
+			Support:         map[string]any{"status": "verified", "drift_test": true},
 		})
 	}
 	if err = db.Model(&feat).UpdateColumn("name", feat.Name+" drift").Error; err != nil {
@@ -530,6 +532,24 @@ func prepareContentMigrationIntegrationSchema(t *testing.T, db *gorm.DB) {
 	if err := db.AutoMigrate(tables...); err != nil {
 		t.Fatalf("bootstrap disposable content tables: %v", err)
 	}
+	// Use the production function, including its metadata allowlist and review
+	// status validation. A copied pre-274 NULL invalidator hid schema drift.
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, migration := range migrations.GetAllMigrations() {
+		if migration.Version == "277_partial_narrative_review" {
+			if err := migration.Up(sqlDB); err != nil {
+				t.Fatal(err)
+			}
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("manual-review migration 277 is not registered")
+	}
 	if err := db.Exec(`
 		CREATE OR REPLACE FUNCTION update_updated_at_column()
 		RETURNS TRIGGER AS $$
@@ -539,35 +559,29 @@ func prepareContentMigrationIntegrationSchema(t *testing.T, db *gorm.DB) {
 		END;
 		$$ LANGUAGE plpgsql;
 
-		CREATE OR REPLACE FUNCTION invalidate_content_support()
-		RETURNS TRIGGER AS $$
-		BEGIN
-			IF (to_jsonb(NEW) - 'support' - 'updated_at')
-				IS DISTINCT FROM
-			   (to_jsonb(OLD) - 'support' - 'updated_at') THEN
-				NEW.support = NULL;
-			END IF;
-			RETURN NEW;
-		END;
-		$$ LANGUAGE plpgsql;
-
 		CREATE TRIGGER update_effects_updated_at
 			BEFORE UPDATE ON effects
 			FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 		CREATE TRIGGER invalidate_effects_support
-			BEFORE UPDATE ON effects
+			BEFORE INSERT OR UPDATE ON effects
 			FOR EACH ROW EXECUTE FUNCTION invalidate_content_support();
 		CREATE TRIGGER update_feats_updated_at
 			BEFORE UPDATE ON feats
 			FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 		CREATE TRIGGER invalidate_feats_support
-			BEFORE UPDATE ON feats
+			BEFORE INSERT OR UPDATE ON feats
 			FOR EACH ROW EXECUTE FUNCTION invalidate_content_support();
 		CREATE TRIGGER update_backgrounds_updated_at
 			BEFORE UPDATE ON backgrounds
 			FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 		CREATE TRIGGER invalidate_backgrounds_support
-			BEFORE UPDATE ON backgrounds
+			BEFORE INSERT OR UPDATE ON backgrounds
+			FOR EACH ROW EXECUTE FUNCTION invalidate_content_support();
+		CREATE TRIGGER update_classes_updated_at
+			BEFORE UPDATE ON classes
+			FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+		CREATE TRIGGER invalidate_classes_support
+			BEFORE INSERT OR UPDATE ON classes
 			FOR EACH ROW EXECUTE FUNCTION invalidate_content_support();
 
 		CREATE UNIQUE INDEX uq_content_migration_receipts_bundle_operation

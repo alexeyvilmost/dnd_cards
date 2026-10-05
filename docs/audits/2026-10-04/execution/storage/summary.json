@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "run_id": "test_fa81a978fede47ee1a00a96d",
+  "fixture": "integration-baseline",
+  "counts": {
+    "runs": 2,
+    "receipts": 4,
+    "events": 2
+  },
+  "top_five_after": [
+    {
+      "name": "entity_reference_edges",
+      "bytes": 2572288
+    },
+    {
+      "name": "spells",
+      "bytes": 2031616
+    },
+    {
+      "name": "cards",
+      "bytes": 1826816
+    },
+    {
+      "name": "entity_reference_nodes",
+      "bytes": 1605632
+    },
+    {
+      "name": "effects",
+      "bytes": 1449984
+    }
+  ],
+  "database_growth_bytes": 942080,
+  "note": "Two template copies and initialized encounters with exact retries. This is not the required repeated 100/1000-command growth benchmark."
+}

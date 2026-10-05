@@ -1,0 +1,536 @@
+{
+  "schemaVersion": 1,
+  "sourceHead": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "startedAt": "2026-10-04T17:41:09.287Z",
+  "completedAt": "2026-10-04T17:41:55.286Z",
+  "workingTreeDirty": true,
+  "roots": {
+    "frontend/public": {
+      "files": 285,
+      "bytes": 155121376,
+      "trackedFiles": 285,
+      "trackedBytes": 155121376
+    },
+    "references": {
+      "files": 23,
+      "bytes": 36871926,
+      "trackedFiles": 23,
+      "trackedBytes": 36871926
+    }
+  },
+  "publicGroups": [
+    {
+      "group": "assets",
+      "files": 31,
+      "bytes": 63070960
+    },
+    {
+      "group": "audio",
+      "files": 111,
+      "bytes": 60930910
+    },
+    {
+      "group": "icons",
+      "files": 68,
+      "bytes": 15600823
+    },
+    {
+      "group": "images",
+      "files": 58,
+      "bytes": 7075844
+    },
+    {
+      "group": "portraits",
+      "files": 3,
+      "bytes": 7011859
+    },
+    {
+      "group": "site_logo.png",
+      "files": 1,
+      "bytes": 587764
+    },
+    {
+      "group": "pwa-512x512.png",
+      "files": 1,
+      "bytes": 409325
+    },
+    {
+      "group": "default_image.png",
+      "files": 1,
+      "bytes": 193746
+    },
+    {
+      "group": "fonts",
+      "files": 8,
+      "bytes": 93641
+    },
+    {
+      "group": "pwa-192x192.png",
+      "files": 1,
+      "bytes": 55868
+    },
+    {
+      "group": "design_preview.html",
+      "files": 1,
+      "bytes": 53136
+    },
+    {
+      "group": "groovepaper.png",
+      "files": 1,
+      "bytes": 37500
+    }
+  ],
+  "duplicateGroups": [
+    {
+      "sha256": "af8eefd724acda5e70e74ad54a05723c7032be87b5b710dc1686563758fc8725",
+      "bytesEach": 2966,
+      "paths": [
+        "frontend/public/audio/music-v2/gallery.css",
+        "frontend/public/audio/music-v3/gallery.css"
+      ],
+      "repeatedBytes": 2966,
+      "action": "retain_all_URLs_and_originals; duplicate bytes do not prove duplicate ownership/use"
+    },
+    {
+      "sha256": "c435ad9583b8519c73f16bef92ab08b5bdf24bc40f52c9c7d981ec2e436935e1",
+      "bytesEach": 526,
+      "paths": [
+        "frontend/public/audio/music-v2/gallery.js",
+        "frontend/public/audio/music-v3/gallery.js"
+      ],
+      "repeatedBytes": 526,
+      "action": "retain_all_URLs_and_originals; duplicate bytes do not prove duplicate ownership/use"
+    }
+  ],
+  "largestRuntime": [
+    {
+      "path": "frontend/public/assets/battle-maps/urvin-archive-v1.png",
+      "bytes": 3777465,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/urvin-causeway-v1.png",
+      "bytes": 3770501,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/valley-floor-v1.png",
+      "bytes": 3696826,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1619,
+        "height": 971,
+        "alphaChannel": "present",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "dynamic_or_database_references_possible; retain"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/clearing-floor-v1.png",
+      "bytes": 3640117,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1402,
+        "height": 1122,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/cavern-floor-v1.png",
+      "bytes": 3491234,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086,
+        "alphaChannel": "present",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/sanctuary-floor-v1.png",
+      "bytes": 3443119,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024,
+        "alphaChannel": "present",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/quarry-floor-v1.png",
+      "bytes": 3373397,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1619,
+        "height": 971,
+        "alphaChannel": "present",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/urvin-court-v1.png",
+      "bytes": 3323107,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/forest-floor-v1.png",
+      "bytes": 3280718,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/watchpost-floor-v1.png",
+      "bytes": 3234655,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1564,
+        "height": 1006,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/courtyard-floor-v1.png",
+      "bytes": 3217459,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1402,
+        "height": 1122,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/crypt-floor-v1.png",
+      "bytes": 3135308,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1448,
+        "height": 1086,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/snow-floor-v1.png",
+      "bytes": 3116204,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1536,
+        "height": 1024,
+        "alphaChannel": "present",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/valley-river-v2.png",
+      "bytes": 2905084,
+      "mime": "image/png",
+      "dimensions": {
+        "width": 1619,
+        "height": 971,
+        "alphaChannel": "unknown_palette_or_trns",
+        "source": "PNG IHDR only; not a pixel/transparency/visual validation"
+      },
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_cavern-v1.1992c5305f66.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_clearing-v1.37fa516de5f6.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_courtyard-small-v1.5c314b5d16ca.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_crypt-annex-rooms-v1.bcc15159a288.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_crypt-v2.83e37a2cf495.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_forest-v2.48fa5ce8e10d.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_goblin-camp-v2.7b7914a11066.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_quarry-v1.3ea40887ce80.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_sanctuary-v1.5d96688fcc0c.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_snow-pass-v1.dba3ab622458.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "literal_reference_found; additional_dynamic_or_database_references_possible"
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_tavern-v2.241ba172e16b.mp3",
+      "bytes": 2880619,
+      "mime": "audio/mpeg",
+      "dimensions": null,
+      "referenceStatus": "dynamic_or_database_references_possible; retain"
+    }
+  ],
+  "archive": {
+    "tarBytes": 291215360,
+    "gzipBytes": 224233168,
+    "gzipLevel": 6,
+    "basis": "actual streamed git archive HEAD, gzip in memory; no archive written",
+    "headTrackedBlobBytes": 287851992,
+    "headPublicBlobBytes": 155121376
+  },
+  "dist": {
+    "files": 628,
+    "bytes": 169174309,
+    "publicReachability": {
+      "basis": "local dist filesystem; not HTTP availability",
+      "sameBytes": 285,
+      "missing": [],
+      "different": []
+    }
+  },
+  "frontendContext": {
+    "estimatedSourceBytes": 167342326,
+    "files": 1291,
+    "copies": [
+      {
+        "stage": "dependencies",
+        "sources": [
+          "frontend/package.json",
+          "frontend/package-lock.json",
+          "frontend/.npmrc"
+        ],
+        "estimated_bytes": 479104
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/index.html",
+          "frontend/tsconfig.json",
+          "frontend/tsconfig.node.json",
+          "frontend/vite.config.ts",
+          "frontend/postcss.config.js",
+          "frontend/tailwind.config.js"
+        ],
+        "estimated_bytes": 6143
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/scripts/check-dice-box-assets.mjs"
+        ],
+        "estimated_bytes": 5165
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/scripts/pwa-shell.mjs"
+        ],
+        "estimated_bytes": 1755
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/utils"
+        ],
+        "estimated_bytes": 9716
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/charges/charges.json"
+        ],
+        "estimated_bytes": 1778
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "backend/animationpresentation/catalog.json"
+        ],
+        "estimated_bytes": 151174
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "backend/audiopresentation/catalog.json"
+        ],
+        "estimated_bytes": 138701
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/public/assets/dice-box"
+        ],
+        "estimated_bytes": 605888
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/public/site_logo.png",
+          "frontend/public/pwa-192x192.png",
+          "frontend/public/pwa-512x512.png"
+        ],
+        "estimated_bytes": 1052957
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "frontend/src"
+        ],
+        "estimated_bytes": 11418140
+      },
+      {
+        "stage": "build",
+        "sources": [
+          "scripts/release/write-build-identity.mjs"
+        ],
+        "estimated_bytes": 2079
+      },
+      {
+        "stage": "${NGINX_IMAGE}",
+        "sources": [
+          "frontend/public"
+        ],
+        "estimated_bytes": 155121376
+      },
+      {
+        "stage": "${NGINX_IMAGE}",
+        "sources": [
+          "frontend/nginx.conf.template"
+        ],
+        "estimated_bytes": 2409
+      },
+      {
+        "stage": "${NGINX_IMAGE}",
+        "sources": [
+          "frontend/start.sh"
+        ],
+        "estimated_bytes": 345
+      },
+      {
+        "stage": "${NGINX_IMAGE}",
+        "sources": [
+          "frontend/write-build-info.sh"
+        ],
+        "estimated_bytes": 1062
+      }
+    ],
+    "basis": "current allowed source bytes; not actual Docker transferred context"
+  },
+  "git": {
+    "objectStats": {
+      "count": 4074,
+      "size": 527621,
+      "in-pack": 30330,
+      "packs": 4,
+      "size-pack": 2938097,
+      "prune-packable": 0,
+      "garbage": 29,
+      "size-garbage": 156245
+    },
+    "sizeUnit": "KiB for size/size-pack/size-garbage",
+    "integrity": {
+      "command": "git fsck --full --no-reflogs --no-progress",
+      "exitCode": 0,
+      "status": "passed",
+      "durationMs": 38785,
+      "categories": {
+        "dangling": 1241
+      },
+      "examples": [],
+      "mutations": false
+    },
+    "cloneTransferBytes": null,
+    "cloneTransferStatus": "not_measured; local pack/loose size is not clone transfer"
+  },
+  "docker": {
+    "imageBytes": null,
+    "pullBytes": null,
+    "status": "awaiting_environment; daemon unavailable in REL02, not retried"
+  },
+  "browser": {
+    "initialTransferBytes": null,
+    "status": "not inferred from public/archive/dist; use dedicated browser measurement"
+  },
+  "transformedFiles": 0,
+  "deletedFiles": 0,
+  "rewrittenGitHistory": false
+}

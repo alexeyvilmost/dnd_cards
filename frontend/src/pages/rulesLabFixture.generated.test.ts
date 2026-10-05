@@ -11,7 +11,8 @@ import { describe, expect, it } from 'vitest';
 import { compileMicroMvpL1Overlay } from '../canon/microMvpL1Overlay';
 import { readProdSnapshotCatalogs } from '../canon/prodSnapshotL1Fixtures';
 import { SYSTEM_ACTION_IDS } from '../rules-core/systemActions';
-import artifact from './rulesLabFixture.generated.json';
+import artifact from './rulesLabFixture.v6.generated.json';
+import { RULES_LAB_DATABASE_NAME, RULES_LAB_WORLD_ID } from './rulesLabFixture';
 import {
   buildRulesLabFixtureArtifact,
   checkRulesLabFixtureDrift,
@@ -25,6 +26,18 @@ import {
 } from './rulesLabFixtureGenerator';
 
 describe('checked-in Rules Lab compiled artifact', () => {
+  it('keeps the previous fixture bytes and gives new sessions a distinct persistent namespace', async () => {
+    const historicalBytes = (await readFile(
+      new URL('./rulesLabFixture.generated.json', import.meta.url), 'utf8',
+    )).replace(/\r\n/g, '\n');
+    expect(rulesLabFixtureSha256(historicalBytes))
+      .toBe('sha256:db7fea317b72b74483fbd2bbeb34f107265faaf7c981e0c146058a4963667770');
+    expect(JSON.parse(historicalBytes).fixtureVersion).toBe('5.0.0');
+    expect(RULES_LAB_WORLD_ID).toBe('rules-lab:dnd-2024:compiled-l1-v6');
+    expect(RULES_LAB_DATABASE_NAME).toBe('dnd-cards-rules-lab-v6');
+    expect(artifact.fixtureVersion).toBe('6.0.0');
+  });
+
   it('is byte-semantic equal to its stable real overlay roots and pinned snapshot bindings', async () => {
     const provider = await compileMicroMvpL1Overlay();
     const fighterRoot = provider.roots.find(
@@ -53,7 +66,7 @@ describe('checked-in Rules Lab compiled artifact', () => {
       },
     });
     expect(artifact.schemaVersion).toBe(5);
-    expect(artifact.fixtureVersion).toBe('5.0.0');
+    expect(artifact.fixtureVersion).toBe('6.0.0');
     expect(artifact.source.ruleset).toEqual(provider.ruleset);
     expect(artifact.source.release).toEqual(provider.release);
     expect(artifact.source.rootStableKeys).toMatchObject({

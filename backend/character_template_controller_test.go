@@ -101,5 +101,12 @@ func TestCharacterTemplateRoutesAuthorizationAndCopies(t *testing.T) {
 	}
 	t.Setenv("CONTENT_ADMIN_USER_IDS", "")
 	registerCharacterTemplateRoutes(f.router.Group("/closed/api"), f.auth, f.db)
-	request(http.MethodPost, "/closed"+root, adminToken, body, 503)
+	// A configured account database remains an authority when the legacy
+	// allowlist is empty. The previous allowlisted account has no persistent
+	// admin grant, so access is denied rather than treated as unavailable.
+	request(http.MethodPost, "/closed"+root, adminToken, body, 403)
+	if err := f.db.Model(&User{}).Where("id = ?", f.owner.ID).Update("is_admin", true).Error; err != nil {
+		t.Fatal(err)
+	}
+	request(http.MethodPost, "/closed"+root, adminToken, body, 201)
 }

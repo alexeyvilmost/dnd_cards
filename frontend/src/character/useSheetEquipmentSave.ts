@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { CharacterRuntimeCommandRequest, CharacterRuntimeCommandResponse } from './api';
+import {measureClientPhase} from '../api/performanceTelemetry';
+import type { CharacterRuntimeCommandResponse, SheetEquipmentPendingRequest } from './api';
 import { commitSheetEquipmentRequest } from './sheetEquipmentCommit';
 import type { ForgeCharacter } from './types';
 
@@ -7,25 +8,26 @@ export type SheetEquipmentOperation = { equip: string } | { unequip: string };
 
 export const pendingEquipmentKey = (characterId: string) => `dnd:pending-equipment:v1:${characterId}`;
 
-function readPending(key: string): CharacterRuntimeCommandRequest | null {
+function readPending<T extends SheetEquipmentPendingRequest>(key: string): T | null {
   const raw = localStorage.getItem(key);
   if (!raw) return null;
-  try { return JSON.parse(raw) as CharacterRuntimeCommandRequest; }
+  try { return JSON.parse(raw) as T; }
   catch { localStorage.removeItem(key); return null; }
 }
 
 /** Mounted once per character. Retries persist and resend the original transition,
  * never rerun its rules, random choices or resource payments. */
-export function useSheetEquipmentSave(input: {
+export interface SheetEquipmentSaveInput<T extends SheetEquipmentPendingRequest> {
   characterId: string;
   disabled: boolean;
-  prepare: (operation: SheetEquipmentOperation) => Promise<CharacterRuntimeCommandRequest>;
-  commit: (request: CharacterRuntimeCommandRequest) => Promise<CharacterRuntimeCommandResponse>;
+  prepare: (operation: SheetEquipmentOperation) => Promise<T>;
+  commit: (request: T) => Promise<CharacterRuntimeCommandResponse>;
   loadCurrent: (characterId: string) => Promise<ForgeCharacter>;
   onUpdated: (character: ForgeCharacter) => void;
-}) {
+}
+export function useSheetEquipmentSave<T extends SheetEquipmentPendingRequest>(input: SheetEquipmentSaveInput<T>) {
   const key = pendingEquipmentKey(input.characterId);
-  const [pending, setPending] = useState(() => readPending(key));
+  const [pending, setPending] = useState(() => readPending<T>(key));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingRef = useRef(pending);
@@ -54,7 +56,7 @@ export function useSheetEquipmentSave(input: {
     const clear = () => {
       // Another tab may have stored a different transition while this POST
       // was in flight. Its uncertain outcome does not belong to this receipt.
-      const stored = readPending(key);
+      const stored = readPending<T>(key);
       const next = stored?.command_id === commandId ? null : stored;
       if (stored?.command_id === commandId) localStorage.removeItem(key);
       pendingRef.current = next;
@@ -63,7 +65,7 @@ export function useSheetEquipmentSave(input: {
     try {
       let request = pendingRef.current;
       if (!request) {
-        request = await current.prepare(operation!);
+        request = await measureClientPhase('equipment_prepare', () => current.prepare(operation!));
         localStorage.setItem(key, JSON.stringify(request));
         pendingRef.current = request;
         if (mounted.current) setPending(request);
@@ -72,7 +74,7 @@ export function useSheetEquipmentSave(input: {
       commandId = immutable.command_id;
       const result = await commitSheetEquipmentRequest({
         request: immutable,
-        commit: () => current.commit(immutable),
+        commit: () => measureClientPhase('equipment_commit', () => current.commit(immutable)),
         loadCurrent: current.loadCurrent,
         viewingCharacterId: current.characterId,
         onDefinitiveRejection: () => { definitelyRejected = true; clear(); },

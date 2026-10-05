@@ -1,0 +1,4917 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-04T16:32:49.582Z",
+  "entryJavaScript": {
+    "assets": [
+      "assets/index-DyJQPQ9m.js"
+    ],
+    "raw_bytes": 801703,
+    "gzip_bytes": 233337
+  },
+  "entryCSS": {
+    "assets": [
+      "assets/index-DWlYD9Yu.css"
+    ],
+    "raw_bytes": 178920,
+    "gzip_bytes": 33500
+  },
+  "routes": {
+    "CardLibrary": {
+      "staticJavaScript": {
+        "assets": [
+          "assets/ActionDetailModal-BMckNtsT.js",
+          "assets/BackgroundDetailModal-DLPtWEjh.js",
+          "assets/CardDetailModal-CGqyCYrw.js",
+          "assets/CardLibrary-DR5Wng1c.js",
+          "assets/ClassDetailModal-Dp3yGsMa.js",
+          "assets/ConceptDetailModal-DrmyeOqe.js",
+          "assets/CurrencyPriceInline-CJ3ATX9t.js",
+          "assets/EffectDetailModal-CYMn7js0.js",
+          "assets/EntityDetailShell-Ck5dlmNw.js",
+          "assets/EntityImageEditor-DgGVGYZt.js",
+          "assets/EntityTags-C-xdYPpa.js",
+          "assets/FeatDetailModal-Ccv8x-Cb.js",
+          "assets/ImageUploader-OpEcXqWg.js",
+          "assets/LibraryQuickDetail-C_t7A8un.js",
+          "assets/RaceDetailModal-Dktx_5Jk.js",
+          "assets/ResourceDetailModal-B1XBK52W.js",
+          "assets/ReviewStatusEditor-3TIlfGBx.js",
+          "assets/SpellDetailModal-BX_hh3eh.js",
+          "assets/VariableDetailModal-BY-Claqo.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/clipboardImage-v5ebXI4d.js",
+          "assets/copy-D_6pF6mu.js",
+          "assets/download-CgtE8a0x.js",
+          "assets/entityReferences-BMTC2a3n.js",
+          "assets/entityTags-CuDHdo9g.js",
+          "assets/exportFonts-JWdZDBXC.js",
+          "assets/filter-Bz62FVhY.js",
+          "assets/grid-3x3-DAkPEmlJ.js",
+          "assets/hash-CUebfJIn.js",
+          "assets/imagesApi-Ap7_JVzR.js",
+          "assets/index-CgJtiJsK.js",
+          "assets/index-DyJQPQ9m.js",
+          "assets/list-DO9JLdfG.js",
+          "assets/loader-2-a_7e2de7.js",
+          "assets/passiveCatalog-B99U7jMc.js",
+          "assets/pen-square-DWrD-u9L.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/rarityColors-CtscuJj6.js",
+          "assets/raritySymbols-iM5CEzDQ.js",
+          "assets/search-AHUowqOX.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/star-D3KYwG6W.js",
+          "assets/trash-2-BrwNMy_v.js",
+          "assets/upload-ocXhOSPY.js",
+          "assets/useIsMobile-CzI9YrUf.js",
+          "assets/wand-2-BcKMDmQZ.js",
+          "assets/zap-Wd2ZmpMV.js"
+        ],
+        "raw_bytes": 982905,
+        "gzip_bytes": 296103
+      },
+      "additionalJavaScript": {
+        "assets": [
+          "assets/ActionDetailModal-BMckNtsT.js",
+          "assets/BackgroundDetailModal-DLPtWEjh.js",
+          "assets/CardDetailModal-CGqyCYrw.js",
+          "assets/CardLibrary-DR5Wng1c.js",
+          "assets/ClassDetailModal-Dp3yGsMa.js",
+          "assets/ConceptDetailModal-DrmyeOqe.js",
+          "assets/CurrencyPriceInline-CJ3ATX9t.js",
+          "assets/EffectDetailModal-CYMn7js0.js",
+          "assets/EntityDetailShell-Ck5dlmNw.js",
+          "assets/EntityImageEditor-DgGVGYZt.js",
+          "assets/EntityTags-C-xdYPpa.js",
+          "assets/FeatDetailModal-Ccv8x-Cb.js",
+          "assets/ImageUploader-OpEcXqWg.js",
+          "assets/LibraryQuickDetail-C_t7A8un.js",
+          "assets/RaceDetailModal-Dktx_5Jk.js",
+          "assets/ResourceDetailModal-B1XBK52W.js",
+          "assets/ReviewStatusEditor-3TIlfGBx.js",
+          "assets/SpellDetailModal-BX_hh3eh.js",
+          "assets/VariableDetailModal-BY-Claqo.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/clipboardImage-v5ebXI4d.js",
+          "assets/copy-D_6pF6mu.js",
+          "assets/download-CgtE8a0x.js",
+          "assets/entityReferences-BMTC2a3n.js",
+          "assets/entityTags-CuDHdo9g.js",
+          "assets/exportFonts-JWdZDBXC.js",
+          "assets/filter-Bz62FVhY.js",
+          "assets/grid-3x3-DAkPEmlJ.js",
+          "assets/hash-CUebfJIn.js",
+          "assets/imagesApi-Ap7_JVzR.js",
+          "assets/index-CgJtiJsK.js",
+          "assets/list-DO9JLdfG.js",
+          "assets/loader-2-a_7e2de7.js",
+          "assets/passiveCatalog-B99U7jMc.js",
+          "assets/pen-square-DWrD-u9L.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/rarityColors-CtscuJj6.js",
+          "assets/raritySymbols-iM5CEzDQ.js",
+          "assets/search-AHUowqOX.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/star-D3KYwG6W.js",
+          "assets/trash-2-BrwNMy_v.js",
+          "assets/upload-ocXhOSPY.js",
+          "assets/useIsMobile-CzI9YrUf.js",
+          "assets/wand-2-BcKMDmQZ.js",
+          "assets/zap-Wd2ZmpMV.js"
+        ],
+        "raw_bytes": 181202,
+        "gzip_bytes": 62766
+      },
+      "namedRouteCSS": {
+        "assets": [
+          "assets/CardLibrary-CxhIYDk9.css"
+        ],
+        "raw_bytes": 4194,
+        "gzip_bytes": 1185
+      }
+    },
+    "CharacterForge": {
+      "staticJavaScript": {
+        "assets": [
+          "assets/CharacterForge-BBQ-HULo.js",
+          "assets/ForgeAbilityDisplay-DsAcnm4f.js",
+          "assets/ImageUploader-OpEcXqWg.js",
+          "assets/ResourceHoverPreview-CQo1aGAz.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/equipmentWeaponMastery-CmjXuEXc.js",
+          "assets/eventDisplay-BKMbK1V4.js",
+          "assets/file-text-Djbm4gkI.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/imagesApi-Ap7_JVzR.js",
+          "assets/index-DyJQPQ9m.js",
+          "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+          "assets/loader-2-a_7e2de7.js",
+          "assets/magicSuppression-FUMAr7l_.js",
+          "assets/pencil-DMsroJxH.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/saveCharacter-DLevrb1Y.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/star-D3KYwG6W.js",
+          "assets/turnCommands-CfrGE0C4.js",
+          "assets/upload-ocXhOSPY.js",
+          "assets/useIsMobile-CzI9YrUf.js",
+          "assets/zap-Wd2ZmpMV.js"
+        ],
+        "raw_bytes": 1528399,
+        "gzip_bytes": 458065
+      },
+      "additionalJavaScript": {
+        "assets": [
+          "assets/CharacterForge-BBQ-HULo.js",
+          "assets/ForgeAbilityDisplay-DsAcnm4f.js",
+          "assets/ImageUploader-OpEcXqWg.js",
+          "assets/ResourceHoverPreview-CQo1aGAz.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/equipmentWeaponMastery-CmjXuEXc.js",
+          "assets/eventDisplay-BKMbK1V4.js",
+          "assets/file-text-Djbm4gkI.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/imagesApi-Ap7_JVzR.js",
+          "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+          "assets/loader-2-a_7e2de7.js",
+          "assets/magicSuppression-FUMAr7l_.js",
+          "assets/pencil-DMsroJxH.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/saveCharacter-DLevrb1Y.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/star-D3KYwG6W.js",
+          "assets/turnCommands-CfrGE0C4.js",
+          "assets/upload-ocXhOSPY.js",
+          "assets/useIsMobile-CzI9YrUf.js",
+          "assets/zap-Wd2ZmpMV.js"
+        ],
+        "raw_bytes": 726696,
+        "gzip_bytes": 224728
+      },
+      "namedRouteCSS": {
+        "assets": [
+          "assets/CharacterForge-CMO1SgFV.css",
+          "assets/CharacterForge-CqamfXAa.css"
+        ],
+        "raw_bytes": 62224,
+        "gzip_bytes": 12348
+      }
+    },
+    "CharacterSheetMVP": {
+      "staticJavaScript": {
+        "assets": [
+          "assets/ActiveEffectCard-BxERd799.js",
+          "assets/BoonActivationDialog-CjDB7hrr.js",
+          "assets/CharacterAccessBadge-BhTYu5-G.js",
+          "assets/CharacterSheetMVP-BbXS6tI4.js",
+          "assets/CharacterSheetV2-D4hlC7u3.js",
+          "assets/EntityDetailShell-Ck5dlmNw.js",
+          "assets/EntityTags-C-xdYPpa.js",
+          "assets/ForgeAbilityDisplay-DsAcnm4f.js",
+          "assets/HealingPulse-C05zFLi-.js",
+          "assets/PaperExportButton-Dqkl67GF.js",
+          "assets/ResourceHoverPreview-CQo1aGAz.js",
+          "assets/ReviewStatusEditor-3TIlfGBx.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/actorArmorClass-CK4C8IbH.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/api-P3x_3UMN.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/characterConversion-BNpJhze2.js",
+          "assets/chevron-right-CiKajAMp.js",
+          "assets/chevrons-up-BboC64WA.js",
+          "assets/circle-dot-DjvaOYtY.js",
+          "assets/copy-D_6pF6mu.js",
+          "assets/encountersApi-DSmdhKSl.js",
+          "assets/entityTags-CuDHdo9g.js",
+          "assets/eventDisplay-BKMbK1V4.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/handler-Bl6sYEpP.js",
+          "assets/healing-CLp5c1G2.js",
+          "assets/heart-D0FlzqyL.js",
+          "assets/index-DyJQPQ9m.js",
+          "assets/inventory-CBwTY7ao.js",
+          "assets/layout-grid-Bi7uEfV1.js",
+          "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+          "assets/magicSuppression-FUMAr7l_.js",
+          "assets/manualEffectCommands-V-A7_gux.js",
+          "assets/manualEntityAddition-CQZqYgJk.js",
+          "assets/minus-0zUzhRGs.js",
+          "assets/money-B26_2UTx.js",
+          "assets/money-Dt7ER44a.js",
+          "assets/paperEquipment-EzJQ6sMj.js",
+          "assets/passiveCatalog-B99U7jMc.js",
+          "assets/pencil-DMsroJxH.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/raritySymbols-iM5CEzDQ.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/saveCharacter-DLevrb1Y.js",
+          "assets/search-AHUowqOX.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+          "assets/shield-check-C24vgm_G.js",
+          "assets/shopNavigation-DCL8AxvU.js",
+          "assets/shopping-cart-WEgjweuW.js",
+          "assets/skull-wtjbJW10.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/trash-2-BrwNMy_v.js",
+          "assets/turnCommands-CfrGE0C4.js",
+          "assets/useEncounterStream-D9lC-sHb.js",
+          "assets/useIsMobile-CzI9YrUf.js",
+          "assets/zap-Wd2ZmpMV.js"
+        ],
+        "raw_bytes": 2702944,
+        "gzip_bytes": 761407
+      },
+      "additionalJavaScript": {
+        "assets": [
+          "assets/ActiveEffectCard-BxERd799.js",
+          "assets/BoonActivationDialog-CjDB7hrr.js",
+          "assets/CharacterAccessBadge-BhTYu5-G.js",
+          "assets/CharacterSheetMVP-BbXS6tI4.js",
+          "assets/CharacterSheetV2-D4hlC7u3.js",
+          "assets/EntityDetailShell-Ck5dlmNw.js",
+          "assets/EntityTags-C-xdYPpa.js",
+          "assets/ForgeAbilityDisplay-DsAcnm4f.js",
+          "assets/HealingPulse-C05zFLi-.js",
+          "assets/PaperExportButton-Dqkl67GF.js",
+          "assets/ResourceHoverPreview-CQo1aGAz.js",
+          "assets/ReviewStatusEditor-3TIlfGBx.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/actorArmorClass-CK4C8IbH.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/api-P3x_3UMN.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/characterConversion-BNpJhze2.js",
+          "assets/chevron-right-CiKajAMp.js",
+          "assets/chevrons-up-BboC64WA.js",
+          "assets/circle-dot-DjvaOYtY.js",
+          "assets/copy-D_6pF6mu.js",
+          "assets/encountersApi-DSmdhKSl.js",
+          "assets/entityTags-CuDHdo9g.js",
+          "assets/eventDisplay-BKMbK1V4.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/handler-Bl6sYEpP.js",
+          "assets/healing-CLp5c1G2.js",
+          "assets/heart-D0FlzqyL.js",
+          "assets/inventory-CBwTY7ao.js",
+          "assets/layout-grid-Bi7uEfV1.js",
+          "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+          "assets/magicSuppression-FUMAr7l_.js",
+          "assets/manualEffectCommands-V-A7_gux.js",
+          "assets/manualEntityAddition-CQZqYgJk.js",
+          "assets/minus-0zUzhRGs.js",
+          "assets/money-B26_2UTx.js",
+          "assets/money-Dt7ER44a.js",
+          "assets/paperEquipment-EzJQ6sMj.js",
+          "assets/passiveCatalog-B99U7jMc.js",
+          "assets/pencil-DMsroJxH.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/raritySymbols-iM5CEzDQ.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/saveCharacter-DLevrb1Y.js",
+          "assets/search-AHUowqOX.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+          "assets/shield-check-C24vgm_G.js",
+          "assets/shopNavigation-DCL8AxvU.js",
+          "assets/shopping-cart-WEgjweuW.js",
+          "assets/skull-wtjbJW10.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/trash-2-BrwNMy_v.js",
+          "assets/turnCommands-CfrGE0C4.js",
+          "assets/useEncounterStream-D9lC-sHb.js",
+          "assets/useIsMobile-CzI9YrUf.js",
+          "assets/zap-Wd2ZmpMV.js"
+        ],
+        "raw_bytes": 1901241,
+        "gzip_bytes": 528070
+      },
+      "namedRouteCSS": {
+        "assets": [
+          "assets/CharacterSheetMVP-YzCy3Lb_.css"
+        ],
+        "raw_bytes": 12500,
+        "gzip_bytes": 3244
+      }
+    },
+    "PaperSheetEntry": {
+      "staticJavaScript": {
+        "assets": [
+          "assets/PaperSheetEntry-BM2hPOTx.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/chevron-left-Dlhg_KQa.js",
+          "assets/chevron-right-CiKajAMp.js",
+          "assets/download-CgtE8a0x.js",
+          "assets/index-DyJQPQ9m.js",
+          "assets/layout-grid-Bi7uEfV1.js",
+          "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+          "assets/paperEquipment-EzJQ6sMj.js",
+          "assets/pencil-DMsroJxH.js",
+          "assets/search-AHUowqOX.js",
+          "assets/trash-2-BrwNMy_v.js",
+          "assets/unlink-CipugEUI.js",
+          "assets/upload-ocXhOSPY.js"
+        ],
+        "raw_bytes": 1089772,
+        "gzip_bytes": 329246
+      },
+      "additionalJavaScript": {
+        "assets": [
+          "assets/PaperSheetEntry-BM2hPOTx.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/catalogPages-DlRysuVv.js",
+          "assets/chevron-left-Dlhg_KQa.js",
+          "assets/chevron-right-CiKajAMp.js",
+          "assets/download-CgtE8a0x.js",
+          "assets/layout-grid-Bi7uEfV1.js",
+          "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+          "assets/paperEquipment-EzJQ6sMj.js",
+          "assets/pencil-DMsroJxH.js",
+          "assets/search-AHUowqOX.js",
+          "assets/trash-2-BrwNMy_v.js",
+          "assets/unlink-CipugEUI.js",
+          "assets/upload-ocXhOSPY.js"
+        ],
+        "raw_bytes": 288069,
+        "gzip_bytes": 95909
+      },
+      "namedRouteCSS": {
+        "assets": [
+          "assets/PaperSheetEntry-CxgSnDEX.css",
+          "assets/PaperSheetEntry-DNRAiW1A.css"
+        ],
+        "raw_bytes": 53575,
+        "gzip_bytes": 11289
+      }
+    },
+    "SoloCombatPage": {
+      "staticJavaScript": {
+        "assets": [
+          "assets/ActiveEffectCard-BxERd799.js",
+          "assets/BoonActivationDialog-CjDB7hrr.js",
+          "assets/CharacterSheetV2-D4hlC7u3.js",
+          "assets/ResourceHoverPreview-CQo1aGAz.js",
+          "assets/SoloCombatPage-D9tJ0D1j.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/actorArmorClass-CK4C8IbH.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/api-P3x_3UMN.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/chevron-left-Dlhg_KQa.js",
+          "assets/chevron-right-CiKajAMp.js",
+          "assets/circle-dot-DjvaOYtY.js",
+          "assets/coins-DxIY4_uE.js",
+          "assets/footprints-X78Jv7gm.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/handler-Bl6sYEpP.js",
+          "assets/healing-CLp5c1G2.js",
+          "assets/heart-D0FlzqyL.js",
+          "assets/index-DyJQPQ9m.js",
+          "assets/inventory-CBwTY7ao.js",
+          "assets/magicSuppression-FUMAr7l_.js",
+          "assets/money-B26_2UTx.js",
+          "assets/passiveCatalog-B99U7jMc.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/raritySymbols-iM5CEzDQ.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/save-BQYg_1qT.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/turnCommands-CfrGE0C4.js",
+          "assets/unlink-CipugEUI.js"
+        ],
+        "raw_bytes": 2860071,
+        "gzip_bytes": 781978
+      },
+      "additionalJavaScript": {
+        "assets": [
+          "assets/ActiveEffectCard-BxERd799.js",
+          "assets/BoonActivationDialog-CjDB7hrr.js",
+          "assets/CharacterSheetV2-D4hlC7u3.js",
+          "assets/ResourceHoverPreview-CQo1aGAz.js",
+          "assets/SoloCombatPage-D9tJ0D1j.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/actorArmorClass-CK4C8IbH.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/api-P3x_3UMN.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/breakdown-B_MUqx7Z.js",
+          "assets/chevron-left-Dlhg_KQa.js",
+          "assets/chevron-right-CiKajAMp.js",
+          "assets/circle-dot-DjvaOYtY.js",
+          "assets/coins-DxIY4_uE.js",
+          "assets/footprints-X78Jv7gm.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/handler-Bl6sYEpP.js",
+          "assets/healing-CLp5c1G2.js",
+          "assets/heart-D0FlzqyL.js",
+          "assets/inventory-CBwTY7ao.js",
+          "assets/magicSuppression-FUMAr7l_.js",
+          "assets/money-B26_2UTx.js",
+          "assets/passiveCatalog-B99U7jMc.js",
+          "assets/plus-hqki7r-X.js",
+          "assets/raritySymbols-iM5CEzDQ.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/save-BQYg_1qT.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/turnCommands-CfrGE0C4.js",
+          "assets/unlink-CipugEUI.js"
+        ],
+        "raw_bytes": 2058368,
+        "gzip_bytes": 548641
+      },
+      "namedRouteCSS": {
+        "assets": [
+          "assets/SoloCombatPage-DOFU3wsh.css"
+        ],
+        "raw_bytes": 88214,
+        "gzip_bytes": 17181
+      }
+    },
+    "RoguelikePage": {
+      "staticJavaScript": {
+        "assets": [
+          "assets/CharacterTemplateLibrary-BD8qIvKb.js",
+          "assets/EntityDetailShell-Ck5dlmNw.js",
+          "assets/EntityTags-C-xdYPpa.js",
+          "assets/HealingPulse-C05zFLi-.js",
+          "assets/MerchantSettingsDialog-B5eFGbWN.js",
+          "assets/ReviewStatusEditor-3TIlfGBx.js",
+          "assets/RoguelikePage-Ce7adYBe.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/actorArmorClass-CK4C8IbH.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/chevrons-up-BboC64WA.js",
+          "assets/crown-BKLDOTHM.js",
+          "assets/entityTags-CuDHdo9g.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/healing-CLp5c1G2.js",
+          "assets/index-DyJQPQ9m.js",
+          "assets/money-B26_2UTx.js",
+          "assets/money-Dt7ER44a.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+          "assets/shopNavigation-DCL8AxvU.js",
+          "assets/skull-wtjbJW10.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/turnCommands-CfrGE0C4.js"
+        ],
+        "raw_bytes": 1493724,
+        "gzip_bytes": 447498
+      },
+      "additionalJavaScript": {
+        "assets": [
+          "assets/CharacterTemplateLibrary-BD8qIvKb.js",
+          "assets/EntityDetailShell-Ck5dlmNw.js",
+          "assets/EntityTags-C-xdYPpa.js",
+          "assets/HealingPulse-C05zFLi-.js",
+          "assets/MerchantSettingsDialog-B5eFGbWN.js",
+          "assets/ReviewStatusEditor-3TIlfGBx.js",
+          "assets/RoguelikePage-Ce7adYBe.js",
+          "assets/activationRequirements-B-nKDJLy.js",
+          "assets/actorArmorClass-CK4C8IbH.js",
+          "assets/api-DyNZpMEV.js",
+          "assets/assemble-CCy9Ehvn.js",
+          "assets/chevrons-up-BboC64WA.js",
+          "assets/crown-BKLDOTHM.js",
+          "assets/entityTags-CuDHdo9g.js",
+          "assets/forgeHelpers-D2wZ-dY_.js",
+          "assets/generalSpellFeatRuntime-JRANRXuH.js",
+          "assets/healing-CLp5c1G2.js",
+          "assets/money-B26_2UTx.js",
+          "assets/money-Dt7ER44a.js",
+          "assets/resourceInit-CTH9gB8z.js",
+          "assets/sheetCanonicalWorld-7YqaXEkL.js",
+          "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+          "assets/shopNavigation-DCL8AxvU.js",
+          "assets/skull-wtjbJW10.js",
+          "assets/sparkles-4C9CboU-.js",
+          "assets/turnCommands-CfrGE0C4.js"
+        ],
+        "raw_bytes": 692021,
+        "gzip_bytes": 214161
+      },
+      "namedRouteCSS": {
+        "assets": [
+          "assets/RoguelikePage-CYt99Kb1.css"
+        ],
+        "raw_bytes": 14984,
+        "gzip_bytes": 3558
+      }
+    }
+  },
+  "dynamicImports": [
+    {
+      "from": "assets/dice-box.es-BJ6Vo3UT.js",
+      "to": "assets/world.offscreen-C5e_o3iU.js"
+    },
+    {
+      "from": "assets/dice-box.es-BJ6Vo3UT.js",
+      "to": "assets/world.onscreen-xMNOm1-Y.js"
+    },
+    {
+      "from": "assets/dice-box.es-BJ6Vo3UT.js",
+      "to": "assets/world.none-DoupFtf4.js"
+    },
+    {
+      "from": "assets/EngineGuide-Dy1hIR6N.js",
+      "to": "assets/mermaid.core-CGXQnlEM.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/workbox-window.prod.es5-BBnX5xw4.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/dice-box.es-BJ6Vo3UT.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/SpellDetailModal-BX_hh3eh.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ActionDetailModal-BMckNtsT.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/EffectDetailModal-CYMn7js0.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CardDetailModal-CGqyCYrw.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ConceptDetailModal-DrmyeOqe.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ResourceDetailModal-B1XBK52W.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/VariableDetailModal-BY-Claqo.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/FeatDetailModal-Ccv8x-Cb.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/RaceDetailModal-Dktx_5Jk.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ClassDetailModal-Dp3yGsMa.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/BackgroundDetailModal-DLPtWEjh.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/Settings-Cp0ONCj6.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/AccountPage-_jmf2cTE.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CardLibrary-DR5Wng1c.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/HomePage-D60pgp-o.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CardCreator-C34RUUCJ.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CardExport-BevafSsi.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/WeaponTemplates-BhRvzrEx.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/Login-DsDAab-S.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/Register-BWglSd8F.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/Groups-CDMID7Cf.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CreateGroup-DDOUCN-9.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/JoinGroup-UcB0ZWyx.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/GroupDetail-DGNZ_U3l.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/Inventory-t_pYn-9T.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CreateInventory-CXYj5GRL.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/InventoryDetail-BQhZ50K9.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/AddItemToInventory-CVAr0ElT.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CharacterForge-BBQ-HULo.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CharacterSheetMVP-BbXS6tI4.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/PaperSheetEntry-BM2hPOTx.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/PaperCharacterForge-CkZ9QApp.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CharactersForgeList-CSOt4lHN.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/InitiativeTracker-DP4-qADO.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/CardTypeSelection-DrQibDIe.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/WeaponSelection-DoPUxD-p.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/EquipmentSelection-DGqQq35x.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/PotionSelection-CDinpppq.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/IngredientSelection-DUVwQMVI.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/TrinketSelection-Ci0cVHBS.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ShopNew-BOuA5r6Y.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ShopDetail-6HwKnrCb.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ActionCreator-DRIeuKex.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/EffectCreator-DOVlAXpr.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/PassiveCreator-CmMKsO9D.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/SpellCreator-DA8HwGk7.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/EntityPage-BYVeAyhF.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/FeatCreator-C0jTmnUs.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/BackgroundCreator-Cmt873f6.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/RaceCreator-B1qUutM7.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ClassCreator-C7sPk3De.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ResourceCreator-DGL0y0MR.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/VariableCreator-DeMRP-g6.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ConceptCreator-DOxFua1E.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/ImageStudio-CJfCyXfF.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/MechanicsGuide-CP2hUnNC.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/EngineGuide-Dy1hIR6N.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/EncounterList-B-JU9t4u.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/EncounterBoard-DELa64gD.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/MobileCharactersPage-DUnjzFd6.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/MobileCharacterSheet-3NJzgTXF.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/MobileCharacterWizard-C7qYw9li.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/MobileEntityCatalog-DDu1MgBs.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/RulesLab-CBri6vLh.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/MonsterLibrary-axwNhMbv.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/MonsterCreator-Dj1dCU8R.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/SoloCombatPage-D9tJ0D1j.js"
+    },
+    {
+      "from": "assets/index-DyJQPQ9m.js",
+      "to": "assets/RoguelikePage-Ce7adYBe.js"
+    },
+    {
+      "from": "assets/jspdf.es.min-0SafzmET.js",
+      "to": "assets/html2canvas.esm-QH1iLAAe.js"
+    },
+    {
+      "from": "assets/jspdf.es.min-0SafzmET.js",
+      "to": "assets/purify.es-DedTAGkB.js"
+    },
+    {
+      "from": "assets/jspdf.es.min-0SafzmET.js",
+      "to": "assets/index.es-sFesFsCq.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/katex-C5jXJg4s.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/sizeCapture-INFHLROL-la647fao.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/dagre-GXQ25YYZ-Dg1IonZ3.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/swimlanes-42K2YHIH-CnQP3a9j.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/cose-bilkent-JH36ORCC-CdFT2HP7.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/c4Diagram-7LVT6UL2-B7veLhmI.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/flowDiagram-HODETNUW-DIHt0g8Z.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/flowDiagram-HODETNUW-DIHt0g8Z.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/swimlanesDiagram-VR7AAH4N-zbMprCuu.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/erDiagram-RLTQ6QDP-DAQXgV4r.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/gitGraphDiagram-WWUBYQGX-C6E25rjn.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/ganttDiagram-EL5Y4UJY-cFVfbEDE.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/infoDiagram-27XIBGKW-CEbshFhW.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/pieDiagram-E7YTZNPT-1wwzFK2p.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/quadrantDiagram-AXDQQJYC-BA3A5o2l.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/xychartDiagram-S5SC5T6Z-DIZyv6dF.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/requirementDiagram-BXWQKSXE-BvfXdh_N.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/sequenceDiagram-WJ2MYXX4-CbEvyo-W.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/classDiagram-ZZMXUADV-DspzOJvW.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/classDiagram-v2-VYDZK3BY-DspzOJvW.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/stateDiagram-D77RDMKH-BV3xiM2h.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/stateDiagram-v2-MP3YSRHH-D9CdBUVr.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/journeyDiagram-3NMN7TZE-BoWDsjqX.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/flowDiagram-HODETNUW-DIHt0g8Z.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/timeline-definition-24CTP7MA-BlLrtVuz.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/mindmap-definition-YA3MSWOX-DPsTKdvk.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/kanban-definition-UXKFOSKX-BROzHDpG.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/sankeyDiagram-P5KCCOFB-Bwj_JFbG.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/diagram-Z3DM3KII-eh4xOvQ5.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/diagram-UQ7AKVKN-BklJuBuo.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/blockDiagram-I7D4REHJ-Ctkl1pMD.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/diagram-S7CK7UJ4-BQ8gdssb.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/architectureDiagram-5GKGNRK7-pKJiLYKo.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/diagram-VSXAHHWV-CPO81Zb9.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/ishikawaDiagram-5VMMS53U-D01YqkGI.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/vennDiagram-4TSXK5OY-C4Bka0Wg.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/diagram-VX7I27RA-DPJbgshk.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/wardleyDiagram-VM6X3IG4-CsLzR6K2.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/cynefinDiagram-5FMLGOSQ-DfYM_Cxa.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/railroadDiagram-O6MQD6OU-BJQMwJ76.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/ebnfDiagram-PWID7BFC-CJ9BGtus.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/abnfDiagram-VCTEODGH-DR1KQf4b.js"
+    },
+    {
+      "from": "assets/mermaid.core-CGXQnlEM.js",
+      "to": "assets/pegDiagram-XKGWAZYB-BPKufkAm.js"
+    },
+    {
+      "from": "assets/PaperSheetEntry-BM2hPOTx.js",
+      "to": "assets/index-CgJtiJsK.js"
+    },
+    {
+      "from": "assets/PaperSheetEntry-BM2hPOTx.js",
+      "to": "assets/jspdf.es.min-0SafzmET.js"
+    },
+    {
+      "from": "assets/SoloCombatPage-D9tJ0D1j.js",
+      "to": "assets/BattleScene-CH0vnSe7.js"
+    }
+  ],
+  "pwaPrecache": {
+    "assets": [
+      "index.html",
+      "assets/index-DyJQPQ9m.js",
+      "assets/index-DWlYD9Yu.css",
+      "assets/index-CgJtiJsK.js",
+      "assets/index-C3R-ojTr.js",
+      "assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+      "assets/inter-latin-600-normal-LgqL8muc.woff2",
+      "assets/inter-latin-500-normal-Cerq10X2.woff2",
+      "assets/inter-latin-400-normal-C38fXH4l.woff2",
+      "assets/inter-latin-300-normal-BVlfKGgI.woff2",
+      "assets/inter-cyrillic-700-normal-CjBOestx.woff2",
+      "assets/inter-cyrillic-600-normal-CWCymEST.woff2",
+      "assets/inter-cyrillic-500-normal-BasfLYem.woff2",
+      "assets/inter-cyrillic-400-normal-obahsSVq.woff2",
+      "assets/inter-cyrillic-300-normal-BnqRxXuy.woff2",
+      "assets/pangolin-latin-400-normal-Cx-z2UDT.woff2",
+      "assets/pangolin-cyrillic-400-normal-DXBky3Ii.woff2",
+      "pwa-192x192.png",
+      "pwa-512x512.png",
+      "site_logo.png",
+      "manifest.webmanifest"
+    ],
+    "raw_bytes": 2489918,
+    "gzip_bytes": 1657842
+  },
+  "allJavaScript": {
+    "assets": [
+      "assets/abnfDiagram-VCTEODGH-DR1KQf4b.js",
+      "assets/AccountPage-_jmf2cTE.js",
+      "assets/ActionCreator-DRIeuKex.js",
+      "assets/ActionDetailModal-BMckNtsT.js",
+      "assets/activationRequirements-B-nKDJLy.js",
+      "assets/ActiveEffectCard-BxERd799.js",
+      "assets/actorArmorClass-CK4C8IbH.js",
+      "assets/AddItemToInventory-CVAr0ElT.js",
+      "assets/api-DyNZpMEV.js",
+      "assets/api-P3x_3UMN.js",
+      "assets/arc-D7T_dWN2.js",
+      "assets/architectureDiagram-5GKGNRK7-pKJiLYKo.js",
+      "assets/assemble-CCy9Ehvn.js",
+      "assets/BackgroundCreator-Cmt873f6.js",
+      "assets/BackgroundDetailModal-DLPtWEjh.js",
+      "assets/BattleScene-CH0vnSe7.js",
+      "assets/blockDiagram-I7D4REHJ-Ctkl1pMD.js",
+      "assets/BoonActivationDialog-CjDB7hrr.js",
+      "assets/breakdown-B_MUqx7Z.js",
+      "assets/c4Diagram-7LVT6UL2-B7veLhmI.js",
+      "assets/calendar-B_SSe40j.js",
+      "assets/CardCreator-C34RUUCJ.js",
+      "assets/CardDetailModal-CGqyCYrw.js",
+      "assets/CardExport-BevafSsi.js",
+      "assets/CardLibrary-DR5Wng1c.js",
+      "assets/CardTypeSelection-DrQibDIe.js",
+      "assets/catalogPages-DlRysuVv.js",
+      "assets/channel-D3diJ307.js",
+      "assets/CharacterAccessBadge-BhTYu5-G.js",
+      "assets/characterConversion-BNpJhze2.js",
+      "assets/CharacterForge-BBQ-HULo.js",
+      "assets/CharactersForgeList-CSOt4lHN.js",
+      "assets/CharacterSheetMVP-BbXS6tI4.js",
+      "assets/CharacterSheetV2-D4hlC7u3.js",
+      "assets/CharacterTemplateLibrary-BD8qIvKb.js",
+      "assets/chevron-left-Dlhg_KQa.js",
+      "assets/chevron-right-CiKajAMp.js",
+      "assets/chevron-up-BkzzFJQX.js",
+      "assets/chevrons-up-BboC64WA.js",
+      "assets/ChipToggleList-C8EYln6H.js",
+      "assets/chunk-2Q5K7J3B-bV3dbI4O.js",
+      "assets/chunk-5VM5RSS4-BSQFpimf.js",
+      "assets/chunk-F27PBJKO-DpYFHJzt.js",
+      "assets/chunk-IMKFNOWR-DIesyVj8.js",
+      "assets/chunk-JWPE2WC7-DOfq_N7u.js",
+      "assets/chunk-POPQ4Y6H--R_axJO6.js",
+      "assets/chunk-SVP7TREG-RYcFuOy7.js",
+      "assets/chunk-TICWLB2K-Cq5iH-zP.js",
+      "assets/chunk-XXDRQBXY-BuLub1jF.js",
+      "assets/circle-dot-DjvaOYtY.js",
+      "assets/ClassCreator-C7sPk3De.js",
+      "assets/ClassDetailModal-Dp3yGsMa.js",
+      "assets/classDiagram-v2-VYDZK3BY-DspzOJvW.js",
+      "assets/classDiagram-ZZMXUADV-DspzOJvW.js",
+      "assets/clipboardImage-v5ebXI4d.js",
+      "assets/coins-DxIY4_uE.js",
+      "assets/ConceptCreator-DOxFua1E.js",
+      "assets/ConceptDetailModal-DrmyeOqe.js",
+      "assets/copy-D_6pF6mu.js",
+      "assets/cose-bilkent-JH36ORCC-CdFT2HP7.js",
+      "assets/CreateGroup-DDOUCN-9.js",
+      "assets/CreateInventory-CXYj5GRL.js",
+      "assets/CreatorShell-DBuHFX5F.js",
+      "assets/crown-BKLDOTHM.js",
+      "assets/CurrencyPriceInline-CJ3ATX9t.js",
+      "assets/cynefin-OW5HDTMX-LPI0zNsD.js",
+      "assets/cynefinDiagram-5FMLGOSQ-DfYM_Cxa.js",
+      "assets/cytoscape.esm-Ix0LnXOy.js",
+      "assets/dagre-GXQ25YYZ-Dg1IonZ3.js",
+      "assets/defaultLocale-DX6XiGOO.js",
+      "assets/diagram-S7CK7UJ4-BQ8gdssb.js",
+      "assets/diagram-UQ7AKVKN-BklJuBuo.js",
+      "assets/diagram-VSXAHHWV-CPO81Zb9.js",
+      "assets/diagram-VX7I27RA-DPJbgshk.js",
+      "assets/diagram-Z3DM3KII-eh4xOvQ5.js",
+      "assets/dice-box.es-BJ6Vo3UT.js",
+      "assets/Dice-Ca3iYnAg.js",
+      "assets/download-CgtE8a0x.js",
+      "assets/ebnfDiagram-PWID7BFC-CJ9BGtus.js",
+      "assets/EffectCreator-DOVlAXpr.js",
+      "assets/EffectDetailModal-CYMn7js0.js",
+      "assets/EncounterBoard-DELa64gD.js",
+      "assets/EncounterList-B-JU9t4u.js",
+      "assets/encountersApi-DSmdhKSl.js",
+      "assets/EngineGuide-Dy1hIR6N.js",
+      "assets/EntityDetailShell-Ck5dlmNw.js",
+      "assets/entityEditorError-Hv6OJQgZ.js",
+      "assets/entityId-kkwwXMhc.js",
+      "assets/EntityImageEditor-DgGVGYZt.js",
+      "assets/EntityPage-BYVeAyhF.js",
+      "assets/entityReferences-BMTC2a3n.js",
+      "assets/EntityReferences-yyc8fPdJ.js",
+      "assets/EntityRefSelector-D5yYoHpM.js",
+      "assets/EntityTags-C-xdYPpa.js",
+      "assets/entityTags-CuDHdo9g.js",
+      "assets/EquipmentOptionsEditor-CvInPrPt.js",
+      "assets/EquipmentSelection-DGqQq35x.js",
+      "assets/equipmentWeaponMastery-CmjXuEXc.js",
+      "assets/erDiagram-RLTQ6QDP-DAQXgV4r.js",
+      "assets/eventDisplay-BKMbK1V4.js",
+      "assets/exportFonts-JWdZDBXC.js",
+      "assets/eye-DTioKYJ4.js",
+      "assets/FeatCreator-C0jTmnUs.js",
+      "assets/FeatDetailModal-Ccv8x-Cb.js",
+      "assets/file-text-Djbm4gkI.js",
+      "assets/filter-Bz62FVhY.js",
+      "assets/flowDiagram-HODETNUW-DIHt0g8Z.js",
+      "assets/footprints-X78Jv7gm.js",
+      "assets/ForgeAbilityDisplay-DsAcnm4f.js",
+      "assets/forgeHelpers-D2wZ-dY_.js",
+      "assets/FormattedTextarea-BWM8b-_s.js",
+      "assets/ganttDiagram-EL5Y4UJY-cFVfbEDE.js",
+      "assets/generalSpellFeatRuntime-JRANRXuH.js",
+      "assets/gitGraphDiagram-WWUBYQGX-C6E25rjn.js",
+      "assets/grid-3x3-DAkPEmlJ.js",
+      "assets/GroupDetail-DGNZ_U3l.js",
+      "assets/Groups-CDMID7Cf.js",
+      "assets/groupsApi-BaOyzifM.js",
+      "assets/handler-Bl6sYEpP.js",
+      "assets/hash-CUebfJIn.js",
+      "assets/healing-CLp5c1G2.js",
+      "assets/HealingPulse-C05zFLi-.js",
+      "assets/heart-D0FlzqyL.js",
+      "assets/HomePage-D60pgp-o.js",
+      "assets/html2canvas.esm-QH1iLAAe.js",
+      "assets/imagesApi-Ap7_JVzR.js",
+      "assets/ImageStudio-CJfCyXfF.js",
+      "assets/ImageUploader-OpEcXqWg.js",
+      "assets/index-C3R-ojTr.js",
+      "assets/index-CgJtiJsK.js",
+      "assets/index-DyJQPQ9m.js",
+      "assets/index.es-sFesFsCq.js",
+      "assets/index.esm-1LENlGK3.js",
+      "assets/infoDiagram-27XIBGKW-CEbshFhW.js",
+      "assets/IngredientSelection-DUVwQMVI.js",
+      "assets/init-Gi6I4Gst.js",
+      "assets/InitiativeTracker-DP4-qADO.js",
+      "assets/inventory-CBwTY7ao.js",
+      "assets/Inventory-t_pYn-9T.js",
+      "assets/inventoryApi--8UEQKSk.js",
+      "assets/InventoryDetail-BQhZ50K9.js",
+      "assets/ishikawaDiagram-5VMMS53U-D01YqkGI.js",
+      "assets/ItemRefSelector-kpMc7NRx.js",
+      "assets/JoinGroup-UcB0ZWyx.js",
+      "assets/journeyDiagram-3NMN7TZE-BoWDsjqX.js",
+      "assets/jspdf.es.min-0SafzmET.js",
+      "assets/kanban-definition-UXKFOSKX-BROzHDpG.js",
+      "assets/katex-C5jXJg4s.js",
+      "assets/layout-CXhZEEOu.js",
+      "assets/layout-grid-Bi7uEfV1.js",
+      "assets/LevelProgressionEditor-2jvOl9JZ.js",
+      "assets/LibraryQuickDetail-C_t7A8un.js",
+      "assets/linear-BB1NXjVy.js",
+      "assets/list-DO9JLdfG.js",
+      "assets/loader-2-a_7e2de7.js",
+      "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+      "assets/Login-DsDAab-S.js",
+      "assets/magicSuppression-FUMAr7l_.js",
+      "assets/manualEffectCommands-V-A7_gux.js",
+      "assets/manualEntityAddition-CQZqYgJk.js",
+      "assets/MechanicsGuide-CP2hUnNC.js",
+      "assets/MerchantSettingsDialog-B5eFGbWN.js",
+      "assets/mermaid.core-CGXQnlEM.js",
+      "assets/mindmap-definition-YA3MSWOX-DPsTKdvk.js",
+      "assets/minus-0zUzhRGs.js",
+      "assets/MobileCharacterSheet-3NJzgTXF.js",
+      "assets/MobileCharactersPage-DUnjzFd6.js",
+      "assets/MobileCharacterWizard-C7qYw9li.js",
+      "assets/MobileEntityCard-DIdWlwmS.js",
+      "assets/MobileEntityCatalog-DDu1MgBs.js",
+      "assets/MobileOverlay-CNZha_Iv.js",
+      "assets/money-B26_2UTx.js",
+      "assets/money-Dt7ER44a.js",
+      "assets/MonsterCreator-Dj1dCU8R.js",
+      "assets/MonsterLibrary-axwNhMbv.js",
+      "assets/MonsterPreview-B2vICink.js",
+      "assets/OAuthButtons-jWwsnX1K.js",
+      "assets/ordinal-Cboi1Yqb.js",
+      "assets/PaperCharacterForge-CkZ9QApp.js",
+      "assets/paperEquipment-EzJQ6sMj.js",
+      "assets/PaperExportButton-Dqkl67GF.js",
+      "assets/PaperSheetEntry-BM2hPOTx.js",
+      "assets/passiveCatalog-B99U7jMc.js",
+      "assets/PassiveCreator-CmMKsO9D.js",
+      "assets/pegDiagram-XKGWAZYB-BPKufkAm.js",
+      "assets/pen-square-DWrD-u9L.js",
+      "assets/pencil-DMsroJxH.js",
+      "assets/pieDiagram-E7YTZNPT-1wwzFK2p.js",
+      "assets/plus-hqki7r-X.js",
+      "assets/PotionSelection-CDinpppq.js",
+      "assets/purify.es-DedTAGkB.js",
+      "assets/puzzle-SeBPheSj.js",
+      "assets/quadrantDiagram-AXDQQJYC-BA3A5o2l.js",
+      "assets/RaceCreator-B1qUutM7.js",
+      "assets/RaceDetailModal-Dktx_5Jk.js",
+      "assets/railroadDiagram-O6MQD6OU-BJQMwJ76.js",
+      "assets/rarityColors-CtscuJj6.js",
+      "assets/raritySymbols-iM5CEzDQ.js",
+      "assets/Register-BWglSd8F.js",
+      "assets/requirementDiagram-BXWQKSXE-BvfXdh_N.js",
+      "assets/ResourceCreator-DGL0y0MR.js",
+      "assets/ResourceDetailModal-B1XBK52W.js",
+      "assets/ResourceHoverPreview-CQo1aGAz.js",
+      "assets/resourceInit-CTH9gB8z.js",
+      "assets/ReviewStatusEditor-3TIlfGBx.js",
+      "assets/RoguelikePage-Ce7adYBe.js",
+      "assets/RulesLab-CBri6vLh.js",
+      "assets/sankeyDiagram-P5KCCOFB-Bwj_JFbG.js",
+      "assets/save-BQYg_1qT.js",
+      "assets/saveCharacter-DLevrb1Y.js",
+      "assets/search-AHUowqOX.js",
+      "assets/sequenceDiagram-WJ2MYXX4-CbEvyo-W.js",
+      "assets/Settings-Cp0ONCj6.js",
+      "assets/sheetCanonicalWorld-7YqaXEkL.js",
+      "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+      "assets/shield-check-C24vgm_G.js",
+      "assets/ShopDetail-6HwKnrCb.js",
+      "assets/shopNavigation-DCL8AxvU.js",
+      "assets/ShopNew-BOuA5r6Y.js",
+      "assets/shopping-cart-WEgjweuW.js",
+      "assets/sizeCapture-INFHLROL-la647fao.js",
+      "assets/skull-wtjbJW10.js",
+      "assets/SoloCombatPage-D9tJ0D1j.js",
+      "assets/sparkles-4C9CboU-.js",
+      "assets/SpellCreator-DA8HwGk7.js",
+      "assets/SpellDetailModal-BX_hh3eh.js",
+      "assets/star-D3KYwG6W.js",
+      "assets/stateDiagram-D77RDMKH-BV3xiM2h.js",
+      "assets/stateDiagram-v2-MP3YSRHH-D9CdBUVr.js",
+      "assets/swimlanes-42K2YHIH-CnQP3a9j.js",
+      "assets/swimlanesDiagram-VR7AAH4N-zbMprCuu.js",
+      "assets/sword-CbZV6b_z.js",
+      "assets/TemplateViewer-CZpour15.js",
+      "assets/timeline-definition-24CTP7MA-BlLrtVuz.js",
+      "assets/trash-2-BrwNMy_v.js",
+      "assets/TrinketSelection-Ci0cVHBS.js",
+      "assets/turnCommands-CfrGE0C4.js",
+      "assets/type-ChjzZATU.js",
+      "assets/unlink-CipugEUI.js",
+      "assets/upload-ocXhOSPY.js",
+      "assets/useEffectActionLoaders---RTzbDu.js",
+      "assets/useEncounterStream-D9lC-sHb.js",
+      "assets/useIsMobile-CzI9YrUf.js",
+      "assets/user-round-ColoVrAs.js",
+      "assets/validateMechanics-DnrvuJzE.js",
+      "assets/VariableCreator-DeMRP-g6.js",
+      "assets/VariableDetailModal-BY-Claqo.js",
+      "assets/vennDiagram-4TSXK5OY-C4Bka0Wg.js",
+      "assets/wand-2-BcKMDmQZ.js",
+      "assets/wardleyDiagram-VM6X3IG4-CsLzR6K2.js",
+      "assets/WeaponSelection-DoPUxD-p.js",
+      "assets/WeaponTemplates-BhRvzrEx.js",
+      "assets/weight-CtF_8iOd.js",
+      "assets/workbox-window.prod.es5-BBnX5xw4.js",
+      "assets/world.none-DoupFtf4.js",
+      "assets/world.offscreen-C5e_o3iU.js",
+      "assets/world.onscreen-xMNOm1-Y.js",
+      "assets/xychartDiagram-S5SC5T6Z-DIZyv6dF.js",
+      "assets/zap-Wd2ZmpMV.js",
+      "audio/music-v2/gallery.js",
+      "audio/music-v3/gallery.js",
+      "sw.js",
+      "workbox-9845bf53.js"
+    ],
+    "raw_bytes": 13054074,
+    "gzip_bytes": 3673218
+  },
+  "allAssets": {
+    "assets": [
+      "assets/abnfDiagram-VCTEODGH-DR1KQf4b.js",
+      "assets/AccountPage-DrH85ghD.css",
+      "assets/AccountPage-_jmf2cTE.js",
+      "assets/ActionCreator-DRIeuKex.js",
+      "assets/ActionDetailModal-BMckNtsT.js",
+      "assets/activationRequirements-B-nKDJLy.js",
+      "assets/ActiveEffectCard-BxERd799.js",
+      "assets/ActiveEffectCard-CntYg9ha.css",
+      "assets/actorArmorClass-CK4C8IbH.js",
+      "assets/AddItemToInventory-CVAr0ElT.js",
+      "assets/api-DyNZpMEV.js",
+      "assets/api-P3x_3UMN.js",
+      "assets/arc-D7T_dWN2.js",
+      "assets/architectureDiagram-5GKGNRK7-pKJiLYKo.js",
+      "assets/assemble-CCy9Ehvn.js",
+      "assets/BackgroundCreator-Cmt873f6.js",
+      "assets/BackgroundDetailModal-DLPtWEjh.js",
+      "assets/battle-maps/cavern-floor-v1.png",
+      "assets/battle-maps/clearing-floor-v1.png",
+      "assets/battle-maps/courtyard-floor-v1.png",
+      "assets/battle-maps/crypt-annex-floor-v1.png",
+      "assets/battle-maps/crypt-floor-v1.png",
+      "assets/battle-maps/forest-floor-v1.png",
+      "assets/battle-maps/masonry-atlas-v2.png",
+      "assets/battle-maps/props-atlas-v1.png",
+      "assets/battle-maps/quarry-floor-v1.png",
+      "assets/battle-maps/sanctuary-floor-v1.png",
+      "assets/battle-maps/snow-floor-v1.png",
+      "assets/battle-maps/table-v2.png",
+      "assets/battle-maps/tavern-floor-v1.png",
+      "assets/battle-maps/urvin-archive-v1.png",
+      "assets/battle-maps/urvin-causeway-v1.png",
+      "assets/battle-maps/urvin-court-v1.png",
+      "assets/battle-maps/valley-floor-v1.png",
+      "assets/battle-maps/valley-river-v2.png",
+      "assets/battle-maps/watchpost-floor-v1.png",
+      "assets/BattleScene-BILXKoai.css",
+      "assets/BattleScene-CH0vnSe7.js",
+      "assets/blockDiagram-I7D4REHJ-Ctkl1pMD.js",
+      "assets/BoonActivationDialog-BX-mOLI0.css",
+      "assets/BoonActivationDialog-CjDB7hrr.js",
+      "assets/breakdown-B_MUqx7Z.js",
+      "assets/c4Diagram-7LVT6UL2-B7veLhmI.js",
+      "assets/calendar-B_SSe40j.js",
+      "assets/CardCreator-C34RUUCJ.js",
+      "assets/CardDetailModal-CGqyCYrw.js",
+      "assets/CardExport-BevafSsi.js",
+      "assets/CardLibrary-CxhIYDk9.css",
+      "assets/CardLibrary-DR5Wng1c.js",
+      "assets/CardTypeSelection-DrQibDIe.js",
+      "assets/catalogPages-DlRysuVv.js",
+      "assets/channel-D3diJ307.js",
+      "assets/CharacterAccessBadge-BhTYu5-G.js",
+      "assets/characterConversion-BNpJhze2.js",
+      "assets/CharacterForge-BBQ-HULo.js",
+      "assets/CharacterForge-CMO1SgFV.css",
+      "assets/CharacterForge-CqamfXAa.css",
+      "assets/CharactersForgeList-CSOt4lHN.js",
+      "assets/CharacterSheetMVP-BbXS6tI4.js",
+      "assets/CharacterSheetMVP-YzCy3Lb_.css",
+      "assets/CharacterSheetV2-Biq8wV02.css",
+      "assets/CharacterSheetV2-D4hlC7u3.js",
+      "assets/CharacterTemplateLibrary-BD8qIvKb.js",
+      "assets/CharacterTemplateLibrary-vXQhu_iw.css",
+      "assets/chevron-left-Dlhg_KQa.js",
+      "assets/chevron-right-CiKajAMp.js",
+      "assets/chevron-up-BkzzFJQX.js",
+      "assets/chevrons-up-BboC64WA.js",
+      "assets/ChipToggleList-C8EYln6H.js",
+      "assets/chunk-2Q5K7J3B-bV3dbI4O.js",
+      "assets/chunk-5VM5RSS4-BSQFpimf.js",
+      "assets/chunk-F27PBJKO-DpYFHJzt.js",
+      "assets/chunk-IMKFNOWR-DIesyVj8.js",
+      "assets/chunk-JWPE2WC7-DOfq_N7u.js",
+      "assets/chunk-POPQ4Y6H--R_axJO6.js",
+      "assets/chunk-SVP7TREG-RYcFuOy7.js",
+      "assets/chunk-TICWLB2K-Cq5iH-zP.js",
+      "assets/chunk-XXDRQBXY-BuLub1jF.js",
+      "assets/circle-dot-DjvaOYtY.js",
+      "assets/ClassCreator-C7sPk3De.js",
+      "assets/ClassDetailModal-Dp3yGsMa.js",
+      "assets/classDiagram-v2-VYDZK3BY-DspzOJvW.js",
+      "assets/classDiagram-ZZMXUADV-DspzOJvW.js",
+      "assets/clipboardImage-v5ebXI4d.js",
+      "assets/coins-DxIY4_uE.js",
+      "assets/ConceptCreator-DOxFua1E.js",
+      "assets/ConceptDetailModal-DrmyeOqe.js",
+      "assets/copy-D_6pF6mu.js",
+      "assets/cose-bilkent-JH36ORCC-CdFT2HP7.js",
+      "assets/CreateGroup-DDOUCN-9.js",
+      "assets/CreateInventory-CXYj5GRL.js",
+      "assets/CreatorShell-DBuHFX5F.js",
+      "assets/crown-BKLDOTHM.js",
+      "assets/CurrencyPriceInline-CJ3ATX9t.js",
+      "assets/cynefin-OW5HDTMX-LPI0zNsD.js",
+      "assets/cynefinDiagram-5FMLGOSQ-DfYM_Cxa.js",
+      "assets/cytoscape.esm-Ix0LnXOy.js",
+      "assets/dagre-GXQ25YYZ-Dg1IonZ3.js",
+      "assets/defaultLocale-DX6XiGOO.js",
+      "assets/diagram-S7CK7UJ4-BQ8gdssb.js",
+      "assets/diagram-UQ7AKVKN-BklJuBuo.js",
+      "assets/diagram-VSXAHHWV-CPO81Zb9.js",
+      "assets/diagram-VX7I27RA-DPJbgshk.js",
+      "assets/diagram-Z3DM3KII-eh4xOvQ5.js",
+      "assets/dice-box/ammo/ammo.wasm.wasm",
+      "assets/dice-box/themes/default/default.json",
+      "assets/dice-box/themes/default/diffuse-dark.png",
+      "assets/dice-box/themes/default/diffuse-light.png",
+      "assets/dice-box/themes/default/normal.png",
+      "assets/dice-box/themes/default/specular.jpg",
+      "assets/dice-box/themes/default/theme.config.json",
+      "assets/dice-box.es-BJ6Vo3UT.js",
+      "assets/Dice-Ca3iYnAg.js",
+      "assets/download-CgtE8a0x.js",
+      "assets/ebnfDiagram-PWID7BFC-CJ9BGtus.js",
+      "assets/EffectCreator-DOVlAXpr.js",
+      "assets/EffectDetailModal-CYMn7js0.js",
+      "assets/EncounterBoard-DELa64gD.js",
+      "assets/EncounterList-B-JU9t4u.js",
+      "assets/encountersApi-DSmdhKSl.js",
+      "assets/EngineGuide-Dy1hIR6N.js",
+      "assets/EntityDetailShell-C4ihvdAl.css",
+      "assets/EntityDetailShell-Ck5dlmNw.js",
+      "assets/entityEditorError-Hv6OJQgZ.js",
+      "assets/entityId-kkwwXMhc.js",
+      "assets/EntityImageEditor-DgGVGYZt.js",
+      "assets/EntityPage-BYVeAyhF.js",
+      "assets/EntityPage-xNdj_6ir.css",
+      "assets/entityReferences-BMTC2a3n.js",
+      "assets/EntityReferences-C0791Ceq.css",
+      "assets/EntityReferences-yyc8fPdJ.js",
+      "assets/EntityRefSelector-D5yYoHpM.js",
+      "assets/EntityTags-C-xdYPpa.js",
+      "assets/entityTags-CuDHdo9g.js",
+      "assets/EntityTags-DmHOO-wl.css",
+      "assets/EquipmentOptionsEditor-CvInPrPt.js",
+      "assets/EquipmentSelection-DGqQq35x.js",
+      "assets/equipmentWeaponMastery-CmjXuEXc.js",
+      "assets/erDiagram-RLTQ6QDP-DAQXgV4r.js",
+      "assets/eventDisplay-BKMbK1V4.js",
+      "assets/exportFonts-JWdZDBXC.js",
+      "assets/eye-DTioKYJ4.js",
+      "assets/FeatCreator-C0jTmnUs.js",
+      "assets/FeatDetailModal-Ccv8x-Cb.js",
+      "assets/file-text-Djbm4gkI.js",
+      "assets/filter-Bz62FVhY.js",
+      "assets/flowDiagram-HODETNUW-DIHt0g8Z.js",
+      "assets/footprints-X78Jv7gm.js",
+      "assets/ForgeAbilityDisplay-DsAcnm4f.js",
+      "assets/forgeHelpers-D2wZ-dY_.js",
+      "assets/FormattedTextarea-BWM8b-_s.js",
+      "assets/ganttDiagram-EL5Y4UJY-cFVfbEDE.js",
+      "assets/generalSpellFeatRuntime-JRANRXuH.js",
+      "assets/gitGraphDiagram-WWUBYQGX-C6E25rjn.js",
+      "assets/grid-3x3-DAkPEmlJ.js",
+      "assets/GroupDetail-DGNZ_U3l.js",
+      "assets/Groups-CDMID7Cf.js",
+      "assets/groupsApi-BaOyzifM.js",
+      "assets/handler-Bl6sYEpP.js",
+      "assets/hash-CUebfJIn.js",
+      "assets/healing-3D0tqaRZ.css",
+      "assets/healing-CLp5c1G2.js",
+      "assets/HealingPulse-BVlywiH7.css",
+      "assets/HealingPulse-C05zFLi-.js",
+      "assets/heart-D0FlzqyL.js",
+      "assets/HomePage-Bz1FfLh6.css",
+      "assets/HomePage-D60pgp-o.js",
+      "assets/html2canvas.esm-QH1iLAAe.js",
+      "assets/imagesApi-Ap7_JVzR.js",
+      "assets/ImageStudio-CJfCyXfF.js",
+      "assets/ImageUploader-OpEcXqWg.js",
+      "assets/index-C3R-ojTr.js",
+      "assets/index-CgJtiJsK.js",
+      "assets/index-DWlYD9Yu.css",
+      "assets/index-DyJQPQ9m.js",
+      "assets/index.es-sFesFsCq.js",
+      "assets/index.esm-1LENlGK3.js",
+      "assets/infoDiagram-27XIBGKW-CEbshFhW.js",
+      "assets/IngredientSelection-DUVwQMVI.js",
+      "assets/init-Gi6I4Gst.js",
+      "assets/InitiativeTracker-DP4-qADO.js",
+      "assets/inter-cyrillic-300-normal-BnqRxXuy.woff2",
+      "assets/inter-cyrillic-400-normal-obahsSVq.woff2",
+      "assets/inter-cyrillic-500-normal-BasfLYem.woff2",
+      "assets/inter-cyrillic-600-normal-CWCymEST.woff2",
+      "assets/inter-cyrillic-700-normal-CjBOestx.woff2",
+      "assets/inter-latin-300-normal-BVlfKGgI.woff2",
+      "assets/inter-latin-400-normal-C38fXH4l.woff2",
+      "assets/inter-latin-500-normal-Cerq10X2.woff2",
+      "assets/inter-latin-600-normal-LgqL8muc.woff2",
+      "assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+      "assets/inventory-CBwTY7ao.js",
+      "assets/Inventory-t_pYn-9T.js",
+      "assets/inventoryApi--8UEQKSk.js",
+      "assets/InventoryDetail-BQhZ50K9.js",
+      "assets/ishikawaDiagram-5VMMS53U-D01YqkGI.js",
+      "assets/ItemRefSelector-kpMc7NRx.js",
+      "assets/JoinGroup-UcB0ZWyx.js",
+      "assets/journeyDiagram-3NMN7TZE-BoWDsjqX.js",
+      "assets/jspdf.es.min-0SafzmET.js",
+      "assets/kanban-definition-UXKFOSKX-BROzHDpG.js",
+      "assets/katex-C5jXJg4s.js",
+      "assets/layout-CXhZEEOu.js",
+      "assets/layout-grid-Bi7uEfV1.js",
+      "assets/LevelProgressionEditor-2jvOl9JZ.js",
+      "assets/LibraryQuickDetail-CYNNwyev.css",
+      "assets/LibraryQuickDetail-C_t7A8un.js",
+      "assets/linear-BB1NXjVy.js",
+      "assets/list-DO9JLdfG.js",
+      "assets/loader-2-a_7e2de7.js",
+      "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+      "assets/Login-DsDAab-S.js",
+      "assets/magicSuppression-FUMAr7l_.js",
+      "assets/manualEffectCommands-V-A7_gux.js",
+      "assets/manualEntityAddition-CQZqYgJk.js",
+      "assets/MechanicsGuide-CP2hUnNC.js",
+      "assets/MerchantSettingsDialog-B5eFGbWN.js",
+      "assets/mermaid.core-CGXQnlEM.js",
+      "assets/mindmap-definition-YA3MSWOX-DPsTKdvk.js",
+      "assets/minus-0zUzhRGs.js",
+      "assets/MobileCharacterSheet-3NJzgTXF.js",
+      "assets/MobileCharactersPage-DUnjzFd6.js",
+      "assets/MobileCharacterWizard-C7qYw9li.js",
+      "assets/MobileEntityCard-DIdWlwmS.js",
+      "assets/MobileEntityCatalog-DDu1MgBs.js",
+      "assets/MobileOverlay-CNZha_Iv.js",
+      "assets/money-B26_2UTx.js",
+      "assets/money-Dt7ER44a.js",
+      "assets/MonsterCreator-Dj1dCU8R.js",
+      "assets/MonsterLibrary-axwNhMbv.js",
+      "assets/MonsterLibrary-DRxECD57.css",
+      "assets/MonsterPreview-B2vICink.js",
+      "assets/OAuthButtons-jWwsnX1K.js",
+      "assets/ordinal-Cboi1Yqb.js",
+      "assets/pangolin-cyrillic-400-normal-DXBky3Ii.woff2",
+      "assets/pangolin-latin-400-normal-Cx-z2UDT.woff2",
+      "assets/PaperCharacterForge-CkZ9QApp.js",
+      "assets/PaperCharacterForge-Cv_PCJKl.css",
+      "assets/paperEquipment-EzJQ6sMj.js",
+      "assets/PaperExportButton-Bp7rE0si.css",
+      "assets/PaperExportButton-Dqkl67GF.js",
+      "assets/PaperSheetEntry-BM2hPOTx.js",
+      "assets/PaperSheetEntry-CxgSnDEX.css",
+      "assets/PaperSheetEntry-DNRAiW1A.css",
+      "assets/passiveCatalog-B99U7jMc.js",
+      "assets/PassiveCreator-CmMKsO9D.js",
+      "assets/pegDiagram-XKGWAZYB-BPKufkAm.js",
+      "assets/pen-square-DWrD-u9L.js",
+      "assets/pencil-DMsroJxH.js",
+      "assets/pieDiagram-E7YTZNPT-1wwzFK2p.js",
+      "assets/plus-hqki7r-X.js",
+      "assets/PotionSelection-CDinpppq.js",
+      "assets/purify.es-DedTAGkB.js",
+      "assets/puzzle-SeBPheSj.js",
+      "assets/quadrantDiagram-AXDQQJYC-BA3A5o2l.js",
+      "assets/RaceCreator-B1qUutM7.js",
+      "assets/RaceDetailModal-Dktx_5Jk.js",
+      "assets/railroadDiagram-O6MQD6OU-BJQMwJ76.js",
+      "assets/rarityColors-CtscuJj6.js",
+      "assets/raritySymbols-iM5CEzDQ.js",
+      "assets/Register-BWglSd8F.js",
+      "assets/requirementDiagram-BXWQKSXE-BvfXdh_N.js",
+      "assets/ResourceCreator-DGL0y0MR.js",
+      "assets/ResourceDetailModal-B1XBK52W.js",
+      "assets/ResourceHoverPreview-CQo1aGAz.js",
+      "assets/resourceInit-CTH9gB8z.js",
+      "assets/ReviewStatusEditor-3TIlfGBx.js",
+      "assets/RoguelikePage-Ce7adYBe.js",
+      "assets/RoguelikePage-CYt99Kb1.css",
+      "assets/RulesLab-CBri6vLh.js",
+      "assets/RulesLab-DczvsN1C.css",
+      "assets/sankeyDiagram-P5KCCOFB-Bwj_JFbG.js",
+      "assets/save-BQYg_1qT.js",
+      "assets/saveCharacter-DLevrb1Y.js",
+      "assets/search-AHUowqOX.js",
+      "assets/sequenceDiagram-WJ2MYXX4-CbEvyo-W.js",
+      "assets/Settings-Cp0ONCj6.js",
+      "assets/sheetCanonicalWorld-7YqaXEkL.js",
+      "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+      "assets/shield-check-C24vgm_G.js",
+      "assets/ShopDetail-6HwKnrCb.js",
+      "assets/ShopDetail-CF7sFU2v.css",
+      "assets/shopNavigation-DCL8AxvU.js",
+      "assets/ShopNew-BOuA5r6Y.js",
+      "assets/shopping-cart-WEgjweuW.js",
+      "assets/sizeCapture-INFHLROL-la647fao.js",
+      "assets/skull-wtjbJW10.js",
+      "assets/SoloCombatPage-D9tJ0D1j.js",
+      "assets/SoloCombatPage-DOFU3wsh.css",
+      "assets/sparkles-4C9CboU-.js",
+      "assets/SpellCreator-DA8HwGk7.js",
+      "assets/SpellDetailModal-BX_hh3eh.js",
+      "assets/star-D3KYwG6W.js",
+      "assets/stateDiagram-D77RDMKH-BV3xiM2h.js",
+      "assets/stateDiagram-v2-MP3YSRHH-D9CdBUVr.js",
+      "assets/swimlanes-42K2YHIH-CnQP3a9j.js",
+      "assets/swimlanesDiagram-VR7AAH4N-zbMprCuu.js",
+      "assets/sword-CbZV6b_z.js",
+      "assets/TemplateViewer-CZpour15.js",
+      "assets/timeline-definition-24CTP7MA-BlLrtVuz.js",
+      "assets/trash-2-BrwNMy_v.js",
+      "assets/TrinketSelection-Ci0cVHBS.js",
+      "assets/turnCommands-CfrGE0C4.js",
+      "assets/type-ChjzZATU.js",
+      "assets/unlink-CipugEUI.js",
+      "assets/upload-ocXhOSPY.js",
+      "assets/urvin/auras/ferocity.png",
+      "assets/urvin/auras/phoenix.png",
+      "assets/urvin/auras/restoration.png",
+      "assets/urvin/auras/solitude.png",
+      "assets/urvin/auras/wealth.png",
+      "assets/useEffectActionLoaders---RTzbDu.js",
+      "assets/useEncounterStream-D9lC-sHb.js",
+      "assets/useIsMobile-CzI9YrUf.js",
+      "assets/user-round-ColoVrAs.js",
+      "assets/UtilityPages-33TODRkg.css",
+      "assets/validateMechanics-DnrvuJzE.js",
+      "assets/VariableCreator-DeMRP-g6.js",
+      "assets/VariableDetailModal-BY-Claqo.js",
+      "assets/vennDiagram-4TSXK5OY-C4Bka0Wg.js",
+      "assets/wand-2-BcKMDmQZ.js",
+      "assets/wardleyDiagram-VM6X3IG4-CsLzR6K2.js",
+      "assets/WeaponSelection-DoPUxD-p.js",
+      "assets/WeaponTemplates-BhRvzrEx.js",
+      "assets/weight-CtF_8iOd.js",
+      "assets/workbox-window.prod.es5-BBnX5xw4.js",
+      "assets/world.none-DoupFtf4.js",
+      "assets/world.offscreen-C5e_o3iU.js",
+      "assets/world.onscreen-xMNOm1-Y.js",
+      "assets/xychartDiagram-S5SC5T6Z-DIZyv6dF.js",
+      "assets/zap-Wd2ZmpMV.js",
+      "audio/combat-v2/dice_roll.47aa77d5fc6f.mp3",
+      "audio/combat-v2/dice_single.7ee4afd31075.mp3",
+      "audio/combat-v2/magic_acid_hit.f0ad64741152.mp3",
+      "audio/combat-v2/magic_acid_launch.7ee66d03cd78.mp3",
+      "audio/combat-v2/magic_area_illusion_activate.f386cb4d1a95.mp3",
+      "audio/combat-v2/magic_area_nature_activate.f70966fdb458.mp3",
+      "audio/combat-v2/magic_area_thunder_launch.92e0486403b7.mp3",
+      "audio/combat-v2/magic_breath_acid_launch.c774ceb783f0.mp3",
+      "audio/combat-v2/magic_breath_fire_launch.0f562047a080.mp3",
+      "audio/combat-v2/magic_breath_frost_launch.605e13fe51b2.mp3",
+      "audio/combat-v2/magic_breath_lightning_launch.477cf13e0756.mp3",
+      "audio/combat-v2/magic_breath_poison_launch.613c49c58823.mp3",
+      "audio/combat-v2/magic_earth_hit.b37bdb022f5d.mp3",
+      "audio/combat-v2/magic_earth_launch.c78fd8e5a06a.mp3",
+      "audio/combat-v2/magic_fire_hit.6d2d39e0381a.mp3",
+      "audio/combat-v2/magic_fire_launch.2cc9a0774329.mp3",
+      "audio/combat-v2/magic_force_charge.37c64a45e5ba.mp3",
+      "audio/combat-v2/magic_force_hit.b64ef8e8230a.mp3",
+      "audio/combat-v2/magic_force_launch.eecdb68b02bf.mp3",
+      "audio/combat-v2/magic_frost_hit.306fb439b0f7.mp3",
+      "audio/combat-v2/magic_frost_launch.2d2016224750.mp3",
+      "audio/combat-v2/magic_healing_activate.a497f3c462fb.mp3",
+      "audio/combat-v2/magic_illusion_activate.279e8585b9d5.mp3",
+      "audio/combat-v2/magic_lightning_hit.310bbabb2d00.mp3",
+      "audio/combat-v2/magic_lightning_launch.2f6d7a117b1f.mp3",
+      "audio/combat-v2/magic_miss_dissipate.015a6d7142dc.mp3",
+      "audio/combat-v2/magic_miss_flyby.0ced9ab31a13.mp3",
+      "audio/combat-v2/magic_nature_hit.08817e6e976b.mp3",
+      "audio/combat-v2/magic_nature_launch.f33263db1a23.mp3",
+      "audio/combat-v2/magic_necrotic_hit.343769c9e533.mp3",
+      "audio/combat-v2/magic_necrotic_launch.629ebb838407.mp3",
+      "audio/combat-v2/magic_poison_hit.7c1417917fa4.mp3",
+      "audio/combat-v2/magic_poison_launch.7cc18d58a136.mp3",
+      "audio/combat-v2/magic_psychic_hit.80427365a766.mp3",
+      "audio/combat-v2/magic_psychic_launch.54b42e4a71d6.mp3",
+      "audio/combat-v2/magic_radiant_hit.f231b2c86309.mp3",
+      "audio/combat-v2/magic_radiant_launch.563c06e0b584.mp3",
+      "audio/combat-v2/magic_thunder_hit.60c959cbe4df.mp3",
+      "audio/combat-v2/magic_thunder_launch.99d423f71a84.mp3",
+      "audio/combat-v2/magic_ward_activate.8d17eb7ea825.mp3",
+      "audio/combat-v2/magic_water_hit.e994dbb9b12e.mp3",
+      "audio/combat-v2/magic_water_launch.f88d085fd054.mp3",
+      "audio/combat-v2/magic_wind_hit.aafb263e973a.mp3",
+      "audio/combat-v2/magic_wind_launch.65b665af4b70.mp3",
+      "audio/combat-v2/natural_bite_hit.6ba7a44fc2d9.mp3",
+      "audio/combat-v2/natural_bite_launch.78d1aa4a96d5.mp3",
+      "audio/combat-v2/natural_claws_hit.f7e6f29ca60e.mp3",
+      "audio/combat-v2/natural_claws_launch.49fea95a0a2a.mp3",
+      "audio/combat-v2/natural_slam_hit.c1a63959e4ad.mp3",
+      "audio/combat-v2/natural_sting_hit.3aeef4dbd6ed.mp3",
+      "audio/combat-v2/natural_sting_launch.a8555c03b074.mp3",
+      "audio/combat-v2/natural_tail_launch.a72582fd0d15.mp3",
+      "audio/combat-v2/natural_tentacle_hit.98f1b80d1daf.mp3",
+      "audio/combat-v2/natural_tentacle_launch.80ad3eb3fe1e.mp3",
+      "audio/combat-v2/weapon_arrow_hit.14d64f13e8c2.mp3",
+      "audio/combat-v2/weapon_blade_hit.3bfe26e6473b.mp3",
+      "audio/combat-v2/weapon_blade_launch.e871e097b25c.mp3",
+      "audio/combat-v2/weapon_blunt_hit.4fa3488ac629.mp3",
+      "audio/combat-v2/weapon_blunt_launch.c559abe0ee81.mp3",
+      "audio/combat-v2/weapon_bow_launch.00863cf03679.mp3",
+      "audio/combat-v2/weapon_crossbow_launch.35e0e6487fc7.mp3",
+      "audio/combat-v2/weapon_firearm_hit.55e92230bf06.mp3",
+      "audio/combat-v2/weapon_firearm_launch.9785913ea4ff.mp3",
+      "audio/combat-v2/weapon_melee_miss.d2ae6e615c38.mp3",
+      "audio/combat-v2/weapon_pierce_hit.7ed8d9b172b1.mp3",
+      "audio/combat-v2/weapon_pierce_launch.86d2a69a2fdf.mp3",
+      "audio/combat-v2/weapon_projectile_miss.10b7c80a46a5.mp3",
+      "audio/combat-v2/weapon_stone_hit.f03123da9abb.mp3",
+      "audio/combat-v2/weapon_stone_launch.eee27d9a89ef.mp3",
+      "audio/combat-v2/weapon_throw_launch.58de899be34d.mp3",
+      "audio/music-v2/gallery.css",
+      "audio/music-v2/gallery.js",
+      "audio/music-v2/index.html",
+      "audio/music-v2/music_battle_cavern-v1.0a3a36ce77dd.mp3",
+      "audio/music-v2/music_battle_clearing-v1.91b5626989bf.mp3",
+      "audio/music-v2/music_battle_courtyard-small-v1.4b41f0aef498.mp3",
+      "audio/music-v2/music_battle_crypt-annex-rooms-v1.ba68e0f11311.mp3",
+      "audio/music-v2/music_battle_crypt-v2.bb71eacaa6a2.mp3",
+      "audio/music-v2/music_battle_forest-v2.b295e0d6cf01.mp3",
+      "audio/music-v2/music_battle_goblin-camp-v2.35d50c4c5939.mp3",
+      "audio/music-v2/music_battle_quarry-v1.09425c6d494a.mp3",
+      "audio/music-v2/music_battle_sanctuary-v1.f283d02e6c65.mp3",
+      "audio/music-v2/music_battle_snow-pass-v1.5ba0bb9d1a8d.mp3",
+      "audio/music-v2/music_battle_tavern-v2.6205024a54cb.mp3",
+      "audio/music-v2/music_battle_urvin-archive-v1.fb1f382e7889.mp3",
+      "audio/music-v2/music_battle_urvin-causeway-v1.02ffdb9818d7.mp3",
+      "audio/music-v2/music_battle_urvin-court-v1.dadcec99fb6b.mp3",
+      "audio/music-v2/music_battle_watchpost-rooms-v1.9f25ab275999.mp3",
+      "audio/music-v2/music_run.3669a5282ed2.mp3",
+      "audio/music-v2/music_site.5a612a248f6d.mp3",
+      "audio/music-v3/gallery.css",
+      "audio/music-v3/gallery.js",
+      "audio/music-v3/index.html",
+      "audio/music-v3/music_battle_cavern-v1.1992c5305f66.mp3",
+      "audio/music-v3/music_battle_clearing-v1.37fa516de5f6.mp3",
+      "audio/music-v3/music_battle_courtyard-small-v1.5c314b5d16ca.mp3",
+      "audio/music-v3/music_battle_crypt-annex-rooms-v1.bcc15159a288.mp3",
+      "audio/music-v3/music_battle_crypt-v2.83e37a2cf495.mp3",
+      "audio/music-v3/music_battle_forest-v2.48fa5ce8e10d.mp3",
+      "audio/music-v3/music_battle_goblin-camp-v2.7b7914a11066.mp3",
+      "audio/music-v3/music_battle_quarry-v1.3ea40887ce80.mp3",
+      "audio/music-v3/music_battle_sanctuary-v1.5d96688fcc0c.mp3",
+      "audio/music-v3/music_battle_snow-pass-v1.dba3ab622458.mp3",
+      "audio/music-v3/music_battle_tavern-v2.241ba172e16b.mp3",
+      "audio/music-v3/music_battle_tavern-v2.e188bb9cde22.mp3",
+      "audio/music-v3/music_battle_urvin-archive-v1.ddbfebd8d819.mp3",
+      "audio/music-v3/music_battle_urvin-causeway-v1.40ca1482270c.mp3",
+      "audio/music-v3/music_battle_urvin-court-v1.5decb99802a7.mp3",
+      "audio/music-v3/music_battle_watchpost-rooms-v1.a50a85477df8.mp3",
+      "audio/music-v3/music_run.f308cbb191dc.mp3",
+      "audio/music-v3/music_site.c6b6fc3095ec.mp3",
+      "default_image.png",
+      "design_preview.html",
+      "fonts/open-sans/OFL.txt",
+      "fonts/open-sans/open-sans-cyrillic-400-normal.woff2",
+      "fonts/open-sans/open-sans-cyrillic-600-normal.woff2",
+      "fonts/open-sans/open-sans-cyrillic-700-normal.woff2",
+      "fonts/open-sans/open-sans-latin-400-normal.woff2",
+      "fonts/open-sans/open-sans-latin-600-normal.woff2",
+      "fonts/open-sans/open-sans-latin-700-normal.woff2",
+      "fonts/open-sans/README.md",
+      "groovepaper.png",
+      "icons/actions/dodge.png",
+      "icons/actions/heroic-inspiration.svg",
+      "icons/actions/offhand_attack.png",
+      "icons/actions/ranged_weapon_attack.png",
+      "icons/actions/unarmed_strike.png",
+      "icons/actions/weapon_attack.png",
+      "icons/ammunition.png",
+      "icons/attunement.png",
+      "icons/belt.png",
+      "icons/bludgeoning.png",
+      "icons/bow-hand.png",
+      "icons/cloth.png",
+      "icons/coin.png",
+      "icons/consumable.png",
+      "icons/currency/copper.png",
+      "icons/currency/gold.png",
+      "icons/currency/silver.png",
+      "icons/damage_types/acid.png",
+      "icons/damage_types/bludgeoning.png",
+      "icons/damage_types/cold.png",
+      "icons/damage_types/fire.png",
+      "icons/damage_types/force.png",
+      "icons/damage_types/healing.png",
+      "icons/damage_types/lightning.png",
+      "icons/damage_types/necrotic.png",
+      "icons/damage_types/piercing.png",
+      "icons/damage_types/poison.png",
+      "icons/damage_types/psychic.png",
+      "icons/damage_types/radiant.png",
+      "icons/damage_types/slashing.png",
+      "icons/damage_types/thunder.png",
+      "icons/defense.png",
+      "icons/finesse.png",
+      "icons/heavy.png",
+      "icons/heavy_defense.png",
+      "icons/light.png",
+      "icons/light_defense.png",
+      "icons/loading.png",
+      "icons/medium_defense.png",
+      "icons/melee-hand.png",
+      "icons/passives/auto-stand.svg",
+      "icons/passives/roll-influence.svg",
+      "icons/passives/slow.svg",
+      "icons/piercing.png",
+      "icons/range.png",
+      "icons/reach.png",
+      "icons/resources/action.png",
+      "icons/resources/bonus_action.png",
+      "icons/resources/movement.svg",
+      "icons/resources/reaction.png",
+      "icons/resources/ritual.png",
+      "icons/resources/spell_slot.png",
+      "icons/resources/warlock_spell_slot.png",
+      "icons/single_use.png",
+      "icons/slashing.png",
+      "icons/slots/armor.png",
+      "icons/slots/boots.png",
+      "icons/slots/cloak.png",
+      "icons/slots/gloves.png",
+      "icons/slots/hand.png",
+      "icons/slots/helm.png",
+      "icons/slots/necklace.png",
+      "icons/slots/ring.png",
+      "icons/special.png",
+      "icons/thrown.png",
+      "icons/two_handed.png",
+      "icons/versatile.png",
+      "icons/weight.png",
+      "images/home/interactive.jpg",
+      "images/home/library.jpg",
+      "images/home/paper.jpg",
+      "images/home/runs.jpg",
+      "images/library/actions.jpg",
+      "images/library/backgrounds.jpg",
+      "images/library/cards.jpg",
+      "images/library/classes.jpg",
+      "images/library/concepts.jpg",
+      "images/library/effects.jpg",
+      "images/library/feats.jpg",
+      "images/library/monsters.jpg",
+      "images/library/passives.jpg",
+      "images/library/races.jpg",
+      "images/library/resources.jpg",
+      "images/library/spells.jpg",
+      "images/library/variables.jpg",
+      "images/weapons/axe.svg",
+      "images/weapons/battleaxe.png",
+      "images/weapons/club.png",
+      "images/weapons/dagger.png",
+      "images/weapons/dart.png",
+      "images/weapons/flail.png",
+      "images/weapons/generate_weapons.sh",
+      "images/weapons/glaive.png",
+      "images/weapons/greataxe.png",
+      "images/weapons/greatclub.png",
+      "images/weapons/greatsword.png",
+      "images/weapons/halberd.png",
+      "images/weapons/handaxe.png",
+      "images/weapons/hand_crossbow.png",
+      "images/weapons/heavy_crossbow.png",
+      "images/weapons/javelin.png",
+      "images/weapons/lance.png",
+      "images/weapons/light_crossbow.png",
+      "images/weapons/light_hammer.png",
+      "images/weapons/longbow.png",
+      "images/weapons/longsword.png",
+      "images/weapons/mace.png",
+      "images/weapons/maul.png",
+      "images/weapons/morningstar.png",
+      "images/weapons/net.png",
+      "images/weapons/pike.png",
+      "images/weapons/quarterstaff.png",
+      "images/weapons/rapier.png",
+      "images/weapons/scimitar.png",
+      "images/weapons/shield.png",
+      "images/weapons/shortbow.png",
+      "images/weapons/shortbow.svg",
+      "images/weapons/shortsword.png",
+      "images/weapons/sickle.png",
+      "images/weapons/sling.png",
+      "images/weapons/spear.png",
+      "images/weapons/sword.svg",
+      "images/weapons/trident.png",
+      "images/weapons/warhammer.png",
+      "images/weapons/warpick.png",
+      "images/weapons/whip.png",
+      "index.html",
+      "manifest.webmanifest",
+      "portraits/presets/archer.png",
+      "portraits/presets/line.png",
+      "portraits/presets/swordsman.png",
+      "pwa-192x192.png",
+      "pwa-512x512.png",
+      "site_logo.png",
+      "sw.js",
+      "workbox-9845bf53.js"
+    ],
+    "raw_bytes": 168982519,
+    "gzip_bytes": 157860596
+  },
+  "assetInventory": [
+    {
+      "name": "assets/abnfDiagram-VCTEODGH-DR1KQf4b.js",
+      "bytes": 1841,
+      "gzip_bytes": 908
+    },
+    {
+      "name": "assets/AccountPage-DrH85ghD.css",
+      "bytes": 1484,
+      "gzip_bytes": 604
+    },
+    {
+      "name": "assets/AccountPage-_jmf2cTE.js",
+      "bytes": 4859,
+      "gzip_bytes": 1808
+    },
+    {
+      "name": "assets/ActionCreator-DRIeuKex.js",
+      "bytes": 15198,
+      "gzip_bytes": 4581
+    },
+    {
+      "name": "assets/ActionDetailModal-BMckNtsT.js",
+      "bytes": 3116,
+      "gzip_bytes": 1504
+    },
+    {
+      "name": "assets/activationRequirements-B-nKDJLy.js",
+      "bytes": 85758,
+      "gzip_bytes": 27485
+    },
+    {
+      "name": "assets/ActiveEffectCard-BxERd799.js",
+      "bytes": 12354,
+      "gzip_bytes": 4838
+    },
+    {
+      "name": "assets/ActiveEffectCard-CntYg9ha.css",
+      "bytes": 2952,
+      "gzip_bytes": 795
+    },
+    {
+      "name": "assets/actorArmorClass-CK4C8IbH.js",
+      "bytes": 20154,
+      "gzip_bytes": 6074
+    },
+    {
+      "name": "assets/AddItemToInventory-CVAr0ElT.js",
+      "bytes": 8631,
+      "gzip_bytes": 2667
+    },
+    {
+      "name": "assets/api-DyNZpMEV.js",
+      "bytes": 918,
+      "gzip_bytes": 429
+    },
+    {
+      "name": "assets/api-P3x_3UMN.js",
+      "bytes": 455,
+      "gzip_bytes": 241
+    },
+    {
+      "name": "assets/arc-D7T_dWN2.js",
+      "bytes": 3426,
+      "gzip_bytes": 1469
+    },
+    {
+      "name": "assets/architectureDiagram-5GKGNRK7-pKJiLYKo.js",
+      "bytes": 152052,
+      "gzip_bytes": 43240
+    },
+    {
+      "name": "assets/assemble-CCy9Ehvn.js",
+      "bytes": 20634,
+      "gzip_bytes": 7238
+    },
+    {
+      "name": "assets/BackgroundCreator-Cmt873f6.js",
+      "bytes": 6597,
+      "gzip_bytes": 2503
+    },
+    {
+      "name": "assets/BackgroundDetailModal-DLPtWEjh.js",
+      "bytes": 2855,
+      "gzip_bytes": 1310
+    },
+    {
+      "name": "assets/battle-maps/cavern-floor-v1.png",
+      "bytes": 3491234,
+      "gzip_bytes": 3479700
+    },
+    {
+      "name": "assets/battle-maps/clearing-floor-v1.png",
+      "bytes": 3640117,
+      "gzip_bytes": 3627734
+    },
+    {
+      "name": "assets/battle-maps/courtyard-floor-v1.png",
+      "bytes": 3217459,
+      "gzip_bytes": 3196494
+    },
+    {
+      "name": "assets/battle-maps/crypt-annex-floor-v1.png",
+      "bytes": 2700796,
+      "gzip_bytes": 2682235
+    },
+    {
+      "name": "assets/battle-maps/crypt-floor-v1.png",
+      "bytes": 3135308,
+      "gzip_bytes": 3115913
+    },
+    {
+      "name": "assets/battle-maps/forest-floor-v1.png",
+      "bytes": 3280718,
+      "gzip_bytes": 3221790
+    },
+    {
+      "name": "assets/battle-maps/masonry-atlas-v2.png",
+      "bytes": 2422616,
+      "gzip_bytes": 2408608
+    },
+    {
+      "name": "assets/battle-maps/props-atlas-v1.png",
+      "bytes": 1956635,
+      "gzip_bytes": 1943450
+    },
+    {
+      "name": "assets/battle-maps/quarry-floor-v1.png",
+      "bytes": 3373397,
+      "gzip_bytes": 3361815
+    },
+    {
+      "name": "assets/battle-maps/sanctuary-floor-v1.png",
+      "bytes": 3443119,
+      "gzip_bytes": 3430658
+    },
+    {
+      "name": "assets/battle-maps/snow-floor-v1.png",
+      "bytes": 3116204,
+      "gzip_bytes": 3104511
+    },
+    {
+      "name": "assets/battle-maps/table-v2.png",
+      "bytes": 2835079,
+      "gzip_bytes": 2818631
+    },
+    {
+      "name": "assets/battle-maps/tavern-floor-v1.png",
+      "bytes": 2292577,
+      "gzip_bytes": 2280074
+    },
+    {
+      "name": "assets/battle-maps/urvin-archive-v1.png",
+      "bytes": 3777465,
+      "gzip_bytes": 3684164
+    },
+    {
+      "name": "assets/battle-maps/urvin-causeway-v1.png",
+      "bytes": 3770501,
+      "gzip_bytes": 3667950
+    },
+    {
+      "name": "assets/battle-maps/urvin-court-v1.png",
+      "bytes": 3323107,
+      "gzip_bytes": 3254306
+    },
+    {
+      "name": "assets/battle-maps/valley-floor-v1.png",
+      "bytes": 3696826,
+      "gzip_bytes": 3684423
+    },
+    {
+      "name": "assets/battle-maps/valley-river-v2.png",
+      "bytes": 2905084,
+      "gzip_bytes": 2882051
+    },
+    {
+      "name": "assets/battle-maps/watchpost-floor-v1.png",
+      "bytes": 3234655,
+      "gzip_bytes": 3212461
+    },
+    {
+      "name": "assets/BattleScene-BILXKoai.css",
+      "bytes": 6146,
+      "gzip_bytes": 1948
+    },
+    {
+      "name": "assets/BattleScene-CH0vnSe7.js",
+      "bytes": 953756,
+      "gzip_bytes": 258937
+    },
+    {
+      "name": "assets/blockDiagram-I7D4REHJ-Ctkl1pMD.js",
+      "bytes": 43188,
+      "gzip_bytes": 13933
+    },
+    {
+      "name": "assets/BoonActivationDialog-BX-mOLI0.css",
+      "bytes": 1172,
+      "gzip_bytes": 505
+    },
+    {
+      "name": "assets/BoonActivationDialog-CjDB7hrr.js",
+      "bytes": 312669,
+      "gzip_bytes": 42869
+    },
+    {
+      "name": "assets/breakdown-B_MUqx7Z.js",
+      "bytes": 5208,
+      "gzip_bytes": 2136
+    },
+    {
+      "name": "assets/c4Diagram-7LVT6UL2-B7veLhmI.js",
+      "bytes": 65588,
+      "gzip_bytes": 18846
+    },
+    {
+      "name": "assets/calendar-B_SSe40j.js",
+      "bytes": 486,
+      "gzip_bytes": 323
+    },
+    {
+      "name": "assets/CardCreator-C34RUUCJ.js",
+      "bytes": 65650,
+      "gzip_bytes": 16232
+    },
+    {
+      "name": "assets/CardDetailModal-CGqyCYrw.js",
+      "bytes": 14743,
+      "gzip_bytes": 5433
+    },
+    {
+      "name": "assets/CardExport-BevafSsi.js",
+      "bytes": 13613,
+      "gzip_bytes": 4597
+    },
+    {
+      "name": "assets/CardLibrary-CxhIYDk9.css",
+      "bytes": 4194,
+      "gzip_bytes": 1185
+    },
+    {
+      "name": "assets/CardLibrary-DR5Wng1c.js",
+      "bytes": 83848,
+      "gzip_bytes": 18238
+    },
+    {
+      "name": "assets/CardTypeSelection-DrQibDIe.js",
+      "bytes": 4677,
+      "gzip_bytes": 1916
+    },
+    {
+      "name": "assets/catalogPages-DlRysuVv.js",
+      "bytes": 578,
+      "gzip_bytes": 354
+    },
+    {
+      "name": "assets/channel-D3diJ307.js",
+      "bytes": 113,
+      "gzip_bytes": 126
+    },
+    {
+      "name": "assets/CharacterAccessBadge-BhTYu5-G.js",
+      "bytes": 739,
+      "gzip_bytes": 541
+    },
+    {
+      "name": "assets/characterConversion-BNpJhze2.js",
+      "bytes": 17428,
+      "gzip_bytes": 6818
+    },
+    {
+      "name": "assets/CharacterForge-BBQ-HULo.js",
+      "bytes": 79971,
+      "gzip_bytes": 24494
+    },
+    {
+      "name": "assets/CharacterForge-CMO1SgFV.css",
+      "bytes": 7482,
+      "gzip_bytes": 1911
+    },
+    {
+      "name": "assets/CharacterForge-CqamfXAa.css",
+      "bytes": 54742,
+      "gzip_bytes": 10437
+    },
+    {
+      "name": "assets/CharactersForgeList-CSOt4lHN.js",
+      "bytes": 4268,
+      "gzip_bytes": 1792
+    },
+    {
+      "name": "assets/CharacterSheetMVP-BbXS6tI4.js",
+      "bytes": 79410,
+      "gzip_bytes": 25536
+    },
+    {
+      "name": "assets/CharacterSheetMVP-YzCy3Lb_.css",
+      "bytes": 12500,
+      "gzip_bytes": 3244
+    },
+    {
+      "name": "assets/CharacterSheetV2-Biq8wV02.css",
+      "bytes": 10886,
+      "gzip_bytes": 2484
+    },
+    {
+      "name": "assets/CharacterSheetV2-D4hlC7u3.js",
+      "bytes": 7753,
+      "gzip_bytes": 3329
+    },
+    {
+      "name": "assets/CharacterTemplateLibrary-BD8qIvKb.js",
+      "bytes": 7101,
+      "gzip_bytes": 2783
+    },
+    {
+      "name": "assets/CharacterTemplateLibrary-vXQhu_iw.css",
+      "bytes": 2142,
+      "gzip_bytes": 807
+    },
+    {
+      "name": "assets/chevron-left-Dlhg_KQa.js",
+      "bytes": 298,
+      "gzip_bytes": 248
+    },
+    {
+      "name": "assets/chevron-right-CiKajAMp.js",
+      "bytes": 298,
+      "gzip_bytes": 246
+    },
+    {
+      "name": "assets/chevron-up-BkzzFJQX.js",
+      "bytes": 296,
+      "gzip_bytes": 246
+    },
+    {
+      "name": "assets/chevrons-up-BboC64WA.js",
+      "bytes": 340,
+      "gzip_bytes": 260
+    },
+    {
+      "name": "assets/ChipToggleList-C8EYln6H.js",
+      "bytes": 567,
+      "gzip_bytes": 386
+    },
+    {
+      "name": "assets/chunk-2Q5K7J3B-bV3dbI4O.js",
+      "bytes": 193,
+      "gzip_bytes": 162
+    },
+    {
+      "name": "assets/chunk-5VM5RSS4-BSQFpimf.js",
+      "bytes": 366,
+      "gzip_bytes": 272
+    },
+    {
+      "name": "assets/chunk-F27PBJKO-DpYFHJzt.js",
+      "bytes": 1878,
+      "gzip_bytes": 828
+    },
+    {
+      "name": "assets/chunk-IMKFNOWR-DIesyVj8.js",
+      "bytes": 38612,
+      "gzip_bytes": 12676
+    },
+    {
+      "name": "assets/chunk-JWPE2WC7-DOfq_N7u.js",
+      "bytes": 297,
+      "gzip_bytes": 207
+    },
+    {
+      "name": "assets/chunk-POPQ4Y6H--R_axJO6.js",
+      "bytes": 532,
+      "gzip_bytes": 375
+    },
+    {
+      "name": "assets/chunk-SVP7TREG-RYcFuOy7.js",
+      "bytes": 15750,
+      "gzip_bytes": 4423
+    },
+    {
+      "name": "assets/chunk-TICWLB2K-Cq5iH-zP.js",
+      "bytes": 49333,
+      "gzip_bytes": 15794
+    },
+    {
+      "name": "assets/chunk-XXDRQBXY-BuLub1jF.js",
+      "bytes": 230,
+      "gzip_bytes": 208
+    },
+    {
+      "name": "assets/circle-dot-DjvaOYtY.js",
+      "bytes": 350,
+      "gzip_bytes": 256
+    },
+    {
+      "name": "assets/ClassCreator-C7sPk3De.js",
+      "bytes": 11146,
+      "gzip_bytes": 3998
+    },
+    {
+      "name": "assets/ClassDetailModal-Dp3yGsMa.js",
+      "bytes": 1712,
+      "gzip_bytes": 887
+    },
+    {
+      "name": "assets/classDiagram-v2-VYDZK3BY-DspzOJvW.js",
+      "bytes": 499,
+      "gzip_bytes": 334
+    },
+    {
+      "name": "assets/classDiagram-ZZMXUADV-DspzOJvW.js",
+      "bytes": 499,
+      "gzip_bytes": 334
+    },
+    {
+      "name": "assets/clipboardImage-v5ebXI4d.js",
+      "bytes": 1115,
+      "gzip_bytes": 735
+    },
+    {
+      "name": "assets/coins-DxIY4_uE.js",
+      "bytes": 448,
+      "gzip_bytes": 326
+    },
+    {
+      "name": "assets/ConceptCreator-DOxFua1E.js",
+      "bytes": 6322,
+      "gzip_bytes": 2355
+    },
+    {
+      "name": "assets/ConceptDetailModal-DrmyeOqe.js",
+      "bytes": 1125,
+      "gzip_bytes": 647
+    },
+    {
+      "name": "assets/copy-D_6pF6mu.js",
+      "bytes": 405,
+      "gzip_bytes": 311
+    },
+    {
+      "name": "assets/cose-bilkent-JH36ORCC-CdFT2HP7.js",
+      "bytes": 81750,
+      "gzip_bytes": 22500
+    },
+    {
+      "name": "assets/CreateGroup-DDOUCN-9.js",
+      "bytes": 4342,
+      "gzip_bytes": 1749
+    },
+    {
+      "name": "assets/CreateInventory-CXYj5GRL.js",
+      "bytes": 7021,
+      "gzip_bytes": 2326
+    },
+    {
+      "name": "assets/CreatorShell-DBuHFX5F.js",
+      "bytes": 2427,
+      "gzip_bytes": 1020
+    },
+    {
+      "name": "assets/crown-BKLDOTHM.js",
+      "bytes": 320,
+      "gzip_bytes": 263
+    },
+    {
+      "name": "assets/CurrencyPriceInline-CJ3ATX9t.js",
+      "bytes": 366,
+      "gzip_bytes": 273
+    },
+    {
+      "name": "assets/cynefin-OW5HDTMX-LPI0zNsD.js",
+      "bytes": 690856,
+      "gzip_bytes": 155114
+    },
+    {
+      "name": "assets/cynefinDiagram-5FMLGOSQ-DfYM_Cxa.js",
+      "bytes": 10129,
+      "gzip_bytes": 3651
+    },
+    {
+      "name": "assets/cytoscape.esm-Ix0LnXOy.js",
+      "bytes": 443834,
+      "gzip_bytes": 142409
+    },
+    {
+      "name": "assets/dagre-GXQ25YYZ-Dg1IonZ3.js",
+      "bytes": 11168,
+      "gzip_bytes": 4201
+    },
+    {
+      "name": "assets/defaultLocale-DX6XiGOO.js",
+      "bytes": 4688,
+      "gzip_bytes": 2182
+    },
+    {
+      "name": "assets/diagram-S7CK7UJ4-BQ8gdssb.js",
+      "bytes": 8389,
+      "gzip_bytes": 3741
+    },
+    {
+      "name": "assets/diagram-UQ7AKVKN-BklJuBuo.js",
+      "bytes": 6259,
+      "gzip_bytes": 2699
+    },
+    {
+      "name": "assets/diagram-VSXAHHWV-CPO81Zb9.js",
+      "bytes": 10850,
+      "gzip_bytes": 4185
+    },
+    {
+      "name": "assets/diagram-VX7I27RA-DPJbgshk.js",
+      "bytes": 16103,
+      "gzip_bytes": 5751
+    },
+    {
+      "name": "assets/diagram-Z3DM3KII-eh4xOvQ5.js",
+      "bytes": 4276,
+      "gzip_bytes": 1875
+    },
+    {
+      "name": "assets/dice-box/ammo/ammo.wasm.wasm",
+      "bytes": 316981,
+      "gzip_bytes": 127820
+    },
+    {
+      "name": "assets/dice-box/themes/default/default.json",
+      "bytes": 158337,
+      "gzip_bytes": 34397
+    },
+    {
+      "name": "assets/dice-box/themes/default/diffuse-dark.png",
+      "bytes": 19883,
+      "gzip_bytes": 19662
+    },
+    {
+      "name": "assets/dice-box/themes/default/diffuse-light.png",
+      "bytes": 19934,
+      "gzip_bytes": 19703
+    },
+    {
+      "name": "assets/dice-box/themes/default/normal.png",
+      "bytes": 64073,
+      "gzip_bytes": 63731
+    },
+    {
+      "name": "assets/dice-box/themes/default/specular.jpg",
+      "bytes": 26234,
+      "gzip_bytes": 22988
+    },
+    {
+      "name": "assets/dice-box/themes/default/theme.config.json",
+      "bytes": 446,
+      "gzip_bytes": 269
+    },
+    {
+      "name": "assets/dice-box.es-BJ6Vo3UT.js",
+      "bytes": 198121,
+      "gzip_bytes": 40784
+    },
+    {
+      "name": "assets/Dice-Ca3iYnAg.js",
+      "bytes": 691346,
+      "gzip_bytes": 168477
+    },
+    {
+      "name": "assets/download-CgtE8a0x.js",
+      "bytes": 431,
+      "gzip_bytes": 318
+    },
+    {
+      "name": "assets/ebnfDiagram-PWID7BFC-CJ9BGtus.js",
+      "bytes": 2037,
+      "gzip_bytes": 895
+    },
+    {
+      "name": "assets/EffectCreator-DOVlAXpr.js",
+      "bytes": 14941,
+      "gzip_bytes": 4742
+    },
+    {
+      "name": "assets/EffectDetailModal-CYMn7js0.js",
+      "bytes": 2308,
+      "gzip_bytes": 1120
+    },
+    {
+      "name": "assets/EncounterBoard-DELa64gD.js",
+      "bytes": 12524,
+      "gzip_bytes": 4887
+    },
+    {
+      "name": "assets/EncounterList-B-JU9t4u.js",
+      "bytes": 2015,
+      "gzip_bytes": 1116
+    },
+    {
+      "name": "assets/encountersApi-DSmdhKSl.js",
+      "bytes": 2952,
+      "gzip_bytes": 1543
+    },
+    {
+      "name": "assets/EngineGuide-Dy1hIR6N.js",
+      "bytes": 97961,
+      "gzip_bytes": 29832
+    },
+    {
+      "name": "assets/EntityDetailShell-C4ihvdAl.css",
+      "bytes": 3677,
+      "gzip_bytes": 1253
+    },
+    {
+      "name": "assets/EntityDetailShell-Ck5dlmNw.js",
+      "bytes": 2534,
+      "gzip_bytes": 1113
+    },
+    {
+      "name": "assets/entityEditorError-Hv6OJQgZ.js",
+      "bytes": 342,
+      "gzip_bytes": 264
+    },
+    {
+      "name": "assets/entityId-kkwwXMhc.js",
+      "bytes": 455,
+      "gzip_bytes": 373
+    },
+    {
+      "name": "assets/EntityImageEditor-DgGVGYZt.js",
+      "bytes": 2489,
+      "gzip_bytes": 1268
+    },
+    {
+      "name": "assets/EntityPage-BYVeAyhF.js",
+      "bytes": 17239,
+      "gzip_bytes": 6143
+    },
+    {
+      "name": "assets/EntityPage-xNdj_6ir.css",
+      "bytes": 5488,
+      "gzip_bytes": 1506
+    },
+    {
+      "name": "assets/entityReferences-BMTC2a3n.js",
+      "bytes": 1054,
+      "gzip_bytes": 602
+    },
+    {
+      "name": "assets/EntityReferences-C0791Ceq.css",
+      "bytes": 1129,
+      "gzip_bytes": 472
+    },
+    {
+      "name": "assets/EntityReferences-yyc8fPdJ.js",
+      "bytes": 5483,
+      "gzip_bytes": 2431
+    },
+    {
+      "name": "assets/EntityRefSelector-D5yYoHpM.js",
+      "bytes": 2814,
+      "gzip_bytes": 1303
+    },
+    {
+      "name": "assets/EntityTags-C-xdYPpa.js",
+      "bytes": 7749,
+      "gzip_bytes": 3094
+    },
+    {
+      "name": "assets/entityTags-CuDHdo9g.js",
+      "bytes": 1118,
+      "gzip_bytes": 530
+    },
+    {
+      "name": "assets/EntityTags-DmHOO-wl.css",
+      "bytes": 1551,
+      "gzip_bytes": 582
+    },
+    {
+      "name": "assets/EquipmentOptionsEditor-CvInPrPt.js",
+      "bytes": 991,
+      "gzip_bytes": 524
+    },
+    {
+      "name": "assets/EquipmentSelection-DGqQq35x.js",
+      "bytes": 5185,
+      "gzip_bytes": 2111
+    },
+    {
+      "name": "assets/equipmentWeaponMastery-CmjXuEXc.js",
+      "bytes": 4679,
+      "gzip_bytes": 1928
+    },
+    {
+      "name": "assets/erDiagram-RLTQ6QDP-DAQXgV4r.js",
+      "bytes": 30960,
+      "gzip_bytes": 10651
+    },
+    {
+      "name": "assets/eventDisplay-BKMbK1V4.js",
+      "bytes": 1206,
+      "gzip_bytes": 702
+    },
+    {
+      "name": "assets/exportFonts-JWdZDBXC.js",
+      "bytes": 605,
+      "gzip_bytes": 396
+    },
+    {
+      "name": "assets/eye-DTioKYJ4.js",
+      "bytes": 886,
+      "gzip_bytes": 447
+    },
+    {
+      "name": "assets/FeatCreator-C0jTmnUs.js",
+      "bytes": 6570,
+      "gzip_bytes": 2650
+    },
+    {
+      "name": "assets/FeatDetailModal-Ccv8x-Cb.js",
+      "bytes": 2240,
+      "gzip_bytes": 1156
+    },
+    {
+      "name": "assets/file-text-Djbm4gkI.js",
+      "bytes": 565,
+      "gzip_bytes": 355
+    },
+    {
+      "name": "assets/filter-Bz62FVhY.js",
+      "bytes": 330,
+      "gzip_bytes": 264
+    },
+    {
+      "name": "assets/flowDiagram-HODETNUW-DIHt0g8Z.js",
+      "bytes": 62644,
+      "gzip_bytes": 20063
+    },
+    {
+      "name": "assets/footprints-X78Jv7gm.js",
+      "bytes": 618,
+      "gzip_bytes": 406
+    },
+    {
+      "name": "assets/ForgeAbilityDisplay-DsAcnm4f.js",
+      "bytes": 2491,
+      "gzip_bytes": 965
+    },
+    {
+      "name": "assets/forgeHelpers-D2wZ-dY_.js",
+      "bytes": 7897,
+      "gzip_bytes": 3188
+    },
+    {
+      "name": "assets/FormattedTextarea-BWM8b-_s.js",
+      "bytes": 9061,
+      "gzip_bytes": 3343
+    },
+    {
+      "name": "assets/ganttDiagram-EL5Y4UJY-cFVfbEDE.js",
+      "bytes": 69728,
+      "gzip_bytes": 23577
+    },
+    {
+      "name": "assets/generalSpellFeatRuntime-JRANRXuH.js",
+      "bytes": 398597,
+      "gzip_bytes": 112762
+    },
+    {
+      "name": "assets/gitGraphDiagram-WWUBYQGX-C6E25rjn.js",
+      "bytes": 29967,
+      "gzip_bytes": 8894
+    },
+    {
+      "name": "assets/grid-3x3-DAkPEmlJ.js",
+      "bytes": 463,
+      "gzip_bytes": 313
+    },
+    {
+      "name": "assets/GroupDetail-DGNZ_U3l.js",
+      "bytes": 7492,
+      "gzip_bytes": 2309
+    },
+    {
+      "name": "assets/Groups-CDMID7Cf.js",
+      "bytes": 5842,
+      "gzip_bytes": 2000
+    },
+    {
+      "name": "assets/groupsApi-BaOyzifM.js",
+      "bytes": 435,
+      "gzip_bytes": 206
+    },
+    {
+      "name": "assets/handler-Bl6sYEpP.js",
+      "bytes": 464369,
+      "gzip_bytes": 122843
+    },
+    {
+      "name": "assets/hash-CUebfJIn.js",
+      "bytes": 465,
+      "gzip_bytes": 298
+    },
+    {
+      "name": "assets/healing-3D0tqaRZ.css",
+      "bytes": 1412,
+      "gzip_bytes": 585
+    },
+    {
+      "name": "assets/healing-CLp5c1G2.js",
+      "bytes": 629,
+      "gzip_bytes": 387
+    },
+    {
+      "name": "assets/HealingPulse-BVlywiH7.css",
+      "bytes": 6014,
+      "gzip_bytes": 1934
+    },
+    {
+      "name": "assets/HealingPulse-C05zFLi-.js",
+      "bytes": 871,
+      "gzip_bytes": 553
+    },
+    {
+      "name": "assets/heart-D0FlzqyL.js",
+      "bytes": 414,
+      "gzip_bytes": 314
+    },
+    {
+      "name": "assets/HomePage-Bz1FfLh6.css",
+      "bytes": 5633,
+      "gzip_bytes": 1840
+    },
+    {
+      "name": "assets/HomePage-D60pgp-o.js",
+      "bytes": 5146,
+      "gzip_bytes": 1970
+    },
+    {
+      "name": "assets/html2canvas.esm-QH1iLAAe.js",
+      "bytes": 202379,
+      "gzip_bytes": 48044
+    },
+    {
+      "name": "assets/imagesApi-Ap7_JVzR.js",
+      "bytes": 1253,
+      "gzip_bytes": 612
+    },
+    {
+      "name": "assets/ImageStudio-CJfCyXfF.js",
+      "bytes": 7249,
+      "gzip_bytes": 2663
+    },
+    {
+      "name": "assets/ImageUploader-OpEcXqWg.js",
+      "bytes": 5160,
+      "gzip_bytes": 2144
+    },
+    {
+      "name": "assets/index-C3R-ojTr.js",
+      "bytes": 157288,
+      "gzip_bytes": 47677
+    },
+    {
+      "name": "assets/index-CgJtiJsK.js",
+      "bytes": 13750,
+      "gzip_bytes": 5412
+    },
+    {
+      "name": "assets/index-DWlYD9Yu.css",
+      "bytes": 178920,
+      "gzip_bytes": 33500
+    },
+    {
+      "name": "assets/index-DyJQPQ9m.js",
+      "bytes": 801703,
+      "gzip_bytes": 233337
+    },
+    {
+      "name": "assets/index.es-sFesFsCq.js",
+      "bytes": 159757,
+      "gzip_bytes": 53561
+    },
+    {
+      "name": "assets/index.esm-1LENlGK3.js",
+      "bytes": 34724,
+      "gzip_bytes": 12550
+    },
+    {
+      "name": "assets/infoDiagram-27XIBGKW-CEbshFhW.js",
+      "bytes": 614,
+      "gzip_bytes": 422
+    },
+    {
+      "name": "assets/IngredientSelection-DUVwQMVI.js",
+      "bytes": 5691,
+      "gzip_bytes": 2008
+    },
+    {
+      "name": "assets/init-Gi6I4Gst.js",
+      "bytes": 147,
+      "gzip_bytes": 129
+    },
+    {
+      "name": "assets/InitiativeTracker-DP4-qADO.js",
+      "bytes": 122880,
+      "gzip_bytes": 32721
+    },
+    {
+      "name": "assets/inter-cyrillic-300-normal-BnqRxXuy.woff2",
+      "bytes": 7812,
+      "gzip_bytes": 7835
+    },
+    {
+      "name": "assets/inter-cyrillic-400-normal-obahsSVq.woff2",
+      "bytes": 7712,
+      "gzip_bytes": 7735
+    },
+    {
+      "name": "assets/inter-cyrillic-500-normal-BasfLYem.woff2",
+      "bytes": 7900,
+      "gzip_bytes": 7923
+    },
+    {
+      "name": "assets/inter-cyrillic-600-normal-CWCymEST.woff2",
+      "bytes": 7972,
+      "gzip_bytes": 7995
+    },
+    {
+      "name": "assets/inter-cyrillic-700-normal-CjBOestx.woff2",
+      "bytes": 7904,
+      "gzip_bytes": 7927
+    },
+    {
+      "name": "assets/inter-latin-300-normal-BVlfKGgI.woff2",
+      "bytes": 23916,
+      "gzip_bytes": 23887
+    },
+    {
+      "name": "assets/inter-latin-400-normal-C38fXH4l.woff2",
+      "bytes": 23664,
+      "gzip_bytes": 23667
+    },
+    {
+      "name": "assets/inter-latin-500-normal-Cerq10X2.woff2",
+      "bytes": 24272,
+      "gzip_bytes": 24253
+    },
+    {
+      "name": "assets/inter-latin-600-normal-LgqL8muc.woff2",
+      "bytes": 24452,
+      "gzip_bytes": 24443
+    },
+    {
+      "name": "assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+      "bytes": 24356,
+      "gzip_bytes": 24314
+    },
+    {
+      "name": "assets/inventory-CBwTY7ao.js",
+      "bytes": 6716,
+      "gzip_bytes": 2856
+    },
+    {
+      "name": "assets/Inventory-t_pYn-9T.js",
+      "bytes": 6124,
+      "gzip_bytes": 1963
+    },
+    {
+      "name": "assets/inventoryApi--8UEQKSk.js",
+      "bytes": 775,
+      "gzip_bytes": 338
+    },
+    {
+      "name": "assets/InventoryDetail-BQhZ50K9.js",
+      "bytes": 9472,
+      "gzip_bytes": 2684
+    },
+    {
+      "name": "assets/ishikawaDiagram-5VMMS53U-D01YqkGI.js",
+      "bytes": 17599,
+      "gzip_bytes": 6696
+    },
+    {
+      "name": "assets/ItemRefSelector-kpMc7NRx.js",
+      "bytes": 3313,
+      "gzip_bytes": 1406
+    },
+    {
+      "name": "assets/JoinGroup-UcB0ZWyx.js",
+      "bytes": 4444,
+      "gzip_bytes": 1699
+    },
+    {
+      "name": "assets/journeyDiagram-3NMN7TZE-BoWDsjqX.js",
+      "bytes": 23603,
+      "gzip_bytes": 8367
+    },
+    {
+      "name": "assets/jspdf.es.min-0SafzmET.js",
+      "bytes": 390795,
+      "gzip_bytes": 128837
+    },
+    {
+      "name": "assets/kanban-definition-UXKFOSKX-BROzHDpG.js",
+      "bytes": 20733,
+      "gzip_bytes": 7310
+    },
+    {
+      "name": "assets/katex-C5jXJg4s.js",
+      "bytes": 261329,
+      "gzip_bytes": 77574
+    },
+    {
+      "name": "assets/layout-CXhZEEOu.js",
+      "bytes": 35437,
+      "gzip_bytes": 12747
+    },
+    {
+      "name": "assets/layout-grid-Bi7uEfV1.js",
+      "bytes": 514,
+      "gzip_bytes": 297
+    },
+    {
+      "name": "assets/LevelProgressionEditor-2jvOl9JZ.js",
+      "bytes": 5115,
+      "gzip_bytes": 2070
+    },
+    {
+      "name": "assets/LibraryQuickDetail-CYNNwyev.css",
+      "bytes": 9322,
+      "gzip_bytes": 2186
+    },
+    {
+      "name": "assets/LibraryQuickDetail-C_t7A8un.js",
+      "bytes": 10816,
+      "gzip_bytes": 4033
+    },
+    {
+      "name": "assets/linear-BB1NXjVy.js",
+      "bytes": 5661,
+      "gzip_bytes": 2311
+    },
+    {
+      "name": "assets/list-DO9JLdfG.js",
+      "bytes": 580,
+      "gzip_bytes": 312
+    },
+    {
+      "name": "assets/loader-2-a_7e2de7.js",
+      "bytes": 302,
+      "gzip_bytes": 251
+    },
+    {
+      "name": "assets/loadPaperIdentityAssembly-BBhvBs7k.js",
+      "bytes": 1333,
+      "gzip_bytes": 730
+    },
+    {
+      "name": "assets/Login-DsDAab-S.js",
+      "bytes": 2712,
+      "gzip_bytes": 1184
+    },
+    {
+      "name": "assets/magicSuppression-FUMAr7l_.js",
+      "bytes": 3366,
+      "gzip_bytes": 1481
+    },
+    {
+      "name": "assets/manualEffectCommands-V-A7_gux.js",
+      "bytes": 13524,
+      "gzip_bytes": 4723
+    },
+    {
+      "name": "assets/manualEntityAddition-CQZqYgJk.js",
+      "bytes": 3072,
+      "gzip_bytes": 1506
+    },
+    {
+      "name": "assets/MechanicsGuide-CP2hUnNC.js",
+      "bytes": 41584,
+      "gzip_bytes": 13354
+    },
+    {
+      "name": "assets/MerchantSettingsDialog-B5eFGbWN.js",
+      "bytes": 3521,
+      "gzip_bytes": 1657
+    },
+    {
+      "name": "assets/mermaid.core-CGXQnlEM.js",
+      "bytes": 666580,
+      "gzip_bytes": 160757
+    },
+    {
+      "name": "assets/mindmap-definition-YA3MSWOX-DPsTKdvk.js",
+      "bytes": 23395,
+      "gzip_bytes": 7910
+    },
+    {
+      "name": "assets/minus-0zUzhRGs.js",
+      "bytes": 281,
+      "gzip_bytes": 236
+    },
+    {
+      "name": "assets/MobileCharacterSheet-3NJzgTXF.js",
+      "bytes": 24745,
+      "gzip_bytes": 8731
+    },
+    {
+      "name": "assets/MobileCharactersPage-DUnjzFd6.js",
+      "bytes": 7351,
+      "gzip_bytes": 2800
+    },
+    {
+      "name": "assets/MobileCharacterWizard-C7qYw9li.js",
+      "bytes": 29556,
+      "gzip_bytes": 9070
+    },
+    {
+      "name": "assets/MobileEntityCard-DIdWlwmS.js",
+      "bytes": 1613,
+      "gzip_bytes": 752
+    },
+    {
+      "name": "assets/MobileEntityCatalog-DDu1MgBs.js",
+      "bytes": 13922,
+      "gzip_bytes": 5236
+    },
+    {
+      "name": "assets/MobileOverlay-CNZha_Iv.js",
+      "bytes": 1231,
+      "gzip_bytes": 624
+    },
+    {
+      "name": "assets/money-B26_2UTx.js",
+      "bytes": 744,
+      "gzip_bytes": 489
+    },
+    {
+      "name": "assets/money-Dt7ER44a.js",
+      "bytes": 143,
+      "gzip_bytes": 147
+    },
+    {
+      "name": "assets/MonsterCreator-Dj1dCU8R.js",
+      "bytes": 10820,
+      "gzip_bytes": 3953
+    },
+    {
+      "name": "assets/MonsterLibrary-axwNhMbv.js",
+      "bytes": 3099,
+      "gzip_bytes": 1522
+    },
+    {
+      "name": "assets/MonsterLibrary-DRxECD57.css",
+      "bytes": 5177,
+      "gzip_bytes": 1544
+    },
+    {
+      "name": "assets/MonsterPreview-B2vICink.js",
+      "bytes": 1914,
+      "gzip_bytes": 834
+    },
+    {
+      "name": "assets/OAuthButtons-jWwsnX1K.js",
+      "bytes": 2834,
+      "gzip_bytes": 1566
+    },
+    {
+      "name": "assets/ordinal-Cboi1Yqb.js",
+      "bytes": 1189,
+      "gzip_bytes": 573
+    },
+    {
+      "name": "assets/pangolin-cyrillic-400-normal-DXBky3Ii.woff2",
+      "bytes": 49176,
+      "gzip_bytes": 49211
+    },
+    {
+      "name": "assets/pangolin-latin-400-normal-Cx-z2UDT.woff2",
+      "bytes": 74680,
+      "gzip_bytes": 74723
+    },
+    {
+      "name": "assets/PaperCharacterForge-CkZ9QApp.js",
+      "bytes": 5968,
+      "gzip_bytes": 2783
+    },
+    {
+      "name": "assets/PaperCharacterForge-Cv_PCJKl.css",
+      "bytes": 14723,
+      "gzip_bytes": 3103
+    },
+    {
+      "name": "assets/paperEquipment-EzJQ6sMj.js",
+      "bytes": 38542,
+      "gzip_bytes": 13624
+    },
+    {
+      "name": "assets/PaperExportButton-Bp7rE0si.css",
+      "bytes": 6434,
+      "gzip_bytes": 1854
+    },
+    {
+      "name": "assets/PaperExportButton-Dqkl67GF.js",
+      "bytes": 226607,
+      "gzip_bytes": 70819
+    },
+    {
+      "name": "assets/PaperSheetEntry-BM2hPOTx.js",
+      "bytes": 132120,
+      "gzip_bytes": 41600
+    },
+    {
+      "name": "assets/PaperSheetEntry-CxgSnDEX.css",
+      "bytes": 4830,
+      "gzip_bytes": 1537
+    },
+    {
+      "name": "assets/PaperSheetEntry-DNRAiW1A.css",
+      "bytes": 48745,
+      "gzip_bytes": 9752
+    },
+    {
+      "name": "assets/passiveCatalog-B99U7jMc.js",
+      "bytes": 1568,
+      "gzip_bytes": 920
+    },
+    {
+      "name": "assets/PassiveCreator-CmMKsO9D.js",
+      "bytes": 3473,
+      "gzip_bytes": 1704
+    },
+    {
+      "name": "assets/pegDiagram-XKGWAZYB-BPKufkAm.js",
+      "bytes": 1988,
+      "gzip_bytes": 941
+    },
+    {
+      "name": "assets/pen-square-DWrD-u9L.js",
+      "bytes": 409,
+      "gzip_bytes": 301
+    },
+    {
+      "name": "assets/pencil-DMsroJxH.js",
+      "bytes": 365,
+      "gzip_bytes": 285
+    },
+    {
+      "name": "assets/pieDiagram-E7YTZNPT-1wwzFK2p.js",
+      "bytes": 6384,
+      "gzip_bytes": 2669
+    },
+    {
+      "name": "assets/plus-hqki7r-X.js",
+      "bytes": 317,
+      "gzip_bytes": 251
+    },
+    {
+      "name": "assets/PotionSelection-CDinpppq.js",
+      "bytes": 5411,
+      "gzip_bytes": 1970
+    },
+    {
+      "name": "assets/purify.es-DedTAGkB.js",
+      "bytes": 29049,
+      "gzip_bytes": 11178
+    },
+    {
+      "name": "assets/puzzle-SeBPheSj.js",
+      "bytes": 1134,
+      "gzip_bytes": 633
+    },
+    {
+      "name": "assets/quadrantDiagram-AXDQQJYC-BA3A5o2l.js",
+      "bytes": 34525,
+      "gzip_bytes": 10149
+    },
+    {
+      "name": "assets/RaceCreator-B1qUutM7.js",
+      "bytes": 10978,
+      "gzip_bytes": 3931
+    },
+    {
+      "name": "assets/RaceDetailModal-Dktx_5Jk.js",
+      "bytes": 2257,
+      "gzip_bytes": 1096
+    },
+    {
+      "name": "assets/railroadDiagram-O6MQD6OU-BJQMwJ76.js",
+      "bytes": 1638,
+      "gzip_bytes": 774
+    },
+    {
+      "name": "assets/rarityColors-CtscuJj6.js",
+      "bytes": 647,
+      "gzip_bytes": 328
+    },
+    {
+      "name": "assets/raritySymbols-iM5CEzDQ.js",
+      "bytes": 848,
+      "gzip_bytes": 342
+    },
+    {
+      "name": "assets/Register-BWglSd8F.js",
+      "bytes": 5361,
+      "gzip_bytes": 1878
+    },
+    {
+      "name": "assets/requirementDiagram-BXWQKSXE-BvfXdh_N.js",
+      "bytes": 31238,
+      "gzip_bytes": 9834
+    },
+    {
+      "name": "assets/ResourceCreator-DGL0y0MR.js",
+      "bytes": 7298,
+      "gzip_bytes": 2503
+    },
+    {
+      "name": "assets/ResourceDetailModal-B1XBK52W.js",
+      "bytes": 1283,
+      "gzip_bytes": 722
+    },
+    {
+      "name": "assets/ResourceHoverPreview-CQo1aGAz.js",
+      "bytes": 42009,
+      "gzip_bytes": 14620
+    },
+    {
+      "name": "assets/resourceInit-CTH9gB8z.js",
+      "bytes": 18943,
+      "gzip_bytes": 6435
+    },
+    {
+      "name": "assets/ReviewStatusEditor-3TIlfGBx.js",
+      "bytes": 1095,
+      "gzip_bytes": 665
+    },
+    {
+      "name": "assets/RoguelikePage-Ce7adYBe.js",
+      "bytes": 34119,
+      "gzip_bytes": 11499
+    },
+    {
+      "name": "assets/RoguelikePage-CYt99Kb1.css",
+      "bytes": 14984,
+      "gzip_bytes": 3558
+    },
+    {
+      "name": "assets/RulesLab-CBri6vLh.js",
+      "bytes": 240954,
+      "gzip_bytes": 37092
+    },
+    {
+      "name": "assets/RulesLab-DczvsN1C.css",
+      "bytes": 10300,
+      "gzip_bytes": 2660
+    },
+    {
+      "name": "assets/sankeyDiagram-P5KCCOFB-Bwj_JFbG.js",
+      "bytes": 23423,
+      "gzip_bytes": 8597
+    },
+    {
+      "name": "assets/save-BQYg_1qT.js",
+      "bytes": 444,
+      "gzip_bytes": 316
+    },
+    {
+      "name": "assets/saveCharacter-DLevrb1Y.js",
+      "bytes": 756,
+      "gzip_bytes": 417
+    },
+    {
+      "name": "assets/search-AHUowqOX.js",
+      "bytes": 341,
+      "gzip_bytes": 272
+    },
+    {
+      "name": "assets/sequenceDiagram-WJ2MYXX4-CbEvyo-W.js",
+      "bytes": 117484,
+      "gzip_bytes": 31293
+    },
+    {
+      "name": "assets/Settings-Cp0ONCj6.js",
+      "bytes": 352,
+      "gzip_bytes": 297
+    },
+    {
+      "name": "assets/sheetCanonicalWorld-7YqaXEkL.js",
+      "bytes": 38294,
+      "gzip_bytes": 12292
+    },
+    {
+      "name": "assets/sheetCombatTargetRuntime-DUxW6AOW.js",
+      "bytes": 34883,
+      "gzip_bytes": 12080
+    },
+    {
+      "name": "assets/shield-check-C24vgm_G.js",
+      "bytes": 368,
+      "gzip_bytes": 288
+    },
+    {
+      "name": "assets/ShopDetail-6HwKnrCb.js",
+      "bytes": 24451,
+      "gzip_bytes": 9096
+    },
+    {
+      "name": "assets/ShopDetail-CF7sFU2v.css",
+      "bytes": 9065,
+      "gzip_bytes": 2666
+    },
+    {
+      "name": "assets/shopNavigation-DCL8AxvU.js",
+      "bytes": 588,
+      "gzip_bytes": 346
+    },
+    {
+      "name": "assets/ShopNew-BOuA5r6Y.js",
+      "bytes": 1732,
+      "gzip_bytes": 1022
+    },
+    {
+      "name": "assets/shopping-cart-WEgjweuW.js",
+      "bytes": 460,
+      "gzip_bytes": 331
+    },
+    {
+      "name": "assets/sizeCapture-INFHLROL-la647fao.js",
+      "bytes": 1030,
+      "gzip_bytes": 575
+    },
+    {
+      "name": "assets/skull-wtjbJW10.js",
+      "bytes": 523,
+      "gzip_bytes": 347
+    },
+    {
+      "name": "assets/SoloCombatPage-D9tJ0D1j.js",
+      "bytes": 565170,
+      "gzip_bytes": 158494
+    },
+    {
+      "name": "assets/SoloCombatPage-DOFU3wsh.css",
+      "bytes": 88214,
+      "gzip_bytes": 17181
+    },
+    {
+      "name": "assets/sparkles-4C9CboU-.js",
+      "bytes": 585,
+      "gzip_bytes": 350
+    },
+    {
+      "name": "assets/SpellCreator-DA8HwGk7.js",
+      "bytes": 19665,
+      "gzip_bytes": 6194
+    },
+    {
+      "name": "assets/SpellDetailModal-BX_hh3eh.js",
+      "bytes": 3873,
+      "gzip_bytes": 1766
+    },
+    {
+      "name": "assets/star-D3KYwG6W.js",
+      "bytes": 379,
+      "gzip_bytes": 287
+    },
+    {
+      "name": "assets/stateDiagram-D77RDMKH-BV3xiM2h.js",
+      "bytes": 10397,
+      "gzip_bytes": 3649
+    },
+    {
+      "name": "assets/stateDiagram-v2-MP3YSRHH-D9CdBUVr.js",
+      "bytes": 460,
+      "gzip_bytes": 318
+    },
+    {
+      "name": "assets/swimlanes-42K2YHIH-CnQP3a9j.js",
+      "bytes": 117149,
+      "gzip_bytes": 42854
+    },
+    {
+      "name": "assets/swimlanesDiagram-VR7AAH4N-zbMprCuu.js",
+      "bytes": 580,
+      "gzip_bytes": 387
+    },
+    {
+      "name": "assets/sword-CbZV6b_z.js",
+      "bytes": 486,
+      "gzip_bytes": 319
+    },
+    {
+      "name": "assets/TemplateViewer-CZpour15.js",
+      "bytes": 5516,
+      "gzip_bytes": 1817
+    },
+    {
+      "name": "assets/timeline-definition-24CTP7MA-BlLrtVuz.js",
+      "bytes": 31382,
+      "gzip_bytes": 10445
+    },
+    {
+      "name": "assets/trash-2-BrwNMy_v.js",
+      "bytes": 526,
+      "gzip_bytes": 353
+    },
+    {
+      "name": "assets/TrinketSelection-Ci0cVHBS.js",
+      "bytes": 5684,
+      "gzip_bytes": 2032
+    },
+    {
+      "name": "assets/turnCommands-CfrGE0C4.js",
+      "bytes": 3963,
+      "gzip_bytes": 1695
+    },
+    {
+      "name": "assets/type-ChjzZATU.js",
+      "bytes": 1243,
+      "gzip_bytes": 537
+    },
+    {
+      "name": "assets/unlink-CipugEUI.js",
+      "bytes": 697,
+      "gzip_bytes": 405
+    },
+    {
+      "name": "assets/upload-ocXhOSPY.js",
+      "bytes": 426,
+      "gzip_bytes": 318
+    },
+    {
+      "name": "assets/urvin/auras/ferocity.png",
+      "bytes": 785292,
+      "gzip_bytes": 784444
+    },
+    {
+      "name": "assets/urvin/auras/phoenix.png",
+      "bytes": 615942,
+      "gzip_bytes": 615341
+    },
+    {
+      "name": "assets/urvin/auras/restoration.png",
+      "bytes": 406214,
+      "gzip_bytes": 405911
+    },
+    {
+      "name": "assets/urvin/auras/solitude.png",
+      "bytes": 517350,
+      "gzip_bytes": 516954
+    },
+    {
+      "name": "assets/urvin/auras/wealth.png",
+      "bytes": 527377,
+      "gzip_bytes": 526727
+    },
+    {
+      "name": "assets/useEffectActionLoaders---RTzbDu.js",
+      "bytes": 774,
+      "gzip_bytes": 330
+    },
+    {
+      "name": "assets/useEncounterStream-D9lC-sHb.js",
+      "bytes": 2946,
+      "gzip_bytes": 1394
+    },
+    {
+      "name": "assets/useIsMobile-CzI9YrUf.js",
+      "bytes": 421,
+      "gzip_bytes": 264
+    },
+    {
+      "name": "assets/user-round-ColoVrAs.js",
+      "bytes": 350,
+      "gzip_bytes": 281
+    },
+    {
+      "name": "assets/UtilityPages-33TODRkg.css",
+      "bytes": 3503,
+      "gzip_bytes": 780
+    },
+    {
+      "name": "assets/validateMechanics-DnrvuJzE.js",
+      "bytes": 245707,
+      "gzip_bytes": 67776
+    },
+    {
+      "name": "assets/VariableCreator-DeMRP-g6.js",
+      "bytes": 6742,
+      "gzip_bytes": 2387
+    },
+    {
+      "name": "assets/VariableDetailModal-BY-Claqo.js",
+      "bytes": 1725,
+      "gzip_bytes": 952
+    },
+    {
+      "name": "assets/vennDiagram-4TSXK5OY-C4Bka0Wg.js",
+      "bytes": 42404,
+      "gzip_bytes": 15817
+    },
+    {
+      "name": "assets/wand-2-BcKMDmQZ.js",
+      "bytes": 670,
+      "gzip_bytes": 391
+    },
+    {
+      "name": "assets/wardleyDiagram-VM6X3IG4-CsLzR6K2.js",
+      "bytes": 26128,
+      "gzip_bytes": 6960
+    },
+    {
+      "name": "assets/WeaponSelection-DoPUxD-p.js",
+      "bytes": 3744,
+      "gzip_bytes": 1604
+    },
+    {
+      "name": "assets/WeaponTemplates-BhRvzrEx.js",
+      "bytes": 7867,
+      "gzip_bytes": 2651
+    },
+    {
+      "name": "assets/weight-CtF_8iOd.js",
+      "bytes": 429,
+      "gzip_bytes": 326
+    },
+    {
+      "name": "assets/workbox-window.prod.es5-BBnX5xw4.js",
+      "bytes": 5748,
+      "gzip_bytes": 2358
+    },
+    {
+      "name": "assets/world.none-DoupFtf4.js",
+      "bytes": 2576,
+      "gzip_bytes": 1115
+    },
+    {
+      "name": "assets/world.offscreen-C5e_o3iU.js",
+      "bytes": 1447256,
+      "gzip_bytes": 412356
+    },
+    {
+      "name": "assets/world.onscreen-xMNOm1-Y.js",
+      "bytes": 391142,
+      "gzip_bytes": 87526
+    },
+    {
+      "name": "assets/xychartDiagram-S5SC5T6Z-DIZyv6dF.js",
+      "bytes": 44542,
+      "gzip_bytes": 12627
+    },
+    {
+      "name": "assets/zap-Wd2ZmpMV.js",
+      "bytes": 322,
+      "gzip_bytes": 260
+    },
+    {
+      "name": "audio/combat-v2/dice_roll.47aa77d5fc6f.mp3",
+      "bytes": 21359,
+      "gzip_bytes": 20566
+    },
+    {
+      "name": "audio/combat-v2/dice_single.7ee4afd31075.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16368
+    },
+    {
+      "name": "audio/combat-v2/magic_acid_hit.f0ad64741152.mp3",
+      "bytes": 15090,
+      "gzip_bytes": 14575
+    },
+    {
+      "name": "audio/combat-v2/magic_acid_launch.7ee66d03cd78.mp3",
+      "bytes": 10493,
+      "gzip_bytes": 10011
+    },
+    {
+      "name": "audio/combat-v2/magic_area_illusion_activate.f386cb4d1a95.mp3",
+      "bytes": 18434,
+      "gzip_bytes": 17868
+    },
+    {
+      "name": "audio/combat-v2/magic_area_nature_activate.f70966fdb458.mp3",
+      "bytes": 22195,
+      "gzip_bytes": 21247
+    },
+    {
+      "name": "audio/combat-v2/magic_area_thunder_launch.92e0486403b7.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16604
+    },
+    {
+      "name": "audio/combat-v2/magic_breath_acid_launch.c774ceb783f0.mp3",
+      "bytes": 23031,
+      "gzip_bytes": 22307
+    },
+    {
+      "name": "audio/combat-v2/magic_breath_fire_launch.0f562047a080.mp3",
+      "bytes": 23031,
+      "gzip_bytes": 22348
+    },
+    {
+      "name": "audio/combat-v2/magic_breath_frost_launch.605e13fe51b2.mp3",
+      "bytes": 22195,
+      "gzip_bytes": 21252
+    },
+    {
+      "name": "audio/combat-v2/magic_breath_lightning_launch.477cf13e0756.mp3",
+      "bytes": 20942,
+      "gzip_bytes": 20349
+    },
+    {
+      "name": "audio/combat-v2/magic_breath_poison_launch.613c49c58823.mp3",
+      "bytes": 23031,
+      "gzip_bytes": 22203
+    },
+    {
+      "name": "audio/combat-v2/magic_earth_hit.b37bdb022f5d.mp3",
+      "bytes": 11328,
+      "gzip_bytes": 10647
+    },
+    {
+      "name": "audio/combat-v2/magic_earth_launch.c78fd8e5a06a.mp3",
+      "bytes": 11328,
+      "gzip_bytes": 10379
+    },
+    {
+      "name": "audio/combat-v2/magic_fire_hit.6d2d39e0381a.mp3",
+      "bytes": 10493,
+      "gzip_bytes": 9969
+    },
+    {
+      "name": "audio/combat-v2/magic_fire_launch.2cc9a0774329.mp3",
+      "bytes": 11328,
+      "gzip_bytes": 10433
+    },
+    {
+      "name": "audio/combat-v2/magic_force_charge.37c64a45e5ba.mp3",
+      "bytes": 10493,
+      "gzip_bytes": 10029
+    },
+    {
+      "name": "audio/combat-v2/magic_force_hit.b64ef8e8230a.mp3",
+      "bytes": 9239,
+      "gzip_bytes": 8401
+    },
+    {
+      "name": "audio/combat-v2/magic_force_launch.eecdb68b02bf.mp3",
+      "bytes": 9239,
+      "gzip_bytes": 8571
+    },
+    {
+      "name": "audio/combat-v2/magic_frost_hit.306fb439b0f7.mp3",
+      "bytes": 12164,
+      "gzip_bytes": 11056
+    },
+    {
+      "name": "audio/combat-v2/magic_frost_launch.2d2016224750.mp3",
+      "bytes": 11328,
+      "gzip_bytes": 10823
+    },
+    {
+      "name": "audio/combat-v2/magic_healing_activate.a497f3c462fb.mp3",
+      "bytes": 20106,
+      "gzip_bytes": 19586
+    },
+    {
+      "name": "audio/combat-v2/magic_illusion_activate.279e8585b9d5.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16573
+    },
+    {
+      "name": "audio/combat-v2/magic_lightning_hit.310bbabb2d00.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16553
+    },
+    {
+      "name": "audio/combat-v2/magic_lightning_launch.2f6d7a117b1f.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8068
+    },
+    {
+      "name": "audio/combat-v2/magic_miss_dissipate.015a6d7142dc.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16649
+    },
+    {
+      "name": "audio/combat-v2/magic_miss_flyby.0ced9ab31a13.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8097
+    },
+    {
+      "name": "audio/combat-v2/magic_nature_hit.08817e6e976b.mp3",
+      "bytes": 11328,
+      "gzip_bytes": 10689
+    },
+    {
+      "name": "audio/combat-v2/magic_nature_launch.f33263db1a23.mp3",
+      "bytes": 11328,
+      "gzip_bytes": 10544
+    },
+    {
+      "name": "audio/combat-v2/magic_necrotic_hit.343769c9e533.mp3",
+      "bytes": 13836,
+      "gzip_bytes": 13104
+    },
+    {
+      "name": "audio/combat-v2/magic_necrotic_launch.629ebb838407.mp3",
+      "bytes": 12582,
+      "gzip_bytes": 12041
+    },
+    {
+      "name": "audio/combat-v2/magic_poison_hit.7c1417917fa4.mp3",
+      "bytes": 12582,
+      "gzip_bytes": 12072
+    },
+    {
+      "name": "audio/combat-v2/magic_poison_launch.7cc18d58a136.mp3",
+      "bytes": 12582,
+      "gzip_bytes": 11799
+    },
+    {
+      "name": "audio/combat-v2/magic_psychic_hit.80427365a766.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16497
+    },
+    {
+      "name": "audio/combat-v2/magic_psychic_launch.54b42e4a71d6.mp3",
+      "bytes": 12164,
+      "gzip_bytes": 11276
+    },
+    {
+      "name": "audio/combat-v2/magic_radiant_hit.f231b2c86309.mp3",
+      "bytes": 11328,
+      "gzip_bytes": 10479
+    },
+    {
+      "name": "audio/combat-v2/magic_radiant_launch.563c06e0b584.mp3",
+      "bytes": 12164,
+      "gzip_bytes": 11416
+    },
+    {
+      "name": "audio/combat-v2/magic_thunder_hit.60c959cbe4df.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16458
+    },
+    {
+      "name": "audio/combat-v2/magic_thunder_launch.99d423f71a84.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16481
+    },
+    {
+      "name": "audio/combat-v2/magic_ward_activate.8d17eb7ea825.mp3",
+      "bytes": 14672,
+      "gzip_bytes": 13950
+    },
+    {
+      "name": "audio/combat-v2/magic_water_hit.e994dbb9b12e.mp3",
+      "bytes": 13836,
+      "gzip_bytes": 13093
+    },
+    {
+      "name": "audio/combat-v2/magic_water_launch.f88d085fd054.mp3",
+      "bytes": 12164,
+      "gzip_bytes": 11469
+    },
+    {
+      "name": "audio/combat-v2/magic_wind_hit.aafb263e973a.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8061
+    },
+    {
+      "name": "audio/combat-v2/magic_wind_launch.65b665af4b70.mp3",
+      "bytes": 9239,
+      "gzip_bytes": 8731
+    },
+    {
+      "name": "audio/combat-v2/natural_bite_hit.6ba7a44fc2d9.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8180
+    },
+    {
+      "name": "audio/combat-v2/natural_bite_launch.78d1aa4a96d5.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7813
+    },
+    {
+      "name": "audio/combat-v2/natural_claws_hit.f7e6f29ca60e.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8061
+    },
+    {
+      "name": "audio/combat-v2/natural_claws_launch.49fea95a0a2a.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8060
+    },
+    {
+      "name": "audio/combat-v2/natural_slam_hit.c1a63959e4ad.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7968
+    },
+    {
+      "name": "audio/combat-v2/natural_sting_hit.3aeef4dbd6ed.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8237
+    },
+    {
+      "name": "audio/combat-v2/natural_sting_launch.a8555c03b074.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8005
+    },
+    {
+      "name": "audio/combat-v2/natural_tail_launch.a72582fd0d15.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7953
+    },
+    {
+      "name": "audio/combat-v2/natural_tentacle_hit.98f1b80d1daf.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8021
+    },
+    {
+      "name": "audio/combat-v2/natural_tentacle_launch.80ad3eb3fe1e.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8126
+    },
+    {
+      "name": "audio/combat-v2/weapon_arrow_hit.14d64f13e8c2.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8275
+    },
+    {
+      "name": "audio/combat-v2/weapon_blade_hit.3bfe26e6473b.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8214
+    },
+    {
+      "name": "audio/combat-v2/weapon_blade_launch.e871e097b25c.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7813
+    },
+    {
+      "name": "audio/combat-v2/weapon_blunt_hit.4fa3488ac629.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7948
+    },
+    {
+      "name": "audio/combat-v2/weapon_blunt_launch.c559abe0ee81.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8173
+    },
+    {
+      "name": "audio/combat-v2/weapon_bow_launch.00863cf03679.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8256
+    },
+    {
+      "name": "audio/combat-v2/weapon_crossbow_launch.35e0e6487fc7.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7856
+    },
+    {
+      "name": "audio/combat-v2/weapon_firearm_hit.55e92230bf06.mp3",
+      "bytes": 12164,
+      "gzip_bytes": 11061
+    },
+    {
+      "name": "audio/combat-v2/weapon_firearm_launch.9785913ea4ff.mp3",
+      "bytes": 17180,
+      "gzip_bytes": 16508
+    },
+    {
+      "name": "audio/combat-v2/weapon_melee_miss.d2ae6e615c38.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8249
+    },
+    {
+      "name": "audio/combat-v2/weapon_pierce_hit.7ed8d9b172b1.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8068
+    },
+    {
+      "name": "audio/combat-v2/weapon_pierce_launch.86d2a69a2fdf.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7964
+    },
+    {
+      "name": "audio/combat-v2/weapon_projectile_miss.10b7c80a46a5.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 8019
+    },
+    {
+      "name": "audio/combat-v2/weapon_stone_hit.f03123da9abb.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7856
+    },
+    {
+      "name": "audio/combat-v2/weapon_stone_launch.eee27d9a89ef.mp3",
+      "bytes": 12164,
+      "gzip_bytes": 11060
+    },
+    {
+      "name": "audio/combat-v2/weapon_throw_launch.58de899be34d.mp3",
+      "bytes": 8821,
+      "gzip_bytes": 7866
+    },
+    {
+      "name": "audio/music-v2/gallery.css",
+      "bytes": 2966,
+      "gzip_bytes": 1206
+    },
+    {
+      "name": "audio/music-v2/gallery.js",
+      "bytes": 526,
+      "gzip_bytes": 269
+    },
+    {
+      "name": "audio/music-v2/index.html",
+      "bytes": 7954,
+      "gzip_bytes": 1952
+    },
+    {
+      "name": "audio/music-v2/music_battle_cavern-v1.0a3a36ce77dd.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478881
+    },
+    {
+      "name": "audio/music-v2/music_battle_clearing-v1.91b5626989bf.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478561
+    },
+    {
+      "name": "audio/music-v2/music_battle_courtyard-small-v1.4b41f0aef498.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478822
+    },
+    {
+      "name": "audio/music-v2/music_battle_crypt-annex-rooms-v1.ba68e0f11311.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 479043
+    },
+    {
+      "name": "audio/music-v2/music_battle_crypt-v2.bb71eacaa6a2.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 477669
+    },
+    {
+      "name": "audio/music-v2/music_battle_forest-v2.b295e0d6cf01.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478037
+    },
+    {
+      "name": "audio/music-v2/music_battle_goblin-camp-v2.35d50c4c5939.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478954
+    },
+    {
+      "name": "audio/music-v2/music_battle_quarry-v1.09425c6d494a.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478707
+    },
+    {
+      "name": "audio/music-v2/music_battle_sanctuary-v1.f283d02e6c65.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478206
+    },
+    {
+      "name": "audio/music-v2/music_battle_snow-pass-v1.5ba0bb9d1a8d.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478874
+    },
+    {
+      "name": "audio/music-v2/music_battle_tavern-v2.6205024a54cb.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478657
+    },
+    {
+      "name": "audio/music-v2/music_battle_urvin-archive-v1.fb1f382e7889.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478700
+    },
+    {
+      "name": "audio/music-v2/music_battle_urvin-causeway-v1.02ffdb9818d7.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478745
+    },
+    {
+      "name": "audio/music-v2/music_battle_urvin-court-v1.dadcec99fb6b.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478834
+    },
+    {
+      "name": "audio/music-v2/music_battle_watchpost-rooms-v1.9f25ab275999.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478711
+    },
+    {
+      "name": "audio/music-v2/music_run.3669a5282ed2.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478963
+    },
+    {
+      "name": "audio/music-v2/music_site.5a612a248f6d.mp3",
+      "bytes": 480698,
+      "gzip_bytes": 478455
+    },
+    {
+      "name": "audio/music-v3/gallery.css",
+      "bytes": 2966,
+      "gzip_bytes": 1206
+    },
+    {
+      "name": "audio/music-v3/gallery.js",
+      "bytes": 526,
+      "gzip_bytes": 269
+    },
+    {
+      "name": "audio/music-v3/index.html",
+      "bytes": 8018,
+      "gzip_bytes": 1949
+    },
+    {
+      "name": "audio/music-v3/music_battle_cavern-v1.1992c5305f66.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871010
+    },
+    {
+      "name": "audio/music-v3/music_battle_clearing-v1.37fa516de5f6.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871700
+    },
+    {
+      "name": "audio/music-v3/music_battle_courtyard-small-v1.5c314b5d16ca.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2872941
+    },
+    {
+      "name": "audio/music-v3/music_battle_crypt-annex-rooms-v1.bcc15159a288.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871460
+    },
+    {
+      "name": "audio/music-v3/music_battle_crypt-v2.83e37a2cf495.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2872916
+    },
+    {
+      "name": "audio/music-v3/music_battle_forest-v2.48fa5ce8e10d.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2870523
+    },
+    {
+      "name": "audio/music-v3/music_battle_goblin-camp-v2.7b7914a11066.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2872570
+    },
+    {
+      "name": "audio/music-v3/music_battle_quarry-v1.3ea40887ce80.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871463
+    },
+    {
+      "name": "audio/music-v3/music_battle_sanctuary-v1.5d96688fcc0c.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871927
+    },
+    {
+      "name": "audio/music-v3/music_battle_snow-pass-v1.dba3ab622458.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871039
+    },
+    {
+      "name": "audio/music-v3/music_battle_tavern-v2.241ba172e16b.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871689
+    },
+    {
+      "name": "audio/music-v3/music_battle_tavern-v2.e188bb9cde22.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871080
+    },
+    {
+      "name": "audio/music-v3/music_battle_urvin-archive-v1.ddbfebd8d819.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2870478
+    },
+    {
+      "name": "audio/music-v3/music_battle_urvin-causeway-v1.40ca1482270c.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871076
+    },
+    {
+      "name": "audio/music-v3/music_battle_urvin-court-v1.5decb99802a7.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2872460
+    },
+    {
+      "name": "audio/music-v3/music_battle_watchpost-rooms-v1.a50a85477df8.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2869923
+    },
+    {
+      "name": "audio/music-v3/music_run.f308cbb191dc.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2871710
+    },
+    {
+      "name": "audio/music-v3/music_site.c6b6fc3095ec.mp3",
+      "bytes": 2880619,
+      "gzip_bytes": 2869017
+    },
+    {
+      "name": "default_image.png",
+      "bytes": 193746,
+      "gzip_bytes": 182744
+    },
+    {
+      "name": "design_preview.html",
+      "bytes": 53136,
+      "gzip_bytes": 12281
+    },
+    {
+      "name": "fonts/open-sans/OFL.txt",
+      "bytes": 4508,
+      "gzip_bytes": 2005
+    },
+    {
+      "name": "fonts/open-sans/open-sans-cyrillic-400-normal.woff2",
+      "bytes": 11108,
+      "gzip_bytes": 11131
+    },
+    {
+      "name": "fonts/open-sans/open-sans-cyrillic-600-normal.woff2",
+      "bytes": 11100,
+      "gzip_bytes": 11123
+    },
+    {
+      "name": "fonts/open-sans/open-sans-cyrillic-700-normal.woff2",
+      "bytes": 10876,
+      "gzip_bytes": 10897
+    },
+    {
+      "name": "fonts/open-sans/open-sans-latin-400-normal.woff2",
+      "bytes": 18640,
+      "gzip_bytes": 18668
+    },
+    {
+      "name": "fonts/open-sans/open-sans-latin-600-normal.woff2",
+      "bytes": 18620,
+      "gzip_bytes": 18648
+    },
+    {
+      "name": "fonts/open-sans/open-sans-latin-700-normal.woff2",
+      "bytes": 18204,
+      "gzip_bytes": 18232
+    },
+    {
+      "name": "fonts/open-sans/README.md",
+      "bytes": 585,
+      "gzip_bytes": 394
+    },
+    {
+      "name": "groovepaper.png",
+      "bytes": 37500,
+      "gzip_bytes": 37533
+    },
+    {
+      "name": "icons/actions/dodge.png",
+      "bytes": 1718721,
+      "gzip_bytes": 1705689
+    },
+    {
+      "name": "icons/actions/heroic-inspiration.svg",
+      "bytes": 418,
+      "gzip_bytes": 245
+    },
+    {
+      "name": "icons/actions/offhand_attack.png",
+      "bytes": 1784217,
+      "gzip_bytes": 1770453
+    },
+    {
+      "name": "icons/actions/ranged_weapon_attack.png",
+      "bytes": 123009,
+      "gzip_bytes": 123054
+    },
+    {
+      "name": "icons/actions/unarmed_strike.png",
+      "bytes": 2040365,
+      "gzip_bytes": 2027332
+    },
+    {
+      "name": "icons/actions/weapon_attack.png",
+      "bytes": 1708344,
+      "gzip_bytes": 1695195
+    },
+    {
+      "name": "icons/ammunition.png",
+      "bytes": 13915,
+      "gzip_bytes": 12878
+    },
+    {
+      "name": "icons/attunement.png",
+      "bytes": 19915,
+      "gzip_bytes": 19293
+    },
+    {
+      "name": "icons/belt.png",
+      "bytes": 17004,
+      "gzip_bytes": 15029
+    },
+    {
+      "name": "icons/bludgeoning.png",
+      "bytes": 13276,
+      "gzip_bytes": 12147
+    },
+    {
+      "name": "icons/bow-hand.png",
+      "bytes": 16960,
+      "gzip_bytes": 16072
+    },
+    {
+      "name": "icons/cloth.png",
+      "bytes": 12241,
+      "gzip_bytes": 11027
+    },
+    {
+      "name": "icons/coin.png",
+      "bytes": 17415,
+      "gzip_bytes": 16128
+    },
+    {
+      "name": "icons/consumable.png",
+      "bytes": 15165,
+      "gzip_bytes": 14328
+    },
+    {
+      "name": "icons/currency/copper.png",
+      "bytes": 1512344,
+      "gzip_bytes": 1510227
+    },
+    {
+      "name": "icons/currency/gold.png",
+      "bytes": 991526,
+      "gzip_bytes": 986779
+    },
+    {
+      "name": "icons/currency/silver.png",
+      "bytes": 950528,
+      "gzip_bytes": 942900
+    },
+    {
+      "name": "icons/damage_types/acid.png",
+      "bytes": 4846,
+      "gzip_bytes": 4869
+    },
+    {
+      "name": "icons/damage_types/bludgeoning.png",
+      "bytes": 3694,
+      "gzip_bytes": 3717
+    },
+    {
+      "name": "icons/damage_types/cold.png",
+      "bytes": 4338,
+      "gzip_bytes": 4361
+    },
+    {
+      "name": "icons/damage_types/fire.png",
+      "bytes": 4069,
+      "gzip_bytes": 4092
+    },
+    {
+      "name": "icons/damage_types/force.png",
+      "bytes": 4431,
+      "gzip_bytes": 4454
+    },
+    {
+      "name": "icons/damage_types/healing.png",
+      "bytes": 2616,
+      "gzip_bytes": 2639
+    },
+    {
+      "name": "icons/damage_types/lightning.png",
+      "bytes": 3384,
+      "gzip_bytes": 3407
+    },
+    {
+      "name": "icons/damage_types/necrotic.png",
+      "bytes": 4500,
+      "gzip_bytes": 4523
+    },
+    {
+      "name": "icons/damage_types/piercing.png",
+      "bytes": 3504,
+      "gzip_bytes": 3527
+    },
+    {
+      "name": "icons/damage_types/poison.png",
+      "bytes": 4693,
+      "gzip_bytes": 4716
+    },
+    {
+      "name": "icons/damage_types/psychic.png",
+      "bytes": 4036,
+      "gzip_bytes": 4059
+    },
+    {
+      "name": "icons/damage_types/radiant.png",
+      "bytes": 4744,
+      "gzip_bytes": 4767
+    },
+    {
+      "name": "icons/damage_types/slashing.png",
+      "bytes": 3452,
+      "gzip_bytes": 3475
+    },
+    {
+      "name": "icons/damage_types/thunder.png",
+      "bytes": 4623,
+      "gzip_bytes": 4646
+    },
+    {
+      "name": "icons/defense.png",
+      "bytes": 11862,
+      "gzip_bytes": 10962
+    },
+    {
+      "name": "icons/finesse.png",
+      "bytes": 7396,
+      "gzip_bytes": 6019
+    },
+    {
+      "name": "icons/heavy.png",
+      "bytes": 10006,
+      "gzip_bytes": 6068
+    },
+    {
+      "name": "icons/heavy_defense.png",
+      "bytes": 12551,
+      "gzip_bytes": 11716
+    },
+    {
+      "name": "icons/light.png",
+      "bytes": 13984,
+      "gzip_bytes": 12941
+    },
+    {
+      "name": "icons/light_defense.png",
+      "bytes": 12334,
+      "gzip_bytes": 11505
+    },
+    {
+      "name": "icons/loading.png",
+      "bytes": 16854,
+      "gzip_bytes": 16117
+    },
+    {
+      "name": "icons/medium_defense.png",
+      "bytes": 16899,
+      "gzip_bytes": 16128
+    },
+    {
+      "name": "icons/melee-hand.png",
+      "bytes": 27236,
+      "gzip_bytes": 26420
+    },
+    {
+      "name": "icons/passives/auto-stand.svg",
+      "bytes": 281,
+      "gzip_bytes": 222
+    },
+    {
+      "name": "icons/passives/roll-influence.svg",
+      "bytes": 551,
+      "gzip_bytes": 321
+    },
+    {
+      "name": "icons/passives/slow.svg",
+      "bytes": 559,
+      "gzip_bytes": 306
+    },
+    {
+      "name": "icons/piercing.png",
+      "bytes": 14413,
+      "gzip_bytes": 13092
+    },
+    {
+      "name": "icons/range.png",
+      "bytes": 10013,
+      "gzip_bytes": 8054
+    },
+    {
+      "name": "icons/reach.png",
+      "bytes": 12941,
+      "gzip_bytes": 11821
+    },
+    {
+      "name": "icons/resources/action.png",
+      "bytes": 920890,
+      "gzip_bytes": 920193
+    },
+    {
+      "name": "icons/resources/bonus_action.png",
+      "bytes": 580478,
+      "gzip_bytes": 578013
+    },
+    {
+      "name": "icons/resources/movement.svg",
+      "bytes": 421,
+      "gzip_bytes": 266
+    },
+    {
+      "name": "icons/resources/reaction.png",
+      "bytes": 422701,
+      "gzip_bytes": 418902
+    },
+    {
+      "name": "icons/resources/ritual.png",
+      "bytes": 798757,
+      "gzip_bytes": 796815
+    },
+    {
+      "name": "icons/resources/spell_slot.png",
+      "bytes": 759301,
+      "gzip_bytes": 759547
+    },
+    {
+      "name": "icons/resources/warlock_spell_slot.png",
+      "bytes": 690533,
+      "gzip_bytes": 690589
+    },
+    {
+      "name": "icons/single_use.png",
+      "bytes": 10356,
+      "gzip_bytes": 9017
+    },
+    {
+      "name": "icons/slashing.png",
+      "bytes": 17261,
+      "gzip_bytes": 16686
+    },
+    {
+      "name": "icons/slots/armor.png",
+      "bytes": 15925,
+      "gzip_bytes": 14781
+    },
+    {
+      "name": "icons/slots/boots.png",
+      "bytes": 18479,
+      "gzip_bytes": 17495
+    },
+    {
+      "name": "icons/slots/cloak.png",
+      "bytes": 17253,
+      "gzip_bytes": 16586
+    },
+    {
+      "name": "icons/slots/gloves.png",
+      "bytes": 26093,
+      "gzip_bytes": 25688
+    },
+    {
+      "name": "icons/slots/hand.png",
+      "bytes": 15892,
+      "gzip_bytes": 15115
+    },
+    {
+      "name": "icons/slots/helm.png",
+      "bytes": 19566,
+      "gzip_bytes": 19088
+    },
+    {
+      "name": "icons/slots/necklace.png",
+      "bytes": 15316,
+      "gzip_bytes": 14274
+    },
+    {
+      "name": "icons/slots/ring.png",
+      "bytes": 13529,
+      "gzip_bytes": 12268
+    },
+    {
+      "name": "icons/special.png",
+      "bytes": 13636,
+      "gzip_bytes": 12846
+    },
+    {
+      "name": "icons/thrown.png",
+      "bytes": 15240,
+      "gzip_bytes": 14478
+    },
+    {
+      "name": "icons/two_handed.png",
+      "bytes": 18504,
+      "gzip_bytes": 17730
+    },
+    {
+      "name": "icons/versatile.png",
+      "bytes": 13927,
+      "gzip_bytes": 13067
+    },
+    {
+      "name": "icons/weight.png",
+      "bytes": 16592,
+      "gzip_bytes": 15815
+    },
+    {
+      "name": "images/home/interactive.jpg",
+      "bytes": 296278,
+      "gzip_bytes": 296114
+    },
+    {
+      "name": "images/home/library.jpg",
+      "bytes": 283647,
+      "gzip_bytes": 283446
+    },
+    {
+      "name": "images/home/paper.jpg",
+      "bytes": 275683,
+      "gzip_bytes": 275341
+    },
+    {
+      "name": "images/home/runs.jpg",
+      "bytes": 267039,
+      "gzip_bytes": 266960
+    },
+    {
+      "name": "images/library/actions.jpg",
+      "bytes": 140373,
+      "gzip_bytes": 140280
+    },
+    {
+      "name": "images/library/backgrounds.jpg",
+      "bytes": 171125,
+      "gzip_bytes": 171044
+    },
+    {
+      "name": "images/library/cards.jpg",
+      "bytes": 129429,
+      "gzip_bytes": 129291
+    },
+    {
+      "name": "images/library/classes.jpg",
+      "bytes": 133769,
+      "gzip_bytes": 133668
+    },
+    {
+      "name": "images/library/concepts.jpg",
+      "bytes": 146653,
+      "gzip_bytes": 146550
+    },
+    {
+      "name": "images/library/effects.jpg",
+      "bytes": 164375,
+      "gzip_bytes": 164287
+    },
+    {
+      "name": "images/library/feats.jpg",
+      "bytes": 132010,
+      "gzip_bytes": 131907
+    },
+    {
+      "name": "images/library/monsters.jpg",
+      "bytes": 142258,
+      "gzip_bytes": 142164
+    },
+    {
+      "name": "images/library/passives.jpg",
+      "bytes": 122482,
+      "gzip_bytes": 122359
+    },
+    {
+      "name": "images/library/races.jpg",
+      "bytes": 161548,
+      "gzip_bytes": 161465
+    },
+    {
+      "name": "images/library/resources.jpg",
+      "bytes": 145354,
+      "gzip_bytes": 145255
+    },
+    {
+      "name": "images/library/spells.jpg",
+      "bytes": 141991,
+      "gzip_bytes": 141898
+    },
+    {
+      "name": "images/library/variables.jpg",
+      "bytes": 150919,
+      "gzip_bytes": 150824
+    },
+    {
+      "name": "images/weapons/axe.svg",
+      "bytes": 1014,
+      "gzip_bytes": 439
+    },
+    {
+      "name": "images/weapons/battleaxe.png",
+      "bytes": 84982,
+      "gzip_bytes": 84573
+    },
+    {
+      "name": "images/weapons/club.png",
+      "bytes": 87412,
+      "gzip_bytes": 87137
+    },
+    {
+      "name": "images/weapons/dagger.png",
+      "bytes": 75685,
+      "gzip_bytes": 75165
+    },
+    {
+      "name": "images/weapons/dart.png",
+      "bytes": 69874,
+      "gzip_bytes": 69553
+    },
+    {
+      "name": "images/weapons/flail.png",
+      "bytes": 91987,
+      "gzip_bytes": 91601
+    },
+    {
+      "name": "images/weapons/generate_weapons.sh",
+      "bytes": 6928,
+      "gzip_bytes": 1324
+    },
+    {
+      "name": "images/weapons/glaive.png",
+      "bytes": 75524,
+      "gzip_bytes": 75093
+    },
+    {
+      "name": "images/weapons/greataxe.png",
+      "bytes": 128576,
+      "gzip_bytes": 128298
+    },
+    {
+      "name": "images/weapons/greatclub.png",
+      "bytes": 104820,
+      "gzip_bytes": 104811
+    },
+    {
+      "name": "images/weapons/greatsword.png",
+      "bytes": 129105,
+      "gzip_bytes": 129002
+    },
+    {
+      "name": "images/weapons/halberd.png",
+      "bytes": 94051,
+      "gzip_bytes": 93756
+    },
+    {
+      "name": "images/weapons/handaxe.png",
+      "bytes": 95635,
+      "gzip_bytes": 95215
+    },
+    {
+      "name": "images/weapons/hand_crossbow.png",
+      "bytes": 122926,
+      "gzip_bytes": 122419
+    },
+    {
+      "name": "images/weapons/heavy_crossbow.png",
+      "bytes": 131395,
+      "gzip_bytes": 131014
+    },
+    {
+      "name": "images/weapons/javelin.png",
+      "bytes": 112237,
+      "gzip_bytes": 112143
+    },
+    {
+      "name": "images/weapons/lance.png",
+      "bytes": 70372,
+      "gzip_bytes": 70004
+    },
+    {
+      "name": "images/weapons/light_crossbow.png",
+      "bytes": 133547,
+      "gzip_bytes": 133386
+    },
+    {
+      "name": "images/weapons/light_hammer.png",
+      "bytes": 92384,
+      "gzip_bytes": 92137
+    },
+    {
+      "name": "images/weapons/longbow.png",
+      "bytes": 96506,
+      "gzip_bytes": 96027
+    },
+    {
+      "name": "images/weapons/longsword.png",
+      "bytes": 105050,
+      "gzip_bytes": 104579
+    },
+    {
+      "name": "images/weapons/mace.png",
+      "bytes": 94201,
+      "gzip_bytes": 93938
+    },
+    {
+      "name": "images/weapons/maul.png",
+      "bytes": 119973,
+      "gzip_bytes": 119840
+    },
+    {
+      "name": "images/weapons/morningstar.png",
+      "bytes": 109479,
+      "gzip_bytes": 109364
+    },
+    {
+      "name": "images/weapons/net.png",
+      "bytes": 289635,
+      "gzip_bytes": 289743
+    },
+    {
+      "name": "images/weapons/pike.png",
+      "bytes": 70329,
+      "gzip_bytes": 70031
+    },
+    {
+      "name": "images/weapons/quarterstaff.png",
+      "bytes": 82356,
+      "gzip_bytes": 81965
+    },
+    {
+      "name": "images/weapons/rapier.png",
+      "bytes": 88431,
+      "gzip_bytes": 87759
+    },
+    {
+      "name": "images/weapons/scimitar.png",
+      "bytes": 87415,
+      "gzip_bytes": 87040
+    },
+    {
+      "name": "images/weapons/shield.png",
+      "bytes": 251126,
+      "gzip_bytes": 251209
+    },
+    {
+      "name": "images/weapons/shortbow.png",
+      "bytes": 82432,
+      "gzip_bytes": 82376
+    },
+    {
+      "name": "images/weapons/shortbow.svg",
+      "bytes": 969,
+      "gzip_bytes": 467
+    },
+    {
+      "name": "images/weapons/shortsword.png",
+      "bytes": 103072,
+      "gzip_bytes": 102720
+    },
+    {
+      "name": "images/weapons/sickle.png",
+      "bytes": 78395,
+      "gzip_bytes": 78038
+    },
+    {
+      "name": "images/weapons/sling.png",
+      "bytes": 116538,
+      "gzip_bytes": 116510
+    },
+    {
+      "name": "images/weapons/spear.png",
+      "bytes": 80891,
+      "gzip_bytes": 80640
+    },
+    {
+      "name": "images/weapons/sword.svg",
+      "bytes": 1123,
+      "gzip_bytes": 484
+    },
+    {
+      "name": "images/weapons/trident.png",
+      "bytes": 108609,
+      "gzip_bytes": 108490
+    },
+    {
+      "name": "images/weapons/warhammer.png",
+      "bytes": 106159,
+      "gzip_bytes": 105686
+    },
+    {
+      "name": "images/weapons/warpick.png",
+      "bytes": 73683,
+      "gzip_bytes": 73028
+    },
+    {
+      "name": "images/weapons/whip.png",
+      "bytes": 216085,
+      "gzip_bytes": 216173
+    },
+    {
+      "name": "index.html",
+      "bytes": 992,
+      "gzip_bytes": 529
+    },
+    {
+      "name": "manifest.webmanifest",
+      "bytes": 492,
+      "gzip_bytes": 326
+    },
+    {
+      "name": "portraits/presets/archer.png",
+      "bytes": 2151347,
+      "gzip_bytes": 2152020
+    },
+    {
+      "name": "portraits/presets/line.png",
+      "bytes": 2468282,
+      "gzip_bytes": 2469055
+    },
+    {
+      "name": "portraits/presets/swordsman.png",
+      "bytes": 2392230,
+      "gzip_bytes": 2392978
+    },
+    {
+      "name": "pwa-192x192.png",
+      "bytes": 55868,
+      "gzip_bytes": 55906
+    },
+    {
+      "name": "pwa-512x512.png",
+      "bytes": 409325,
+      "gzip_bytes": 409468
+    },
+    {
+      "name": "site_logo.png",
+      "bytes": 587764,
+      "gzip_bytes": 587774
+    },
+    {
+      "name": "sw.js",
+      "bytes": 2645,
+      "gzip_bytes": 1168
+    },
+    {
+      "name": "workbox-9845bf53.js",
+      "bytes": 22311,
+      "gzip_bytes": 7545
+    }
+  ],
+  "interpretation": {
+    "gzip": "Per-file gzip estimate; actual HTTP encoding/cache is measured by browser resources.",
+    "routes": "Static JS dependency closure plus separately named route CSS. CSS inherited from other chunks and dynamic preload CSS are not assigned to routes here; browser resource timings measure actual CSS bytes.",
+    "dynamicImports": "Reachability edges only, not proof of initial download.",
+    "pwa": "Parsed emitted service worker precache URLs; browser baseline blocks service worker, so this is separate install cost.",
+    "allAssets": "Includes lazy code/media/public files; never an initial-load budget."
+  }
+}

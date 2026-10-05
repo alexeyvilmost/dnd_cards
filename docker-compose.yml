@@ -54,11 +54,11 @@ services:
   # Frontend (React)
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
     container_name: dnd_cards_frontend
-    environment:
-      VITE_API_URL: http://localhost:8080
     ports:
       - "3000:3000"
     depends_on:

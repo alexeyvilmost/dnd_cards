@@ -1,5 +1,5 @@
 import ReviewStatusCorner from '../components/ReviewStatusCorner';
-import { loadCatalogPages } from '../api/catalogPages';
+import { useLibraryCatalogPage, type LibraryPageRequest } from '../components/library/useLibraryCatalogPage';
 import { LibraryReviewStatusFilter, LibraryReviewStatusSummary, filterReviewStatuses, parseReviewStatuses } from '../components/library/LibraryReviewStatus';
 import { REVIEW_STATUS_CHANGED, type ReviewStatusChange } from '../api/contentReview';
 import type { SupportableEntity } from '../content/supportStatus';
@@ -178,14 +178,10 @@ const CardLibrary = () => {
   const [rawResources, setResources] = useState<ResourceDefinition[]>([]);
   const [rawVariables, setVariables] = useState<Variable[]>([]);
   const [rawConcepts, setConcepts] = useState<Concept[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState(initialFilters.search);
   const [tagFilter,setTagFilter]=useState(initialFilters.tag??'');
   const [tagRevision,setTagRevision]=useState(0);
   useEffect(()=>{const refresh=()=>setTagRevision(v=>v+1);window.addEventListener('entity-tags-changed',refresh);return()=>window.removeEventListener('entity-tags-changed',refresh)},[]);
-  const catalogRequestSequence = useRef(0);
   const previousContentType = useRef<LibraryContentType>(initialFilters.contentType);
   const [rarityFilter, setRarityFilter] = useState<string>(initialFilters.rarity);
   const [effectTypeFilter, setEffectTypeFilter] = useState<string>(initialFilters.effectType);
@@ -246,12 +242,12 @@ const CardLibrary = () => {
   const [isSpellModalOpen, setIsSpellModalOpen] = useState(false);
   const [isFeatModalOpen, setIsFeatModalOpen] = useState(false);
   const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rawTotalCards, setTotalCards] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
   // Отдельная настройка: превью предмета при наведении — карточка или интерфейс (стат-блок).
   const { itemPreview, showReviewStatus } = useSiteSettings();
   const [reviewStatuses, setReviewStatuses] = useState(() => parseReviewStatuses(initialFilters.statuses ?? ''));
+  const catalogPage = useLibraryCatalogPage(showReviewStatus);
+  const { loading, loadingMore, error, reviewError, currentPage, total: totalCards, hasMore, reviewSummary, setError } = catalogPage;
+  const refreshReviewRef = useRef<(change: ReviewStatusChange) => void>(() => {});
   const activeReviewStatuses = useMemo(() => showReviewStatus ? reviewStatuses : [], [showReviewStatus, reviewStatuses]);
   const cards = useMemo(() => filterReviewStatuses(rawCards, activeReviewStatuses), [rawCards, activeReviewStatuses]);
   const effects = useMemo(() => filterReviewStatuses(rawEffects, activeReviewStatuses), [rawEffects, activeReviewStatuses]);
@@ -264,12 +260,11 @@ const CardLibrary = () => {
   const resources = useMemo(() => filterReviewStatuses(rawResources, activeReviewStatuses), [rawResources, activeReviewStatuses]);
   const variables = useMemo(() => filterReviewStatuses(rawVariables, activeReviewStatuses), [rawVariables, activeReviewStatuses]);
   const concepts = useMemo(() => filterReviewStatuses(rawConcepts, activeReviewStatuses), [rawConcepts, activeReviewStatuses]);
-  const reviewCatalog: Record<string, SupportableEntity[]> = { cards: rawCards, effects: rawEffects, actions: rawActions, spells: rawSpells, feats: rawFeats, backgrounds: rawBackgrounds, races: rawRaces, classes: rawClasses, resources: rawResources, variables: rawVariables, concepts: rawConcepts };
-  const totalCards = showReviewStatus ? filterReviewStatuses(reviewCatalog[contentType] ?? [], activeReviewStatuses).length : rawTotalCards;
   useEffect(() => {
     const refresh = (event: Event) => {
       const change = (event as CustomEvent<ReviewStatusChange>).detail;
       if (change) {
+        refreshReviewRef.current(change);
         const patch = <T extends SupportableEntity & { id: string }>(row: T): T => row.id === change.entity_id ? { ...row, support: change.support } : row;
         const patchList = <T extends SupportableEntity & { id: string }>(set: Dispatch<SetStateAction<T[]>>) => set(rows => rows.map(patch));
         const patchOne = <T extends SupportableEntity & { id: string }>(set: Dispatch<SetStateAction<T | null>>) => set(row => row ? patch(row) : row);
@@ -373,534 +368,180 @@ const CardLibrary = () => {
     [rawClasses],
   );
 
-  // Загрузка карточек
-  const loadCards = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      console.log(`📥 [CARD LIBRARY] Загружаем карты: страница ${page}, append: ${append}`);
-      
-      if (page === 1) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-      
-      const params: any = {
-        page,
-        limit: 50
-      };
-      
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      if (rarityFilter) params.rarity = rarityFilter;
-      if (propertiesFilter) params.properties = propertiesFilter;
-      if (slotFilter) params.slot = slotFilter;
-      if (armorTypeFilter) params.armor_type = armorTypeFilter;
-      if (sortBy) params.sort_by = sortBy;
-      
-      // Фильтр по типу шаблона
-      switch (templateTypeFilter) {
-        case 'cards':
-          params.exclude_template_only = true;
-          break;
-        case 'templates':
-          params.template_only = true;
-          break;
-        case 'mixed':
-          // Показываем и карты, и шаблоны
-          break;
-        case 'all':
-          // Показываем всё
-          break;
-      }
-      
-      const response = await loadCatalogPages((nextPage: number) => itemLibraryApi.list({ ...params, page: showReviewStatus ? nextPage : page }), 'cards', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-      cardsIdentity.current = token;
-      
-      if (append) {
-        setCards(prev => {
-          // Фильтруем дубликаты по ID
-          const existingIds = new Set(prev.map(card => card.id));
-          const newCards = response.cards.filter(card => !existingIds.has(card.id));
-          const combinedCards = [...prev, ...newCards];
-          
-          console.log(`📊 [CARD LIBRARY] Добавляем карты: получено ${response.cards.length}, новых ${newCards.length}, всего ${combinedCards.length}`);
-          
-          setHasMore(response.cards.length === 50 && combinedCards.length < response.total);
-          return combinedCards;
-        });
-      } else {
-        setCards(response.cards);
-        setHasMore(response.cards.length === 50 && response.cards.length < response.total);
-        console.log(`📊 [CARD LIBRARY] Загружено карт: ${response.cards.length}, всего в базе: ${response.total}`);
-      }
-      
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки карточек');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
+  const requestCards: LibraryPageRequest<Card> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = {
+      page,
+      limit
+    };
+
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    if (rarityFilter) params.rarity = rarityFilter;
+    if (propertiesFilter) params.properties = propertiesFilter;
+    if (slotFilter) params.slot = slotFilter;
+    if (armorTypeFilter) params.armor_type = armorTypeFilter;
+    if (sortBy) params.sort_by = sortBy;
+
+    // Фильтр по типу шаблона
+    switch (templateTypeFilter) {
+      case 'cards':
+        params.exclude_template_only = true;
+        break;
+      case 'templates':
+        params.template_only = true;
+        break;
+      case 'mixed':
+        // Показываем и карты, и шаблоны
+        break;
+      case 'all':
+        // Показываем всё
+        break;
     }
+
+    const response = await itemLibraryApi.list({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.cards };
   };
+  const loadCards = (page = 1, append = false) => catalogPage.load(requestCards, setCards, page, append, () => { cardsIdentity.current = token; });
 
-  // Загрузка действий
-  const loadActions = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      console.log(`📥 [CARD LIBRARY] Загружаем действия: страница ${page}, append: ${append}`);
-      
-      if (page === 1) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-      
-      const params: any = {
-        page,
-        limit: 50
-      };
-      
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      if (rarityFilter) params.rarity = rarityFilter;
-      
-      const response = await loadCatalogPages((nextPage: number) => actionsApi.getActions({ ...params, page: showReviewStatus ? nextPage : page }), 'actions', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-      
-      if (append) {
-        setActions(prev => {
-          // Фильтруем дубликаты по ID
-          const existingIds = new Set(prev.map(action => action.id));
-          const newActions = response.actions.filter(action => !existingIds.has(action.id));
-          const combinedActions = [...prev, ...newActions];
-          
-          console.log(`📊 [CARD LIBRARY] Добавляем действия: получено ${response.actions.length}, новых ${newActions.length}, всего ${combinedActions.length}`);
-          
-          setHasMore(response.actions.length === 50 && combinedActions.length < response.total);
-          return combinedActions;
-        });
-      } else {
-        setActions(response.actions);
-        setHasMore(response.actions.length === 50 && response.actions.length < response.total);
-        console.log(`📊 [CARD LIBRARY] Загружено действий: ${response.actions.length}, всего в базе: ${response.total}`);
-      }
-      
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки действий');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestActions: LibraryPageRequest<Action> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = {
+      page,
+      limit
+    };
+
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    if (rarityFilter) params.rarity = rarityFilter;
+
+    const response = await actionsApi.getActions({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.actions };
   };
+  const loadActions = (page = 1, append = false) => catalogPage.load(requestActions, setActions, page, append);
 
-  // Загрузка эффектов
-  const loadEffects = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      console.log(`📥 [CARD LIBRARY] Загружаем эффекты: страница ${page}, append: ${append}`);
-      
-      if (page === 1) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
-      
-      const params: any = {
-        page,
-        limit: 50
-      };
-      
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      if (rarityFilter) params.rarity = rarityFilter;
-      if (effectTypeFilter) params.effect_type = effectTypeFilter;
-      if (referenceState) params.reference_state = referenceState;
-      if (referenceType) params.reference_type = referenceType;
-      if (referenceId) params.reference_id = referenceId;
-      if (referenceLevel) params.reference_level = referenceLevel;
-      params.sort_by = groupedSortBy;
-      
-      const response = await loadCatalogPages((nextPage: number) => effectsApi.getEffects({ ...params, page: showReviewStatus ? nextPage : page }), 'effects', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-      
-      if (append) {
-        setEffects(prev => {
-          // Фильтруем дубликаты по ID
-          const existingIds = new Set(prev.map(effect => effect.id));
-          const newEffects = response.effects.filter(effect => !existingIds.has(effect.id));
-          const combinedEffects = [...prev, ...newEffects];
-          
-          console.log(`📊 [CARD LIBRARY] Добавляем эффекты: получено ${response.effects.length}, новых ${newEffects.length}, всего ${combinedEffects.length}`);
-          
-          setHasMore(response.effects.length === 50 && combinedEffects.length < response.total);
-          return combinedEffects;
-        });
-      } else {
-        setEffects(response.effects);
-        setHasMore(response.effects.length === 50 && response.effects.length < response.total);
-        console.log(`📊 [CARD LIBRARY] Загружено эффектов: ${response.effects.length}, всего в базе: ${response.total}`);
-      }
-      
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки эффектов');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestEffects: LibraryPageRequest<PassiveEffect> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = {
+      page,
+      limit
+    };
+
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    if (rarityFilter) params.rarity = rarityFilter;
+    if (effectTypeFilter) params.effect_type = effectTypeFilter;
+    if (referenceState) params.reference_state = referenceState;
+    if (referenceType) params.reference_type = referenceType;
+    if (referenceId) params.reference_id = referenceId;
+    if (referenceLevel) params.reference_level = referenceLevel;
+    params.sort_by = groupedSortBy;
+
+    const response = await effectsApi.getEffects({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.effects };
   };
+  const loadEffects = (page = 1, append = false) => catalogPage.load(requestEffects, setEffects, page, append);
 
-  // Загрузка заклинаний
-  const loadSpells = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      if (page === 1) {
-        setLoading(true);
-      } else {
-        setLoadingMore(true);
-      }
+  const requestSpells: LibraryPageRequest<Spell> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = { page, limit };
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    if (spellLevel !== '') params.level = Number(spellLevel);
+    if (spellClass) params.class = spellClass;
+    if (spellSubclass) params.subclass = spellSubclass;
+    if (spellSchool) params.school = spellSchool;
+    if (spellConcentration) params.concentration = spellConcentration;
+    if (spellRitual) params.ritual = spellRitual;
 
-      const params: any = { page, limit: 50 };
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      if (spellLevel !== '') params.level = Number(spellLevel);
-      if (spellClass) params.class = spellClass;
-      if (spellSubclass) params.subclass = spellSubclass;
-      if (spellSchool) params.school = spellSchool;
-      if (spellConcentration) params.concentration = spellConcentration;
-      if (spellRitual) params.ritual = spellRitual;
-
-      const response = await loadCatalogPages((nextPage: number) => spellsApi.getSpells({ ...params, page: showReviewStatus ? nextPage : page }), 'spells', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-
-      if (append) {
-        setSpells(prev => {
-          const existingIds = new Set(prev.map(spell => spell.id));
-          const newSpells = response.spells.filter(spell => !existingIds.has(spell.id));
-          const combinedSpells = [...prev, ...newSpells];
-          setHasMore(response.spells.length === 50 && combinedSpells.length < response.total);
-          return combinedSpells;
-        });
-      } else {
-        setSpells(response.spells);
-        setHasMore(response.spells.length === 50 && response.spells.length < response.total);
-      }
-
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки заклинаний');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+    const response = await spellsApi.getSpells({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.spells };
   };
+  const loadSpells = (page = 1, append = false) => catalogPage.load(requestSpells, setSpells, page, append);
 
-  // Загрузка черт
-  const loadFeats = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      if (page === 1) setLoading(true); else setLoadingMore(true);
-      const params: any = { page, limit: 50 };
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      if (featCategory) params.category = featCategory;
-      if (featRepeatable) params.repeatable = featRepeatable;
-      if (featAbility) params.ability = featAbility;
-      params.sort_by = groupedSortBy;
-      const response = await loadCatalogPages((nextPage: number) => featsApi.getFeats({ ...params, page: showReviewStatus ? nextPage : page }), 'feats', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-      if (append) {
-        setFeats(prev => {
-          const existing = new Set(prev.map(f => f.id));
-          const combined = [...prev, ...response.feats.filter(f => !existing.has(f.id))];
-          setHasMore(response.feats.length === 50 && combined.length < response.total);
-          return combined;
-        });
-      } else {
-        setFeats(response.feats);
-        setHasMore(response.feats.length === 50 && response.feats.length < response.total);
-      }
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки черт');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestFeats: LibraryPageRequest<Feat> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = { page, limit };
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    if (featCategory) params.category = featCategory;
+    if (featRepeatable) params.repeatable = featRepeatable;
+    if (featAbility) params.ability = featAbility;
+    params.sort_by = groupedSortBy;
+    const response = await featsApi.getFeats({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.feats };
   };
+  const loadFeats = (page = 1, append = false) => catalogPage.load(requestFeats, setFeats, page, append);
 
-  // Загрузка предысторий
-  const loadBackgrounds = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      if (page === 1) setLoading(true); else setLoadingMore(true);
-      const params: any = { page, limit: 50 };
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      if (bgAbility) params.ability = bgAbility;
-      if (bgSkill) params.skill = bgSkill;
-      const response = await loadCatalogPages((nextPage: number) => backgroundsApi.getBackgrounds({ ...params, page: showReviewStatus ? nextPage : page }), 'backgrounds', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-      if (append) {
-        setBackgrounds(prev => {
-          const existing = new Set(prev.map(b => b.id));
-          const combined = [...prev, ...response.backgrounds.filter(b => !existing.has(b.id))];
-          setHasMore(response.backgrounds.length === 50 && combined.length < response.total);
-          return combined;
-        });
-      } else {
-        setBackgrounds(response.backgrounds);
-        setHasMore(response.backgrounds.length === 50 && response.backgrounds.length < response.total);
-      }
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки предысторий');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestBackgrounds: LibraryPageRequest<Background> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = { page, limit };
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    if (bgAbility) params.ability = bgAbility;
+    if (bgSkill) params.skill = bgSkill;
+    const response = await backgroundsApi.getBackgrounds({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.backgrounds };
   };
+  const loadBackgrounds = (page = 1, append = false) => catalogPage.load(requestBackgrounds, setBackgrounds, page, append);
 
-  const loadRaces = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      if (page === 1) setLoading(true); else setLoadingMore(true);
-      const params: any = { page, limit: 50 };
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      const response = await loadCatalogPages((nextPage: number) => racesApi.getRaces({ ...params, page: showReviewStatus ? nextPage : page }), 'races', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-      if (append) {
-        setRaces(prev => {
-          const existing = new Set(prev.map(r => r.id));
-          const combined = [...prev, ...response.races.filter(r => !existing.has(r.id))];
-          setHasMore(response.races.length === 50 && combined.length < response.total);
-          return combined;
-        });
-      } else {
-        setRaces(response.races);
-        setHasMore(response.races.length === 50 && response.races.length < response.total);
-      }
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки видов');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestRaces: LibraryPageRequest<Race> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = { page, limit };
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    const response = await racesApi.getRaces({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.races };
   };
+  const loadRaces = (page = 1, append = false) => catalogPage.load(requestRaces, setRaces, page, append);
 
-  const loadClasses = async (page = 1, append = false) => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      if (page === 1) setLoading(true); else setLoadingMore(true);
-      const params: any = { page, limit: 50 };
-      if (tagFilter) params.tag = tagFilter;
-      if (search) params.search = search;
-      const response = await loadCatalogPages((nextPage: number) => classesApi.getClasses({ ...params, page: showReviewStatus ? nextPage : page }), 'classes', showReviewStatus, () => requestSequence === catalogRequestSequence.current);
-      if (requestSequence !== catalogRequestSequence.current) return;
-      if (append) {
-        setClasses(prev => {
-          const existing = new Set(prev.map(c => c.id));
-          const combined = [...prev, ...response.classes.filter(c => !existing.has(c.id))];
-          setHasMore(response.classes.length === 50 && combined.length < response.total);
-          return combined;
-        });
-      } else {
-        setClasses(response.classes);
-        setHasMore(response.classes.length === 50 && response.classes.length < response.total);
-      }
-      setTotalCards(response.total);
-      setCurrentPage(page);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки классов');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestClasses: LibraryPageRequest<CharacterClass> = async (page, limit) => {
+    const params: Record<string, string | number | boolean> = { page, limit };
+    if (tagFilter) params.tag = tagFilter;
+    if (search) params.search = search;
+    const response = await classesApi.getClasses({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.classes };
   };
+  const loadClasses = (page = 1, append = false) => catalogPage.load(requestClasses, setClasses, page, append);
 
-  const loadResources = async () => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      setLoading(true);
-      const response = await resourcesApi.getResources({ category: resourceCategoryFilter || undefined, tag:tagFilter||undefined });
-      if (requestSequence !== catalogRequestSequence.current) return;
-      const normalizedSearch = search.trim().toLowerCase();
-      const filtered = normalizedSearch
-        ? response.resources.filter((resource) => {
-            const text = [
-              resource.name,
-              resource.resource_id,
-              resource.description || '',
-              resource.category || '',
-              resource.recharge || '',
-            ].join(' ').toLowerCase();
-            return text.includes(normalizedSearch);
-          })
-        : response.resources;
-
-      setResources(filtered);
-      setTotalCards(filtered.length);
-      setHasMore(false);
-      setCurrentPage(1);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки ресурсов');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestResources: LibraryPageRequest<ResourceDefinition> = async (page, limit) => {
+    const response = await resourcesApi.getResources({ category: resourceCategoryFilter || undefined, tag: tagFilter || undefined, search, page, limit,
+      ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.resources };
   };
+  const loadResources = (page = 1, append = false) => catalogPage.load(requestResources, setResources, page, append);
 
-  // Переменные раньше в библиотеке не грузились вовсе: вкладка была заглушкой со ссылкой
-  // на конструктор. Теперь это полноценный раздел, как понятия.
-  const loadVariables = async () => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      setLoading(true);
-      const response = await variablesApi.getVariables({tag:tagFilter||undefined});
-      if (requestSequence !== catalogRequestSequence.current) return;
-      const list = response.variables || [];
-      const normalizedSearch = search.trim().toLowerCase();
-      const filtered = normalizedSearch
-        ? list.filter((variable) =>
-            [variable.name, variable.name_en || '', variable.variable_id, variable.description || '']
-              .join(' ')
-              .toLowerCase()
-              .includes(normalizedSearch))
-        : list;
-      setVariables(filtered);
-      setTotalCards(filtered.length);
-      setHasMore(false);
-      setCurrentPage(1);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки переменных');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestVariables: LibraryPageRequest<Variable> = async (page, limit) => {
+    const response = await variablesApi.getVariables({  tag: tagFilter || undefined, search, page, limit,
+      ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.variables };
   };
+  const loadVariables = (page = 1, append = false) => catalogPage.load(requestVariables, setVariables, page, append);
 
-  const loadConcepts = async () => {
-    const requestSequence = catalogRequestSequence.current;
-    try {
-      setLoading(true);
-      const response = await conceptsApi.getConcepts({tag:tagFilter||undefined});
-      if (requestSequence !== catalogRequestSequence.current) return;
-      const list = response.concepts || [];
-      const normalizedSearch = search.trim().toLowerCase();
-      const filtered = normalizedSearch
-        ? list.filter((concept) =>
-            [concept.name, concept.concept_id, concept.description || '']
-              .join(' ')
-              .toLowerCase()
-              .includes(normalizedSearch))
-        : list;
-      setConcepts(filtered);
-      setTotalCards(filtered.length);
-      setHasMore(false);
-      setCurrentPage(1);
-      setError(null);
-    } catch (err) {
-      if (requestSequence !== catalogRequestSequence.current) return;
-      setError(err instanceof Error ? err.message : 'Ошибка загрузки понятий');
-    } finally {
-      if (requestSequence === catalogRequestSequence.current) {
-        setLoading(false);
-        setLoadingMore(false);
-      }
-    }
+  const requestConcepts: LibraryPageRequest<Concept> = async (page, limit) => {
+    const response = await conceptsApi.getConcepts({  tag: tagFilter || undefined, search, page, limit,
+      ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
+    return { ...response, rows: response.concepts };
   };
+  const loadConcepts = (page = 1, append = false) => catalogPage.load(requestConcepts, setConcepts, page, append);
+
+  const catalogLoaders = { cards: loadCards, actions: loadActions, effects: loadEffects, spells: loadSpells, feats: loadFeats, backgrounds: loadBackgrounds, races: loadRaces, classes: loadClasses, resources: loadResources, variables: loadVariables, concepts: loadConcepts };
+  const catalogRequests = { cards: requestCards, actions: requestActions, effects: requestEffects, spells: requestSpells, feats: requestFeats, backgrounds: requestBackgrounds, races: requestRaces, classes: requestClasses, resources: requestResources, variables: requestVariables, concepts: requestConcepts };
+  const reviewEntityTypes = { cards: 'card', actions: 'action', effects: 'effect', spells: 'spell', feats: 'feat', backgrounds: 'background', races: 'race', classes: 'class', resources: 'resource', variables: 'variable', concepts: 'concept' } as const;
+  useLayoutEffect(() => {
+    refreshReviewRef.current = change => {
+      if (contentType !== 'passives' && reviewEntityTypes[contentType] === change.entity_type) {
+        void catalogPage.refreshSummary(catalogRequests[contentType], activeReviewStatuses.length > 0);
+      }
+    };
+  });
 
   useEffect(() => {
-    catalogRequestSequence.current += 1;
-    setCurrentPage(1);
+    catalogPage.reset();
     if (cardsIdentity.current !== token) {
       setCards([]);
-      setTotalCards(0);
     }
     if (previousContentType.current !== contentType) {
       setCards([]); setEffects([]); setActions([]); setSpells([]); setFeats([]);
       setBackgrounds([]); setRaces([]); setClasses([]); setResources([]); setVariables([]); setConcepts([]);
       previousContentType.current = contentType;
     }
-    if (contentType === 'cards') {
-      loadCards(1, false);
-    } else if (contentType === 'effects') {
-      loadEffects(1, false);
-    } else if (contentType === 'passives') {
-      setLoading(false); setLoadingMore(false); setHasMore(false);
-    } else if (contentType === 'actions') {
-      loadActions(1, false);
-    } else if (contentType === 'spells') {
-      loadSpells(1, false);
-    } else if (contentType === 'feats') {
-      loadFeats(1, false);
-    } else if (contentType === 'backgrounds') {
-      loadBackgrounds(1, false);
-    } else if (contentType === 'races') {
-      loadRaces(1, false);
-    } else if (contentType === 'classes') {
-      loadClasses(1, false);
-    } else if (contentType === 'resources') {
-      loadResources();
-    } else if (contentType === 'variables') {
-      loadVariables();
-    } else if (contentType === 'concepts') {
-      loadConcepts();
-    }
-    return () => { catalogRequestSequence.current += 1; };
-  }, [token, showReviewStatus, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, referenceState, referenceType, referenceId, referenceLevel, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
+    if (contentType !== 'passives') void catalogLoaders[contentType](1, false);
+    return catalogPage.invalidate;
+  }, [token, showReviewStatus, activeReviewStatuses, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, referenceState, referenceType, referenceId, referenceLevel, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
@@ -1075,24 +716,7 @@ const CardLibrary = () => {
   // Функция для загрузки следующей страницы
   const loadMoreCards = () => {
     if (!loadingMore && hasMore && !loading) {
-      console.log(`🔄 [CARD LIBRARY] Загружаем страницу ${currentPage + 1}`);
-      if (contentType === 'cards') {
-        loadCards(currentPage + 1, true);
-      } else if (contentType === 'effects') {
-        loadEffects(currentPage + 1, true);
-      } else if (contentType === 'actions') {
-        loadActions(currentPage + 1, true);
-      } else if (contentType === 'spells') {
-        loadSpells(currentPage + 1, true);
-      } else if (contentType === 'feats') {
-        loadFeats(currentPage + 1, true);
-      } else if (contentType === 'backgrounds') {
-        loadBackgrounds(currentPage + 1, true);
-      } else if (contentType === 'races') {
-        loadRaces(currentPage + 1, true);
-      } else if (contentType === 'classes') {
-        loadClasses(currentPage + 1, true);
-      }
+      if (contentType !== 'passives') void catalogLoaders[contentType](currentPage + 1, true);
     }
   };
   // Cached first pages can leave pagination flags unchanged while filters change.
@@ -1844,7 +1468,8 @@ const CardLibrary = () => {
         )}
       </div>
 
-      {showReviewStatus && contentType !== 'passives' && !error && <LibraryReviewStatusSummary entities={reviewCatalog[contentType] ?? []} loading={loading} />}
+      {reviewError && <p role="alert">{reviewError}</p>}
+      {showReviewStatus && contentType !== 'passives' && !error && !reviewError && <LibraryReviewStatusSummary summary={reviewSummary} loading={loading || !reviewSummary} />}
 
       {/* Сообщение об ошибке */}
       {error && (

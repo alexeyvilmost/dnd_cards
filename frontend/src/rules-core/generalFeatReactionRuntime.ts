@@ -246,4 +246,4 @@ export function chargerApproachEligible(input: {
   return moveX * targetY - moveY * targetX === 0
     && moveX * targetX + moveY * targetY > 0;
 }
-import {actorHasConsciousVitality} from '../engine/lifePolicies';
+import {actorHasConsciousVitality} from './legacy/engineAdapter';

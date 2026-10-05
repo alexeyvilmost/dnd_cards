@@ -48,6 +48,13 @@ describe('review status library controls', () => {
       .toEqual(['not_tested', 'narrative', 'partial_narrative_verified_partial']);
   });
 
+  it('renders server counts for all matching rows instead of the loaded page', async () => {
+    const counts = Object.fromEntries(ENTITY_SUPPORT_STATUSES.map(status => [status, 100])) as Record<EntityReviewStatus, number>;
+    await act(async () => root.render(<LibraryReviewStatusSummary entities={rows} summary={{ total: 800, counts }} />));
+    expect(container.querySelector('.library-review-summary p')?.textContent).toContain('800 сущностей');
+    expect([...container.querySelectorAll('strong')].map(row => row.textContent)).toEqual(Array(8).fill('100'));
+  });
+
   it('shows an empty library with eight explicit zero counts and no invalid bar widths', async () => {
     await act(async () => root.render(<LibraryReviewStatusSummary entities={[]} />));
     expect(container.querySelectorAll('.library-review-summary__bar span')).toHaveLength(0);

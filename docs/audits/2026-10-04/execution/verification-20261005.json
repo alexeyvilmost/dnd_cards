@@ -1,0 +1,679 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-10-05T02:15:18.970Z",
+  "scope": "Honest local verification ledger; distinct snapshots and partial receipts are not merged into a passed aggregate.",
+  "productionApplicationDeployed": false,
+  "latestAcceptedCore": {
+    "file": "outputs/testing/final-v3-core-6/aggregate/report.json",
+    "sha256": "959729e53e50878c652996607f95ee5a8a7ef0e89df320f1a46575fd644cc3d7",
+    "status": "passed",
+    "suite": "core",
+    "sourceSnapshot": {
+      "sha256": "0a7ff8a034d83eb0de82a06f907ac660eec5f0f0fa6b539458080ecb73ccfb2a",
+      "files": 4401
+    },
+    "manifestHash": "e8600fe92b45730b59c049f75725d1ab102eb1ee6baf1c2f43228d3317e6353c",
+    "startedAt": "2026-10-05T02:10:44.332Z",
+    "durationMs": 225507,
+    "checks": [
+      {
+        "id": "source-hygiene",
+        "status": "passed",
+        "counts": {}
+      },
+      {
+        "id": "node-contracts",
+        "status": "passed",
+        "counts": {
+          "tests": 232,
+          "passed": 232,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "vitest",
+        "status": "passed",
+        "counts": {
+          "tests": 247,
+          "passed": 247,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "source-stability",
+        "status": "passed",
+        "counts": {}
+      },
+      {
+        "id": "isolated-stack",
+        "status": "passed",
+        "counts": {}
+      },
+      {
+        "id": "worker-and-database-node",
+        "status": "passed",
+        "counts": {
+          "tests": 15,
+          "passed": 15,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "backend-compile",
+        "status": "passed",
+        "counts": {}
+      },
+      {
+        "id": "go-backend",
+        "status": "passed",
+        "counts": {
+          "required": 92,
+          "passed": 92
+        }
+      },
+      {
+        "id": "go-migrations",
+        "status": "passed",
+        "counts": {
+          "required": 12,
+          "passed": 12
+        }
+      },
+      {
+        "id": "local-api-spine",
+        "status": "passed",
+        "counts": {}
+      },
+      {
+        "id": "local-browser-flows",
+        "status": "passed",
+        "counts": {
+          "tests": 12,
+          "passed": 12,
+          "skipped": 0
+        }
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "latestExtended": {
+    "status": "failed_no_accepted_aggregate",
+    "lanes": [
+      {
+        "file": "outputs/testing/final-v3-extended-2/unit/report.json",
+        "sha256": "5a6e8b172d8abfbaf1d3a993a3b268f504f6d3c9c33365c46fa39317f3182392",
+        "status": "passed",
+        "suite": "extended",
+        "sourceSnapshot": {
+          "sha256": "f951e2071f2dc9786ff79775b340407bf9237c758a1394c2490870fd6753c098",
+          "files": 4400
+        },
+        "manifestHash": "b454fcb80e415bb01b703c1a9db37731678ada1926ea5780523f03dc90e0cd0d",
+        "startedAt": "2026-10-05T01:47:52.788Z",
+        "durationMs": 434565,
+        "checks": [
+          {
+            "id": "source-hygiene",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "node-contracts",
+            "status": "passed",
+            "counts": {
+              "tests": 651,
+              "passed": 651,
+              "skipped": 0
+            }
+          },
+          {
+            "id": "vitest",
+            "status": "passed",
+            "counts": {
+              "tests": 6462,
+              "passed": 6462,
+              "skipped": 0
+            }
+          },
+          {
+            "id": "source-stability",
+            "status": "passed",
+            "counts": {}
+          }
+        ],
+        "cleanup": {
+          "status": "not-required",
+          "errors": []
+        }
+      },
+      {
+        "file": "outputs/testing/final-v3-extended-2/backend/report.json",
+        "sha256": "728d1ac84cf8d6fde90ea0adc2766b65bd4b9646ededa0d809587d41c4b36ebc",
+        "status": "failed",
+        "suite": "extended",
+        "sourceSnapshot": {
+          "sha256": "f951e2071f2dc9786ff79775b340407bf9237c758a1394c2490870fd6753c098",
+          "files": 4400
+        },
+        "manifestHash": "b454fcb80e415bb01b703c1a9db37731678ada1926ea5780523f03dc90e0cd0d",
+        "startedAt": "2026-10-05T01:47:53.317Z",
+        "durationMs": 243043,
+        "checks": [
+          {
+            "id": "source-hygiene",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "isolated-stack",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "worker-and-database-node",
+            "status": "passed",
+            "counts": {
+              "tests": 20,
+              "passed": 20,
+              "skipped": 0
+            }
+          },
+          {
+            "id": "backend-compile",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "go-backend",
+            "status": "passed",
+            "counts": {
+              "required": 406,
+              "passed": 406
+            }
+          },
+          {
+            "id": "go-animationpresentation",
+            "status": "passed",
+            "counts": {
+              "required": 4,
+              "passed": 4
+            }
+          },
+          {
+            "id": "go-audiopresentation",
+            "status": "passed",
+            "counts": {
+              "required": 3,
+              "passed": 3
+            }
+          },
+          {
+            "id": "go-charactertemplates",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "go-itemsource",
+            "status": "passed",
+            "counts": {
+              "required": 5,
+              "passed": 5
+            }
+          },
+          {
+            "id": "go-itemsource-cmd-audit",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "go-migrations",
+            "status": "failed",
+            "reason": "go.exe exited 1; see C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_547bdcf89f8ec98706fb1fb4\\required-go.jsonl"
+          }
+        ],
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      {
+        "file": "outputs/testing/final-v3-extended-2/flows/report.json",
+        "sha256": "91dc4c71b09659c0695ea8b28e07f824d783e05ceb677ef7ff4feaa0015cfa30",
+        "status": "passed",
+        "suite": "extended",
+        "sourceSnapshot": {
+          "sha256": "f951e2071f2dc9786ff79775b340407bf9237c758a1394c2490870fd6753c098",
+          "files": 4400
+        },
+        "manifestHash": "b454fcb80e415bb01b703c1a9db37731678ada1926ea5780523f03dc90e0cd0d",
+        "startedAt": "2026-10-05T01:51:56.364Z",
+        "durationMs": 200875,
+        "checks": [
+          {
+            "id": "source-hygiene",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "isolated-stack",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "local-api-spine",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "local-browser-flows",
+            "status": "passed",
+            "counts": {
+              "tests": 12,
+              "passed": 12,
+              "skipped": 0
+            }
+          },
+          {
+            "id": "source-stability",
+            "status": "passed",
+            "counts": {}
+          }
+        ],
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      {
+        "file": "outputs/testing/final-v3-extended-2/extended/report.json",
+        "sha256": "a5b3668bdb5d36dca68ff120a7737cd226b5161a5ef6e1e196e65b8db50e37c0",
+        "status": "passed",
+        "suite": "extended",
+        "sourceSnapshot": {
+          "sha256": "f951e2071f2dc9786ff79775b340407bf9237c758a1394c2490870fd6753c098",
+          "files": 4400
+        },
+        "manifestHash": "b454fcb80e415bb01b703c1a9db37731678ada1926ea5780523f03dc90e0cd0d",
+        "startedAt": "2026-10-05T01:55:07.360Z",
+        "durationMs": 520649,
+        "checks": [
+          {
+            "id": "source-hygiene",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "isolated-stack",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "process-crash-recovery",
+            "status": "passed",
+            "counts": {
+              "phases": 2
+            }
+          },
+          {
+            "id": "supported-upgrade-baselines",
+            "status": "passed",
+            "counts": {
+              "cases": 3
+            }
+          },
+          {
+            "id": "candidate-rehearsal-api",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "catalog-equivalence",
+            "status": "passed",
+            "counts": {
+              "required": 4,
+              "passed": 4
+            }
+          },
+          {
+            "id": "preparation-cache-equivalence",
+            "status": "passed",
+            "counts": {
+              "required": 9,
+              "passed": 9
+            }
+          },
+          {
+            "id": "worker-wire-mirror-equivalence",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "equipment-authority-flow",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "initiative-options-flow",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "library-review-pages",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "equipment-runtime-browser",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "pwa-offline-shell",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "urvin-owned-journey",
+            "status": "passed",
+            "counts": {}
+          },
+          {
+            "id": "solo-durable-continuations",
+            "status": "passed",
+            "counts": {
+              "cases": 222,
+              "required": {
+                "required": 1,
+                "passed": 1
+              }
+            }
+          },
+          {
+            "id": "image-egress-isolation",
+            "status": "passed",
+            "counts": {
+              "required": {
+                "required": 1,
+                "passed": 1
+              }
+            }
+          },
+          {
+            "id": "browser-ui-fixtures-production",
+            "status": "passed",
+            "counts": {
+              "tests": 48,
+              "passed": 48,
+              "skipped": 0
+            }
+          },
+          {
+            "id": "browser-ui-fixtures-battle3d",
+            "status": "passed",
+            "counts": {
+              "tests": 8,
+              "passed": 8,
+              "skipped": 0
+            }
+          },
+          {
+            "id": "source-stability",
+            "status": "passed",
+            "counts": {}
+          }
+        ],
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      }
+    ],
+    "remainingFailure": "Resolved by the dedicated actual owned-baseline test and successful full backend shard. Original aggregate remains failed; unchanged full lanes retain their original source identity."
+  },
+  "exactCommitCi": {
+    "status": "pending",
+    "requirements": [
+      "Successful full extended aggregate",
+      "Linux Go race",
+      "Exact committed source identity",
+      "Owned cleanup complete"
+    ]
+  },
+  "localCommitGate": "Passed proportionate local verification: fresh core aggregate; full repaired backend shard; dedicated observed-baseline test; deployment expiry regressions; retained successful unchanged full unit/browser/scenario lanes. Full exact-commit Linux CI required before publication.",
+  "followOnWork": [
+    "First verified legacy adoption with new writers OFF",
+    "Actual writer compatibility proof and rollout",
+    "Proportionate pure-UI deployment and docs-only no-op integration",
+    "Automatic main release enablement after first verified adoption"
+  ],
+  "previousAcceptedCore": {
+    "file": "outputs/testing/final-v3-core-5/aggregate/report.json",
+    "sha256": "0b8e7cc3a704d1e3da30ea640f9cf03054b38484dd594c65e359dc1a27c1b45a",
+    "status": "passed",
+    "suite": "core",
+    "sourceSnapshot": {
+      "sha256": "f951e2071f2dc9786ff79775b340407bf9237c758a1394c2490870fd6753c098",
+      "files": 4400
+    },
+    "manifestHash": "b454fcb80e415bb01b703c1a9db37731678ada1926ea5780523f03dc90e0cd0d",
+    "startedAt": "2026-10-05T01:44:13.906Z",
+    "durationMs": 214025,
+    "checks": [
+      {
+        "id": "source-hygiene",
+        "status": "passed"
+      },
+      {
+        "id": "node-contracts",
+        "status": "passed"
+      },
+      {
+        "id": "vitest",
+        "status": "passed"
+      },
+      {
+        "id": "source-stability",
+        "status": "passed"
+      },
+      {
+        "id": "isolated-stack",
+        "status": "passed"
+      },
+      {
+        "id": "worker-and-database-node",
+        "status": "passed"
+      },
+      {
+        "id": "backend-compile",
+        "status": "passed"
+      },
+      {
+        "id": "go-backend",
+        "status": "passed"
+      },
+      {
+        "id": "go-migrations",
+        "status": "passed"
+      },
+      {
+        "id": "local-api-spine",
+        "status": "passed"
+      },
+      {
+        "id": "local-browser-flows",
+        "status": "passed"
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "focusedRepairs": {
+    "status": "passed",
+    "sourceSnapshot": {
+      "sha256": "0a7ff8a034d83eb0de82a06f907ac660eec5f0f0fa6b539458080ecb73ccfb2a",
+      "files": 4401
+    },
+    "backend": {
+      "file": "outputs/testing/observed-baseline-routing-draft/backend-repair/report.json",
+      "sha256": "6a3a53216c55cf5c191e33b0f7e1182ed039092ac7365f548520284516517b6b",
+      "status": "passed",
+      "suite": "extended",
+      "sourceSnapshot": {
+        "sha256": "0a7ff8a034d83eb0de82a06f907ac660eec5f0f0fa6b539458080ecb73ccfb2a",
+        "files": 4401
+      },
+      "manifestHash": "e8600fe92b45730b59c049f75725d1ab102eb1ee6baf1c2f43228d3317e6353c",
+      "startedAt": "2026-10-05T02:08:22.498Z",
+      "durationMs": 222545,
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "counts": {}
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "counts": {}
+        },
+        {
+          "id": "worker-and-database-node",
+          "status": "passed",
+          "counts": {
+            "tests": 20,
+            "passed": 20,
+            "skipped": 0
+          }
+        },
+        {
+          "id": "backend-compile",
+          "status": "passed",
+          "counts": {}
+        },
+        {
+          "id": "go-backend",
+          "status": "passed",
+          "counts": {
+            "required": 406,
+            "passed": 406
+          }
+        },
+        {
+          "id": "go-animationpresentation",
+          "status": "passed",
+          "counts": {
+            "required": 4,
+            "passed": 4
+          }
+        },
+        {
+          "id": "go-audiopresentation",
+          "status": "passed",
+          "counts": {
+            "required": 3,
+            "passed": 3
+          }
+        },
+        {
+          "id": "go-charactertemplates",
+          "status": "passed",
+          "counts": {}
+        },
+        {
+          "id": "go-itemsource",
+          "status": "passed",
+          "counts": {
+            "required": 5,
+            "passed": 5
+          }
+        },
+        {
+          "id": "go-itemsource-cmd-audit",
+          "status": "passed",
+          "counts": {}
+        },
+        {
+          "id": "go-migrations",
+          "status": "passed",
+          "counts": {
+            "required": 333,
+            "passed": 333
+          }
+        },
+        {
+          "id": "go-passivepresentation",
+          "status": "passed",
+          "counts": {}
+        },
+        {
+          "id": "go-roguelikecontent",
+          "status": "passed",
+          "counts": {
+            "required": 1,
+            "passed": 1
+          }
+        },
+        {
+          "id": "go-weapondata",
+          "status": "passed",
+          "counts": {
+            "required": 1,
+            "passed": 1
+          }
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "counts": {}
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    "observedBaseline": {
+      "file": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_6d10d3a842011b379d387a4d\\observed-legacy-baseline\\report.json",
+      "sha256": "cc8071c1f1b5dbc8ad7aef784ad4201a5088c89a08b00566a0312eec3decf70e",
+      "status": "passed",
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    "outerCleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "routingContracts": {
+      "passed": 14,
+      "skipped": 0
+    },
+    "cutoverBackupAge": {
+      "file": "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
+      "passed": 34,
+      "skipped": 0
+    },
+    "frontendLint": {
+      "status": "passed",
+      "files": [
+        "frontend/src/api/client.ts",
+        "frontend/src/api/runtimeCards.test.ts",
+        "frontend/e2e/forge-api-fixture.ts"
+      ]
+    },
+    "changedInputsSinceExtended2": [
+      "scripts/release/deploy-state.mjs",
+      "scripts/release/deploy-state.test.mjs",
+      "scripts/testing/suites.test.mjs",
+      "tests/suites.json",
+      "scripts/performance/check-observed-baseline.mjs"
+    ],
+    "fullExtendedAggregateClaim": false
+  }
+}

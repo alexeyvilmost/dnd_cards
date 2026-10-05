@@ -78,6 +78,20 @@ func oauthTestDatabase(t *testing.T) *gorm.DB {
 			t.Fatal(err)
 		}
 	}
+	// The account model and token authority also require migration 268. Keep
+	// the fixture explicit; never run the global catalog migration chain here.
+	adminMigrationFound := false
+	for _, migration := range migrations.GetAllMigrations() {
+		if migration.Version == "268_account_admin_status" {
+			if err := migration.Up(sqlDB); err != nil {
+				t.Fatal(err)
+			}
+			adminMigrationFound = true
+		}
+	}
+	if !adminMigrationFound {
+		t.Fatal("account authority migration 268 is not registered")
+	}
 	var hash string
 	if err := sqlDB.QueryRow(`SELECT password_hash FROM users WHERE id=$1`, legacyID).Scan(&hash); err != nil || hash != "unchanged-password-hash" {
 		t.Fatal("migration changed existing account")
@@ -129,7 +143,7 @@ func TestOAuthIntegration(t *testing.T) {
 		router.ServeHTTP(w, r)
 		return w
 	}
-	start := func(id, path string) (string, string, *http.Cookie) {
+	start := func(t *testing.T, id, path string) (string, string, *http.Cookie) {
 		verifier, _ := oauthRandom()
 		w := request("GET", oauthPath+"/"+id+"/start?"+url.Values{"challenge": {oauthChallenge(verifier)}, "return_to": {path}}.Encode(), "", nil)
 		if w.Code != 303 {
@@ -148,7 +162,7 @@ func TestOAuthIntegration(t *testing.T) {
 		body, _ := json.Marshal(map[string]string{"code": code, "verifier": verifier})
 		return request("POST", oauthPath+"/exchange", string(body), nil)
 	}
-	getHandoff := func(w *httptest.ResponseRecorder) string {
+	getHandoff := func(t *testing.T, w *httptest.ResponseRecorder) string {
 		u, _ := url.Parse(w.Header().Get("Location"))
 		q, _ := url.ParseQuery(u.Fragment)
 		if u.Scheme+"://"+u.Host+u.Path != "https://app.test/login" || !oauthProofPattern.MatchString(q.Get("oauth_code")) {
@@ -164,7 +178,7 @@ func TestOAuthIntegration(t *testing.T) {
 		}
 	})
 	t.Run("state cookie provider binding and replay", func(t *testing.T) {
-		state, verifier, cookie := start("google", "/encounters/join?mode=play#invite=abc")
+		state, verifier, cookie := start(t, "google", "/encounters/join?mode=play#invite=abc")
 		before := tokenCalls.Load()
 		for _, w := range []*httptest.ResponseRecorder{callback("google", state, nil), callback("google", strings.Repeat("x", 43), cookie), callback("yandex", state, cookie)} {
 			if !strings.Contains(w.Header().Get("Location"), "oauth_error=expired") {
@@ -176,7 +190,7 @@ func TestOAuthIntegration(t *testing.T) {
 		}
 		// A different controller instance resumes the DB-backed flow.
 		router = newRouter()
-		code := getHandoff(callback("google", state, cookie))
+		code := getHandoff(t, callback("google", state, cookie))
 		if !strings.Contains(callback("google", state, cookie).Header().Get("Location"), "oauth_error=expired") || tokenCalls.Load() != before+1 {
 			t.Fatal("callback replay exchanged another token")
 		}
@@ -204,8 +218,8 @@ func TestOAuthIntegration(t *testing.T) {
 	t.Run("second provider and repeat login reuse identity", func(t *testing.T) {
 		var first uuid.UUID
 		for i := 0; i < 2; i++ {
-			state, verifier, cookie := start("yandex", "/")
-			w := exchange(getHandoff(callback("yandex", state, cookie)), verifier)
+			state, verifier, cookie := start(t, "yandex", "/")
+			w := exchange(getHandoff(t, callback("yandex", state, cookie)), verifier)
 			var result oauthLoginResponse
 			if w.Code != 200 || json.Unmarshal(w.Body.Bytes(), &result) != nil || result.ReturnPath != "/" {
 				t.Fatal("Yandex login failed")
@@ -227,7 +241,7 @@ func TestOAuthIntegration(t *testing.T) {
 		}
 	})
 	t.Run("cancellation expires state without exchange", func(t *testing.T) {
-		state, _, cookie := start("google", "/")
+		state, _, cookie := start(t, "google", "/")
 		before := tokenCalls.Load()
 		w := request("GET", oauthPath+"/google/callback?state="+state+"&error=access_denied&error_description=untrusted", "", cookie)
 		if !strings.HasSuffix(w.Header().Get("Location"), "oauth_error=denied") || tokenCalls.Load() != before {
@@ -238,13 +252,13 @@ func TestOAuthIntegration(t *testing.T) {
 		}
 	})
 	t.Run("expired flow and handoff", func(t *testing.T) {
-		state, _, cookie := start("google", "/")
+		state, _, cookie := start(t, "google", "/")
 		db.Exec("UPDATE oauth_flows SET expires_at = CURRENT_TIMESTAMP - interval '1 second' WHERE state_hash = ?", oauthHash(state))
 		if !strings.HasSuffix(callback("google", state, cookie).Header().Get("Location"), "oauth_error=expired") {
 			t.Fatal("expired state accepted")
 		}
-		state, verifier, cookie := start("google", "/")
-		code := getHandoff(callback("google", state, cookie))
+		state, verifier, cookie := start(t, "google", "/")
+		code := getHandoff(t, callback("google", state, cookie))
 		db.Exec("UPDATE oauth_handoffs SET expires_at = CURRENT_TIMESTAMP - interval '1 second' WHERE code_hash = ?", oauthHash(code))
 		if exchange(code, verifier).Code != 400 {
 			t.Fatal("expired handoff accepted")
@@ -309,15 +323,15 @@ func TestOAuthIntegration(t *testing.T) {
 		}
 	})
 	t.Run("deleted account stays deleted", func(t *testing.T) {
-		state, verifier, cookie := start("yandex", "/")
-		code := getHandoff(callback("yandex", state, cookie))
+		state, verifier, cookie := start(t, "yandex", "/")
+		code := getHandoff(t, callback("yandex", state, cookie))
 		if err := db.Exec("UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id IN (SELECT user_id FROM oauth_identities WHERE provider = 'yandex')").Error; err != nil {
 			t.Fatal(err)
 		}
 		if exchange(code, verifier).Code != 400 {
 			t.Fatal("deleted account received a session")
 		}
-		state, _, cookie = start("yandex", "/")
+		state, _, cookie = start(t, "yandex", "/")
 		if !strings.HasSuffix(callback("yandex", state, cookie).Header().Get("Location"), "oauth_error=failed") {
 			t.Fatal("deleted account resurrected")
 		}

@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "owned-native-postgres-only",
+  "checks": {
+    "index": {
+      "schemaVersion": 1,
+      "scope": "owned-local-index-fixture",
+      "status": "passed",
+      "runId": "test_dab1077b0d3f66e6c8bd7d78",
+      "explain": {
+        "before": {
+          "Plan": {
+            "Node Type": "Index Only Scan",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Scan Direction": "Forward",
+            "Index Name": "cards_owner_b",
+            "Relation Name": "cards",
+            "Alias": "cards",
+            "Startup Cost": 0.13,
+            "Total Cost": 8.14,
+            "Plan Rows": 1,
+            "Plan Width": 4,
+            "Actual Startup Time": 0.081,
+            "Actual Total Time": 0.082,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Index Cond": "(owner_id = 2)",
+            "Rows Removed by Index Recheck": 0,
+            "Heap Fetches": 1,
+            "Shared Hit Blocks": 1,
+            "Shared Read Blocks": 1,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning": {
+            "Shared Hit Blocks": 105,
+            "Shared Read Blocks": 1,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 2.297,
+          "Triggers": [],
+          "Execution Time": 0.161
+        },
+        "after": {
+          "Plan": {
+            "Node Type": "Index Only Scan",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Scan Direction": "Forward",
+            "Index Name": "cards_owner_a",
+            "Relation Name": "cards",
+            "Alias": "cards",
+            "Startup Cost": 0.13,
+            "Total Cost": 8.14,
+            "Plan Rows": 1,
+            "Plan Width": 4,
+            "Actual Startup Time": 0.062,
+            "Actual Total Time": 0.063,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Index Cond": "(owner_id = 2)",
+            "Rows Removed by Index Recheck": 0,
+            "Heap Fetches": 1,
+            "Shared Hit Blocks": 2,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning": {
+            "Shared Hit Blocks": 94,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 1.681,
+          "Triggers": [],
+          "Execution Time": 0.093
+        },
+        "meaning": "Same rows/node/cost and surviving eligible index; tiny fixture timings are diagnostic, not production latency evidence"
+      },
+      "apply": [
+        "applied",
+        "already_applied"
+      ],
+      "restore": [
+        "restored",
+        "already_restored"
+      ],
+      "rowsUnchanged": true,
+      "changedPreimagesRejected": true,
+      "foreignOwnerRejected": true,
+      "cleanup": "stopped"
+    },
+    "inline": {
+      "schemaVersion": 1,
+      "scope": "owned-local-inline-export",
+      "status": "passed",
+      "runId": "test_495eea63d8f8f53018d7a3b9",
+      "bytes": 42,
+      "referenceHash": "560a481d94b94be28e45a6ee498682f92b2eb99f8f6f5956c9aad969f61ee5e5",
+      "sourcePreserved": true,
+      "checks": [
+        "repeat-export",
+        "repeat-restore",
+        "exact-reference-and-blob",
+        "changed-blob-rejected",
+        "changed-owner-rejected",
+        "changed-reference-rejected",
+        "foreign-owner-rejected",
+        "missing-marker-rejected"
+      ],
+      "cleanup": "stopped"
+    }
+  },
+  "tests": {
+    "passed": 5,
+    "failed": 0,
+    "skipped": 0
+  },
+  "limits": [
+    "Tiny fixture EXPLAIN timings are diagnostic; no production query window measured.",
+    "Inline export is a byte-verified local recovery copy; original entity stays unchanged, no remote storage upload.",
+    "No user rows, journals, receipt history or executable artifacts deleted."
+  ]
+}

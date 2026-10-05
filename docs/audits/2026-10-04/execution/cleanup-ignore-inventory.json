@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "rows": [
+    {
+      "root": "output/",
+      "resolved": "C:/Projects/dnd_cards/output/",
+      "tracked": [
+        "output/mini-mvp-live-manual-approval-audit-2026-09-01.json",
+        "output/mini-mvp-manual-testing-checklist-2026-08-30.xlsx",
+        "output/mini-mvp-manual-testing-report-2026-08-30.md",
+        "output/pdf/engine-architecture-and-effects-ru.pdf"
+      ],
+      "untracked_count": 29349,
+      "action": "add-ignore-only",
+      "files_moved": 0,
+      "files_deleted": 0,
+      "originals_preserved": true
+    },
+    {
+      "root": "tmp/",
+      "resolved": "C:/Projects/dnd_cards/tmp/",
+      "tracked": [],
+      "untracked_count": 3138,
+      "action": "add-ignore-only",
+      "files_moved": 0,
+      "files_deleted": 0,
+      "originals_preserved": true
+    }
+  ],
+  "notes": [
+    "Tracked files remain tracked and scanned; ignore changes only untracked discovery.",
+    "No original, evidence or history is deleted or moved."
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "connectCalls": 3,
+  "directAttempts": 0,
+  "exactReceiptReplays": 3,
+  "externalProviderRequests": 0,
+  "failureCode": "image_network_error",
+  "gameplayCommands": 3,
+  "provider": "local TLS emulator",
+  "providerCalls": 2,
+  "status": "passed",
+  "storage": "local S3 protocol emulator",
+  "storageUploads": 3,
+  "tlsVerified": true,
+  "workerCalls": 18,
+  "runId": "test_d760b4424959ca658bea9413",
+  "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+  "sourceUnchanged": true,
+  "required": {
+    "required": 1,
+    "passed": 1
+  },
+  "cleanup": "stopped",
+  "scope": "TLS, CONNECT, held proxy and upstream lookup failure emulator; actual local gameplay/PG/Node. Not a diagnosis of live provider403."
+}

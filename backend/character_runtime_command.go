@@ -40,8 +40,9 @@ type CharacterRuntimeCommandRulesetRef struct {
 // CharacterRuntimeCommandPatch intentionally contains only engine-owned
 // runtime channels. InventoryItems is a complete quantity snapshot: the
 // transition validator permits consumption only and rejects additions,
-// quantity increases and container moves. Equipment and item transfer remain
-// separate mechanics and cannot be smuggled through a combat transaction.
+// quantity increases and container moves. Equipment is a declared runtime
+// channel checked by validateItemEquipmentChange and camp authority; item
+// transfer cannot be smuggled through this quantity snapshot.
 type CharacterRuntimeCommandPatch struct {
 	Equipment      *JSONMap           `json:"equipment"`
 	CurrentHP      *int               `json:"current_hp"`
@@ -89,6 +90,7 @@ type CharacterRuntimeCommandResponse struct {
 // CharacterRuntimeCommandRecord is an append-only idempotency receipt. A
 // matching retry returns Response and never appends CharacterEvent rows twice.
 type CharacterRuntimeCommandRecord struct {
+	ReceiptStorage
 	UserID      uuid.UUID `json:"user_id" gorm:"type:uuid;primaryKey"`
 	CommandID   uuid.UUID `json:"command_id" gorm:"type:uuid;primaryKey"`
 	RequestHash string    `json:"request_hash" gorm:"type:varchar(71);not null"`
@@ -509,6 +511,9 @@ func rulesetRefToJSONMap(reference CharacterRuntimeCommandRulesetRef) (JSONMap, 
 // CAS and replay guarantees only; semantic authority remains the pinned local
 // rules artifact until a server worker executes the same release.
 func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
+	local := *cc
+	local.db = cc.db.WithContext(c.Request.Context())
+	cc = &local
 	userID, ok := requireCharacterV3UserID(c)
 	if !ok {
 		return
@@ -518,7 +523,9 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 		writeCharacterRuntimeCommandError(c, invalidRuntimeCommand("request body cannot be read"))
 		return
 	}
+	decodeDone := performanceSince(c.Request.Context(), "runtime_decode_hash_ms")
 	request, requestHash, err := decodeCharacterRuntimeCommand(raw)
+	decodeDone()
 	if err != nil {
 		writeCharacterRuntimeCommandError(c, err)
 		return
@@ -530,7 +537,7 @@ func (cc *CharacterV3Controller) PostCharacterRuntimeCommand(c *gin.Context) {
 	}
 
 	var response JSONMap
-	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
+	txErr := performanceTransaction(cc.db, c.Request.Context(), func(tx *gorm.DB) error {
 		// A per-caller command lock closes the race between the initial replay
 		// lookup and the unique ledger insert without blocking unrelated sheets.
 		lockKey := userID.String() + ":" + commandID.String()

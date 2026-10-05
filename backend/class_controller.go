@@ -40,6 +40,11 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 
 	page, limit, offset := parseListPagination(c)
 
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "classes")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	query.Count(&total)
 
@@ -86,7 +91,7 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 		}
 		responses = append(responses, response)
 	}
-	c.JSON(http.StatusOK, gin.H{"classes": responses, "total": total, "page": page, "limit": limit})
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{"classes": responses, "total": total, "page": page, "limit": limit}))
 }
 
 func (cc *ClassController) GetClass(c *gin.Context) {

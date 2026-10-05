@@ -1,0 +1,23 @@
+{
+  "runId": "test_7978e064ea4840f119c5ac71",
+  "artifactHash": "sha256:5eedc099bbfc8e6e7641b9a07cbe9548e53b1881b6a1ae82d7c132300a4e697f",
+  "uiBuild": {
+    "reused": true,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_7978e064ea4840f119c5ac71\\ui-dist",
+    "indexHash": "0ceb8ace35b802f0c418c401208189073997d0ff0ebd31db912b2c7deaf63c47",
+    "manifestHash": "0b1bb20ad122b4f4b7dc38b5615728b86617433a4466e806df004c53e5f48b04",
+    "files": 627,
+    "bytes": 169022595
+  },
+  "equipmentPosts": 3,
+  "samePendingCommandAfterReload": true,
+  "exactRetry": true,
+  "inventoryPreserved": true,
+  "equipmentBrowserBuildCalls": 0,
+  "initiativeBrowserBuildCalls": 0,
+  "optionsRequests": 1,
+  "initializeRequests": 1,
+  "pageErrors": 0,
+  "sourceIsolated": true,
+  "outcomeHash": "sha256:7b68cb6429a2e1cb3a26bbb19d37be4ae560d41c74aafa76249eedb330aedb39"
+}

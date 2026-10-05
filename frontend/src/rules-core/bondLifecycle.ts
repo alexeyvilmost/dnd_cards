@@ -1,5 +1,5 @@
 import type {WorldState} from './domain';
-import {itemSourceRequirementIssue} from '../engine/actionRequirements';
+import {itemSourceRequirementIssue} from './legacy/engineAdapter';
 type Dict=Record<string,unknown>;
 
 /** A bond is one actual effect instance, so ending it removes its modifiers,

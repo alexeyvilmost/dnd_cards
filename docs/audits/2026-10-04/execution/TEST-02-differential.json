@@ -1,0 +1,83 @@
+{
+  "status": "equivalent",
+  "beforeArtifactHash": "sha256:284c13adbbbeee740805f495ec1be6e82f33dbea092bbdf04abc098bce25a636",
+  "afterArtifactHash": "sha256:97e8d25465ba0ad7411f12fef7bab5f178bd4a123b1f26a92b257a9ea9d3b4b8",
+  "comparedRecords": 18,
+  "identityFieldsExcluded": [
+    "artifactHash"
+  ],
+  "traces": [
+    {
+      "name": "combat-1:initialize",
+      "behavioralHash": "sha256:d012ae0d13a9364c1ff4ff9f717a1caa447315ac0f019e7e333ec3442658847f"
+    },
+    {
+      "name": "combat-1:turn-0",
+      "behavioralHash": "sha256:cea2a6fa788d5d96dd3c30705d8f7a5e47a4ffbe9fbd7a3b31e7de707af6d341"
+    },
+    {
+      "name": "combat-1:turn-1",
+      "behavioralHash": "sha256:8c5b2596a1f2e57c7a759b70a6e4d18e87402152c8fb88da19070c3eff828f41"
+    },
+    {
+      "name": "combat-1:turn-2",
+      "behavioralHash": "sha256:dadb909d012a4e46e552b2fd7c51a3bd666d0473c797cfbf4b55e0addb3b97c6"
+    },
+    {
+      "name": "check-1:held",
+      "behavioralHash": "sha256:30244e6dd883881d1cc31f2f17c066527aaefec4e506e43499572532eda1f6b4"
+    },
+    {
+      "name": "check-1:resolved",
+      "behavioralHash": "sha256:016a49f06b0f2a5c9475fdb4f03af37e5eab14166d38ca6527c6516fb2ee6cfc"
+    },
+    {
+      "name": "rest-1",
+      "behavioralHash": "sha256:d85a4368822f66913252b2c30c03dffeca8a015ae5a4aae25d4dacbac33e6460"
+    },
+    {
+      "name": "hazard-1",
+      "behavioralHash": "sha256:7295197bb4d5ffc3d387a679afe9c3afbc834e5ff0974fb005e11c403079efe4"
+    },
+    {
+      "name": "unknown-1",
+      "behavioralHash": "sha256:8a71a9dd6ae7df3dd47f373541bf1fe15ab61e520f96463cfca1eef4568c3d31"
+    },
+    {
+      "name": "combat-2:initialize",
+      "behavioralHash": "sha256:d59070c706498f1badea4d46fd36f01b2f44923416025993350c7f5161ff1549"
+    },
+    {
+      "name": "combat-2:turn-0",
+      "behavioralHash": "sha256:89b3877d68f7ca4040d7e74a57ea2a2055a36df2ef98d758fef3534c7c05e3bd"
+    },
+    {
+      "name": "combat-2:turn-1",
+      "behavioralHash": "sha256:0b4cd965440135c467c20313a89a0b490074c8fbbac269a121ba3fad548076e6"
+    },
+    {
+      "name": "combat-2:turn-2",
+      "behavioralHash": "sha256:2829592d95ccf1cde9523f214b8d65888efbfb7abf287f6d819002ed123c484f"
+    },
+    {
+      "name": "check-2:held",
+      "behavioralHash": "sha256:6b4ca773e9c94c6481df5d589587a8a19cd1eb8ef711a543544ff8cdd44f1bbf"
+    },
+    {
+      "name": "check-2:resolved",
+      "behavioralHash": "sha256:ee91ed8bdd2d25738149ab06aaacecc8903507c4df8dcd4b95a151040b5674af"
+    },
+    {
+      "name": "rest-2",
+      "behavioralHash": "sha256:48d2a016129b7c937ba843c0a50b98a3c8b94812944c228f2325968ce62888d6"
+    },
+    {
+      "name": "hazard-2",
+      "behavioralHash": "sha256:f11bb2b7fdf44b6d9b897c91facac8a39671d259e53d8386bdbdff0494415c27"
+    },
+    {
+      "name": "unknown-2",
+      "behavioralHash": "sha256:8a71a9dd6ae7df3dd47f373541bf1fe15ab61e520f96463cfca1eef4568c3d31"
+    }
+  ]
+}

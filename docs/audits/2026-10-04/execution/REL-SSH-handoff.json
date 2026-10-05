@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "status": "targeted-passed-full-suite-pending",
+  "executedAt": "2026-10-05T00:02:18.094Z",
+  "scope": "Hosted Actions SSH transport and protected host gate orchestration",
+  "remoteExecution": false,
+  "productionDeploymentClaim": false,
+  "tests": {
+    "command": "node --test scripts/release/ssh-transport.test.mjs scripts/release/deployment-handoff.test.mjs scripts/testing/suites.test.mjs",
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "log": "outputs/testing/ssh-transport-current.log"
+  },
+  "sourceHashes": {
+    "scripts/release/ssh-transport.mjs": "c886feae95f7e87b044c27e167320edc60f73a85d066308666ec1d32a02aa4c0",
+    "scripts/release/ssh-host-release.mjs": "d7e2690dca86cb98ad25220ee2a15cb028396a0e67bcb62ee972b90e62be4379",
+    "scripts/release/ssh-archive.mjs": "3b490ff533068cf18d0f3434f8a83e5f4c10f6814e70e7e0293e86cf40f85d65",
+    "scripts/release/ssh-deploy.mjs": "eee47a9f26e1a08dd712c4f6dabb9e04d8f7814c51e2b9599b2c78ef9da1c6cd",
+    "scripts/release/ssh-transport.test.mjs": "4d31621e410b083a21494f4d7a6e8eb443c0e30e05ce2e269aa68553cb062543",
+    ".github/workflows/deploy.yml": "5eced5cbf9024e60ef9ac5d515e5aff45f2ca189f2faca0b377f176f4db25225",
+    "scripts/release/deployment-handoff.test.mjs": "4773fdd715c11531fa9fde57ab0b63b85b3ff56a5061c1e8982dc8d94c3d5b70"
+  },
+  "proofs": [
+    "Real temporary Git commit archive with checksum and embedded exact commit",
+    "Long Unicode PAX path roundtrip; traversal, links, duplicate paths and metadata rejected before extraction",
+    "Strict SSH known-host verification, no agent/port forwarding, credentials on stdin",
+    "Host repeats actual GitHub metadata command before accepting candidate provenance",
+    "All prior capture/rehearsal/assembler/handoff/deploy/receipt gates retained",
+    "Failure injection at every host command boundary cleans attempt Docker credentials; cutover never automatically repeated",
+    "Invalid or incomplete final receipt rejected without successful public upload",
+    "Global manifest resolves all new mandatory test selectors",
+    "Signal during Docker auth write waits for command boundary, blocks following gate and then removes recreated config; timeout/output-bound executor waits for local child close"
+  ],
+  "remaining": [
+    "Run root combined core and complete sharded extended on the final source snapshot",
+    "Provision and validate actual protected host configuration/Node/key and pinned OCI artifacts",
+    "Run actual hosted SSH deployment with legacy adoption after readiness; mixed-component cutover/rollback remain separate actual gates"
+  ],
+  "limits": [
+    "Fault adapters are unit fixtures, not evidence of actual Docker or TimeWeb cutover",
+    "Hard host kill may leave private short-lived Docker auth; inspect and clean the owned attempt before recovery",
+    "Unknown SSH outcome requires existing journal inspection/recovery, never blind apply retry"
+  ]
+}

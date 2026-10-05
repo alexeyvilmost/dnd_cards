@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "execution": "native-owned-api",
+  "runId": "test_ae06e8058e978db6fbb0ea4f",
+  "part": "all",
+  "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+  "checks": [
+    {
+      "id": "aura-phoenix",
+      "status": "passed",
+      "party": 2
+    },
+    {
+      "id": "aura-restoration",
+      "status": "passed",
+      "party": 2
+    },
+    {
+      "id": "aura-ferocity",
+      "status": "passed",
+      "party": 2
+    },
+    {
+      "id": "aura-wealth",
+      "status": "passed",
+      "party": 2
+    },
+    {
+      "id": "aura-solitude",
+      "status": "passed",
+      "party": 1
+    },
+    {
+      "id": "wealth-once",
+      "status": "passed"
+    },
+    {
+      "id": "source-independent-copies",
+      "status": "passed"
+    },
+    {
+      "id": "peer-ownership",
+      "status": "passed"
+    },
+    {
+      "id": "route-and-room-gates",
+      "status": "passed"
+    },
+    {
+      "id": "route-combat-reload-retry",
+      "status": "passed"
+    },
+    {
+      "id": "treasure-xp-loot-once",
+      "status": "passed"
+    },
+    {
+      "id": "shop-buy-once-and-close",
+      "status": "passed"
+    },
+    {
+      "id": "pass-canonical-rest-once",
+      "status": "passed",
+      "introducedPools": 1
+    },
+    {
+      "id": "camp-canonical-rest-once",
+      "status": "passed",
+      "introducedPools": 1
+    },
+    {
+      "id": "elite-original-guardian-compiles",
+      "status": "passed"
+    },
+    {
+      "id": "elite-actual-victory-reward-retry",
+      "status": "passed"
+    },
+    {
+      "id": "boss-original-guardian-compiles",
+      "status": "passed"
+    },
+    {
+      "id": "boss-actual-victory-reward-retry",
+      "status": "passed"
+    },
+    {
+      "id": "event-sleeping-goblins-quiet",
+      "status": "passed",
+      "heldChecks": 1,
+      "transitions": 3
+    },
+    {
+      "id": "event-sleeping-goblins-force",
+      "status": "passed",
+      "heldChecks": 2,
+      "transitions": 6
+    },
+    {
+      "id": "event-drowned-purse-recover",
+      "status": "passed",
+      "heldChecks": 1,
+      "transitions": 3
+    },
+    {
+      "id": "event-wayside-healer-help",
+      "status": "passed",
+      "heldChecks": 1,
+      "transitions": 3
+    },
+    {
+      "id": "event-sealed-shrine-ritual",
+      "status": "passed",
+      "heldChecks": 1,
+      "transitions": 3
+    },
+    {
+      "id": "event-broken-bridge-balance",
+      "status": "passed",
+      "heldChecks": 1,
+      "transitions": 3
+    },
+    {
+      "id": "event-broken-bridge-repair",
+      "status": "passed",
+      "heldChecks": 2,
+      "transitions": 6
+    },
+    {
+      "id": "ambush-checkpoint-defeat-retry",
+      "status": "passed"
+    },
+    {
+      "id": "source-sheets-unchanged",
+      "status": "passed",
+      "count": 26
+    }
+  ],
+  "createdRuns": 23,
+  "limitations": [
+    "Integration fixture; historical migration chain not exercised",
+    "Terminal combat uses declared synthetic pre-init stats; not balance proof"
+  ],
+  "fixture": {
+    "schemaVersion": 1,
+    "kind": "owned-urvin-catalog",
+    "sourceHashes": {
+      "backend/migrations/materialize_roguelike_monsters_199.go": "sha256:ed715db7342830dbd3e0e4c567eb3dfb6d23c7b81d72005879fac40eeea4939f",
+      "backend/migrations/urvin_run_273.go": "sha256:e5bfa02e631304929d3406915050836f96e0ebf043756fd6597325979d96f4c0",
+      "backend/roguelikecontent/urvin.json": "sha256:9ad6b8a8eac4b0b121253011a192bd18446624f4d17e444f62e43aa34fbcbadb",
+      "frontend/src/solo-combat/data/urvinMaps.json": "sha256:3b5b5ec1885669a8426617ab085e153060a6c90fd2dd68f264ad1cc34aa8d305"
+    },
+    "seedHash": "sha256:baf6fd344d52f76b860f7582ad6825ba3c1f574175a51213ad3961e20645055c",
+    "fixtureHash": "sha256:0b7a62e727d7cdeaedc85f52dc4a711dffc21628b35a8454fa9a79bf02303045",
+    "historicalChainVerified": false,
+    "sourceRows": {
+      "actions": 7,
+      "effects": 5,
+      "monsters": 6
+    }
+  },
+  "fixtureCleanup": {
+    "status": "restored",
+    "sharedCatalogUnchanged": true,
+    "sharedSettingsUnchanged": true,
+    "rewardCardsRetained": 3
+  },
+  "recordedAt": "2026-10-04T20:45:34.365Z",
+  "sourceInputs": {
+    "scripts/testing/urvin-acceptance.mjs": "sha256:07608086d1a64cb23216329c035fb34e125b687bd3a2140bdfbf1dd989ebb800",
+    "scripts/testing/urvin-fixture.mjs": "sha256:4181d0a1c5f6dc2866d53a430015ebd628aa6e64df12cfd6e150399231144dad",
+    "scripts/testing/export-urvin-fixture.go": "sha256:5d0bc25afb8461866de1e6e560dd853c9c7c34ffe568850bb0a16fa9b9b824f6",
+    "scripts/testing/urvin-fixture.test.mjs": "sha256:a18195aaf258ae6031718801cd87dce16570f36020230be205b81ed3a2bae2ba",
+    "scripts/performance/check-urvin.mjs": "sha256:1de446c3b5bf4bce093a2099284ca472b7efe425178d8ba57c998a40b929b3b6",
+    "scripts/roguelike/urvin-local.test.mjs": "sha256:853dafa4a0865e62f023c5214016a0f41bccdd0db61a31a77d55ab1098a48e20",
+    "scripts/roguelike/urvin-rooms-local.test.mjs": "sha256:07ae555dbb5c49363cff42baae23e8ea8f5efef4c575eff5097f1c4c0b02f1da",
+    "scripts/testing/postgres.mjs": "sha256:3d497cb7139ee8afddce16d1a03a0061d9863a4a1addc499dc1794a16d8b62a2",
+    "backend/roguelike_worker_controller.go": "sha256:5e9678b3b392a2b38de4d9abbf4bc012fae4776fc9f58d801d5580c7a5776f63",
+    "backend/roguelike_rest_resources_test.go": "sha256:0dd8b52e3da98219b3a58022b9e8d01e5aa085a4cf767f44d938359418041d93"
+  },
+  "lifecycle": {
+    "status": "stopped",
+    "errors": []
+  },
+  "checksCount": 27,
+  "node": {
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "log": "outputs/testing/test05-next/urvin-unit-final.log"
+  },
+  "postgres": {
+    "requiredTopLevel": 5,
+    "passedWithSubtests": 9,
+    "failed": 0,
+    "skipped": 0,
+    "log": "outputs/testing/runs/test_ae06e8058e978db6fbb0ea4f/required-go.jsonl"
+  },
+  "queryProtocol": {
+    "sensitiveJSONWithoutCommandTags": "passed"
+  },
+  "fullLog": "outputs/testing/test05-next/urvin-sixth.log",
+  "report": "outputs/testing/runs/test_ae06e8058e978db6fbb0ea4f/urvin-acceptance.json",
+  "cleanupReport": "outputs/testing/runs/test_ae06e8058e978db6fbb0ea4f/acceptance/urvin-fixture-cleanup.json"
+}

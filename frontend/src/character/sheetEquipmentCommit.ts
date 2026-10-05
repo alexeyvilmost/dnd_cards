@@ -1,5 +1,6 @@
 import { ApiRequestError } from '../api/client';
 import { CharacterV3AccessError } from './api';
+import type {SheetEquipmentPendingRequest} from './api';
 import { commitSheetRuntimeCommand } from './sheetRuntimeCommand';
 
 /** Only a response to the POST itself can prove that its command was rejected. */
@@ -12,7 +13,8 @@ function definitiveCommandRejection(error: unknown): boolean {
 }
 
 export async function commitSheetEquipmentRequest(
-  input: Parameters<typeof commitSheetRuntimeCommand>[0] & {
+  input: Omit<Parameters<typeof commitSheetRuntimeCommand>[0], 'request'> & {
+    request: SheetEquipmentPendingRequest;
     onDefinitiveRejection: () => void;
   },
 ): ReturnType<typeof commitSheetRuntimeCommand> {
@@ -20,6 +22,10 @@ export async function commitSheetEquipmentRequest(
   try {
     return await commitSheetRuntimeCommand({
       ...input,
+      request: 'kind' in input.request ? {
+        command_id: input.request.command_id, events: [],
+        participants: [{character_id: input.request.character_id, expected_runtime_revision: input.request.expected_runtime_revision}],
+      } : input.request,
       commit: async () => {
         try {
           return await input.commit();

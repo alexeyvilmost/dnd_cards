@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "status": "local_pixel_verified_default_OFF",
+  "bundle": "outputs/maintenance/media-lossless-20261004-v2",
+  "summary": {
+    "PNGFiles": 135,
+    "variants": 17,
+    "originalOnly": 118,
+    "allSourcePNGBytes": 90524494,
+    "selectedSourceBytes": 42818912,
+    "selectedVariantBytes": 29448348,
+    "requestBytesSaved": 13370564,
+    "originalsRetained": true,
+    "gitBytesRemoved": 0,
+    "HTTPTransfer": "not_measured",
+    "visualPrintAcceptance": "pending_default_OFF"
+  },
+  "groups": {
+    "battle-maps": {
+      "variants": 11,
+      "originalOnly": 8,
+      "sourceBytes": 35277787,
+      "variantBytes": 24557492,
+      "savedBytes": 10720295
+    },
+    "assets": {
+      "variants": 1,
+      "originalOnly": 7,
+      "sourceBytes": 64073,
+      "variantBytes": 59062,
+      "savedBytes": 5011
+    },
+    "default_image.png": {
+      "variants": 0,
+      "originalOnly": 1,
+      "sourceBytes": 0,
+      "variantBytes": 0,
+      "savedBytes": 0
+    },
+    "groovepaper.png": {
+      "variants": 0,
+      "originalOnly": 1,
+      "sourceBytes": 0,
+      "variantBytes": 0,
+      "savedBytes": 0
+    },
+    "icons": {
+      "variants": 0,
+      "originalOnly": 63,
+      "sourceBytes": 0,
+      "variantBytes": 0,
+      "savedBytes": 0
+    },
+    "images": {
+      "variants": 0,
+      "originalOnly": 37,
+      "sourceBytes": 0,
+      "variantBytes": 0,
+      "savedBytes": 0
+    },
+    "portraits": {
+      "variants": 3,
+      "originalOnly": 0,
+      "sourceBytes": 7011859,
+      "variantBytes": 4534566,
+      "savedBytes": 2477293
+    },
+    "pwa-192x192.png": {
+      "variants": 1,
+      "originalOnly": 0,
+      "sourceBytes": 55868,
+      "variantBytes": 35314,
+      "savedBytes": 20554
+    },
+    "pwa-512x512.png": {
+      "variants": 1,
+      "originalOnly": 0,
+      "sourceBytes": 409325,
+      "variantBytes": 261914,
+      "savedBytes": 147411
+    },
+    "site_logo.png": {
+      "variants": 0,
+      "originalOnly": 1,
+      "sourceBytes": 0,
+      "variantBytes": 0,
+      "savedBytes": 0
+    }
+  },
+  "originalReasons": {
+    "partial_alpha_browser_rounding_original_preserved": 76,
+    "only_8_bit_PNG_supported": 2,
+    "unsupported_color_or_orientation_metadata": 39,
+    "nonstandard_chromaticity_original_preserved": 1
+  },
+  "initialBrowserExperiment": {
+    "evidence": "CLEAN-03-media-browser.json",
+    "pairs": 93,
+    "failed": 70,
+    "differingBytes": 26174359,
+    "opaqueDifferences": 0,
+    "alphaDifferences": 0,
+    "maxDifference": 255,
+    "policy": "all_partial_alpha_excluded_including_6_that_happened_to_match"
+  },
+  "currentBrowser": {
+    "enabled": true,
+    "variants": 17,
+    "uniqueFiles": 17,
+    "variantBytes": 29448348,
+    "originals": true,
+    "decodedPairs": 17,
+    "browserRGBAEqual": true,
+    "failedPairs": 0,
+    "servedBodyBytes": 72267260,
+    "networkBasis": "local validation deliberately fetches both original and variant; not app transfer or latency",
+    "applicationEnabledE2E": "pending",
+    "printVisualReview": "pending",
+    "deployment": "not_attempted"
+  },
+  "fullNativeEncodeDurationMs": 13534,
+  "limitations": [
+    "runtime consumer currently only tactical floor background",
+    "original PNGs retained; Git and image total size do not shrink",
+    "enabled application UI build is separate root evidence",
+    "cross-browser human visual and print acceptance pending",
+    "no production deploy"
+  ]
+}

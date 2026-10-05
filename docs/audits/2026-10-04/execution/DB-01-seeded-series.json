@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "kind": "two-independent-seeded-storage-series",
+  "sourceRun": "test_65c7effa393e1b43e93c4bbd",
+  "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+  "binaryHash": "sha256:989f56b2cffb974328e512ac589dffbe78bc1494e931542fd806911df3b60353",
+  "backupHash": "sha256:79f8aa4fbc7837e19c6a64d150b9f9eaff8080512a23f62d896dcadfce259d39",
+  "workerServerHash": "sha256:698f587a545bc45a6493d35ba41e3def1828eb199a52b13f585b1733282f93c0",
+  "commandsPerArm": 1000,
+  "commandPlanHash": "sha256:d032d97ff2403126b2b46c69646b69cbce4b100485e4878ce577a96c1dfedc3e",
+  "fixture": {
+    "partySize": 1,
+    "preset": "line",
+    "zeroDamageDeclaredBeforeInitialize": true,
+    "initializedStateNeverEdited": true
+  },
+  "comparisons": [
+    {
+      "commands": 100,
+      "canonicalStateHash": "sha256:22d94d6667cf6bc78f3ec935edbc9645e26f3c4d4d160f285fac26fe22c6e055",
+      "identicalCanonicalState": true,
+      "logicalComparisons": [
+        {
+          "key": "receipt_json_bytes",
+          "first": 58470001,
+          "second": 58469993,
+          "relativeDifference": 1.3682229969518898e-7
+        },
+        {
+          "key": "journal_json_bytes",
+          "first": 45725,
+          "second": 45725,
+          "relativeDifference": 0
+        }
+      ]
+    },
+    {
+      "commands": 1000,
+      "canonicalStateHash": "sha256:b5dadf4cfb7238ee70350f5fcba3d6d6b769bb5d35aac4abc6c231fb561ecba1",
+      "identicalCanonicalState": true,
+      "logicalComparisons": [
+        {
+          "key": "receipt_json_bytes",
+          "first": 794003252,
+          "second": 794003280,
+          "relativeDifference": 3.5264337950845744e-8
+        },
+        {
+          "key": "journal_json_bytes",
+          "first": 458138,
+          "second": 458138,
+          "relativeDifference": 0
+        }
+      ]
+    }
+  ],
+  "arms": [
+    {
+      "runId": "test_3eb325d8ffeba395d423e8a7",
+      "initialCanonicalStateHash": "sha256:db638485755045b477615a25ca3f75b6941fd52552fb3e69d771669222c350f0",
+      "checkpoints": [
+        {
+          "count": 100,
+          "canonicalStateHash": "sha256:22d94d6667cf6bc78f3ec935edbc9645e26f3c4d4d160f285fac26fe22c6e055",
+          "logical": {
+            "receipts": 102,
+            "journal_rows": 101,
+            "journal_json_bytes": 135744,
+            "receipt_json_bytes": 58766180,
+            "envelope_json_bytes": 314651
+          },
+          "databaseGrowthBytes": 36528128,
+          "walGrowthBytes": 36992675,
+          "walSameReset": true,
+          "topRelationGrowth": [
+            {
+              "relation": "roguelike_command_receipts",
+              "table_bytes": 16605184,
+              "index_bytes": 0,
+              "total_bytes": 16605184
+            },
+            {
+              "relation": "roguelike_runs",
+              "table_bytes": 11247616,
+              "index_bytes": 8192,
+              "total_bytes": 11255808
+            },
+            {
+              "relation": "characters_v3",
+              "table_bytes": 8560640,
+              "index_bytes": 0,
+              "total_bytes": 8560640
+            },
+            {
+              "relation": "roguelike_combat_events",
+              "table_bytes": 90112,
+              "index_bytes": 16384,
+              "total_bytes": 106496
+            }
+          ],
+          "timings": {
+            "seeded_combat_turn": {
+              "count": 100,
+              "median_ms": 149.19779999999446,
+              "p95_ms": 174.52070000000094,
+              "p95_preliminary": false,
+              "min_ms": 91.63120000000345,
+              "max_ms": 207.20509999999194,
+              "phase_means": {
+                "backend_first_write_uncompressed_bytes": 553795.49,
+                "backend_to_first_write_ms": 136.53778,
+                "backend_worker_body_read_ms": 1.6306499999999997,
+                "backend_worker_marshal_ms": 3.399119999999999,
+                "backend_worker_unmarshal_ms": 4.332980000000001,
+                "cold_run_compare_ms": 0,
+                "lock_acquired_to_tx_return_ms": 62.97560999999999,
+                "lock_statement_ms": 9.575120000000005,
+                "persist_sql_ms": 32.06035999999999,
+                "receipt_encode_ms": 0.00528,
+                "receipt_encoded_bytes": 0,
+                "sql_count": 14,
+                "sql_operation_ms": 65.63823,
+                "sql_rows": 12,
+                "transaction_ms": 68.6308,
+                "worker_admitted_calls": 1,
+                "worker_calls": 1,
+                "worker_client_total_ms": 50.672819999999994,
+                "worker_correlated_calls": 1,
+                "worker_http_headers_ms": 41.28728,
+                "worker_request_bytes": 546246.5,
+                "worker_response_bytes": 542527.95
+              }
+            }
+          },
+          "runActivity": {
+            "groups": [
+              {
+                "status": "active",
+                "phase": "combat",
+                "sampled_runs": 1,
+                "commands": 102,
+                "commands_mean": 102,
+                "commands_p95": 102
+              }
+            ],
+            "limit": 1000,
+            "population": "explicit runner-owned local fixture; QA provenance is the registry, not a username heuristic",
+            "method": "bounded runs ordered by id; indexed receipt count per sampled run; statuses preserved as stored"
+          }
+        },
+        {
+          "count": 1000,
+          "canonicalStateHash": "sha256:b5dadf4cfb7238ee70350f5fcba3d6d6b769bb5d35aac4abc6c231fb561ecba1",
+          "logical": {
+            "receipts": 1002,
+            "journal_rows": 1001,
+            "journal_json_bytes": 548157,
+            "receipt_json_bytes": 794299431,
+            "envelope_json_bytes": 501406
+          },
+          "databaseGrowthBytes": 455532544,
+          "walGrowthBytes": 739489936,
+          "walSameReset": true,
+          "topRelationGrowth": [
+            {
+              "relation": "roguelike_command_receipts",
+              "table_bytes": 333438976,
+              "index_bytes": 155648,
+              "total_bytes": 333594624
+            },
+            {
+              "relation": "roguelike_runs",
+              "table_bytes": 67731456,
+              "index_bytes": 98304,
+              "total_bytes": 67829760
+            },
+            {
+              "relation": "characters_v3",
+              "table_bytes": 52600832,
+              "index_bytes": 0,
+              "total_bytes": 52600832
+            },
+            {
+              "relation": "roguelike_combat_events",
+              "table_bytes": 704512,
+              "index_bytes": 278528,
+              "total_bytes": 983040
+            },
+            {
+              "relation": "cards",
+              "table_bytes": 0,
+              "index_bytes": 73728,
+              "total_bytes": 73728
+            }
+          ],
+          "timings": {
+            "seeded_combat_turn": {
+              "count": 1000,
+              "median_ms": 188.92990000001737,
+              "p95_ms": 264.39770000000135,
+              "p95_preliminary": false,
+              "min_ms": 91.63120000000345,
+              "max_ms": 327,
+              "phase_means": {
+                "backend_first_write_uncompressed_bytes": 757196.244,
+                "backend_to_first_write_ms": 171.08180999999988,
+                "backend_worker_body_read_ms": 2.699824999999998,
+                "backend_worker_marshal_ms": 4.086512999999998,
+                "backend_worker_unmarshal_ms": 5.647823000000006,
+                "cold_run_compare_ms": 0.0015470000000000002,
+                "lock_acquired_to_tx_return_ms": 82.11251899999993,
+                "lock_statement_ms": 11.741556000000005,
+                "persist_sql_ms": 42.46418400000001,
+                "receipt_encode_ms": 0.0031349999999999998,
+                "receipt_encoded_bytes": 0,
+                "sql_count": 14,
+                "sql_operation_ms": 83.6947610000001,
+                "sql_rows": 12,
+                "transaction_ms": 88.84003700000002,
+                "worker_admitted_calls": 1,
+                "worker_calls": 1,
+                "worker_client_total_ms": 61.50269099999998,
+                "worker_correlated_calls": 1,
+                "worker_http_headers_ms": 49.03901699999996,
+                "worker_request_bytes": 753147.237,
+                "worker_response_bytes": 745929.623
+              }
+            }
+          },
+          "runActivity": {
+            "groups": [
+              {
+                "status": "active",
+                "phase": "combat",
+                "sampled_runs": 1,
+                "commands": 1002,
+                "commands_mean": 1002,
+                "commands_p95": 1002
+              }
+            ],
+            "limit": 1000,
+            "population": "explicit runner-owned local fixture; QA provenance is the registry, not a username heuristic",
+            "method": "bounded runs ordered by id; indexed receipt count per sampled run; statuses preserved as stored"
+          }
+        }
+      ],
+      "exactRetries": 1000,
+      "verification": {
+        "runId": "47289d6f-1cbf-477d-955e-501ef918983b",
+        "revision": 1002,
+        "outcomeHash": "sha256:fda909d54ecacf2b87759443feeaf6d2184eebb2beac79fe4e6d5ee333777b7c",
+        "sourceUnchanged": true,
+        "exactRetry": true
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "runId": "test_0d6e6502eb5109803d7cd0d5",
+      "initialCanonicalStateHash": "sha256:db638485755045b477615a25ca3f75b6941fd52552fb3e69d771669222c350f0",
+      "checkpoints": [
+        {
+          "count": 100,
+          "canonicalStateHash": "sha256:22d94d6667cf6bc78f3ec935edbc9645e26f3c4d4d160f285fac26fe22c6e055",
+          "logical": {
+            "receipts": 102,
+            "journal_rows": 101,
+            "journal_json_bytes": 135744,
+            "receipt_json_bytes": 58766172,
+            "envelope_json_bytes": 314651
+          },
+          "databaseGrowthBytes": 36528128,
+          "walGrowthBytes": 36992658,
+          "walSameReset": true,
+          "topRelationGrowth": [
+            {
+              "relation": "roguelike_command_receipts",
+              "table_bytes": 16605184,
+              "index_bytes": 0,
+              "total_bytes": 16605184
+            },
+            {
+              "relation": "roguelike_runs",
+              "table_bytes": 11247616,
+              "index_bytes": 8192,
+              "total_bytes": 11255808
+            },
+            {
+              "relation": "characters_v3",
+              "table_bytes": 8560640,
+              "index_bytes": 0,
+              "total_bytes": 8560640
+            },
+            {
+              "relation": "roguelike_combat_events",
+              "table_bytes": 90112,
+              "index_bytes": 16384,
+              "total_bytes": 106496
+            }
+          ],
+          "timings": {
+            "seeded_combat_turn": {
+              "count": 100,
+              "median_ms": 145.289300000004,
+              "p95_ms": 171.83860000001732,
+              "p95_preliminary": false,
+              "min_ms": 90.84470000001602,
+              "max_ms": 201.75069999997504,
+              "phase_means": {
+                "backend_first_write_uncompressed_bytes": 553795.41,
+                "backend_to_first_write_ms": 130.75355,
+                "backend_worker_body_read_ms": 1.1325100000000001,
+                "backend_worker_marshal_ms": 3.2056999999999998,
+                "backend_worker_unmarshal_ms": 4.2841700000000005,
+                "cold_run_compare_ms": 0,
+                "lock_acquired_to_tx_return_ms": 61.038799999999995,
+                "lock_statement_ms": 9.338480000000002,
+                "persist_sql_ms": 30.624330000000008,
+                "receipt_encode_ms": 0,
+                "receipt_encoded_bytes": 0,
+                "sql_count": 14,
+                "sql_operation_ms": 63.28309000000004,
+                "sql_rows": 12,
+                "transaction_ms": 66.45212000000004,
+                "worker_admitted_calls": 1,
+                "worker_calls": 1,
+                "worker_client_total_ms": 47.59964,
+                "worker_correlated_calls": 1,
+                "worker_http_headers_ms": 38.92411999999998,
+                "worker_request_bytes": 546246.44,
+                "worker_response_bytes": 542527.95
+              }
+            }
+          },
+          "runActivity": {
+            "groups": [
+              {
+                "status": "active",
+                "phase": "combat",
+                "sampled_runs": 1,
+                "commands": 102,
+                "commands_mean": 102,
+                "commands_p95": 102
+              }
+            ],
+            "limit": 1000,
+            "population": "explicit runner-owned local fixture; QA provenance is the registry, not a username heuristic",
+            "method": "bounded runs ordered by id; indexed receipt count per sampled run; statuses preserved as stored"
+          }
+        },
+        {
+          "count": 1000,
+          "canonicalStateHash": "sha256:b5dadf4cfb7238ee70350f5fcba3d6d6b769bb5d35aac4abc6c231fb561ecba1",
+          "logical": {
+            "receipts": 1002,
+            "journal_rows": 1001,
+            "journal_json_bytes": 548157,
+            "receipt_json_bytes": 794299459,
+            "envelope_json_bytes": 501406
+          },
+          "databaseGrowthBytes": 471711744,
+          "walGrowthBytes": 739677770,
+          "walSameReset": true,
+          "topRelationGrowth": [
+            {
+              "relation": "roguelike_command_receipts",
+              "table_bytes": 333438976,
+              "index_bytes": 155648,
+              "total_bytes": 333594624
+            },
+            {
+              "relation": "roguelike_runs",
+              "table_bytes": 78241792,
+              "index_bytes": 98304,
+              "total_bytes": 78340096
+            },
+            {
+              "relation": "characters_v3",
+              "table_bytes": 58269696,
+              "index_bytes": 0,
+              "total_bytes": 58269696
+            },
+            {
+              "relation": "roguelike_combat_events",
+              "table_bytes": 704512,
+              "index_bytes": 278528,
+              "total_bytes": 983040
+            },
+            {
+              "relation": "cards",
+              "table_bytes": 0,
+              "index_bytes": 73728,
+              "total_bytes": 73728
+            }
+          ],
+          "timings": {
+            "seeded_combat_turn": {
+              "count": 1000,
+              "median_ms": 199.0739000000176,
+              "p95_ms": 255.29300000006333,
+              "p95_preliminary": false,
+              "min_ms": 90.84470000001602,
+              "max_ms": 334.718200000003,
+              "phase_means": {
+                "backend_first_write_uncompressed_bytes": 757196.272,
+                "backend_to_first_write_ms": 173.87176400000016,
+                "backend_worker_body_read_ms": 2.215750999999996,
+                "backend_worker_marshal_ms": 4.2446539999999935,
+                "backend_worker_unmarshal_ms": 5.860745,
+                "cold_run_compare_ms": 0.0005200000000000001,
+                "lock_acquired_to_tx_return_ms": 83.72249599999998,
+                "lock_statement_ms": 11.897682000000009,
+                "persist_sql_ms": 43.27888099999997,
+                "receipt_encode_ms": 0.002064,
+                "receipt_encoded_bytes": 0,
+                "sql_count": 14,
+                "sql_operation_ms": 85.13634099999983,
+                "sql_rows": 12,
+                "transaction_ms": 90.49238900000009,
+                "worker_admitted_calls": 1,
+                "worker_calls": 1,
+                "worker_client_total_ms": 62.05719999999999,
+                "worker_correlated_calls": 1,
+                "worker_http_headers_ms": 49.70282300000002,
+                "worker_request_bytes": 753147.245,
+                "worker_response_bytes": 745929.623
+              }
+            }
+          },
+          "runActivity": {
+            "groups": [
+              {
+                "status": "active",
+                "phase": "combat",
+                "sampled_runs": 1,
+                "commands": 1002,
+                "commands_mean": 1002,
+                "commands_p95": 1002
+              }
+            ],
+            "limit": 1000,
+            "population": "explicit runner-owned local fixture; QA provenance is the registry, not a username heuristic",
+            "method": "bounded runs ordered by id; indexed receipt count per sampled run; statuses preserved as stored"
+          }
+        }
+      ],
+      "exactRetries": 1000,
+      "verification": {
+        "runId": "47289d6f-1cbf-477d-955e-501ef918983b",
+        "revision": 1002,
+        "outcomeHash": "sha256:d246e05614105ffcb1cd184ead0a4c490404ef4d13f413afe23de7bb2daf7ad6",
+        "sourceUnchanged": true,
+        "exactRetry": true
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    }
+  ],
+  "sourceCleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "boundary": "Two independently restored 1000-command series include paired 100-command prefixes. Full canonical state/RNG equality is exact; receipt/journal row timestamps are real and may vary in encoded length. Allocated table/TOAST/index/WAL growth is measured separately from logical JSON. No production savings inferred.",
+  "sourceReceipt": "outputs/testing/runs/test_65c7effa393e1b43e93c4bbd/seeded-storage-growth.json"
+}

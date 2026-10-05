@@ -15,7 +15,7 @@ func TestDecodeCharacterRuntimeCommandRejectsAmbiguousAndUnknownJSON(t *testing.
 	commandID := uuid.NewString()
 	for name, raw := range map[string]string{
 		"duplicate command id":    fmt.Sprintf(`{"command_id":%q,"command_id":%q,%s,"participants":[{"character_id":%q,"expected_runtime_revision":0,"patch":{"current_hp":1}}],"events":[]}`, commandID, commandID, validRuleset, characterID),
-		"unknown patch field":     fmt.Sprintf(`{"command_id":%q,%s,"participants":[{"character_id":%q,"expected_runtime_revision":0,"patch":{"equipment":{}}}],"events":[]}`, commandID, validRuleset, characterID),
+		"unknown patch field":     fmt.Sprintf(`{"command_id":%q,%s,"participants":[{"character_id":%q,"expected_runtime_revision":0,"patch":{"forged_equipment":{}}}],"events":[]}`, commandID, validRuleset, characterID),
 		"immutable build field":   fmt.Sprintf(`{"command_id":%q,%s,"participants":[{"character_id":%q,"expected_runtime_revision":0,"patch":{"action_ids":[]}}],"events":[]}`, commandID, validRuleset, characterID),
 		"unknown inventory field": fmt.Sprintf(`{"command_id":%q,%s,"participants":[{"character_id":%q,"expected_runtime_revision":0,"patch":{"inventory_items":[{"card_id":%q,"qty":1,"name":"forged"}]}}],"events":[]}`, commandID, validRuleset, characterID, uuid.NewString()),
 	} {

@@ -415,6 +415,30 @@ describe('persisted familiar actor integrity', () => {
     expect(bundleIssue(history)).toMatch(/invalid combat history/);
   });
 
+  it.each(['owl', 'cat'] as const)('accepts board observations for %s while keeping pinned stats exact', form => {
+    const test = actorBundle(form);
+    test.familiar.character.spatialObservations = { boardRevision: 3, nearby: [{ actorId: 'nearby', relation: 'enemy', distanceFt: 15, conscious: true }] };
+    test.familiar.character.illumination = { boardRevision: 3, level: 'dim', daylight: false, magicalDarkness: false };
+    test.familiar.character.environmentObservations = { boardRevision: 3, openNightSky: true, nearestSeaFt: 25 };
+    test.familiar.runtime.maxResources.movement = 30;
+    expect(bundleIssue(test)).toBeNull();
+    const before = JSON.parse(JSON.stringify(test));
+    test.familiar.character.spatialObservations.nearby[0].distanceFt = -1;
+    expect(bundleIssue(test)).toMatch(/spatial observations/);
+    Object.assign(test, JSON.parse(JSON.stringify(before)));
+    test.familiar.character.illumination!.boardRevision = -1;
+    expect(bundleIssue(test)).toMatch(/illumination/);
+    Object.assign(test, JSON.parse(JSON.stringify(before)));
+    test.familiar.character.environmentObservations!.nearestSeaFt = -1;
+    expect(bundleIssue(test)).toMatch(/environment observations/);
+    Object.assign(test, JSON.parse(JSON.stringify(before)));
+    test.familiar.runtime.maxResources.movement = -1;
+    expect(bundleIssue(test)).toMatch(/movement maximum/);
+    Object.assign(test, JSON.parse(JSON.stringify(before)));
+    test.familiar.character.profBonus += 1;
+    expect(bundleIssue(test)).toMatch(/forged character/);
+  });
+
   it('enforces pinned HP bounds, Reaction mirror, and disappearance lifecycle', () => {
     const mutations: Array<[string, (actor: ActorState) => void]> = [
       ['max', (actor) => { actor.runtime.hp.max += 1; }],

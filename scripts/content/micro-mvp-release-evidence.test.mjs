@@ -14,6 +14,7 @@ import { createServer } from 'node:http';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import {ignorePolicy} from '../release/measure-local.mjs';
 import {
   executeBrowserGate,
   executeMicroMvpReleaseGate,
@@ -147,6 +148,23 @@ test('release source fingerprint covers canonical data and every non-TypeScript 
     'frontend/utils/weapon_types.json',
     'frontend/liveCanaryTargets.ts',
     'frontend/.npmrc',
+    '.dockerignore',
+    'backend/.dockerignore',
+    'backend/animationpresentation/catalog.json',
+    'backend/audiopresentation/catalog.json',
+    'backend/migrations/entity_references_277.sql',
+    'frontend/Dockerfile.dockerignore',
+    'frontend/worker/build.mjs',
+    'infra/Dockerfile.rules-worker',
+    'infra/Dockerfile.rules-worker.dockerignore',
+    'infra/docker-bake.hcl',
+    'infra/docker-bake.cache-gha.hcl',
+    'scripts/release/component-dependencies.json',
+    'scripts/release/plan-components.mjs',
+    'scripts/release/ci-release.mjs',
+    'scripts/release/ci-images.mjs',
+    'infra/release-build-config.json',
+    '.github/workflows/release.yml',
     'frontend/public/assets/dice-box/ammo/ammo.wasm.wasm',
     'docs/mechanics.schema.json',
     'docs/product-rules/free_origin_feat_choice_v1.json',
@@ -164,9 +182,9 @@ test('release source fingerprint covers canonical data and every non-TypeScript 
   assert.equal(paths.has('frontend/tsconfig.tsbuildinfo'), false);
   assert.equal(paths.has('frontend/vite.config.js'), false);
   assert.equal(paths.has('officials/canon/phb2024/class-barbarian.json'), false);
-  assert.match(
-    readFileSync(new URL('../../frontend/.dockerignore', import.meta.url), 'utf8'),
-    /^vite\.config\.js$/m,
+  assert.equal(
+    ignorePolicy(readFileSync(new URL('../../frontend/Dockerfile.dockerignore', import.meta.url), 'utf8')).includes('frontend/vite.config.js'),
+    false,
     'generated Vite config must not enter the production Docker context',
   );
 });
@@ -960,24 +978,26 @@ test('schema-v3 evidence and generator reject missing or malformed frontend orig
 
 test('frontend image publishes an atomic no-cache build-info endpoint contract', () => {
   const start = readFileSync(new URL('../../frontend/start.sh', import.meta.url), 'utf8');
+  const writer = readFileSync(new URL('../../frontend/write-build-info.sh', import.meta.url), 'utf8');
   const nginx = readFileSync(new URL('../../frontend/nginx.conf.template', import.meta.url), 'utf8');
   const dockerfile = readFileSync(new URL('../../frontend/Dockerfile', import.meta.url), 'utf8');
 
   assert.match(start, /^set -eu$/m);
-  assert.match(start, /SOURCE_COMMIT="\$\{SOURCE_COMMIT:-\}"/);
-  assert.match(start, /grep -Eq '\^\[0-9A-Fa-f\]\{40\}\$'/);
-  assert.match(start, /printf '\{"source_commit":"%s"\}\\n'/);
-  assert.match(start, /printf '\{"source_commit":null\}\\n'/);
-  const temporaryWrite = start.indexOf('> "$BUILD_INFO_TMP"');
-  const atomicRename = start.indexOf('mv "$BUILD_INFO_TMP" "$BUILD_INFO_PATH"');
+  assert.match(start, /^\/write-build-info\.sh$/m);
+  assert.doesNotMatch(start + writer, /\$\{?SOURCE_COMMIT/);
+  assert.match(writer, /component-identity\.json/);
+  assert.match(writer, /RELEASE_COMMIT="\$\{RELEASE_COMMIT:-\}"/);
+  const temporaryWrite = writer.indexOf('> "$BUILD_INFO_TMP"');
+  const atomicRename = writer.indexOf('mv "$BUILD_INFO_TMP" "$BUILD_INFO_PATH"');
   const nginxStart = start.indexOf("exec nginx -g 'daemon off;'");
-  assert.ok(temporaryWrite >= 0 && atomicRename > temporaryWrite && nginxStart > atomicRename);
+  assert.ok(temporaryWrite >= 0 && atomicRename > temporaryWrite && nginxStart > start.indexOf('/write-build-info.sh'));
 
   assert.match(nginx, /location = \/build-info\.json \{/);
   assert.match(nginx, /try_files \$uri =404;/);
   assert.match(nginx, /add_header Cache-Control "no-cache, no-store, must-revalidate" always;/);
   assert.doesNotMatch(start, /legacy-port\.conf/);
-  assert.match(dockerfile, /COPY start\.sh \/start\.sh/);
+  assert.match(dockerfile, /COPY frontend\/start\.sh \/start\.sh/);
+  assert.match(dockerfile, /COPY --from=build \/app\/component-identity\.json \/opt\/bagofholding\/component-identity\.json/);
   assert.match(dockerfile, /CMD \["\/start\.sh"\]/);
 });
 

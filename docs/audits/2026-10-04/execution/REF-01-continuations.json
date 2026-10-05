@@ -1,0 +1,507 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "beforeSourceHash": "8311001d08bd30ff8c4c81984e9d5d8a8771cd31efc0d7b1c44df4a88ecb1937",
+  "beforeExecutableHash": "df0f1d18774c22dfe87d84492e484b57da5feca9a897fc781dfd34160370a6c4",
+  "afterExecutableHash": "8fc286b3128b7bf254340bbe8e73dff20d778b49b57fc9e3ffe2193793cb1d00",
+  "immutableCorpora": [
+    "726929985527d894ffe6b0876aea79e2a2ed52b11fcd2eae5ef41e1c703eb726",
+    "92218d18f188020300643ead41575679210e35105444daa742a9b8b4672c08a6"
+  ],
+  "checks": [
+    {
+      "group": "pending",
+      "phase": "action_cost_policy",
+      "name": "persisted canonical action cost choice > resumes null after reload and never spends or rolls twice",
+      "resultHash": "49c4de44bd0027d9aa22d0b464a484d5737915cc70be3ead00610b2052f77185"
+    },
+    {
+      "group": "pending",
+      "phase": "action_cost_policy",
+      "name": "persisted canonical action cost choice > resumes quick after reload and never spends or rolls twice",
+      "resultHash": "fad2b9a7e84749f4bfa56cb1174457ebe77acad0e6e070d8076cef1cd06e9526"
+    },
+    {
+      "group": "pending",
+      "phase": "action_cost_policy",
+      "name": "persisted canonical action cost choice > resumes swift after reload and never spends or rolls twice",
+      "resultHash": "8be1730888cc49ddea1560be1b8ca36041e94ed08c4101d1c5a15ac3f1deb3d2"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "WorldState command/event facade > applies the suspended damage exactly once when the target declines Shield",
+      "resultHash": "c4e988441d6c7a1663c7c7c06eba28b9a067562ca28212c188b2f91f92e92ecf"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "item after-event reactions > reflects a projectile on d20 into its source with a persisted defense window",
+      "resultHash": "751d93617b433db67f658c72b30bcafe676b8b0ef43551b4fafe9b8a1bd90ef4"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "item after-event reactions > redirects natural 2 to the nearest data-tagged actor and keeps the hit through reload",
+      "resultHash": "273e2658f48a7339b1b08bd3e487dd4c429c43ea18b9a9021902377ed7d4d952"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "item after-event reactions > cancels the second bonus attack before RNG even when a hit reaction requires prepaid costs",
+      "resultHash": "1d42c5b9d681caf322c98afa190616f5848753d9c003e3ec23d22487c3a27829"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "item after-event reactions > replaces disadvantage with two separate arrows and preserves the extra shot after an interrupt",
+      "resultHash": "7e7f61d0b6e3f922d794133507c9fea03e5d5dc6e05e50a5388b70a7fbdf4100"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "WorldState command/event facade > pauses a hit before damage and lets Shield turn it into a miss after JSON reload",
+      "resultHash": "c00d1f29e92b543626f284e5dc54e16c9178d4f0caad8238e031d64cbbc70963"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "compiled D&D 2024 Protection runtime vertical > protects the first and later attacks before RNG, survives later invisibility and Shield, then ends irreversibly beyond 5 feet",
+      "resultHash": "8d4571065cdff316f15979ee258cf831bbc147cc6ab3e2942e73c693169e4d76"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "serializable weapon mastery saving throws > opens the same mastery continuation after Shield resolves but the attack still hits",
+      "resultHash": "a090c73539d693646de5e2d81fd878d81a95a7474de852deacde7e1a4d961021"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "item after-event reactions > redirects natural 1 to the nearest data-tagged actor and keeps the hit through reload",
+      "resultHash": "1f92fe89f9e3025dad10d2a97425ce765c1056a8621acc0ffce755563164980a"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "item after-event reactions > reflects a projectile on d10 into its source with a persisted defense window",
+      "resultHash": "874920cb929f5c7f75a1f2312870d50154abeb6bca9ca87c3b0588cc272c0eca"
+    },
+    {
+      "group": "pending",
+      "phase": "attack_reaction",
+      "name": "item after-event reactions > replaces advantage with two separate arrows and preserves the extra shot after an interrupt",
+      "resultHash": "3144982d2572997ab79d7c126e352062767efefcecf0ca1f98b9e62e49d29d19"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > uses bonus 10 only after the player chooses, retaining the original roll across reload",
+      "resultHash": "8f061172d51cb41c33243e4b0d32864873294f3020c5b8460f1e5caf83dc1075"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > uses bonus 1 only after the player chooses, retaining the original roll across reload",
+      "resultHash": "dfdb5f3685ac49165123b17926c218abb300237a132f9fb2afd079d28b8db21e"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > retains the opposing total for a contested embedded check and resumes its target outcome",
+      "resultHash": "6f402a91bccab36d90a51d5a2ff7a87b8d905903c6a2b9e4ab11e958ff0faa45"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > resumes 'study' from the saved failure without repeating 'action_surge_action' or its original die",
+      "resultHash": "f8f222b57c4780043dbc0fcf6d25112550c9d2036edf5c0c5324e5c283e76f38"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > resumes a generic action-embedded check after reload without paying or rolling the action twice",
+      "resultHash": "00b38b2953f963eb73b540385f3ff5b4b3403ad595a54fe84df5e2051b518bf9"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > resumes escape after a successful boost without charging a second action",
+      "resultHash": "0d19f0f4330a5af53e08629d57f5f626fcf9b44a99ec4b083a850033f241995a"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > resumes escape after a successful boost without charging a second action_surge_action",
+      "resultHash": "3f57d139678d73e0f908f921eac06f6af5463d70bee85425f19eee9c6b130d8f"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > resumes 'hide' from the saved failure without repeating 'action' or its original die",
+      "resultHash": "c1a5ac454844f6d0228d0a9445ec6f11592573d1d634e7e0bcb0b025e8681bd3"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > resumes 'study' from the saved failure without repeating 'action' or its original die",
+      "resultHash": "28fdc2bf2f650585ecb94dc86ffcc66d56f40028d39b56a581159adfc3c43cbe"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > uses bonus null only after the player chooses, retaining the original roll across reload",
+      "resultHash": "c64133ad16a245f5570a4b550d1a184263eb870f729f610acc22a1a005ce17c3"
+    },
+    {
+      "group": "pending",
+      "phase": "check_boost",
+      "name": "optional class boost after a committed failed ability check > resumes 'hide' from the saved failure without repeating 'action_surge_action' or its original die",
+      "resultHash": "da28641c1aa8700db918bb6ad9ed68c31b6df4d5b8828ca0ca92a853943bfd2f"
+    },
+    {
+      "group": "pending",
+      "phase": "concentration_save",
+      "name": "serializable weapon mastery saving throws > queues the base-damage concentration save behind Topple and opens one pending at a time",
+      "resultHash": "b0c310029c02a7d1023725aa4ec3f7b3b6787ea3dbbafeeb410cfdf5eafab163"
+    },
+    {
+      "group": "pending",
+      "phase": "concentration_save",
+      "name": "item after-event reactions > allows damage reduction and exactly one concentration save after a reflected projectile",
+      "resultHash": "2cd743cb0c04ccb52cfc83c5582b1e7ee593f7dedd5a369ef5688445f44b5013"
+    },
+    {
+      "group": "pending",
+      "phase": "concentration_save",
+      "name": "WorldState command/event facade > applies Eldritch Mind only to the Constitution save made to maintain Concentration",
+      "resultHash": "188cf9105c7e2ceb376d8a8e1ac5123671d4f070f0dd0c28affa9e81ce4e3885"
+    },
+    {
+      "group": "pending",
+      "phase": "concentration_save",
+      "name": "WorldState command/event facade > tracks concentration across actors and removes linked effects when replaced",
+      "resultHash": "2a5987b8ba269227f364b92793ba363a4e7fd392dc08e98265fe3852b7f853af"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "item after-event reactions > allows damage reduction and exactly one concentration save after a reflected projectile",
+      "resultHash": "9730d081f01123354e6aa04f0d37e7a0a829a6a9dfca1a776f664d0e954871ef"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "item after-event reactions > transfers 0.5 of actual damage, rechecking ownership and preserving both defenses after reload",
+      "resultHash": "0ab37b08ef804213a48431a3584e964de12efc29774ed58b6e527fd36a4cb1c4"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "item after-event reactions > resolves a 5 ft item burst through saved damage reactions then the remaining targets",
+      "resultHash": "f12f65b9cd3f4f952fcbba0c0670d71cead6ae695bbd6b33d1749eda4ec09bae"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "item after-event reactions > echoes fraction 0.5 only after the protected actor settles damage; the source gets its own defenses",
+      "resultHash": "d775a635bd9020f23260c799c312b53ff8c9f12602cd66da795dbf6546aea728"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "item after-event reactions > transfers 1 of actual damage, rechecking ownership and preserving both defenses after reload",
+      "resultHash": "b9f8c3deb8c4f2554dcc4b7a3b81caaf7a82de19f608a2515f3b388f7e05c761"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "item after-event reactions > echoes fraction 1 only after the protected actor settles damage; the source gets its own defenses",
+      "resultHash": "6dd5892884ff03cf7a9accdba9b95124b08246546ddfd96d631415700113e4d9"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "saving throw damage reaction continuation > persists cloak charge choice, resumes area saves and never rerolls shared damage",
+      "resultHash": "44a7d215a326f599134fbf9d9fa47ce0bfe2d26ffb89a4564f085c7d3249267e"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "saving throw damage reaction continuation > persists charm charge choice, resumes area saves and never rerolls shared damage",
+      "resultHash": "4cdf0230dadff43bcb8b2136ffbf607206ec7fb77835be0479e1dafff374c7e9"
+    },
+    {
+      "group": "pending",
+      "phase": "damage_reaction",
+      "name": "item after-event reactions > resolves a 10 ft item burst through saved damage reactions then the remaining targets",
+      "resultHash": "820f6d7603f56a782c89e5140e258667067256ef2eebb7c3da7db2f145477333"
+    },
+    {
+      "group": "pending",
+      "phase": "escape_grapple",
+      "name": "optional class boost after a committed failed ability check > resumes escape after a successful boost without charging a second action",
+      "resultHash": "c3efa8f1006c4103b5664f864e8459d1d9f2fe5829461db3e88c79cb679aad17"
+    },
+    {
+      "group": "pending",
+      "phase": "escape_grapple",
+      "name": "escape checks share the ordinary consumable modifier lifecycle > persists bonus consumption/refund for 5 + 10 and replays after reload",
+      "resultHash": "23658b07aa3d6100793b4040cc916eea55307c8bc74174698286c3ce92e7c990"
+    },
+    {
+      "group": "pending",
+      "phase": "escape_grapple",
+      "name": "schema-v4 canonical Attack runtime > runs two-PC grapple → chosen save → shove choice → escape across JSON reloads",
+      "resultHash": "212b6984903c6dbf4339f6987a3b27ab5b73f04ecea06e4796d602c95c0d69e8"
+    },
+    {
+      "group": "pending",
+      "phase": "escape_grapple",
+      "name": "escape checks share the ordinary consumable modifier lifecycle > persists bonus consumption/refund for 20 + undefined and replays after reload",
+      "resultHash": "43c1a5ae2db1a47179e8bf65c06f5d9e4dfb4be28652916451e956e0174d99f4"
+    },
+    {
+      "group": "pending",
+      "phase": "escape_grapple",
+      "name": "escape checks share the ordinary consumable modifier lifecycle > persists bonus consumption/refund for 1 + 1 and replays after reload",
+      "resultHash": "f8f93a82d16c51b3fd085bea66abd612f7531be1da9c6e9e93e10e9089b5abf6"
+    },
+    {
+      "group": "pending",
+      "phase": "escape_grapple",
+      "name": "optional class boost after a committed failed ability check > resumes escape after a successful boost without charging a second action_surge_action",
+      "resultHash": "73eb9206ac2789d11f4af3508b54ceb52e69944358b40625f530673aad0c29e6"
+    },
+    {
+      "group": "pending",
+      "phase": "event_reaction",
+      "name": "item after-event reactions > persists 'damage_dealt' choice, spends once and resumes through canonical damage",
+      "resultHash": "81ba6c7dbc980f45ed21c5e77206d169a29f4645b09b77349dc84b4e86994b7a"
+    },
+    {
+      "group": "pending",
+      "phase": "event_reaction",
+      "name": "item after-event reactions > replaces advantage with two separate arrows and preserves the extra shot after an interrupt",
+      "resultHash": "b104495ab11a32c8d9b6197edbf733fa484724315bda80c62baf576f1c31144a"
+    },
+    {
+      "group": "pending",
+      "phase": "event_reaction",
+      "name": "item after-event reactions > replaces disadvantage with two separate arrows and preserves the extra shot after an interrupt",
+      "resultHash": "ae80d06e0f6c2bb97ae541ce73232020694bea63d4593622116fc86dd45ebd76"
+    },
+    {
+      "group": "pending",
+      "phase": "event_reaction",
+      "name": "item after-event reactions > holds both owners in event order, validates critical filter and decline costs nothing",
+      "resultHash": "d3df7cd2cb91a97ea7180fcda0f2ef40f1a98c70b155ba7793d1d31c78b2c472"
+    },
+    {
+      "group": "pending",
+      "phase": "event_reaction",
+      "name": "item after-event reactions > persists 'attacked' choice, spends once and resumes through canonical damage",
+      "resultHash": "0c9b454c9ab7ab63582554cbc52a0ff5e4cfbfa72f8db4d8721c87bca8a420ca"
+    },
+    {
+      "group": "pending",
+      "phase": "event_reaction",
+      "name": "item after-event reactions > holds both owners in event order, validates critical filter and decline costs nothing",
+      "resultHash": "b3b79899ceb9c03853960535de1806a614888b32a58a44156dae3fc7996e046d"
+    },
+    {
+      "group": "pending",
+      "phase": "hazard_save",
+      "name": "rules-core interaction primitives > opens a catalog-owned environment save and resumes its canonical consequence after JSON reload",
+      "resultHash": "9e6d9db23a093c654d00222d0b5ded519d701d42b4c03cdc5b382844bbb34c6f"
+    },
+    {
+      "group": "pending",
+      "phase": "magic_missile_reaction",
+      "name": "PHB 2024 Magic Missile and Shield primitive > serializes two Shield choices, blocks every dart on accept, damages declined targets, and replays byte-identically",
+      "resultHash": "baee20554ce92cafbbb6ca8d095bb156f1b1bc57b908f6a7205c7baf9d72ffae"
+    },
+    {
+      "group": "pending",
+      "phase": "magic_missile_reaction",
+      "name": "PHB 2024 Magic Missile and Shield primitive > serializes two Shield choices, blocks every dart on accept, damages declined targets, and replays byte-identically",
+      "resultHash": "a022b3acc77adc6a7f8e6669b47ebb9e833d6a56566f4b16d2cc3b2c25bfa82b"
+    },
+    {
+      "group": "pending",
+      "phase": "magic_missile_reaction",
+      "name": "PHB 2024 Magic Missile and Shield primitive > lets one target decline Shield, then rolls and applies every allocated dart without reaction cost",
+      "resultHash": "24ef38f02389c4e431de5ff60403d85d61d17934fd4291c65252da387f16d95e"
+    },
+    {
+      "group": "pending",
+      "phase": "mastery_save",
+      "name": "serializable weapon mastery saving throws > opens the same mastery continuation after Shield resolves but the attack still hits",
+      "resultHash": "afe48d7a8ea4c9fba0ca7c31b5b4eb1dbf38a4435318510f8a375bf337363ef8"
+    },
+    {
+      "group": "pending",
+      "phase": "mastery_save",
+      "name": "serializable weapon mastery saving throws > commits hit damage, opens Topple without rolling the target, and resumes manually after reload",
+      "resultHash": "fc626a8b7a147c215088ef56d0374d11a162252abf8ae722655c1e06d18b4cbb"
+    },
+    {
+      "group": "pending",
+      "phase": "mastery_save",
+      "name": "serializable weapon mastery saving throws > queues the base-damage concentration save behind Topple and opens one pending at a time",
+      "resultHash": "a390b776ec1bdae31bd45f15a75044234ab06e16ac0204453bae01c6ea0fbb27"
+    },
+    {
+      "group": "pending",
+      "phase": "protection_reaction",
+      "name": "compiled D&D 2024 Protection runtime vertical > protects the first and later attacks before RNG, survives later invisibility and Shield, then ends irreversibly beyond 5 feet",
+      "resultHash": "11fc9ed437a16b8881ef836759275cd124959f99df43e3622f26f0862df4f55a"
+    },
+    {
+      "group": "pending",
+      "phase": "protection_reaction",
+      "name": "compiled D&D 2024 Protection runtime vertical > expires at the protector next turn start and rejects incomplete or stale attack observations atomically",
+      "resultHash": "3943fffe1ce861e3a1bfdd08dd9d2c0da6d538ad2b82b67f362afb7e7a0f0423"
+    },
+    {
+      "group": "pending",
+      "phase": "shove_outcome",
+      "name": "schema-v4 canonical Attack runtime > runs two-PC grapple → chosen save → shove choice → escape across JSON reloads",
+      "resultHash": "fad7fd34d7fd3ecd3f530a22855a7c7423c6a6eca756023c5ead7750800e5aea"
+    },
+    {
+      "group": "pending",
+      "phase": "slot_recovery",
+      "name": "canonical active slot recovery > persists natural_recovery choice and spends exactly once",
+      "resultHash": "997999755e4fd34a8f55a4b69cf4fd207bc986e84907090a7794ce825a965ce5"
+    },
+    {
+      "group": "pending",
+      "phase": "slot_recovery",
+      "name": "canonical active slot recovery > allows cancellation without a resource or action cost",
+      "resultHash": "044213c21a15b3b9bdff25d04c3e132c7e5be331d89d2f2c5ccc871778a047c9"
+    },
+    {
+      "group": "pending",
+      "phase": "slot_recovery",
+      "name": "canonical active slot recovery > persists magic_recovery_charge choice and spends exactly once",
+      "resultHash": "58e573e55dd8c1f45b96a3087b21afb8b2b23c0c5cca37ca0ab660e9cfe4c0ed"
+    },
+    {
+      "group": "pending",
+      "phase": "target_save",
+      "name": "saving throw damage reaction continuation > persists charm charge choice, resumes area saves and never rerolls shared damage",
+      "resultHash": "354bff558ec19b4a21d1f5b83e22c50417e5db45d5a6d48c68ff8d483b3703d1"
+    },
+    {
+      "group": "pending",
+      "phase": "target_save",
+      "name": "compiled D&D 2024 Protection runtime vertical > protects the first and later attacks before RNG, survives later invisibility and Shield, then ends irreversibly beyond 5 feet",
+      "resultHash": "86c025c2aaf70d855bc3f2e30c047b180bf24532d4f0bba9afe2a43bd265aed7"
+    },
+    {
+      "group": "pending",
+      "phase": "target_save",
+      "name": "saving throw damage reaction continuation > persists cloak charge choice, resumes area saves and never rerolls shared damage",
+      "resultHash": "13bb4d110c31d241853ac1a6cf27d7ec999859ed4821eebc2319285e9f09d90e"
+    },
+    {
+      "group": "pending",
+      "phase": "target_save",
+      "name": "saving throw damage reaction continuation > persists cloak charge choice, resumes area saves and never rerolls shared damage",
+      "resultHash": "08358df0288b84864d3527dd48d990e44c211e0b4f263c5e6d3b779285126934"
+    },
+    {
+      "group": "pending",
+      "phase": "target_save",
+      "name": "WorldState command/event facade > pauses a target save before effects, survives JSON reload and resumes without paying twice",
+      "resultHash": "77906b589904d8e28d799cb9b3f2e1d61590372659640135629c4632af2dd796"
+    },
+    {
+      "group": "pending",
+      "phase": "target_save",
+      "name": "saving throw damage reaction continuation > persists charm charge choice, resumes area saves and never rerolls shared damage",
+      "resultHash": "94fc951c2d08af0ab72cfaa4b03cb0163eb667a9b2f00bad08e5bf54bb5fbf2f"
+    },
+    {
+      "group": "pending",
+      "phase": "unarmed_save",
+      "name": "schema-v4 canonical Attack runtime > runs two-PC grapple → chosen save → shove choice → escape across JSON reloads",
+      "resultHash": "fdbc3ee8da175b2c47d8d560457ef71f8bedc8eefad0b8755d1a12ac9e7c4290"
+    },
+    {
+      "group": "pending",
+      "phase": "unarmed_save",
+      "name": "schema-v4 canonical Attack runtime > runs two-PC grapple → chosen save → shove choice → escape across JSON reloads",
+      "resultHash": "b9ec2a2d0ea1a699a169d1269c5545568a817fd37ac76cfc27c397e822a24b24"
+    },
+    {
+      "group": "event-queue",
+      "name": "paid-retaliate/1/UseAction",
+      "resultHash": "f06e37837b53eb95b47652265f20b6f769dbb8b5bc099d8529a00bd292c3045e"
+    },
+    {
+      "group": "event-queue",
+      "name": "paid-retaliate/2/ResolveDecision",
+      "resultHash": "e5dc5bab266ae29c45a34705e1b0b970feb6ebaf3ebdcf54fdbc91632bbd1caf"
+    },
+    {
+      "group": "event-queue",
+      "name": "paid-retaliate/3/ResolveDecision",
+      "resultHash": "1129a18dbffced023b313f2d4031bb9bd048819056e03053cb2f5b7a0bcd8cd0"
+    },
+    {
+      "group": "event-queue",
+      "name": "paid-echo/1/UseAction",
+      "resultHash": "23729c448c409bd0cbb52ad6711350df82c1decea8d13a2a45354c64af5ec237"
+    },
+    {
+      "group": "event-queue",
+      "name": "paid-echo/2/ResolveDecision",
+      "resultHash": "59089c815d0886b9d5e02ca54f52ff8d78acc10c2da9639d5f6950ff22bac9b7"
+    },
+    {
+      "group": "event-queue",
+      "name": "paid-echo/3/ResolveDecision",
+      "resultHash": "1d89967e9537c13140266aeeea691bcef89b767906e39e0907914802c8c7b65d"
+    },
+    {
+      "group": "event-queue",
+      "name": "ordered-declines/1/UseAction",
+      "resultHash": "42eace064588712888db18cfcf149e3d4ed18ded77b48e01bfa634c3deebb4df"
+    },
+    {
+      "group": "event-queue",
+      "name": "ordered-declines/2/ResolveDecision",
+      "resultHash": "8ccb9b0584b8b9b174fa35ad85f05ed83b8006d19cf081a7e160dbd8f16e655f"
+    },
+    {
+      "group": "event-queue",
+      "name": "ordered-declines/3/ResolveDecision",
+      "resultHash": "c0a2dff26dc3dfbc389d0a6b0b0e4a26474fbdc3d025d9db734461b54fe8df17"
+    },
+    {
+      "group": "event-queue",
+      "name": "automatic-0/1/UseAction",
+      "resultHash": "84972bf69dba703a30b3aea649fe4d7b868af1293f0843529f7fa9651900ee39"
+    },
+    {
+      "group": "event-queue",
+      "name": "automatic-1/1/UseAction",
+      "resultHash": "1b4d036fbee4400f7780553be98044240cde268772eaa2662186d47a97e5af04"
+    },
+    {
+      "group": "event-queue",
+      "name": "unowned-requires_weapon_or_unarmed_hit/1/UseAction",
+      "resultHash": "4764fc94733a0263822dc62b60e119b0ff3098599a010450f494fab9fb42ab8f"
+    },
+    {
+      "group": "event-queue",
+      "name": "unowned-unsupported_fixture_gate/1/UseAction",
+      "resultHash": "dcc1de9f6562c8ba50f30226ffb092b69aa8f8e6b1abd3273288193bbaf55d88"
+    }
+  ],
+  "scope": "typed-command-and-decision-dispatch-plus-attack-damage-continuations",
+  "targetedTests": 100,
+  "oldArtifactsChanged": false
+}

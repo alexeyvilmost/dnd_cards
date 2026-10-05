@@ -1,0 +1,225 @@
+name: Prepare immutable release images
+
+# Enabling this external stage requires a separate request and reviewed config.
+on:
+  workflow_run:
+    workflows: ['Local contract suites']
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      candidate:
+        description: 'Exact 40-character main commit already verified by CI'
+        required: true
+        type: string
+      verification_run_id:
+        description: 'Successful ci.yml run for exactly this commit, including real E2E'
+        required: true
+        type: string
+      baseline_run_id:
+        description: 'Latest successful deploy.yml run; blank only for initial full build'
+        required: false
+        type: string
+      publish:
+        description: 'Publish verified component images; never deploys production'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-image-build-${{ inputs.candidate || github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main' && vars.RELEASE_BUILD_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && vars.AUTO_RELEASE_MAIN_ENABLED == 'true'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      buildkit_image: ${{ steps.plan.outputs.buildkit_image }}
+      candidate: ${{ steps.request.outputs.candidate }}
+      publish: ${{ steps.request.outputs.publish }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified 2026-10-04
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+      - id: request
+        name: Resolve verified source and the last successful deployed baseline
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_BUILD_ENABLED: ${{ vars.RELEASE_BUILD_ENABLED }}
+          AUTO_RELEASE_MAIN_ENABLED: ${{ vars.AUTO_RELEASE_MAIN_ENABLED }}
+          RELEASE_PUBLICATION_ENABLED: ${{ vars.RELEASE_PUBLICATION_ENABLED }}
+        run: node control/scripts/release/automatic-release.mjs "$GITHUB_EVENT_PATH" artifacts/request.json >> "$GITHUB_OUTPUT"
+      - name: Verify trusted workflow identities before reading artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CANDIDATE: ${{ steps.request.outputs.candidate }}
+          CI_RUN: ${{ steps.request.outputs.verification_run_id }}
+          BASELINE_RUN: ${{ steps.request.outputs.baseline_run_id }}
+        run: |
+          node control/scripts/release/ci-release.mjs verify-run "$CI_RUN" "$GITHUB_REPOSITORY" "$CANDIDATE" verification artifacts/verified-run.json
+          if [ -n "$BASELINE_RUN" ]; then
+            node control/scripts/release/ci-release.mjs verify-run "$BASELINE_RUN" "$GITHUB_REPOSITORY" - deployment artifacts/verified-baseline-run.json
+          fi
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: local-suite-results
+          path: artifacts/verification
+          run-id: ${{ steps.request.outputs.verification_run_id }}
+          github-token: ${{ github.token }}
+      - if: steps.request.outputs.baseline_run_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: deployed-release
+          path: artifacts/baseline
+          run-id: ${{ steps.request.outputs.baseline_run_id }}
+          github-token: ${{ github.token }}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.request.outputs.candidate }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - id: plan
+        name: Bind source, successful reports, fingerprints and last deployed manifest
+        env:
+          CANDIDATE: ${{ steps.request.outputs.candidate }}
+        run: |
+          node control/scripts/release/ci-release.mjs plan source "$CANDIDATE" "$GITHUB_REPOSITORY" control/infra/release-build-config.json artifacts/verified-run.json artifacts/verification/report.json artifacts/baseline artifacts/build-plan.json >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: immutable-build-plan
+          path: artifacts/build-plan.json
+          if-no-files-found: error
+          retention-days: 14
+
+  components:
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.prepare.outputs.candidate }}
+          path: source
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: immutable-build-plan
+          path: artifacts
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3, read-only pull credentials
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        with:
+          version: v0.36.1
+          driver-opts: image=${{ needs.prepare.outputs.buildkit_image }}
+      - id: component
+        env:
+          COMPONENT: ${{ matrix.name }}
+        run: node control/scripts/release/ci-images.mjs outputs artifacts/build-plan.json "$COMPONENT" source >> "$GITHUB_OUTPUT"
+      - if: steps.component.outputs.operation == 'build'
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ${{ steps.component.outputs.context }}
+          file: ${{ steps.component.outputs.dockerfile }}
+          platforms: ${{ steps.component.outputs.platform }}
+          tags: ${{ steps.component.outputs.tag }}
+          build-args: ${{ steps.component.outputs.build_args }}
+          load: true
+          push: false
+          provenance: false
+          cache-from: type=gha,scope=bagofholding-${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=bagofholding-${{ matrix.name }}
+      - name: Verify actual baked identity and retain image bytes
+        env:
+          COMPONENT: ${{ matrix.name }}
+        run: node control/scripts/release/ci-images.mjs verify artifacts/build-plan.json "$COMPONENT" source "artifacts/components/$COMPONENT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: verified-image-${{ matrix.name }}
+          path: artifacts/components/${{ matrix.name }}/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  publish:
+    needs: [prepare, components]
+    if: needs.prepare.outputs.publish == 'true' && vars.RELEASE_PUBLICATION_ENABLED == 'true'
+    environment: release-publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24.19.0'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: immutable-build-plan
+          path: artifacts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: verified-image-backend
+          path: artifacts/components/backend
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: verified-image-frontend
+          path: artifacts/components/frontend
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: verified-image-worker
+          path: artifacts/components/worker
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Publish verified bytes and candidate manifest after every job succeeds
+        env:
+          RELEASE_PUBLICATION_ENABLED: ${{ vars.RELEASE_PUBLICATION_ENABLED }}
+        run: node control/scripts/release/ci-images.mjs publish artifacts/build-plan.json artifacts/components artifacts/candidate
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-candidate
+          path: artifacts/candidate/
+          if-no-files-found: error
+          retention-days: 30

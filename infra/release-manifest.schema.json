@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:bagofholding:release-manifest:1",
+  "title": "Bag of Holding release composition, version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "releaseId", "releaseCommit", "previousReleaseId", "createdAt", "components", "rulesArtifactHash", "contentManifestHash", "apiProtocolVersion", "workerProtocolVersion", "supportedWorldSchemaVersions", "workerRuntime", "capabilities", "migrationSet", "validationEvidence"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "releaseId": {"$ref": "#/$defs/id"},
+    "releaseCommit": {"$ref": "#/$defs/commit"},
+    "previousReleaseId": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/id"}]},
+    "createdAt": {"$ref": "#/$defs/timestamp"},
+    "components": {
+      "type": "object", "additionalProperties": false,
+      "required": ["frontend", "backend", "rulesWorker"],
+      "properties": {
+        "frontend": {"$ref": "#/$defs/component"},
+        "backend": {"$ref": "#/$defs/component"},
+        "rulesWorker": {"$ref": "#/$defs/component"}
+      }
+    },
+    "rulesArtifactHash": {"$ref": "#/$defs/hash"},
+    "contentManifestHash": {"$ref": "#/$defs/hash"},
+    "apiProtocolVersion": {"const": 1},
+    "workerProtocolVersion": {"const": 1},
+    "supportedWorldSchemaVersions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"const": 5}},
+    "workerRuntime": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "node"}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}}},
+    "capabilities": {"type": "array", "uniqueItems": true, "minItems": 2, "items": {"enum": ["pinned-artifact-routing", "pending-decision-pass-through"]}},
+    "migrationSet": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/migrationIdentity"}},
+    "validationEvidence": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["gate", "status", "reportHash", "inputFingerprint", "completedAt"], "properties": {"gate": {"enum": ["core", "image-contract", "pinned-artifacts"]}, "status": {"const": "passed"}, "reportHash": {"$ref": "#/$defs/hash"}, "inputFingerprint": {"$ref": "#/$defs/hash"}, "completedAt": {"$ref": "#/$defs/timestamp"}}}}
+  },
+  "$defs": {
+    "migrationIdentity": {"type": "object", "anyOf": [
+      {"type":"object","additionalProperties":false,"required":["id","checksum"],"properties":{"id":{"$ref":"#/$defs/id"},"checksum":{"$ref":"#/$defs/hash"}}},
+      {"type":"object","additionalProperties":false,"required":["id","kind","observationHash"],"properties":{"id":{"$ref":"#/$defs/id"},"kind":{"const":"observed-id-only"},"observationHash":{"$ref":"#/$defs/hash"}}}
+    ]},
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "timestamp": {"type": "string", "format": "date-time", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$"},
+    "component": {
+      "type": "object", "additionalProperties": false,
+      "required": ["sourceCommit", "inputFingerprint", "imageDigest"],
+      "properties": {
+        "sourceCommit": {"$ref": "#/$defs/commit"},
+        "inputFingerprint": {"$ref": "#/$defs/hash"},
+        "imageDigest": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$"}
+      }
+    }
+  }
+}

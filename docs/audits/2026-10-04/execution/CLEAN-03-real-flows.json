@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "tests": 11,
+  "passed": 11,
+  "skipped": 0,
+  "projects": [
+    ""
+  ],
+  "runId": "test_ceec12dd7b16c11534a719cb",
+  "uiBuild": {
+    "reused": true,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_ceec12dd7b16c11534a719cb\\ui-dist",
+    "indexHash": "0e1afa41664d191d645045445e8c3c51334ca54965dba0f9186e145b8f87a4e6",
+    "manifestHash": "6d536042f99b7836ff08679e6fbd72641ec647828d6dfbfcbbdd4289e2c1ac5f",
+    "files": 645,
+    "bytes": 198636716
+  },
+  "cleanup": "stopped",
+  "printExport": "S03 writes a real PDF and compares exported JSON against the saved document",
+  "browserReport": "outputs/testing/runs/test_ceec12dd7b16c11534a719cb/acceptance/playwright.json",
+  "mapProof": "Separate retry follows a diagnostic script error, not included in this receipt"
+}

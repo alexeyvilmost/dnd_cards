@@ -1,4 +1,4 @@
-import {projectRuntimeCharacter} from '../engine/runtimeCharacterProjection';
+import {projectRuntimeCharacter} from './legacy/engineAdapter';
 /**
  * Rules-core adapter for condition mechanics.
  *

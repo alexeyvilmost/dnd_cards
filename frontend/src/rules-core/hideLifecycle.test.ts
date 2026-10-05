@@ -329,6 +329,7 @@ describe('PHB 2024 Hide / Invisible lifecycle', () => {
           baseLevel: 1,
           castLevel: 1,
           sourceClass: 'CLASS-wizard',
+          concentration: false,
           components: { verbal: true, somatic: true, material: false },
         },
       }),

@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "kind": "native-owned-phase-crash",
+  "runId": "test_b74426d134f97d09e055f94a",
+  "scenarios": [
+    {
+      "phase": "before_commit",
+      "runId": "889864fa-0343-4201-9647-e05d9983d2cb",
+      "commandId": "71fead79-7e75-45a3-9139-a8467b37c202",
+      "commandHash": "sha256:1d0904a3e4bc83f3184ec7c9b133b536a32be7603c65353081fb7ec13c4f68ac",
+      "noClientResponse": true,
+      "beforeHash": "sha256:33c7c6addbc4e206158476f3953a5fc468d82b6220469b6384d86604ca12eb4f",
+      "afterCrashHash": "sha256:33c7c6addbc4e206158476f3953a5fc468d82b6220469b6384d86604ca12eb4f",
+      "afterHash": "sha256:cdb41adfd4f402ed3d943bb787429d104d420a1e5fb6e7d701ce3bfa131812da",
+      "afterDuplicateHash": "sha256:cdb41adfd4f402ed3d943bb787429d104d420a1e5fb6e7d701ce3bfa131812da",
+      "envelopeBeforeHash": "sha256:263d60f1e7fe8ed4a6c35a0de48d1c7240d130e3747d34dc7d617b63b66831aa",
+      "envelopeAfterHash": "sha256:eca9817020365872316a128a3f01115d059f2578b7494ffde2b5cad02795fa1a",
+      "rngBeforeHash": "sha256:c11a3bb0da73616b08cc72961d2afe4301e5fea7df3260cfe27e14dd625ea435",
+      "rngAfterHash": "sha256:8544392656b2f6e7af8f3de7f77cf3f33dfddd961521c738ba11b724b441295c",
+      "receiptHash": "sha256:fec2bca6f0e6e8cd6c8d236e799bf0390905b2bc06d976f5659f9fa7098968a2",
+      "receiptResponseHash": "sha256:f6b60b47149794259aa8d099094ae50926cf9f40d22c9b965f4a545cac4b9ec5",
+      "resultHash": "sha256:f6b60b47149794259aa8d099094ae50926cf9f40d22c9b965f4a545cac4b9ec5",
+      "heldWorkerResultHash": "sha256:0323bd3aac7ca40dfa9d1b58e7f338acee14cb14cf9384e46a7a17112cf6d960",
+      "retriedWorkerResultHash": "sha256:0323bd3aac7ca40dfa9d1b58e7f338acee14cb14cf9384e46a7a17112cf6d960",
+      "heldWorkerInputHash": "sha256:abc5a3b7512d63ce5753cdcc4d69e169753f087cd2beb10fff3f27aed79869fa",
+      "retriedWorkerInputHash": "sha256:abc5a3b7512d63ce5753cdcc4d69e169753f087cd2beb10fff3f27aed79869fa",
+      "fullWorkerReplayEquality": true,
+      "revisionBefore": 3,
+      "revisionAfter": 4,
+      "runtimeRevisionBefore": 2,
+      "runtimeRevisionAfter": 3,
+      "receiptCountBefore": 0,
+      "receiptCount": 1,
+      "workerCalls": 2,
+      "retryWorkerCalls": 1,
+      "duplicateWorkerCalls": 0,
+      "paid": [
+        {
+          "resource": "heroic_inspiration",
+          "before": 1,
+          "after": 0,
+          "cost": 1
+        }
+      ],
+      "exactRetry": true
+    },
+    {
+      "phase": "after_commit",
+      "runId": "32092bca-9295-4d03-ad5b-f8152ab0e094",
+      "commandId": "7d29c992-e44d-4729-9923-1a78e5b0fd97",
+      "commandHash": "sha256:4da0e6cb98fe0b7068cdc07ff8b637993e1e3cfbb1329282390e4c898d6afa02",
+      "noClientResponse": true,
+      "beforeHash": "sha256:9ae96ce2036495b17b76248ed66381447caf65dcf05844e32eb3f585ab2f56fc",
+      "afterCrashHash": "sha256:4949b3814c96daf84abc66f78e66b74e8436a4bd9cae34310ce61de068768cce",
+      "afterHash": "sha256:4949b3814c96daf84abc66f78e66b74e8436a4bd9cae34310ce61de068768cce",
+      "afterDuplicateHash": "sha256:4949b3814c96daf84abc66f78e66b74e8436a4bd9cae34310ce61de068768cce",
+      "envelopeBeforeHash": "sha256:a20e691afd0ec003839b4f424ef02fc2f8823999b3b03e67a2385adec119cd6e",
+      "envelopeAfterHash": "sha256:56d6f4c76aacc1d68ce74882282aa44e582a0ef3bf283d1405c3066a6044eb88",
+      "rngBeforeHash": "sha256:0d39b5b05bb0881ff38cc353903218b0e021c583830800b53e7a8e186506b04e",
+      "rngAfterHash": "sha256:2bd1def3ff5bd3cffa0ccabec0e03ff47e0e720c419922d3d44c3cf46669a636",
+      "receiptHash": "sha256:79898a676c05055744bc5d91f1e4a48bf18fcd9562343cc54b528e337eb5f272",
+      "receiptResponseHash": "sha256:cefd19a915f437d9c42075c99db03d90e631783f16d356e5ecaa506851c1215e",
+      "resultHash": "sha256:cefd19a915f437d9c42075c99db03d90e631783f16d356e5ecaa506851c1215e",
+      "committedHash": "sha256:4949b3814c96daf84abc66f78e66b74e8436a4bd9cae34310ce61de068768cce",
+      "heldApiResultHash": "sha256:cefd19a915f437d9c42075c99db03d90e631783f16d356e5ecaa506851c1215e",
+      "revisionBefore": 3,
+      "revisionAfter": 4,
+      "runtimeRevisionBefore": 2,
+      "runtimeRevisionAfter": 3,
+      "receiptCountBefore": 0,
+      "receiptCount": 1,
+      "workerCalls": 1,
+      "retryWorkerCalls": 0,
+      "duplicateWorkerCalls": 0,
+      "paid": [
+        {
+          "resource": "heroic_inspiration",
+          "before": 1,
+          "after": 0,
+          "cost": 1
+        }
+      ],
+      "exactRetry": true
+    }
+  ],
+  "binary": {
+    "sourceRun": "test_eaf775049c3f360dc6b7cac2",
+    "sha256": "sha256:4b4d45b39d1668a27258e069d4649e82835f54542af0673bf8343d85688a16d1",
+    "bytes": 74590720,
+    "goRuntime": "go1.25.12",
+    "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64"
+  },
+  "crashes": [
+    {
+      "phase": "before_commit",
+      "pid": 76152,
+      "generation": 1,
+      "requestedSignal": "SIGKILL",
+      "code": null,
+      "signal": "SIGKILL"
+    },
+    {
+      "phase": "after_commit",
+      "pid": 54316,
+      "generation": 2,
+      "requestedSignal": "SIGKILL",
+      "code": null,
+      "signal": "SIGKILL"
+    },
+    {
+      "phase": "cleanup",
+      "pid": 24300,
+      "generation": 3,
+      "requestedSignal": "SIGKILL",
+      "code": null,
+      "signal": "SIGKILL"
+    }
+  ],
+  "sourceAfter": {
+    "binaryHash": "sha256:4b4d45b39d1668a27258e069d4649e82835f54542af0673bf8343d85688a16d1",
+    "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64"
+  },
+  "executionAfter": {
+    "binaryHash": "sha256:4b4d45b39d1668a27258e069d4649e82835f54542af0673bf8343d85688a16d1",
+    "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64"
+  },
+  "cleanup": {
+    "status": "stopped",
+    "errors": [],
+    "ownedChildrenExited": true
+  }
+}

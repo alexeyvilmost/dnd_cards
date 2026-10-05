@@ -23,9 +23,16 @@ export type CombatCatalogNeed =
   | {kind: 'entity'; entityType: CombatCatalogKind; reference: string}
   | {kind: 'effect_type'; effectType: string}
   | {kind: 'variables'};
+export interface CombatCatalogSelection {
+  version: 1;
+  entities: {entityType: CombatCatalogKind; id: string}[];
+  effectTypes: string[];
+  variables: boolean;
+  reads: CombatCatalogNeed[];
+}
 export type PreparedCombatParticipant =
   | {status: 'needs_content'; needs: CombatCatalogNeed[]}
-  | {status: 'ready'; participant: SheetCombatParticipantSeed; contentManifestHash: string};
+  | {status: 'ready'; participant: SheetCombatParticipantSeed; contentManifestHash: string; catalogSelection?: CombatCatalogSelection};
 
 /** A read-only, per-build resolver. Missing declarations survive the ordinary
  * assembler's optional-load catches and must be fulfilled before a worker can
@@ -34,10 +41,15 @@ export async function prepareRoguelikeCombatParticipant(
   character: ForgeCharacter,
   catalog: FrozenCombatCatalog,
   basicActionIds: readonly string[],
+  options: {consumedCatalog?: boolean} = {},
 ): Promise<PreparedCombatParticipant> {
   if (catalog.schemaVersion !== 1) throw new Error('Несовместимая версия каталога боя');
   const needs = new Map<string, CombatCatalogNeed>();
   const need = (entry: CombatCatalogNeed) => {needs.set(canonicalSha256Sync(entry), entry);};
+  const reads = new Map<string, CombatCatalogNeed>(), consumed = new Map<string, {entityType: CombatCatalogKind; id: string}>();
+  const effectTypes = new Set<string>(); let variablesRead = false;
+  const read = (entry: CombatCatalogNeed) => {if (options.consumedCatalog) reads.set(canonicalSha256Sync(entry), entry);};
+  const consume = (kind: CombatCatalogKind, row: {id: string}) => {if (options.consumedCatalog) consumed.set(`${kind}/${row.id}`, {entityType: kind, id: row.id});};
   const indexes = new Map<CombatCatalogKind, Map<string, unknown>>();
   const spellAliases = new Map<string, Spell | null>();
   let ambiguousReference: Error | undefined;
@@ -63,6 +75,7 @@ export async function prepareRoguelikeCombatParticipant(
     indexes.set(kind, index);
   }
   const get = async <K extends CombatCatalogKind>(kind: K, reference: string): Promise<CombatCatalogEntities[K]> => {
+    read({kind: 'entity', entityType: kind, reference});
     let entity = indexes.get(kind)?.get(reference);
     if (!entity && kind === 'spell') {
       const alias = spellAliases.get(reference.trim().toLowerCase());
@@ -78,11 +91,15 @@ export async function prepareRoguelikeCombatParticipant(
       need({kind: 'entity', entityType: kind, reference});
       throw new Error(`Каталог не содержит ${kind}/${reference}`);
     }
+    consume(kind, entity as {id: string});
     return structuredClone(entity) as CombatCatalogEntities[K];
   };
   const listEffects = async (effectType: string) => {
+    read({kind: 'effect_type', effectType}); effectTypes.add(effectType);
     if (!catalog.completeEffectTypes.includes(effectType)) need({kind: 'effect_type', effectType});
-    return structuredClone(catalog.entities.effect.filter((entry) => entry.type === effectType));
+    const rows = catalog.entities.effect.filter((entry) => entry.type === effectType);
+    for (const row of rows) consume('effect', row);
+    return structuredClone(rows);
   };
   const effectsApi = {getEffect: (id: string) => get('effect', id),
     getEffects: async (params?: {type?: string}) => {
@@ -97,6 +114,7 @@ export async function prepareRoguelikeCombatParticipant(
     effectsApi, actionsApi, spellsApi: {getSpell: id => get('spell', id)},
     resourcesApi: {getResource: id => get('resource', id)},
     variablesApi: {getVariables: async () => {
+      read({kind: 'variables'}); variablesRead = true;
       if (!catalog.variablesComplete) need({kind: 'variables'});
       return {variables: structuredClone(catalog.variables), total: catalog.variables.length, page: 1, limit: catalog.variables.length};
     }},
@@ -117,10 +135,19 @@ export async function prepareRoguelikeCombatParticipant(
   try {
     const basicActions = await Promise.all(basicActionIds.map(id => get('action', id)));
     const participant = await sheet.loadSheetCombatParticipant({character: structuredClone(character), basicActions,
-      cards: new Map(catalog.entities.card.map(card => [card.id, card]))});
+      // Candidate cache entries may contain formerly owned cards. Hydration is
+      // the canonical source of carried/bound cards; a cache is not inventory.
+      cards: new Map((options.consumedCatalog ? [] : catalog.entities.card).map(card => [card.id, card]))});
     if (ambiguousReference) throw ambiguousReference;
     if (needs.size) return {status: 'needs_content', needs: [...needs.values()]};
-    return {status: 'ready', participant, contentManifestHash: canonicalSha256Sync(catalog)};
+    if (!options.consumedCatalog) return {status: 'ready', participant, contentManifestHash: canonicalSha256Sync(catalog)};
+    const catalogSelection: CombatCatalogSelection = {version: 1, entities: [...consumed.values()].sort((a, b) => `${a.entityType}/${a.id}`.localeCompare(`${b.entityType}/${b.id}`)),
+      effectTypes: [...effectTypes].sort(), variables: variablesRead,
+      reads: [...reads].sort(([a], [b]) => a.localeCompare(b)).map(([, value]) => value)};
+    const selected = {...catalog, entities: Object.fromEntries(Object.entries(catalog.entities).map(([kind, rows]) => [kind,
+      rows.filter(row => consumed.has(`${kind}/${row.id}`)).sort((a, b) => a.id.localeCompare(b.id))])),
+      completeEffectTypes: catalogSelection.effectTypes, variables: variablesRead ? catalog.variables : [], variablesComplete: variablesRead};
+    return {status: 'ready', participant, contentManifestHash: canonicalSha256Sync(selected), catalogSelection};
   } catch (error) {
     if (ambiguousReference) throw ambiguousReference;
     if (needs.size) return {status: 'needs_content', needs: [...needs.values()]};

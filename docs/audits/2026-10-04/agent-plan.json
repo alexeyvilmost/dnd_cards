@@ -1,0 +1,2660 @@
+{
+  "schema_version": "1.0",
+  "report_type": "agent_implementation_plan",
+  "language": "ru",
+  "created_at": "2026-10-04",
+  "workspace": "C:/Projects/dnd_cards",
+  "baseline_commit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "status": "implementation_in_progress_completion_audit",
+  "execution_progress": "docs/audits/2026-10-04/execution/progress.json",
+  "execution_report": "docs/audits/2026-10-04/execution/README.md",
+  "task_status_semantics": "Статусы внутри исходных tasks фиксируют состояние предложенного плана. Текущее выполнение и доказательства читать из execution_progress; не начинать уже выполненный срез повторно.",
+  "human_report": "docs/audits/2026-10-04/recommendations.md",
+  "objective": "Ускорить основные сценарии и доставку сервиса, сделать проверки воспроизводимыми, ограничить рост хранения и уменьшить сложность без расхождения правил и потери истории.",
+  "authorization": {
+    "current": "Пользователь поручил автономно выполнить весь план; 2026-10-05 явно разрешил коммит и выкатку после локальных проверок. Необходимый push входит в release workflow. Повторное разрешение этих действий не требуется; секреты, пользовательские данные и исторические артефакты сохраняются.",
+    "future_local_work": "Продолжать локально в назначенном scope по execution_progress, сохраняя пользовательские данные и проверенные исторические артефакты.",
+    "requires_explicit_request": [
+      "необратимое удаление пользовательских данных",
+      "переписывание Git history"
+    ],
+    "production_enabled": false,
+    "approved_release_actions": [
+      "commit verified in-scope files",
+      "push exact reviewed commit",
+      "TimeWeb application deployment after required checks",
+      "enable automatic main deployment after first successful verified adoption, as requested in item2"
+    ],
+    "production_enablement_status": "Tracked manual policy prepared; external release/deploy variables remain false until required checks pass."
+  },
+  "invariants": [
+    "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
+    "Механики принадлежат данным, не веткам по имени/UUID; новая механика проверяется на второй сущности с другими данными.",
+    "Переиспользовать общие assembler/executor/cost/availability/preview/dialog; UI сохраняет каноничные компоненты и настройки иконка/строка.",
+    "Авторитетная сторона проверяет права, ревизии, доступность и стоимость; принятие решения, расход, RNG, состояния и receipt атомарны.",
+    "Тот же command ID и fingerprint возвращают прежний outcome без нового броска/списания; иной payload с тем же ID отклоняется.",
+    "Pending decision переживает reload/restart; окончательный исход не публикуется до доступного влияния; КД и модификаторы имеют исторические источники.",
+    "Старые artifact/catalog/receipt/event bytes и hashes не переписывать; новые форматы имеют версию, dual-read и явную миграцию.",
+    "Теги библиотеки принадлежат БД и устойчивым ID; legacy_tags неизменяем; автоматические тесты не повышают ручные статусы проверки.",
+    "Тесты пишут только в специально созданную локальную/CI БД. Не запускать старые live/migration scripts по умолчанию.",
+    "Обязательные skipped DB tests, пустой selector и отсутствие нужного artifact завершают gate ошибкой.",
+    "Не использовать DOM title для hover; новые подписи Armor Class только КД.",
+    "Не публиковать секреты, entropy, полные личные листы, prompts или base64 в диагностике.",
+    "Не удалять компонент по одному отсутствующему импорту: проверить dynamic routes, data refs, COPY, go:embed, fixtures и historical readers. src/mvp и src/canon содержат production dependencies."
+  ],
+  "evidence": {
+    "measured": [
+      {
+        "id": "M01",
+        "name": "Frontend build",
+        "value": 112.16,
+        "unit": "seconds",
+        "result": "pass",
+        "scope": "Один локальный warm-workspace запуск; Vite 30.07 s; эквивалентные package.json команды через установленный Node."
+      },
+      {
+        "id": "M02",
+        "name": "Entry JS gzip",
+        "value": 231511,
+        "unit": "bytes"
+      },
+      {
+        "id": "M03",
+        "name": "Combat static JS closure gzip",
+        "value": 779700,
+        "unit": "bytes",
+        "scope": "Включая entry; без dynamic imports, CSS, API, media; не browser waterfall."
+      },
+      {
+        "id": "M04",
+        "name": "Targeted Vitest",
+        "value": {
+          "passed": 26,
+          "failed": 1,
+          "seconds": 13.97
+        },
+        "scope": "Пять файлов: importBoundary legacy imports failing, остальные четыре pass."
+      },
+      {
+        "id": "M05",
+        "name": "Tracked files",
+        "value": 4259
+      },
+      {
+        "id": "M06",
+        "name": "Local dist",
+        "value": 168974643,
+        "unit": "bytes"
+      }
+    ],
+    "unknown": [
+      "production database bytes and growth",
+      "production p50/p95 and lock waits",
+      "actual upstream 403 body/account eligibility",
+      "current server CPU/RAM/network and release timing",
+      "deprecated route traffic",
+      "restore RPO/RTO"
+    ],
+    "files": [
+      "runtime-findings.md",
+      "deployment-database-findings.md",
+      "tests-findings.md",
+      "cleanup-openai-findings.md",
+      "inventory.json",
+      "local-disk-inventory.json",
+      "runtime-build-metrics.json"
+    ],
+    "files_base": "docs/audits/2026-10-04"
+  },
+  "execution_contract": {
+    "max_parallel_owners": 3,
+    "coordination": "Разделять по файлам; App.tsx/package.json/CI/models/migrations/quick-gate и protocol имеют одного владельца. Общие contract changes интегрировать последовательно.",
+    "task_start": [
+      "Зафиксировать HEAD и git status без перезаписи чужих файлов.",
+      "Перепроверить source references: строки относятся к baseline.",
+      "Проверить dependencies задач и baseline измерений; назначить владельца общих файлов."
+    ],
+    "task_finish": [
+      "Сохранить diff и команды проверок с cwd/versions/exit code.",
+      "Сохранить baseline/result metrics и ограничения, различить regression/pre-existing/infrastructure failures.",
+      "Для механик доказать second entity/retry/reload/atomicity; для форматов old-reader/replay; для UI canonical presentation.",
+      "Передать результат координатору без commit/push/deploy."
+    ],
+    "done_rule": "Все acceptance criteria выполнены и доказаны. Новые зависимости отражены в плане. Пропущенные проверки не считаются успешными.",
+    "rollback_rule": "Возврат image не откатывает миграцию. Данные имеют заранее проверенный forward-repair/restore; удаление требует отдельного решения."
+  },
+  "proposed_budgets": {
+    "status": "Цели после baseline, не измеренные гарантии",
+    "core_ci_minutes": [
+      5,
+      8
+    ],
+    "extended_ci_minutes": [
+      20,
+      40
+    ],
+    "frontend_only_release_minutes": [
+      2,
+      3
+    ],
+    "full_release_minutes": [
+      5,
+      8
+    ],
+    "representative_command_p95_improvement_percent": 30,
+    "browser_LCP_seconds": 2.5,
+    "browser_INP_ms": 200,
+    "method": "Одинаковые runtime/runner/dataset/CPU/network, cold и warm отдельно. Команды >=30 повторов после warmup. Миграции/restore считать отдельно от обычного release."
+  },
+  "change_selection": {
+    "deploy_base": "Последний успешно развёрнутый manifest; не HEAD^ и не origin/main после push.",
+    "candidate": "Один полный SHA выбранной ветки, прошедший gate и доступный remote CI; фиксируется до build.",
+    "local_base": "Явный base + staged/unstaged/untracked changes; A,C,M,R,D и обе стороны rename.",
+    "sources": "Утверждённый dependency manifest + esbuild/Vite/Go embed graph. Ниже начальные правила, не полный граф.",
+    "cases": [
+      {
+        "change": "frontend presentation без общих rules imports",
+        "build": [
+          "frontend"
+        ],
+        "tests": [
+          "always",
+          "frontend_core",
+          "browser_core"
+        ]
+      },
+      {
+        "change": "backend Go без shared JSON",
+        "build": [
+          "backend"
+        ],
+        "tests": [
+          "always",
+          "backend_core",
+          "postgres_contracts",
+          "wire_contract"
+        ]
+      },
+      {
+        "change": "frontend/worker/**",
+        "build": [
+          "rules-worker"
+        ],
+        "tests": [
+          "always",
+          "worker",
+          "rules_core",
+          "full_stack_core"
+        ]
+      },
+      {
+        "change": "frontend/src/{engine,rules-core,character,solo-combat,roguelike}/**",
+        "build": [
+          "frontend",
+          "rules-worker"
+        ],
+        "tests": [
+          "always",
+          "rules_core",
+          "worker",
+          "postgres_contracts",
+          "full_stack_core",
+          "affected_extended"
+        ]
+      },
+      {
+        "change": "backend/{animationpresentation,audiopresentation}/catalog.json",
+        "build": [
+          "resolve_all_consumers"
+        ],
+        "tests": [
+          "catalog_contract",
+          "build_graph",
+          "full_stack_core"
+        ]
+      },
+      {
+        "change": "backend/migrations/**",
+        "build": [
+          "backend"
+        ],
+        "tests": [
+          "postgres_upgrade",
+          "preserved_artifacts",
+          "full_stack_core"
+        ]
+      },
+      {
+        "change": "lockfile/build/schema/Dockerfiles/infra/unknown shared input",
+        "build": [
+          "resolve_or_all"
+        ],
+        "tests": [
+          "always",
+          "build_graph",
+          "release_contract"
+        ]
+      },
+      {
+        "change": "docs only без runtime/fixture/embed зависимости",
+        "build": [],
+        "tests": [
+          "links",
+          "manifest_selection"
+        ]
+      }
+    ],
+    "fail_closed": "Неизвестный путь, неполный граф или ошибка анализа включает все потенциально затронутые компоненты. Worker не ограничен каталогом frontend/worker."
+  },
+  "release_manifest_contract": {
+    "proposed": true,
+    "fields": [
+      "schemaVersion",
+      "releaseId",
+      "releaseCommit",
+      "previousReleaseId",
+      "createdAt",
+      "components.frontend.sourceCommit",
+      "components.frontend.imageDigest",
+      "components.backend.sourceCommit",
+      "components.backend.imageDigest",
+      "components.rulesWorker.sourceCommit",
+      "components.rulesWorker.imageDigest",
+      "rulesArtifactHash",
+      "contentManifestHash",
+      "apiProtocolVersion",
+      "workerProtocolVersion",
+      "supportedWorldSchemaVersions",
+      "migrationSet",
+      "validationEvidence"
+    ],
+    "requirements": [
+      "Component identity встроена в image, runtime SOURCE_COMMIT не подменяет provenance.",
+      "Старый image допустим в новом релизе; health проверяет manifest, а не равенство всех SHA.",
+      "Старые chunks и executable artifacts доступны пока есть retained references.",
+      "Один активный deploy; новый push не отменяет выполняемую миграцию/cutover.",
+      "Retry выпуска идемпотентен; digest/provenance проверяются до запуска.",
+      "GC учитывает все сохраняемые manifests и historical readers."
+    ]
+  },
+  "test_suites": {
+    "status": "Целевая структура: новые aliases и runner ещё не реализованы",
+    "core": {
+      "trigger": "PR/local candidate",
+      "layers": [
+        "unit",
+        "worker process/replay",
+        "PostgreSQL contracts",
+        "real full-stack Chromium smoke"
+      ],
+      "scenario_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S06",
+        "S07",
+        "S08"
+      ]
+    },
+    "extended": {
+      "trigger": "Nightly и affected изменения rules/storage/migrations/protocol",
+      "layers": [
+        "class/level/multiclass matrix",
+        "property invariants",
+        "seeded simulation",
+        "old replay",
+        "upgrade/restore",
+        "mobile/accessibility/export",
+        "performance"
+      ],
+      "scenario_ids": [
+        "S09",
+        "S10",
+        "S11",
+        "S12"
+      ],
+      "blocking": "Affected contract failure блокирует выпуск, даже если suite обычно nightly."
+    },
+    "historical": {
+      "trigger": "Только явная ручная диагностика",
+      "scope": "retired entity certifications",
+      "rule": "Не повышает ручные статусы, не заменяет core."
+    },
+    "isolation": "Ephemeral DB/run namespace, отдельные порты и worker artifacts, synthetic users; никаких prod credentials. Required skip/0 selected = fail.",
+    "baseline_command": {
+      "cwd": "C:/Projects/dnd_cards/frontend",
+      "command": "node node_modules/vitest/vitest.mjs run src/engine/rollInfluence.test.ts src/engine/conditionActions.test.ts src/character/sheetEquipmentCommit.test.ts src/character/useSheetEquipmentSave.test.tsx src/rules-core/importBoundary.test.ts --reporter=dot",
+      "known_result": "26 pass / 1 fail; не green baseline"
+    },
+    "scenarios": [
+      {
+        "id": "S01",
+        "name": "Библиотека",
+        "steps": [
+          "search/filter/page",
+          "review filter+counts",
+          "icon/row preview",
+          "owned edit / unauthorized reject"
+        ],
+        "assert": [
+          "pagination/count consistency",
+          "correct cache scope"
+        ]
+      },
+      {
+        "id": "S02",
+        "name": "Создание персонажа",
+        "steps": [
+          "origin/species/class/abilities/skills/equipment",
+          "save",
+          "reload/sheet"
+        ],
+        "assert": [
+          "choices/resources persist",
+          "canonical КД",
+          "no duplicate grants"
+        ],
+        "data": "Две разные конфигурации, одна со spell acquisition."
+      },
+      {
+        "id": "S03",
+        "name": "Бумажный лист",
+        "steps": [
+          "create/edit/save",
+          "reload",
+          "prepare print/export"
+        ],
+        "assert": [
+          "document retained",
+          "canonical details",
+          "print smoke"
+        ]
+      },
+      {
+        "id": "S04",
+        "name": "Экипировка",
+        "steps": [
+          "equip/unequip",
+          "resource-granting item",
+          "invalid equip",
+          "response loss/retry/reload"
+        ],
+        "assert": [
+          "correct КД/resources",
+          "inventory conservation",
+          "one receipt",
+          "no partial write"
+        ]
+      },
+      {
+        "id": "S05",
+        "name": "Забег и бой",
+        "steps": [
+          "start/enter",
+          "act/roll influence",
+          "reload pending",
+          "confirm",
+          "finish/return"
+        ],
+        "assert": [
+          "same roll/target",
+          "one cost",
+          "history",
+          "pinned artifact/catalog"
+        ]
+      },
+      {
+        "id": "S06",
+        "name": "Магазин и отдых",
+        "steps": [
+          "buy/sell/retry cart",
+          "short/long rest",
+          "prepare spells/reload"
+        ],
+        "assert": [
+          "currency/item conservation",
+          "canonical previews",
+          "one charge"
+        ]
+      },
+      {
+        "id": "S07",
+        "name": "Авторизация/конкурентность",
+        "steps": [
+          "other user",
+          "expired token",
+          "same command two tabs",
+          "different commands same revision"
+        ],
+        "assert": [
+          "ownership",
+          "no private cache leak",
+          "one winner/no lost update"
+        ]
+      },
+      {
+        "id": "S08",
+        "name": "Выпуск",
+        "steps": [
+          "UI-only",
+          "shared engine",
+          "old browser during cutover"
+        ],
+        "assert": [
+          "affected set",
+          "truthful identity",
+          "old session continues"
+        ]
+      },
+      {
+        "id": "S09",
+        "name": "Матрица механик",
+        "steps": [
+          "hit/miss/save/check/damage/effect",
+          "turn/move/rest",
+          "second entity",
+          "unknown primitive"
+        ],
+        "assert": [
+          "phases",
+          "no premature outcome",
+          "fail closed"
+        ]
+      },
+      {
+        "id": "S10",
+        "name": "История",
+        "steps": [
+          "old replay",
+          "upgrade",
+          "archive/restore",
+          "old command retry"
+        ],
+        "assert": [
+          "captured КД/modifiers/RNG",
+          "same outcome",
+          "old bytes unchanged"
+        ]
+      },
+      {
+        "id": "S11",
+        "name": "UI/нагруженный бой",
+        "steps": [
+          "mobile/keyboard",
+          "2D/optional3D",
+          "large party/map/lighting/cover",
+          "audio unavailable"
+        ],
+        "assert": [
+          "playable",
+          "canonical preview",
+          "no title",
+          "performance"
+        ]
+      },
+      {
+        "id": "S12",
+        "name": "Генерация",
+        "steps": [
+          "app/upstream 403",
+          "429/timeout/cancel",
+          "storage fail",
+          "unknown paid outcome",
+          "same job twice"
+        ],
+        "assert": [
+          "distinct reason",
+          "old image retained",
+          "no base64 logs",
+          "no blind repeated POST"
+        ]
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "TEST-01",
+      "title": "Создать воспроизводимый локальный тестовый стенд и изолировать старые опасные сценарии",
+      "priority": "P0",
+      "owner": "agent-test-infrastructure",
+      "depends_on": [],
+      "scope": [
+        "docker-compose.yml",
+        "frontend/Dockerfile",
+        "backend/Dockerfile",
+        "infra/Dockerfile.rules-worker",
+        "infra/compose.test.yml (new)",
+        "scripts/testing/ (new)",
+        "backend/tests/conftest.py",
+        "backend/migrations/postgres_integration_test.go",
+        "backend/canonical_session_transport_integration_test.go",
+        "scripts/run_tests.sh",
+        "scripts/run_tests.bat",
+        "scripts/roguelike/templates-local-acceptance.mjs",
+        "scripts/roguelike/polish-local-acceptance.mjs"
+      ],
+      "effort_workdays": [
+        2,
+        4
+      ],
+      "status": "not_started",
+      "steps": [
+        "Зафиксировать drift текущего локального Compose: PostgreSQL закомментирован, backend по умолчанию подключается к host.docker.internal/dnd_cards, rules-worker отсутствует, frontend build context ./frontend несовместим с COPY frontend/... в актуальном Dockerfile. Не запускать этот compose как disposable test stack без исправления.",
+        "Создать отдельный compose.test.yml или эквивалентный supervisor с PostgreSQL, Go API, rules-worker и production frontend preview. Использовать уникальный project/run ID, непересекающиеся локальные порты, отдельную БД/schema и отдельный каталог артефактов правил. Исправить общий локальный Compose либо явно направить тестовый runner в новую конфигурацию; не менять production Compose ради тестового стенда.",
+        "Определить версию PostgreSQL из текущего поддерживаемого production baseline; отдельно поддержать CI-версию и upgrade matrix. Ввести readiness для БД, миграций, API, worker artifact и UI, проверяя совместимость протокола, а не только открытый TCP-порт.",
+        "До любого обращения к сети валидировать origins и DSN: loopback либо точный локальный Docker service из созданной конфигурации, обязательное имя/marker тестовой БД, запрет production host и перехода redirect на другой origin. Уникальный namespace должен быть создан самим runner; наличие localhost само по себе не разрешает очищать произвольную рабочую БД.",
+        "Вынести минимальный каталог и создание тестовых аккаунтов в общий fixture lifecycle. Секреты генерировать для одного запуска и передавать через env; реальный production snapshot использовать только после обезличивания в отдельном расширенном профиле. Сохранить hash fixture и список созданных ресурсов в отчёте без credentials.",
+        "Поместить Python autouse DELETE FROM cards в явный карантин до переноса на disposable namespace; убрать небезопасную старую точку входа из общего запуска. Перед архивированием сохранить таблицу уникальных assertions и их новых мест. Не считать requests-проверку Vite HTML полноценной браузерной проверкой.",
+        "Устранить producer/consumer mismatch локальных acceptance scripts: templates пишет {created}, polish пытается login по username/password из этого же файла. Передавать обоим один fixture context через env/API, записывать в acceptance.json только несекретные IDs/результаты. Каждый сценарий должен запускаться самостоятельно после fresh setup.",
+        "Реализовать cleanup на success/failure/interruption по registry точных ресурсов запуска. На Windows проверять абсолютные пути перед рекурсивным удалением и удалять только внутри выделенного каталога. Не использовать blanket DELETE/TRUNCATE или удаление общего Docker volume.",
+        "Добавить preflight обязательных integration suites: отсутствие DSN, недоступность БД или полный skip обязательных PostgreSQL tests завершают runner ошибкой. Отличать допустимый skip явно необязательного сценария от пропуска основного контракта."
+      ],
+      "verification": [
+        "Проверить docker compose -f infra/compose.test.yml config и построение из фактического общего корня; это локальный стенд без production env-файлов.",
+        "Дважды последовательно создать fresh stack, seed fixtures, выполнить узкий PostgreSQL contract, закрыть stack; проверить отсутствие оставшихся объектов первого запуска и неизменность контрольной рабочей БД.",
+        "Прервать запуск после seed и после принятия игровой команды; cleanup удаляет только ресурсы текущего run, отчёт не содержит токенов/паролей.",
+        "Подставить production URL, произвольную localhost DB, отсутствующий DSN и неверный artifact hash; получить предсказуемую ошибку до мутации.",
+        "Запустить templates и polish независимо через новые fixtures; consumer не требует сохранённого файла credentials от старого задания."
+      ],
+      "acceptance": [
+        "Есть одна документированная локальная команда для создания и завершения полного тестового стека.",
+        "Ни один обязательный integration suite не получает успешный статус при отсутствии БД или полном skip.",
+        "Все испытуемые игровые команды идут через реальный API/worker; внешние OAuth/OpenAI/storage заменены локальными ответами без платных запросов.",
+        "Два последовательных запуска и аварийное завершение не повреждают общие локальные данные и не зависят от прежних acceptance artifacts.",
+        "Опасный Python cleanup больше недостижим из стандартной команды тестирования."
+      ],
+      "risks": [
+        "Слепое использование текущего docker-compose.yml может подключить тесты к рабочей БД или не собрать frontend.",
+        "Изоляция schema не помогает, если cleanup удаляет таблицы вне search_path либо fixture выполняет глобальные DDL; такие операции требуют отдельной БД.",
+        "Упрощённый test seed может потерять важные декларации текущего каталога; минимальный набор должен проходить тот же сборщик сущностей.",
+        "Хранение test credentials в JSON, trace или stdout создаёт ненужный долг даже для локальных аккаунтов."
+      ],
+      "rollback": [
+        "Сохранить прежние конфигурации и диагностические команды в явно ручном архиве, не возвращая небезопасный автозапуск DELETE.",
+        "При сбое нового lifecycle завершить только процессы, БД и каталоги из registry текущего run; приложение и production конфигурация не затрагиваются."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "docker-compose.yml",
+          "frontend/Dockerfile",
+          "backend/Dockerfile",
+          "infra/Dockerfile.rules-worker",
+          "backend/tests/conftest.py",
+          "backend/migrations/postgres_integration_test.go",
+          "backend/canonical_session_transport_integration_test.go",
+          "scripts/run_tests.sh",
+          "scripts/run_tests.bat",
+          "scripts/roguelike/templates-local-acceptance.mjs",
+          "scripts/roguelike/polish-local-acceptance.mjs"
+        ],
+        "proposed": [],
+        "descriptive": [
+          "infra/compose.test.yml (new)",
+          "scripts/testing/ (new)"
+        ]
+      }
+    },
+    {
+      "id": "TEST-02",
+      "title": "Восстановить согласованную архитектурную границу движка",
+      "priority": "P0",
+      "owner": "agent-rules-architecture",
+      "depends_on": [],
+      "scope": [
+        "frontend/src/rules-core/importBoundary.test.ts",
+        "frontend/src/rules-core/legacy/engineAdapter.ts",
+        "frontend/src/rules-core/handler.ts",
+        "frontend/src/rules-core/worldMigration.ts",
+        "frontend/src/rules-core/activeSlotRecovery.ts",
+        "frontend/src/rules-core/attackActionBudget.ts",
+        "frontend/src/rules-core/attackRedirection.ts",
+        "frontend/src/rules-core/bondLifecycle.ts",
+        "frontend/src/rules-core/conditionsRuntime.ts",
+        "frontend/src/rules-core/damageTransfer.ts",
+        "frontend/src/rules-core/deathRecovery.ts",
+        "frontend/src/rules-core/effectReceived.ts",
+        "frontend/src/rules-core/equipmentChange.ts",
+        "frontend/src/rules-core/generalFeatDamageRuntime.ts",
+        "frontend/src/rules-core/generalFeatReactionRuntime.ts",
+        "frontend/src/rules-core/itemWeaponLifecycle.ts",
+        "frontend/src/rules-core/magicSuppression.ts",
+        "frontend/src/rules-core/projectileReflection.ts",
+        "frontend/src/rules-core/recipientBindings.ts",
+        "frontend/worker/build.mjs",
+        "docs/data-driven-rules.md"
+      ],
+      "effort_workdays": [
+        2,
+        4
+      ],
+      "status": "not_started",
+      "steps": [
+        "Воспроизвести текущий failure importBoundary.test.ts: 17 modules напрямую импортируют engine/mvp вне adapter. Сохранить полный список импортируемых символов, циклов и их фактических исполнителей, отличая type-only imports от runtime dependencies.",
+        "Документировать разрешённое направление зависимостей: shared pure primitives, command orchestration, legacy compatibility adapter, transport/UI. Выбрать для каждого нарушения adapter либо перенос действительно общего примитива; не создавать копии механик и не вводить blanket allowlist на весь engine.",
+        "Переносить небольшими группами импортов с сохранением public API и runtime поведения. Не переименовывать/пересобирать исторические artifacts и не переписывать artifact hash начатых боёв. Контракты из mvp и projections из canon остаются активными до доказанного переноса всех потребителей.",
+        "Уточнить import boundary test для фактически выбранной архитектуры: тест должен обнаруживать запрещённый direct/transitive UI/HTTP/storage dependency, циклы и выбор поведения по literal entity UUID. Удаление упавшей проверки или исключение всех 17 modules не является исправлением.",
+        "Сохранить headless worker boundary и проверить esbuild metafile: React, browser API transport и UI не попадают в artifact. Разрешённые pure modules могут переиспользоваться без отдельного упрощённого источника истины.",
+        "На одних seeded inputs сравнить состояние, events, RNG position, pending decisions и captured breakdown до/после переноса. Для затронутого примитива выполнить сценарий второй сущности с иным ресурсом/порогом и проверить отказ неизвестной операции."
+      ],
+      "verification": [
+        "Из frontend выполнить node node_modules/vitest/vitest.mjs run src/rules-core/importBoundary.test.ts src/engine/rollInfluence.test.ts src/engine/conditionActions.test.ts src/character/sheetEquipmentCommit.test.ts src/character/useSheetEquipmentSave.test.tsx --reporter=dot.",
+        "Выполнить production TypeScript check и npm run test:rules-worker после затронутых переносов; не использовать старый dist worker как доказательство новой сборки.",
+        "Проверить differential replay corpus для перенесённых операций, включая reload сохранённого решения и точный повтор command id.",
+        "Контрольным временным fixture импорта подтвердить, что новая boundary-проверка отклоняет запрещённый путь; не оставлять отрицательный fixture в production imports."
+      ],
+      "acceptance": [
+        "Выявленный общий архитектурный тест проходит по осмысленному контракту и защищает его от повторного нарушения.",
+        "Worker остаётся headless, общие механики не дублируются в UI/Go/тестовом mock.",
+        "Одинаковый вход сохраняет порядок событий, кости, стоимость, финальное состояние и сохранённый расчёт КД.",
+        "Исторические боевые артефакты и журналы не изменены; старый pinned artifact доступен для продолжения."
+      ],
+      "risks": [
+        "Формальное протаскивание всех экспортов через adapter может скрыть цикл вместо восстановления границы.",
+        "Перемещение кода меняет bundle hash; новый artifact допустим для новых боёв, но не подменяет старый автоматически.",
+        "Неверное объявление mvp/canon устаревшими приведёт к удалению активных runtime contracts и projections."
+      ],
+      "rollback": [
+        "Возвращать последнюю небольшую группу переносов вместе с её boundary changes; сохранять диагностический failing test и фактическую карту зависимостей.",
+        "Не откатывать или переписывать данные боёв; поддерживать доступность предыдущего worker artifact."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/rules-core/importBoundary.test.ts",
+          "frontend/src/rules-core/legacy/engineAdapter.ts",
+          "frontend/src/rules-core/handler.ts",
+          "frontend/src/rules-core/worldMigration.ts",
+          "frontend/src/rules-core/activeSlotRecovery.ts",
+          "frontend/src/rules-core/attackActionBudget.ts",
+          "frontend/src/rules-core/attackRedirection.ts",
+          "frontend/src/rules-core/bondLifecycle.ts",
+          "frontend/src/rules-core/conditionsRuntime.ts",
+          "frontend/src/rules-core/damageTransfer.ts",
+          "frontend/src/rules-core/deathRecovery.ts",
+          "frontend/src/rules-core/effectReceived.ts",
+          "frontend/src/rules-core/equipmentChange.ts",
+          "frontend/src/rules-core/generalFeatDamageRuntime.ts",
+          "frontend/src/rules-core/generalFeatReactionRuntime.ts",
+          "frontend/src/rules-core/itemWeaponLifecycle.ts",
+          "frontend/src/rules-core/magicSuppression.ts",
+          "frontend/src/rules-core/projectileReflection.ts",
+          "frontend/src/rules-core/recipientBindings.ts",
+          "frontend/worker/build.mjs",
+          "docs/data-driven-rules.md"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "TEST-03",
+      "title": "Объединить основной набор, расширенный набор и выбор проверок в одном манифесте",
+      "priority": "P0",
+      "owner": "agent-test-selection",
+      "depends_on": [
+        "TEST-01",
+        "TEST-02",
+        "REL-01"
+      ],
+      "scope": [
+        "tests/suites.json (new)",
+        "scripts/testing/run.mjs (new)",
+        "frontend/package.json",
+        "frontend/vitest.config.ts",
+        "frontend/vitest.rules-core.config.ts",
+        "frontend/vitest.rules-primitives.config.ts",
+        "scripts/release/quick-gate.ps1",
+        ".github/workflows/ci.yml",
+        "scripts/security/check-no-database-dumps.mjs",
+        "scripts/security/check-no-known-credentials.mjs"
+      ],
+      "effort_workdays": [
+        2,
+        4
+      ],
+      "status": "not_started",
+      "steps": [
+        "Каталогизировать tracked tests по runner, владельцу, функциональному контракту, потребности в БД/сети, стоимости и tier: core, extended, legacy-manual. Использовать начальный manifest из tests-findings.md; каждый excluded historical suite получает причину. Старый возраст или папка mvp сами по себе не делают общий контракт необязательным.",
+        "Подключить общий dependency planner REL-01. Выбор должен учитывать удаления, rename, shared JSON, package lock, build configuration, транзитивные inputs worker и изменение реализации без изменения test file. Не повторять отдельную эвристику только frontend/worker/* в тестовом runner.",
+        "Всегда запускать короткие auth/ownership/manifest checks, а остальное выбирать по продуктовой границе с консервативным core fallback для неизвестного изменения. Отдельно описать docs-only поведение. Указывать выбранные и пропущенные suites с машинной причиной.",
+        "Разрешать test selectors в реальные имена/файлы до запуска. В обязательной группе отсутствие файла, сбор 0 тестов, отсутствие БД и полный skip — ошибки. Убрать passWithNoTests с обязательных путей; сверять ожидаемые PostgreSQL cases с go test JSON output и не маскировать их compile-only запуском.",
+        "Создать команды core/extended/legacy-manual с единым машинным отчётом: SHA и dirty diff hash, fixture/lock/manifest hashes, версии runtime, pass/fail/skip, длительности, причины selection, пути diagnostics. Legacy-manual требует явного suite ID; никогда не присваивает ручной verified status.",
+        "Переключить CI и quick-gate на один runner. Собирать frontend/worker один раз на профиль и переиспользовать результат в browser/worker tests; исключить скрытые повторные build через вложенные npm scripts.",
+        "Измерить основной набор на стандартном runner и разделить независимые Go/Vitest/browser jobs, сохраняя изоляцию fixtures. Бюджет 5–8 минут использовать как цель настройки; не добиваться его удалением атомарности, авторизации или второй сущности.",
+        "Добавить проверки самого selection planner: реализация без test diff, удаление файла, общий engine change, backend JSON import, lockfile, неизвестная область и пустой обязательный selector."
+      ],
+      "verification": [
+        "В новом runner выполнить --suite core на fresh локальном стенде; в JSON report должны присутствовать ненулевые counts обязательных UI/API/worker/PostgreSQL контрактов.",
+        "На синтетических diff-manifests проверить, что изменение engine выбирает worker tests, а удаление/rename не выпадает из dependency closure.",
+        "Убрать DSN, выбрать несуществующий suite, исключить обязательный test конфигурацией и вызвать полный DB skip: во всех случаях exit code ненулевой и причина понятна.",
+        "Сравнить локальный выбор suites и выбор CI для одинаковых base/head; список и manifest hash должны совпасть.",
+        "Проверить, что legacy entity/certification suites не запускаются автоматически и текущие manual review статусы не изменяются тестовым pipeline."
+      ],
+      "acceptance": [
+        "Единый manifest определяет тесты локально и в CI; dependency planning согласован со сборкой/выкаткой.",
+        "Обязательная группа не может дать зелёный результат при 0 selected tests или skipped PostgreSQL contracts.",
+        "Изменения реализации запускают соответствующие проверки без обязательной правки самого test file.",
+        "Основной набор защищает актуальные общие контракты, а старые certificates имеют отдельный ручной режим.",
+        "Опубликованы реальные durations и границы покрытия; целевой бюджет времени не объявлен достигнутым без измерения."
+      ],
+      "risks": [
+        "Слишком узкий граф test dependencies может пропустить динамические импорты и данные; неизвестные входы требуют консервативного расширения.",
+        "Тесты на уровне Go package выбираются regex, а не файлами; проверка непустого совпадения и учёт skipped names обязательны.",
+        "Одинаковый SHA без dirty diff hash может ошибочно выдать локальную проверку изменённого дерева за проверку commit."
+      ],
+      "rollback": [
+        "Временно включить консервативный полный актуальный core при проблеме selection, сохраняя обязательную проверку БД и отчётность.",
+        "Вернуть прежнюю CI entry point только вместе с явным перечнем недостающих контрактов; не восстанавливать passWithNoTests или автоматические live production mutations."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/package.json",
+          "frontend/vitest.config.ts",
+          "frontend/vitest.rules-core.config.ts",
+          "frontend/vitest.rules-primitives.config.ts",
+          "scripts/release/quick-gate.ps1",
+          ".github/workflows/ci.yml",
+          "scripts/security/check-no-database-dumps.mjs",
+          "scripts/security/check-no-known-credentials.mjs"
+        ],
+        "proposed": [],
+        "descriptive": [
+          "tests/suites.json (new)",
+          "scripts/testing/run.mjs (new)"
+        ]
+      }
+    },
+    {
+      "id": "TEST-04",
+      "title": "Покрыть основные пользовательские сценарии реальным локальным E2E",
+      "priority": "P1",
+      "owner": "agent-product-e2e",
+      "depends_on": [
+        "TEST-01",
+        "TEST-03"
+      ],
+      "scope": [
+        "frontend/playwright.local.config.ts (new)",
+        "frontend/e2e-local/ (new)",
+        "frontend/e2e/forge-interaction-driver.ts",
+        "frontend/e2e/forge-real-interaction.spec.ts",
+        "frontend/e2e/sheet-combat.spec.ts",
+        "frontend/e2e/paper-sheet-blocks.spec.ts",
+        "frontend/e2e-live/real-backend-canary.spec.ts",
+        "frontend/liveCanaryTargets.ts",
+        "tests/suites.json",
+        "scripts/testing/"
+      ],
+      "effort_workdays": [
+        4,
+        7
+      ],
+      "status": "not_started",
+      "steps": [
+        "Создать локальный full-stack Playwright profile на lifecycle TEST-01. Переиспользовать реальные UI drivers из forge-interaction-driver и real-backend-canary, извлекая общие helpers. Не включать production-mutating canary и certification-readiness как условие обычного local/CI run.",
+        "Сохранить существующие API-fixture browser tests отдельным UI integration слоем. В новом профиле запрещать перехват продуктовых /api/** ради подмены успешного результата; mock допустим только для явно внешних OAuth/OpenAI/storage зависимостей.",
+        "Добавить вход и библиотеку: авторизация, bounded pagination/search/filter, каноничное preview, переключение иконка/строка, проверка editor rights. Проверить отсутствие неожиданных JS/console ошибок и дублирующихся одновременных чтений при одном действии.",
+        "Добавить создание персонажа из пустого мастера и копии шаблона: реальные выборы происхождения/класса/характеристик/навыков/экипировки, сохранение, reload, владелец и соответствие значений на листе. Исходный шаблон остаётся неизменным; сценарий не требует старого сертификата конкретного UUID.",
+        "Добавить экипировку: надеть/снять/переставить предмет, изменение КД и доступных ресурсов, отказ недопустимого действия без частичной записи. Потерять ответ после успешного POST и повторить тот же command id; проверить сохранение количества предметов, ресурса и одного receipt.",
+        "Добавить забег: создать → начать бой → дождаться авторитетной инициализации → движение/действие → pending influence → reload → подтвердить → закончить ход/бой. Проверить, что исход не применён до выбора, RNG и расчёт КД сохранены, расход один, история/journal/receipt согласованы.",
+        "Добавить бумажный лист: создать, изменить и сохранить поле, reload, скрыть/показать блок без потери данных, подготовить печатный экспорт. Конфликт ревизий должен быть явным и не затирать новую запись молча.",
+        "Добавить короткие общие проверки shop/rest и доступа: атомарная покупка/продажа, восстановление ресурсов/подготовка, чужой лист/бой, истёкшая сессия, конкурирующие команды. Распределить дорогие варианты в extended, сохраняя в core хотя бы один реальный контракт каждой критичной границы.",
+        "Для нового или расширенного механического примитива использовать вторую сущность с иным ID/названием/ресурсом/порогом. Ожидания формировать из инвариантов и явных входов, не из параллельного упрощённого движка."
+      ],
+      "verification": [
+        "Выполнить все новые core E2E на fresh stack дважды; каждый test создаёт собственные entities и не зависит от порядка или acceptance.json предыдущего теста.",
+        "Проверить по request/DB/worker observations, что игровые команды действительно прошли Go API, worker и PostgreSQL, а UI fixture не подменил путь.",
+        "Отдельно прогнать loss-after-commit, stale revision, forged choice и две команды с одинаковым id: проверять persisted result и число receipt/events, а не только текст UI.",
+        "Повторить основной путь с другой декларацией источника и параметров; видимость/preview/стоимость работают без новой UI ветки.",
+        "При failure сохранять trace/screenshot только локального disposable аккаунта, санитизируя headers и credential steps; отчёт связывает UI failure с request id backend/worker."
+      ],
+      "acceptance": [
+        "Основной набор проверяет четыре главных раздела: Библиотека, Персонажи, Бумажный лист и Забеги через настоящую локальную серверную цепочку.",
+        "Создание, экипировка и сохранённое боевое решение переживают reload; retry не создаёт новый бросок или повторный расход.",
+        "Недоступное или подделанное действие отклоняется авторитетно, чужие данные не изменяются.",
+        "Во вложенных диалогах сохранены каноничные entity previews и настройки отображения.",
+        "Отчёт явно отделяет UI-fixture tests от full-stack tests и не выдаёт первый слой за проверку транзакций."
+      ],
+      "risks": [
+        "Старый real-backend canary тесно связан с historical certificate fixtures; перенос helpers не должен переносить эту зависимость в новый product smoke.",
+        "Случайная инициатива и нестабильный внешний контент сделают сценарии flaky; использовать seeded inputs и версионированный минимальный fixture.",
+        "Проверка только видимого результата может пропустить двойной расход; нужны persisted receipts/events и контроль revision/RNG.",
+        "Слишком широкий единый browser test даёт плохую диагностику; разделять сценарии по пользовательским контрактам и независимо восстанавливать fixtures."
+      ],
+      "rollback": [
+        "Сохранить новые E2E как отдельный явно вызываемый профиль при стабилизации инфраструктуры; отключать только конкретный flaky case с issue/owner, не весь слой атомарности.",
+        "Возвращать изменения drivers отдельно от продуктового кода; существующие UI-fixture tests остаются работоспособны."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/e2e/forge-interaction-driver.ts",
+          "frontend/e2e/forge-real-interaction.spec.ts",
+          "frontend/e2e/sheet-combat.spec.ts",
+          "frontend/e2e/paper-sheet-blocks.spec.ts",
+          "frontend/e2e-live/real-backend-canary.spec.ts",
+          "frontend/liveCanaryTargets.ts"
+        ],
+        "proposed": [
+          "tests/suites.json",
+          "scripts/testing/"
+        ],
+        "descriptive": [
+          "frontend/playwright.local.config.ts (new)",
+          "frontend/e2e-local/ (new)"
+        ]
+      }
+    },
+    {
+      "id": "TEST-05",
+      "title": "Добавить расширенную регрессию, replay/migration matrix и контроль производительности",
+      "priority": "P2",
+      "owner": "agent-regression-performance",
+      "depends_on": [
+        "TEST-04",
+        "OBS-01"
+      ],
+      "scope": [
+        "tests/suites.json",
+        "scripts/testing/",
+        "frontend/vitest.rules-core.config.ts",
+        "frontend/vitest.rules-primitives.config.ts",
+        "frontend/worker/server.test.mjs",
+        "frontend/worker/replay.test.mjs",
+        "frontend/e2e-local/",
+        "frontend/e2e/battle-3d.spec.ts",
+        "backend/character_runtime_command_integration_test.go",
+        "backend/canonical_session_transport_integration_test.go",
+        "backend/migrations/",
+        ".github/workflows/ci.yml"
+      ],
+      "effort_workdays": [
+        4,
+        8
+      ],
+      "status": "not_started",
+      "steps": [
+        "Сформировать расширенный manifest всех актуальных offline suites и отдельный ручной перечень historical certification suites. Общие replay/authorization/migration contracts не переносить в legacy только из-за старого имени или включения в прежний coverage pipeline.",
+        "Добавить сценарии melee/ranged/caster, разные уровни и multiclass, reactions/saving throws/damage/effects/death/movement, геометрию крупных существ и area delivery, party, camp/shop/loot/journey, короткий/долгий отдых и подготовку. Новые механики проверять второй сущностью на том же примитиве.",
+        "Построить таблицу сохранённых pending phases и прогонять reload/restart/retry для каждой поддерживаемой фазы. В worker replay corpus хранить версию и hash артефакта, исходное состояние, команду, RNG position и ожидаемый outcome; продолжать старый бой старым артефактом после обновления нового.",
+        "Расширить PostgreSQL concurrency/failure tests: одинаковый id, разные конкурирующие команды, stale revision, запись journal/receipt падает после расчёта, смена доступа перед commit. Проверять атомарный rollback всех проекций и отсутствие повторного платежа; race запускать на Linux.",
+        "Проверять fresh migration install и upgrade обезличенных локальных baseline нескольких поддерживаемых версий. Верифицировать locks, повторный запуск миграций, historical artifacts и manual review statuses. В обязательной migration группе skipped DB или 0 selected tests — failure.",
+        "Добавить mobile 390px, keyboard/focus, иконка/строка с preview, бумажный экспорт, 2D/3D equivalence и fallback при отсутствии WebGL. Визуальные изменения не должны вызывать игровые команды или повторный бросок.",
+        "Используя OBS-01, собирать воспроизводимые cold/warm performance profiles: page-ready/character-ready/combat-ready, command accepted→rendered, p50/p95 API/worker/lock, SQL count, bytes и long tasks. Зафиксировать dataset/network/CPU/runtime hashes; thresholds установить по baseline и учитывать шум, не вводя произвольное обещание ускорения.",
+        "Добавить property-based или параметризованные metamorphic invariants для сохранения предметов/ресурсов, determinism, повторов команд, стоимости, второй сущности и неизвестных operations. Не требовать 100% UI line coverage; узкие coverage thresholds replay-critical ядра поддерживать вместе с семантическими сценариями.",
+        "Разбить независимые suites на shards с изолированными ресурсами, отдельным отчётом flaky и понятным owner. Запускать nightly либо вручную; при изменении критического контракта соответствующий expanded suite становится блокирующим до релиза, а не откладывается до ночи."
+      ],
+      "verification": [
+        "Выполнить полный extended профиль на свежем стенде и на поддерживаемом обезличенном upgrade fixture; отчёт содержит ненулевые counts всех обязательных групп и не скрывает skip.",
+        "Повторить worker restart и старый artifact replay после обновления текущего artifact; pending decision, RNG и outcome сохраняются.",
+        "Запустить Linux Go race для concurrency suites и подтвердить отсутствие partial projections при инъекции journal/receipt failures.",
+        "Провести серию одинаковых performance прогонов, опубликовать baseline, разброс и длительность; сравнить регрессию по установленным budgets.",
+        "Проверить nightly/ручной selection: historical certification остаётся explicit opt-in, manual review статусы не повышаются автоматически."
+      ],
+      "acceptance": [
+        "Extended набор покрывает поддерживаемые фазы продолжения, старые artifacts, миграции, concurrency, mobile и performance с воспроизводимыми fixtures.",
+        "Критичный failure блокирует соответствующее изменение до релиза независимо от того, где suite обычно расписан.",
+        "Длительность, skips и flaky failures видимы; повторная попытка не превращает нестабильность в незаметный зелёный результат.",
+        "История и хэши существующих боёв не переписываются, а tests не присваивают ручные verification statuses.",
+        "Целевое время 20–40 минут после шардирования представлено как бюджет; фактически достигнутое время указано отдельно."
+      ],
+      "risks": [
+        "Комбинаторный рост сценариев может вернуть многочасовой gate; использовать риск-ориентированную матрицу и shared fixtures, сохраняя уникальные контракты.",
+        "Performance thresholds на шумном shared runner дают ложные отказы; отделять стабильные bytes/request counts от шумных latency metrics и хранить серию измерений.",
+        "Удаление старых artifacts ради экономии CI-диска разрушает replay-проверку; corpus должен явно удерживать нужные версии.",
+        "Race, browser GPU и migration DDL имеют разные требования к среде и не должны бесконтрольно делить одну БД/процесс."
+      ],
+      "rollback": [
+        "При проблеме расписания временно оставить extended ручным запуском и сохранить обязательные expanded gates затронутого контракта.",
+        "Нестабильные performance budgets временно перевести в диагностический режим с owner и сроком исправления; не отключать correctness/replay/authorization проверки.",
+        "Удалять только артефакты disposable test run по registry; исторический corpus и production данные не затрагивать."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/vitest.rules-core.config.ts",
+          "frontend/vitest.rules-primitives.config.ts",
+          "frontend/worker/server.test.mjs",
+          "frontend/worker/replay.test.mjs",
+          "frontend/e2e/battle-3d.spec.ts",
+          "backend/character_runtime_command_integration_test.go",
+          "backend/canonical_session_transport_integration_test.go",
+          "backend/migrations/",
+          ".github/workflows/ci.yml"
+        ],
+        "proposed": [
+          "tests/suites.json",
+          "scripts/testing/",
+          "frontend/e2e-local/"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "OBS-01",
+      "title": "Воспроизводимый baseline загрузки и игровых команд",
+      "priority": "P0",
+      "owner": "runtime-observability-agent",
+      "depends_on": [
+        "TEST-01"
+      ],
+      "scope": [
+        "frontend/src/api/client.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "backend/roguelike_worker_client.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_runtime_command.go",
+        "frontend/worker/server.mjs",
+        "frontend/playwright.live.config.ts"
+      ],
+      "effort_workdays": [
+        2,
+        4
+      ],
+      "status": "not_started",
+      "steps": [
+        "Создать локальный/CI performance runner поверх изолированного тестового стенда TEST-01. Сценарии: холодное и тёплое открытие библиотеки, кузницы, бумажного листа, листа; начало и продолжение боя для 1/2/6 персонажей; действие; equip/unequip обычного предмета и предмета, меняющего ресурсы.",
+        "Зафиксировать fixture content hash, artifact hash, seed/RNG, размер карты, состав участников, CPU/network profile, версии Node/Go/Postgres и условия кеша. Минимум 30 повторов серверного сценария; исходные выборки сохранять, p95 считать предварительным при малой выборке.",
+        "Добавить корреляцию request ID frontend→backend→worker и числовые phase timings: catalog resolution, SQL count/time, worker queue/CPU, JSON parse/stringify/hash/clone, lock wait/hold, persist, response bytes. Не записывать токены, entropy, полные листы, prompts или base64.",
+        "Собирать browser navigation/resource timings, LCP/INP/long tasks, React profile для смены экипировки и hover карты. Различать время пользовательского подтверждения, анимации, вычисления и сети.",
+        "Добавить отчёт сборки по entry и транзитивным статическим route dependencies; отдельно учитывать route CSS, runtime imports, PWA install и медиа. Использовать runtime-build-metrics.json как первый build baseline, не как browser waterfall.",
+        "Опубликовать baseline JSON и краткую таблицу bottlenecks; назначить бюджеты для выбранных сценариев после измерения. Не блокировать корректное изменение правил только из-за шумного единичного performance измерения."
+      ],
+      "verification": [
+        "Повторный запуск на неизменном fixture даёт те же игровые outcomes, hashes, RNG cursor и сопоставимые распределения времени.",
+        "Логи и telemetry не содержат секретов или приватных snapshots; production URLs не вызываются.",
+        "Проверены cold/warm и все три размера партии; в отчёте обозначены число повторов и ограничения p95."
+      ],
+      "acceptance": [
+        "Есть исполняемый локальный runner и машиночитаемые результаты с разделением client/network/backend/worker/DB.",
+        "Для equip известны отдельные значения обычной ветки и условного пересчёта max_resources под lock.",
+        "Команда подготовки боя показывает фактическое число needs rounds, SQL queries и байты каталога; верхние лимиты 16/32 не выдаются за измерения."
+      ],
+      "risks": [
+        "Инструментирование меняет тайминги; минимизировать overhead и отключать дорогой tracing по умолчанию.",
+        "Случайные или неполные fixtures делают сравнение несопоставимым.",
+        "Perf runner не должен использовать live production tests со скрытыми побочными эффектами."
+      ],
+      "rollback": [
+        "Удалить или выключить telemetry feature flag и performance job; игровые команды и сохранённые данные остаются прежними. Сохранить уже полученные baseline-артефакты."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/api/client.ts",
+          "frontend/src/pages/SoloCombatPage.tsx",
+          "frontend/src/character/sheetCombatRuntimeFactory.ts",
+          "backend/roguelike_worker_client.go",
+          "backend/roguelike_worker_catalog.go",
+          "backend/character_runtime_command.go",
+          "frontend/worker/server.mjs",
+          "frontend/playwright.live.config.ts"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "PERF-01",
+      "title": "Пакетное разрешение зависимостей и безопасный кеш неизменяемого каталога",
+      "priority": "P1",
+      "owner": "catalog-performance-agent",
+      "depends_on": [
+        "OBS-01",
+        "TEST-03"
+      ],
+      "scope": [
+        "backend/roguelike_worker_catalog.go",
+        "backend/roguelike_camp_inventory.go",
+        "backend/entity_references.go",
+        "frontend/src/roguelike/combatCatalog.ts",
+        "frontend/src/character/assemblyFactory.ts",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/worker/server.mjs"
+      ],
+      "effort_workdays": [
+        4,
+        8
+      ],
+      "status": "not_started",
+      "steps": [
+        "Вынести общий resolver для initialize/rest/camp-action/camp-inventory. Дедуплицировать needs и группировать по entity type и способу ссылки: UUID, card_number, resource_id; загружать одну волну пакетными SQL.",
+        "Сохранить строгую обработку отсутствующих сущностей, неизвестных needs, неоднозначных spell aliases, completeEffectTypes и variablesComplete. Собирать catalog через Map; сортировать один раз перед canonical serialization/hash вместо сортировки после каждой вставки.",
+        "Предварительно собрать известное транзитивное замыкание ссылок через общий reference registry. Не считать синтаксическое замыкание полным для динамических правил: сохранить bounded needs fallback и измерять его срабатывание.",
+        "Кешировать только immutable entity closures, indexes и compiled definitions. Ключ включает artifact hash, rules/schema version, canonical catalog/content hash и build identity, если значение зависит от сборки персонажа; private content дополнительно изолируется stable principal/tenant/access scope и revision прав. Raw access tokens в ключи и логи не помещать.",
+        "Для каждого запроса проверять право доступа до cache hit, не допускать использования чужой private entity через общий hash. Изменения механики, grants, build choices, ownership и policy должны приводить к новому ключу/инвалидации. Mutable HP/resources/equipment/pending state не сохранять в shared cache.",
+        "Установить лимиты байтов/entries и LRU eviction, in-flight deduplication, безопасный cache miss fallback и метрики hit/miss. Исторический бой всегда читает его pinned catalog/artifact, не текущий каталог.",
+        "Сравнить до/после на baseline: rounds, SQL, bytes, CPU, p50/p95. Принять выигрыш только при сохранении canonical hashes и сценарной эквивалентности."
+      ],
+      "verification": [
+        "Два класса и два предмета на одних общих примитивах с разными данными; party 1/2/6.",
+        "Missing need, alias collision, duplicated need, stalled resolver, changed content during preparation.",
+        "Два пользователя с различным доступом к private entities, смена сессии, отзыв доступа; cache hit не обходит авторизацию.",
+        "Replay старого artifact/catalog, cold cache, warm cache и eviction дают одинаковые результаты."
+      ],
+      "acceptance": [
+        "SQL queries одной волны масштабируются по группам типов/ссылок, а не по числу сущностей.",
+        "Все четыре worker preparation paths используют один resolver; нет параллельной сокращённой механики.",
+        "Ключ и инвалидация явно покрывают content+artifact+build+rights, cache ограничен по памяти.",
+        "Есть численное сравнение с OBS-01; при отсутствии выигрыша кеш не включается по умолчанию."
+      ],
+      "risks": [
+        "Неполный cache key способен смешать персонажей, доступ или версии механики.",
+        "Batch resolution может изменить порядок ссылок и canonical hash без стабильной сортировки.",
+        "Reference registry может не охватить динамические зависимости.",
+        "Предварительная загрузка слишком широкого каталога может оказаться дороже needs waterfall."
+      ],
+      "rollback": [
+        "Feature flag возвращает прежний resolver без кеша для новых preparation. Кеш удалить как воспроизводимый; сохранённые старые каталоги/артефакты и receipts не менять."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/roguelike_worker_catalog.go",
+          "backend/roguelike_camp_inventory.go",
+          "backend/entity_references.go",
+          "frontend/src/roguelike/combatCatalog.ts",
+          "frontend/src/character/assemblyFactory.ts",
+          "frontend/src/character/sheetCombatRuntimeFactory.ts",
+          "frontend/worker/server.mjs"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "PERF-02",
+      "title": "Короткая транзакция экипировки и единая подготовка начала боя",
+      "priority": "P1",
+      "owner": "atomic-runtime-agent",
+      "depends_on": [
+        "OBS-01",
+        "PERF-01",
+        "TEST-04"
+      ],
+      "scope": [
+        "backend/character_runtime_command.go",
+        "backend/roguelike_camp_inventory.go",
+        "backend/roguelike_worker_controller.go",
+        "backend/roguelike_party_worker.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/useSheetEquipmentSave.ts",
+        "frontend/src/character/sheetEquipmentCommand.ts",
+        "frontend/src/pages/SoloCombatPage.tsx"
+      ],
+      "effort_workdays": [
+        3,
+        6
+      ],
+      "status": "not_started",
+      "steps": [
+        "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
+        "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
+        "Захватить fingerprints всех семантических входов: character/runtime revision, run phase/revision, owned inventory/equipment/attunement, content version и rights. Стоимость/результат должны вычисляться общей операцией на этих входах.",
+        "В короткой транзакции проверить receipt/command reuse, права, ownership, run membership/phase, ревизии и fingerprints подготовленного результата; затем атомарно записать расходы, patch, события и receipt. Под character/run write locks не выполнять HTTP/worker I/O и полную повторную сборку.",
+        "При изменении входов отклонить stale command или заново подготовить её до lock согласно явному протоколу. Не использовать новый command ID для повторной отправки уже подготовленной команды с неизвестным исходом; не бросать кости/не списывать повторно.",
+        "Переиспользовать статическую сборку в клиентском preview по корректному ключу зависимостей. После принятия применить authoritative postimage; на replay загрузить актуальное состояние, не откатывая его старым receipt.",
+        "Заменить повторную полную UI-сборку в SoloCombatPage перед trusted initialize на серверную read-only preparation инициативных options тем же builder. Сохранять каноничные entity choices, выбор по ID и повторную серверную проверку стоимости/ревизии при initialize; не пропускать предложения по имени класса.",
+        "Оставить совместимый старый endpoint до миграции открытых клиентов; сравнить timings/lock duration на baseline."
+      ],
+      "verification": [
+        "Два одновременных equip в разных вкладках, stale character/run/content revision, истечение прав и переход run camp→combat между prepare/commit.",
+        "Обрыв сети до ответа и после commit, reload с pending request, retry тем же ID, replay после более поздней команды.",
+        "Обычный предмет и второй предмет с иным ресурсом/условием/стоимостью; недопустимое equip не оставляет частичный patch.",
+        "Инициативный выбор отсутствует/доступен/отклонён; другая сущность с тем же declaration; RNG cursor и исходная инициатива не меняются при retry.",
+        "Tracing подтверждает отсутствие worker/HTTP вызова под character/run locks."
+      ],
+      "acceptance": [
+        "На новом intent path server заново проверяет допустимость и стоимость через canonical engine.",
+        "Транзакция содержит только ограниченную проверку подготовленных входов и атомарную запись; нет dependency resolution/HTTP под locks.",
+        "Pending/replay/reload сохраняют exactly-once эффект, исходный RNG и отсутствие двойной оплаты.",
+        "Перед серверным initialize больше нет обязательной полной дублирующей UI-сборки ради инициативных options."
+      ],
+      "risks": [
+        "TOCTOU по content/rights/ownership, если проверять только runtime revision.",
+        "Недопустимая очистка pending request после неопределённого сетевого результата.",
+        "Новая preparation не должна публиковать или применять итог броска до выбора.",
+        "Открытые клиенты могут продолжать пользоваться compatibility endpoint."
+      ],
+      "rollback": [
+        "Выключить новый intent/preparation routing feature flag и вернуть существующий endpoint. Уже сохранённые новые receipts должны оставаться читаемыми; не переписывать command IDs или committed outcomes."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/character_runtime_command.go",
+          "backend/roguelike_camp_inventory.go",
+          "backend/roguelike_worker_controller.go",
+          "backend/roguelike_party_worker.go",
+          "frontend/src/components/SheetEquipmentPanel.tsx",
+          "frontend/src/character/useSheetEquipmentSave.ts",
+          "frontend/src/character/sheetEquipmentCommand.ts",
+          "frontend/src/pages/SoloCombatPage.tsx"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "PERF-03",
+      "title": "Сокращение runtime payload и устранение CPU-очереди worker по измерениям",
+      "priority": "P2",
+      "owner": "rules-transport-agent",
+      "depends_on": [
+        "OBS-01",
+        "PERF-01",
+        "TEST-05"
+      ],
+      "scope": [
+        "frontend/src/roguelike/combatWorker.ts",
+        "frontend/src/roguelike/combatInitialization.ts",
+        "frontend/src/solo-combat/persistence.ts",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_client.go",
+        "backend/roguelike_worker_controller.go",
+        "backend/roguelike_party_worker.go",
+        "backend/roguelike_combat_journal.go",
+        "backend/models_roguelike.go"
+      ],
+      "effort_workdays": [
+        5,
+        10
+      ],
+      "status": "not_started",
+      "steps": [
+        "Разложить размеры и CPU envelope по mutable world, immutable catalog/actions/presentation, history, mirrored character turn_state и receipts. Определить, какой участок доминирует: JSON, clone, hash, engine CPU или storage.",
+        "Спроектировать новый protocol/schema с immutable catalog blob по canonical hash и отдельным mutable snapshot. Shared artifact caches должны сохранять оригинальные исторические bytes; нового боя это касается по явной версии.",
+        "Передавать compact authoritative projection/patch с base revision и result hash только при совпадении протокола и базы; полное восстановление отдаёт snapshot. Нельзя выдавать private entropy браузеру или конструировать второй источник истины.",
+        "Добавить readers старой и новой схем, pinned artifact replay, проверку недоступного blob. Миграции — additive; старые envelopes, события и receipts не переписывать молча. Согласовать compact receipts с отдельной DB-задачей до смены storage.",
+        "По профилю заменить избыточные clone/hash или проверки прогресса на эквивалентные операции; не удалять hash-based stall guard без тестов зависания ИИ и доказательства, что новый progress marker покрывает все переходы.",
+        "Если после сокращения payload event-loop lag/очередь остаётся bottleneck, добавить ограниченный CPU pool либо stateless worker replicas: bounded queue, memory limits, cancellation до commit и насыщение. Доступ к нужным archived artifacts обязателен для каждого исполнителя.",
+        "Сравнить 1/4/16 параллельных клиентов, cold artifact load и archived combat; проверить, что shared cache не хранит mutable state и выполнение не меняет последовательность RNG."
+      ],
+      "verification": [
+        "Новый/старый transport с теми же fixture commands даёт одинаковые final hashes, события, pending continuation и RNG cursor.",
+        "Patch с неверной base revision отклоняется и вызывает full resync; отсутствующий catalog/artifact fail-closed.",
+        "Тесты crash/retry после вычисления до commit и после commit; ресурсы списаны однажды.",
+        "Нагрузочный локальный прогон показывает queue/CPU/memory; saturation не вызывает unbounded growth.",
+        "Старый клиент/бой продолжает работать с совместимой версией сервера."
+      ],
+      "acceptance": [
+        "Измерены уменьшение bytes и CPU, transport не включён без доказанной корректности.",
+        "Immutable data отделены от runtime без переписывания исторических артефактов.",
+        "Масштабирование CPU добавлено только при подтверждённом bottleneck и ограничено ресурсами.",
+        "Rollback не требует восстановления всей БД."
+      ],
+      "risks": [
+        "Новые ссылки на blobs могут сделать старый бой невосстановимым при преждевременном GC.",
+        "Слишком агрессивные patches оставляют клиент незаметно stale.",
+        "Worker pool multiplies artifact memory; thread/process model требует строгой изоляции mutable данных.",
+        "Параллельный execution не заменяет серверную идемпотентность commit."
+      ],
+      "rollback": [
+        "Сохранить full snapshot endpoint и старый reader; feature flag возвращает полный transport и один worker. Новые immutable blobs и readers сохраняются для уже созданных версий; их GC запрещён до проверки ссылок."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/roguelike/combatWorker.ts",
+          "frontend/src/roguelike/combatInitialization.ts",
+          "frontend/src/solo-combat/persistence.ts",
+          "frontend/worker/server.mjs",
+          "backend/roguelike_worker_client.go",
+          "backend/roguelike_worker_controller.go",
+          "backend/roguelike_party_worker.go",
+          "backend/roguelike_combat_journal.go",
+          "backend/models_roguelike.go"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "PERF-04",
+      "title": "Сокращение frontend graph и устранение полного обхода библиотеки",
+      "priority": "P2",
+      "owner": "frontend-loading-agent",
+      "depends_on": [
+        "OBS-01",
+        "TEST-04"
+      ],
+      "scope": [
+        "frontend/src/App.tsx",
+        "frontend/src/contexts/ChoiceDialogContext.tsx",
+        "frontend/src/contexts/DiceDialogContext.tsx",
+        "frontend/src/character/components.tsx",
+        "frontend/src/pages/CardLibrary.tsx",
+        "frontend/src/api/catalogPages.ts",
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/apiCache.ts",
+        "frontend/src/api/ownedItemCache.ts",
+        "frontend/src/api/client.ts",
+        "frontend/vite.config.ts",
+        "backend/content_review_controller.go",
+        "backend/controller.go"
+      ],
+      "effort_workdays": [
+        4,
+        8
+      ],
+      "status": "not_started",
+      "steps": [
+        "Получить bundle attribution общих imports; уже существующие lazy routes, lazy detail modals, dynamic 3D/PDF/Mermaid и Caddy compression сохранить. Размер всего dist не использовать как initial-load budget.",
+        "Разделить лёгкий context/API диалога и тяжёлый lazy host; извлечь ChoiceResolver из общего файла кузницы. Каноничные action/spell/item components, previews, aria и настройка icon/row остаются прежними.",
+        "Ограничить загрузку rules authority игровыми маршрутами; не блокировать библиотеку/настройки/log-in лишними запросами, но ни одна игровая mutation не выполняется до авторитетной готовности.",
+        "Для review status добавить серверные filter/summary по тем же правам и query semantics; CardLibrary получает ограниченную страницу и counts, не скачивает последовательно весь каталог ради фильтра/summary.",
+        "Для gameplay и rest заменить full cardsIndex traversal на bulk hydration нужных owned/equipped/referenced IDs. Полный индекс оставить только потребителям, которым он необходим; canonical closure достраивается общим resolver.",
+        "Разделить invalidation ownership/catalog metadata и обычных HP/turn mutations. Private acquisition, sale/reward, изменение тега/механики, logout/account switch и отзыв прав должны обновлять соответствующий кеш.",
+        "Добавлять виртуализацию длинного списка только при подтверждении profile; сохранять focus, Back/scroll restoration, previews и общие entity renderers.",
+        "Уточнить PWA precache manifest: glob index-*.js захватывает shared chunks с похожим именем. Проверить cold install, update и imports старой открытой вкладки; не нарушать согласованность release identity.",
+        "Сравнить entry/route static closure, API count/bytes, LCP/long tasks и network waterfаll. Entry ≤180 KB gzip рассматривать как предварительную цель после attribution, а не обязательное упрощение правил."
+      ],
+      "verification": [
+        "Library normal/review modes: page count, summary/filter parity, private visibility и редактирование сущности.",
+        "Cold/warm navigation, dialog first-open/cancel, paper-sheet previews, icon/row settings.",
+        "Equip/rest после purchase/sale/reward и после смены пользователя; никаких stale private cards.",
+        "PWA install/update, retained old chunks, несовместимый rules bootstrap fail-closed.",
+        "Длинный список доступен с клавиатуры и не теряет фокус/scroll."
+      ],
+      "acceptance": [
+        "Review mode не делает полный последовательный обход каталога ради first page/summary.",
+        "Gameplay не загружает полный общий cards index, если достаточно owned/referenced closure.",
+        "Общий JS граф уменьшен по измерениям без дублирующего упрощённого renderer или calculator.",
+        "Кеш остаётся согласованным и изолированным по правам/сессии."
+      ],
+      "risks": [
+        "Новая server-side фильтрация может изменить totals или раскрыть private metadata.",
+        "Удаление shared import может создать waterfall первого диалога; предусмотреть intent prefetch.",
+        "Узкая invalidation способна оставить stale предмет после покупки/продажи.",
+        "PWA shell optimization не должна разъединить код правил и release binding."
+      ],
+      "rollback": [
+        "Feature flags возвращают прежние loaders/dialog hosts и полный response contract. Старые hashed assets остаются доступными; backend сохраняет совместимость параметров прежнего каталога."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/App.tsx",
+          "frontend/src/contexts/ChoiceDialogContext.tsx",
+          "frontend/src/contexts/DiceDialogContext.tsx",
+          "frontend/src/character/components.tsx",
+          "frontend/src/pages/CardLibrary.tsx",
+          "frontend/src/api/catalogPages.ts",
+          "frontend/src/utils/cardsIndex.ts",
+          "frontend/src/api/apiCache.ts",
+          "frontend/src/api/ownedItemCache.ts",
+          "frontend/src/api/client.ts",
+          "frontend/vite.config.ts",
+          "backend/content_review_controller.go",
+          "backend/controller.go"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "PERF-05",
+      "title": "Стабильные проекции карты и быстрые каноничные превью",
+      "priority": "P2",
+      "owner": "combat-render-agent",
+      "depends_on": [
+        "OBS-01",
+        "TEST-04"
+      ],
+      "scope": [
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/CombatHotbar.tsx",
+        "frontend/src/solo-combat/engine.ts",
+        "frontend/src/solo-combat/tacticalGrid.ts",
+        "frontend/src/solo-combat/combatIllumination.ts",
+        "frontend/src/solo-combat/attackCoverPreview.ts"
+      ],
+      "effort_workdays": [
+        2,
+        5
+      ],
+      "status": "not_started",
+      "steps": [
+        "Записать CPU/React profile для hover, движения, смены цели и animation beats на большой карте с несколькими световыми областями и существами разного footprint.",
+        "Стабилизировать displayState/tokens по presented state и реальному изменению портретов; отделить авторитетный state от presentation state без новых игровых команд.",
+        "Выделить статическую геометрию, освещение, токены и hover/highlight overlays. Мемоизировать дорогие проекции по действительным семантическим ревизиям/источникам, чтобы движение указателя не считало заново свет всех клеток.",
+        "Кешировать readonly preview по world/board revision, actor, action, targets, choices и spatial context. Cache key по одному action ID запрещён; изменение runtime/effects/resources должно инвалидировать preview.",
+        "Если profile доказывает стоимость full clone/executor, выделить общую чистую plan/validate операцию из каноничного исполнителя. Preview и execution вызывают одну операцию; авторитетный execution заново проверяет стоимость, фазу и цели.",
+        "Сохранить один диалог предварительного/подтверждённого броска, presentation timeline, каноничные карточки и settings. Кеш/анимация не расходуют RNG, HP или ресурсы.",
+        "Сравнить длительность render/long tasks и кадры на тех же fixtures; не делать широкие замены механизмов без профиля."
+      ],
+      "verification": [
+        "Укрытие, ray/area delivery, крупные footprint, свет, маршрут, hazards и недоступная цель.",
+        "Два действия на одном примитиве с разными targeting/cost данными.",
+        "Preview не меняет исходный state/hash, RNG cursor, HP/resources или pending continuation.",
+        "После equip/effect/turn/board revision старое preview не используется.",
+        "Keyboard focus, каноничные previews, icon/row и 2D/3D fallback сохраняются."
+      ],
+      "acceptance": [
+        "Hover неизменной клетки/статического слоя не пересчитывает все lighting/geometry projections.",
+        "Расчёт preview совпадает с authoritative command для одинаковых входов.",
+        "Есть измеренный выигрыш render/CPU без изменения игровых исходов."
+      ],
+      "risks": [
+        "Слишком грубая revision key оставит устаревшую видимость/стоимость.",
+        "Presentation state нельзя использовать как авторитетную базу мутации.",
+        "Ранняя публикация hit/outcome нарушит выбор влияния на бросок."
+      ],
+      "rollback": [
+        "Отключить preview cache/memo layer и вернуть прежний canonical preview executor; сохранённые состояния боя не меняются."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/pages/SoloCombatPage.tsx",
+          "frontend/src/components/TacticalBattleMap.tsx",
+          "frontend/src/components/CombatHotbar.tsx",
+          "frontend/src/solo-combat/engine.ts",
+          "frontend/src/solo-combat/tacticalGrid.ts",
+          "frontend/src/solo-combat/combatIllumination.ts",
+          "frontend/src/solo-combat/attackCoverPreview.ts"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REF-01",
+      "title": "Границы правил и небольшие извлечения из крупных исполнителей",
+      "priority": "P2",
+      "owner": "rules-refactor-agent",
+      "depends_on": [
+        "TEST-03",
+        "TEST-05",
+        "TEST-02"
+      ],
+      "scope": [
+        "frontend/src/rules-core/handler.ts",
+        "frontend/src/rules-core/legacy/engineAdapter.ts",
+        "frontend/src/rules-core/importBoundary.test.ts",
+        "frontend/src/rules-core/domain.ts",
+        "frontend/src/engine/execute.ts",
+        "frontend/src/solo-combat/engine.ts",
+        "frontend/src/character/sheetCanonicalWorld.ts",
+        "frontend/worker/build.mjs",
+        "docs/data-driven-rules.md"
+      ],
+      "effort_workdays": [
+        5,
+        10
+      ],
+      "status": "not_started",
+      "steps": [
+        "Использовать ADR и исправленную границу из TEST-02; не повторять её аудит. Здесь выполняются последующие вертикальные переносы крупных исполнителей.",
+        "Зафиксировать реальный runtime import graph и разбирать найденное нарушение rules-core→engine/mvp по модулям. Не удалять import-boundary test ради зелёного CI и не называть действующий legacy adapter мёртвым кодом.",
+        "Описать интерфейсы данных, чистых правил, application/persistence и presentation. Общие entity operations/predicates/costs/phases остаются data-driven; namespace пакета не должен создавать другой источник истины.",
+        "Создать replay-equivalence corpus фиксированных snapshot/command/RNG для equip, action, roll influence, reaction, damage/effect, movement и rest; включить pending reload и старые artifacts.",
+        "Первыми извлечь небольшие общие фазы: equipment/resource projection и costs/availability; затем roll/damage/reaction continuations. Переносить cohesive functions без изменения semantics, не делить по названию способности.",
+        "Вынести generic command dispatch/phase orchestration из handler в отдельные модули, сохраняя deterministic events, original value breakdown и источник КД на момент броска.",
+        "После стабилизации границ рассмотреть workspace package для shared engine и явный exports API; frontend и worker используют одни исходники. Новый язык, новый repository и дополнительный микросервис не требуются.",
+        "Массовое форматирование и удаление legacy отделить от изменения механики. Семантические изменения требуют новой capability/schema/artifact и явной совместимости."
+      ],
+      "verification": [
+        "Архитектурные import boundary и worker forbidden browser imports проходят.",
+        "Replay-equivalence: одинаковые events/final hash/pending/RNG на фиксированных входах.",
+        "Две сущности с различными данными используют общий operation без изменения UI.",
+        "Старый artifact/бой продолжает исполняться; никаких UUID/name branches в новых механиках."
+      ],
+      "acceptance": [
+        "Импортная граница документирована и проверяется автоматически.",
+        "Первый срез существенно уменьшает ответственность крупных функций без второго calculator/assembler.",
+        "Перенос не меняет semantics и не переписывает исторические артефакты.",
+        "Уменьшение числа строк не используется единственным критерием успеха."
+      ],
+      "risks": [
+        "Циклические imports и tree-shaking regression после перемещения функций.",
+        "Случайное изменение порядка событий/стоимости/continuation при косметическом переносе.",
+        "Shared engine extraction расширяет impacted set frontend+worker; карта CI должна это учитывать."
+      ],
+      "rollback": [
+        "Вернуть отдельный рефакторинговый срез через revert, не меняя сохранённые данные; если уже выпущена новая semantics, продолжать поддерживать созданные ею artifacts."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/rules-core/handler.ts",
+          "frontend/src/rules-core/legacy/engineAdapter.ts",
+          "frontend/src/rules-core/importBoundary.test.ts",
+          "frontend/src/rules-core/domain.ts",
+          "frontend/src/engine/execute.ts",
+          "frontend/src/solo-combat/engine.ts",
+          "frontend/src/character/sheetCanonicalWorld.ts",
+          "frontend/worker/build.mjs",
+          "docs/data-driven-rules.md"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REF-02",
+      "title": "Разделение orchestration и каноничного отображения на крупных экранах",
+      "priority": "P2",
+      "owner": "ui-refactor-agent",
+      "depends_on": [
+        "TEST-04"
+      ],
+      "scope": [
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "frontend/src/components/SheetActionsPanel.tsx",
+        "frontend/src/pages/CardLibrary.tsx",
+        "frontend/src/pages/CharacterSheetMVP.tsx",
+        "frontend/src/character/components.tsx",
+        "frontend/src/components/SheetActionLine.tsx",
+        "frontend/src/contexts/ChoiceDialogContext.tsx"
+      ],
+      "effort_workdays": [
+        4,
+        8
+      ],
+      "status": "not_started",
+      "steps": [
+        "Перед изменением записать navigation/dialog/preview contracts основных экранов и определить повторяющиеся loaders, filters, pagination, command lifecycle и entity rendering boundaries.",
+        "Разделить SoloCombatPage на загрузку и command lifecycle, target selection, presentation и dialog hosts. Command ID, pending persistence, retry/replay и continuation принадлежат одному общему lifecycle.",
+        "Выделить из SheetActionsPanel общий action model/availability selector и renderer; лист, бой и мобильный экран переиспользуют каноничные операции и сущности, а не упрощённые параллельные списки.",
+        "Заменить повторяющиеся library loadCards/loadActions/loadEffects/... типизированным registry общих query/pagination/filter adapters. Специфичные права, семантика, create/edit flow, preview и тип сущности остаются явными.",
+        "Выделить ChoiceResolver и небольшие presentation components из общего character/components файла; использовать те же SheetActionLine/ActionPreview/SpellPreview и настройки icon/row во вложенных диалогах.",
+        "Сохранять aria naming/description, keyboard, focus restoration и отсутствие HTML title hover. Разделить чистый formatting и logic changes на небольшие проверяемые срезы.",
+        "Согласовать файловый scope с PERF-04/PERF-05 перед параллельной работой; не создавать конкурирующие реестры и hooks для одной функции."
+      ],
+      "verification": [
+        "Основной E2E: библиотека, создание персонажа, бумажный лист, забег, экипировка, pending roll reload.",
+        "Visual/interaction check icon/row, hover preview, keyboard и nested dialogs.",
+        "Новые сущности на существующих declarations отображаются без UI branches по имени/UUID.",
+        "До/после сравнить bundle route graph и React profile, чтобы рефакторинг не втянул lazy engine в entry."
+      ],
+      "acceptance": [
+        "Крупные экраны разделены по ответственностям без дублирования authoritative logic.",
+        "Entity registry упрощает общий loading/pagination, сохраняя каноничный renderer каждого типа.",
+        "Retry/pending/results и accessibility contracts не изменились.",
+        "Нет широкого rewrite или общего метаконструктора, скрывающего различия сущностей."
+      ],
+      "risks": [
+        "Извлечение hooks может изменить useEffect dependencies и породить повторные команды.",
+        "Новый registry может стереть различия прав/пагинации разных каталогов.",
+        "Перенос imports может увеличить initial JS; требуется build diff."
+      ],
+      "rollback": [
+        "Отменять рефакторинг по небольшому срезу; schema/API/persistence не менять. Если обновлены exports, на переходный период сохранить совместимые re-exports."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/pages/SoloCombatPage.tsx",
+          "frontend/src/components/SheetActionsPanel.tsx",
+          "frontend/src/pages/CardLibrary.tsx",
+          "frontend/src/pages/CharacterSheetMVP.tsx",
+          "frontend/src/character/components.tsx",
+          "frontend/src/components/SheetActionLine.tsx",
+          "frontend/src/contexts/ChoiceDialogContext.tsx"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REL-01",
+      "title": "Единая карта зависимостей для проверок, сборки и выкатки",
+      "priority": "P0",
+      "owner": "release-tooling-agent",
+      "depends_on": [],
+      "scope": [
+        "scripts/release/quick-gate.ps1",
+        "scripts/release/component-dependencies.json",
+        "scripts/release/plan-components.mjs",
+        "scripts/release/plan-components.test.mjs",
+        "frontend/worker/build.mjs",
+        ".github/workflows/ci.yml"
+      ],
+      "effort_workdays": [
+        1,
+        2
+      ],
+      "status": "not_started",
+      "steps": [
+        "Прочитать AGENTS.md, docs/data-driven-rules.md и аудит; описать реальные inputs frontend, backend, worker и инфраструктуры. Проверить транзитивные импорты worker/artifact.ts, общие engine/character/roguelike/schema inputs и backend presentation JSON.",
+        "Создать один версионированный manifest зависимостей и planner, пригодный для локального gate, CI и будущего deploy. Сохранять esbuild metafile как проверяемый список worker build inputs; не объявлять ручные globs полной заменой графа импортов.",
+        "Учитывать добавление, изменение, удаление и переименование файлов. Для deployment сравнивать последний успешно развёрнутый manifest с exact candidate SHA, включая несколько коммитов и изменения после провалившегося выпуска. Для локальной проверки учитывать выбранный baseline, staged, unstaged и допустимые untracked исходники.",
+        "Описать консервативное поведение для неизвестной общей зависимости, изменённых build scripts, Dockerfiles, lockfiles и инфраструктуры; docs-only изменения не должны запускать application rebuild при отсутствии действительной build зависимости.",
+        "Подключить planner к quick-gate и CI без ослабления обязательных проверок. Не менять remote, branch protection и production pipeline: такие подключения требуют отдельного явного запроса.",
+        "Документировать входы/выходы, выбранный baseline и объяснение включения каждого компонента в машинном результате planner. Не включать секреты и содержимое пользовательских артефактов."
+      ],
+      "verification": [
+        "Table-driven tests: UI-only, Go-only, worker shell, engine-only, общий backend JSON, lockfile, Dockerfile, deletion, rename, docs-only, unknown path.",
+        "Сценарий: первый deploy не прошёл, следующий содержит ещё один commit; planner включает изменения обоих коммитов относительно действующего manifest.",
+        "Сценарий после push, когда origin/main совпадает с HEAD: явно выбранный release baseline продолжает давать правильный набор.",
+        "Проверка imports/metafile выявляет общий source dependency, отсутствующий в ручной карте."
+      ],
+      "acceptance": [
+        "Один и тот же planner определяет component set для local gate, CI и deploy plan.",
+        "Изменение общего движка включает frontend и worker; удаления не теряются.",
+        "Результат содержит точные baseline/candidate identities и причины выбора компонентов.",
+        "Выполнение задания не запускает commit, push или внешнюю выкатку."
+      ],
+      "risks": [
+        "Неполный граф даёт ложный пропуск тестов или сборки.",
+        "Слишком широкий fallback уменьшает выигрыш, но предпочтительнее пропущенной зависимости.",
+        "Динамические импорты, raw JSON и embedded Go data требуют отдельного учёта."
+      ],
+      "rollback": [
+        "Отключить оптимизированный выбор и локально вернуть полный набор проверок/сборок. Сохранить manifest и diagnostic output для исправления planner; не откатывать приложение или БД."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "scripts/release/quick-gate.ps1",
+          "frontend/worker/build.mjs",
+          ".github/workflows/ci.yml"
+        ],
+        "proposed": [
+          "scripts/release/component-dependencies.json",
+          "scripts/release/plan-components.mjs",
+          "scripts/release/plan-components.test.mjs"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REL-02",
+      "title": "Минимальные Docker-контексты и измеряемый кеш сборки",
+      "priority": "P1",
+      "owner": "build-agent",
+      "depends_on": [
+        "REL-01",
+        "TEST-01"
+      ],
+      "scope": [
+        ".dockerignore",
+        "backend/.dockerignore",
+        "frontend/.dockerignore",
+        "backend/Dockerfile",
+        "frontend/Dockerfile",
+        "infra/Dockerfile.rules-worker",
+        "docker-compose.yml",
+        "docker-compose.local.yml",
+        "docker-compose.prod.yml",
+        "scripts/release/measure-local.mjs"
+      ],
+      "effort_workdays": [
+        1,
+        3
+      ],
+      "status": "not_started",
+      "steps": [
+        "На изолированном локальном Linux/Docker стенде снять cold/warm baseline: размер contexts, времени dependency install/compile/bundle, image bytes и ресурсы. Разделить tracked git archive и ручную сборку из рабочего root с локальными артефактами.",
+        "Сверить все COPY/embed/raw-import inputs с REL-01. Исправить устаревший frontend context ./frontend в compose-файлах, несовместимый с текущими COPY frontend/... и общими backend каталогами.",
+        "Ввести минимальные contexts или BuildKit named contexts. Исключить локальные БД, дампы, output/tmp и зависимости, не исключая production source, shared data, лицензии и необходимые assets.",
+        "Стабилизировать dependency layers и добавить подходящие BuildKit cache mounts для npm/Go. Подготовить external cache конфигурацию с отдельным scope на компонент, не включая секреты в ARG/COPY/layers.",
+        "Отделить крупный static asset слой от изменяемого application source там, где это подтверждённо уменьшает invalidation. Не переносить media во внешний storage в рамках этой задачи без отдельного запроса.",
+        "Повторить измерения и чистые сборки всех трёх компонентов без доступа к локальным test fixtures. Изменение server builder или registry configuration относится к отдельному внешнему этапу и требует явного запроса."
+      ],
+      "verification": [
+        "Один cold и два warm build каждого компонента с фиксированными source/runtime versions.",
+        "Build из чистого локального archive без node_modules, .env, snapshots и ранее собранного dist.",
+        "Смена UI, engine, media и lockfile инвалидирует ожидаемые слои; удаление input не скрывается старым кешем.",
+        "Smoke локальных frontend/backend/worker контейнеров и проверка каноничных assets/preview imports."
+      ],
+      "acceptance": [
+        "Все поддерживаемые compose/build entrypoints собираются из документированного контекста.",
+        "Измерены context bytes и cache hits; отчёт не подменяет фактические времена обещанным процентом ускорения.",
+        "Контексты и образы не содержат локальных дампов/секретов/экспериментальных результатов.",
+        "Production build/typecheck остаётся обязательным и не заменён только Vite transpilation."
+      ],
+      "risks": [
+        "Урезанный context может убрать неочевидный raw-import/embed файл.",
+        "BuildKit mounts требуют поддерживаемого builder; текущий production legacy builder нельзя считать автоматически обновлённым.",
+        "Общий cache scope может перезаписывать кеш другого компонента."
+      ],
+      "rollback": [
+        "Вернуть прежние Dockerfile/context правила и собирать все компоненты без оптимизации. Не удалять прежние рабочие образы; очистка Docker cache не нужна для отката исходников."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          ".dockerignore",
+          "backend/.dockerignore",
+          "frontend/.dockerignore",
+          "backend/Dockerfile",
+          "frontend/Dockerfile",
+          "infra/Dockerfile.rules-worker",
+          "docker-compose.yml",
+          "docker-compose.local.yml",
+          "docker-compose.prod.yml"
+        ],
+        "proposed": [
+          "scripts/release/measure-local.mjs"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REL-03",
+      "title": "Manifest релиза и достоверная идентификация компонентов",
+      "priority": "P0",
+      "owner": "release-contract-agent",
+      "depends_on": [
+        "REL-01",
+        "TEST-03"
+      ],
+      "scope": [
+        "infra/compose.prod.yml",
+        "infra/release-manifest.schema.json",
+        "scripts/release/validate-manifest.mjs",
+        "frontend/start.sh",
+        "frontend/Dockerfile",
+        "backend/build_info.go",
+        "backend/build_info_test.go",
+        "backend/Dockerfile",
+        "frontend/worker/server.mjs",
+        "frontend/worker/server.test.mjs",
+        "infra/Dockerfile.rules-worker",
+        "docs/standalone-deploy-after-push.md"
+      ],
+      "effort_workdays": [
+        2,
+        4
+      ],
+      "status": "not_started",
+      "steps": [
+        "Зафиксировать различие release SHA, component source SHA, immutable image digest, input fingerprint, worker executable artifact hash и schema/protocol compatibility. Проверить актуальные файлы реализации health/build identity перед изменением.",
+        "Создать versioned manifest schema и validator. Старые single-SHA releases читать через явный адаптер; неизвестная версия, некорректный digest или несовместимый protocol должны отклоняться до mutation.",
+        "Вшивать component identity при сборке. Runtime release identity показывать отдельным полем; не объявлять переиспользованный image новой сборкой через подстановку SOURCE_COMMIT.",
+        "Изменить compose/identity contracts так, чтобы каждый компонент мог ссылаться на свой digest/source SHA. Для worker добавить проверяемые artifactHash, runtime version и supported transport capabilities.",
+        "Описать manifest-based rollback и retention references: переиспользованный image защищён всеми retained manifests; старые artifact hashes защищены ссылками текущих и исторических боёв, а не только числом релизов.",
+        "Подготовить локальные совместимые frontend/backend/worker версии для mixed-version contract checks; существующие capabilities/pinned artifacts не переписывать. Изменение production health/manifest contract допускается только отдельной явно запрошенной выкаткой."
+      ],
+      "verification": [
+        "Schema tests для валидного mixed manifest, legacy adapter, отсутствующего компонента, неверного digest/artifact hash и несовместимой версии.",
+        "Повторное использование старого frontend/backend image сообщает прежний component SHA и новый release ID раздельно.",
+        "Frontend/backend/worker identities сравниваются с manifest; runtime env не может подменить baked build identity.",
+        "Сохранённый бой со старым hash и pending decision читается после нового worker transport release."
+      ],
+      "acceptance": [
+        "Manifest честно описывает mixed versions и является единственным источником состава релиза.",
+        "Identity failure блокирует переход локального стенда на новый release.",
+        "Возможен откат manifest/images без DB restore и без переписывания старых боевых артефактов.",
+        "Требования к runtime/transport/schema совместимости документированы и проверяются автоматически."
+      ],
+      "risks": [
+        "Смена значения существующего source_commit может сломать внешние проверки; нужен переходный период и обновлённый runbook.",
+        "API/worker совместимость не определяется одним Git SHA.",
+        "Новая версия Node может нарушить запуск старого CJS artifact даже при сохранении его hash."
+      ],
+      "rollback": [
+        "До внешнего включения вернуть локальный single-SHA adapter и прежние identity endpoints. После явно запрошенного rollout возвращать предыдущий совместимый manifest, сохраняя данные и старые artifacts; обратные destructive migrations не выполнять."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "infra/compose.prod.yml",
+          "frontend/start.sh",
+          "frontend/Dockerfile",
+          "backend/build_info.go",
+          "backend/build_info_test.go",
+          "backend/Dockerfile",
+          "frontend/worker/server.mjs",
+          "frontend/worker/server.test.mjs",
+          "infra/Dockerfile.rules-worker",
+          "docs/standalone-deploy-after-push.md"
+        ],
+        "proposed": [
+          "infra/release-manifest.schema.json",
+          "scripts/release/validate-manifest.mjs"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REL-04",
+      "title": "CI-сборка проверенных образов и подготовка доставки через реестр",
+      "priority": "P1",
+      "owner": "ci-agent",
+      "depends_on": [
+        "REL-02",
+        "REL-03",
+        "TEST-03",
+        "TEST-04"
+      ],
+      "scope": [
+        ".github/workflows/ci.yml",
+        ".github/workflows/release.yml",
+        "scripts/release/plan-components.mjs",
+        "scripts/release/validate-manifest.mjs",
+        "infra/release-manifest.schema.json",
+        "docs/standalone-deploy-after-push.md"
+      ],
+      "effort_workdays": [
+        2,
+        3
+      ],
+      "status": "not_started",
+      "steps": [
+        "Подготовить workflow_dispatch pipeline с exact candidate SHA и immutable inputs; проверять принадлежность разрешённой ветке и успешные обязательные проверки именно этого SHA. Не читать движущийся main повторно посреди выпуска.",
+        "Включить REL-01 planner, parallel component build matrix и отдельные external cache scopes. Не собирать неизменившийся компонент, если его digest из доверенного manifest доступен и inputs действительно не менялись.",
+        "Собирать manifest с image digests, build identity и test evidence. Ограничить права jobs; PR/fork jobs не получают production deploy secrets и не публикуют production release.",
+        "На локальном стенде проверить build/publish/pull с локальным OCI registry и сценарии отсутствующего layer/image/manifest. Проверять provenance/достоверность manifest прежде чем он станет deploy input.",
+        "Описать внешний этап: выбор registry, настройка credentials/known-host, permissions и при необходимости GitHub environment. Не создавать registry, secrets, remote workflows/runs и production credentials без отдельного явного запроса.",
+        "После отдельного разрешения внешнего этапа выполнить подключения по подготовленному runbook; оставить production cutover выключенным до REL-05 и разрешения владельца. Доступность required reviewers уточнить по плану/видимости repository, не предполагать её."
+      ],
+      "verification": [
+        "Локальная проверка синтаксиса workflow и planner fixtures; фиксированные revisions используемых действий/инструментов.",
+        "Локальный registry rehearsal: changed component publish, reuse старого digest, invalid manifest reject, failed pull, repeated invocation.",
+        "Проверка прав и conditions: fork/PR не попадают в production publication/deploy boundary.",
+        "Каждый digest сопоставляется с exact build source и обязательным test result; неподтверждённый SHA не создаёт готовый release."
+      ],
+      "acceptance": [
+        "Готов проверяемый путь от exact SHA до immutable component images и manifest.",
+        "Production host не требуется для сборки или локального принятия задачи.",
+        "Внешняя публикация и настройка credentials выполняются только отдельным разрешённым этапом.",
+        "Job failure не публикует manifest как успешно готовый к выпуску."
+      ],
+      "risks": [
+        "Registry/cache limits и сетевой доступ могут менять стоимость и длительность pipeline.",
+        "Нельзя доверять artifact из непроверенного PR job для privileged deployment.",
+        "Отмена сборки допустима, но её concurrency настройки нельзя механически переносить на active production cutover."
+      ],
+      "rollback": [
+        "Отключить публикацию и оставить локально проверенный прежний archive-based путь. Не удалять уже используемые digests, credentials или manifests автоматически; внешние изменения откатывать только в явно разрешённом scope."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          ".github/workflows/ci.yml",
+          "docs/standalone-deploy-after-push.md"
+        ],
+        "proposed": [
+          ".github/workflows/release.yml",
+          "scripts/release/plan-components.mjs",
+          "scripts/release/validate-manifest.mjs",
+          "infra/release-manifest.schema.json"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REL-05",
+      "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
+      "priority": "P1",
+      "owner": "deployment-agent",
+      "depends_on": [
+        "REL-04",
+        "REL-06",
+        "TEST-04",
+        "TEST-05"
+      ],
+      "scope": [
+        "infra/deploy-release",
+        "infra/compose.prod.yml",
+        ".github/workflows/release.yml",
+        "scripts/release/validate-manifest.mjs",
+        "scripts/release/plan-components.mjs",
+        "docs/standalone-deploy-after-push.md",
+        "infra/README.md"
+      ],
+      "effort_workdays": [
+        2,
+        4
+      ],
+      "status": "not_started",
+      "steps": [
+        "Создать новый manifest-based runner с legacy adapter: validate candidate, compare deployed manifest, pull digests, verify identities/protocol/schema, определить изменившиеся сервисы и необходимые миграции.",
+        "Сохранить lock, immutable release directories, exact identities, health/readiness, retained frontend assets и старые executable artifacts. Не называть symlink switch атомарной заменой всего HTTP-трафика: Compose обновляет сервисы последовательно.",
+        "Обновлять только затронутые сервисы при совместимом contract. Неизменённые backend/worker не restart при UI-only выпуске. Expand/contract migration и backup gate проходят до запуска несовместимой новой версии; DB restore не является application rollback.",
+        "Добавить failure recovery и reference-aware retention manifests/images. При повторном запросе с неопределённым прошлым результатом сначала определить текущий state, не повторять migration/cutover вслепую.",
+        "Провести локальную репетицию frontend-only/backend-only/engine-only, health failure, прерванной доставки, rollback, старой вкладки и pending decision старого боя. Один deploy одновременно; не отменять активную миграцию/cutover новым push.",
+        "Подготовить ручной exact-SHA запуск. Установка runner на TimeWeb, публикация/push и реальный deploy требуют отдельного явного запроса после локальной проверки.",
+        "Автодеплой успешного main включать только отдельным явно разрешённым изменением политики проекта. Привязать gate к SHA события и diff к последнему успешному manifest; два быстрых push и failed previous deploy не теряют изменения."
+      ],
+      "verification": [
+        "Локальная матрица selective releases подтверждает component identities и отсутствие restart неизменившихся сервисов.",
+        "Fault injection: corrupt digest, missing artifact, incompatible protocol/schema, failed pull/health, interrupted upload, repeated command.",
+        "Старые frontend chunks, старый pinned battle и незавершённое решение доступны после deploy и rollback; RNG/ресурс не повторяются.",
+        "Два последовательных кандидата и ошибка первого корректно сериализуются; второй включает весь diff от успешно действующего release."
+      ],
+      "acceptance": [
+        "UI-only release не перезапускает backend/worker и использует честный mixed manifest.",
+        "Обязательные проверки блокируют неисправный candidate; rollback возвращает совместимые images/manifest без переписывания данных.",
+        "Retention сохраняет все images/artifacts, на которые есть защищённые ссылки.",
+        "Production deployment и auto-on-push остаются отдельными явно разрешаемыми действиями."
+      ],
+      "risks": [
+        "Rolling release требует совместимости старых вкладок и новых backend/worker версий.",
+        "Миграция может быть необратима простым откатом image.",
+        "Manifest retention без reference counting может удалить image, переиспользованный более новым выпуском.",
+        "Blue/green требует ресурсов и отдельной проверки; не вводить его без замера необходимости."
+      ],
+      "rollback": [
+        "На локальном стенде вернуть последний совместимый manifest и его images, не восстанавливая БД. Для production использовать только заранее проверенный rollback plan в явно разрешённом scope; при schema incompatibility остановить rollout и сохранить текущий диагностический state."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "infra/deploy-release",
+          "infra/compose.prod.yml",
+          "docs/standalone-deploy-after-push.md",
+          "infra/README.md"
+        ],
+        "proposed": [
+          ".github/workflows/release.yml",
+          "scripts/release/validate-manifest.mjs",
+          "scripts/release/plan-components.mjs"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "REL-06",
+      "title": "Проверяемый backup/restore для БД, правил и релизов",
+      "priority": "P0",
+      "owner": "recovery-agent",
+      "depends_on": [
+        "TEST-01",
+        "DB-01"
+      ],
+      "scope": [
+        "infra/deploy-release",
+        "scripts/release/backup-manifest.mjs",
+        "scripts/release/restore-drill.mjs",
+        "scripts/release/artifact-references.mjs",
+        "docs/standalone-deploy-after-push.md",
+        "docs/backup-restore.md"
+      ],
+      "effort_workdays": [
+        1,
+        3
+      ],
+      "status": "not_started",
+      "steps": [
+        "Инвентаризировать backup categories: PostgreSQL snapshot, referenced executable artifacts, release manifest, media manifest и необходимая конфигурация. Текущий pg_dump не содержит /artifacts; не считать его доказательством полного восстановления боя.",
+        "Создать backup manifest с хэшами/размерами/временем и проверкой ссылок DB snapshot на artifacts. Секреты не помещать в обычный manifest, логи или Git; отдельно описать защищённый recovery канал конфигурации.",
+        "Восстановить разрешённый snapshot в новый изолированный локальный PostgreSQL и скопировать его необходимые artifacts. Проверить versions/schema и приложение с данными после восстановления.",
+        "Продолжить старый pending decision и повторить ранее принятую команду: состояние, RNG, ресурс и история должны остаться корректными. Missing/corrupt artifact должен выявляться до попытки принять новую команду.",
+        "Измерить restore time и предложить RPO/RTO и отдельную retention policy для dumps, images, artifacts, assets. Текущие 5 releases и 90 дней assets не являются retention политикой дампов.",
+        "Подготовить внехостовую копию и расписание как reviewable план. Создание внешнего storage/backup schedule, production snapshot/restore и удаление дампов требуют отдельного явного запроса. Убирать dump из пути frontend-only релиза можно только после принятия новой backup policy."
+      ],
+      "verification": [
+        "Полный restore drill на именованном локальном стенде с checksum verification и recorded source identities.",
+        "Проверки current/old pinned combat, pending decision, duplicate command и media references.",
+        "Negative tests: отсутствующий artifact, повреждённый файл, неверный manifest, schema mismatch.",
+        "Retention dry-run сохраняет активные/исторические referenced artifacts и rollback manifests; секреты отсутствуют в выводе."
+      ],
+      "acceptance": [
+        "Есть воспроизводимый доказанный restore, а не только успешный pg_dump.",
+        "Измерено время восстановления и перечислены ещё неизвестные RPO/доступы.",
+        "Артефакты правил не удаляются по числу последних релизов.",
+        "Production restore, external schedule и удаление backups не выполняются без отдельного запроса."
+      ],
+      "risks": [
+        "Снимок БД и файловые artifacts могут относиться к несовместимым моментам без согласованного manifest.",
+        "Backup на том же VPS не защищает от потери всего хоста.",
+        "Автоматический TTL способен удалить исполняемый код ещё активного боя.",
+        "RPO/PITR зависят от фактических возможностей PostgreSQL hosting, не установленных аудитом."
+      ],
+      "rollback": [
+        "Сохранить действующий pre-release pg_dump до доказательства новой процедуры. Не удалять исходный backup при неудачном restore drill; удалить можно только точно созданный disposable local clone по безопасной проверенной процедуре."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "infra/deploy-release",
+          "docs/standalone-deploy-after-push.md"
+        ],
+        "proposed": [
+          "scripts/release/backup-manifest.mjs",
+          "scripts/release/restore-drill.mjs",
+          "scripts/release/artifact-references.mjs",
+          "docs/backup-restore.md"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "DB-01",
+      "title": "Измерение размера БД и роста хранения по игровым сценариям",
+      "priority": "P0",
+      "owner": "database-observability-agent",
+      "depends_on": [
+        "TEST-01"
+      ],
+      "scope": [
+        "scripts/database/storage-inventory.sql",
+        "scripts/database/storage-report.mjs",
+        "scripts/database/storage-report.test.mjs",
+        "docs/database-storage.md",
+        "backend/models_roguelike.go",
+        "backend/migrations/create_canonical_runtime.go"
+      ],
+      "effort_workdays": [
+        1,
+        2
+      ],
+      "status": "not_started",
+      "steps": [
+        "Подготовить инструмент, допускающий только явно названную локальную БД/разрешённый restored snapshot, с read-only transaction, statement timeout и lock timeout. Не читать production DSN из .env автоматически.",
+        "Снять PostgreSQL version, database/relation/TOAST/index sizes, live/dead tuple estimates, workload counters, autovacuum/analyze times и stats reset metadata. Разделить локальный cluster directory, одну БД, dump, WAL и production storage.",
+        "Ограниченными выборками оценить распределение размеров response/record/envelope/catalog/checkpoint и число команд на active/ended/QA run. Не выводить персональные данные и полные JSON.",
+        "Проверить фактическую наполненность legacy/canonical tables до вывода о главном потребителе; соответствующий canonical transport выключен по умолчанию. Проверить индексные определения/constraints и наличие pg_stat_statements без автоматического включения extension.",
+        "На disposable локальном стенде воспроизвести фиксированный seeded сценарий 100/1000 команд. Отдельно разрешённые локальные сценарии изменяют только тестовый clone; снять до/после table/TOAST/index/WAL bytes, p50/p95, lock duration и response bytes.",
+        "Опубликовать baseline с крупнейшими consumers и ограничениями: restored dump не переносит исторические production timings/workload. Любой production monitoring, snapshot или изменение конфигурации требует отдельного явного запроса."
+      ],
+      "verification": [
+        "Инструмент отказывает неизвестному/внешнему DSN и не выводит credentials.",
+        "Read-only inventory не меняет данные; totals согласуются с PostgreSQL size functions.",
+        "Два одинаковых seeded сценария дают сопоставимый logical рост и одинаковый итоговый state hash.",
+        "Rows/indices с нулевой активностью помечаются с длительностью наблюдения, а не автоматически как неиспользуемые."
+      ],
+      "acceptance": [
+        "Известны пять крупнейших consumers и вклад отдельных JSONB/TOAST/index категорий.",
+        "Есть рост bytes на фиксированное число команд и измерения операций для сравнения изменений.",
+        "Не заявлена экономия production storage без фактических данных.",
+        "База, Docker artifacts и локальные экспериментальные каталоги явно разделены в отчёте."
+      ],
+      "risks": [
+        "pg_stat counters являются оценками/накопленными значениями и зависят от reset/нагрузки.",
+        "Полные scans больших JSONB могут быть дорогими, даже если запрос read-only.",
+        "Размер SQL dump и локального cluster directory не равен размеру production БД."
+      ],
+      "rollback": [
+        "Измерительные файлы не требуют data rollback. При ошибке остановить нагрузку на disposable clone; исходный snapshot и production не изменять."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/models_roguelike.go",
+          "backend/migrations/create_canonical_runtime.go"
+        ],
+        "proposed": [
+          "scripts/database/storage-inventory.sql",
+          "scripts/database/storage-report.mjs",
+          "scripts/database/storage-report.test.mjs",
+          "docs/database-storage.md"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "DB-02",
+      "title": "Компактные новые квитанции команд без потери идемпотентности",
+      "priority": "P2",
+      "owner": "command-storage-agent",
+      "depends_on": [
+        "DB-01",
+        "REL-06",
+        "TEST-03",
+        "TEST-05"
+      ],
+      "scope": [
+        "backend/models_roguelike.go",
+        "backend/roguelike_controller.go",
+        "backend/roguelike_worker_controller.go",
+        "backend/roguelike_party_worker.go",
+        "backend/character_runtime_command.go",
+        "backend/migrations",
+        "frontend/src/roguelike",
+        "docs/database-storage.md"
+      ],
+      "effort_workdays": [
+        3,
+        6
+      ],
+      "status": "not_started",
+      "steps": [
+        "По DB-01 подтвердить, что полноразмерные receipt responses существенно влияют на рост/время. Если гипотеза не подтверждена, оформить no-change decision и выбрать фактический consumer вместо внедрения новой схемы ради предположения.",
+        "Спроектировать versioned receipt/result contract: durable command identity, request fingerprint, outcome/revision, exact immutable result или ссылка на exact snapshot/result. Сохранить возможность вернуть прежний ответ после дальнейших ходов; не восстанавливать его из текущего персонажа.",
+        "Добавить additive schema и dual-reader старых/новых receipts. Сначала использовать локально атомарное хранилище; внешний object storage требует отдельного протокола доступности/атомарности и явного запроса на подключение.",
+        "Записывать command result, run/character changes и revisions в прежней атомарной транзакции. Не удалять старые receipts и не менять их JSON/hash; конфликты command ID и request hash продолжают отклоняться.",
+        "Переключать только новые записи через явную версию/feature boundary. Добавить metrics bytes/time и сравнение 1000-command сценария, учитывая существующее TOAST сжатие.",
+        "Проверить reload/retry/concurrency/crash recovery и backward-compatible application rollback. Реальная data migration/production release требует отдельного запроса после локальных evidence."
+      ],
+      "verification": [
+        "Повтор старого и нового command ID после последующих команд и рестарта возвращает сохранённый результат без RNG/расхода.",
+        "Повтор ID с другим fingerprint отклоняется; конкурирующие команды не создают частичный run/character/receipt state.",
+        "Saved pending decision продолжается после изменения storage writer; исторический artifact и modifier/КД breakdown не пересчитываются из текущих данных.",
+        "Локальный seeded replay сравнивает state hashes, ресурсы, RNG и реальный table/TOAST/index размер до/после."
+      ],
+      "acceptance": [
+        "Экономия подтверждена измерениями либо принято обоснованное решение не внедрять усложнение.",
+        "Старые receipts читаются без преобразования истории.",
+        "Сохранены exact-result retry, request-hash conflict и атомарность.",
+        "Автоматический TTL receipts не добавлен; old command не становится новой после очистки."
+      ],
+      "risks": [
+        "Reference на mutable current snapshot нарушит exact retry.",
+        "Внешняя запись blob вне транзакции может оставить receipt без доступного результата.",
+        "Ручное gzip поверх TOAST может усложнить чтение без значимой экономии.",
+        "Удаление old receipts разрушает запрет повторного выполнения команд."
+      ],
+      "rollback": [
+        "Остановить новый writer и вернуть прежний формат новых записей через совместимый dual-reader release. Уже созданные новые receipts сохранять и читать; не восстанавливать БД и не переписывать исторические результаты."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/models_roguelike.go",
+          "backend/roguelike_controller.go",
+          "backend/roguelike_worker_controller.go",
+          "backend/roguelike_party_worker.go",
+          "backend/character_runtime_command.go",
+          "backend/migrations",
+          "frontend/src/roguelike"
+        ],
+        "proposed": [
+          "docs/database-storage.md"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "DB-03",
+      "title": "Неизменяемые каталоги по хэшу и разделение горячего состояния",
+      "priority": "P2",
+      "owner": "catalog-storage-agent",
+      "depends_on": [
+        "DB-01",
+        "REL-06",
+        "PERF-01",
+        "TEST-05"
+      ],
+      "scope": [
+        "backend/models_roguelike.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/roguelike_controller.go",
+        "backend/roguelike_worker_controller.go",
+        "backend/roguelike_combat_journal.go",
+        "backend/migrations",
+        "frontend/src/roguelike/combatInitialization.ts",
+        "frontend/src/roguelike/combatWorker.ts",
+        "frontend/worker/server.mjs"
+      ],
+      "effort_workdays": [
+        3,
+        6
+      ],
+      "status": "not_started",
+      "steps": [
+        "Связать DB-01 measurements с PERF-01 resolver contract. Выяснить, какие immutable catalogs реально повторяются и какие JSONB поля сериализуются/перезаписываются на каждом ходу; не считать физический TOAST rewrite доказанным только по SQL UPDATE.",
+        "Спроектировать новый versioned envelope с content-addressed immutable catalog и отдельным изменяемым состоянием. Хэш включает каноничный полный input и версию serializer/protocol; проверять права и полноту dependency closure до reuse.",
+        "Добавить additive storage/dual-reader и reference integrity. Старые бои продолжают использовать прежний envelope/artifact/catalog; новые каталоги не включаются в них автоматически. Оформление изменяется отдельно от mechanics и исторических snapshots.",
+        "Сократить update set горячих полей и лишнюю сериализацию при доказанной безопасности. Сохранить единую транзакцию run/character/revision/receipt и авторитетную повторную проверку.",
+        "Сохранить уже существующий baseline + small replay events в roguelike_combat_events. Добавлять checkpoints только при измеренной стоимости восстановления; не реализовывать повторно уже работающую схему журнала.",
+        "Проверить cache/reference bounds, восстановление из backup, missing catalog fail-closed и replay старого/нового protocol. Backfill старой истории не входит в задачу; production storage migration требует отдельного явного запроса."
+      ],
+      "verification": [
+        "Две сущности с разными данными на одном примитиве исполняются без UI/name/UUID branch.",
+        "Смешанная party, два одинаковых каталога и два различающихся loadout не получают чужие персональные параметры.",
+        "Replay baseline/events и pending continuation дают прежний RNG/resources/state hash до/после смены writer.",
+        "Измеряются SQL payload, serialization time, table/TOAST/WAL bytes и command p95; corrupted/missing referenced catalog отклоняется."
+      ],
+      "acceptance": [
+        "Новые одинаковые immutable catalogs переиспользуются только при доказанном полном совпадении.",
+        "Старые battle artifacts, history и canonical hash не изменены.",
+        "Update горячего состояния не переносит mechanics authority в UI или отдельный упрощённый engine.",
+        "Сокращение хранения/времени подтверждено baseline и не ухудшает атомарность/restore."
+      ],
+      "risks": [
+        "Неполный hash key может смешать каталоги разных владельцев/версий/персонажей.",
+        "Каталог может содержать персонализированное представление; его нельзя выдавать за общее механическое определение.",
+        "Reference GC может удалить данные, нужные старому pending decision или replay.",
+        "Изменение serializer/hash contract требует явной версии, а не пересчёта истории."
+      ],
+      "rollback": [
+        "Отключить новый writer, сохранив dual-reader и новые immutable catalog rows. Прежний writer используется для новых боёв; начатые бои не меняют pinned artifacts/envelopes."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/models_roguelike.go",
+          "backend/roguelike_worker_catalog.go",
+          "backend/roguelike_controller.go",
+          "backend/roguelike_worker_controller.go",
+          "backend/roguelike_combat_journal.go",
+          "backend/migrations",
+          "frontend/src/roguelike/combatInitialization.ts",
+          "frontend/src/roguelike/combatWorker.ts",
+          "frontend/worker/server.mjs"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "DB-04",
+      "title": "Адресная уборка хранения: retention, индексы и встроенные изображения",
+      "priority": "P2",
+      "owner": "database-maintenance-agent",
+      "depends_on": [
+        "DB-01",
+        "REL-06",
+        "TEST-05"
+      ],
+      "scope": [
+        "scripts/database/retention-plan.mjs",
+        "scripts/database/retention-plan.test.mjs",
+        "scripts/database/storage-inventory.sql",
+        "backend/migrations",
+        "backend/models.go",
+        "backend/paper_documents.go",
+        "backend/image_library_controller.go",
+        "backend/roguelike_combat_journal.go",
+        "docs/database-storage.md",
+        "docs/backup-restore.md"
+      ],
+      "effort_workdays": [
+        2,
+        5
+      ],
+      "status": "not_started",
+      "steps": [
+        "По DB-01 составить ownership/retention matrix для пользовательских документов, active/ended runs, receipts, append-only journals, migration archives, OAuth/outbox, legacy tables, backups и media. Сроки хранения и удаление пользовательских данных не придумывать без решения владельца.",
+        "Проверить candidate duplicate indexes через фактические definitions/constraints/query plans и статистику с известным окном наблюдения. Рассмотреть cloudinary_id UNIQUE плюс обычный индекс и session_id/seq индексы как кандидаты, а не как разрешённые удаления.",
+        "Read-only scan ограниченных metadata выявляет data URLs/крупные inline payloads. Обычные images уже URL-based; внешнее перемещение планировать только для доказанных inline blobs с checksum/reference verification и разрешённым storage.",
+        "Создать plan/export/verify/apply protocol для конкретных завершённых данных. Dry-run показывает точные IDs/bytes/references; active/pending/rollback объекты исключаются. Append-only triggers не отключать ради уборки; archive должен иметь versioned reader и проверяемые hashes.",
+        "Не удалять command receipts простым TTL: сохранить durable idempotency identity и точный результат либо отдельно согласовать versioned expiry semantics, исключающие повторное выполнение. Artifact/media reachability учитывать из frozen catalogs, snapshots, старых документов и manifests.",
+        "На disposable clone проверить export/restore/replay и один адресный индексный/housekeeping change за итерацию. Обычный VACUUM не обещает возврат места ОС; VACUUM FULL/REINDEX/destructive DDL планировать отдельно с блокировками и запасом диска.",
+        "Согласовать точный reviewable deletion/migration plan. Production queries/configuration, подключение storage, data deletion, расписания retention и deployment требуют отдельного явного запроса; до него задача завершает только локальную подготовку/evidence."
+      ],
+      "verification": [
+        "Dry-run deterministic и повторяемый, не изменяет БД/файлы; protected reference fixtures остаются в keep set.",
+        "Архив восстанавливается в отдельную локальную БД; hashes, pending decisions и old-command idempotency сохраняются.",
+        "Удаление candidate index на clone не снимает constraint и не ухудшает важные EXPLAIN/latency checks; при отсутствии доказательств индекс сохраняется.",
+        "Inline image export совпадает byte/hash, ссылки и доступ проверены; orphan detector учитывает исторические frozen references.",
+        "Apply на disposable fixture требует exact prepared plan/preimages; повтор apply no-op, changed preimage fail-closed."
+      ],
+      "acceptance": [
+        "Каждое потенциальное удаление/изменение имеет доказательство ненужности либо согласованную retention policy и restore path.",
+        "Нет общего TTL для receipts/artifacts и нет скрытого изменения append-only history.",
+        "Отчёт различает освобождённое логическое место, повторно используемое PostgreSQL место и реально уменьшенный размер файлов.",
+        "Ни production deletion, ни внешняя автоматизация не активированы без отдельного запроса."
+      ],
+      "risks": [
+        "Нулевой idx_scan за короткое окно не доказывает ненужность индекса.",
+        "Soft-deleted document или старый frozen catalog всё ещё может ссылаться на image/artifact.",
+        "Архив без доступного reader/restore и checksum не сохраняет прежнюю возможность replay.",
+        "Удаление UI-функции не разрешает удаление связанных пользовательских данных и миграционных доказательств."
+      ],
+      "rollback": [
+        "До apply сохранять проверенные exports и исходный manifest; на локальном стенде восстановить только затронутую тестовую категорию и пересоздать индекс из сохранённого DDL. Production restore не выполнять автоматически; остановить последующие действия и подготовить отдельную адресную процедуру."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/migrations",
+          "backend/models.go",
+          "backend/paper_documents.go",
+          "backend/image_library_controller.go",
+          "backend/roguelike_combat_journal.go"
+        ],
+        "proposed": [
+          "scripts/database/retention-plan.mjs",
+          "scripts/database/retention-plan.test.mjs",
+          "scripts/database/storage-inventory.sql",
+          "docs/database-storage.md",
+          "docs/backup-restore.md"
+        ],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "AI-01",
+      "title": "Различить источник 403 и обеспечить безопасную диагностику",
+      "priority": "P0",
+      "owner": "images",
+      "depends_on": [],
+      "scope": [
+        "backend/openai_service.go:21,70,139",
+        "backend/image_controller.go:215",
+        "backend/main.go:204,236,397",
+        "frontend/src/api/imagesApi.ts"
+      ],
+      "effort_workdays": [
+        1,
+        2
+      ],
+      "status": "not_started",
+      "steps": [
+        "Добавить structured error mapper: app authorization / upstream region / upstream permission / rate limit / network / timeout / unknown.",
+        "Локально моделировать JSON и HTML 403, content type и provider request ID; редактировать секретные заголовки и не логировать prompt/base64.",
+        "Проверить конфигурационный путь endpoint/model/proxy. Фактическая модель сейчас gpt-image-1; не менять её для лечения сетевого отказа.",
+        "Подготовить runbook проверки container egress, проекта ключа и доступа к конкретной модели. GET models проверяет соединение, но не разрешение на Images API.",
+        "Реальную внешнюю диагностику и платную пробу оставить отдельным явно разрешённым шагом. До этого точную причину текущего 403 отмечать unknown."
+      ],
+      "verification": [
+        "Mock cases local/upstream 403 различаются.",
+        "UI показывает полезную причину без секретов.",
+        "Логирование не содержит base64/prompt/token."
+      ],
+      "acceptance": [
+        "Источник ошибки прослеживается от браузера до провайдера.",
+        "Runbook ссылается на текущую официальную документацию и не обещает устранение регионального отказа VPN."
+      ],
+      "risks": [
+        "Сам сервис имеет contentAdminAuth и может вернуть 403 до OpenAI.",
+        "Доступ аккаунта/организации не доказан исходниками."
+      ],
+      "rollback": [
+        "Вернуть mapper при необходимости; безопасную redaction сохранить; credentials не менять."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/openai_service.go",
+          "backend/image_controller.go",
+          "backend/main.go",
+          "frontend/src/api/imagesApi.ts"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "AI-02",
+      "title": "Единый сервис генерации и хранения изображений",
+      "priority": "P1",
+      "owner": "images",
+      "depends_on": [
+        "AI-01"
+      ],
+      "scope": [
+        "backend/controller.go:873",
+        "backend/image_controller.go:185,231",
+        "backend/openai_service.go",
+        "frontend/src/api/client.ts:216",
+        "frontend/src/api/imagesApi.ts"
+      ],
+      "effort_workdays": [
+        2,
+        3
+      ],
+      "status": "not_started",
+      "steps": [
+        "Направить существующие маршруты в один domain service: provider → storage → entity update.",
+        "При отказе не сохранять placeholder и не возвращать ложный success; сохранять прежнее изображение.",
+        "Новые изображения сохранять в object storage, в entity писать URL. Старые data URLs продолжают читаться до отдельной миграции.",
+        "Логировать request ID, размер, latency и фактическую model; убрать запись полного base64 и неверную метку DALL-E.",
+        "Согласовать timeout/cancel/error contracts обоих frontend callers, сохранив права; failures storage/DB имеют безопасный cleanup."
+      ],
+      "verification": [
+        "Provider/storage/DB failures и cancel.",
+        "Старый и новый endpoint дают совместимый success DTO.",
+        "Existing image не изменяется при отказе."
+      ],
+      "acceptance": [
+        "Все зарегистрированные пути имеют единый storage/error contract.",
+        "Нет фиктивного успеха и новых base64 blobs в Card.ImageURL."
+      ],
+      "risks": [
+        "Storage cleanup не должен становиться бесконечным после отмены; нужен отдельный ограниченный контекст.",
+        "Старый endpoint всё ещё зарегистрирован — нельзя просто удалить без проверки callers."
+      ],
+      "rollback": [
+        "Сохранить adapters старых endpoint; вернуть предыдущий writer при необходимости, не возвращая ложный placeholder success."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "backend/controller.go",
+          "backend/image_controller.go",
+          "backend/openai_service.go",
+          "frontend/src/api/client.ts",
+          "frontend/src/api/imagesApi.ts"
+        ],
+        "proposed": [],
+        "descriptive": []
+      }
+    },
+    {
+      "id": "AI-03",
+      "title": "Фоновые image jobs и изолированная исходящая сеть",
+      "priority": "P2",
+      "owner": "images",
+      "depends_on": [
+        "AI-02",
+        "TEST-01"
+      ],
+      "scope": [
+        "backend image jobs (new)",
+        "backend/migrations image_jobs (new)",
+        "frontend generation status",
+        "infra optional generation service"
+      ],
+      "effort_workdays": [
+        3,
+        5
+      ],
+      "status": "not_started",
+      "steps": [
+        "Ввести job ID/fingerprint/owner и persisted состояния queued/running/succeeded/failed/unknown; лимиты concurrency и бюджета.",
+        "Worker lease и restart не должны повторять paid POST с неизвестным результатом. Локальная идемпотентность не доказывает exactly-once внешнего API.",
+        "Клиентский повтор возвращает тот же job; UI восстанавливает статус после reload, результат хранится в storage.",
+        "Для разрешённой обычной сетевой проблемы сравнить client-only CONNECT proxy, tunnel sidecar и отдельный generation service. VPN server на том же TimeWeb host не меняет его egress.",
+        "Проверить на тестовом стенде TLS/DNS/NO_PROXY, внутренний worker/DB/storage traffic, потерю egress и откат. API key не передавать произвольному relay, TLS не отключать.",
+        "Поддерживаемое размещение/правомерный доступ пользователей подтвердить до реальной настройки. Не описывать иностранный IP как гарантию обхода регионального ограничения. Внешнее изменение выполняется только по отдельному запросу."
+      ],
+      "verification": [
+        "S12, особенно timeout после отправки тела и потеря ответа.",
+        "Две одинаковые заявки не создают два локальных jobs.",
+        "Недоступность генерации не блокирует игровые команды."
+      ],
+      "acceptance": [
+        "Нет слепых повторных платных запусков.",
+        "Есть восстановимый статус и безопасная изоляция сети.",
+        "Региональный отказ либо разрешённый доступ установлен отдельно, не скрыт под network retry."
+      ],
+      "risks": [
+        "Неопределённый исход у провайдера может потребовать ручного решения.",
+        "Tunnel всего хоста может нарушить SSH/DB/Docker/storage; изоляция предпочтительнее."
+      ],
+      "rollback": [
+        "Остановить приём jobs, завершить или пометить текущие без повторов. Вернуть сеть генерации из сохранённой конфигурации; gameplay сеть не менять."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [],
+        "proposed": [],
+        "descriptive": [
+          "backend image jobs (new)",
+          "backend/migrations image_jobs (new)",
+          "frontend generation status",
+          "infra optional generation service"
+        ]
+      }
+    },
+    {
+      "id": "CLEAN-01",
+      "title": "Упорядочить локальные артефакты и действующую документацию",
+      "priority": "P2",
+      "owner": "repository",
+      "depends_on": [
+        "REL-02"
+      ],
+      "scope": [
+        ".gitignore",
+        "docs index/archive",
+        "output",
+        "outputs",
+        "tmp",
+        "references"
+      ],
+      "effort_workdays": [
+        1,
+        3
+      ],
+      "status": "not_started",
+      "steps": [
+        "Разделить tracked/untracked/generated/original/evidence/cache; проверить единственные оригиналы и хэши перед любыми переносами.",
+        "Определить единый каталог результата и ignore rules. Уже tracked файлы не исключаются автоматически через .gitignore.",
+        "Создать current docs index с датой проверки и supersedes; законченные задачи перенести в archive с сохранением ссылок.",
+        "До перемещения проверить ?raw imports, go:embed, fixture generators, CLI, build contexts и skills. src/mvp и src/canon не удалять целиком.",
+        "Подготовить dry-run manifest очистки с точными resolved paths и backup references. На Windows операции выполнять одной оболочкой без перехода в cmd и без следования symlink за workspace.",
+        "В согласованном обратимом scope переносить по manifest; необратимое удаление originals/history требует отдельного решения."
+      ],
+      "verification": [
+        "Build и link checker после переносов.",
+        "Dry-run targets находятся в ожидаемой workspace directory.",
+        "Размеры Git history/working files/Docker context/local artifacts указаны раздельно."
+      ],
+      "acceptance": [
+        "Актуальные инструкции легко найти; архив не выглядит текущим источником.",
+        "Нет потери единственных оригиналов или доказательств проверки."
+      ],
+      "risks": [
+        "В output десятки GB могут содержать единственные художественные исходники.",
+        "Архивирование внутри Git не уменьшает историю."
+      ],
+      "rollback": [
+        "Вернуть по move manifest; originals и evidence оставлять в проверенном хранилище."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          ".gitignore",
+          "output",
+          "outputs",
+          "tmp",
+          "references"
+        ],
+        "proposed": [],
+        "descriptive": [
+          "docs index/archive"
+        ]
+      }
+    },
+    {
+      "id": "CLEAN-02",
+      "title": "Постепенно убрать старые продуктовые ветки",
+      "priority": "P2",
+      "owner": "product",
+      "depends_on": [
+        "TEST-04"
+      ],
+      "scope": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go:372",
+        "legacy group/inventory/character controllers"
+      ],
+      "effort_workdays": [
+        2,
+        5
+      ],
+      "status": "not_started",
+      "steps": [
+        "Составить route/API/data dependency map и измерение использования без личного содержания. Название старого каталога не доказывает неиспользуемость.",
+        "Сохранить четыре основных раздела и Профиль/Настройки/Экспорт/Инициативу; сохранить обслуживающие библиотеку редакторы, ShopDetail, inventory mechanics и шаблоны для weapon mastery.",
+        "Кандидаты groups/standalone inventory/templates сначала скрываются profile/flag; прекращение создания legacy объектов согласовать как продуктовый переход.",
+        "Для v1/v2 characters обеспечить экспорт/перенос, redirect/deprecation и проверить внешние API callers. Backend endpoints сегодня зарегистрированы.",
+        "Удалять UI/routes/controllers только после переходного периода и подтверждения отсутствия consumers. Данные/таблицы сохранять до отдельного DB решения.",
+        "Лабораторию правил/документацию можно переместить в developer profile. Mobile/PWA и отдельные встречи решать по использованию, сохраняя общий боевой код."
+      ],
+      "verification": [
+        "S01–S07, старые URLs.",
+        "Run shop, weapon mastery, entity editors, mobile/PWA и экспорт остаются рабочими."
+      ],
+      "acceptance": [
+        "Есть kept/hidden/deprecated/deleted inventory с доказательствами.",
+        "Основные сценарии пользователя не теряют зависимые функции."
+      ],
+      "risks": [
+        "Отдельная вкладка Инвентарь и игровые операции инвентаря — разные объекты очистки.",
+        "ShopDetail используется забегами и листом."
+      ],
+      "rollback": [
+        "Вернуть navigation/profile flag. До удаления данных маршруты и экспорт должны оставаться восстановимыми."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/App.tsx",
+          "backend/main.go"
+        ],
+        "proposed": [],
+        "descriptive": [
+          "legacy group/inventory/character controllers"
+        ]
+      }
+    },
+    {
+      "id": "CLEAN-03",
+      "title": "Сократить media-дистрибутив и подготовить обслуживание Git",
+      "priority": "P2",
+      "owner": "repository",
+      "depends_on": [
+        "CLEAN-01",
+        "REL-06"
+      ],
+      "scope": [
+        "frontend/public",
+        "media manifest (new)",
+        "references",
+        "Git maintenance runbook"
+      ],
+      "effort_workdays": [
+        2,
+        4
+      ],
+      "status": "not_started",
+      "steps": [
+        "Разделить originals и runtime media; подготовить WebP/AVIF/размеры под экран с визуальным сравнением карт и иконок.",
+        "Использовать URL с content hash и object storage/CDN либо отдельный assets layer; старые ссылки и лицензионные сведения сохранить.",
+        "Проверить print/export, PWA и offline shell: перенос не должен ломать обязательные ресурсы.",
+        "Сравнить clone/archive/context/image/pull bytes отдельно от initial browser transfer. public примерно 155 MB не скачивается при каждом входе.",
+        "Git maintenance начать с read-only integrity/inventory. Не удалять .git tmp вручную, не выполнять aggressive gc и не переписывать историю без отдельного решения, backup и координации клонов."
+      ],
+      "verification": [
+        "Manifest hash/URL reachability и old document/battle references.",
+        "Изображения визуально приемлемы, прозрачность/детали и экспорт сохраняются.",
+        "Image/pull bytes до/после."
+      ],
+      "acceptance": [
+        "Сокращение передаваемого дистрибутива измерено.",
+        "Оригиналы и старые URL доступны, история Git не переписана без разрешения."
+      ],
+      "risks": [
+        "Уменьшение PNG может ухудшить читаемость карты.",
+        "Moving files в archive внутри Git не уменьшает pack."
+      ],
+      "rollback": [
+        "Вернуть прошлый media manifest/URLs; originals и предыдущие assets retained."
+      ],
+      "execution": "local_only_until_explicitly_authorized",
+      "scope_inventory": {
+        "existing": [
+          "frontend/public",
+          "references"
+        ],
+        "proposed": [],
+        "descriptive": [
+          "media manifest (new)",
+          "Git maintenance runbook"
+        ]
+      }
+    }
+  ],
+  "external_sources": [
+    {
+      "url": "https://developers.openai.com/api/docs/guides/error-codes",
+      "supports": "Классификация регионального 403",
+      "checked": "2026-10-04"
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/supported-countries",
+      "supports": "Региональные условия доступа",
+      "checked": "2026-10-04"
+    },
+    {
+      "url": "https://developers.openai.com/api/docs/guides/image-generation",
+      "supports": "Images API и доступ организации",
+      "checked": "2026-10-04"
+    },
+    {
+      "url": "https://timeweb.cloud/docs/apps/how-it-works",
+      "supports": "App Platform Git deployment",
+      "checked": "2026-10-04"
+    },
+    {
+      "url": "https://docs.docker.com/build/cache/backends/gha/",
+      "supports": "Отдельные scopes кешей",
+      "checked": "2026-10-04"
+    },
+    {
+      "url": "https://www.postgresql.org/docs/15/routine-vacuuming.html",
+      "supports": "VACUUM и VACUUM FULL",
+      "checked": "2026-10-04"
+    }
+  ],
+  "handoff_template": {
+    "task_id": "",
+    "base_commit": "",
+    "status": "not_started|in_progress|done|blocked",
+    "changed_files": [],
+    "commands": [
+      {
+        "cwd": "",
+        "command": "",
+        "exit_code": null
+      }
+    ],
+    "baseline_metrics": {},
+    "result_metrics": {},
+    "acceptance_evidence": [],
+    "known_limitations": [],
+    "data_format_compatibility": "",
+    "rollback_verified": false,
+    "production_changed": false
+  },
+  "dependency_waves": [
+    [
+      "TEST-01",
+      "TEST-02",
+      "REL-01",
+      "AI-01"
+    ],
+    [
+      "TEST-03",
+      "OBS-01",
+      "REL-02",
+      "DB-01",
+      "AI-02"
+    ],
+    [
+      "TEST-04",
+      "PERF-01",
+      "REL-03",
+      "REL-06",
+      "AI-03",
+      "CLEAN-01"
+    ],
+    [
+      "TEST-05",
+      "PERF-02",
+      "PERF-04",
+      "PERF-05",
+      "REF-02",
+      "REL-04",
+      "CLEAN-02",
+      "CLEAN-03"
+    ],
+    [
+      "PERF-03",
+      "REF-01",
+      "REL-05",
+      "DB-02",
+      "DB-03",
+      "DB-04"
+    ]
+  ],
+  "dependency_wave_note": "Это топологические уровни, не обещание параллельного исполнения всех задач. Максимум 3 исполнителя; общий файл/контракт имеет одного владельца.",
+  "start_order": [
+    "TEST-01",
+    "REL-01",
+    "AI-01"
+  ],
+  "start_order_note": "Первые три независимых пакета. TEST-02 затем можно вести отдельным владельцем rules; после TEST-01 доступны OBS-01 и DB-01.",
+  "validation": {
+    "date": "2026-10-04",
+    "task_count": 29,
+    "json_parse": true,
+    "required_fields": true,
+    "dependency_ids_exist": true,
+    "acyclic": true,
+    "implementation_completed": false,
+    "report_links_exist": true,
+    "scope_paths_classified": true,
+    "task_array_types": true
+  },
+  "scope_note": "scope содержит существующие точки изменения и предлагаемые новые файлы. scope_inventory показывает наличие на дату аудита; proposed могут создаваться задачей или её зависимостью. Descriptive уточняются исполнителем до изменения.",
+  "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
+  "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json"
+}

@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "runId": "test_25a5fb92363f9455820e7e0d",
+  "scope": "schema-proof captured trigger fields; independent PostgreSQL reproduction",
+  "capturedProofEqual": true,
+  "immutableUpdateAccepted": true,
+  "cleanup": "stopped"
+}

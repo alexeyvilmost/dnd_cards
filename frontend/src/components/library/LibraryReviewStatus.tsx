@@ -1,5 +1,6 @@
 import { ENTITY_SUPPORT_STATUSES, supportStatusOf, supportStatusPresentation, type EntityReviewStatus, type SupportableEntity } from '../../content/supportStatus';
 import './LibraryReviewStatus.css';
+import type { CatalogReviewSummary } from '../../api/catalogReview';
 
 export function parseReviewStatuses(value: string): EntityReviewStatus[] {
   const selected = new Set(value.split(','));
@@ -25,15 +26,17 @@ export function LibraryReviewStatusFilter({ value, onChange }: { value: EntityRe
   </fieldset>;
 }
 
-export function LibraryReviewStatusSummary({ entities, loading = false }: { entities: readonly SupportableEntity[]; loading?: boolean }) {
+export function LibraryReviewStatusSummary({ entities = [], summary, loading = false }: {
+  entities?: readonly SupportableEntity[]; summary?: CatalogReviewSummary; loading?: boolean;
+}) {
   if (loading) return <p className="library-review-summary" role="status">Загрузка статистики проверки…</p>;
-  const counts = new Map(ENTITY_SUPPORT_STATUSES.map(status => [status, 0]));
-  for (const entity of entities) {
+  const counts = new Map(ENTITY_SUPPORT_STATUSES.map(status => [status, summary?.counts[status] ?? 0]));
+  for (const entity of summary ? [] : entities) {
     const status = supportStatusOf(entity);
     counts.set(status, (counts.get(status) ?? 0) + 1);
   }
   return <section className="library-review-summary" aria-label="Распределение статусов проверки">
-    <p>Статусы проверки: {entities.length} сущностей в этом разделе с учётом поиска и остальных фильтров, до фильтра «Статус».</p>
+    <p>Статусы проверки: {summary?.total ?? entities.length} сущностей в этом разделе с учётом поиска и остальных фильтров, до фильтра «Статус».</p>
     <div className="library-review-summary__bar" aria-hidden="true">{ENTITY_SUPPORT_STATUSES.map(status => {
       const count = counts.get(status)!;
       return count > 0 && <span key={status} data-status={status} style={{ flexGrow: count, backgroundColor: supportStatusPresentation(status).color }} />;

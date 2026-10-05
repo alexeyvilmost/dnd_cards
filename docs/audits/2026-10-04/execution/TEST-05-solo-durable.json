@@ -1,0 +1,1046 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "runId": "test_772753cf5646cd8e927a997d",
+  "cleanup": "stopped",
+  "vitest": {
+    "passed": 224,
+    "failed": 0,
+    "skipped": 0
+  },
+  "native": {
+    "accepted": 220,
+    "acceptedPhases": {
+      "monsterAttackSequence": 2,
+      "monsterMovement": 2,
+      "pendingAdditionalMovement": 17,
+      "pendingAlertSwapActorIds": 1,
+      "pendingCombatAreaTriggers": 13,
+      "pendingCombatAreaTurnContinuation": 2,
+      "pendingD20Interrupt": 19,
+      "pendingDeathSave": 19,
+      "pendingInterception": 1,
+      "pendingInterceptionTrigger": 31,
+      "pendingMonsterOnHitGrapple": 2,
+      "pendingMovementStep": 51,
+      "pendingReachEntry": 6,
+      "pendingRollInfluenceResume": 2,
+      "pendingTriggeredAction": 84,
+      "pendingTurnStartGrappleDamage": 2,
+      "playerMovement": 10
+    },
+    "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+    "boundaryRejections": 2,
+    "cases": 222,
+    "receiptReplaysPerAcceptedCase": 2,
+    "status": "passed",
+    "workerRequests": 222
+  },
+  "corpus": {
+    "schemaVersion": 1,
+    "kind": "synthetic-solo-continuation-corpus",
+    "cases": 222,
+    "phaseCounts": {
+      "pendingD20Interrupt": 19,
+      "pendingTriggeredAction": 84,
+      "pendingDeathSave": 20,
+      "pendingMovementStep": 51,
+      "pendingMonsterOnHitGrapple": 2,
+      "pendingInterceptionTrigger": 31,
+      "pendingAdditionalMovement": 18,
+      "pendingCombatAreaTriggers": 13,
+      "pendingAlertSwapActorIds": 1,
+      "monsterMovement": 2,
+      "playerMovement": 11,
+      "pendingReachEntry": 6,
+      "pendingTurnStartGrappleDamage": 2,
+      "pendingCombatAreaTurnContinuation": 2,
+      "monsterAttackSequence": 2,
+      "pendingRollInfluenceResume": 2,
+      "pendingInterception": 1
+    },
+    "file": "corpus.json.gz",
+    "sha256": "d1741084ee1b348b77556e0fd69a01d21e09ab9ea4988b66401c9f933d781a25",
+    "compressedSha256": "0c379014e762955121d18da9e32e8d3fc781b487f60e11df3aa7ad6b4ca5a3e3",
+    "artifactFile": "engine.cjs.gz",
+    "artifactSha256": "6fa90f5234a9f2eaeffea24720ce684d56d11104c6016780f326bdc8a5f67e46",
+    "artifactCompressedSha256": "57c811075a747f6c8f441e2f0aa0fc156fed486c4f7ed70a847e228dd1826022",
+    "capturedFrom": "existing semantic suites plus explicit two-declaration grapple and end-turn area continuations",
+    "historicalCertificate": false,
+    "inputs": [
+      {
+        "path": "backend/animationpresentation/catalog.json",
+        "sha256": "5c7a4cd75852344acc9acd8608261d7fdddd664fab4b6dceac0b57180aeeb73e"
+      },
+      {
+        "path": "frontend/charges/charges.json",
+        "sha256": "32c06e5711e261bc9259b82c4886c425b30153f0db6a1bc71ccc2ccc28ca0afa"
+      },
+      {
+        "path": "frontend/src/canon/ruleActionProjection.ts",
+        "sha256": "a8e042869b4afc748ec3fa1224465afcc1a9f227a04d929a8489e2310a2d3599"
+      },
+      {
+        "path": "frontend/src/canon/spellcastingAccessProjection.ts",
+        "sha256": "e791828c320624312f4507793c9d1ea36f895fc1b75d9f53b251e691dc57058b"
+      },
+      {
+        "path": "frontend/src/character/actionSheet.ts",
+        "sha256": "67af7f8aa45adc713c939a2cbcc2b2147674de27ae8a5d67d7e03456b0bbd118"
+      },
+      {
+        "path": "frontend/src/character/attunement.ts",
+        "sha256": "49d05580a72521346f4bec2bca9d3e42105399a98ffc20bae3931d9bfbeaf8f8"
+      },
+      {
+        "path": "frontend/src/character/checkManeuvers.ts",
+        "sha256": "bb70fb1d70a6ea56d1d782575c5119037dc7d2444bbe85e917d11d9fb6935daf"
+      },
+      {
+        "path": "frontend/src/character/containerCapacity.ts",
+        "sha256": "503139bac0ef6ca4493526c8e9891a66580ebd3a558d69f8c2b83f7daf5863e6"
+      },
+      {
+        "path": "frontend/src/character/death.ts",
+        "sha256": "35561c623eb75112525ac76034ad3024faba052fc0ecff09f584fd293de600f6"
+      },
+      {
+        "path": "frontend/src/character/derive.ts",
+        "sha256": "011358a175858e7d07af37b0716d8b19b62c815ca189dee77361f0c4f025f28e"
+      },
+      {
+        "path": "frontend/src/character/familiarLabels.ts",
+        "sha256": "b783180d0a4d76de0e1931a8bb4a654d246521fd18908556782a8d43b2df186e"
+      },
+      {
+        "path": "frontend/src/character/inventory.ts",
+        "sha256": "8d561097ffc151662f63fc85adf8da7dbd6e902f83f4d5be0b8444d12809302a"
+      },
+      {
+        "path": "frontend/src/character/itemChoices.ts",
+        "sha256": "7556d6099b54224d9d4caadd9444ec6babf9e4b5e0094aa2ca3c384b9677ef0a"
+      },
+      {
+        "path": "frontend/src/character/itemFeatGrants.ts",
+        "sha256": "23a15e3f39b89931f59a937f0f618739796377647b6c81e3dcd7475b51b2044b"
+      },
+      {
+        "path": "frontend/src/character/itemFeatProjection.ts",
+        "sha256": "543d5427d618ee481d40d34a993e158901387f2455f63a3bc0aa17f3b2bf8cb5"
+      },
+      {
+        "path": "frontend/src/character/legacyActionMechanics.ts",
+        "sha256": "dc22ebb74431accbbad8ba0a5274990d004696d9848ba127d0d102a34051b2b7"
+      },
+      {
+        "path": "frontend/src/character/multiclass.ts",
+        "sha256": "65d316794ebb0f2406d32c3fd33158054063658e28279e09a36c724e2d5b0aa4"
+      },
+      {
+        "path": "frontend/src/character/pointBuy.ts",
+        "sha256": "c1a22e2c6552789fb2e4eec181699fb3dd04c903ee0736834b1ee87c7fa0d965"
+      },
+      {
+        "path": "frontend/src/character/purchasePricePolicy.ts",
+        "sha256": "fbd828ee8e23715c1ca9a214e2eb95cdb00910de028f07e2e9726e7dfe9f92a1"
+      },
+      {
+        "path": "frontend/src/character/resourceInit.ts",
+        "sha256": "886f77eeb7845c8689c92b7125d37048e9902243e86001d5dc8064641751d3f9"
+      },
+      {
+        "path": "frontend/src/character/rules/abilityScoreGrants.ts",
+        "sha256": "e780e7dfe58003c6f5d221414ae6f9b6aed9b35d21be8d26cd260c0bd0366dd6"
+      },
+      {
+        "path": "frontend/src/character/rules/foundation.ts",
+        "sha256": "4f9ccc69d205712f50de66f8a63f18e1aaf0a60a06319174fb554caf5a91f555"
+      },
+      {
+        "path": "frontend/src/character/rules/mechanicalRuleInput.ts",
+        "sha256": "5e8970c76d053c0ac177733ad31b7e565de33d292d35e12342afb52994780abf"
+      },
+      {
+        "path": "frontend/src/character/rules/resolveCharacterRules.ts",
+        "sha256": "640d5d97176a6b1a22b73099201c2b047d50ee3cf2c37070c8ef35e7d09a6ad7"
+      },
+      {
+        "path": "frontend/src/character/runtime.ts",
+        "sha256": "d567310bfa1f560e5d1f78d7f1ffc1f8f3bad07966e54c80bce065b7717d1098"
+      },
+      {
+        "path": "frontend/src/character/sheetCanonicalCommand.ts",
+        "sha256": "b80f39e04acf69eb4b15aa86a3e3cb6c450a6543c962e9873689fd85a364cc05"
+      },
+      {
+        "path": "frontend/src/character/sheetCanonicalWorld.ts",
+        "sha256": "47c99e68e6beb6982f35d0d644ae9ebb2d10ea2d6349766e93c226b4c8f8f8bb"
+      },
+      {
+        "path": "frontend/src/character/sheetCombatCertification.generated.json",
+        "sha256": "2d0223520018d285250e88182d4e82df4c89cd80a3a0836e1ef580439d012c86"
+      },
+      {
+        "path": "frontend/src/character/sheetCombatCertifiedCatalog.ts",
+        "sha256": "3d53ff54c77d802e9d41da0d8a31a7bddacca3ef417c30c6d2b5e68e2c70180d"
+      },
+      {
+        "path": "frontend/src/character/sheetCombatDeclaration.ts",
+        "sha256": "ecc9336ad571d265351af462be0ab1bf20aa767fd6615660e57623f1233e50f2"
+      },
+      {
+        "path": "frontend/src/character/sheetCombatSession.ts",
+        "sha256": "7ba2ea51f00f12a566be6effc29d9720caeb8bd394b1543a7b8dab172118b2b7"
+      },
+      {
+        "path": "frontend/src/character/sheetD20Roll.ts",
+        "sha256": "ece5c5e61a782e0bde6cd711bbb1e23831471f72567a51ce94f20000c7a5a1f7"
+      },
+      {
+        "path": "frontend/src/character/sheetRestDecisions.ts",
+        "sha256": "e9a3fce134f5871eb83e4f5bd309ca085d25fa389d4d3efb7983ab63f825c8af"
+      },
+      {
+        "path": "frontend/src/character/sheetRuntimeCommand.ts",
+        "sha256": "d8b6ec3a1760ab31c810454a5fbd56cdb0f097d89af50ee034029e2e8dcdb626"
+      },
+      {
+        "path": "frontend/src/character/sheetSpellPreparation.ts",
+        "sha256": "6b8a2a0711791e9aae7f3575fce8aaaec1bad14555ef84bb02caaedbc0829bf3"
+      },
+      {
+        "path": "frontend/src/character/skillNormalize.ts",
+        "sha256": "f1adcf30d268bbe28d08a234f67b5be8689e2edce34df1a9e32164586bf8eb22"
+      },
+      {
+        "path": "frontend/src/character/spellChoices.ts",
+        "sha256": "ee6b7dbc7bac42e647e4595a6fa204fc907fdd5ecc5fe3c7295ce21eca94e22a"
+      },
+      {
+        "path": "frontend/src/character/spellcastingAbility.ts",
+        "sha256": "f4bb0dd8b4ec452d2be4d40675e67fec5074b2efe968f17af906f2acf22f05e4"
+      },
+      {
+        "path": "frontend/src/character/types.ts",
+        "sha256": "ba3d53e2e632852d35ae87da40c6579a1e9bf908579356e80e4e45c8c3bae17f"
+      },
+      {
+        "path": "frontend/src/character/untrainedArmor.ts",
+        "sha256": "d060cfa0b8430469e5f104d0c20d580f3b0b01bb79a0d6585b2853fc7f246e38"
+      },
+      {
+        "path": "frontend/src/character/vitalityReconciliation.ts",
+        "sha256": "1c8d9fc8ddf5f42e0f7566e2534d71b59e8e3d2c30d8058cf4abd023e736e896"
+      },
+      {
+        "path": "frontend/src/character/weaponBondPersistence.ts",
+        "sha256": "e10247ad6f622cc3dd76f82ae2d983c86966d95c5abfd24f380b7edf09f4533c"
+      },
+      {
+        "path": "frontend/src/engine/ac.ts",
+        "sha256": "c6927e7b63cd89ebdd47b9c5de2520391e42c26fccce705df9b682bdf71f87ab"
+      },
+      {
+        "path": "frontend/src/engine/actionCostPolicy.ts",
+        "sha256": "a5a5967c133cf501b0f9015562eb010121ef43019492cdba84dd698c8790e04a"
+      },
+      {
+        "path": "frontend/src/engine/actionFormulaBindings.ts",
+        "sha256": "6e127170298115abc1ba08f18d79fcf30b9db02a3a70e27d0a0fd7caed019919"
+      },
+      {
+        "path": "frontend/src/engine/actionGrantContext.ts",
+        "sha256": "48e80f6b2ccc69508a26c8c1644c5635392311af2e496f6596b01263b4831f3d"
+      },
+      {
+        "path": "frontend/src/engine/actionRequirements.ts",
+        "sha256": "82c82991a43446e029e69fb3abdc6d3f3d49d9d3ad7075f7142a1232535da831"
+      },
+      {
+        "path": "frontend/src/engine/actionSurge.ts",
+        "sha256": "581033ed0e416b31d9fce7826b80e065e037a1d4a9db903861f18f465d5bf72f"
+      },
+      {
+        "path": "frontend/src/engine/actionUses.ts",
+        "sha256": "6c85713332ab4342a710042548c7ad22a78206c5c6b20aef7d5dc96fd53d5632"
+      },
+      {
+        "path": "frontend/src/engine/boons.ts",
+        "sha256": "2de792e8d61820089932090d70988459ea7c2dfcb2db73cbd263c3f7bec96fd0"
+      },
+      {
+        "path": "frontend/src/engine/breakdown.ts",
+        "sha256": "f6b654eaf0e75349f450ebfd939ef1468bd54db1050ca6cdaf45fffeb8c15678"
+      },
+      {
+        "path": "frontend/src/engine/cardRegistry.ts",
+        "sha256": "9fa0c8b0e1a5cd095b81f18b2915c9673efe14356816a8cd81dc8b2458e2abea"
+      },
+      {
+        "path": "frontend/src/engine/circumstances.ts",
+        "sha256": "451a0b654ac6104ba15622d1175ceeea2ee30a20e361db8230ce6b20d9752e4d"
+      },
+      {
+        "path": "frontend/src/engine/concentration.ts",
+        "sha256": "f568b3c8e923864ec367cc4ec549daabab57054ecdc7375752dc0c9ded8743b7"
+      },
+      {
+        "path": "frontend/src/engine/conditionActions.ts",
+        "sha256": "7dcdf709904477ab7848faa70f9d49738e926b2019d891e4c58323455c7e62fa"
+      },
+      {
+        "path": "frontend/src/engine/conditions.ts",
+        "sha256": "a1e041ef965157b5153669533b511045a7b42bd0b7cf0dcc7572fbf3e1e2ed24"
+      },
+      {
+        "path": "frontend/src/engine/cost.ts",
+        "sha256": "7141efb9b3de835857a3ec40c2079025e14b71b69de6bd6f2c0315962ad43369"
+      },
+      {
+        "path": "frontend/src/engine/damageAdvantage.ts",
+        "sha256": "2bea6f47a161e306740cd66a5b5b1a280b8680de63607df963d5638625c52b73"
+      },
+      {
+        "path": "frontend/src/engine/damageCalculation.ts",
+        "sha256": "65b3da601e54d60490a777ab2417104212f7514fe4e6103cea0b27eac0428f0f"
+      },
+      {
+        "path": "frontend/src/engine/damageEcho.ts",
+        "sha256": "3a51b45b266aaf3be8fdaf4bbebd981805e803fbcc4be3f5b9232efd1605a7a0"
+      },
+      {
+        "path": "frontend/src/engine/data/combatPassivePresentation.json",
+        "sha256": "aacfc1e7a3f9b3bd513bdeb0e281c958c25e1b3c1ab25e7d5efe158c1f8f6535"
+      },
+      {
+        "path": "frontend/src/engine/data/conditionActions.json",
+        "sha256": "31a2ad8ebb52ae446e11c60638f46e41ba70d588049145865e85f4355f0fd80e"
+      },
+      {
+        "path": "frontend/src/engine/data/resources.json",
+        "sha256": "8f4f93eecab686894b68fe75c6977b9c1278cef5c6e0b6d014737c72c5f97c5e"
+      },
+      {
+        "path": "frontend/src/engine/data/rollInfluences.json",
+        "sha256": "821a043d6d1cdffbd59aac1a963d781d6f9df0dc8b799a7816cab2d3471378b6"
+      },
+      {
+        "path": "frontend/src/engine/deathSaves.ts",
+        "sha256": "70b46b74fcce4d16f7b9a26bc88ddd5725216689b16576a9967f1f52caf7956b"
+      },
+      {
+        "path": "frontend/src/engine/derivedValue.ts",
+        "sha256": "3c2e6f104d20364da4fd0e66e6088543cd397fc733ffb902b8074d71acddd071"
+      },
+      {
+        "path": "frontend/src/engine/dieReplacement.ts",
+        "sha256": "4630e4b3326e3112c5889c8193da955772fb99f959f599494e5527b288568084"
+      },
+      {
+        "path": "frontend/src/engine/dispatch.ts",
+        "sha256": "c11980ab9a30f561fef669792ed905db54067b6db7a12457b02bbd8608ab0504"
+      },
+      {
+        "path": "frontend/src/engine/duration.ts",
+        "sha256": "1c6c442eccc4aa4ed7e056f620dc3d0d581a64c22c9496d5574b23143157d0b3"
+      },
+      {
+        "path": "frontend/src/engine/effectLifecycle.ts",
+        "sha256": "2704b8c457146846bfb59bd99f97b1de880d09ced79ae06ca02d7048f9103d70"
+      },
+      {
+        "path": "frontend/src/engine/effectRollFacts.ts",
+        "sha256": "f44715c3ea1a5a08aa74fe84fa9b85cc78c782b92aa81206dfffc5a9317d3d01"
+      },
+      {
+        "path": "frontend/src/engine/effectiveLevel.ts",
+        "sha256": "dff4ecc02f33d7dc7f3c7b5c2a87a3d6c3a150e68033c39a456fc9cbdbc857d6"
+      },
+      {
+        "path": "frontend/src/engine/elapsedTime.ts",
+        "sha256": "b928d6ef59b30c727607b8e09cc8969652f2be018bc8121707ab4c7b7a309331"
+      },
+      {
+        "path": "frontend/src/engine/encounter.ts",
+        "sha256": "d6ab27a4505591c27be3b2e65e807e27d12e097659a8387122380fa2379486b6"
+      },
+      {
+        "path": "frontend/src/engine/environmentAdaptation.ts",
+        "sha256": "034920e7e207f526634403828ffca444c4600c702e21c05396f42de72d290e82"
+      },
+      {
+        "path": "frontend/src/engine/equipment.ts",
+        "sha256": "0446552e5d1e5a261be5cd19fea2b2bd633815d328945fe1a1dcd30c1faeb54f"
+      },
+      {
+        "path": "frontend/src/engine/eventOccurrence.ts",
+        "sha256": "3f938b5430168b32d1b7b57081d86eb8e3b7d558abe067638112d05dca5d9d91"
+      },
+      {
+        "path": "frontend/src/engine/events.ts",
+        "sha256": "329db410779c664ee6dd6d8ab0ba3a0ec1eef5f8263aac5f393165607c9dbcb0"
+      },
+      {
+        "path": "frontend/src/engine/execute.ts",
+        "sha256": "bc8c8f18599f9cc07f19d2a98dde9a00e87b457e99e6b349e3a7c4aeaa08b11d"
+      },
+      {
+        "path": "frontend/src/engine/formula.ts",
+        "sha256": "890734013d933b8e444f614376bc5b66d95d3788a1d72a5ae743ac5312017257"
+      },
+      {
+        "path": "frontend/src/engine/freeuse.ts",
+        "sha256": "fe9c1138516aa78f0852c783c77ad1bdf237666fa18dd5b8868f87b2864309ce"
+      },
+      {
+        "path": "frontend/src/engine/heldItemDrop.ts",
+        "sha256": "e7300a5be82c172f19ddbba0a9bc7d6a413c837a70e7110fa897c5001352e3ff"
+      },
+      {
+        "path": "frontend/src/engine/hp.ts",
+        "sha256": "fa14b3447052c87634a174552abfc6b5cdcb53cf0e0e3c017e4df61d027cc22b"
+      },
+      {
+        "path": "frontend/src/engine/incomingDamagePolicies.ts",
+        "sha256": "2f42616643a4b2c417b314ae2bb9a9bd37be1658613afa48c488a9c3467c5b19"
+      },
+      {
+        "path": "frontend/src/engine/itemCircumstances.ts",
+        "sha256": "ef0eb2299538d174ded539fb75267783863959eb9c4e39bd48a9265d58de2b17"
+      },
+      {
+        "path": "frontend/src/engine/itemDefensePolicies.ts",
+        "sha256": "953cf0e19bcb5c81f964e7410049babdd4b79d44775590810385a1eaa48e531e"
+      },
+      {
+        "path": "frontend/src/engine/itemEquipmentPolicy.ts",
+        "sha256": "f1341aa74644f16c94e8a92a3e2fa043d131ca493a16f77009c88f5b5a307d9c"
+      },
+      {
+        "path": "frontend/src/engine/itemExecutionCapabilities.ts",
+        "sha256": "bede7d055c5d27708380ef1c2d96a99efe4021f1b95b0bd612541e1994b60db7"
+      },
+      {
+        "path": "frontend/src/engine/itemFailureCost.ts",
+        "sha256": "31f5d1651f4a919ed244ea8d8fb2f100ad335d8c713e9f3861615c0eb6ebb9f9"
+      },
+      {
+        "path": "frontend/src/engine/itemSpellProjectiles.ts",
+        "sha256": "1ee8cd83e47e4434b66986abc551821bfe297ca1c487c7f4553b74f69a57ed38"
+      },
+      {
+        "path": "frontend/src/engine/journeyAuras.ts",
+        "sha256": "229ec1486f56192fae98911c5f95516a5e3534b330bc9cbeadaf0da5ec645979"
+      },
+      {
+        "path": "frontend/src/engine/lifePolicies.ts",
+        "sha256": "de3eb2f9903d895176ffc73788f14c4040422584a410e1713f6b0074e0f09019"
+      },
+      {
+        "path": "frontend/src/engine/magic.ts",
+        "sha256": "6ffb84f7beb79fb53f428bf861824cf82a900dc1d53c23f7915cc80a25485b28"
+      },
+      {
+        "path": "frontend/src/engine/mastery.ts",
+        "sha256": "9ebac58dffdeaf45707a12c12fe5e84a69504ee0b2de7316fd079a718b3b82b6"
+      },
+      {
+        "path": "frontend/src/engine/mechanicsView.ts",
+        "sha256": "426693e80ada1f010fa4eb22b23605e5944c8a426c382ad0dee49941961adbf6"
+      },
+      {
+        "path": "frontend/src/engine/modifiers.ts",
+        "sha256": "d1b718e4ec4214626ab6513dca9acadf6212ea264de281409880b36222b5258e"
+      },
+      {
+        "path": "frontend/src/engine/random.ts",
+        "sha256": "6d5113802c96f0a5a7e78b24626f20f3733e861b2500b991f3ef8ba0439c8c39"
+      },
+      {
+        "path": "frontend/src/engine/recoveryPolicies.ts",
+        "sha256": "b793121260b01bd22f2ed6ceb59db5cee0d6d0f44bf97fd53dcc9a7a617a39b6"
+      },
+      {
+        "path": "frontend/src/engine/resourceRestrictions.ts",
+        "sha256": "f8415832a4c6d1f679e9debafd6bd204a9ffccc8b19676a6840e7f6d9b1e21c3"
+      },
+      {
+        "path": "frontend/src/engine/resources.ts",
+        "sha256": "e7867b6e314ae95bb5269638dc5c416585f6d92d665c711614faf77eafac3324"
+      },
+      {
+        "path": "frontend/src/engine/restPolicies.ts",
+        "sha256": "246a51f0d96299851d8f7d4f64ce837e4cdf30bf1eb40b2b07d2bc2604013e6b"
+      },
+      {
+        "path": "frontend/src/engine/roll.ts",
+        "sha256": "bfbaff4b77ef4e00e18de2db2860bfa47782e126df41b974f1db473ce5911c22"
+      },
+      {
+        "path": "frontend/src/engine/rollInfluence.ts",
+        "sha256": "912216e4051b86001a3dd39ba4b271eb20876470ab2c068203dc6ce12755b614"
+      },
+      {
+        "path": "frontend/src/engine/rollRules.ts",
+        "sha256": "4c2b8556557e15b15c9ff00ce0981f4ddb2212a53f469da6a523d46f2c0737cf"
+      },
+      {
+        "path": "frontend/src/engine/runtimeCharacterProjection.ts",
+        "sha256": "6fc7ec4f7bc6874396572a47eb863a93b9435aa35f7f3534d61c3b3e775fc980"
+      },
+      {
+        "path": "frontend/src/engine/saveReflection.ts",
+        "sha256": "637534127a86c895699010ad88b57a46769525c128fa5268bbd4c12c56e65b07"
+      },
+      {
+        "path": "frontend/src/engine/selectedSpellDamageType.ts",
+        "sha256": "23a3d0b7677718989ff0da37474158f0559ac12373c965dcd5206b13255aa9eb"
+      },
+      {
+        "path": "frontend/src/engine/senses.ts",
+        "sha256": "d4de807b9961a9fb847f713969dcf2babc7a07238f49988be124bfe72f1967e4"
+      },
+      {
+        "path": "frontend/src/engine/sourceTurnExpiry.ts",
+        "sha256": "f0985a18fde91bff29594e2a65b61ef2901fb699e9063b00a7e688a5a21a83c7"
+      },
+      {
+        "path": "frontend/src/engine/sourceWeaponMechanics.ts",
+        "sha256": "6ba227be4e9f09b78daf3585f2964db415fe4e84c482640d1fee6d0e2352bb31"
+      },
+      {
+        "path": "frontend/src/engine/staticDamageReduction.ts",
+        "sha256": "2b7fa5d45100e969ef3c6613fe8062bff3d0e893696706d40baeede300770892"
+      },
+      {
+        "path": "frontend/src/engine/temporaryResourceGrants.ts",
+        "sha256": "87c8ac2f30cc660620a28b38a5319f45ea5aee477039b22bd2059c016a78afce"
+      },
+      {
+        "path": "frontend/src/engine/triggerChance.ts",
+        "sha256": "92ed78d5e196c6dec274760abc512887de1ea8219cd30c8cc400ebc72f320c4a"
+      },
+      {
+        "path": "frontend/src/engine/turn.ts",
+        "sha256": "7bbbb9783eeeb461c292c67c0875dcd8fe036ae2aa8122645a237bcae6e2f57d"
+      },
+      {
+        "path": "frontend/src/engine/turnCommands.ts",
+        "sha256": "c5d0be632ebe85c249fb816c4135634989b0040a8e1f87a8aa2ed6fac2f34a8e"
+      },
+      {
+        "path": "frontend/src/engine/weapon.ts",
+        "sha256": "822acf5dad3d8b5f1018ad52c8ae31401a355535ccaa0f8b007cfc9bc283617a"
+      },
+      {
+        "path": "frontend/src/engine/weaponAttackPolicies.ts",
+        "sha256": "46ba51346b034133be392b535cc797aecbec0799f20d91d861d90503ab0df520"
+      },
+      {
+        "path": "frontend/src/engine/weaponForms.ts",
+        "sha256": "5a45b9ab6560db58872605d0e04cb2d366270abb279e6376471917cd24d77ef6"
+      },
+      {
+        "path": "frontend/src/engine/weaponMastery2024.ts",
+        "sha256": "281d1d0b27d1e40ff8b6da9f6241f38d508d9ff6f05013e3b1176643d2aef4ec"
+      },
+      {
+        "path": "frontend/src/engine/weaponProfile.ts",
+        "sha256": "280b89b39b1e61c3ed628040446bab7d0e10b46cec1ed3d050e13f5eb5e4e439"
+      },
+      {
+        "path": "frontend/src/mechanics/actionGrants.ts",
+        "sha256": "cba0eb12816a17cfd77a219c399497e14ba02582f065dbc6f71d395b80040933"
+      },
+      {
+        "path": "frontend/src/mechanics/blocks.ts",
+        "sha256": "5d5520a7706aa138754b3751a63dc8611c2c30c58c9ac24b55a1d8a15121cebd"
+      },
+      {
+        "path": "frontend/src/mechanics/choiceKey.ts",
+        "sha256": "237b17fa18d3aa0d921271965f4a7471c21ca88daae03399b03211d4e531f466"
+      },
+      {
+        "path": "frontend/src/mechanics/collectChoices.ts",
+        "sha256": "791ac24e4f83e9127f2faa5267168e3ee316a497a55ae29dbfbc03be979f2ee5"
+      },
+      {
+        "path": "frontend/src/mechanics/expandChoices.ts",
+        "sha256": "78abef9413cf3597e7ba73c0aab5d0644b0654c976f53a14e8e4dbc3df8983f0"
+      },
+      {
+        "path": "frontend/src/mechanics/grantSemantics.ts",
+        "sha256": "29a782ea6190d617713c911d45ffb48f2c36625261b00526843ea2536afe3d94"
+      },
+      {
+        "path": "frontend/src/mechanics/predicates.ts",
+        "sha256": "9362bad0d2f01e25fc533a54def59b280e0c8db1c29bab5f44d101727aa2e736"
+      },
+      {
+        "path": "frontend/src/mechanics/registries.ts",
+        "sha256": "7587352da232a9e816299454af4a898967bb1e3fd309c33aa10e4b4e2563e3b1"
+      },
+      {
+        "path": "frontend/src/rules-core/actionTargeting.ts",
+        "sha256": "bb99ae9ba142c7eb07318098abfaa0a907fa96963682fdda77c0a0058520e809"
+      },
+      {
+        "path": "frontend/src/rules-core/activationCastTime.ts",
+        "sha256": "8491811d8ee9b4edbb01d7de0857e7b6281844d0aad9ef41e8acc460ec871785"
+      },
+      {
+        "path": "frontend/src/rules-core/activationRequirements.ts",
+        "sha256": "748e8f1ac7a0cb776200995cf75d996c31358a2c30a08f807bbb301d48bf9715"
+      },
+      {
+        "path": "frontend/src/rules-core/activeSlotRecovery.ts",
+        "sha256": "504255895a3acc318a307e724d4a08a56c8f61243c712d7d9621766cb8598d82"
+      },
+      {
+        "path": "frontend/src/rules-core/actorArmorClass.ts",
+        "sha256": "c4732b847effb8697256c43df0045b75b5d70ec1d29c5afe0b833fa4c3797815"
+      },
+      {
+        "path": "frontend/src/rules-core/actorTraits.ts",
+        "sha256": "c19d93fef93b5a8d4e77a0ebda7d2d889e76a6248678eb8b42eeda311add57c8"
+      },
+      {
+        "path": "frontend/src/rules-core/armorOfAgathys.ts",
+        "sha256": "687cb78faec47a3e0c305e6166a6ba42b90ead47dc081956ea1e707bae12c470"
+      },
+      {
+        "path": "frontend/src/rules-core/attackActionBudget.ts",
+        "sha256": "86df3196e1cfc59b7fca0263227b3b33b0b449bc1e192b409243714f250e1087"
+      },
+      {
+        "path": "frontend/src/rules-core/attackDamageContinuations.ts",
+        "sha256": "e95607856bcdfac4dd572c3f50fabf242c4f9fcc8cd88a069d74e43c1531908e"
+      },
+      {
+        "path": "frontend/src/rules-core/attackDefenseRuntime.ts",
+        "sha256": "78e5d678371254d3d234eb71ac74f1bd0cd3d6f4a56278cf0e08a4f9ea949376"
+      },
+      {
+        "path": "frontend/src/rules-core/attackDefinitions.ts",
+        "sha256": "33d4e9f8f68593ea0010f3e5560ddc7cdf99abff8be5880536db5c76372d3e6e"
+      },
+      {
+        "path": "frontend/src/rules-core/attackRedirection.ts",
+        "sha256": "e7c8ef6895a2cb2d4ed967c82374cc3015e58214f87535716c3b38a6e857bad3"
+      },
+      {
+        "path": "frontend/src/rules-core/attackSequence.ts",
+        "sha256": "b2b6f726c43dbf47d433edcd1909c51332d986d0ff4a7959890af8db15f27be5"
+      },
+      {
+        "path": "frontend/src/rules-core/bondLifecycle.ts",
+        "sha256": "877a91f747c8e87487fbcba4aceb51e81fb816ded680ecfebff13a395fcd6ee1"
+      },
+      {
+        "path": "frontend/src/rules-core/combatHistory.ts",
+        "sha256": "91bcbd27ebf8d117a7ed146c7514f457e5bcad350fc08b84626d3ddbb71e713c"
+      },
+      {
+        "path": "frontend/src/rules-core/commandDispatch.ts",
+        "sha256": "1aba83a5a083298ae6acd43ade3d5e050396c815beb58f1b1513be525e57a416"
+      },
+      {
+        "path": "frontend/src/rules-core/conditionsRuntime.ts",
+        "sha256": "37069874681a576715cce587f7a781218725f3e17fc02cd03ada1b303bb1d0aa"
+      },
+      {
+        "path": "frontend/src/rules-core/damageTransfer.ts",
+        "sha256": "8e8aee8b082df1dd86c8935acaf7056b12c884dbb7c09c9099f18097e55d789b"
+      },
+      {
+        "path": "frontend/src/rules-core/deathRecovery.ts",
+        "sha256": "7bb840e16457ef9313d8764d4c62d6e49ce9c1b4d2d294e9e3aa4fa1b9451727"
+      },
+      {
+        "path": "frontend/src/rules-core/decisionDispatch.ts",
+        "sha256": "5ed6eb180f278e85d5858e942721e63c227dc9619bdf9df15210957ef3af828d"
+      },
+      {
+        "path": "frontend/src/rules-core/determinism.ts",
+        "sha256": "4e00105bf504779d9406ff2fa72c42d884e01ababca7c98202a02b33d2102ff5"
+      },
+      {
+        "path": "frontend/src/rules-core/domain.ts",
+        "sha256": "f176bc53d6e60d4ca77a1b525c45520a199adbd237e1b9f2e7655e00d13c3095"
+      },
+      {
+        "path": "frontend/src/rules-core/dwarfTraits.ts",
+        "sha256": "184157fc132c4500a8768b8ee982658dacef8d7788b95a55781b34d95bf17053"
+      },
+      {
+        "path": "frontend/src/rules-core/effectReceived.ts",
+        "sha256": "1265809b47c62078ff4bfcfeb9c742ee84e7875c32a6a4d1bc5d2ca2522d27a2"
+      },
+      {
+        "path": "frontend/src/rules-core/equipmentChange.ts",
+        "sha256": "ef140cc38f2299652b6abe1585d452c202b89aa0bd8e9c50605bf71e93070747"
+      },
+      {
+        "path": "frontend/src/rules-core/eventReactionQueue.ts",
+        "sha256": "79e64ea6f73547cb8aa1026f76990c53d73f210d26bcdcfb7cce99e5fdb03e39"
+      },
+      {
+        "path": "frontend/src/rules-core/failedCheckBoost.ts",
+        "sha256": "bcbf4b9a66d44a45edbfeb6a701a7899b3cf1100b3e1fcad3b0390cdf0c524e4"
+      },
+      {
+        "path": "frontend/src/rules-core/familiarActorCatalog.ts",
+        "sha256": "bcd8393790bc26d9a384ef58246550e6a308741f345b42435b235753c15dbbd2"
+      },
+      {
+        "path": "frontend/src/rules-core/familiarRuntime.ts",
+        "sha256": "168ecc6bdb5ddac8d9d00a13eaa941816a53778fecc4f6896d3e2e899ed0705f"
+      },
+      {
+        "path": "frontend/src/rules-core/fightingStyleComplexPrimitives.ts",
+        "sha256": "4b9152606710d45345268671b1230d8c2e81ecccd26e975aa1e732604e4ed530"
+      },
+      {
+        "path": "frontend/src/rules-core/findFamiliar.ts",
+        "sha256": "6cdfa3b346d98d7742c36139274f85f04b091fe842d7b838d2ecd4410e436e02"
+      },
+      {
+        "path": "frontend/src/rules-core/generalFeatAttackDeclaration.ts",
+        "sha256": "f447a327c45be0e26df68295cfa794b129354bfd4826630b288a5fb8567c7d39"
+      },
+      {
+        "path": "frontend/src/rules-core/generalFeatDamageRuntime.ts",
+        "sha256": "310cacb055031311a1d5445b387a881b74cd9009cad74c7bb09c600303756345"
+      },
+      {
+        "path": "frontend/src/rules-core/generalFeatReactionRuntime.ts",
+        "sha256": "174104df57d52abb45b47c1723b4f33444227f92ded399d10b3731b8eb9dd94a"
+      },
+      {
+        "path": "frontend/src/rules-core/generalSpellFeatRuntime.ts",
+        "sha256": "53f56265f500876c390562c8d478b12ac471022a34e24e776ba90d11d10b5c84"
+      },
+      {
+        "path": "frontend/src/rules-core/handler.ts",
+        "sha256": "ce016fd8136aa3723ea48c56f4960345d18918a0050eb00b7e8b16164c914fd8"
+      },
+      {
+        "path": "frontend/src/rules-core/heldItemWorld.ts",
+        "sha256": "ee3102a6ca59245648e73b67c8feb1aaed8a0541f0ed6fb8e4f5cd922d90fada"
+      },
+      {
+        "path": "frontend/src/rules-core/hide.ts",
+        "sha256": "ef038646e966aa0d9b9238776ebb7729fc0ff28a5704cef1e8247feb88aca3ab"
+      },
+      {
+        "path": "frontend/src/rules-core/itemLight.ts",
+        "sha256": "25b04ba7f6dbd78f4882da16fcc855a7e4bb41338cfdaf246c88a48e96750890"
+      },
+      {
+        "path": "frontend/src/rules-core/itemMaterialFocus.ts",
+        "sha256": "1fad798bb39c41eacd7d8f8407468ea5a0c19eb0ed48c6088d33b0b4560fb0a5"
+      },
+      {
+        "path": "frontend/src/rules-core/itemTools.ts",
+        "sha256": "9f489033da89c8a1d65f3d118a2f46be015d4aec7556ac857f14b30f97b907ba"
+      },
+      {
+        "path": "frontend/src/rules-core/itemWeaponLifecycle.ts",
+        "sha256": "414f04d0fb5df8107f555bdb90dd6858d01a0df87fe99850c35c367bbd5bc3f1"
+      },
+      {
+        "path": "frontend/src/rules-core/legacy/engineAdapter.ts",
+        "sha256": "ee653ac8c94a405cc453bd7e2e5eca2cff525ee24702333e93435a73fe3c0446"
+      },
+      {
+        "path": "frontend/src/rules-core/lightWeaponExtraAttack.ts",
+        "sha256": "dfceebbb37d13975d105c20c9f737665db95a3c4174b0f46d4dba81ba96cd0b8"
+      },
+      {
+        "path": "frontend/src/rules-core/magicSuppression.ts",
+        "sha256": "9746e076f3062f3cf4e5a4f9b5a24abe09df3e7f919fa5606d7ea394876dd27b"
+      },
+      {
+        "path": "frontend/src/rules-core/pactBladeRuntime.ts",
+        "sha256": "7d6be3ec99ed83b17b1f27276e70b4057b4889773a5a6c46309272238dd6aa72"
+      },
+      {
+        "path": "frontend/src/rules-core/pactBladeWorldAdapter.ts",
+        "sha256": "e512b05c73a3e554d63eef6d86554d9b8fcdcbdf99346f8a610afba0b5f8a27d"
+      },
+      {
+        "path": "frontend/src/rules-core/pactTomeRuntime.ts",
+        "sha256": "791b7189fb1c1d7fb4f01c0fd792d16841a00a8bdd3ec120e03a8a228d15c543"
+      },
+      {
+        "path": "frontend/src/rules-core/pactTomeWorldAdapter.ts",
+        "sha256": "812c94606c932204fd4896a06f32b0937b12c0fe85414093c4aa73d7cec1275c"
+      },
+      {
+        "path": "frontend/src/rules-core/projectileReflection.ts",
+        "sha256": "5998f87b86bdc46906353a6b795c02a812d81a49d60ade358574a9ee9fe8a705"
+      },
+      {
+        "path": "frontend/src/rules-core/protection.ts",
+        "sha256": "9e338fb3b491e335f7aa5d344f2c3d06e2dead3b6e7da909e64542cc2d235be6"
+      },
+      {
+        "path": "frontend/src/rules-core/protectionRuntime.ts",
+        "sha256": "4474379030fb74c2e4eaa37c5c744046a719c4505abccf45c190ebf1ac8197c2"
+      },
+      {
+        "path": "frontend/src/rules-core/recipientBindings.ts",
+        "sha256": "c474f26be7a2422a261b647265f427ed019b578e548d1d7b5e679f94153bf688"
+      },
+      {
+        "path": "frontend/src/rules-core/reducer.ts",
+        "sha256": "ba2f59f483b8c97c2a22bae6b2364a6b03b4cbc0041b809389943b8ae1bee520"
+      },
+      {
+        "path": "frontend/src/rules-core/restDecisions.ts",
+        "sha256": "f943640f6740188869afda2725104ef568ffdf26e5178eec7245b1a880386686"
+      },
+      {
+        "path": "frontend/src/rules-core/session.ts",
+        "sha256": "aa2ec5e77f8add6327249ed494e954ae0cb0e93e42604e53d2ba65d92f41d391"
+      },
+      {
+        "path": "frontend/src/rules-core/spellcastingAccess.ts",
+        "sha256": "9e06accdc447766c6e33373cdf51798d796cbd570aaab9b72ac1cde274242344"
+      },
+      {
+        "path": "frontend/src/rules-core/spellcastingExecution.ts",
+        "sha256": "bc37ce42fe6e5285988a8e04cbad908534612a2a534bdf9d9a8d2bba33ccee8d"
+      },
+      {
+        "path": "frontend/src/rules-core/systemActions.ts",
+        "sha256": "d85c6f9961783b4d0b9db3808ac53502ad0a97704afaee2a7635431b773bf798"
+      },
+      {
+        "path": "frontend/src/rules-core/telekineticMovement.ts",
+        "sha256": "5be74ad3c472f0f1a47f24e3d8fc6e2a7f08a4fe83ff59a19e1b8cc2559dc6ff"
+      },
+      {
+        "path": "frontend/src/rules-core/teleportDestination.ts",
+        "sha256": "bb26d7ff4efa56bf19ecf3905843f402578d2dc829fb89fc1fe83a819b5df6f5"
+      },
+      {
+        "path": "frontend/src/rules-core/triggerOwnership.ts",
+        "sha256": "6590c9505f2527012e859f85272ac66b0960ae6b7868a35f03b1d45fa9a442a1"
+      },
+      {
+        "path": "frontend/src/rules-core/triggeredAttackTargeting.ts",
+        "sha256": "0409c30d3ef64f85638b98dd732b7853cf96d8fcc43f17db3be71d1f03e7b19f"
+      },
+      {
+        "path": "frontend/src/rules-core/warlockPactDeclaration.ts",
+        "sha256": "16172c1178c16572152d9c4ecc8851e6bcbeb832030a501752829a868f41e1cd"
+      },
+      {
+        "path": "frontend/src/rules-core/warlockPacts.ts",
+        "sha256": "640d2f52ab55bed0c12411bb674da2d70f963598880a0a7fcca3539f18186d4c"
+      },
+      {
+        "path": "frontend/src/rules-core/weaponActionPolicies.ts",
+        "sha256": "0b9b1d2c7db929a3b7f82aca894a797625c2a174a2a71d8da4ec8ec1b49e1c40"
+      },
+      {
+        "path": "frontend/src/rules-core/weaponBond.ts",
+        "sha256": "34d851b1490c88af2d02863844c9b6ed5bf057c064ffae17bc08c7222663d2eb"
+      },
+      {
+        "path": "frontend/src/rules-core/weaponProfile.ts",
+        "sha256": "2e116173e3b6251f795683799a2e3be073d76f538070cce907b2217a4e2a0881"
+      },
+      {
+        "path": "frontend/src/rules-core/worldItemActions.ts",
+        "sha256": "0cb822f3bde71a90f96be5c204c3506e8422956a9527979b68d38d92a6e209b2"
+      },
+      {
+        "path": "frontend/src/rules-core/worldMigration.ts",
+        "sha256": "8e5a708ab53678f25cad8d69250cf2bc71f9293575189cf6974ab3732713d154"
+      },
+      {
+        "path": "frontend/src/rules-core/worldObjects.ts",
+        "sha256": "b35b4f685f78ecd6f2c497efd71c18e848e5f5a77f896e582b04d0c0397218bd"
+      },
+      {
+        "path": "frontend/src/rules-core/worldSpellPolicies.ts",
+        "sha256": "7b27f29c7c60b4d02428d7716ae36b247a6504480094278f8ab6034dc2cdefbb"
+      },
+      {
+        "path": "frontend/src/rules-core/worldSpellPrimitives.ts",
+        "sha256": "791dcaf5b72c4454897deeae8b8e1171bbc7e70d5642d5911b59d138d05ec603"
+      },
+      {
+        "path": "frontend/src/rules-primitives/effectRollFacts.ts",
+        "sha256": "aac3df7c6eae605d79412b9ee8529ce5745d98b94dc038b37e2ee246f14427c3"
+      },
+      {
+        "path": "frontend/src/rules-primitives/mechanicsView.ts",
+        "sha256": "b23b91e72a76b50a3952a55b2d1bde55584604bf8af4c1c2dba8ed288b78097c"
+      },
+      {
+        "path": "frontend/src/rules-primitives/runtimeActionGrants.ts",
+        "sha256": "8fd91a88fd49d62af4174e6b9cec0bc6d386324bc19fd37728b7705a1025b57a"
+      },
+      {
+        "path": "frontend/src/rules-primitives/sensePerception.ts",
+        "sha256": "c311a9e3ea224935a54d12cc1fac8fcdd1ddd16ea0af1aadababe34378acfb8f"
+      },
+      {
+        "path": "frontend/src/solo-combat/actionChoices.ts",
+        "sha256": "998aaade6bec0f13835ee7ebe9c7cfe77414a213aecde3d328608fa04300b94f"
+      },
+      {
+        "path": "frontend/src/solo-combat/animationProfiles.ts",
+        "sha256": "78955085778c6d6f69bdaeca67f7dd83703d3807192e70c9e95bb06ca91b2293"
+      },
+      {
+        "path": "frontend/src/solo-combat/auraTerrain.ts",
+        "sha256": "e826824d55b5603cc3553dea936c1dd801d9db7bcd7de7e7c0a9b43ce9f5a8b2"
+      },
+      {
+        "path": "frontend/src/solo-combat/battleMaps.ts",
+        "sha256": "36521dc86cdc5370cee1231b33d365413f67f36007e027e949d5b51c8fb6e9ac"
+      },
+      {
+        "path": "frontend/src/solo-combat/boardGeometry.ts",
+        "sha256": "eb438452175909a4170cdd0b39efd4a8c80194dce367fbf37f2d99cd5c7d6234"
+      },
+      {
+        "path": "frontend/src/solo-combat/combatAntimagic.ts",
+        "sha256": "6475b4e77d5aef5192816b18e55ad1190418aafff70becd00c08c3c1a0d789fd"
+      },
+      {
+        "path": "frontend/src/solo-combat/combatAreas.ts",
+        "sha256": "1338cb31ac2e8d24b630a23bc9afce43956c2ecfe8841732f7d8e012de65ccc7"
+      },
+      {
+        "path": "frontend/src/solo-combat/combatAuras.ts",
+        "sha256": "3839d90ed861c4f0f5fdaf209104ff8c21a053ddbc344381d17378dc7f808dad"
+      },
+      {
+        "path": "frontend/src/solo-combat/combatIllumination.ts",
+        "sha256": "176b9218f316f5e63675e80cbb1ecacfa704f58656417a45ff37a00508a8cfac"
+      },
+      {
+        "path": "frontend/src/solo-combat/combatLog.ts",
+        "sha256": "48d9e2ff161f133dea00d8dd15d3c82ceca3a581c8fbdb4f8ed33552ce11cff7"
+      },
+      {
+        "path": "frontend/src/solo-combat/creatureCover.ts",
+        "sha256": "e1558741b620fa2d5a435b501d86f50c2f47367f32968ced2727e056cd33eb57"
+      },
+      {
+        "path": "frontend/src/solo-combat/data/battleMaps.json",
+        "sha256": "4d25b0a701a5aa10ae929b19ed903f9264cffb7637acaa0ae15d987ad69e53cd"
+      },
+      {
+        "path": "frontend/src/solo-combat/data/urvinMaps.json",
+        "sha256": "3b5b5ec1885669a8426617ab085e153060a6c90fd2dd68f264ad1cc34aa8d305"
+      },
+      {
+        "path": "frontend/src/solo-combat/defaultInteraction.ts",
+        "sha256": "ae9b5dbf75e6b6ba58a55034323f3fab791af10956b41227c8c0279b743dabf8"
+      },
+      {
+        "path": "frontend/src/solo-combat/engine.ts",
+        "sha256": "2fd59e10128840f550bad1a0f2c9cf5bf674b24e98c1be785f7dfc078ad2f3f7"
+      },
+      {
+        "path": "frontend/src/solo-combat/facing.ts",
+        "sha256": "a3da1920202858a953a05f3c173a06c1402da8c290768b640c8c33b17d8ee2bf"
+      },
+      {
+        "path": "frontend/src/solo-combat/footprint.ts",
+        "sha256": "b1d345bf3521ab1eb894c0b995c4d14cf53c3ac3e5b74bba0507d8b691397ee6"
+      },
+      {
+        "path": "frontend/src/solo-combat/hide.ts",
+        "sha256": "16ffa10ba8fadc01bb98f8f583302903ed63b1feecb49b18fafa990ae1c6a6e4"
+      },
+      {
+        "path": "frontend/src/solo-combat/itemOwnedActors.ts",
+        "sha256": "ecf456cee75737059b7100cb270c97464bbfff15bea62627fa0a681638e07b5c"
+      },
+      {
+        "path": "frontend/src/solo-combat/jump.ts",
+        "sha256": "7513be966bdedfc1e6ec98185f2aecf9dc883af5ca94d0b29ed1d1bca977acb7"
+      },
+      {
+        "path": "frontend/src/solo-combat/monsterAi.ts",
+        "sha256": "c4698d6be088da6e5bfb5d4f890ed7b23fc6dbdb9eef6ff0928870a9ad7b12d8"
+      },
+      {
+        "path": "frontend/src/solo-combat/monsterBonusActions.ts",
+        "sha256": "766e0c43ad2f9fd813826c6a4e9354fe9fb68520b90d002ff5c031f7f82f4324"
+      },
+      {
+        "path": "frontend/src/solo-combat/monsterCompiler.ts",
+        "sha256": "66af9db52901dd445246bd6f0ca7da3e6d891a2320151dea2dc4659b94a757e4"
+      },
+      {
+        "path": "frontend/src/solo-combat/movementEffectExpiry.ts",
+        "sha256": "a81930aca1948494d7bcbacb8e4b6cd96c6075d16bbe56c415792f1a1109aee8"
+      },
+      {
+        "path": "frontend/src/solo-combat/movementLedger.ts",
+        "sha256": "33e6941b57eba245c1aacbdc75dd9b50b6a50db6afbfc40354775914006a1d8f"
+      },
+      {
+        "path": "frontend/src/solo-combat/outcomeVisibility.ts",
+        "sha256": "2889bac43a8bfbe1edcfa7425b37ea4396f480933572e08527a8343c0809cd3b"
+      },
+      {
+        "path": "frontend/src/solo-combat/ownedSummons.ts",
+        "sha256": "bcf03c4b11e71b1fa41dbe87379f3d8bf17a644ed8591b84e800f791b5a274a6"
+      },
+      {
+        "path": "frontend/src/solo-combat/spellCastChoices.ts",
+        "sha256": "74440873c185b9fbd2a40ea05808c32448a373f126be5454832912503a057d8a"
+      },
+      {
+        "path": "frontend/src/solo-combat/tacticalGrid.ts",
+        "sha256": "3b3572bf0d059d72a20b141ff71dd888ca4947553c1eff4035467c3f9127109e"
+      },
+      {
+        "path": "frontend/src/solo-combat/types.ts",
+        "sha256": "ebe966fdb20c3e20984b99554c32d173420c5f82a752140ee9f319d0e0344db1"
+      },
+      {
+        "path": "frontend/src/utils/cardProperties.ts",
+        "sha256": "02f282f6168a55efa78f9202b88314ce97f7c9920503c0d9d0bbcfc839c3ce92"
+      },
+      {
+        "path": "frontend/src/utils/charges.ts",
+        "sha256": "7491e2cbd8790c1f46d5518f544483a4dfd2985bbb95050f99fff1671bfde6bb"
+      },
+      {
+        "path": "frontend/src/utils/damageTypes.ts",
+        "sha256": "ff16e0a40661a19645d6e5655296661244bf6ee64391c452a4baa63290fa8384"
+      },
+      {
+        "path": "frontend/src/utils/money.ts",
+        "sha256": "8887f62831a78c22683cd54e5815fc98cb33cf7f2782d1524b397ea4c6bfa342"
+      },
+      {
+        "path": "frontend/src/utils/resourcePresentation.ts",
+        "sha256": "a6ebd4b1dbf952f167eb8d6a92b5864b77f2b255bb7302476252b9ee01a7deb6"
+      },
+      {
+        "path": "frontend/src/utils/russianTranslations.ts",
+        "sha256": "a7e8fbef448e6b568aad6373fd41110f36b68acf48069636ccf9cd8ea58c6007"
+      },
+      {
+        "path": "frontend/utils/weapon_types.json",
+        "sha256": "3a39eda82e5ed6ba21d2b41da80879b96d38de93204c08756bee3e1f4a78598b"
+      }
+    ]
+  },
+  "limitations": [
+    "Synthetic owned persisted tactical states; character creation is covered separately.",
+    "Controller recreation is not an OS process kill; frozen subprocess restarts and the independent process-crash gate are distinct evidence.",
+    "Not a fresh historical migration chain certification."
+  ]
+}

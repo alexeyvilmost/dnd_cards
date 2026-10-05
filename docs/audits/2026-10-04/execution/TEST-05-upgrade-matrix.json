@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "kind": "supported-baseline-upgrade-evidence",
+  "status": "passed",
+  "execution": "native-postgresql",
+  "scope": "checked-in-schema-supported-upgrade",
+  "historicalChainVerified": false,
+  "productionBootstrap": false,
+  "fullReport": "outputs/testing/upgrade-baselines-native-7/report.json",
+  "reportSha256": "sha256:3341f77d2915a5585ba1163e1ffce4cf1d98be050ea77297e83a8dc373001fe5",
+  "startedAt": "2026-10-04T20:35:59.465Z",
+  "finishedAt": "2026-10-04T20:36:41.178Z",
+  "durationMs": 41713,
+  "goVersion": "go version go1.25.12 windows/amd64",
+  "race": false,
+  "testBinary": {
+    "path": "C:\\Projects\\dnd_cards\\outputs\\testing\\upgrade-baselines-native-7\\migrations.test.exe",
+    "sha256": "sha256:c084afbb6d02028d8a2cebcf0e1937828c15519f8ad5e2583ee7a282485d0699"
+  },
+  "sourceInputsHash": "sha256:9753f7fe5bc1f7f02979540d1868e2cfd9f15ce015a525eeb9c1293e117626a0",
+  "implementationHashes": {
+    "backend/migrations/baseline_upgrade_matrix_test.go": "sha256:bfff011f57b42e2fb8b356f983f1fae2be542d951107c9805b9604cd8e1b1a61",
+    "scripts/testing/check-upgrade-baselines.mjs": "sha256:f3eb5fdb0e9b96b65346c576000d3dddd104f749e3fb2fa24da545a362896ee7",
+    "scripts/testing/upgrade-baseline-fixture.mjs": "sha256:49d2e5be9974b4502cb962b6e949c3e609812555dd84af6b7f58a303de921f8a"
+  },
+  "cases": [
+    {
+      "baseline": 297,
+      "runId": "test_712431c8892ae0bed07526f3",
+      "status": "passed",
+      "cleanup": "stopped",
+      "postgres": "psql (PostgreSQL) 17.11",
+      "preparedPrefix": [],
+      "applied": [
+        "298_compact_command_receipts",
+        "299_frozen_combat_catalogs",
+        "300_image_jobs"
+      ],
+      "repeatApplied": [],
+      "retiredLedgerIDs": [
+        "011_add_detailed_description_formatting",
+        "096_register_micro_mvp_rules_release",
+        "097_repair_micro_mvp_rules_release_identity",
+        "098_repair_magic_initiate_2024"
+      ],
+      "legacyTables": 93,
+      "canaries": 9,
+      "foreignKeys": 62,
+      "triggers": 49,
+      "originalSchemaObjects": 1960,
+      "originalSchemaObjectsHash": "sha256:3ff08404b2d46f595f0c1659def0608e1dcc171d167e16c93f1e50e973c405e2",
+      "originalColumnHashesHash": "sha256:a1075762fb0343e62ab6289e57c4ff15f5b7d173d10bb2df96fb2ba84052fdaa",
+      "baselineLedgerHash": "sha256:63f9a0f7d92048159736bd019459202ba95036944425c5e6507e53c21271b8ca",
+      "finalLedgerHash": "sha256:cb676539361ec9e805cfef08c1398dec67f31e890ccc72d111f5e16221ee050d",
+      "artifactHash": "sha256:d65f8e2e1bd73976acbc2d6d7f2d18b2b104b2c8a34463bafddbaf7d07770645",
+      "artifactInventory": [
+        "sha256:d65f8e2e1bd73976acbc2d6d7f2d18b2b104b2c8a34463bafddbaf7d07770645"
+      ],
+      "finalSchemaHash": "sha256:cb584269fb6822f0750b90dec177eda86d99b2f2b49701cdc052d4d9c08e884a",
+      "fixtureSources": {
+        "scripts/testing/fixtures/schema-manifest.json": "sha256:2410df1d43498616e6279f5ed95cd26b88a08c429a3314a9735a2fa7aa7ac82d",
+        "scripts/testing/fixtures/schema.sql": "sha256:296d25beb5723f77b91f418f96d57add118438b49ae539071354ef681dce2cc2",
+        "frontend/worker/fixtures/replay-v1/manifest.json": "sha256:077cea3ecd496f1ef2a5657415fa62ada65817e9d56d6c99eb05ebdeffb9cf65",
+        "frontend/worker/fixtures/replay-v1/artifact.cjs.gz": "sha256:72ffee90684dd16e2f2ea902ef53be0f16e1d2b9097967ad5bfe339920841918",
+        "frontend/worker/fixtures/replay-v1/corpus-manifest.json": "sha256:2e0b16cb7539a235c2b8a9fd5bff450559c49336b20d0beb9f4935fee00d4651",
+        "frontend/worker/fixtures/replay-v1/corpus.json.gz": "sha256:283bddd30658c69e56aebc8c9e88054925a1795f84ef04c5dbbbb0ed72bf7c21"
+      }
+    },
+    {
+      "baseline": 298,
+      "runId": "test_01ace0cc4d3bea4320c9b87f",
+      "status": "passed",
+      "cleanup": "stopped",
+      "postgres": "psql (PostgreSQL) 17.11",
+      "preparedPrefix": [
+        "298_compact_command_receipts"
+      ],
+      "applied": [
+        "299_frozen_combat_catalogs",
+        "300_image_jobs"
+      ],
+      "repeatApplied": [],
+      "retiredLedgerIDs": [
+        "011_add_detailed_description_formatting",
+        "096_register_micro_mvp_rules_release",
+        "097_repair_micro_mvp_rules_release_identity",
+        "098_repair_magic_initiate_2024"
+      ],
+      "legacyTables": 93,
+      "canaries": 9,
+      "foreignKeys": 62,
+      "triggers": 49,
+      "originalSchemaObjects": 1960,
+      "originalSchemaObjectsHash": "sha256:3ff08404b2d46f595f0c1659def0608e1dcc171d167e16c93f1e50e973c405e2",
+      "originalColumnHashesHash": "sha256:153a05dcb0b1451523fc56e9e2c623954170f105e9609c3403b067b7841a6d2f",
+      "baselineLedgerHash": "sha256:f3d2e9cdd5c6b7530608470e97ab60b7bfcf223e060e13474731974b2019c490",
+      "finalLedgerHash": "sha256:147f87af854ffb816f7f5d985f5f5c5019967c8e5c6b64c51d92e2c06f0fd583",
+      "artifactHash": "sha256:d65f8e2e1bd73976acbc2d6d7f2d18b2b104b2c8a34463bafddbaf7d07770645",
+      "artifactInventory": [
+        "sha256:d65f8e2e1bd73976acbc2d6d7f2d18b2b104b2c8a34463bafddbaf7d07770645"
+      ],
+      "finalSchemaHash": "sha256:cb584269fb6822f0750b90dec177eda86d99b2f2b49701cdc052d4d9c08e884a",
+      "fixtureSources": {
+        "scripts/testing/fixtures/schema-manifest.json": "sha256:2410df1d43498616e6279f5ed95cd26b88a08c429a3314a9735a2fa7aa7ac82d",
+        "scripts/testing/fixtures/schema.sql": "sha256:296d25beb5723f77b91f418f96d57add118438b49ae539071354ef681dce2cc2",
+        "frontend/worker/fixtures/replay-v1/manifest.json": "sha256:077cea3ecd496f1ef2a5657415fa62ada65817e9d56d6c99eb05ebdeffb9cf65",
+        "frontend/worker/fixtures/replay-v1/artifact.cjs.gz": "sha256:72ffee90684dd16e2f2ea902ef53be0f16e1d2b9097967ad5bfe339920841918",
+        "frontend/worker/fixtures/replay-v1/corpus-manifest.json": "sha256:2e0b16cb7539a235c2b8a9fd5bff450559c49336b20d0beb9f4935fee00d4651",
+        "frontend/worker/fixtures/replay-v1/corpus.json.gz": "sha256:283bddd30658c69e56aebc8c9e88054925a1795f84ef04c5dbbbb0ed72bf7c21"
+      }
+    },
+    {
+      "baseline": 299,
+      "runId": "test_608d9ac23300993c010e91eb",
+      "status": "passed",
+      "cleanup": "stopped",
+      "postgres": "psql (PostgreSQL) 17.11",
+      "preparedPrefix": [
+        "298_compact_command_receipts",
+        "299_frozen_combat_catalogs"
+      ],
+      "applied": [
+        "300_image_jobs"
+      ],
+      "repeatApplied": [],
+      "retiredLedgerIDs": [
+        "011_add_detailed_description_formatting",
+        "096_register_micro_mvp_rules_release",
+        "097_repair_micro_mvp_rules_release_identity",
+        "098_repair_magic_initiate_2024"
+      ],
+      "legacyTables": 93,
+      "canaries": 9,
+      "foreignKeys": 62,
+      "triggers": 49,
+      "originalSchemaObjects": 1960,
+      "originalSchemaObjectsHash": "sha256:3ff08404b2d46f595f0c1659def0608e1dcc171d167e16c93f1e50e973c405e2",
+      "originalColumnHashesHash": "sha256:13bafa1ab30c9c4c281c0462ef0e7e3c9739335ea0364a172f40e2d7c3e83965",
+      "baselineLedgerHash": "sha256:b5da79f4a7430065ceb45c54eade0b197ebc6bca6f77d9c705517f4a805017ba",
+      "finalLedgerHash": "sha256:637fdf28e735c1ba11feb306e08459d004d22786a53c479f156d748ec1308b76",
+      "artifactHash": "sha256:d65f8e2e1bd73976acbc2d6d7f2d18b2b104b2c8a34463bafddbaf7d07770645",
+      "artifactInventory": [
+        "sha256:d65f8e2e1bd73976acbc2d6d7f2d18b2b104b2c8a34463bafddbaf7d07770645"
+      ],
+      "finalSchemaHash": "sha256:cb584269fb6822f0750b90dec177eda86d99b2f2b49701cdc052d4d9c08e884a",
+      "fixtureSources": {
+        "scripts/testing/fixtures/schema-manifest.json": "sha256:2410df1d43498616e6279f5ed95cd26b88a08c429a3314a9735a2fa7aa7ac82d",
+        "scripts/testing/fixtures/schema.sql": "sha256:296d25beb5723f77b91f418f96d57add118438b49ae539071354ef681dce2cc2",
+        "frontend/worker/fixtures/replay-v1/manifest.json": "sha256:077cea3ecd496f1ef2a5657415fa62ada65817e9d56d6c99eb05ebdeffb9cf65",
+        "frontend/worker/fixtures/replay-v1/artifact.cjs.gz": "sha256:72ffee90684dd16e2f2ea902ef53be0f16e1d2b9097967ad5bfe339920841918",
+        "frontend/worker/fixtures/replay-v1/corpus-manifest.json": "sha256:2e0b16cb7539a235c2b8a9fd5bff450559c49336b20d0beb9f4935fee00d4651",
+        "frontend/worker/fixtures/replay-v1/corpus.json.gz": "sha256:283bddd30658c69e56aebc8c9e88054925a1795f84ef04c5dbbbb0ed72bf7c21"
+      }
+    }
+  ],
+  "limitations": [
+    "Baseline001–297 was imported, not executed; full historical fresh install still requires trusted preimage.",
+    "Synthetic nonempty storage canaries; semantic historical replay has its separate mandatory gate.",
+    "No production snapshots, providers, container builds or deployments."
+  ]
+}

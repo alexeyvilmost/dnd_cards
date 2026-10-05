@@ -131,12 +131,13 @@ func TestGlobalContentReadsRemainPublicAndCharacterV3UsesStrictAuth(t *testing.T
 
 	for _, unchanged := range []string{
 		"protected.Use(AuthMiddleware(authService))",
-		`protected.POST("/characters", characterController.CreateCharacter)`,
-		`protected.POST("/characters-v2", characterV2Controller.CreateCharacterV2)`,
 	} {
 		if !strings.Contains(source, unchanged) {
 			t.Errorf("character/session auth contract changed or disappeared: %s", unchanged)
 		}
+	}
+	if regexp.MustCompile(`protected\.(?:GET|POST|PUT|PATCH|DELETE)\("/characters(?:-v2)?(?:"|/)`).MatchString(source) {
+		t.Fatal("Obsolete character generation remains mounted")
 	}
 	if !strings.Contains(source, "registerCharacterV3Routes(api, authService, characterV3Controller)") {
 		t.Fatal("CharacterV3 route set is not registered through its strict boundary")

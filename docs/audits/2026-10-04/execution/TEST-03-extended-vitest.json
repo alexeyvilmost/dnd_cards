@@ -1,0 +1,1026 @@
+{
+  "tests": 6004,
+  "passed": 5850,
+  "failed": 114,
+  "pending": 40,
+  "suites": 1627,
+  "failures": [
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/canon/declarativeMechanicsPatch.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "versioned declarative micro-MVP L1 content patch compiles an already materialized catalog through verify-only mode",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/canon/liveMicroMvpCompiledCertification.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "live micro-MVP compiled certification boundary ignores HTTP reference metadata without changing the live compiled release",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        },
+        {
+          "name": "live micro-MVP compiled certification boundary attests the exact migration 241 upgrade without changing the L1 fighting style",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        },
+        {
+          "name": "live micro-MVP compiled certification boundary rejects a changed executable primitive outside the materialization patch",
+          "status": "failed",
+          "message": "AssertionError: expected MicroMvpL1OverlayReadinessError: Compiled… { problems: [ …(2) ] } to be an instance of LiveMicroMvpCatalogDriftError\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vit"
+        },
+        {
+          "name": "live micro-MVP compiled certification boundary records source presentation drift without redefining compiler semantics",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        },
+        {
+          "name": "live micro-MVP compiled certification boundary allows an unrelated global catalog extra while recording full-catalog drift",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        },
+        {
+          "name": "live micro-MVP compiled certification boundary treats backend-assigned UUIDs for declared creates as surrogate identities",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        },
+        {
+          "name": "live micro-MVP compiled certification boundary binds Goliath, repaired equipment and both split attacks outside compiler roots",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        },
+        {
+          "name": "live micro-MVP compiled certification boundary binds fetched catalog bytes, compiled release, denominator and evidence protocol",
+          "status": "failed",
+          "message": "MicroMvpL1OverlayReadinessError: Compiled micro-MVP L1 overlay is not ready:\ncompiled content hash mismatch: sha256:2ef94df7df5db2d19cc386ab9f648675ad732280659111431e0b1841619cdd17\ncompiled release hash mismatch: sha256:a1cccdf2bd"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/canon/microMvpL1Overlay.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "versioned deterministic micro-MVP L1 content overlay pins overlay, compiled content, and release hashes independently from the raw release",
+          "status": "failed",
+          "message": "AssertionError: expected { …(9) } to match object { …(6) }\n(3 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/character/sheetActionOrchestrator.differential.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "real-sheet deterministic action orchestration parity matches a failed target save and its condition after canonical continuation resolution",
+          "status": "failed",
+          "message": "AssertionError: expected { Object (source, target, ...) } to deeply equal { Object (source, target, ...) }\n    at C:/Projects/dnd_cards/frontend/src/character/sheetActionOrchestrator.differential.test.ts:724:8\n    at file:///C:/Pr"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/character/sheetCombatCertifiedCatalog.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "450-root sheet combat certification is byte-for-byte generated from the complete current compiler output",
+          "status": "failed",
+          "message": "AssertionError: expected '{\\n  \"schemaVersion\": 1,\\n  \"artifact…' to be '{\\n  \"schemaVersion\": 1,\\n  \"artifact…' // Object.is equality\n    at C:/Projects/dnd_cards/frontend/src/character/sheetCombatCertifiedCatalog.test.ts:77:8\n  "
+        },
+        {
+          "name": "450-root sheet combat certification certifies every compiled and ruleset-global root/action occurrence",
+          "status": "failed",
+          "message": "Error: Action 938a86fd-e0bf-4845-b4b3-acfe2fed2b59@51832580-68f5-4e96-8afe-93e4af045283 differs from the reviewed micro-MVP combat catalog at action.spell.entityId\n    at assertCertifiedSheetCombatAction (C:/Projects/dnd_cards/fro"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/character/sheetCompanionActions.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "data-owned CharacterV3 companion controls recognizes Touch only from compiled requiresTouch, not a localized range label",
+          "status": "failed",
+          "message": "AssertionError: expected [] to deeply equal [ 'spell:explicit-touch' ]\n    at C:/Projects/dnd_cards/frontend/src/character/sheetCompanionActions.test.ts:220:62\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vite"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/components/CombatActorInspector.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "combat actor inspector defenses renders Ray of Sickness condition rules, source, and duration on the mounted monster inspector",
+          "status": "failed",
+          "message": "AssertionError: expected '<aside class=\"combat-actor-inspector …' to contain 'Источник: Луч болезни'\n    at C:/Projects/dnd_cards/frontend/src/components/CombatActorInspector.test.ts:70:18\n    at file:///C:/Projects/dnd_cards/fron"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/components/CombatCharacterSidebar.test.tsx",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "CombatActiveEffects shows an ally how to use Bardic Inspiration at the combat point of inspection",
+          "status": "failed",
+          "message": "AssertionError: expected '<div class=\"combat-sheet-effects comb…' to contain 'Использовать'\n    at C:/Projects/dnd_cards/frontend/src/components/CombatCharacterSidebar.test.tsx:26:18\n    at file:///C:/Projects/dnd_cards/frontend/n"
+        },
+        {
+          "name": "CombatActiveEffects shows Stonecunning scope and limitations in the mounted combat drawer",
+          "status": "failed",
+          "message": "AssertionError: expected '<div class=\"combat-sheet-effects comb…' to contain 'Чувство вибрации: 60 фт. (100 ходов)'\n    at C:/Projects/dnd_cards/frontend/src/components/CombatCharacterSidebar.test.tsx:44:18\n    at file:///C:/Proje"
+        },
+        {
+          "name": "CombatActiveEffects shows a Mage Armor recipient how AC is calculated and how the effect ends",
+          "status": "failed",
+          "message": "AssertionError: expected '<div class=\"combat-sheet-effects comb…' to contain 'КД: 13 + модификатор Ловкости.'\n    at C:/Projects/dnd_cards/frontend/src/components/CombatCharacterSidebar.test.tsx:64:18\n    at file:///C:/Projects/dn"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "combat roll dialog animates all area saves together then all damage together in one dialog",
+          "status": "failed",
+          "message": "AssertionError: expected  to have a length of 1 but got +0\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<"
+        },
+        {
+          "name": "combat roll dialog animates the committed d20 before enabling Continue and compares numbers truthfully for natural one",
+          "status": "failed",
+          "message": "TypeError: Cannot read properties of null (reading 'disabled')\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:93:85\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+r"
+        },
+        {
+          "name": "combat roll dialog reveals the same committed result early without closing or rerolling",
+          "status": "failed",
+          "message": "TypeError: Cannot read properties of null (reading 'click')\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:127:89\n    at act (C:\\Projects\\dnd_cards\\frontend\\node_modules\\.pnpm\\react@18.3.1\\n"
+        },
+        {
+          "name": "combat roll dialog uses the enemy preference independently of own attacks",
+          "status": "failed",
+          "message": "AssertionError: expected null not to be null\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:150:69\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+runner@4.1.11/node"
+        },
+        {
+          "name": "combat roll dialog rolls damage only after the attack lands, then reveals its authoritative sum",
+          "status": "failed",
+          "message": "AssertionError: expected null not to be null\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:161:84\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+runner@4.1.11/node"
+        },
+        {
+          "name": "combat roll dialog can reveal both phases early without restarting the damage throw",
+          "status": "failed",
+          "message": "TypeError: Cannot read properties of null (reading 'click')\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:173:89\n    at act (C:\\Projects\\dnd_cards\\frontend\\node_modules\\.pnpm\\react@18.3.1\\n"
+        },
+        {
+          "name": "combat roll dialog animates damage after a defensive reaction without rerolling the attack",
+          "status": "failed",
+          "message": "AssertionError: expected  to have a length of 2 but got +0\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<"
+        },
+        {
+          "name": "combat roll dialog marks only the kept natural one, not a discarded twenty",
+          "status": "failed",
+          "message": "AssertionError: expected  to have a length of 1 but got +0\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<"
+        },
+        {
+          "name": "combat roll dialog reveals both advantage faces before selecting, and rolls data-owned bonus dice in their own tray",
+          "status": "failed",
+          "message": "AssertionError: expected null not to be null\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:198:86\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+runner@4.1.11/node"
+        },
+        {
+          "name": "combat roll dialog reveals both disadvantage faces before selecting, and rolls data-owned bonus dice in their own tray",
+          "status": "failed",
+          "message": "AssertionError: expected null not to be null\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:198:86\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+runner@4.1.11/node"
+        },
+        {
+          "name": "combat roll dialog honors reduced motion for both phases and critical effects",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "combat roll dialog shows damage on a successful save without applying critical attack rules to a natural one",
+          "status": "failed",
+          "message": "AssertionError: expected undefined to be 'Спасбросок' // Object.is equality\n    at C:/Projects/dnd_cards/frontend/src/components/CombatPresentationDialog.test.tsx:229:83\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/."
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/components/SettingsPanel.test.tsx",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "shared settings categories explains the temporary mute and preserves personal sound settings",
+          "status": "failed",
+          "message": "AssertionError: expected 'Звук и музыкаБой и полеПоказ бросков …' to contain 'Звук временно отключён'\n    at C:/Projects/dnd_cards/frontend/src/components/SettingsPanel.test.tsx:29:35\n    at file:///C:/Projects/dnd_cards/frontend/"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/components/SheetManualEffectAuthority.test.tsx",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "manual-effect component authority boundaries SheetConditionsPanel rejects a forced online removal before persistence, while a detached sheet persists",
+          "status": "failed",
+          "message": "TypeError: Cannot read properties of null (reading 'disabled')\n    at C:/Projects/dnd_cards/frontend/src/components/SheetManualEffectAuthority.test.tsx:154:25\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vites"
+        },
+        {
+          "name": "manual-effect component authority boundaries SheetRuntimePanel rejects a forced online dismissal before persistence, while a detached sheet persists",
+          "status": "failed",
+          "message": "TypeError: Cannot read properties of null (reading 'disabled')\n    at C:/Projects/dnd_cards/frontend/src/components/SheetManualEffectAuthority.test.tsx:189:26\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vites"
+        },
+        {
+          "name": "manual-effect component authority boundaries SheetConditionsPanel displays non-condition runtime effects",
+          "status": "failed",
+          "message": "AssertionError: expected 'СостоянияОслеплёнОчарованОглохшийИсто…' to contain 'Противоядие'\n    at C:/Projects/dnd_cards/frontend/src/components/SheetManualEffectAuthority.test.tsx:229:35\n    at file:///C:/Projects/dnd_cards/fronte"
+        },
+        {
+          "name": "manual-effect component authority boundaries SheetRuntimePanel presents one removable row for one action with several mechanical effects",
+          "status": "failed",
+          "message": "AssertionError: Target cannot be null or undefined.\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1389:20)\n    at Proxy.<anonymo"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/engine/eventBusContract.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "C3 — контракт шины событий каждое событие схемы либо эмитится (EMITTED), либо запланировано (PLANNED)",
+          "status": "failed",
+          "message": "AssertionError: не покрыты в EMITTED/PLANNED: attack_dice_followup, effect_received: expected [ 'attack_dice_followup', …(1) ] to deeply equal []\n    at C:/Projects/dnd_cards/frontend/src/engine/eventBusContract.test.ts:34:76\n    "
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/engine/pushingAttack.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "catalog Pushing Attack adds original damage with critical=false and pushes Large creatures",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(6) ] to deep equally contain { Object (type, mode, ...) }\n    at C:/Projects/dnd_cards/frontend/src/engine/pushingAttack.test.ts:23:27\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@"
+        },
+        {
+          "name": "catalog Pushing Attack adds original damage with critical=true and pushes Large creatures",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(6) ] to deep equally contain { Object (type, mode, ...) }\n    at C:/Projects/dnd_cards/frontend/src/engine/pushingAttack.test.ts:23:27\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@"
+        },
+        {
+          "name": "honors selected push distance 0",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(6) ] to deep equally contain { Object (type, mode, ...) }\n    at C:/Projects/dnd_cards/frontend/src/engine/pushingAttack.test.ts:56:25\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@"
+        },
+        {
+          "name": "honors selected push distance 5",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(6) ] to deep equally contain { Object (type, mode, ...) }\n    at C:/Projects/dnd_cards/frontend/src/engine/pushingAttack.test.ts:56:25\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@"
+        },
+        {
+          "name": "honors selected push distance 10",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(6) ] to deep equally contain { Object (type, mode, ...) }\n    at C:/Projects/dnd_cards/frontend/src/engine/pushingAttack.test.ts:56:25\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@"
+        },
+        {
+          "name": "honors selected push distance 15",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(6) ] to deep equally contain { Object (type, mode, ...) }\n    at C:/Projects/dnd_cards/frontend/src/engine/pushingAttack.test.ts:56:25\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/engine/yarus0.correctness.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Ярус0 0.3 — runAbilityCheck (Толчок/Подножка) успех состязания → цель получает prone (раньше on_success игнорировал condition)",
+          "status": "failed",
+          "message": "MechanicsExecutionError: INVALID_PAYLOAD at mechanics.effects[0]: Target ability check requires a target with runtime and a fixed DC\n    at mechanicsError (C:/Projects/dnd_cards/frontend/src/engine/execute.ts:264:10)\n    at prefli"
+        },
+        {
+          "name": "Ярус0 0.3 — runAbilityCheck (Толчок/Подножка) проигрыш состязания → prone НЕ накладывается",
+          "status": "failed",
+          "message": "MechanicsExecutionError: INVALID_PAYLOAD at mechanics.effects[0]: Target ability check requires a target with runtime and a fixed DC\n    at mechanicsError (C:/Projects/dnd_cards/frontend/src/engine/execute.ts:264:10)\n    at prefli"
+        },
+        {
+          "name": "Ярус0 0.3 — runAbilityCheck (Толчок/Подножка) БМ добавляется только при владении навыком; экспертиза → ×2",
+          "status": "failed",
+          "message": "MechanicsExecutionError: INVALID_PAYLOAD at mechanics.effects[0]: Target ability check requires a target with runtime and a fixed DC\n    at mechanicsError (C:/Projects/dnd_cards/frontend/src/engine/execute.ts:264:10)\n    at prefli"
+        },
+        {
+          "name": "Ярус0 0.3 — runAbilityCheck (Толчок/Подножка) состязание: ОДИН бросок защиты по выгоднейшему навыку, не максимум из нескольких",
+          "status": "failed",
+          "message": "MechanicsExecutionError: INVALID_PAYLOAD at mechanics.effects[0]: Target ability check requires a target with runtime and a fixed DC\n    at mechanicsError (C:/Projects/dnd_cards/frontend/src/engine/execute.ts:264:10)\n    at prefli"
+        },
+        {
+          "name": "Ярус0 0.3 — runAbilityCheck (Толчок/Подножка) mode:dc — успех при total ≥ DC накладывает исход",
+          "status": "failed",
+          "message": "MechanicsExecutionError: INVALID_PAYLOAD at mechanics.effects[0]: Target ability check requires a target with runtime and a fixed DC\n    at mechanicsError (C:/Projects/dnd_cards/frontend/src/engine/execute.ts:264:10)\n    at prefli"
+        },
+        {
+          "name": "Ярус0 0.3 — runAbilityCheck (Толчок/Подножка) mode:dc — провал при total < DC: prone НЕ накладывается (contest-фолбэк дал бы ложный успех)",
+          "status": "failed",
+          "message": "MechanicsExecutionError: INVALID_PAYLOAD at mechanics.effects[0]: Target ability check requires a target with runtime and a fixed DC\n    at mechanicsError (C:/Projects/dnd_cards/frontend/src/engine/execute.ts:264:10)\n    at prefli"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/autoBuild.canon.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Живой autoBuild: Варвар по уровням с подклассом уровень 1: собирается, rage_damage_modifier = 2, подкласс ещё не выбран",
+          "status": "skipped"
+        },
+        {
+          "name": "Живой autoBuild: Варвар по уровням с подклассом уровень 5: подкласс выбран, его фича 3 ур. в сборке, rage_damage_modifier = 2",
+          "status": "skipped"
+        },
+        {
+          "name": "Живой autoBuild: Варвар по уровням с подклассом уровень 9: rage_damage_modifier = 3 (прогрессия урона Ярости)",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/content.readiness.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "G2–G4: классы 12+ базовых классов; у каждого уровни 1 и 2 с контентом, кость хитов и спасброски",
+          "status": "skipped"
+        },
+        {
+          "name": "G5: виды 12 видов; у каждого привязаны способности; подвиды структурированы",
+          "status": "skipped"
+        },
+        {
+          "name": "G6: предыстории 16 предысторий: владения id-шниками, черта slug-ом, снаряжение задано",
+          "status": "skipped"
+        },
+        {
+          "name": "G7: черты происхождения >=10 origin-черт, каждая с механикой (related_effects/actions или собственной)",
+          "status": "skipped"
+        },
+        {
+          "name": "G8–G9: заклинания 0–1 уровня >=90% заклинаний 0–1 уровня имеют механику",
+          "status": "skipped"
+        },
+        {
+          "name": "C7: снаряжение базовое оружие, щиты и доспехи присутствуют с рабочими полями",
+          "status": "skipped"
+        },
+        {
+          "name": "H: гигиена механик каждая механика имеет исполняемый корень или типизированный library-payload",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/coverage.inert.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Покрытие: детектор инертных фич классов/видов нет битых ссылок; инертные фичи ⊆ baseline; baseline не «протух»",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/feats.engine.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Движок черт: HP Крепкого, origin-черта, повторяемость (живой прод) «Крепкий» даёт +2×уровень к максимуму HP (modifier max_hp)",
+          "status": "skipped"
+        },
+        {
+          "name": "Движок черт: HP Крепкого, origin-черта, повторяемость (живой прод) origin-черта предыстории попадает в сборку без «Сменить черту»",
+          "status": "skipped"
+        },
+        {
+          "name": "Движок черт: HP Крепкого, origin-черта, повторяемость (живой прод) повторяемую черту можно взять из вида и предыстории (двойной грант)",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/fightingstyle.forge.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Боевой стиль воина — выбор из черт fighting_style (живой прод) выбор «Оборона»: черта и эффект в сборке, без доспеха бонус КД не применяется",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/forge.sweep.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Свип кузницы: все классы и расы собираются (живой прод) каждый класс: авторазрешение выборов → 0 проблем создания",
+          "status": "skipped"
+        },
+        {
+          "name": "Свип кузницы: все классы и расы собираются (живой прод) каждая раса и каждый подвид: выборы разрешимы, слаги заклинаний существуют",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/freeuse.live.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "freeuse вживую: Высший эльф выдаёт бесплатные касты на 5 уровне: freeuseSpells = misty_step + detect_magic (по 1×/долгий отдых)",
+          "status": "skipped"
+        },
+        {
+          "name": "freeuse вживую: Высший эльф выдаёт бесплатные касты пулы freeuse-<spell> сидируются в ресурсы",
+          "status": "skipped"
+        },
+        {
+          "name": "freeuse вживую: Высший эльф выдаёт бесплатные касты на 1 уровне гейт закрыт: misty_step (круг 2, gate 5) ещё не выдан",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/mechanics.sweep.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Свип механик прод-контента через движок заклинания / эффекты / действия не создают новых неучтённых падений",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/microMicroQa.live.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "регрессии ручной приёмки micro-micro-MVP 2026-07-30 Оборона требует надетый доспех, а Бдительный раскрывает Бонус мастерства",
+          "status": "skipped"
+        },
+        {
+          "name": "регрессии ручной приёмки micro-micro-MVP 2026-07-30 Огненные ладони и Волна грома наносят половину урона при успехе",
+          "status": "skipped"
+        },
+        {
+          "name": "регрессии ручной приёмки micro-micro-MVP 2026-07-30 Наставление, Благословение и Усыпление больше не являются narrative-only",
+          "status": "skipped"
+        },
+        {
+          "name": "регрессии ручной приёмки micro-micro-MVP 2026-07-30 Божественный порядок даёт реальные гранты обоим вариантам",
+          "status": "skipped"
+        },
+        {
+          "name": "регрессии ручной приёмки micro-micro-MVP 2026-07-30 все наследия драконорождённого и эльфа видимы, а Полёт появляется на 5 уровне",
+          "status": "skipped"
+        },
+        {
+          "name": "регрессии ручной приёмки micro-micro-MVP 2026-07-30 родительские сущности, класс Жреца и Бдительный пересертифицированы",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/raceAbilities.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур фиксирует текущий состав: 13 классов, 12 базовых видов, 36 видов с подвидами и 31 допустимую комбинацию",
+          "status": "skipped"
+        },
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур по PHB 2024 варианты Небесного откровения Аасимара — выбор в игре, а не подвиды",
+          "status": "skipped"
+        },
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур Каменная стойкость имеет одну action-authority без дублирующего reduce_damage Effect",
+          "status": "skipped"
+        },
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур все расовые ссылки целы, а текущий инвентарь незаклинательных payload-ов зафиксирован",
+          "status": "skipped"
+        },
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур каждый вид/подвид собирается с каждым классом на уровнях 1/3/5/20 без потери способностей и error-конфликтов",
+          "status": "skipped"
+        },
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур пассивные сопротивления, чувства, скорости, ресурсы и модификаторы реально доходят до движка во всех классах",
+          "status": "skipped"
+        },
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур все расовые кнопки исполняются каждым классом; текущие неподдержанные payload-ы зафиксированы",
+          "status": "skipped"
+        },
+        {
+          "name": "Незаклинательные способности видов: полный регрессионный контур явно фиксирует известные расхождения с PHB 2024 вместо ложного заявления «работает всё»",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/repro.morjachok.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Репро: Воин со стилем «Оборона» (+1 КД) единый breakdown даёт +1 в доспехе и не даёт бонус без него",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/mvp/variables.live.mvp.test.ts",
+      "status": "passed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Система переменных на живом контенте монах: martial_arts_die растёт d6 → d8 по setter-эффектам",
+          "status": "skipped"
+        },
+        {
+          "name": "Система переменных на живом контенте варвар: rage_damage_modifier растёт 2 → 3",
+          "status": "skipped"
+        },
+        {
+          "name": "Система переменных на живом контенте нецелевой класс не получает чужую переменную",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/pages/RulesLab.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "RulesLab browser acceptance adapter projects exactly two PCs and runs action, check and save only in a valid turn phase",
+          "status": "failed",
+          "message": "AssertionError: expected 'Команда rules-lab:r4:weapon-attack за…' to contain 'core.attack.weapon'\n    at C:/Projects/dnd_cards/frontend/src/pages/RulesLab.test.ts:148:54\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/."
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/pages/rulesLabFixture.generated.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "checked-in Rules Lab compiled artifact is byte-semantic equal to its stable real overlay roots and pinned snapshot bindings",
+          "status": "failed",
+          "message": "AssertionError: expected { systemId: 'dnd5e-2024', …(3) } to deeply equal { systemId: 'dnd5e-2024', …(3) }\n    at C:/Projects/dnd_cards/frontend/src/pages/rulesLabFixture.generated.test.ts:57:37\n    at processTicksAndRejections (n"
+        },
+        {
+          "name": "checked-in Rules Lab compiled artifact renders deterministic bytes and detects drift without mutating the checked-in artifact",
+          "status": "failed",
+          "message": "AssertionError: expected { matches: false, …(4) } to match object { matches: true, …(2) }\n(2 matching properties omitted from actual)\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expe"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/pages/SoloCombatPage.3d-parity.test.tsx",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "real combat page uses one canonical pipeline in 2D and 3D ranged selection, canonical command and real roll dialog work with 3D=false",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "real combat page uses one canonical pipeline in 2D and 3D ranged selection, canonical command and real roll dialog work with 3D=true",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "real combat page uses one canonical pipeline in 2D and 3D loads an isolated saved encounter and changes only its renderer",
+          "status": "skipped"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/roguelike/combatInteraction.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "pinned combat transport compatibility uses the original action command for an adjacent hostile click",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pinned combat transport compatibility follows the preview through adjacent moves with fresh revisions, then attacks once",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pinned combat transport compatibility stops at a reaction without silently attacking or continuing movement",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pinned combat transport compatibility does not move or spend an action if the entire route is unaffordable",
+          "status": "failed",
+          "message": "Error: expected [Function] to throw error including 'доступно 5' but got 'Cannot convert undefined or null to o…'\n    at _Assertion.__VITEST_REJECTS__ (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.1"
+        },
+        {
+          "name": "pinned combat transport compatibility never retries a lost attack response after confirmed movement",
+          "status": "failed",
+          "message": "Error: expected [Function] to throw error including 'Перемещение сохранено' but got 'Cannot convert undefined or null to o…'\n    at _Assertion.__VITEST_REJECTS__ (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+e"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/attackRuntimeIntegrity.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "Attack/grapple reducer integrity guards rejects every malformed AttackActionStarted shape and a second open budget",
+          "status": "failed",
+          "message": "AssertionError: expected [Function] to throw error matching /Invalid Attack/ but got 'Actor has no valid attack profile'\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/nod"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/battleMasterRally.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "the existing board picker explains Rally target restrictions before sending a command",
+          "status": "failed",
+          "message": "TypeError: Cannot read properties of undefined (reading 'actors')\n    at selectedTargetsForAction (C:/Projects/dnd_cards/frontend/src/solo-combat/engine.ts:6142:48)\n    at select (C:/Projects/dnd_cards/frontend/src/rules-core/batt"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/compiledWorldSpellScenarios.integration.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "compiled PHB 2024 world spells in mandatory two-PC scenarios casts compiled Mending and repairs the explicit touched break through replay",
+          "status": "failed",
+          "message": "Error: compiled-world-mending-03-class-wizard-species-dwarf-background-soldier-feat-alert: step 4 (startEncounter) rejected: InvalidActionTiming — An active encounter cannot be restarted\n    at runScenario (C:/Projects/dnd_cards/f"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/failedCheckBoost.integration.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "optional class boost after a committed failed ability check retains the opposing total for a contested embedded check and resumes its target outcome",
+          "status": "failed",
+          "message": "MechanicsExecutionError: INVALID_PAYLOAD at mechanics.effects[0]: Target ability check requires a target with runtime and a fixed DC\n    at mechanicsError (C:/Projects/dnd_cards/frontend/src/engine/execute.ts:264:10)\n    at prefli"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/hideLifecycle.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "PHB 2024 Hide / Invisible lifecycle uses catalog V/S/M metadata: verbal spells end Hide, nonverbal and rejected spells do not",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(5) ] to deep equally contain ObjectContaining{…}\n    at C:/Projects/dnd_cards/frontend/src/rules-core/hideLifecycle.test.ts:324:59\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vite"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/microMvpSpellEntitySemantics.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "micro-MVP compiled spell entity semantics executes False Life from the pinned entity as 2d4+4 Temporary HP without changing HP and without stacking",
+          "status": "failed",
+          "message": "AssertionError: expected { …(10) } to deeply equal { …(8) }\n    at run (C:/Projects/dnd_cards/frontend/src/rules-core/microMvpSpellEntitySemantics.test.ts:957:67)\n    at C:/Projects/dnd_cards/frontend/src/rules-core/microMvpSpellE"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/world.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "WorldState command/event facade runs one strict round for two player characters and replays to the same state",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(2) ] to deeply equal [ ObjectContaining{…}, …(1) ]\n    at C:/Projects/dnd_cards/frontend/src/rules-core/world.test.ts:303:26\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+run"
+        },
+        {
+          "name": "WorldState command/event facade pauses a hit before damage and lets Shield turn it into a miss after JSON reload",
+          "status": "failed",
+          "message": "AssertionError: expected [ …(11) ] to deep equally contain ObjectContaining{…}\n    at C:/Projects/dnd_cards/frontend/src/rules-core/world.test.ts:569:67\n    at file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+runn"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/solo-combat/actionChoices.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "solo combat data-owned action choices resolves self-centered emanations immediately from the actor position",
+          "status": "failed",
+          "message": "TypeError: Cannot read properties of undefined (reading 'filter')\n    at collectLifePolicies (C:/Projects/dnd_cards/frontend/src/engine/lifePolicies.ts:29:56)\n    at actorIsDead (C:/Projects/dnd_cards/frontend/src/engine/lifePolic"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.contract.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "solo combat tactical contract chooses attack, move-and-attack, or reusable Dash from geometry and speed",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract keeps a ranged monster in place when its target is already in weapon range",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract respects spent movement and does not spend Dash while grappled",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract uses a saved extra movement allotment without paying for another Dash",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract moves out of obscurity before a ranged attack and remains deterministic",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract derives directed hearing independently of fog and deafness of the speaker",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract projects directed Blindsight through fog and invisibility within its declared range",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract closes to the preferred range without spending an action on Dash",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "solo combat tactical contract backs away to the declared range but favors an attack without provoking",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pack tactics ally eligibility incapacitated ally",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pack tactics ally eligibility stunned ally",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pack tactics ally eligibility paralyzed ally",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pack tactics ally eligibility unconscious ally",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pack tactics ally eligibility petrified ally",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pack tactics ally eligibility prone ally",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "pack tactics ally eligibility poisoned ally",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        },
+        {
+          "name": "AI path search routes around occupied intermediate cells rather than crossing them",
+          "status": "failed",
+          "message": "TypeError: Cannot convert undefined or null to object\n    at Object.values (<anonymous>)\n    at boardLightSources (C:/Projects/dnd_cards/frontend/src/solo-combat/combatIllumination.ts:35:31)\n    at illuminationAt (C:/Projects/dnd_"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "solo combat engine vertical integration persists an inspiration decision before applying damage, use=true",
+          "status": "failed",
+          "message": "AssertionError: expected { schemaVersion: 5, …(13) } to deeply equal { schemaVersion: 5, …(13) }\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:848:24\n    at processTicksAndRejections ("
+        },
+        {
+          "name": "solo combat engine vertical integration persists an inspiration decision before applying damage, use=false",
+          "status": "failed",
+          "message": "AssertionError: expected { schemaVersion: 5, …(13) } to deeply equal { schemaVersion: 5, …(13) }\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:848:24\n    at processTicksAndRejections ("
+        },
+        {
+          "name": "solo combat engine vertical integration rolls a present camp familiar once, excludes a dismissed one and respects initiative (present=true)",
+          "status": "failed",
+          "message": "Error: Familiar actor has forged character\n    at evolve (C:/Projects/dnd_cards/frontend/src/rules-core/reducer.ts:609:24)\n    at C:/Projects/dnd_cards/frontend/src/rules-core/reducer.ts:796:42\n    at Array.reduce (<anonymous>)\n  "
+        },
+        {
+          "name": "solo combat engine vertical integration projects a Wild Companion into the tactical map, initiative, allegiance, and player-controlled turn",
+          "status": "failed",
+          "message": "Error: Familiar actor has forged character\n    at evolve (C:/Projects/dnd_cards/frontend/src/rules-core/reducer.ts:609:24)\n    at C:/Projects/dnd_cards/frontend/src/rules-core/reducer.ts:796:42\n    at Array.reduce (<anonymous>)\n  "
+        },
+        {
+          "name": "solo combat engine vertical integration casts an owned Touch spell through the present familiar from its board position",
+          "status": "failed",
+          "message": "Error: Familiar actor has forged character\n    at evolve (C:/Projects/dnd_cards/frontend/src/rules-core/reducer.ts:609:24)\n    at C:/Projects/dnd_cards/frontend/src/rules-core/reducer.ts:796:42\n    at Array.reduce (<anonymous>)\n  "
+        },
+        {
+          "name": "solo combat engine vertical integration opens and resolves a generic owned post-hit rider instead of exposing it proactively",
+          "status": "failed",
+          "message": "AssertionError: expected undefined to deeply equal ObjectContaining{…}\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:2195:42\n    at processTicksAndRejections (node:internal/process/tas"
+        },
+        {
+          "name": "solo combat engine vertical integration resolves a level-one post-hit spell against the creature that was hit",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "solo combat engine vertical integration lets Sentinel ignore Disengage and stop movement with an exact library effect",
+          "status": "failed",
+          "message": "AssertionError: expected [ { id: 'disengage', …(3) } ] to deep equally contain ObjectContaining{…}\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:3022:65\n    at processTicksAndRejection"
+        },
+        {
+          "name": "solo combat engine vertical integration offers Crusher only after qualifying damage and once per turn with log cursor 0",
+          "status": "failed",
+          "message": "AssertionError: {\"presentation\":{\"entityType\":\"action\",\"entityId\":\"d7000000-0000-4000-8000-000000000001\",\"actionRef\":{\"id\":\"d7000000-0000-4000-8000-000000000001\",\"name\":\"Булава\",\"description\":\"\",\"rarity\":\"common\",\"card_number\":\"ac"
+        },
+        {
+          "name": "solo combat engine vertical integration offers Crusher only after qualifying damage and once per turn with log cursor 160",
+          "status": "failed",
+          "message": "AssertionError: {\"presentation\":{\"entityType\":\"action\",\"entityId\":\"d7000000-0000-4000-8000-000000000001\",\"actionRef\":{\"id\":\"d7000000-0000-4000-8000-000000000001\",\"name\":\"Булава\",\"description\":\"\",\"rarity\":\"common\",\"card_number\":\"ac"
+        },
+        {
+          "name": "solo combat engine vertical integration offers a post-hit feat after a Protection pre-roll reaction continuation",
+          "status": "failed",
+          "message": "AssertionError: expected { …(7) } to be null\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:3667:43\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at fil"
+        },
+        {
+          "name": "solo combat engine vertical integration offers Polearm Master butt strike only after the qualifying Attack closes, and on entry",
+          "status": "failed",
+          "message": "AssertionError: expected undefined to deeply equal [ Array(1) ]\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:3769:59\n    at processTicksAndRejections (node:internal/process/task_queue"
+        },
+        {
+          "name": "preserves original damage type and critical=false with save=false across reload",
+          "status": "failed",
+          "message": "AssertionError: expected undefined to match object { …(3) }\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy."
+        },
+        {
+          "name": "preserves original damage type and critical=true with save=false across reload",
+          "status": "failed",
+          "message": "AssertionError: expected undefined to match object { …(3) }\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy."
+        },
+        {
+          "name": "preserves original damage type and critical=false with save=true across reload",
+          "status": "failed",
+          "message": "AssertionError: expected undefined to match object { …(3) }\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy."
+        },
+        {
+          "name": "preserves original damage type and critical=true with save=true across reload",
+          "status": "failed",
+          "message": "AssertionError: expected undefined to match object { …(3) }\n    at Proxy.<anonymous> (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy."
+        },
+        {
+          "name": "Trip Attack is offered only after weapon or unarmed hits: weapon_melee",
+          "status": "failed",
+          "message": "AssertionError: expected false to be true // Object.is equality\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:4612:6\n    at processTicksAndRejections (node:internal/process/task_queues"
+        },
+        {
+          "name": "Trip Attack is offered only after weapon or unarmed hits: weapon_ranged",
+          "status": "failed",
+          "message": "AssertionError: expected false to be true // Object.is equality\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:4612:6\n    at processTicksAndRejections (node:internal/process/task_queues"
+        },
+        {
+          "name": "Trip Attack is offered only after weapon or unarmed hits: unarmed",
+          "status": "failed",
+          "message": "AssertionError: expected false to be true // Object.is equality\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:4612:6\n    at processTicksAndRejections (node:internal/process/task_queues"
+        },
+        {
+          "name": "Pushing Attack carries a saved distance through the triggered command: 0",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "Pushing Attack carries a saved distance through the triggered command: 5",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "Pushing Attack carries a saved distance through the triggered command: 10",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "Pushing Attack carries a saved distance through the triggered command: 15",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "Precision Attack preserves the held attack roll resumes the canonical Attack-action ledger without charging another action",
+          "status": "failed",
+          "message": "AssertionError: expected { …(7) } to be null\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:4768:44\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at fil"
+        },
+        {
+          "name": "Precision Attack preserves the held attack roll offers defender interruption after Precision, preserves the original roll: false",
+          "status": "failed",
+          "message": "AssertionError: expected { …(7) } to be null\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:4795:44\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at fil"
+        },
+        {
+          "name": "Precision Attack preserves the held attack roll resumes exactly once: hit",
+          "status": "failed",
+          "message": "AssertionError: expected { …(7) } to be null\n    at C:/Projects/dnd_cards/frontend/src/solo-combat/soloCombat.engine.integration.test.ts:4821:44\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at fil"
+        },
+        {
+          "name": "Psionic Strike eligibility and separate noncritical damage: hit",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "Psionic Strike eligibility and separate noncritical damage: critical",
+          "status": "failed",
+          "message": "AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string\n    at Proxy.<anonymous> (file:///C"
+        },
+        {
+          "name": "routes a newly scoped spell through ordinary solo rules while keeping the certified session strict",
+          "status": "failed",
+          "message": "Error: promise resolved \"{ …(9) }\" instead of rejecting\n    at _Assertion.__VITEST_REJECTS__ (file:///C:/Projects/dnd_cards/frontend/node_modules/.pnpm/@vitest+expect@4.1.11/node_modules/@vitest/expect/dist/index.js:1747:17)\n    a"
+        }
+      ]
+    },
+    {
+      "file": "C:/Projects/dnd_cards/frontend/src/rules-core/testing/weaponMastery2024MandatoryScenarios.test.ts",
+      "status": "failed",
+      "message": "",
+      "cases": [
+        {
+          "name": "mandatory two-PC sequential PHB 2024 Weapon Mastery scenarios push: real Card/Effect binding executes across the sequential two-PC protocol",
+          "status": "failed",
+          "message": "AssertionError: expected [ { type: 'roll', …(2) }, …(8) ] to deep equally contain { Object (type, mode, ...) }\n    at C:/Projects/dnd_cards/frontend/src/rules-core/testing/weaponMastery2024MandatoryScenarios.test.ts:415:44\n    at "
+        }
+      ]
+    }
+  ]
+}

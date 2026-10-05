@@ -10,7 +10,7 @@ import { alignRuntimeHp, forgeToRuntimeState } from './runtime';
 import { expandPassiveChoicePayloads, passiveSourceId } from '../mechanics/expandChoices';
 import type { Card } from '../types';
 import {collectItemMechanics} from './attunement';
-import {currentResourceForMaximum} from './vitalityReconciliation';
+import {currentResourceAfterProjection} from './vitalityReconciliation';
 import resourceDeclarations from '../engine/data/resources.json';
 
 type Dict = Record<string, unknown>;
@@ -60,6 +60,42 @@ export function collectResourceGrantPayloads(passives: Dict[]): Dict[] {
     }
   }
   return out;
+}
+
+function eligibleItemResourceMechanics(ctx: CharacterContext, existing: RuntimeState | undefined, itemCards: readonly Card[]): Dict[] {
+  return collectItemMechanics(
+    existing?.equipment ?? Object.fromEntries((ctx.equippedCards ?? []).map((card, index) => [`equipped_${index}`, card.id])),
+    new Map(itemCards.map(card => [card.id, card])), {attuned_ids: ctx.attunedIds ?? []}, existing?.inventory ?? [],
+  ).map(item => item.mechanics).filter(mechanics => {
+    const activation = mechanics.activation as Dict | undefined;
+    return !activation?.mode || activation.mode === 'passive';
+  });
+}
+
+/** Change only the item-owned capacity contribution. Class/runtime pools and
+ * their spent charges are retained. Grant collection, amount evaluation and
+ * dormant-pool reconciliation are the ordinary initializer's operations. */
+export function reconcileEquipmentResourceGrants(
+  beforeContext: CharacterContext, afterContext: CharacterContext,
+  before: RuntimeState, after: RuntimeState, itemCards: readonly Card[],
+): RuntimeState {
+  const contribution = (ctx: CharacterContext, state: RuntimeState) => {
+    const grants = collectResourceGrantPayloads(eligibleItemResourceMechanics(ctx, state, itemCards));
+    const base = initResources(ctx, null, []).maxResources;
+    const withGrants = initResources(ctx, null, grants).maxResources;
+    return Object.fromEntries(grants.map(grant => String(grant.id ?? '')).filter(Boolean)
+      .map(key => [key, (withGrants[key] ?? 0) - (base[key] ?? 0)]));
+  };
+  const oldGrants = contribution(beforeContext, before), newGrants = contribution(afterContext, after);
+  const resources = {...after.resources}, maxResources = {...after.maxResources};
+  for (const key of new Set([...Object.keys(oldGrants), ...Object.keys(newGrants)])) {
+    const previous = oldGrants[key] ?? 0, next = newGrants[key] ?? 0;
+    if (previous === next) continue;
+    const maximum = Math.max(0, (before.maxResources[key] ?? 0) - previous + next);
+    maxResources[key] = maximum;
+    resources[key] = currentResourceAfterProjection(after.resources[key], before.maxResources[key], maximum, true);
+  }
+  return {...after, resources, maxResources};
 }
 
 function resourceGrantParts(passives: Dict[], resourceKey: string, ctx: CharacterContext) {
@@ -190,15 +226,7 @@ export function syncRuntimeResources(
   grantedActions: readonly GrantedAction[] = [],
 ): { resources: Record<string, number>; maxResources: Record<string, number>; sources: Record<string, RollModifier[]> } {
   const classRes = (assembled.klass?.resources ?? null) as Dict | null;
-  const itemMechanics = collectItemMechanics(
-    existing?.equipment ?? Object.fromEntries((ctx.equippedCards ?? []).map((card,index)=>[`equipped_${index}`,card.id])),
-    new Map(itemCards.map(card=>[card.id,card])),
-    {attuned_ids:ctx.attunedIds ?? []},
-    existing?.inventory ?? [],
-  ).map(item=>item.mechanics).filter(mechanics=>{
-    const activation=mechanics.activation as Dict|undefined;
-    return !activation?.mode || activation.mode==='passive';
-  });
+  const itemMechanics = eligibleItemResourceMechanics(ctx, existing, itemCards);
   const runtimeGrants=(existing?.activeEffects ?? []).filter(effect=>effect.roundsLeft===undefined || effect.roundsLeft>0)
     .map(effect=>({...effect.mechanics as Dict,name:effect.name}))
     .filter(mechanics=>{
@@ -306,16 +334,8 @@ export function syncRuntimeResources(
   }
 
   for (const key of Object.keys(maxResources)) {
-    const cur = existing.resources[key];
-    if (cur != null) {
-      const oldMax = existing.maxResources[key] ?? maxResources[key];
-      // Re-equipping a previously exhausted item must not replenish its
-      // dormant pool. Permanent class/feat capacity increases are available
-      // immediately, including slots and limited-use action pools.
-      const dormantItemPool = knownItemResourceKeys.has(key) && oldMax === 0;
-      resources[key] = dormantItemPool ? Math.min(cur, maxResources[key])
-        : currentResourceForMaximum(cur, oldMax, maxResources[key]);
-    }
+    resources[key] = currentResourceAfterProjection(existing.resources[key], existing.maxResources[key],
+      maxResources[key], knownItemResourceKeys.has(key));
   }
 
   return { resources, maxResources, sources };

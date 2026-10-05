@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "scope": "actual-owned-postgres-scalar-boundary",
+  "rawScalar": "t",
+  "jsonValues": [
+    true,
+    false
+  ],
+  "mutations": 0
+}

@@ -18,6 +18,16 @@ import (
 )
 
 func main() {
+	if handled, err := runReleaseMigrationCommand(os.Args[1:], os.Stdin, os.Stdout); handled {
+		if err != nil {
+			log.Print(err)
+			os.Exit(1)
+		}
+		return
+	}
+	if writeBuildIdentityCommand(os.Args[1:], os.Stdout) {
+		return
+	}
 	// Загрузка переменных окружения
 	if err := godotenv.Load(); err != nil {
 		log.Println("Файл .env не найден, используем переменные окружения")
@@ -37,6 +47,12 @@ func main() {
 	}
 
 	// Получаем *sql.DB для миграций
+	performanceEnabled := os.Getenv("RULES_PERFORMANCE_ENABLED") == "1"
+	if performanceEnabled {
+		if err := registerPerformanceCallbacks(db); err != nil {
+			log.Fatal("Cannot register performance callbacks: ", err)
+		}
+	}
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatal("Ошибка получения sql.DB:", err)
@@ -75,6 +91,7 @@ func main() {
 	// SSE-потоки боёв (/stream) исключаем — gzip буферизирует и ломает realtime.
 	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPathsRegexs([]string{`.*/stream$`})))
 	r.Use(RequestIDMiddleware())
+	r.Use(PerformanceMiddleware(performanceEnabled))
 	r.Use(SecurityHeadersMiddleware())
 
 	// Same-origin production does not require CORS, but explicit origins remain
@@ -87,10 +104,10 @@ func main() {
 	corsConfig.AllowOrigins = allowedOrigins
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{
-		"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID",
+		"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-Performance-Trace", "Idempotency-Key",
 		roguelikeRunHeader, roguelikeIntentHeader,
 	}
-	corsConfig.ExposeHeaders = []string{"X-Request-ID", "Retry-After"}
+	corsConfig.ExposeHeaders = []string{"X-Request-ID", "Retry-After", "Server-Timing", "X-Performance-Metrics"}
 	corsConfig.AllowCredentials = true
 	r.Use(cors.New(corsConfig))
 
@@ -103,17 +120,16 @@ func main() {
 
 	openAIService := NewOpenAIService()
 	imageController := NewImageController(db, yandexStorage, openAIService)
+	go imageController.runImageJobs(context.Background())
 	contentImageController := NewContentImageController(db)
 	ttgBestiaryController := NewTTGBestiaryController()
 
 	// Инициализация сервисов и контроллеров
-	cardController := NewCardController(db)
+	cardController := NewCardController(db, imageController)
 	authService := NewAuthService(db)
 	authController := NewAuthController(authService)
 	groupController := NewGroupController(db)
 	inventoryController := NewInventoryController(db)
-	characterController := NewCharacterController(db)
-	characterV2Controller := NewCharacterV2Controller(db)
 	characterV3Controller := NewCharacterV3Controller(db)
 	roguelikeController := NewRoguelikeController(db)
 	imageLibraryController := NewImageLibraryController(db)
@@ -141,11 +157,9 @@ func main() {
 
 	// Health check endpoint
 	r.GET("/api/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":        "ok",
-			"timestamp":     time.Now().Unix(),
-			"source_commit": deployedSourceCommit(),
-		})
+		identity := componentBuildIdentity()
+		identity["status"], identity["timestamp"] = "ok", time.Now().Unix()
+		c.JSON(200, identity)
 	})
 
 	// Маршруты API
@@ -195,6 +209,7 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"admin": canManageEntityTags(c), "user_id": id.String()})
 		})
 		api.GET("/cards", OptionalAuthMiddleware(authService), cardController.GetCards)
+		api.GET("/cards/runtime/resolve", OptionalAuthMiddleware(authService), cardController.ResolveRuntimeCards)
 		api.GET("/cards/:id", OptionalAuthMiddleware(authService), cardController.GetCard)
 		api.GET("/cards/:id/battle-stats", OptionalAuthMiddleware(authService), cardController.GetCardBattleStats)
 		api.POST("/cards/battle-stats", OptionalAuthMiddleware(authService), cardController.GetBatchCardBattleStats)
@@ -234,6 +249,12 @@ func main() {
 
 		// Standalone-генерация изображений (вкладка «Генерация изображений»)
 		api.POST("/images/generate-standalone", contentAdminAuth, imageController.GenerateStandaloneImage)
+		api.GET("/images/jobs", contentAdminAuth, imageController.ListImageJobs)
+		api.GET("/images/jobs/capabilities", contentAdminAuth, imageController.GetImageJobCapability)
+		api.GET("/images/jobs/:id", contentAdminAuth, imageController.GetImageJob)
+		api.POST("/images/jobs/generate", contentAdminAuth, imageJobHandler(imageController.GenerateImage))
+		api.POST("/images/jobs/generate-standalone", contentAdminAuth, imageJobHandler(imageController.GenerateStandaloneImage))
+		api.POST("/images/jobs/generate-card", contentAdminAuth, imageJobHandler(cardController.GenerateImage))
 		// Роут /images/upload-base64 удалён (KB-202): анонимная неограниченная запись любых данных
 		// в облачный бакет (OptionalAuthMiddleware = аноним) — поверхность абьюза и расходов. Фронт
 		// его не использовал; служил одноразовой миграции base64→S3 (см. историю git при надобности).
@@ -367,30 +388,6 @@ func main() {
 			protected.PUT("/inventories/:id/items/:itemId", inventoryController.UpdateInventoryItem)
 			protected.DELETE("/inventories/:id/items/:itemId", inventoryController.RemoveItemFromInventory)
 			protected.PUT("/inventories/items/:itemId/equip", inventoryController.EquipItem)
-
-			// Персонажи
-			protected.POST("/characters", characterController.CreateCharacter)
-			protected.GET("/characters", characterController.GetCharacters)
-			protected.GET("/characters/:id/inventories", inventoryController.GetCharacterInventories)
-			protected.GET("/characters/:id", characterController.GetCharacter)
-			protected.PUT("/characters/:id", characterController.UpdateCharacter)
-			protected.DELETE("/characters/:id", characterController.DeleteCharacter)
-			protected.POST("/characters/import", characterController.ImportCharacter)
-			protected.GET("/characters/:id/export", characterController.ExportCharacter)
-			protected.PATCH("/characters/:id/stats/:statName", characterController.UpdateCharacterStat)
-
-			// Персонажи V2 (новая система)
-			protected.POST("/characters-v2", characterV2Controller.CreateCharacterV2)
-			protected.GET("/characters-v2", characterV2Controller.GetCharactersV2)
-			protected.GET("/characters-v2/:id", characterV2Controller.GetCharacterV2)
-			protected.PUT("/characters-v2/:id", characterV2Controller.UpdateCharacterV2)
-			protected.DELETE("/characters-v2/:id", characterV2Controller.DeleteCharacterV2)
-			protected.PATCH("/characters-v2/:id/stats/:statName", characterV2Controller.UpdateCharacterV2Stat)
-			protected.GET("/characters-v2/:id/inventories", inventoryController.GetCharacterInventories)
-			protected.GET("/characters-v2/:id/armor", characterV2Controller.GetCharacterArmor)
-			protected.POST("/characters-v2/:id/inventories/items", characterV2Controller.AddItemsToCharacterInventory)
-			protected.POST("/characters-v2/:id/equip", characterV2Controller.EquipItem)
-			protected.GET("/characters-v2/:id/active-effects", characterV2Controller.GetActiveEffects)
 
 			// Изображения
 			protected.POST("/images/upload", StrictAuthMiddleware(authService), RequestBodyLimitMiddleware(maxMultipartSafetyBytes), ContentEntityImageMutation(db), imageController.UploadImage)

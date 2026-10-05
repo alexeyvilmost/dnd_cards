@@ -1,28 +1,42 @@
-node_modules
-dist
-.git
-.env
-.env.*
-# Vite imports the engine/mechanics guides with `?raw`; Markdown under src is a
-# production build input and must stay in the Docker context.
-README.md
-tsconfig.tsbuildinfo
-tsconfig.node.tsbuildinfo
-vite.config.d.ts
-vite.config.js
-
-# Production Docker typechecking covers the shipped source graph. The full
-# repository/CI `npm run build` still typechecks tests; Docker intentionally has
-# no access to sibling test fixtures outside this build context.
-src/**/*.test.ts
-src/**/*.test.tsx
-src/testing/featAuditFixtures.ts
-e2e
-e2e-live
-
-# Test-only generated output must never inflate or influence the image context.
-.micro-mvp-evidence
+# Safety for frontend/ tools. Dockerfile requires repository-root context.
+**
+!package.json
+!package-lock.json
+!.npmrc
+!index.html
+!tsconfig.json
+!tsconfig.node.json
+!vite.config.ts
+!postcss.config.js
+!tailwind.config.js
+!nginx.conf.template
+!start.sh
+!write-build-info.sh
+!Dockerfile
+!Dockerfile.dockerignore
+!src/**
+!utils/**
+!charges/charges.json
+!public/**
+!scripts/check-dice-box-assets.mjs
+**/.git
+**/.env
+**/.env.*
+**/node_modules
+**/dist
+**/output
+**/outputs
+**/tmp
+**/backups
+**/.local-postgres
 coverage
-test-results
-playwright-report
-blob-report
+**/test-results
+**/playwright-report
+**/*.test.ts
+**/*.test.tsx
+**/*.test.mjs
+**/*.tsbuildinfo
+src/testing/featAuditFixtures.ts
+src/roguelike/testing/currentPinnedFixture.ts
+src/rules-core/testing/fixtures
+src/rules-core/testing/pendingReplay.*

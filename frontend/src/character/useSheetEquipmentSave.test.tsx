@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiRequestError } from '../api/client';
 import type { CharacterRuntimeCommandRequest, CharacterRuntimeCommandResponse } from './api';
 import type { ForgeCharacter } from './types';
-import { pendingEquipmentKey, useSheetEquipmentSave } from './useSheetEquipmentSave';
+import { pendingEquipmentKey, useSheetEquipmentSave, type SheetEquipmentSaveInput } from './useSheetEquipmentSave';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const firstId = '11111111-1111-4111-8111-111111111111';
@@ -33,7 +33,7 @@ function receipt(value = request(), replayed = false): CharacterRuntimeCommandRe
     runtime_revision: 2, character: character(characterId) }] };
 }
 
-type Input = Parameters<typeof useSheetEquipmentSave>[0];
+type Input = SheetEquipmentSaveInput<CharacterRuntimeCommandRequest>;
 let session: ReturnType<typeof useSheetEquipmentSave>;
 function Harness({ input }: { input: Input }) {
   session = useSheetEquipmentSave(input);

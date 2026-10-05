@@ -1,3 +1,29 @@
+import SheetActionList from './sheet-actions/SheetActionList';
+import {sheetActionAvailability} from './sheet-actions/actionAvailability';
+import {
+  sheetMechanicsAllowsSelfTarget,
+  sheetTriggerOnlyReason,
+  explicitSheetTargetFactsIssue,
+  explicitSheetTargetContext,
+  sheetActionNeedsCanonicalAvailability,
+  legacyUnarmedTargetAction,
+  mechanicsPrimitiveType,
+  payableWithUpcast,
+} from './sheet-actions/actionModel';
+// Keep existing consumers on the same selectors during this extraction.
+export {
+  sheetMechanicsAllowsSelfTarget,
+  sheetActionPanelLockIssue,
+  sheetTriggerOnlyReason,
+  sheetSpellActionsForPresentation,
+  explicitSheetTargetFactsIssue,
+  explicitSheetTargetContext,
+  sheetActionDisplayName,
+  payableWithUpcast,
+  sheetActionNeedsCanonicalAvailability,
+  legacyUnarmedTargetAction,
+} from './sheet-actions/actionModel';
+export type {ExplicitSheetTargetFacts} from './sheet-actions/actionModel';
 import { collectSoloCombatActionChoices, projectSoloCombatActionChoices } from '../solo-combat/actionChoices';
 import { activeRunId, notifyRunUpdated,runCharacters,runCharacter,RUN_UPDATED_EVENT } from '../roguelike/navigation';
 import { roguelikeApi } from '../roguelike/api';
@@ -19,8 +45,6 @@ import {
 import { useGrantedActions } from '../character/grantedActions';
 import { useBasicActions } from '../character/basicActions';
 import { collectItemMechanics, readAttunedIds } from '../character/attunement';
-import {bindWorldItemAction} from '../rules-core/worldItemActions';
-import {bindItemLightFuel} from '../rules-core/itemLight';
 import { collectPassiveMechanics } from '../character/resourceInit';
 import {
   buildCharacterContext,
@@ -35,14 +59,13 @@ import type { Combatant, BattleLogEntry, PendingSave, PendingAttack, SaveOutcome
 import { pendingAttackDamage } from '../battle/pendingAttack';
 import { describeEngineEvent, narrativeEvent } from '../engine/events';
 import { rollD20 } from '../engine/roll';
-import { isCharacterReadOnly, type CharacterType, type ForgeCharacter, type ForgeCharacterPreview } from '../character/types';
+import { isCharacterReadOnly, type ForgeCharacter, type ForgeCharacterPreview } from '../character/types';
 import type { CharacterRuleState } from '../character/rules/types';
 import { isActionUsesKey } from '../engine/actionUses';
 import { buildResourceRecharge, buildResourceRecovery } from '../engine/resources';
 import { applyFreeuseCost, resolveFreeusePoolKey, freeuseSpellReferences, isFreeusePoolKey, FREEUSE_SHOWCASE_KEY } from '../engine/freeuse';
 import { startConcentration } from '../engine/concentration';
 import { canPay } from '../engine/cost';
-import { activeEffectRequirementIssue } from '../engine/actionRequirements';
 import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/actionSurge';
 import { deniedCapabilities } from '../engine/modifiers';
 import { plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
@@ -54,8 +77,6 @@ import {
   weaponActionAvailability,
   weaponAttackPreview,
 } from '../engine/weapon';
-import { costAmount } from '../engine/cost';
-import { inventoryQty } from '../character/inventory';
 import { groupActiveEffectsForDisplay, removeActiveEffectGroup } from '../engine/effects';
 import { useDiceDialog } from '../contexts/DiceDialogContext';
 import { useChoiceDialog } from '../contexts/ChoiceDialogContext';
@@ -63,14 +84,11 @@ import { useToast } from '../contexts/ToastContext';
 import { collectInPlayActionChoices } from '../mechanics/collectChoices';
 import { findResource, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
-import { getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, type Action, type Card, type Spell } from '../types';
-import { isSpellActionPrepared } from '../rules-core/spellcastingAccess';
+import { getSpellLevelLabel, type Action, type Card, type Spell } from '../types';
 import { collectSheetSpellCastOptions, type SheetSpellCastOption } from '../character/sheetSpellCastingUi';
 import type { EngineEvent, ExecuteContext, ReactionOffer, RollLog, RuntimeState, TargetContext } from '../mvp/contracts';
 import { getSettings } from '../settings';
 import { useReactionPrompt } from '../contexts/ReactionPromptContext';
-import SheetActionLine from './SheetActionLine';
-import SheetActionGroups, {sheetActionGroups} from './SheetActionGroups';
 import SpellPreview from './SpellPreview';
 import FreeuseSpellsTile from './FreeuseSpellsTile';
 import ActionPreview from './ActionPreview';
@@ -82,7 +100,6 @@ import {
   executeSheetCanonicalAction,
   executeSheetAction,
   planSheetActionDice,
-  sheetPrimitiveCastTimingIssue,
   validateSheetCanonicalAction,
   UnsupportedSheetPendingResolutionError,
   type SheetCanonicalActionContext,
@@ -93,8 +110,6 @@ import {
   isSheetNoPendingPrimitive,
   isSheetPendingCombatPrimitive,
   sheetActionRequiresActorTargets,
-  sheetPrimitiveDefinitionIssue,
-  sheetPrimitiveDisabledReason,
 } from '../character/sheetPrimitiveUi';
 import { projectRunnableSheetCanonicalActions } from '../character/sheetCanonicalActionProjection';
 import { applyUnarmedDamageProfileToAction } from '../rules-core/fightingStyleComplexPrimitives';
@@ -120,13 +135,11 @@ import type {
   ActorState,
   DecisionResponse,
   GameCommand,
-  RuleActionDefinition,
   WorldState,
 } from '../rules-core/domain';
 import type { SheetCanonicalCommandInput } from '../character/sheetCanonicalCommand';
 import { loadSheetCombatParticipant } from '../character/sheetCombatTargetRuntime';
 import {
-  UNTRAINED_ARMOR_SPELL_REASON,
   untrainedArmorPenaltyMechanics,
 } from '../character/untrainedArmor';
 import { playerFacingSheetActionError } from '../character/sheetActionError';
@@ -247,12 +260,6 @@ interface Props {
   onBusyChange?: (busy: boolean) => void;
 }
 
-export function sheetActionPanelLockIssue(
-  disabledReason?: string,
-): { disabled: true; reason: string } | null {
-  return disabledReason ? { disabled: true, reason: disabledReason } : null;
-}
-
 export interface SheetConcentrationPresentation {
   name: string;
   detectMagicFollowUp: boolean;
@@ -274,23 +281,6 @@ export function sheetConcentrationPresentation(
     name: action?.name?.trim() || 'Заклинание',
     detectMagicFollowUp: mechanicsPrimitiveType(action?.mechanics ?? {}) === 'detect_magic_world_sensing',
   };
-}
-
-export function sheetTriggerOnlyReason(
-  mechanics: Record<string, unknown> | undefined,
-): string | null {
-  const activation = mechanics?.activation as Record<string, unknown> | undefined;
-  const mode = String(activation?.mode ?? '');
-  const trigger = activation?.trigger as Record<string, unknown> | undefined;
-  const hasTrigger = typeof trigger?.event === 'string'
-    || (Array.isArray(trigger?.events) && trigger.events.some((event) => typeof event === 'string'));
-  return hasTrigger && (mode === 'reaction' || mode === 'triggered')
-    ? 'Доступно только в окне реакции после подходящего события'
-    : null;
-}
-
-export function sheetSpellActionsForPresentation(actions: readonly SheetAction[]): SheetAction[] {
-  return actions.filter((action) => action.group === 'spell');
 }
 
 /**
@@ -323,65 +313,6 @@ export function contextualizeSheetJournalEvents(input: {
 
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : `id-${Math.random().toString(36).slice(2)}`);
 
-export interface ExplicitSheetTargetFacts {
-  armorClass: number | null | undefined;
-  savingThrowModifier: number | null | undefined;
-}
-
-function targetResolutionRequirements(mechanics: Record<string, unknown>): {
-  attack: boolean;
-  save: boolean;
-} {
-  const effects = Array.isArray(mechanics.effects)
-    ? mechanics.effects as Record<string, unknown>[]
-    : [];
-  return {
-    attack: effects.some((effect) => effect.resolution === 'attack_roll'),
-    save: effects.some((effect) => effect.resolution === 'save'),
-  };
-}
-
-/** Legacy execution accepts no invented target statistics. */
-export function explicitSheetTargetFactsIssue(
-  mechanics: Record<string, unknown>,
-  facts: ExplicitSheetTargetFacts,
-): string | null {
-  const required = targetResolutionRequirements(mechanics);
-  if (required.attack && (typeof facts.armorClass !== 'number'
-    || !Number.isFinite(facts.armorClass)
-    || facts.armorClass <= 0)) {
-    return 'Укажите КД цели или выберите персонажа с явно рассчитанной КД';
-  }
-  if (required.save && (typeof facts.savingThrowModifier !== 'number'
-    || !Number.isSafeInteger(facts.savingThrowModifier))) {
-    return 'Укажите модификатор спасброска цели или выберите персонажа с рассчитанными спасбросками';
-  }
-  return null;
-}
-
-export function explicitSheetTargetContext(
-  mechanics: Record<string, unknown>,
-  facts: ExplicitSheetTargetFacts,
-): TargetContext | undefined {
-  const issue = explicitSheetTargetFactsIssue(mechanics, facts);
-  if (issue) throw new Error(issue);
-  const required = targetResolutionRequirements(mechanics);
-  if (!required.attack && !required.save) return undefined;
-  return {
-    ...(required.attack ? { ac: facts.armorClass as number } : {}),
-    ...(required.save ? {
-      saveMods: {
-        dex: facts.savingThrowModifier as number,
-        con: facts.savingThrowModifier as number,
-        str: facts.savingThrowModifier as number,
-        int: facts.savingThrowModifier as number,
-        wis: facts.savingThrowModifier as number,
-        cha: facts.savingThrowModifier as number,
-      },
-    } : {}),
-  };
-}
-
 // Дельта исхода спасброска: изменение состояния цели после прогона движка относительно БАЗЫ
 // прогона (baseHp/baseTemp). Прогон делается по цели с огромным hp, поэтому дельта несёт ИСТИННЫЙ
 // урон без упора в 0 (ограничит уже цель по своему текущему hp). ts undefined (успешный негейт —
@@ -393,33 +324,6 @@ function outcomeDelta(baseHp: number, baseTemp: number, prevEffects: { id?: stri
     .filter((e) => !(e.id && prevIds.has(e.id))) as SaveOutcome['addEffects'];
   return { hpDelta: ts.hp.current - baseHp, tempDelta: (ts.hp.temp ?? 0) - baseTemp, addEffects };
 }
-
-const GROUP_DETAIL: Record<SheetAction['group'], string> = {
-  basic: 'Базовое действие', race: 'Вид', class: 'Класс', item: 'Предмет', spell: 'Заклинание',
-};
-const spellSchoolLabel = (s?: string | null) => SPELL_SCHOOL_OPTIONS.find((o) => o.value === s)?.label || s || '';
-export function sheetActionDisplayName(
-  action: Pick<SheetAction, 'name' | 'mechanics'>,
-): string {
-  const primitive = action.mechanics.primitive as Record<string, unknown> | undefined;
-  if (primitive?.type !== 'weapon_attack') return action.name;
-  const effects = Array.isArray(action.mechanics.effects)
-    ? action.mechanics.effects as Array<Record<string, unknown>>
-    : [];
-  const attackKind = effects.find((effect) => effect.resolution === 'attack_roll')?.attack_kind;
-  if (attackKind === 'weapon_ranged') return 'Дальнобойная атака оружием';
-  if (attackKind === 'weapon_melee') return 'Рукопашная атака оружием';
-  return action.name;
-}
-// Вторая строка ряда действия (как у предметов, но без веса/цены).
-const actionDetail = (a: SheetAction): string => {
-  if (a.spellRef) {
-    const lvl = a.spellRef.level ?? a.level ?? 0;
-    return `${lvl === 0 ? 'Заговор' : `${lvl} уровень`}${a.spellRef.school ? ` · ${spellSchoolLabel(a.spellRef.school)}` : ''}`;
-  }
-  if (a.group === 'basic') return 'Базовое действие';
-  return a.sourceLabel ?? GROUP_DETAIL[a.group] ?? '';
-};
 
 /** Выбор источника оплаты каста: за ячейку уровня level или бесплатно (freeuse-пул). */
 type CastChoice = { via: 'slot'; level: number } | { via: 'free' };
@@ -445,13 +349,6 @@ export function characterInteractionTargetOption(
     };
   }
   return { id: candidate.id, name: candidate.name };
-}
-
-/** Target relations are mechanics-owned; localized names never decide picker membership. */
-export function sheetMechanicsAllowsSelfTarget(mechanics: Record<string, unknown>): boolean {
-  const targeting = mechanics.targeting as Record<string, unknown> | undefined;
-  return Array.isArray(targeting?.allowed_relations)
-    && targeting.allowed_relations.includes('self');
 }
 
 export function sheetSelectedTargetRelationIssue(input: {
@@ -513,26 +410,6 @@ export function replaceCachedInteractionTarget(
     : [...cached, persisted];
 }
 
-/** Апкаст (D1): заклинание со стоимостью spell_slot уровня N доступно, если есть ЛЮБОЙ
- *  слот уровня ≥ N (не только базового) — иначе кастер со свободным старшим слотом, но
- *  потраченным базовым, не смог бы кастовать. Прочие ресурсы стоимости — обычной проверкой.
- *  freeuseAvailable снимает ТОЛЬКО требование ячейки (каст из пула бесплатных использований),
- *  но НЕ экономику действий: не-слотовые косты (основное/бонусное действие, реакция, предмет)
- *  проверяются всегда — без свободного действия заклинание недоступно даже при freeuse. */
-export function payableWithUpcast(runtime: RuntimeState, cost: Record<string, unknown>[], freeuseAvailable = false): boolean {
-  const slot = cost.find((c) => String(c.resource ?? '') === 'spell_slot' && c.level != null);
-  const nonSlot = cost.filter((c) => c !== slot);
-  if (nonSlot.length && !canPay(runtime, nonSlot).ok) return false;
-  if (slot && !freeuseAvailable) {
-    const base = Number(slot.level) || 0;
-    const need = Number(slot.amount ?? 1) || 1;
-    let ok = false;
-    for (let L = base; L <= 9; L++) if ((runtime.resources[`spell_slot_${L}`] ?? 0) >= need) { ok = true; break; }
-    if (!ok) return false;
-  }
-  return true;
-}
-
 export function persistPayload(state: RuntimeState, prevTurnState: Record<string, unknown> | null | undefined, includeInventory: boolean) {
   return {
     current_hp: state.hp.current,
@@ -556,80 +433,6 @@ function spendsResource(mech: Record<string, unknown>): boolean {
   const cost = activation?.cost as Record<string, unknown>[] | undefined;
   if (!Array.isArray(cost)) return false;
   return cost.some((c) => !!String(c.resource ?? ''));
-}
-
-function mechanicsPrimitiveType(mechanics: Record<string, unknown>): string | null {
-  const primitive = mechanics.primitive;
-  if (!primitive || typeof primitive !== 'object' || Array.isArray(primitive)) return null;
-  const type = (primitive as Record<string, unknown>).type;
-  return typeof type === 'string' && type ? type : null;
-}
-
-/** Every spell row and every run action uses the canonical authority, primitive or not. */
-export function sheetActionNeedsCanonicalAvailability(
-  action: Pick<SheetAction, 'mechanics' | 'spellRef'>,
-  characterType?: CharacterType,
-): boolean {
-  const effects = Array.isArray(action.mechanics.effects)
-    ? action.mechanics.effects as Record<string, unknown>[]
-    : [];
-  const structuralUnarmed = effects.some((effect) => (
-    effect.resolution === 'attack_roll' && effect.attack_kind === 'unarmed'
-  ));
-  return characterType === 'dungeon_crawl'
-    || action.spellRef !== undefined
-    || mechanicsPrimitiveType(action.mechanics) !== null
-    || structuralUnarmed;
-}
-
-/**
- * Compatibility projection for the data-owned basic Unarmed Strike row. It is
- * structural (not tied to an id/name), so another entity with the same generic
- * attack contract can reuse the scene-target flow.
- */
-export function legacyUnarmedTargetAction(action: SheetAction): RuleActionDefinition | null {
-  const effects = Array.isArray(action.mechanics.effects)
-    ? action.mechanics.effects as Record<string, unknown>[]
-    : [];
-  if (mechanicsPrimitiveType(action.mechanics)
-    || !effects.some((effect) => (
-      effect.resolution === 'attack_roll' && effect.attack_kind === 'unarmed'
-    ))) return null;
-  const targeting = action.mechanics.targeting;
-  const declared = targeting && typeof targeting === 'object' && !Array.isArray(targeting)
-    ? targeting as Record<string, unknown>
-    : {};
-  const rangeMatch = String(declared.range ?? '').match(/\d+/);
-  const rangeFt = rangeMatch ? Number(rangeMatch[0]) : 5;
-  const sourceId = action.actionRef?.id ?? action.id;
-  const sourceCard = action.actionRef?.card_number ?? action.id;
-  return {
-    id: action.id,
-    name: action.name,
-    kind: 'nonSpell',
-    sourceEntityIds: [sourceId, sourceCard],
-    mechanics: {
-      ...action.mechanics,
-      primitive: { type: UNARMED_STRIKE_PRIMITIVE },
-      targeting: {
-        domain: 'actor',
-        actor_targets: true,
-        shape: 'single',
-        min_targets: 1,
-        max_targets: 1,
-        range_ft: rangeFt,
-        requires_line_of_sight: true,
-        allowed_relations: ['enemy'],
-      },
-    },
-    targeting: {
-      minTargets: 1,
-      maxTargets: 1,
-      rangeFt,
-      requiresLineOfSight: true,
-      allowedRelations: ['enemy'],
-    },
-  };
 }
 
 export default function SheetActionsPanel({
@@ -2971,164 +2774,30 @@ export default function SheetActionsPanel({
     }
   };
 
-  // Доступность + причина недоступности: сперва экипировка (оружие в руке), затем ресурсы.
-  const disabledInfo = (action: SheetAction): { disabled: boolean; reason?: string } => {
-    const canonical=canonicalBuild.runtime;
-    if(canonical)action=bindItemLightFuel(canonical.world,canonical.actorId,bindWorldItemAction(canonical.world,canonical.actorId,{
-      ...action,sourceEntityIds:[action.actionRef?.id??action.id],
-    }));
-    const campIssue = campActionAllowsAlly(action)?null:runCampTargetIssue(character.character_type,
-      actionInteractsWithTarget(action.mechanics), sheetMechanicsAllowsSelfTarget(action.mechanics));
-    if (campIssue) return { disabled: true, reason: campIssue };
-    const panelLock = sheetActionPanelLockIssue(panelDisabledReason);
-    if (panelLock) return panelLock;
-    if (pendingAtomicRetry) {
-      return {
-        disabled: true,
-        reason: `Ожидается безопасный повтор ${sheetAtomicRetryLabel(pendingAtomicRetry)}`,
-      };
-    }
-    if ((action.mechanics.activation as Record<string, unknown> | undefined)?.counts_as === 'hide') {
-      return {disabled: true, reason: 'Засада требует данных карты: используйте панель боя'};
-    }
-    const activeEffectIssue = activeEffectRequirementIssue(action.mechanics, runtime, ctx);
-    if (activeEffectIssue) return { disabled: true, reason: activeEffectIssue };
-    if (action.spellRef && ctx.untrainedArmorCategories?.length) {
-      return { disabled: true, reason: UNTRAINED_ARMOR_SPELL_REASON };
-    }
-    const contextualCostIssue = contextualCostProjection.issues.get(action.id);
-    if (contextualCostIssue) return { disabled: true, reason: contextualCostIssue };
-    const primitive = mechanicsPrimitiveType(action.mechanics);
-    const pendingCombat = primitive ? isSheetPendingCombatPrimitive(primitive) : false;
-    if (action.spellRef && !primitive) {
-      if (canonicalBuild.error) return { disabled: true, reason: canonicalBuild.error.message };
-      try {
-        canonicalFor(action);
-      } catch (cause) {
-        return {
-          disabled: true,
-          reason: playerFacingSheetActionError(cause),
-        };
-      }
-    }
-    if (primitive) {
-      const primitiveReason = sheetPrimitiveDisabledReason(primitive);
-      if (primitiveReason) return { disabled: true, reason: primitiveReason };
-      if (canonicalBuild.error) return { disabled: true, reason: canonicalBuild.error.message };
-      try {
-        const canonical = canonicalFor(action);
-        const definitionIssue = canonical ? sheetPrimitiveDefinitionIssue(canonical.action) : null;
-        if (definitionIssue) return { disabled: true, reason: definitionIssue };
-        if (canonical && !canonical.action.targeting) {
-          return { disabled: true, reason: 'У канонического действия нет явного targeting-контракта' };
-        }
-        if (canonical && sheetActionRequiresActorTargets(canonical.action) && !pendingCombat) {
-          return {
-            disabled: true,
-            reason: 'Этот канонический примитив требует выбора персонажа и явных фактов цели; продолжение ещё не подключено',
-          };
-        }
-        if (pendingCombat && encounterId) {
-          return { disabled: true, reason: 'Двухлистовая атомарная команда пока недоступна внутри онлайн-боя' };
-        }
-        const legacyCombat = pendingCombat && combatContinuation.session?.catalogAuthority !== 'live'
-          && !!combatContinuation.session;
-        if (legacyCombat && certifiedCombat.loading) {
-          return { disabled: true, reason: 'Проверяется сертифицированный combat release' };
-        }
-        if (legacyCombat && certifiedCombat.error) {
-          return { disabled: true, reason: certifiedCombat.error.message };
-        }
-        if (pendingCombat && canonical) {
-          const existing = combatContinuation.session;
-          if (existing) requireCombatSessionAuthority(existing);
-          if (!existing || existing.catalogAuthority === 'live') {
-            assertLiveSheetCombatActorAction(canonical.action, canonical.runtime.world.actors[character.id]);
-          } else {
-            assertCertifiedSheetCombatActorAction(
-              canonical.action,
-              canonical.runtime.world.actors[character.id],
-              certifiedCombat.catalog!,
-            );
-          }
-        }
-        if (pendingCombat && !Number.isSafeInteger(character.runtime_revision)) {
-          return { disabled: true, reason: 'Сервер не вернул runtime_revision персонажа' };
-        }
-        if (pendingCombat && combatContinuation.error) {
-          return { disabled: true, reason: combatContinuation.error.message };
-        }
-        if (pendingCombat && combatContinuation.session?.world.pendingResolution) {
-          return { disabled: true, reason: 'Сначала завершите ожидающее решение' };
-        }
-        if (canonical) {
-          const timingIssue = sheetPrimitiveCastTimingIssue(
-            canonical,
-            encounterId ? 'encounter' : 'exploration',
-          );
-          if (timingIssue) return { disabled: true, reason: timingIssue };
-        }
-        collectSheetPrimitiveChoices(canonical, encounterId ? 'encounter' : 'exploration');
-      } catch (cause) {
-        return {
-          disabled: true,
-          reason: playerFacingSheetActionError(cause),
-        };
-      }
-    }
-    const avail = weaponActionAvailability(action.mechanics, runtime.equipment, equipCards,passives);
-    if (!avail.available) return { disabled: true, reason: avail.reason };
-    if (!primitive
-      && !legacyUnarmedTargetAction(action)
-      && !(selectedSheetTarget && actionInteractsWithTarget(action.mechanics))) {
-      const targetFactsIssue = explicitSheetTargetFactsIssue(action.mechanics, {
-        armorClass: targetAc,
-        savingThrowModifier: targetSaveMod,
-      });
-      if (targetFactsIssue) return { disabled: true, reason: targetFactsIssue };
-    }
-    const payableMechanics = projectQuickenedSpellCost(
-      projectActionSurgeCost(
-        action.mechanics,
-        runtime,
-        action.spellRef ? 'spell' : 'nonspell',
-      ),
-      runtime,
-      action.spellRef ? 'spell' : 'nonspell',
-    );
-    const activation = payableMechanics.activation as Record<string, unknown> | undefined;
-    const baseCost = (activation?.cost as Record<string, unknown>[]) ?? [];
-    // D: Недееспособность запрещает экономику хода — гейтим действие, если его стоимость включает
-    // запрещённый тип (действие/бонусное/реакция) или оно требует концентрации при её запрете.
-    const capReason = deniedActionReason(action, baseCost);
-    if (capReason) return { disabled: true, reason: capReason };
-    if (primitive) {
-      const nonSlotCost = baseCost.filter((entry) => (
-        String(entry.resource ?? '') !== 'spell_slot'
-      ));
-      const payableRuntime = canonicalBuild.runtime?.world.actors[character.id]?.runtime ?? runtime;
-      if (nonSlotCost.length && !canPay(payableRuntime, nonSlotCost).ok) {
-        return { disabled: true, reason: 'Недостаточно ресурсов' };
-      }
-      return { disabled: busy };
-    }
-    const cost = baseCost;
-    // Апкаст: спелл доступен при любом слоте ≥ базового круга; freeuse снимает требование
-    // ячейки (не действия) — заклинание всё равно требует свободного действия/бонуса.
-    const payable = !cost.length || payableWithUpcast(runtime, cost, !!freeuseFor(action));
-    if (!payable) {
-      // Внятная причина для нехватки предмета-стоимости (боеприпас/зелье): показываем имя.
-      const miss = cost.find((c) => String(c.resource ?? '') === 'item'
-        && inventoryQty(runtime, String(c.card_id ?? '')) < costAmount(c));
-      if (miss) {
-        const name = (typeof miss.name === 'string' && miss.name)
-          || equipCards.get(String(miss.card_id ?? ''))?.name || 'боеприпас';
-        return { disabled: true, reason: `Нет: ${name}` };
-      }
-      return { disabled: true, reason: 'Недостаточно ресурсов' };
-    }
-    return { disabled: busy };
+  const actionAvailabilityContext = {
+    canonicalBuild,
+    campActionAllowsAlly,
+    character,
+    panelDisabledReason,
+    pendingAtomicRetry,
+    runtime,
+    ctx,
+    contextualCostProjection,
+    canonicalFor,
+    encounterId,
+    combatContinuation,
+    certifiedCombat,
+    requireCombatSessionAuthority,
+    equipCards,
+    passives,
+    selectedSheetTarget,
+    targetAc,
+    targetSaveMod,
+    deniedActionReason,
+    busy,
+    freeuseFor,
   };
+  const disabledInfo = (action: SheetAction) => sheetActionAvailability(action, actionAvailabilityContext);
 
   const activeEffectGroups = groupActiveEffectsForDisplay(runtime.activeEffects);
   const canonicalConcentration = runtime.activeEffects.some(
@@ -3157,46 +2826,6 @@ export default function SheetActionsPanel({
     await apply(result.state, result.events);
   };
 
-  const spellIsPrepared = (action: SheetAction): boolean => {
-    if (!action.spellRef) return true;
-    const canonical = canonicalBuild.runtime;
-    if (!canonical) return false;
-    const access = canonical.world.actors[canonical.actorId]?.spellcastingAccess;
-    if (!access) return false;
-    const sourceActions = canonical.actionsFor?.(action) ?? [];
-    return sourceActions.some((candidate) => isSpellActionPrepared(access, candidate.id));
-  };
-
-  const actionBlockActions = actions.filter((action) => {
-    const projectedMechanics = projectQuickenedSpellCost(
-      projectActionSurgeCost(
-        action.mechanics,
-        runtime,
-        action.spellRef ? 'spell' : 'nonspell',
-      ),
-      runtime,
-      action.spellRef ? 'spell' : 'nonspell',
-    );
-    const activation = projectedMechanics.activation as Record<string, unknown> | undefined;
-    // Reactions remain actor capabilities for canonical combat, but are never
-    // manually activatable entries in the ordinary Action block.
-    if (activation?.mode === 'reaction') return false;
-    return action.group !== 'spell' || spellIsPrepared(action);
-  });
-
-  const allGroups = sheetActionGroups(actionBlockActions);
-  // Режим «только заклинания»: группировка по кругам (тот же SheetActionLine и то же
-  // поведение по клику/наведению, что и в блоке «Действия»).
-  const spellLevelGroups: { key: string; label: string; items: SheetAction[] }[] = (() => {
-    const m = new Map<number, SheetAction[]>();
-    for (const a of sheetSpellActionsForPresentation(allActions)) {
-      const lvl = a.spellRef?.level ?? a.level ?? 0;
-      if (!m.has(lvl)) m.set(lvl, []);
-      m.get(lvl)!.push(a);
-    }
-    return [...m.entries()].sort((x, y) => x[0] - y[0]).map(([lvl, items]) => ({ key: `lvl-${lvl}`, label: getSpellLevelLabel(lvl), items }));
-  })();
-  const groups = spellsOnly ? spellLevelGroups : allGroups;
 
   const combatSession = combatContinuation.session;
   const combatActorNames = combatSession
@@ -3426,55 +3055,14 @@ export default function SheetActionsPanel({
         </div>
       )}
 
-      <SheetActionGroups groups={groups} icons={actionsAsIcons} bySpellLevel={spellsOnly} renderAction={(action) => {
-              // Loading/build failures are not preparation failures. Preserve
-              // their real reason in the hover card until canonical access is
-              // available; only then can an actor-owned grant be called
-              // unprepared.
-              const preparationBlocked = Boolean(
-                action.spellRef
-                && canonicalBuild.runtime
-                && !canonicalBuild.error
-                && !spellIsPrepared(action),
-              );
-              const triggerOnlyReason = sheetTriggerOnlyReason(action.mechanics);
-              const { disabled, reason } = preparationBlocked
-                ? { disabled: true, reason: 'Заклинание не подготовлено' }
-                : triggerOnlyReason
-                  ? { disabled: true, reason: triggerOnlyReason }
-                  : disabledInfo(action);
-              const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment, runtime, passives) ?? undefined;
-              return (
-                <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>
-                <SheetActionLine
-                  name={sheetActionDisplayName(action)}
-                  imageUrl={action.imageUrl}
-                  sourceLabel={action.sourceLabel ?? (action.group === 'basic' ? 'Базовое действие' : undefined)}
-                  description={action.group === 'basic' ? action.description ?? action.name : undefined}
-                  detail={actionDetail(action)}
-                  level={action.level}
-                  variant={actionsAsIcons ? 'icon' : 'row'}
-                  actionRef={action.actionRef}
-                  itemRef={action.itemRef}
-                  runtime={runtime}
-                  effectRef={action.effectRef}
-                  spellRef={action.spellRef}
-                  spellcasting={ruleState.spellcasting
-                    ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack }
-                    : undefined}
-                  weaponAttackPreview={weaponPreview}
-                  disabled={disabled}
-                  disabledTitle={reason ?? 'Недостаточно ресурсов'}
-                  inlineDisabledReason={!panelDisabledReason}
-                  disableHover={disableHoverPreviews}
-                  inspectMode={!!onInspectAction}
-                  onActivate={() => onInspectAction
-                    ? onInspectAction(action, () => { void runAction(action); }, disabled ? (reason ?? 'Недостаточно ресурсов') : undefined)
-                    : runAction(action)}
-                />
-                </div>
-              );
-      }}/>
+      <SheetActionList
+        actions={actions} allActions={allActions} spellsOnly={spellsOnly}
+        actionsAsIcons={actionsAsIcons} runtime={runtime} ctx={ctx} passives={passives}
+        canonicalBuild={canonicalBuild} disabledInfo={disabledInfo}
+        spellcasting={ruleState.spellcasting} panelDisabledReason={panelDisabledReason}
+        disableHoverPreviews={disableHoverPreviews} onInspectAction={onInspectAction}
+        runAction={runAction}
+      />
 
       {slotPick && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-label="Выбор источника оплаты заклинания">

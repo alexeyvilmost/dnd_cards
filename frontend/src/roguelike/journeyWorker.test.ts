@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import fixture from './pinnedFighter.fixture.json';
+import fixture from './testing/currentPinnedFixture';
 import type {ForgeCharacter} from '../character/types';
 import type {FrozenCombatCatalog} from './combatCatalog';
 import {executeJourneyCheck,executeJourneyEffect} from './journeyWorker';

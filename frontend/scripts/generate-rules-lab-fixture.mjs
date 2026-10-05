@@ -6,7 +6,7 @@ const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const frontendRoot = resolve(scriptDirectory, '..');
 const artifactPath = resolve(
   frontendRoot,
-  'src/pages/rulesLabFixture.generated.json',
+  'src/pages/rulesLabFixture.v6.generated.json',
 );
 const args = new Set(process.argv.slice(2));
 const checkOnly = args.delete('--check') || args.delete('--dry-run');

@@ -110,10 +110,12 @@ describe('Playwright certified condition database release', () => {
   it.each([
     {
       name: 'row set',
+      mode: 'offline_fixture',
       mutate: (rows: JsonRecord[]) => rows.filter((row) => row.card_number !== 'COND-blinded'),
     },
     {
       name: 'release pin',
+      mode: 'database_release',
       mutate: (rows: JsonRecord[]) => {
         const next = cloneJson(rows);
         const support = next.find((row) => row.card_number === 'COND-blinded')!.support as JsonRecord;
@@ -123,6 +125,7 @@ describe('Playwright certified condition database release', () => {
     },
     {
       name: 'executable projection',
+      mode: 'database_release',
       mutate: (rows: JsonRecord[]) => {
         const next = cloneJson(rows);
         const condition = next.find((row) => row.card_number === 'COND-blinded')!;
@@ -130,11 +133,24 @@ describe('Playwright certified condition database release', () => {
         return next;
       },
     },
-  ])('keeps the runtime offline when the certified $name drifts', async ({ mutate }) => {
-    const release = materializePlaywrightCertifiedConditionRelease(sourceCatalogs());
-    serveConditions(mutate(release.catalogs.effects));
-    await expect(loadConditions({ expectedRelease: CURRENT_RELEASE })).resolves.toMatchObject({
+    {
+      name: 'invalid executable declaration',
       mode: 'offline_fixture',
-    });
+      mutate: (rows: JsonRecord[]) => {
+        const next=cloneJson(rows); next.find(row=>row.card_number==='COND-blinded')!.mechanics={}; return next;
+      },
+    },
+  ])('uses current DB completeness rather than archived certification for $name', async ({ name, mode, mutate }) => {
+    const release = materializePlaywrightCertifiedConditionRelease(sourceCatalogs());
+    serveConditions(release.catalogs.effects);
+    const original=await loadConditions({expectedRelease:CURRENT_RELEASE});
+    vi.restoreAllMocks();
+    serveConditions(mutate(release.catalogs.effects));
+    const result=await loadConditions({expectedRelease:CURRENT_RELEASE});
+    expect(result.mode).toBe(mode);
+    if(result.mode==='database_release'&&original.mode==='database_release') {
+      if(name==='release pin') expect(result.setHash).toBe(original.setHash);
+      else expect(result.setHash).not.toBe(original.setHash);
+    }
   });
 });

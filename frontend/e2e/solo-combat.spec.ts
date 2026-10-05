@@ -138,7 +138,7 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   await expectPopoverInsideViewport(page);
 
   if ((page.viewportSize()?.width ?? 0) > 820) {
-    const bottomAbilityTile = page.locator('.forge-spell-icon.ready:visible').last();
+    const bottomAbilityTile = page.getByRole('button', {name:'Волна грома',exact:true}).first();
     await expect(bottomAbilityTile).toBeVisible();
     await bottomAbilityTile.scrollIntoViewIfNeeded();
     await bottomAbilityTile.hover();
@@ -158,9 +158,9 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   await acceptCombatOpening(page);
 
   await expect(page).toHaveURL(new RegExp(`/characters-v3/${CHARACTER_ID}/combat`));
-  await expect(page.getByLabel('Порядок инициативы')).toContainText('Бард-помощник');
+  await expect(page.getByLabel('Порядок инициативы').getByLabel(/Бард-помощник/)).toBeVisible();
   const hotbar = page.getByLabel('Панель действий');
-  await expect(hotbar).toContainText('Бард-помощник');
+  await expect(hotbar.getByLabel('Бард-помощник',{exact:true})).toBeVisible();
   const summary = hotbar.locator('.combat-hotbar__character-summary');
   const utility = hotbar.getByRole('group', { name: 'Управление полем' });
   const actions = hotbar.getByLabel('Действия персонажа');
@@ -170,13 +170,22 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
   expect(summaryBox).not.toBeNull();
   expect(utilityBox).not.toBeNull();
   expect(actionsBox).not.toBeNull();
-  const compactHotbar = (page.viewportSize()?.width ?? 0) <= 560;
-  if (compactHotbar) {
-    expect(utilityBox!.x).toBeGreaterThanOrEqual(summaryBox!.x + summaryBox!.width - 1);
-    expect(actionsBox!.y).toBeGreaterThanOrEqual(summaryBox!.y + summaryBox!.height - 1);
-  } else {
-    expect(utilityBox!.y).toBeGreaterThanOrEqual(summaryBox!.y + summaryBox!.height - 1);
-    expect(utilityBox!.x).toBeLessThan(actionsBox!.x);
+  // The current compact hotbar puts field tools above the action dock. Its
+  // usable regions must remain visible and must not cover each other.
+  const regions = [summaryBox!, utilityBox!, actionsBox!];
+  for (const box of regions) {
+    expect(box.x).toBeGreaterThanOrEqual(-1);
+    expect(box.y).toBeGreaterThanOrEqual(-1);
+    expect(box.x + box.width).toBeLessThanOrEqual(page.viewportSize()!.width + 1);
+    expect(box.y + box.height).toBeLessThanOrEqual(page.viewportSize()!.height + 1);
+  }
+  for (let left = 0; left < regions.length; left += 1) {
+    for (const right of regions.slice(left + 1)) {
+      const box = regions[left];
+      const overlapX = Math.min(box.x + box.width, right.x + right.width) - Math.max(box.x, right.x);
+      const overlapY = Math.min(box.y + box.height, right.y + right.height) - Math.max(box.y, right.y);
+      expect(overlapX <= 1 || overlapY <= 1, 'Hotbar controls overlap').toBe(true);
+    }
   }
 
   const actionLayout = await actions.evaluate((node) => {
@@ -190,15 +199,9 @@ test('combat setup invites an owned ally and keeps shared action cards inside th
       scrollable: node.scrollWidth > node.clientWidth,
     };
   });
-  if (compactHotbar) {
-    expect(actionLayout.wrap).toBe('nowrap');
-    expect(actionLayout.rowTops).toHaveLength(1);
-  } else {
-    expect(actionLayout.flow).toBe('column');
-    expect(actionLayout.rows).toBe(2);
-    expect(actionLayout.rowTops.length).toBeLessThanOrEqual(2);
-    if (actionLayout.scrollable) expect(actionLayout.rowTops).toHaveLength(2);
-  }
+  expect(actionLayout.rowTops.length).toBeGreaterThan(0);
+  expect(actionLayout.rowTops.length).toBeLessThanOrEqual(2);
+  if (actionLayout.scrollable) expect(actionLayout.rowTops).toHaveLength(2);
 
   const combatAction = actions.locator('.cs-action-tile').last();
   await combatAction.scrollIntoViewIfNeeded();
@@ -231,8 +234,8 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
 
   await expect(page).toHaveURL(new RegExp(`/characters-v3/${CHARACTER_ID}/combat`));
   await expect(page.getByTestId('tactical-map')).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByLabel('Панель действий')).toContainText('Лучник-дварф');
-  await expect(page.getByLabel('Порядок инициативы')).toContainText('Гоблин-воин');
+  await expect(page.getByLabel('Панель действий').getByLabel('Лучник-дварф',{exact:true})).toBeVisible();
+  await expect(page.getByLabel('Порядок инициативы').getByLabel(/Гоблин-воин/)).toBeVisible();
   await expect(page.getByRole('button', { name: /Огненный снаряд/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Малая иллюзия/ })).toBeVisible();
 
@@ -278,11 +281,11 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
     inspectedMonsterBox!.x + inspectedMonsterBox!.width / 2,
     inspectedMonsterBox!.y + inspectedMonsterBox!.height / 2,
   );
-  await expect(page.getByText('I / Ш — изучить противника', { exact: true })).toBeVisible();
+  await expect(page.locator('.combat-enemy-preview').getByText('Нажмите I, чтобы узнать подробнее', { exact: true })).toBeVisible();
   await page.keyboard.press('i');
   const inspector = page.getByRole('complementary', { name: 'Информация: Гоблин-воин' });
   await expect(inspector).toBeVisible();
-  await expect(inspector).toContainText('Класс доспеха');
+  await expect(inspector).toContainText('КД');
   await expect(inspector).toContainText('Скорость, фт.');
   await expect(inspector).toContainText('Скимитар');
   const inspectorBox = await inspector.boundingBox();
@@ -292,20 +295,25 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
 
   const utility = page.getByRole('group', { name: 'Управление полем' });
   await expect(utility.getByRole('button', { name: /Движение/ })).toBeVisible();
-  await expect(utility.getByRole('button', { name: /Лист/ })).toBeVisible();
+  await expect(page.getByLabel('Панель действий').getByRole('button', { name: 'Открыть лист персонажа', exact: true })).toBeVisible();
   await expect(page.getByLabel('Действия персонажа').getByRole('button', { name: /Движение|Лист/ })).toHaveCount(0);
   await utility.getByRole('button', { name: /Движение/ }).click();
+  const movement = page.getByRole('dialog', { name: 'Перемещение', exact: true });
+  await expect(movement.getByRole('button', { name: /^Ходьба/ })).toHaveAttribute('aria-pressed', 'true');
+  await movement.getByRole('button', { name: 'Применить', exact: true }).click();
   await expect(page.locator('.tactical-cell.is-move-reachable').first()).toBeVisible();
   expect(await page.locator('.tactical-cell.is-move-reachable.has-token').count()).toBe(0);
   await utility.getByRole('button', { name: /Движение/ }).click();
   await expect(page.locator('.tactical-cell.is-move-reachable')).toHaveCount(0);
 
   const hotbarBox = await page.getByLabel('Панель действий').boundingBox();
-  const resourceFilter = page.getByRole('group', { name: 'Фильтр действий по ресурсу' });
+  const resourceFilter = page.getByRole('group', { name: 'Ресурсы персонажа', exact: true });
   const resourceFilterBox = await resourceFilter.boundingBox();
   expect(hotbarBox).not.toBeNull();
   expect(resourceFilterBox).not.toBeNull();
-  expect(resourceFilterBox!.y + resourceFilterBox!.height).toBeLessThanOrEqual(hotbarBox!.y);
+  expect(resourceFilterBox!.x).toBeGreaterThanOrEqual(0);
+  expect(resourceFilterBox!.x + resourceFilterBox!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  expect(resourceFilterBox!.y + resourceFilterBox!.height).toBeLessThanOrEqual(hotbarBox!.y + hotbarBox!.height);
 
   const resourceTile = resourceFilter.locator('.res-tile').first();
   await expect(resourceTile).toBeVisible();
@@ -341,7 +349,7 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await page.locator(`a.sheet-in-battle[href="/characters-v3/${CHARACTER_ID}/combat"]`).first().click();
   await expect(page.getByTestId('tactical-map')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Лист', exact: true }).last().click();
+  await page.getByRole('button', { name: 'Открыть лист персонажа', exact: true }).click();
   const drawer = page.locator('.combat-sheet-drawer');
   await expect(drawer.locator('.combat-sheet-sidebar.csheet-col')).toBeVisible();
   await expect(drawer).toContainText('Характеристики');
@@ -372,6 +380,7 @@ test('real character sheet: selects a monster and executes Thunderwave on the ta
   await monsterCell.hover();
   await expect(page.locator('.tactical-cell.is-area-preview')).toHaveCount(9);
   await monsterCell.click();
+  await page.getByRole('button', { name: 'Показать журнал боя', exact: true }).click();
   await expect(page.locator('.combat-log')).toContainText('Лучник-дварф: Волна грома', { timeout: 30_000 });
   const allyDamageEntry = page.locator('.combat-log-entry--ally-damage').first();
   if ((page.viewportSize()?.width ?? 0) > 900) await expect(allyDamageEntry).toBeVisible();

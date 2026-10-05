@@ -1,0 +1,1752 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-10-05",
+  "scope": [
+    "REL-01",
+    "REL-02",
+    "REL-03",
+    "REL-04",
+    "REL-05",
+    "REL-06",
+    "DB-01",
+    "DB-02",
+    "DB-03",
+    "DB-04",
+    "CLEAN-01"
+  ],
+  "mode": "read-only completion audit; only these two reports written",
+  "source_changes": false,
+  "tests_reexecuted": false,
+  "plan": {
+    "path": "docs/audits/2026-10-04/agent-plan.json",
+    "sha256": "e06c9d2942116a9f0bcedd8d5a3df655aca7868853e2506b049559423e9c7c38"
+  },
+  "status_meaning": {
+    "proven": "Указанный локальный подпункт имеет код и фактическое сохранённое доказательство в указанных пределах.",
+    "incomplete": "Неисполненная локальная реализация/проверка; не сводить к Docker или внешнему доступу.",
+    "external": "Нужна отсутствующая локальная среда либо отдельно разрешённый внешний этап; actual PASS отсутствует."
+  },
+  "final_gates": [
+    {
+      "file": "outputs/testing/final-core-5/report.json",
+      "sha256": "ea9ceea8fed28fb8747c38946fda8f7674237450ec31c11b35fc2f207bfa2101",
+      "suite": "core",
+      "status": "passed",
+      "duration_ms": 268898,
+      "source_snapshot": {
+        "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+        "files": 4313
+      },
+      "source_stability": {
+        "unchanged": true,
+        "files": 4313,
+        "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb"
+      },
+      "cleanup": "stopped"
+    },
+    {
+      "file": "outputs/testing/final-extended-3/report.json",
+      "sha256": "e652a6b52c15bdbee3e093253822c383634d2ba1a73fa89bca7a1d3cd0a9f043",
+      "suite": "extended",
+      "status": "passed",
+      "duration_ms": 1095961,
+      "source_snapshot": {
+        "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+        "files": 4313
+      },
+      "source_stability": {
+        "unchanged": true,
+        "files": 4313,
+        "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb"
+      },
+      "cleanup": "stopped"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "REL-01",
+      "title": "Единая карта зависимостей для проверок, сборки и выкатки",
+      "recommendation": "proven_local",
+      "summary": "Все заявленные локальные planner/wiring критерии подтверждены.",
+      "requirements": [
+        {
+          "id": "R01-plan",
+          "task": "REL-01",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Прочитать AGENTS.md, docs/data-driven-rules.md и аудит; описать реальные inputs frontend, backend, worker и инфраструктуры. Проверить транзитивные импорты worker/artifact.ts, общие engine/character/roguelike/schema inputs и backend presentation JSON."
+            },
+            {
+              "id": "S2",
+              "text": "Создать один версионированный manifest зависимостей и planner, пригодный для локального gate, CI и будущего deploy. Сохранять esbuild metafile как проверяемый список worker build inputs; не объявлять ручные globs полной заменой графа импортов."
+            },
+            {
+              "id": "S3",
+              "text": "Учитывать добавление, изменение, удаление и переименование файлов. Для deployment сравнивать последний успешно развёрнутый manifest с exact candidate SHA, включая несколько коммитов и изменения после провалившегося выпуска. Для локальной проверки учитывать выбранный baseline, staged, unstaged и допустимые untracked исходники."
+            },
+            {
+              "id": "S4",
+              "text": "Описать консервативное поведение для неизвестной общей зависимости, изменённых build scripts, Dockerfiles, lockfiles и инфраструктуры; docs-only изменения не должны запускать application rebuild при отсутствии действительной build зависимости."
+            },
+            {
+              "id": "S6",
+              "text": "Документировать входы/выходы, выбранный baseline и объяснение включения каждого компонента в машинном результате planner. Не включать секреты и содержимое пользовательских артефактов."
+            },
+            {
+              "id": "V1",
+              "text": "Table-driven tests: UI-only, Go-only, worker shell, engine-only, общий backend JSON, lockfile, Dockerfile, deletion, rename, docs-only, unknown path."
+            },
+            {
+              "id": "V2",
+              "text": "Сценарий: первый deploy не прошёл, следующий содержит ещё один commit; planner включает изменения обоих коммитов относительно действующего manifest."
+            },
+            {
+              "id": "V3",
+              "text": "Сценарий после push, когда origin/main совпадает с HEAD: явно выбранный release baseline продолжает давать правильный набор."
+            },
+            {
+              "id": "V4",
+              "text": "Проверка imports/metafile выявляет общий source dependency, отсутствующий в ручной карте."
+            },
+            {
+              "id": "A2",
+              "text": "Изменение общего движка включает frontend и worker; удаления не теряются."
+            },
+            {
+              "id": "A3",
+              "text": "Результат содержит точные baseline/candidate identities и причины выбора компонентов."
+            }
+          ],
+          "claim": "Единый dependency manifest, Git change planner и проверка настоящего worker metafile; rename/delete/untracked, точный deployed baseline и консервативный fallback.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/release/component-dependencies.json"
+            },
+            {
+              "path": "scripts/release/plan-components.mjs"
+            },
+            {
+              "path": "scripts/release/plan-components.test.mjs",
+              "line": 87
+            },
+            {
+              "path": "scripts/release/plan-components.test.mjs",
+              "line": 137
+            },
+            {
+              "path": "frontend/worker/build.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-01.md"
+            }
+          ],
+          "limits": "Проверен локальный контракт; manual map намеренно может выбрать лишнюю сборку."
+        },
+        {
+          "id": "R01-wiring",
+          "task": "REL-01",
+          "requirements": [
+            {
+              "id": "S5",
+              "text": "Подключить planner к quick-gate и CI без ослабления обязательных проверок. Не менять remote, branch protection и production pipeline: такие подключения требуют отдельного явного запроса."
+            },
+            {
+              "id": "A1",
+              "text": "Один и тот же planner определяет component set для local gate, CI и deploy plan."
+            },
+            {
+              "id": "A4",
+              "text": "Выполнение задания не запускает commit, push или внешнюю выкатку."
+            }
+          ],
+          "claim": "Planner используется общим local/CI runner и release plan; remote действия не выполнялись.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/testing/run.mjs",
+              "line": 7
+            },
+            {
+              "path": "scripts/testing/ci-policy.mjs",
+              "line": 4
+            },
+            {
+              "path": "scripts/release/quick-gate.ps1",
+              "line": 26
+            },
+            {
+              "path": "scripts/release/ci-release.mjs",
+              "line": 89
+            },
+            {
+              "path": ".github/workflows/ci.yml"
+            }
+          ],
+          "limits": "Финальные core/extended проверили текущее дерево; это не запуск GitHub workflow."
+        }
+      ]
+    },
+    {
+      "id": "REL-02",
+      "title": "Минимальные Docker-контексты и измеряемый кеш сборки",
+      "recommendation": "prepared_pending_environment",
+      "summary": "Contexts/layers/source closure готовы; actual OCI builds/cache/smoke не выполнены.",
+      "requirements": [
+        {
+          "id": "R02-inputs",
+          "task": "REL-02",
+          "requirements": [
+            {
+              "id": "S2",
+              "text": "Сверить все COPY/embed/raw-import inputs с REL-01. Исправить устаревший frontend context ./frontend в compose-файлах, несовместимый с текущими COPY frontend/... и общими backend каталогами."
+            },
+            {
+              "id": "S3",
+              "text": "Ввести минимальные contexts или BuildKit named contexts. Исключить локальные БД, дампы, output/tmp и зависимости, не исключая production source, shared data, лицензии и необходимые assets."
+            },
+            {
+              "id": "S5",
+              "text": "Отделить крупный static asset слой от изменяемого application source там, где это подтверждённо уменьшает invalidation. Не переносить media во внешний storage в рамках этой задачи без отдельного запроса."
+            },
+            {
+              "id": "V2",
+              "text": "Build из чистого локального archive без node_modules, .env, snapshots и ранее собранного dist."
+            },
+            {
+              "id": "A3",
+              "text": "Контексты и образы не содержат локальных дампов/секретов/экспериментальных результатов."
+            },
+            {
+              "id": "A4",
+              "text": "Production build/typecheck остаётся обязательным и не заменён только Vite transpilation."
+            }
+          ],
+          "claim": "Исправлены contexts/allowlists/COPY closure; media layer отделён; чистые source snapshots и native frontend/worker/Linux-target Go сборки выполнены.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/release/measure-local.mjs"
+            },
+            {
+              "path": "scripts/release/measure-local.test.mjs"
+            },
+            {
+              "path": "frontend/Dockerfile"
+            },
+            {
+              "path": "infra/Dockerfile.rules-worker"
+            },
+            {
+              "path": "backend/Dockerfile"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-02.md"
+            }
+          ],
+          "limits": "V2/A3 доказаны для source snapshots, не содержимого OCI image. Native dependency junction не является чистым npm ci."
+        },
+        {
+          "id": "R02-layers",
+          "task": "REL-02",
+          "requirements": [
+            {
+              "id": "S4",
+              "text": "Стабилизировать dependency layers и добавить подходящие BuildKit cache mounts для npm/Go. Подготовить external cache конфигурацию с отдельным scope на компонент, не включая секреты в ARG/COPY/layers."
+            },
+            {
+              "id": "A4",
+              "text": "Production build/typecheck остаётся обязательным и не заменён только Vite transpilation."
+            }
+          ],
+          "claim": "Cache mounts/scopes и обязательные TypeScript/production build подготовлены; Compose/Bake разобраны настоящим CLI.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "infra/docker-bake.hcl"
+            },
+            {
+              "path": "infra/docker-bake.cache-gha.hcl"
+            },
+            {
+              "path": "frontend/Dockerfile"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-02.md"
+            }
+          ],
+          "limits": "Синтаксис и input fingerprints не доказывают cache hits."
+        },
+        {
+          "id": "R02-runtime",
+          "task": "REL-02",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "На изолированном локальном Linux/Docker стенде снять cold/warm baseline: размер contexts, времени dependency install/compile/bundle, image bytes и ресурсы. Разделить tracked git archive и ручную сборку из рабочего root с локальными артефактами."
+            },
+            {
+              "id": "S6",
+              "text": "Повторить измерения и чистые сборки всех трёх компонентов без доступа к локальным test fixtures. Изменение server builder или registry configuration относится к отдельному внешнему этапу и требует явного запроса."
+            },
+            {
+              "id": "V1",
+              "text": "Один cold и два warm build каждого компонента с фиксированными source/runtime versions."
+            },
+            {
+              "id": "V2",
+              "text": "Build из чистого локального archive без node_modules, .env, snapshots и ранее собранного dist."
+            },
+            {
+              "id": "V3",
+              "text": "Смена UI, engine, media и lockfile инвалидирует ожидаемые слои; удаление input не скрывается старым кешем."
+            },
+            {
+              "id": "V4",
+              "text": "Smoke локальных frontend/backend/worker контейнеров и проверка каноничных assets/preview imports."
+            },
+            {
+              "id": "A1",
+              "text": "Все поддерживаемые compose/build entrypoints собираются из документированного контекста."
+            },
+            {
+              "id": "A2",
+              "text": "Измерены context bytes и cache hits; отчёт не подменяет фактические времена обещанным процентом ускорения."
+            },
+            {
+              "id": "A3",
+              "text": "Контексты и образы не содержат локальных дампов/секретов/экспериментальных результатов."
+            }
+          ],
+          "claim": "Cold + два warm build каждого компонента, чистый install, фактические transferred bytes/cache invalidation/image sizes и container smoke.",
+          "status": "external",
+          "evidence": [
+            {
+              "path": "scripts/release/measure-local.mjs"
+            },
+            {
+              "path": "docs/release-builds.md"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-02.md"
+            },
+            {
+              "path": "outputs/testing/environment-readiness-current.json"
+            }
+          ],
+          "limits": "Обязательная локальная проверка ожидает Linux Docker/BuildKit; pins должны быть настоящими. Это environment gate, не требование TimeWeb."
+        }
+      ]
+    },
+    {
+      "id": "REL-03",
+      "title": "Manifest релиза и достоверная идентификация компонентов",
+      "recommendation": "prepared_pending_environment",
+      "summary": "Identity/schema/native replay готовы; POSIX и final images/mixed rollback не исполнены.",
+      "requirements": [
+        {
+          "id": "R03-contract",
+          "task": "REL-03",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Зафиксировать различие release SHA, component source SHA, immutable image digest, input fingerprint, worker executable artifact hash и schema/protocol compatibility. Проверить актуальные файлы реализации health/build identity перед изменением."
+            },
+            {
+              "id": "S2",
+              "text": "Создать versioned manifest schema и validator. Старые single-SHA releases читать через явный адаптер; неизвестная версия, некорректный digest или несовместимый protocol должны отклоняться до mutation."
+            },
+            {
+              "id": "S3",
+              "text": "Вшивать component identity при сборке. Runtime release identity показывать отдельным полем; не объявлять переиспользованный image новой сборкой через подстановку SOURCE_COMMIT."
+            },
+            {
+              "id": "S4",
+              "text": "Изменить compose/identity contracts так, чтобы каждый компонент мог ссылаться на свой digest/source SHA. Для worker добавить проверяемые artifactHash, runtime version и supported transport capabilities."
+            },
+            {
+              "id": "S5",
+              "text": "Описать manifest-based rollback и retention references: переиспользованный image защищён всеми retained manifests; старые artifact hashes защищены ссылками текущих и исторических боёв, а не только числом релизов."
+            },
+            {
+              "id": "V1",
+              "text": "Schema tests для валидного mixed manifest, legacy adapter, отсутствующего компонента, неверного digest/artifact hash и несовместимой версии."
+            },
+            {
+              "id": "V2",
+              "text": "Повторное использование старого frontend/backend image сообщает прежний component SHA и новый release ID раздельно."
+            },
+            {
+              "id": "V3",
+              "text": "Frontend/backend/worker identities сравниваются с manifest; runtime env не может подменить baked build identity."
+            },
+            {
+              "id": "V4",
+              "text": "Сохранённый бой со старым hash и pending decision читается после нового worker transport release."
+            },
+            {
+              "id": "A1",
+              "text": "Manifest честно описывает mixed versions и является единственным источником состава релиза."
+            },
+            {
+              "id": "A2",
+              "text": "Identity failure блокирует переход локального стенда на новый release."
+            },
+            {
+              "id": "A4",
+              "text": "Требования к runtime/transport/schema совместимости документированы и проверяются автоматически."
+            }
+          ],
+          "claim": "Versioned mixed manifest, baked component identity отдельно от release identity, legacy fail-closed, reference-aware retention и native historical replay.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "infra/release-manifest.schema.json"
+            },
+            {
+              "path": "scripts/release/validate-manifest.mjs"
+            },
+            {
+              "path": "scripts/release/validate-manifest.test.mjs"
+            },
+            {
+              "path": "scripts/release/write-build-identity.mjs"
+            },
+            {
+              "path": "backend/build_info.go"
+            },
+            {
+              "path": "frontend/worker/server.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-03.md"
+            }
+          ],
+          "limits": "Native/fixtures доказывают контракты, но не настоящие mixed final images."
+        },
+        {
+          "id": "R03-posix",
+          "task": "REL-03",
+          "requirements": [
+            {
+              "id": "S3",
+              "text": "Вшивать component identity при сборке. Runtime release identity показывать отдельным полем; не объявлять переиспользованный image новой сборкой через подстановку SOURCE_COMMIT."
+            },
+            {
+              "id": "V3",
+              "text": "Frontend/backend/worker identities сравниваются с manifest; runtime env не может подменить baked build identity."
+            }
+          ],
+          "claim": "Настоящий POSIX writer: atomic build-info, malformed metadata и runtime spoof guards.",
+          "status": "external",
+          "evidence": [
+            {
+              "path": "scripts/release/check-frontend-identity.mjs",
+              "line": 11
+            },
+            {
+              "path": "frontend/write-build-info.sh"
+            },
+            {
+              "path": "scripts/release/ci-images.mjs",
+              "line": 35
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-03.md"
+            }
+          ],
+          "limits": "Standalone проверка явно отказывает на Windows; Git Bash по стандартным путям отсутствует. Статические source assertions не заменяют исполнение shell."
+        },
+        {
+          "id": "R03-images",
+          "task": "REL-03",
+          "requirements": [
+            {
+              "id": "S6",
+              "text": "Подготовить локальные совместимые frontend/backend/worker версии для mixed-version contract checks; существующие capabilities/pinned artifacts не переписывать. Изменение production health/manifest contract допускается только отдельной явно запрошенной выкаткой."
+            },
+            {
+              "id": "V2",
+              "text": "Повторное использование старого frontend/backend image сообщает прежний component SHA и новый release ID раздельно."
+            },
+            {
+              "id": "V3",
+              "text": "Frontend/backend/worker identities сравниваются с manifest; runtime env не может подменить baked build identity."
+            },
+            {
+              "id": "V4",
+              "text": "Сохранённый бой со старым hash и pending decision читается после нового worker transport release."
+            },
+            {
+              "id": "A2",
+              "text": "Identity failure блокирует переход локального стенда на новый release."
+            },
+            {
+              "id": "A3",
+              "text": "Возможен откат manifest/images без DB restore и без переписывания старых боевых артефактов."
+            },
+            {
+              "id": "A4",
+              "text": "Требования к runtime/transport/schema совместимости документированы и проверяются автоматически."
+            }
+          ],
+          "claim": "Actual identity/protocol сравнение всех OCI images, mixed-version cutover и rollback при старом pending бою.",
+          "status": "external",
+          "evidence": [
+            {
+              "path": "scripts/release/docker-rehearsal.mjs"
+            },
+            {
+              "path": "scripts/release/docker-deployment.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-03.md"
+            }
+          ],
+          "limits": "Подготовленные адаптеры существуют; фактический image/runtime acceptance требует Docker."
+        }
+      ]
+    },
+    {
+      "id": "REL-04",
+      "title": "CI-сборка проверенных образов и подготовка доставки через реестр",
+      "recommendation": "incomplete_local_and_environment",
+      "summary": "CI path подготовлен; отдельный local registry driver отсутствует, затем нужен OCI rehearsal.",
+      "requirements": [
+        {
+          "id": "R04-ci",
+          "task": "REL-04",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Подготовить workflow_dispatch pipeline с exact candidate SHA и immutable inputs; проверять принадлежность разрешённой ветке и успешные обязательные проверки именно этого SHA. Не читать движущийся main повторно посреди выпуска."
+            },
+            {
+              "id": "S2",
+              "text": "Включить REL-01 planner, parallel component build matrix и отдельные external cache scopes. Не собирать неизменившийся компонент, если его digest из доверенного manifest доступен и inputs действительно не менялись."
+            },
+            {
+              "id": "S3",
+              "text": "Собирать manifest с image digests, build identity и test evidence. Ограничить права jobs; PR/fork jobs не получают production deploy secrets и не публикуют production release."
+            },
+            {
+              "id": "V1",
+              "text": "Локальная проверка синтаксиса workflow и planner fixtures; фиксированные revisions используемых действий/инструментов."
+            },
+            {
+              "id": "V3",
+              "text": "Проверка прав и conditions: fork/PR не попадают в production publication/deploy boundary."
+            },
+            {
+              "id": "V4",
+              "text": "Каждый digest сопоставляется с exact build source и обязательным test result; неподтверждённый SHA не создаёт готовый release."
+            },
+            {
+              "id": "A1",
+              "text": "Готов проверяемый путь от exact SHA до immutable component images и manifest."
+            },
+            {
+              "id": "A4",
+              "text": "Job failure не публикует manifest как успешно готовый к выпуску."
+            }
+          ],
+          "claim": "Exact candidate/control identities, проверенный source-stable CI report, shared planner, parallel matrix/reuse и guarded publication/ready bundle path.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": ".github/workflows/release.yml"
+            },
+            {
+              "path": "scripts/release/ci-release.mjs"
+            },
+            {
+              "path": "scripts/release/ci-images.mjs"
+            },
+            {
+              "path": "scripts/release/deployed-baseline.mjs"
+            },
+            {
+              "path": "scripts/release/automatic-release.mjs"
+            },
+            {
+              "path": "scripts/release/candidate-rehearsal.mjs"
+            },
+            {
+              "path": "scripts/release/assemble-bundle.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-04.md"
+            }
+          ],
+          "limits": "Доказаны code/contracts; actual images/publication не выполнялись. Старые абзацы REL04.md «manual only» и REL05 bundle missing исторические: текущий workflow_run и collector уже есть."
+        },
+        {
+          "id": "R04-local-registry",
+          "task": "REL-04",
+          "requirements": [
+            {
+              "id": "S4",
+              "text": "На локальном стенде проверить build/publish/pull с локальным OCI registry и сценарии отсутствующего layer/image/manifest. Проверять provenance/достоверность manifest прежде чем он станет deploy input."
+            },
+            {
+              "id": "V2",
+              "text": "Локальный registry rehearsal: changed component publish, reuse старого digest, invalid manifest reject, failed pull, repeated invocation."
+            },
+            {
+              "id": "A1",
+              "text": "Готов проверяемый путь от exact SHA до immutable component images и manifest."
+            },
+            {
+              "id": "A2",
+              "text": "Production host не требуется для сборки или локального принятия задачи."
+            }
+          ],
+          "claim": "Owned loopback registry build/publish/pull, reuse, missing layer/image/manifest и повтор выпуска.",
+          "status": "incomplete",
+          "evidence": [
+            {
+              "path": "scripts/release/ci-release.mjs",
+              "line": 104
+            },
+            {
+              "path": "scripts/release/ci-release.mjs",
+              "line": 151
+            },
+            {
+              "path": "scripts/release/ci-images.mjs",
+              "line": 84
+            },
+            {
+              "path": "docs/release-ci.md",
+              "line": 114
+            },
+            {
+              "path": ".github/workflows/release.yml",
+              "line": 140
+            }
+          ],
+          "limits": "Не только Docker block: отсутствует локальный registry producer/caller. prepareBuildPlan/validateBuildPlan жёстко связывают imageRepository с GHCR; publish требует GitHub control/run. docker-rehearsal лишь потребляет опубликованные digests. Нужен отдельный owned local adapter/driver без ослабления production provenance, затем actual OCI запуск."
+        },
+        {
+          "id": "R04-external",
+          "task": "REL-04",
+          "requirements": [
+            {
+              "id": "S5",
+              "text": "Описать внешний этап: выбор registry, настройка credentials/known-host, permissions и при необходимости GitHub environment. Не создавать registry, secrets, remote workflows/runs и production credentials без отдельного явного запроса."
+            },
+            {
+              "id": "S6",
+              "text": "После отдельного разрешения внешнего этапа выполнить подключения по подготовленному runbook; оставить production cutover выключенным до REL-05 и разрешения владельца. Доступность required reviewers уточнить по плану/видимости repository, не предполагать её."
+            },
+            {
+              "id": "A3",
+              "text": "Внешняя публикация и настройка credentials выполняются только отдельным разрешённым этапом."
+            }
+          ],
+          "claim": "Registry/TimeWeb pull access, credentials, GitHub environment/policy и настоящий exact committed CI run.",
+          "status": "external",
+          "evidence": [
+            {
+              "path": "docs/release-ci.md"
+            },
+            {
+              "path": "infra/release-build-config.json"
+            },
+            {
+              "path": ".github/workflows/release.yml"
+            }
+          ],
+          "limits": "Runbook/disabled config подготовлены. Commit/push/deploy уже разрешены пользователем после проверок; root владеет external execution. Это не оправдывает отсутствие локального registry driver."
+        }
+      ]
+    },
+    {
+      "id": "REL-05",
+      "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
+      "recommendation": "prepared_pending_environment",
+      "summary": "Journal/adapters/capture/collector/additive producer готовы; actual selective OCI matrix не исполнена, зависит от REL04 local seam.",
+      "requirements": [
+        {
+          "id": "R05-local",
+          "task": "REL-05",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Создать новый manifest-based runner с legacy adapter: validate candidate, compare deployed manifest, pull digests, verify identities/protocol/schema, определить изменившиеся сервисы и необходимые миграции."
+            },
+            {
+              "id": "S2",
+              "text": "Сохранить lock, immutable release directories, exact identities, health/readiness, retained frontend assets и старые executable artifacts. Не называть symlink switch атомарной заменой всего HTTP-трафика: Compose обновляет сервисы последовательно."
+            },
+            {
+              "id": "S3",
+              "text": "Обновлять только затронутые сервисы при совместимом contract. Неизменённые backend/worker не restart при UI-only выпуске. Expand/contract migration и backup gate проходят до запуска несовместимой новой версии; DB restore не является application rollback."
+            },
+            {
+              "id": "S4",
+              "text": "Добавить failure recovery и reference-aware retention manifests/images. При повторном запросе с неопределённым прошлым результатом сначала определить текущий state, не повторять migration/cutover вслепую."
+            },
+            {
+              "id": "V2",
+              "text": "Fault injection: corrupt digest, missing artifact, incompatible protocol/schema, failed pull/health, interrupted upload, repeated command."
+            },
+            {
+              "id": "V4",
+              "text": "Два последовательных кандидата и ошибка первого корректно сериализуются; второй включает весь diff от успешно действующего release."
+            },
+            {
+              "id": "A2",
+              "text": "Обязательные проверки блокируют неисправный candidate; rollback возвращает совместимые images/manifest без переписывания данных."
+            },
+            {
+              "id": "A3",
+              "text": "Retention сохраняет все images/artifacts, на которые есть защищённые ссылки."
+            }
+          ],
+          "claim": "Persisted deploy journal, selective plan, recovery/rollback, retained assets/CJS, fresh capture, source DB binding и additive executor 298–300.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/release/deploy-state.mjs"
+            },
+            {
+              "path": "scripts/release/docker-deployment.mjs"
+            },
+            {
+              "path": "scripts/release/capture-host-backup.mjs"
+            },
+            {
+              "path": "scripts/release/prepare-host-release.mjs"
+            },
+            {
+              "path": "scripts/release/migration-rehearsal.mjs"
+            },
+            {
+              "path": "backend/migrations/release_additive.go"
+            },
+            {
+              "path": "backend/migrations/release_schema_proof.go"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-05.md"
+            }
+          ],
+          "limits": "Native PG executor + simulated Docker boundary + real config-only Compose proof. Новая DB schema сохраняется при app rollback; old readers разрешены только при доказанной совместимости и writer-off."
+        },
+        {
+          "id": "R05-oci",
+          "task": "REL-05",
+          "requirements": [
+            {
+              "id": "S5",
+              "text": "Провести локальную репетицию frontend-only/backend-only/engine-only, health failure, прерванной доставки, rollback, старой вкладки и pending decision старого боя. Один deploy одновременно; не отменять активную миграцию/cutover новым push."
+            },
+            {
+              "id": "V1",
+              "text": "Локальная матрица selective releases подтверждает component identities и отсутствие restart неизменившихся сервисов."
+            },
+            {
+              "id": "V2",
+              "text": "Fault injection: corrupt digest, missing artifact, incompatible protocol/schema, failed pull/health, interrupted upload, repeated command."
+            },
+            {
+              "id": "V3",
+              "text": "Старые frontend chunks, старый pinned battle и незавершённое решение доступны после deploy и rollback; RNG/ресурс не повторяются."
+            },
+            {
+              "id": "V4",
+              "text": "Два последовательных кандидата и ошибка первого корректно сериализуются; второй включает весь diff от успешно действующего release."
+            },
+            {
+              "id": "A1",
+              "text": "UI-only release не перезапускает backend/worker и использует честный mixed manifest."
+            },
+            {
+              "id": "A2",
+              "text": "Обязательные проверки блокируют неисправный candidate; rollback возвращает совместимые images/manifest без переписывания данных."
+            },
+            {
+              "id": "A3",
+              "text": "Retention сохраняет все images/artifacts, на которые есть защищённые ссылки."
+            }
+          ],
+          "claim": "Настоящая frontend/backend/engine selective matrix, restart counts, failed health/pull, interrupted delivery/recovery, old tab/pending/rollback, exact-image семь migration scenarios.",
+          "status": "external",
+          "evidence": [
+            {
+              "path": "scripts/release/deploy.mjs"
+            },
+            {
+              "path": "scripts/release/docker-deployment.mjs"
+            },
+            {
+              "path": "scripts/release/docker-rehearsal.mjs"
+            },
+            {
+              "path": "scripts/release/migration-rehearsal.mjs"
+            },
+            {
+              "path": "scripts/release/deploy-state.test.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-05.md"
+            }
+          ],
+          "limits": "Адаптеры/collector/assembler существуют; реальные containers не запускались. Сначала закрыть локальный registry seam REL04 и Docker среду. Current native candidate-rehearsal-api не OCI rehearsal."
+        },
+        {
+          "id": "R05-policy",
+          "task": "REL-05",
+          "requirements": [
+            {
+              "id": "S6",
+              "text": "Подготовить ручной exact-SHA запуск. Установка runner на TimeWeb, публикация/push и реальный deploy требуют отдельного явного запроса после локальной проверки."
+            },
+            {
+              "id": "S7",
+              "text": "Автодеплой успешного main включать только отдельным явно разрешённым изменением политики проекта. Привязать gate к SHA события и diff к последнему успешному manifest; два быстрых push и failed previous deploy не теряют изменения."
+            },
+            {
+              "id": "A4",
+              "text": "Production deployment и auto-on-push остаются отдельными явно разрешаемыми действиями."
+            }
+          ],
+          "claim": "Manual exact-SHA и gated automatic CI→build→capture→rehearsal→deploy wiring; активный cutover не отменяется новым push.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": ".github/workflows/release.yml"
+            },
+            {
+              "path": ".github/workflows/deploy.yml"
+            },
+            {
+              "path": "scripts/release/automatic-release.mjs"
+            },
+            {
+              "path": "scripts/release/deployment-handoff.mjs"
+            },
+            {
+              "path": "docs/release-deployment.md"
+            }
+          ],
+          "limits": "Подготовленное wiring доказано; реальная установка/включение и TimeWeb deployment ещё не выполнены. Пользователь уже разрешил root commit/push/deploy после локальных проверок."
+        }
+      ]
+    },
+    {
+      "id": "REL-06",
+      "title": "Проверяемый backup/restore для БД, правил и релизов",
+      "recommendation": "proven_local",
+      "summary": "Native complete restore/negative drill + policy plan; production-sized/OCI/off-host этап отдельный.",
+      "requirements": [
+        {
+          "id": "R06-recovery",
+          "task": "REL-06",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Инвентаризировать backup categories: PostgreSQL snapshot, referenced executable artifacts, release manifest, media manifest и необходимая конфигурация. Текущий pg_dump не содержит /artifacts; не считать его доказательством полного восстановления боя."
+            },
+            {
+              "id": "S2",
+              "text": "Создать backup manifest с хэшами/размерами/временем и проверкой ссылок DB snapshot на artifacts. Секреты не помещать в обычный manifest, логи или Git; отдельно описать защищённый recovery канал конфигурации."
+            },
+            {
+              "id": "S3",
+              "text": "Восстановить разрешённый snapshot в новый изолированный локальный PostgreSQL и скопировать его необходимые artifacts. Проверить versions/schema и приложение с данными после восстановления."
+            },
+            {
+              "id": "S4",
+              "text": "Продолжить старый pending decision и повторить ранее принятую команду: состояние, RNG, ресурс и история должны остаться корректными. Missing/corrupt artifact должен выявляться до попытки принять новую команду."
+            },
+            {
+              "id": "V1",
+              "text": "Полный restore drill на именованном локальном стенде с checksum verification и recorded source identities."
+            },
+            {
+              "id": "V2",
+              "text": "Проверки current/old pinned combat, pending decision, duplicate command и media references."
+            },
+            {
+              "id": "V3",
+              "text": "Negative tests: отсутствующий artifact, повреждённый файл, неверный manifest, schema mismatch."
+            },
+            {
+              "id": "A1",
+              "text": "Есть воспроизводимый доказанный restore, а не только успешный pg_dump."
+            }
+          ],
+          "claim": "Checksummed dump+CJS+media-reference manifest, настоящий native restore, pending/RNG/paid resource и exact duplicate; negative corruption/schema tests.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/release/backup-manifest.mjs"
+            },
+            {
+              "path": "scripts/release/native-backup.mjs"
+            },
+            {
+              "path": "scripts/release/restore-drill.mjs"
+            },
+            {
+              "path": "scripts/release/restore-negative-drill.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-06-native-media.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-06-negative.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-06.md"
+            }
+          ],
+          "limits": "Synthetic owned schema/catalog; media refs не media object bytes. Схема baseline297 не доказывает historical fresh install."
+        },
+        {
+          "id": "R06-policy",
+          "task": "REL-06",
+          "requirements": [
+            {
+              "id": "S5",
+              "text": "Измерить restore time и предложить RPO/RTO и отдельную retention policy для dumps, images, artifacts, assets. Текущие 5 releases и 90 дней assets не являются retention политикой дампов."
+            },
+            {
+              "id": "S6",
+              "text": "Подготовить внехостовую копию и расписание как reviewable план. Создание внешнего storage/backup schedule, production snapshot/restore и удаление дампов требуют отдельного явного запроса. Убирать dump из пути frontend-only релиза можно только после принятия новой backup policy."
+            },
+            {
+              "id": "V4",
+              "text": "Retention dry-run сохраняет активные/исторические referenced artifacts и rollback manifests; секреты отсутствуют в выводе."
+            },
+            {
+              "id": "A2",
+              "text": "Измерено время восстановления и перечислены ещё неизвестные RPO/доступы."
+            },
+            {
+              "id": "A3",
+              "text": "Артефакты правил не удаляются по числу последних релизов."
+            },
+            {
+              "id": "A4",
+              "text": "Production restore, external schedule и удаление backups не выполняются без отдельного запроса."
+            }
+          ],
+          "claim": "Restore time измерено, RPO/RTO/off-host schedule/retention предложены; reference protections вместо удаления по числу releases.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "docs/backup-restore.md"
+            },
+            {
+              "path": "scripts/release/backup-manifest.mjs"
+            },
+            {
+              "path": "scripts/release/artifact-references.mjs"
+            },
+            {
+              "path": "scripts/release/deploy-state.test.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-06.md"
+            }
+          ],
+          "limits": "1.94s capture / 2.27s restore относятся малой fixture. Политики/расписания — reviewable план, не действующая гарантия; keep-all безопасен."
+        },
+        {
+          "id": "R06-host",
+          "task": "REL-06",
+          "requirements": [
+            {
+              "id": "S6",
+              "text": "Подготовить внехостовую копию и расписание как reviewable план. Создание внешнего storage/backup schedule, production snapshot/restore и удаление дампов требуют отдельного явного запроса. Убирать dump из пути frontend-only релиза можно только после принятия новой backup policy."
+            }
+          ],
+          "claim": "Production-sized restore, external storage/config durability и фактический OCI capture/restore.",
+          "status": "external",
+          "evidence": [
+            {
+              "path": "docs/backup-restore.md"
+            },
+            {
+              "path": "scripts/release/capture-host-backup.mjs"
+            },
+            {
+              "path": "scripts/release/docker-rehearsal.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/REL-06.md"
+            }
+          ],
+          "limits": "Это явно отдельный внешний/OCI этап; не препятствует local restore acceptance, но native proof не открывает production gate."
+        }
+      ]
+    },
+    {
+      "id": "DB-01",
+      "title": "Измерение размера БД и роста хранения по игровым сценариям",
+      "recommendation": "incomplete_local_verification",
+      "summary": "Inventory/growth измерены, независимая seeded equality и per-run-class counts отсутствуют.",
+      "requirements": [
+        {
+          "id": "D01-inventory",
+          "task": "DB-01",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Подготовить инструмент, допускающий только явно названную локальную БД/разрешённый restored snapshot, с read-only transaction, statement timeout и lock timeout. Не читать production DSN из .env автоматически."
+            },
+            {
+              "id": "S2",
+              "text": "Снять PostgreSQL version, database/relation/TOAST/index sizes, live/dead tuple estimates, workload counters, autovacuum/analyze times и stats reset metadata. Разделить локальный cluster directory, одну БД, dump, WAL и production storage."
+            },
+            {
+              "id": "S3",
+              "text": "Ограниченными выборками оценить распределение размеров response/record/envelope/catalog/checkpoint и число команд на active/ended/QA run. Не выводить персональные данные и полные JSON."
+            },
+            {
+              "id": "S4",
+              "text": "Проверить фактическую наполненность legacy/canonical tables до вывода о главном потребителе; соответствующий canonical transport выключен по умолчанию. Проверить индексные определения/constraints и наличие pg_stat_statements без автоматического включения extension."
+            },
+            {
+              "id": "S6",
+              "text": "Опубликовать baseline с крупнейшими consumers и ограничениями: restored dump не переносит исторические production timings/workload. Любой production monitoring, snapshot или изменение конфигурации требует отдельного явного запроса."
+            },
+            {
+              "id": "V1",
+              "text": "Инструмент отказывает неизвестному/внешнему DSN и не выводит credentials."
+            },
+            {
+              "id": "V2",
+              "text": "Read-only inventory не меняет данные; totals согласуются с PostgreSQL size functions."
+            },
+            {
+              "id": "V4",
+              "text": "Rows/indices с нулевой активностью помечаются с длительностью наблюдения, а не автоматически как неиспользуемые."
+            },
+            {
+              "id": "A1",
+              "text": "Известны пять крупнейших consumers и вклад отдельных JSONB/TOAST/index категорий."
+            },
+            {
+              "id": "A3",
+              "text": "Не заявлена экономия production storage без фактических данных."
+            },
+            {
+              "id": "A4",
+              "text": "База, Docker artifacts и локальные экспериментальные каталоги явно разделены в отчёте."
+            }
+          ],
+          "claim": "Owned/read-only bounded inventory: relation/TOAST/index/WAL, top5, stats window, canonical/legacy presence, no credentials/production claims.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/database/storage-report.mjs",
+              "line": 45
+            },
+            {
+              "path": "scripts/database/storage-inventory.sql"
+            },
+            {
+              "path": "scripts/database/storage-report.integration.test.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/storage/summary.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-01.md"
+            }
+          ],
+          "limits": "S3 частично: JSON size distributions есть, но отдельного распределения command counts по active/ended/QA runs в current report нет."
+        },
+        {
+          "id": "D01-growth",
+          "task": "DB-01",
+          "requirements": [
+            {
+              "id": "S5",
+              "text": "На disposable локальном стенде воспроизвести фиксированный seeded сценарий 100/1000 команд. Отдельно разрешённые локальные сценарии изменяют только тестовый clone; снять до/после table/TOAST/index/WAL bytes, p50/p95, lock duration и response bytes."
+            },
+            {
+              "id": "A2",
+              "text": "Есть рост bytes на фиксированное число команд и измерения операций для сравнения изменений."
+            }
+          ],
+          "claim": "100 и 1000 actual camp commands + exact retries, before/after sizes, timings и одинаковые response bytes в DB02 shadow comparison.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/database/storage-growth.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/storage/growth-100.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/storage/growth-1000.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-02-storage.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-01.md"
+            }
+          ],
+          "limits": "Свежие UUID/entropy/time между независимыми сериями различаются."
+        },
+        {
+          "id": "D01-repeatability",
+          "task": "DB-01",
+          "requirements": [
+            {
+              "id": "S3",
+              "text": "Ограниченными выборками оценить распределение размеров response/record/envelope/catalog/checkpoint и число команд на active/ended/QA run. Не выводить персональные данные и полные JSON."
+            },
+            {
+              "id": "S5",
+              "text": "На disposable локальном стенде воспроизвести фиксированный seeded сценарий 100/1000 команд. Отдельно разрешённые локальные сценарии изменяют только тестовый clone; снять до/после table/TOAST/index/WAL bytes, p50/p95, lock duration и response bytes."
+            },
+            {
+              "id": "V3",
+              "text": "Два одинаковых seeded сценария дают сопоставимый logical рост и одинаковый итоговый state hash."
+            }
+          ],
+          "claim": "Две независимые одинаково seeded series с одинаковым final state/RNG/receipts и сопоставимым logical ростом; run-class command counts.",
+          "status": "incomplete",
+          "evidence": [
+            {
+              "path": "scripts/database/storage-growth.mjs",
+              "line": 18
+            },
+            {
+              "path": "scripts/database/storage-growth.mjs",
+              "line": 47
+            },
+            {
+              "path": "scripts/database/storage-report.mjs",
+              "line": 77
+            },
+            {
+              "path": "docs/database-storage.md"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-01.md"
+            }
+          ],
+          "limits": "Нет seeded repeat driver и отчёта equality. Retry одной команды и same-answer shadow DB02 не заменяют два воспроизведения. Это локальная работа, не Docker/production blocker."
+        }
+      ]
+    },
+    {
+      "id": "DB-02",
+      "title": "Компактные новые квитанции команд без потери идемпотентности",
+      "recommendation": "verified_default_off",
+      "summary": "Local exact format/atomicity/recovery и physical saving подтверждены; performance/prod не обобщаются.",
+      "requirements": [
+        {
+          "id": "D02-format",
+          "task": "DB-02",
+          "requirements": [
+            {
+              "id": "S2",
+              "text": "Спроектировать versioned receipt/result contract: durable command identity, request fingerprint, outcome/revision, exact immutable result или ссылка на exact snapshot/result. Сохранить возможность вернуть прежний ответ после дальнейших ходов; не восстанавливать его из текущего персонажа."
+            },
+            {
+              "id": "S3",
+              "text": "Добавить additive schema и dual-reader старых/новых receipts. Сначала использовать локально атомарное хранилище; внешний object storage требует отдельного протокола доступности/атомарности и явного запроса на подключение."
+            },
+            {
+              "id": "S4",
+              "text": "Записывать command result, run/character changes и revisions в прежней атомарной транзакции. Не удалять старые receipts и не менять их JSON/hash; конфликты command ID и request hash продолжают отклоняться."
+            },
+            {
+              "id": "S6",
+              "text": "Проверить reload/retry/concurrency/crash recovery и backward-compatible application rollback. Реальная data migration/production release требует отдельного запроса после локальных evidence."
+            },
+            {
+              "id": "V1",
+              "text": "Повтор старого и нового command ID после последующих команд и рестарта возвращает сохранённый результат без RNG/расхода."
+            },
+            {
+              "id": "V2",
+              "text": "Повтор ID с другим fingerprint отклоняется; конкурирующие команды не создают частичный run/character/receipt state."
+            },
+            {
+              "id": "V3",
+              "text": "Saved pending decision продолжается после изменения storage writer; исторический artifact и modifier/КД breakdown не пересчитываются из текущих данных."
+            },
+            {
+              "id": "A2",
+              "text": "Старые receipts читаются без преобразования истории."
+            },
+            {
+              "id": "A3",
+              "text": "Сохранены exact-result retry, request-hash conflict и атомарность."
+            },
+            {
+              "id": "A4",
+              "text": "Автоматический TTL receipts не добавлен; old command не становится новой после очистки."
+            }
+          ],
+          "claim": "Additive v2 exact gzip bytes+hash, dual readers, atomic receipts/state, mismatch/concurrency/SQL-failure rollback и restore с выключенным writer.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "backend/storage_receipt.go"
+            },
+            {
+              "path": "backend/storage_receipt_test.go"
+            },
+            {
+              "path": "backend/migrations/compact_receipts_298.go"
+            },
+            {
+              "path": "scripts/database/receipt-codec.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-02-recovery.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-02.md"
+            }
+          ],
+          "limits": "Writer OFF. Rollback сохраняет reader/schema; старый бинарник без v2 reader после новых записей запрещён. Фазовый process-kill общего gate работает с writer OFF, отдельно ON это не доказано; ON проверены SQL failure+restart/restore."
+        },
+        {
+          "id": "D02-measure",
+          "task": "DB-02",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "По DB-01 подтвердить, что полноразмерные receipt responses существенно влияют на рост/время. Если гипотеза не подтверждена, оформить no-change decision и выбрать фактический consumer вместо внедрения новой схемы ради предположения."
+            },
+            {
+              "id": "S5",
+              "text": "Переключать только новые записи через явную версию/feature boundary. Добавить metrics bytes/time и сравнение 1000-command сценария, учитывая существующее TOAST сжатие."
+            },
+            {
+              "id": "V4",
+              "text": "Локальный seeded replay сравнивает state hashes, ресурсы, RNG и реальный table/TOAST/index размер до/после."
+            },
+            {
+              "id": "A1",
+              "text": "Экономия подтверждена измерениями либо принято обоснованное решение не внедрять усложнение."
+            }
+          ],
+          "claim": "1000 exact responses: physical relation 44,507,136→26,492,928 bytes (−40.47%), включая TOAST; старые строки не переписаны.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/database/compact-receipts-drill.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-02-storage.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-02.md"
+            }
+          ],
+          "limits": "Локальный выигрыш хранения; ускорение API/production disk saving не заявляются."
+        }
+      ]
+    },
+    {
+      "id": "DB-03",
+      "title": "Неизменяемые каталоги по хэшу и разделение горячего состояния",
+      "recommendation": "verified_default_off_incomplete_latency_acceptance",
+      "summary": "Correctness и storage win доказаны; latency acceptance остаётся локально открытым.",
+      "requirements": [
+        {
+          "id": "D03-format",
+          "task": "DB-03",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Связать DB-01 measurements с PERF-01 resolver contract. Выяснить, какие immutable catalogs реально повторяются и какие JSONB поля сериализуются/перезаписываются на каждом ходу; не считать физический TOAST rewrite доказанным только по SQL UPDATE."
+            },
+            {
+              "id": "S2",
+              "text": "Спроектировать новый versioned envelope с content-addressed immutable catalog и отдельным изменяемым состоянием. Хэш включает каноничный полный input и версию serializer/protocol; проверять права и полноту dependency closure до reuse."
+            },
+            {
+              "id": "S3",
+              "text": "Добавить additive storage/dual-reader и reference integrity. Старые бои продолжают использовать прежний envelope/artifact/catalog; новые каталоги не включаются в них автоматически. Оформление изменяется отдельно от mechanics и исторических snapshots."
+            },
+            {
+              "id": "S4",
+              "text": "Сократить update set горячих полей и лишнюю сериализацию при доказанной безопасности. Сохранить единую транзакцию run/character/revision/receipt и авторитетную повторную проверку."
+            },
+            {
+              "id": "S5",
+              "text": "Сохранить уже существующий baseline + small replay events в roguelike_combat_events. Добавлять checkpoints только при измеренной стоимости восстановления; не реализовывать повторно уже работающую схему журнала."
+            },
+            {
+              "id": "S6",
+              "text": "Проверить cache/reference bounds, восстановление из backup, missing catalog fail-closed и replay старого/нового protocol. Backfill старой истории не входит в задачу; production storage migration требует отдельного явного запроса."
+            },
+            {
+              "id": "V1",
+              "text": "Две сущности с разными данными на одном примитиве исполняются без UI/name/UUID branch."
+            },
+            {
+              "id": "V2",
+              "text": "Смешанная party, два одинаковых каталога и два различающихся loadout не получают чужие персональные параметры."
+            },
+            {
+              "id": "V3",
+              "text": "Replay baseline/events и pending continuation дают прежний RNG/resources/state hash до/после смены writer."
+            },
+            {
+              "id": "V4",
+              "text": "Измеряются SQL payload, serialization time, table/TOAST/WAL bytes и command p95; corrupted/missing referenced catalog отклоняется."
+            },
+            {
+              "id": "A1",
+              "text": "Новые одинаковые immutable catalogs переиспользуются только при доказанном полном совпадении."
+            },
+            {
+              "id": "A2",
+              "text": "Старые battle artifacts, history и canonical hash не изменены."
+            },
+            {
+              "id": "A3",
+              "text": "Update горячего состояния не переносит mechanics authority в UI или отдельный упрощённый engine."
+            }
+          ],
+          "claim": "Owner/artifact/full-input hash, immutable rows+FK/dual read, frozen initialization reuse, cold update omission, corruption/rights/atomic/restore safeguards.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "backend/storage_catalog.go"
+            },
+            {
+              "path": "backend/storage_catalog_test.go"
+            },
+            {
+              "path": "backend/migrations/frozen_catalogs_299.go"
+            },
+            {
+              "path": "scripts/database/frozen-catalog-drill.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-03-recovery.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-03.md"
+            }
+          ],
+          "limits": "Новый dynamic envelope/CharacterV3 transport не выделен; реализован узкий frozen input и пропуск неизменных cold полей. Dynamic catalogActions не объявлен immutable. Checkpoints без измеренной потребности не добавлены."
+        },
+        {
+          "id": "D03-space",
+          "task": "DB-03",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Связать DB-01 measurements с PERF-01 resolver contract. Выяснить, какие immutable catalogs реально повторяются и какие JSONB поля сериализуются/перезаписываются на каждом ходу; не считать физический TOAST rewrite доказанным только по SQL UPDATE."
+            },
+            {
+              "id": "S4",
+              "text": "Сократить update set горячих полей и лишнюю сериализацию при доказанной безопасности. Сохранить единую транзакцию run/character/revision/receipt и авторитетную повторную проверку."
+            },
+            {
+              "id": "V4",
+              "text": "Измеряются SQL payload, serialization time, table/TOAST/WAL bytes и command p95; corrupted/missing referenced catalog отклоняется."
+            },
+            {
+              "id": "A4",
+              "text": "Сокращение хранения/времени подтверждено baseline и не ухудшает атомарность/restore."
+            }
+          ],
+          "claim": "30 catalog copies→1 immutable blob, run+catalog relation 4,784,128→2,834,432 bytes; SQL payload/WAL/serialization/timing измерены.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-03-storage.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-03.md"
+            }
+          ],
+          "limits": "Два fresh synthetic прогона с разными UUID/RNG/time; это не exact-state A/B."
+        },
+        {
+          "id": "D03-latency",
+          "task": "DB-03",
+          "requirements": [
+            {
+              "id": "V4",
+              "text": "Измеряются SQL payload, serialization time, table/TOAST/WAL bytes и command p95; corrupted/missing referenced catalog отклоняется."
+            },
+            {
+              "id": "A4",
+              "text": "Сокращение хранения/времени подтверждено baseline и не ухудшает атомарность/restore."
+            }
+          ],
+          "claim": "Принятие latency нового writer и полное обоснование включения.",
+          "status": "incomplete",
+          "evidence": [
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-03-storage.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-03.md"
+            }
+          ],
+          "limits": "Init p95 182.7→194.0ms на30 samples; общего performance acceptance нет. Storage win доказан, writer остаётся OFF; повтор сравнения в контролируемой среде локален, не требует Docker."
+        }
+      ]
+    },
+    {
+      "id": "DB-04",
+      "title": "Адресная уборка хранения: retention, индексы и встроенные изображения",
+      "recommendation": "incomplete_local_verification",
+      "summary": "Safe metadata/index path доказан; repeat no-op, EXPLAIN/latency и inline export verification не выполнены.",
+      "requirements": [
+        {
+          "id": "D04-safe-plan",
+          "task": "DB-04",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "По DB-01 составить ownership/retention matrix для пользовательских документов, active/ended runs, receipts, append-only journals, migration archives, OAuth/outbox, legacy tables, backups и media. Сроки хранения и удаление пользовательских данных не придумывать без решения владельца."
+            },
+            {
+              "id": "S2",
+              "text": "Проверить candidate duplicate indexes через фактические definitions/constraints/query plans и статистику с известным окном наблюдения. Рассмотреть cloudinary_id UNIQUE плюс обычный индекс и session_id/seq индексы как кандидаты, а не как разрешённые удаления."
+            },
+            {
+              "id": "S3",
+              "text": "Read-only scan ограниченных metadata выявляет data URLs/крупные inline payloads. Обычные images уже URL-based; внешнее перемещение планировать только для доказанных inline blobs с checksum/reference verification и разрешённым storage."
+            },
+            {
+              "id": "S4",
+              "text": "Создать plan/export/verify/apply protocol для конкретных завершённых данных. Dry-run показывает точные IDs/bytes/references; active/pending/rollback объекты исключаются. Append-only triggers не отключать ради уборки; archive должен иметь versioned reader и проверяемые hashes."
+            },
+            {
+              "id": "S5",
+              "text": "Не удалять command receipts простым TTL: сохранить durable idempotency identity и точный результат либо отдельно согласовать versioned expiry semantics, исключающие повторное выполнение. Artifact/media reachability учитывать из frozen catalogs, snapshots, старых документов и manifests."
+            },
+            {
+              "id": "V1",
+              "text": "Dry-run deterministic и повторяемый, не изменяет БД/файлы; protected reference fixtures остаются в keep set."
+            },
+            {
+              "id": "V2",
+              "text": "Архив восстанавливается в отдельную локальную БД; hashes, pending decisions и old-command idempotency сохраняются."
+            },
+            {
+              "id": "A1",
+              "text": "Каждое потенциальное удаление/изменение имеет доказательство ненужности либо согласованную retention policy и restore path."
+            },
+            {
+              "id": "A2",
+              "text": "Нет общего TTL для receipts/artifacts и нет скрытого изменения append-only history."
+            },
+            {
+              "id": "A3",
+              "text": "Отчёт различает освобождённое логическое место, повторно используемое PostgreSQL место и реально уменьшенный размер файлов."
+            }
+          ],
+          "claim": "Conservative keep policy, bounded dataURL metadata, exact simple duplicate-index plan/export/drop/restore с preimage/ownership guards; old data/history сохранены.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/database/retention-plan.mjs"
+            },
+            {
+              "path": "scripts/database/retention-plan.test.mjs",
+              "line": 20
+            },
+            {
+              "path": "scripts/database/data-url-inventory.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-04-plan.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-04.md"
+            }
+          ],
+          "limits": "Полный fixture не дал duplicate candidates/inline URLs. Positive fixtures подтверждают scanner и index export/restore; row archive/delete protocol не реализован и не разрешает удаления."
+        },
+        {
+          "id": "D04-idempotent",
+          "task": "DB-04",
+          "requirements": [
+            {
+              "id": "S6",
+              "text": "На disposable clone проверить export/restore/replay и один адресный индексный/housekeeping change за итерацию. Обычный VACUUM не обещает возврат места ОС; VACUUM FULL/REINDEX/destructive DDL планировать отдельно с блокировками и запасом диска."
+            },
+            {
+              "id": "V3",
+              "text": "Удаление candidate index на clone не снимает constraint и не ухудшает важные EXPLAIN/latency checks; при отсутствии доказательств индекс сохраняется."
+            },
+            {
+              "id": "V5",
+              "text": "Apply на disposable fixture требует exact prepared plan/preimages; повтор apply no-op, changed preimage fail-closed."
+            }
+          ],
+          "claim": "Повтор exact apply — no-op; после duplicate-index изменения EXPLAIN/latency не ухудшены.",
+          "status": "incomplete",
+          "evidence": [
+            {
+              "path": "scripts/database/retention-plan.mjs",
+              "line": 58
+            },
+            {
+              "path": "scripts/database/retention-plan.mjs",
+              "line": 62
+            },
+            {
+              "path": "scripts/database/retention-plan.mjs",
+              "line": 68
+            },
+            {
+              "path": "scripts/database/retention-plan.test.mjs",
+              "line": 20
+            }
+          ],
+          "limits": "Повтор после drop бросает preimage changed, recovery export пишется flag wx; нет durable applied/no-op reconciliation. До/после EXPLAIN/latency в positive fixture не проверяется; доказана идентичность index semantics и сохранность row hash."
+        },
+        {
+          "id": "D04-inline",
+          "task": "DB-04",
+          "requirements": [
+            {
+              "id": "S3",
+              "text": "Read-only scan ограниченных metadata выявляет data URLs/крупные inline payloads. Обычные images уже URL-based; внешнее перемещение планировать только для доказанных inline blobs с checksum/reference verification и разрешённым storage."
+            },
+            {
+              "id": "S4",
+              "text": "Создать plan/export/verify/apply protocol для конкретных завершённых данных. Dry-run показывает точные IDs/bytes/references; active/pending/rollback объекты исключаются. Append-only triggers не отключать ради уборки; archive должен иметь versioned reader и проверяемые hashes."
+            },
+            {
+              "id": "S6",
+              "text": "На disposable clone проверить export/restore/replay и один адресный индексный/housekeeping change за итерацию. Обычный VACUUM не обещает возврат места ОС; VACUUM FULL/REINDEX/destructive DDL планировать отдельно с блокировками и запасом диска."
+            },
+            {
+              "id": "V4",
+              "text": "Inline image export совпадает byte/hash, ссылки и доступ проверены; orphan detector учитывает исторические frozen references."
+            }
+          ],
+          "claim": "Byte/hash verified inline image export с сохранением references и восстановлением на disposable fixture.",
+          "status": "incomplete",
+          "evidence": [
+            {
+              "path": "scripts/database/data-url-inventory.mjs",
+              "line": 2
+            },
+            {
+              "path": "scripts/database/retention-plan.mjs",
+              "line": 41
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-04.md"
+            }
+          ],
+          "limits": "Реализованы только MIME/count/size агрегаты. Local export/verify/restore helper и positive byte equality test отсутствуют; реальный внешний storage migration отдельно не разрешён. Отсутствие inline URLs в stripped fixture не доказывает отсутствие их в production."
+        },
+        {
+          "id": "D04-policy",
+          "task": "DB-04",
+          "requirements": [
+            {
+              "id": "S7",
+              "text": "Согласовать точный reviewable deletion/migration plan. Production queries/configuration, подключение storage, data deletion, расписания retention и deployment требуют отдельного явного запроса; до него задача завершает только локальную подготовку/evidence."
+            },
+            {
+              "id": "A4",
+              "text": "Ни production deletion, ни внешняя автоматизация не активированы без отдельного запроса."
+            }
+          ],
+          "claim": "Production index/data retention/storage migration и scheduler.",
+          "status": "external",
+          "evidence": [
+            {
+              "path": "docs/database-storage.md"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/DB-04.md"
+            }
+          ],
+          "limits": "Конкретное удаление/подключение требует отдельного плана и запроса; текущий apply строго owned-local-only."
+        }
+      ]
+    },
+    {
+      "id": "CLEAN-01",
+      "title": "Упорядочить локальные артефакты и действующую документацию",
+      "recommendation": "proven_local",
+      "summary": "Обратимый согласованный cleanup scope и сохранность originals доказаны.",
+      "requirements": [
+        {
+          "id": "C01-inventory",
+          "task": "CLEAN-01",
+          "requirements": [
+            {
+              "id": "S1",
+              "text": "Разделить tracked/untracked/generated/original/evidence/cache; проверить единственные оригиналы и хэши перед любыми переносами."
+            },
+            {
+              "id": "S2",
+              "text": "Определить единый каталог результата и ignore rules. Уже tracked файлы не исключаются автоматически через .gitignore."
+            },
+            {
+              "id": "S4",
+              "text": "До перемещения проверить ?raw imports, go:embed, fixture generators, CLI, build contexts и skills. src/mvp и src/canon не удалять целиком."
+            },
+            {
+              "id": "S5",
+              "text": "Подготовить dry-run manifest очистки с точными resolved paths и backup references. На Windows операции выполнять одной оболочкой без перехода в cmd и без следования symlink за workspace."
+            },
+            {
+              "id": "V2",
+              "text": "Dry-run targets находятся в ожидаемой workspace directory."
+            },
+            {
+              "id": "V3",
+              "text": "Размеры Git history/working files/Docker context/local artifacts указаны раздельно."
+            },
+            {
+              "id": "A2",
+              "text": "Нет потери единственных оригиналов или доказательств проверки."
+            }
+          ],
+          "claim": "Tracked/original/evidence inventory, outputs convention, root ignore, safe resolved-path dry-run и разделение Git/local/context sizes.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/maintenance/inventory-artifacts.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/artifact-inventory-summary.json"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/cleanup-ignore-inventory.json"
+            },
+            {
+              "path": "docs/README.md"
+            },
+            {
+              "path": ".gitignore"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/CLEAN-01.md"
+            }
+          ],
+          "limits": "Неизвестные originals сохранены; history/temporary Git objects не удалялись."
+        },
+        {
+          "id": "C01-docs",
+          "task": "CLEAN-01",
+          "requirements": [
+            {
+              "id": "S3",
+              "text": "Создать current docs index с датой проверки и supersedes; законченные задачи перенести в archive с сохранением ссылок."
+            },
+            {
+              "id": "S6",
+              "text": "В согласованном обратимом scope переносить по manifest; необратимое удаление originals/history требует отдельного решения."
+            },
+            {
+              "id": "V1",
+              "text": "Build и link checker после переносов."
+            },
+            {
+              "id": "A1",
+              "text": "Актуальные инструкции легко найти; архив не выглядит текущим источником."
+            },
+            {
+              "id": "A2",
+              "text": "Нет потери единственных оригиналов или доказательств проверки."
+            }
+          ],
+          "claim": "Current docs index + 3 reversible archives с SHA256 original bytes, forwarding links; link check и build после переноса.",
+          "status": "proven",
+          "evidence": [
+            {
+              "path": "scripts/maintenance/archive-documents.mjs"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/document-archive-manifest.json"
+            },
+            {
+              "path": "scripts/maintenance/check-document-links.mjs"
+            },
+            {
+              "path": "docs/README.md"
+            },
+            {
+              "path": "docs/audits/2026-10-04/execution/CLEAN-01.md"
+            }
+          ],
+          "limits": "Link checker ограничен inline local file links: remote/anchors/reference-style не заявлены проверенными."
+        }
+      ]
+    }
+  ],
+  "material_local_gaps": [
+    {
+      "id": "REL04-LOCAL-REGISTRY",
+      "task": "REL-04",
+      "requirement_rows": [
+        "R04-local-registry"
+      ],
+      "kind": "local_code_and_later_environment",
+      "next_action": "Добавить отдельный owned loopback registry producer и caller build/save/publish/pull/reuse/fault matrix. Изолировать его plan/receipt от production-ready identity; не подставлять фиктивные GitHub runs. Закрепить реальный registry/base image digest, зарегистрировать owned resources/cleanup; actual build/run после появления локального daemon."
+    },
+    {
+      "id": "DB01-REPEATABLE-SERIES",
+      "task": "DB-01",
+      "requirement_rows": [
+        "D01-repeatability"
+      ],
+      "kind": "local_code_and_measurement",
+      "next_action": "Создать один реальный owned бой с закреплённым artifact/seed, снять frozen snapshot ДО workload и восстановить его в две отдельные owned DB. Выполнить один и тот же список legal command IDs/revisions/inputs через реальный API/worker; сравнить authoritative game state, RNG, journal и exact receipts плюс logical growth. Не использовать camp_turn с новой entropy на каждом запросе и не подменять RNG после init. Если server-generated semantic time всё ещё меняет результат — сначала явная test-only clock/entropy dependency injection до старта source, без production env fault knob; operational timestamp whitelist документировать отдельно, semantic fields не отбрасывать. Добавить bounded per-run-class command counts, неизвестный QA scope явно отмечать."
+    },
+    {
+      "id": "DB03-LATENCY-ACCEPTANCE",
+      "task": "DB-03",
+      "requirement_rows": [
+        "D03-latency"
+      ],
+      "kind": "local_measurement",
+      "next_action": "Повторить OFF/ON comparison на одинаковой восстановленной базе/inputs с численной дисперсией и idle CPU либо явно оставить storage-only эксперимент OFF. Не называть текущие30samples отсутствием регрессии; оптимизацию повторных catalog lookups делать только при сохранении integrity/privacy."
+    },
+    {
+      "id": "DB04-IDEMPOTENT-APPLY",
+      "task": "DB-04",
+      "requirement_rows": [
+        "D04-idempotent"
+      ],
+      "kind": "local_code_and_verification",
+      "next_action": "Добавить hash-bound owned operation receipt/reconciliation: absent drop-index плюс неизменный keep-index и совпадающий exact export дают already-applied/no-op; чужое изменение/несовпадение fail-closed. Проверить повтор, потерянный ack, restart, changed preimage; добавить EXPLAIN и bounded before/after query timing на clone."
+    },
+    {
+      "id": "DB04-INLINE-EXPORT",
+      "task": "DB-04",
+      "requirement_rows": [
+        "D04-inline"
+      ],
+      "kind": "local_code_and_verification",
+      "next_action": "Подготовить owned local-only export/verify/restore fixture для найденного synthetic inline image: exact decoded bytes/hash, MIME/access/reference preimages, отсутствие удаления исходного значения и воспроизводимый rollback. Внешний object storage/production apply не включать; если scope сознательно оставляется scan-only, зафиксировать явно неисполненный V4, а не done полного исходного плана."
+    }
+  ],
+  "external_notes": [
+    "Docker Linux daemon недоступен, WSL virtualization недоступна; ОС не изменялась.",
+    "Native PostgreSQL/Go/browser + config-only Compose не заменяют OCI image build/restart/pull/health.",
+    "Historical pre102 fresh install не доказан; supported baseline297/298/299 upgrades не подменяют его.",
+    "В рамках аудита реальные GitHub/registry/TimeWeb/off-host/provider действия не выполнялись. Пользователь уже разрешил root commit/push/deploy после проверок; отключённые deployment flags ещё не являются выполненной выкаткой.",
+    "Старые task evidence содержат промежуточные статусы; эта сверка учитывает актуальный код и финальные core5/extended3 receipts, но не переписывает старые результаты."
+  ],
+  "authorization_update": {
+    "source": "Parent relay of explicit user authorization, received during this audit",
+    "commit_push_deploy_authorized_after_checks": true,
+    "remote_actions_owner": "root only",
+    "this_audit_remote_actions": false,
+    "note": "Исходный agent-plan содержит прежнее условие отдельного запроса. Для commit/push/deploy этот запрос теперь получен; не запрашивать повторно. OCI/local implementation gaps и preflight от этого не становятся PASS."
+  }
+}

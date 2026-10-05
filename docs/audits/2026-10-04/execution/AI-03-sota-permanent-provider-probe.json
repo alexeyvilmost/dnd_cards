@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-05T00:11:29.310Z",
+  "host": "TimeWeb",
+  "method": "GET",
+  "endpoint": "https://api.openai.com/v1/models",
+  "paidRequest": false,
+  "route": "private CONNECT gateway → Sota Finland → provider TLS",
+  "publicPortPublished": false,
+  "hostRoutingChanged": false,
+  "tlsVerified": true,
+  "unauthenticatedConnectStatus": 407,
+  "status": 200,
+  "errorCode": null,
+  "errorType": null,
+  "imageModelListed": true
+}

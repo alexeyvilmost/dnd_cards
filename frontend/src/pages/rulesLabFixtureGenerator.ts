@@ -19,7 +19,7 @@ import { replacePreparedSpells } from '../rules-core/spellcastingAccess';
 type JsonObject = Record<string, unknown>;
 
 export const RULES_LAB_FIXTURE_SCHEMA_VERSION = 5 as const;
-export const RULES_LAB_GENERATED_FIXTURE_VERSION = '5.0.0' as const;
+export const RULES_LAB_GENERATED_FIXTURE_VERSION = '6.0.0' as const;
 export const RULES_LAB_FIGHTER_ROOT_KEY =
   'class.fighter|species.human|background.soldier|feat.alert' as const;
 export const RULES_LAB_WIZARD_ROOT_KEY =
@@ -32,7 +32,7 @@ export const RULES_LAB_SHIELD_CARD_NUMBER = 'SPELL-0317' as const;
 export const RULES_LAB_TOME_CANTRIP_CARD_NUMBER = 'fire_bolt' as const;
 export const RULES_LAB_CHAIN_FAMILIAR_ACTION_ID = 'mm2025.owl.talons' as const;
 export const RULES_LAB_GENERATED_ARTIFACT_PATH = fileURLToPath(
-  new URL('./rulesLabFixture.generated.json', import.meta.url),
+  new URL('./rulesLabFixture.v6.generated.json', import.meta.url),
 );
 
 function required<T>(value: T | undefined, description: string): T {

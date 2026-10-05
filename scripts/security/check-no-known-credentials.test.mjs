@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import {
-  mkdirSync, mkdtempSync, rmSync, writeFileSync,
+  mkdirSync, mkdtempSync, rmSync, writeFileSync, readFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -167,6 +167,18 @@ test('changed mode ignores inherited violations in clean tracked files', () => {
     },
   );
   assert.equal(result.status, 0, result.stderr);
+});
+
+test('allows only the exact opaque owned-clone registration capability and rejects missing guards',()=>{
+  const source=readFileSync(new URL('../release/rehearsal-scenarios.mjs',import.meta.url),'utf8');
+  const file='scripts/release/rehearsal-scenarios.mjs';
+  assert.equal(runScanner({[file]:source}).status,0);
+  assert.equal(runScanner({'scripts/release/arbitrary-registration.mjs':source}).status,1);
+  for(const guard of ['const authorizedRehearsals=new WeakMap();','if(!authorizedRehearsals.has(capability))','await access.assertOwned();','FROM test_run_ownership;',"network.Internal!==true","target.hostname!=='postgres'","container.Config?.Labels?.['bagofholding.rehearsal']!==owner"]){
+    assert.ok(source.includes(guard));
+    const result=runScanner({[file]:source.replace(guard,'REMOVED_OWNERSHIP_GUARD')});
+    assert.equal(result.status,1,guard);assert.match(result.stderr,/must never auto-register/);
+  }
 });
 
 test('changed mode rejects violations introduced by an untracked file', () => {

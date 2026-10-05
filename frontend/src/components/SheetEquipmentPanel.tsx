@@ -153,12 +153,19 @@ function CharacterEquipmentPanel({
     disabled: readOnly || otherBusy,
     prepare: async (operation) => {
       const runId = activeRunId();
-      if(runId){const run=await roguelikeApi.get(runId);if(run.phase==='combat'){setCombatRedirect(runCombatURL(run));throw Error('Изменение экипировки в листе доступно после завершения боя. Вернитесь на поле боя.');}}
+      const [run, authority] = await Promise.all([runId ? roguelikeApi.get(runId) : Promise.resolve(null), charactersV3Api.equipmentAuthority()]);
+      if(run?.phase==='combat'){setCombatRedirect(runCombatURL(run));throw Error('Изменение экипировки в листе доступно после завершения боя. Вернитесь на поле боя.');}
+      if (authority.enabled) {
+        return {kind: 'equipment_intent' as const, character_id: character.id,
+          command_id: newSheetRuntimeCommandId(), expected_runtime_revision: Number(character.runtime_revision), operation,
+          ...(run ? {roguelike_run_id: run.id, expected_run_revision: run.revision} : {})};
+      }
       const participant = await loadSheetCombatParticipant({ character, cards: cardMap });
       const request = prepareSheetEquipmentCommand(participant, newSheetRuntimeCommandId(), operation, Math.random).request;
       return runId ? { ...request, roguelike_run_id: runId, roguelike_intent: 'camp' } : request;
     },
-    commit: request => charactersV3Api.postRuntimeCommand(request, { preserveRoguelikeContext: true }),
+    commit: request => 'kind' in request ? charactersV3Api.postEquipmentIntent(request)
+      : charactersV3Api.postRuntimeCommand(request, { preserveRoguelikeContext: true }),
     loadCurrent: charactersV3Api.get,
     onUpdated,
   });
@@ -343,7 +350,7 @@ function CharacterEquipmentPanel({
                 key={slot}
                 type="button"
                 className={`sheet-slot-tile${card ? ' filled' : ''}`}
-                aria-description={card ? `${label}: ${card.name}` : label}
+                aria-label={card ? `${label}: ${card.name}` : label}
                 onClick={() => { if (card) openEquipped(slot, card); }}
                 {...hoverHandlers(card)}
               >

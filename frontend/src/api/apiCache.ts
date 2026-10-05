@@ -10,7 +10,7 @@
 type Entry = { value: unknown; expires: number };
 type CachePatch = (value: unknown) => unknown;
 type InFlight = { promise: Promise<unknown>; version: number; epoch: number; patches: CachePatch[] };
-export type ApiCacheInvalidation = { prefix: string | null };
+export type ApiCacheInvalidation = { prefix: string | null; runtimeOnly?: boolean };
 
 const store = new Map<string, Entry>();
 const inFlight = new Map<string, InFlight>();
@@ -22,8 +22,8 @@ function versionOf(key: string): number {
   return versions.get(key) ?? 0;
 }
 
-function notifyInvalidation(prefix: string | null): void {
-  for (const listener of invalidationListeners) listener({ prefix });
+function notifyInvalidation(prefix: string | null, runtimeOnly = false): void {
+  for (const listener of invalidationListeners) listener({ prefix, runtimeOnly });
 }
 
 /** Subscribe reference projections to mutations without coupling them to Axios. */
@@ -34,10 +34,11 @@ export function subscribeApiCacheInvalidation(
   return () => invalidationListeners.delete(listener);
 }
 
-/** Вернуть из кэша (если свежо) или загрузить и закэшировать на ttlMs. */
+/** TTL <= 0 only coalesces pending reads; no completed value is retained. */
 export async function cached<T>(key: string, ttlMs: number, loader: () => Promise<T>): Promise<T> {
   const hit = store.get(key);
-  if (hit && hit.expires > Date.now()) return hit.value as T;
+  if (ttlMs > 0 && hit && hit.expires > Date.now()) return hit.value as T;
+  if (hit) store.delete(key);
   const pending = inFlight.get(key);
   const version = versionOf(key);
   if (pending && pending.version === version && pending.epoch === epoch) {
@@ -52,7 +53,7 @@ export async function cached<T>(key: string, ttlMs: number, loader: () => Promis
     // A mutation that happened while this GET was running makes the response
     // unsuitable for the shared cache, even though its original caller may
     // still consume the response it requested.
-    if (epoch === startedAtEpoch && versionOf(key) === startedAtVersion) {
+    if (ttlMs > 0 && epoch === startedAtEpoch && versionOf(key) === startedAtVersion) {
       store.set(key, { value, expires: Date.now() + ttlMs });
     }
     return value;
@@ -74,7 +75,7 @@ export function patchCachedValues(prefix: string, patch: CachePatch): void {
 }
 
 /** Сбросить все записи, чей ключ начинается с prefix (напр. '/api/cards'). */
-export function bustPrefix(prefix: string): void {
+export function bustPrefix(prefix: string, runtimeOnly = false): void {
   const affectedKeys = new Set([...store.keys(), ...inFlight.keys()]);
   for (const key of affectedKeys) {
     if (!key.startsWith(prefix)) continue;
@@ -82,7 +83,7 @@ export function bustPrefix(prefix: string): void {
     store.delete(key);
     inFlight.delete(key);
   }
-  notifyInvalidation(prefix);
+  notifyInvalidation(prefix, runtimeOnly);
 }
 
 /** Полный сброс (напр. при разлогине — на будущее). */

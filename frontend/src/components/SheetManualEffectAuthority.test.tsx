@@ -11,6 +11,7 @@ import type { CharacterRuleState } from '../character/rules/types';
 import type { ForgeCharacter } from '../character/types';
 import SheetConditionsPanel from './SheetConditionsPanel';
 import SheetRuntimePanel from './SheetRuntimePanel';
+import {setEntityDisplay} from '../settings';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -133,6 +134,9 @@ describe('manual-effect component authority boundaries', () => {
   let root: Root;
 
   beforeEach(() => {
+    let stored: string | null = null;
+    vi.stubGlobal('localStorage', {getItem: () => stored, setItem: (_key: string, value: string) => {stored = value;}});
+    setEntityDisplay('effects', 'row');
     persistCharacterRuntimeMock.mockReset();
     persistDetachedManualEffectsMock.mockReset();
     container = document.createElement('div');
@@ -143,6 +147,7 @@ describe('manual-effect component authority boundaries', () => {
   afterEach(async () => {
     await act(async () => root.unmount());
     container.remove();
+    vi.unstubAllGlobals();
   });
 
   it('SheetConditionsPanel rejects a forced online removal before persistence, while a detached sheet persists', async () => {

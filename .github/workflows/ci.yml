@@ -1,4 +1,4 @@
-name: Focused CI
+name: Local contract suites
 
 permissions:
   contents: read
@@ -7,48 +7,55 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# PR/пуш выполняют только быстрый gate изменяемых продуктовых границ. Исторический
-# многочасовой полный набор сохранён исключительно как явная ручная диагностика:
-# он больше не запускается после каждого push, не ждёт несвязанный production SHA
-# и не считается доказательством ручной mini-MVP проверки.
-
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
     inputs:
-      run_full_regression:
-        description: 'Run the retired full diagnostic pipeline explicitly'
-        required: false
-        default: false
-        type: boolean
-      expected_deployed_commit:
-        description: 'Optional exact deployed SHA for the production browser spine'
-        required: false
+      suite:
+        description: 'Local suite; legacy diagnostics require an explicit ID'
+        type: choice
+        options: [core, extended, legacy-manual]
+        default: core
+      legacy_suite:
+        description: 'ID from tests/suites.json (only for legacy-manual)'
         type: string
 
 jobs:
-  focused:
-    name: Быстрый gate изменённых границ
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: content_review_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d content_review_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
+  plan:
+    runs-on: ubuntu-24.04
+    outputs:
+      suite: ${{ steps.policy.outputs.suite }}
+      shards: ${{ steps.policy.outputs.shards }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - id: policy
+        name: Select the exact mandatory workload
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+          REQUESTED_SUITE: ${{ inputs.suite || 'core' }}
+          LEGACY_SUITE: ${{ inputs.legacy_suite || '' }}
+        run: node scripts/testing/ci-policy.mjs >> "$GITHUB_OUTPUT"
+  contracts:
+    needs: plan
+    strategy:
+      fail-fast: false
+      # Each lane owns PG, worker and UI outputs. Bound memory/CPU concurrency.
+      max-parallel: 2
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
@@ -58,295 +65,76 @@ jobs:
         with:
           go-version: '1.25.x'
           cache-dependency-path: backend/go.sum
-      - name: Установка зависимостей
+      - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci --ignore-scripts
-      - name: TypeScript и целевые продуктовые регрессии
-        working-directory: frontend
+      - name: PostgreSQL 17 binaries for the owned native cluster
+        # Official PGDG repository. The runner creates its own random cluster,
+        # role, database and marker; no shared service database is passed in.
         run: |
-          npx tsc --noEmit
-          npx vitest run src/contexts/AuthContext.test.tsx src/api/authPolicy.test.ts src/components/CombatHotbar.test.ts src/content/reviewStatus.test.ts src/components/ReviewStatusEditor.test.tsx src/components/library/LibraryReviewStatus.test.tsx src/api/catalogPages.test.ts src/api/conditionsReviewStatus.test.ts src/character/passiveCatalogReview.test.tsx src/utils/resourcesReview.test.tsx
-      - name: Авторизация и ручная проверка каталога
-        working-directory: backend
-        env:
-          CANONICAL_RUNTIME_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_review_test?sslmode=disable
-          CONTENT_MIGRATION_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_review_test?sslmode=disable
-        run: |
-          go test ./... -run '^$'
-          go test . -run 'Test(AuthTokenLifetime|StrictAuth|JWTIssuance|ContentReview|ManualContentReview)' -count=1
-          go test ./migrations -run 'TestManualContentReview' -count=1
-
-  offline:
-    name: Полная историческая диагностика (только вручную)
-    if: github.event_name == 'workflow_dispatch' && inputs.run_full_regression
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: test
-          POSTGRES_DB: dnd_cards_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d dnd_cards_test"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.x'
-          cache-dependency-path: backend/go.sum
-      - name: Установка зависимостей
-        working-directory: frontend
-        run: npm ci --ignore-scripts
-      - name: Изолированные PostgreSQL базы для integration tests
-        env:
-          PGPASSWORD: test
-        run: |
-          createdb --host 127.0.0.1 --username postgres canonical_runtime_test
-          createdb --host 127.0.0.1 --username postgres content_migration_test
-      - name: Запрет tracked database dumps
-        run: node scripts/security/check-no-database-dumps.mjs
-      - name: Запрет известных паролей и авторегистрации из скриптов
-        run: |
-          node scripts/security/check-no-known-credentials.mjs
-          node --test scripts/security/check-no-known-credentials.test.mjs
-      - name: Production build
-        working-directory: frontend
-        run: npm run build
-      - name: Проверка generated fixture Rules Lab
-        working-directory: frontend
-        run: npm run rules-lab:check
-      - name: Проверка 448-root сертификата боя листов
-        working-directory: frontend
-        run: npm run sheet-combat-certification:check
-      - name: Frontend lint
-        working-directory: frontend
-        run: npm run lint
-      - name: Тесты (обычный набор + пилот покрытия)
-        working-directory: frontend
-        run: npm test
-      - name: Тесты MVP (оффлайн-часть)
-        working-directory: frontend
-        run: npm run test:mvp
-      - name: Manifest и 448-сочетаний micro-MVP (offline snapshot)
-        working-directory: frontend
-        run: npm run test:micro:manifest && npm run test:micro:matrix
-      - name: Структурное покрытие replay-critical ядра
-        working-directory: frontend
-        run: npm run test:rules:coverage
-      - name: Структурное покрытие правил-примитивов
-        working-directory: frontend
-        run: npm run test:rules:primitives
-      - name: Полный semantic gate micro-MVP
-        working-directory: frontend
-        run: npm run test:micro:coverage
-      - name: Browser acceptance Rules Lab + isolated sheet API fixture (desktop + mobile)
-        working-directory: frontend
-        run: npx playwright test --project=desktop-chromium --project=mobile-chromium
-      - name: Browser diagnostics on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-diagnostics
-          path: |
-            frontend/playwright-report
-            frontend/test-results
-      - name: CI-only fixture + transaction contract content migration (не release evidence)
-        working-directory: backend
-        env:
-          CONTENT_MIGRATION_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_migration_test?sslmode=disable
-          CONTENT_MIGRATION_TEST_BOOTSTRAP: '1'
-        run: go test -race -count=1 -run '^TestContentMigrationCreateReceiptRoundTripOnIsolatedPostgres$' .
-      - name: Backend tests
-        working-directory: backend
-        env:
-          CANONICAL_RUNTIME_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/canonical_runtime_test?sslmode=disable
-          CONTENT_MIGRATION_TEST_DSN: postgres://postgres:test@127.0.0.1:5432/content_migration_test?sslmode=disable
-        run: go test -race -count=1 -p 1 ./...
-      - name: Backend vet
-        working-directory: backend
-        run: go vet ./...
-
-  live-content:
-    name: Живой прод (только явная полная диагностика)
-    if: github.event_name == 'workflow_dispatch' && inputs.run_full_regression
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      MVP_CONTENT: '1'
-      VITE_API_URL: 'https://bagofholding.ru'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Установка зависимостей
-        working-directory: frontend
-        run: npm ci --ignore-scripts
-      - name: Живые MVP-тесты (прод-контент)
-        working-directory: frontend
-        run: npm run test:mvp
-      - name: Живая матрица и certification micro-MVP
-        working-directory: frontend
-        run: npm run test:micro:live-matrix
-      - name: Линт механик (схема по всей прод-БД)
-        run: node scripts/lint-mechanics.mjs
-      - name: Рефреш снапшота прод-контента
-        run: node scripts/content/export-prod.mjs
-      - name: Дифф дрейфа контента (снапшот vs прод)
-        run: |
-          if ! git diff --quiet officials/canon/prod-snapshot; then
-            echo "::warning::Прод-контент разошёлся со снапшотом в git (правка в UI?). Дифф ниже."
-            git --no-pager diff --stat officials/canon/prod-snapshot
-          else
-            echo "Снапшот совпадает с продом."
+          if [ ! -x /usr/lib/postgresql/17/bin/initdb ]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+            echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main' | sudo tee /etc/apt/sources.list.d/dnd-test-pgdg.list
+            sudo apt-get update
+            sudo apt-get install --yes postgresql-17
           fi
-      - name: Артефакт свежего снапшота
+          echo '/usr/lib/postgresql/17/bin' >> "$GITHUB_PATH"
+      - name: Run the shared suite runner
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+          REQUESTED_SUITE: ${{ needs.plan.outputs.suite }}
+          LEGACY_SUITE: ${{ inputs.legacy_suite || '' }}
+          SHARD: ${{ matrix.shard }}
+          TEST_PG_BIN: /usr/lib/postgresql/17/bin
+        run: |
+          args=(--mode ci --candidate HEAD --suite "$REQUESTED_SUITE" --output outputs/testing/ci)
+          if [ -n "$BASE_SHA" ]; then args+=(--base "$BASE_SHA"); fi
+          if [ -n "$LEGACY_SUITE" ]; then args+=(--select "$LEGACY_SUITE"); fi
+          if [ "$REQUESTED_SUITE" = extended ]; then args+=(--race); fi
+          if [ "$REQUESTED_SUITE" != legacy-manual ]; then args+=(--shard "$SHARD"); fi
+          node scripts/testing/run.mjs "${args[@]}"
+      - name: Publish verification reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: prod-snapshot
-          path: officials/canon/prod-snapshot
-
-  live-browser-spine:
-    name: Реальные production happy paths (только вручную)
-    needs: offline
-    if: github.event_name == 'workflow_dispatch' && inputs.run_full_regression
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    env:
-      LIVE_BROWSER_CANARY: '1'
-      LIVE_BROWSER_BASE_URL: 'https://bagofholding.ru'
-      LIVE_BROWSER_API_URL: 'https://bagofholding.ru'
-      MVP_CONTENT: '1'
-      VITE_API_URL: 'https://bagofholding.ru'
-      API_URL: 'https://bagofholding.ru'
-      LIVE_BROWSER_USER_A: ${{ secrets.LIVE_BROWSER_USER_A }}
-      LIVE_BROWSER_PASSWORD_A: ${{ secrets.LIVE_BROWSER_PASSWORD_A }}
+          name: ${{ needs.plan.outputs.suite == 'legacy-manual' && 'local-suite-results' || format('local-suite-{0}', matrix.shard) }}
+          # Do not upload run directories: they may contain transient DB data.
+          path: |
+            outputs/testing/ci/report.json
+            outputs/testing/ci/test-catalog.json
+            outputs/testing/ci/source-snapshot.json
+          if-no-files-found: error
+  aggregate:
+    needs: [plan, contracts]
+    if: always() && needs.plan.result == 'success' && needs.plan.outputs.suite != 'legacy-manual'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Проверка настроенного canary-аккаунта
-        shell: bash
-        run: |
-          test -n "$LIVE_BROWSER_USER_A"
-          test -n "$LIVE_BROWSER_PASSWORD_A"
-      - name: Фиксация проверяемого production SHA
-        shell: bash
+      - name: Require every shard to finish successfully
         env:
-          REQUESTED_COMMIT: ${{ inputs.expected_deployed_commit }}
-          PUSH_COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
-        run: |
-          commit="$REQUESTED_COMMIT"
-          if [ -z "$commit" ] && [ -n "$PUSH_COMMIT" ]; then
-            commit="$PUSH_COMMIT"
-          fi
-          if [ -z "$commit" ]; then
-            commit=$(curl -fsS https://bagofholding.ru/build-info.json | node -e '
-              let body = "";
-              process.stdin.on("data", chunk => body += chunk);
-              process.stdin.on("end", () => process.stdout.write(JSON.parse(body).source_commit || ""));
-            ')
-          fi
-          case "$commit" in
-            ''|*[!0-9a-f]*) echo "Expected an exact 40-character lowercase production SHA" >&2; exit 1 ;;
-          esac
-          test "${#commit}" -eq 40
-          echo "EXPECTED_DEPLOYED_COMMIT=$commit" >> "$GITHUB_ENV"
-      - name: Загрузка точного проверяемого релиза
-        shell: bash
-        run: |
-          git fetch --no-tags --depth=1 origin "$EXPECTED_DEPLOYED_COMMIT"
-          git checkout --detach "$EXPECTED_DEPLOYED_COMMIT"
-          test "$(git rev-parse HEAD)" = "$EXPECTED_DEPLOYED_COMMIT"
-      - name: Ожидание exact-SHA frontend и backend после push
-        if: github.event_name == 'push'
-        shell: bash
-        run: |
-          for attempt in $(seq 1 90); do
-            deployed=$(
-              curl -fsS https://bagofholding.ru/build-info.json 2>/dev/null | node -e '
-                let body = "";
-                process.stdin.on("data", chunk => body += chunk);
-                process.stdin.on("end", () => {
-                  try { process.stdout.write(JSON.parse(body).source_commit || ""); }
-                  catch { process.stdout.write(""); }
-                });
-              ' || true
-            )
-            backend=$(
-              curl -fsS https://bagofholding.ru/api/health 2>/dev/null | node -e '
-                let body = "";
-                process.stdin.on("data", chunk => body += chunk);
-                process.stdin.on("end", () => {
-                  try { process.stdout.write(JSON.parse(body).source_commit || ""); }
-                  catch { process.stdout.write(""); }
-                });
-              ' || true
-            )
-            if [ "$deployed" = "$EXPECTED_DEPLOYED_COMMIT" ] && [ "$backend" = "$EXPECTED_DEPLOYED_COMMIT" ]; then
-              exit 0
-            fi
-            sleep 30
-          done
-          echo "Production did not expose $EXPECTED_DEPLOYED_COMMIT within 45 minutes" >&2
-          exit 1
+          SHARD_RESULT: ${{ needs.contracts.result }}
+        run: test "$SHARD_RESULT" = success
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Установка зависимостей
-        working-directory: frontend
-        run: npm ci --ignore-scripts
-      - name: Ожидание exact certification-readiness перед production spine
-        working-directory: frontend
-        shell: bash
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: local-suite-*
+          path: outputs/testing/shards
+      - name: Verify global coverage and exact source, then combine receipts
         run: |
-          mkdir -p test-results-live
-          readiness_log="test-results-live/certification-readiness.log"
-          attempts=1
-          delay_seconds=0
-          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
-            attempts=90
-            delay_seconds=30
-          fi
-          for attempt in $(seq 1 "$attempts"); do
-            if npm run test:production:certification-readiness >"$readiness_log" 2>&1; then
-              cat "$readiness_log"
-              exit 0
-            fi
-            if [ "$attempt" -lt "$attempts" ]; then
-              echo "Certification is not ready yet ($attempt/$attempts); retrying in ${delay_seconds}s."
-              sleep "$delay_seconds"
-            fi
-          done
-          echo "Production did not reach exact certification readiness after $attempts attempt(s)." >&2
-          cat "$readiness_log" >&2
-          exit 1
-      - name: Проверка типов production spine
-        working-directory: frontend
-        run: npm run test:browser:live:typecheck
-      - name: "Три пути: lineage/ranged/reaction + martial/spell + full-caster/world"
-        working-directory: frontend
-        run: npm run test:browser:live:nightly
-      - name: Краткие диагностики production spine
-        if: failure()
+          mapfile -t reports < <(find outputs/testing/shards -name report.json -type f | sort)
+          node scripts/testing/aggregate-shards.mjs outputs/testing/ci "${reports[@]}"
+      - name: Publish the complete release-eligible report
         uses: actions/upload-artifact@v4
         with:
-          name: live-browser-spine-${{ github.run_id }}-${{ github.run_attempt }}
-          path: frontend/test-results-live
-          if-no-files-found: warn
-          retention-days: 7
+          name: local-suite-results
+          path: |
+            outputs/testing/ci/report.json
+            outputs/testing/ci/test-catalog.json
+            outputs/testing/ci/source-snapshot.json
+          if-no-files-found: error

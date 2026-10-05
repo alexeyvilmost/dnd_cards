@@ -1,0 +1,2898 @@
+{
+  "schema_version": 1,
+  "kind": "read-only-original-plan-completion-audit",
+  "created_at": "2026-10-04T22:14:08.412Z",
+  "plan": {
+    "path": "docs/audits/2026-10-04/agent-plan.json",
+    "sha256": "e06c9d2942116a9f0bcedd8d5a3df655aca7868853e2506b049559423e9c7c38",
+    "baseline_commit": "4549fb3c903659d3fe2beb272f7f903a731f7388"
+  },
+  "method": "Original indexed text retained verbatim. Current code+existing evidence read only. No source edit, new test or benchmark. Proven scope does not imply all task steps completed or production enablement.",
+  "statuses": {
+    "proven": "Requirement fulfilled in documented implemented scope or explicit justified replacement; not a production SLA.",
+    "incomplete": "Concrete local implementation/evidence remainder; no newly invented optimization.",
+    "external": "Needed external data/environment/operator step; conditional deletion must remain gated."
+  },
+  "receipts": [
+    {
+      "path": "docs/audits/2026-10-04/execution/TEST-03-final-core.json",
+      "sha256": "78a92df5dee62205601ebe5787d188ae2c49d1cbc638585711723bb6f2bbce90",
+      "status": "passed",
+      "source_snapshot": {
+        "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+        "files": 4313
+      },
+      "artifact_hash": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+      "ui_manifest": "2a562f13aab53051d724f6c8b5aaf88dc2136f816a10795dd202a98ba392fe83",
+      "tests": 504,
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "path": "docs/audits/2026-10-04/execution/TEST-03-final-extended.json",
+      "sha256": "46242744e1c6c1dc80ef2d8d80eeb90794e208da2c613dfe70ada42fc68a59e8",
+      "status": "passed",
+      "source_snapshot": {
+        "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+        "files": 4313
+      },
+      "artifact_hash": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+      "ui_manifest": "2a562f13aab53051d724f6c8b5aaf88dc2136f816a10795dd202a98ba392fe83",
+      "tests": 7586,
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    }
+  ],
+  "requirements": [
+    {
+      "id": "PERF-01.S1",
+      "task": "PERF-01",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Вынести общий resolver для initialize/rest/camp-action/camp-inventory. Дедуплицировать needs и группировать по entity type и способу ссылки: UUID, card_number, resource_id; загружать одну волну пакетными SQL.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.S2",
+      "task": "PERF-01",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Сохранить строгую обработку отсутствующих сущностей, неизвестных needs, неоднозначных spell aliases, completeEffectTypes и variablesComplete. Собирать catalog через Map; сортировать один раз перед canonical serialization/hash вместо сортировки после каждой вставки.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.S3",
+      "task": "PERF-01",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Предварительно собрать известное транзитивное замыкание ссылок через общий reference registry. Не считать синтаксическое замыкание полным для динамических правил: сохранить bounded needs fallback и измерять его срабатывание.",
+      "status": "incomplete",
+      "finding": "Known transitive reference-registry prefetch is absent; bounded dynamic needs fallback is retained.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.S4",
+      "task": "PERF-01",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Кешировать только immutable entity closures, indexes и compiled definitions. Ключ включает artifact hash, rules/schema version, canonical catalog/content hash и build identity, если значение зависит от сборки персонажа; private content дополнительно изолируется stable principal/tenant/access scope и revision прав. Raw access tokens в ключи и логи не помещать.",
+      "status": "proven",
+      "finding": "Fresh complete selected content/membership/rights proof substitutes durable rights epoch; current character is rebuilt and mutable state is not cached.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.S5",
+      "task": "PERF-01",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Для каждого запроса проверять право доступа до cache hit, не допускать использования чужой private entity через общий hash. Изменения механики, grants, build choices, ownership и policy должны приводить к новому ключу/инвалидации. Mutable HP/resources/equipment/pending state не сохранять в shared cache.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.S6",
+      "task": "PERF-01",
+      "field": "steps",
+      "number": 6,
+      "requirement": "Установить лимиты байтов/entries и LRU eviction, in-flight deduplication, безопасный cache miss fallback и метрики hit/miss. Исторический бой всегда читает его pinned catalog/artifact, не текущий каталог.",
+      "status": "incomplete",
+      "finding": "Byte/entry limits, LRU, copies, miss fallback and telemetry are proven. Separate in-flight dedup is absent; cross-RR snapshot I/O deliberately is not merged. Publication under mutex is not request deduplication.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.S7",
+      "task": "PERF-01",
+      "field": "steps",
+      "number": 7,
+      "requirement": "Сравнить до/после на baseline: rounds, SQL, bytes, CPU, p50/p95. Принять выигрыш только при сохранении canonical hashes и сценарной эквивалентности.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.V1",
+      "task": "PERF-01",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Два класса и два предмета на одних общих примитивах с разными данными; party 1/2/6.",
+      "status": "incomplete",
+      "finding": "Items with grants3/5 and party1/2/6 proven; actual cache differential uses line+swordsman fighter presets, not two different classes.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.V2",
+      "task": "PERF-01",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Missing need, alias collision, duplicated need, stalled resolver, changed content during preparation.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.V3",
+      "task": "PERF-01",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Два пользователя с различным доступом к private entities, смена сессии, отзыв доступа; cache hit не обходит авторизацию.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.V4",
+      "task": "PERF-01",
+      "field": "verification",
+      "number": 4,
+      "requirement": "Replay старого artifact/catalog, cold cache, warm cache и eviction дают одинаковые результаты.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.A1",
+      "task": "PERF-01",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "SQL queries одной волны масштабируются по группам типов/ссылок, а не по числу сущностей.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.A2",
+      "task": "PERF-01",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Все четыре worker preparation paths используют один resolver; нет параллельной сокращённой механики.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.A3",
+      "task": "PERF-01",
+      "field": "acceptance",
+      "number": 3,
+      "requirement": "Ключ и инвалидация явно покрывают content+artifact+build+rights, cache ограничен по памяти.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-01.A4",
+      "task": "PERF-01",
+      "field": "acceptance",
+      "number": 4,
+      "requirement": "Есть численное сравнение с OBS-01; при отсутствии выигрыша кеш не включается по умолчанию.",
+      "status": "proven",
+      "finding": "Shared batch resolver for four paths; fresh immutable content proof cache limited to equipment/initiative. Same-seed differential and numerical before/after exist; default OFF.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-01-paired-comparison.json",
+        "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json"
+      ],
+      "code": [
+        "backend/roguelike_catalog_batch.go",
+        "backend/roguelike_worker_catalog.go",
+        "backend/character_preparation_cache.go",
+        "scripts/performance/check-preparation-cache.mjs"
+      ]
+    },
+    {
+      "id": "PERF-02.S1",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.S2",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.S3",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Захватить fingerprints всех семантических входов: character/runtime revision, run phase/revision, owned inventory/equipment/attunement, content version и rights. Стоимость/результат должны вычисляться общей операцией на этих входах.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.S4",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 4,
+      "requirement": "В короткой транзакции проверить receipt/command reuse, права, ownership, run membership/phase, ревизии и fingerprints подготовленного результата; затем атомарно записать расходы, patch, события и receipt. Под character/run write locks не выполнять HTTP/worker I/O и полную повторную сборку.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.S5",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 5,
+      "requirement": "При изменении входов отклонить stale command или заново подготовить её до lock согласно явному протоколу. Не использовать новый command ID для повторной отправки уже подготовленной команды с неизвестным исходом; не бросать кости/не списывать повторно.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.S6",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 6,
+      "requirement": "Переиспользовать статическую сборку в клиентском preview по корректному ключу зависимостей. После принятия применить authoritative postimage; на replay загрузить актуальное состояние, не откатывая его старым receipt.",
+      "status": "incomplete",
+      "finding": "Authoritative postimage and replay reload proven. Keyed reuse of static client preview assembly result is absent; compatibility SheetEquipmentPanel:163 still calls participant builder. Server immutable declarations cache is not that result cache.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.S7",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 7,
+      "requirement": "Заменить повторную полную UI-сборку в SoloCombatPage перед trusted initialize на серверную read-only preparation инициативных options тем же builder. Сохранять каноничные entity choices, выбор по ID и повторную серверную проверку стоимости/ревизии при initialize; не пропускать предложения по имени класса.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.S8",
+      "task": "PERF-02",
+      "field": "steps",
+      "number": 8,
+      "requirement": "Оставить совместимый старый endpoint до миграции открытых клиентов; сравнить timings/lock duration на baseline.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.V1",
+      "task": "PERF-02",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Два одновременных equip в разных вкладках, stale character/run/content revision, истечение прав и переход run camp→combat между prepare/commit.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.V2",
+      "task": "PERF-02",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Обрыв сети до ответа и после commit, reload с pending request, retry тем же ID, replay после более поздней команды.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.V3",
+      "task": "PERF-02",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Обычный предмет и второй предмет с иным ресурсом/условием/стоимостью; недопустимое equip не оставляет частичный patch.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.V4",
+      "task": "PERF-02",
+      "field": "verification",
+      "number": 4,
+      "requirement": "Инициативный выбор отсутствует/доступен/отклонён; другая сущность с тем же declaration; RNG cursor и исходная инициатива не меняются при retry.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.V5",
+      "task": "PERF-02",
+      "field": "verification",
+      "number": 5,
+      "requirement": "Tracing подтверждает отсутствие worker/HTTP вызова под character/run locks.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.A1",
+      "task": "PERF-02",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "На новом intent path server заново проверяет допустимость и стоимость через canonical engine.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.A2",
+      "task": "PERF-02",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Транзакция содержит только ограниченную проверку подготовленных входов и атомарную запись; нет dependency resolution/HTTP под locks.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.A3",
+      "task": "PERF-02",
+      "field": "acceptance",
+      "number": 3,
+      "requirement": "Pending/replay/reload сохраняют exactly-once эффект, исходный RNG и отсутствие двойной оплаты.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-02.A4",
+      "task": "PERF-02",
+      "field": "acceptance",
+      "number": 4,
+      "requirement": "Перед серверным initialize больше нет обязательной полной дублирующей UI-сборки ради инициативных options.",
+      "status": "proven",
+      "finding": "Canonical authority and CAS/fresh stamps outside/inside short transaction, same-ID recovery, options without browser participant, compatibility endpoint retained. Resource latency improved; ordinary and initiative medians do not prove overall speedup.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      ],
+      "code": [
+        "backend/character_equipment_intent.go",
+        "backend/character_preparation_cache.go",
+        "frontend/src/components/SheetEquipmentPanel.tsx",
+        "frontend/src/character/sheetCombatRuntimeFactory.ts",
+        "frontend/src/character/assemblyFactory.ts"
+      ]
+    },
+    {
+      "id": "PERF-03.S1",
+      "task": "PERF-03",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Разложить размеры и CPU envelope по mutable world, immutable catalog/actions/presentation, history, mirrored character turn_state и receipts. Определить, какой участок доминирует: JSON, clone, hash, engine CPU или storage.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.S2",
+      "task": "PERF-03",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Спроектировать новый protocol/schema с immutable catalog blob по canonical hash и отдельным mutable snapshot. Shared artifact caches должны сохранять оригинальные исторические bytes; нового боя это касается по явной версии.",
+      "status": "proven",
+      "finding": "Implementation replacement explicitly documented in PERF-03-scope-review: immutable input DB03 and self-contained mirrors; dynamic catalogActions stays runtime-owned.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.S3",
+      "task": "PERF-03",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Передавать compact authoritative projection/patch с base revision и result hash только при совпадении протокола и базы; полное восстановление отдаёт snapshot. Нельзя выдавать private entropy браузеру или конструировать второй источник истины.",
+      "status": "proven",
+      "finding": "Approved replacement: same-frame complete response reconstruction, no inter-request patch/base revision; no stale remote base exists.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.S4",
+      "task": "PERF-03",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Добавить readers старой и новой схем, pinned artifact replay, проверку недоступного blob. Миграции — additive; старые envelopes, события и receipts не переписывать молча. Согласовать compact receipts с отдельной DB-задачей до смены storage.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.S5",
+      "task": "PERF-03",
+      "field": "steps",
+      "number": 5,
+      "requirement": "По профилю заменить избыточные clone/hash или проверки прогресса на эквивалентные операции; не удалять hash-based stall guard без тестов зависания ИИ и доказательства, что новый progress marker покрывает все переходы.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.S6",
+      "task": "PERF-03",
+      "field": "steps",
+      "number": 6,
+      "requirement": "Если после сокращения payload event-loop lag/очередь остаётся bottleneck, добавить ограниченный CPU pool либо stateless worker replicas: bounded queue, memory limits, cancellation до commit и насыщение. Доступ к нужным archived artifacts обязателен для каждого исполнителя.",
+      "status": "proven",
+      "finding": "Conditional pool/replicas not introduced without proven benefit. Shared Go admission before marshal bounds outstanding requests; remote synchronous cancellation does not abort running JavaScript.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.S7",
+      "task": "PERF-03",
+      "field": "steps",
+      "number": 7,
+      "requirement": "Сравнить 1/4/16 параллельных клиентов, cold artifact load и archived combat; проверить, что shared cache не хранит mutable state и выполнение не меняет последовательность RNG.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.V1",
+      "task": "PERF-03",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Новый/старый transport с теми же fixture commands даёт одинаковые final hashes, события, pending continuation и RNG cursor.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.V2",
+      "task": "PERF-03",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Patch с неверной base revision отклоняется и вызывает full resync; отсутствующий catalog/artifact fail-closed.",
+      "status": "proven",
+      "finding": "Wrong inter-request base is inapplicable to chosen protocol; malformed mirrors/missing or corrupt immutable inputs/artifacts fail closed.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.V3",
+      "task": "PERF-03",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Тесты crash/retry после вычисления до commit и после commit; ресурсы списаны однажды.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.V4",
+      "task": "PERF-03",
+      "field": "verification",
+      "number": 4,
+      "requirement": "Нагрузочный локальный прогон показывает queue/CPU/memory; saturation не вызывает unbounded growth.",
+      "status": "proven",
+      "finding": "Fresh bursts and bounded admission tested; not a proof of global RSS/heap bound. Retained processedCommandIds growth195B/turn measured explicitly.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.V5",
+      "task": "PERF-03",
+      "field": "verification",
+      "number": 5,
+      "requirement": "Старый клиент/бой продолжает работать с совместимой версией сервера.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.A1",
+      "task": "PERF-03",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Измерены уменьшение bytes и CPU, transport не включён без доказанной корректности.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.A2",
+      "task": "PERF-03",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Immutable data отделены от runtime без переписывания исторических артефактов.",
+      "status": "proven",
+      "finding": "Immutable frozen input separated by owner/artifact/content; historical bytes retained. Dynamic catalogActions not falsely treated as immutable.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.A3",
+      "task": "PERF-03",
+      "field": "acceptance",
+      "number": 3,
+      "requirement": "Масштабирование CPU добавлено только при подтверждённом bottleneck и ограничено ресурсами.",
+      "status": "proven",
+      "finding": "Conditional architecture: admission bound substituted for an unproven pool; host sizing remains external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-03.A4",
+      "task": "PERF-03",
+      "field": "acceptance",
+      "number": 4,
+      "requirement": "Rollback не требует восстановления всей БД.",
+      "status": "proven",
+      "finding": "Accepted narrower self-contained mirrors-v2 plus frozen input catalog; full-result/RNG parity, cold current/archive1/4/16, bounded admission4 and live-module LRU4, actual two-phase backend kill/retry,160+100 legal turns. No production SLO or global heap bound.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03.md",
+        "docs/audits/2026-10-04/execution/PERF-03-scope-review.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/DB-03.md"
+      ],
+      "code": [
+        "frontend/worker/mirrors.mjs",
+        "frontend/worker/server.mjs",
+        "backend/roguelike_worker_mirrors.go",
+        "backend/roguelike_worker_client.go",
+        "scripts/performance/crash-recovery.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S1",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Получить bundle attribution общих imports; уже существующие lazy routes, lazy detail modals, dynamic 3D/PDF/Mermaid и Caddy compression сохранить. Размер всего dist не использовать как initial-load budget.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S2",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Разделить лёгкий context/API диалога и тяжёлый lazy host; извлечь ChoiceResolver из общего файла кузницы. Каноничные action/spell/item components, previews, aria и настройка icon/row остаются прежними.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S3",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Ограничить загрузку rules authority игровыми маршрутами; не блокировать библиотеку/настройки/log-in лишними запросами, но ни одна игровая mutation не выполняется до авторитетной готовности.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S4",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Для review status добавить серверные filter/summary по тем же правам и query semantics; CardLibrary получает ограниченную страницу и counts, не скачивает последовательно весь каталог ради фильтра/summary.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S5",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Для gameplay и rest заменить full cardsIndex traversal на bulk hydration нужных owned/equipped/referenced IDs. Полный индекс оставить только потребителям, которым он необходим; canonical closure достраивается общим resolver.",
+      "status": "incomplete",
+      "finding": "Full public/private cardsIndex traversal remains at SheetRestButtons:343/497, useSoloCombatBootstrap:131/167, SoloCombatPage:354. SheetActionsPanel now loads referenced container IDs only.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S6",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 6,
+      "requirement": "Разделить invalidation ownership/catalog metadata и обычных HP/turn mutations. Private acquisition, sale/reward, изменение тега/механики, logout/account switch и отзыв прав должны обновлять соответствующий кеш.",
+      "status": "incomplete",
+      "finding": "Any successful non-GET characters-v3/roguelike request busts cardsIndex. HP/turn invalidation is not separated from ownership/catalog changes.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S7",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 7,
+      "requirement": "Добавлять виртуализацию длинного списка только при подтверждении profile; сохранять focus, Back/scroll restoration, previews и общие entity renderers.",
+      "status": "proven",
+      "finding": "Virtualization is conditional on profile; no additional virtualization required without evidence. Canonical components/focus remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S8",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 8,
+      "requirement": "Уточнить PWA precache manifest: glob index-*.js захватывает shared chunks с похожим именем. Проверить cold install, update и imports старой открытой вкладки; не нарушать согласованность release identity.",
+      "status": "incomplete",
+      "finding": "One-build install/offline login and retained file unit tests proven; actual two-version SW update and old-open-tab lazy import not executed.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.S9",
+      "task": "PERF-04",
+      "field": "steps",
+      "number": 9,
+      "requirement": "Сравнить entry/route static closure, API count/bytes, LCP/long tasks и network waterfаll. Entry ≤180 KB gzip рассматривать как предварительную цель после attribution, а не обязательное упрощение правил.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.V1",
+      "task": "PERF-04",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Library normal/review modes: page count, summary/filter parity, private visibility и редактирование сущности.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.V2",
+      "task": "PERF-04",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Cold/warm navigation, dialog first-open/cancel, paper-sheet previews, icon/row settings.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.V3",
+      "task": "PERF-04",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Equip/rest после purchase/sale/reward и после смены пользователя; никаких stale private cards.",
+      "status": "incomplete",
+      "finding": "Acquisition and account invalidation tests exist; remaining whole-index consumers and same-session external rights revocation are not fully verified.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.V4",
+      "task": "PERF-04",
+      "field": "verification",
+      "number": 4,
+      "requirement": "PWA install/update, retained old chunks, несовместимый rules bootstrap fail-closed.",
+      "status": "incomplete",
+      "finding": "Rules bootstrap fail-closed is tested; actual PWA update/old-tab import remains unverified.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.V5",
+      "task": "PERF-04",
+      "field": "verification",
+      "number": 5,
+      "requirement": "Длинный список доступен с клавиатуры и не теряет фокус/scroll.",
+      "status": "proven",
+      "finding": "CardLibrary/useLibraryCatalogPage tests preserve row/detail DOM and scroll, search Back/Forward, canonical keyboard previews; full extended browser UI gates pass. Virtualization is not added without profile evidence.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.A1",
+      "task": "PERF-04",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Review mode не делает полный последовательный обход каталога ради first page/summary.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.A2",
+      "task": "PERF-04",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Gameplay не загружает полный общий cards index, если достаточно owned/referenced closure.",
+      "status": "incomplete",
+      "finding": "Gameplay/rest still call full getCardsIndex; page-limited CardLibrary does not satisfy this acceptance.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.A3",
+      "task": "PERF-04",
+      "field": "acceptance",
+      "number": 3,
+      "requirement": "Общий JS граф уменьшен по измерениям без дублирующего упрощённого renderer или calculator.",
+      "status": "proven",
+      "finding": "Lazy hosts/route authority/server review summary and page-limited library proven; entry graph and browser navigation measured. Not all gameplay index consumers converted.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-04.A4",
+      "task": "PERF-04",
+      "field": "acceptance",
+      "number": 4,
+      "requirement": "Кеш остаётся согласованным и изолированным по правам/сессии.",
+      "status": "incomplete",
+      "finding": "Session/account and explicit acquisition invalidation proven; externally revoked rights with unchanged token and an already warm index is not covered. This is missing evidence, not a newly demonstrated exploit.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-04.md",
+        "docs/audits/2026-10-04/execution/PERF-04-lazy-comparison.json",
+        "docs/audits/2026-10-04/execution/REF-02-library.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json"
+      ],
+      "code": [
+        "frontend/src/utils/cardsIndex.ts",
+        "frontend/src/api/client.ts",
+        "frontend/src/components/SheetRestButtons.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "frontend/src/pages/SoloCombatPage.tsx",
+        "scripts/performance/check-pwa.mjs"
+      ]
+    },
+    {
+      "id": "PERF-05.S1",
+      "task": "PERF-05",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Записать CPU/React profile для hover, движения, смены цели и animation beats на большой карте с несколькими световыми областями и существами разного footprint.",
+      "status": "incomplete",
+      "finding": "Profile covers hover/selection24x18/fourlights in JSDOM, not full CPU/browser-frame movement/target/animation comparison on large-map mixed-footprint fixture.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.S2",
+      "task": "PERF-05",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Стабилизировать displayState/tokens по presented state и реальному изменению портретов; отделить авторитетный state от presentation state без новых игровых команд.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.S3",
+      "task": "PERF-05",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Выделить статическую геометрию, освещение, токены и hover/highlight overlays. Мемоизировать дорогие проекции по действительным семантическим ревизиям/источникам, чтобы движение указателя не считало заново свет всех клеток.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.S4",
+      "task": "PERF-05",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Кешировать readonly preview по world/board revision, actor, action, targets, choices и spatial context. Cache key по одному action ID запрещён; изменение runtime/effects/resources должно инвалидировать preview.",
+      "status": "proven",
+      "finding": "Existing useMemo for hit/cover/movement previews keys full state/spatial projection, actor/action/targets/choices; every immutable state replacement invalidates. Cross-world retained preview cache is unnecessary.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.S5",
+      "task": "PERF-05",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Если profile доказывает стоимость full clone/executor, выделить общую чистую plan/validate операцию из каноничного исполнителя. Preview и execution вызывают одну операцию; авторитетный execution заново проверяет стоимость, фазу и цели.",
+      "status": "proven",
+      "finding": "Conditional extraction of pure plan/validate not required without executor/clone bottleneck profile; canonical executor remains reused.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.S6",
+      "task": "PERF-05",
+      "field": "steps",
+      "number": 6,
+      "requirement": "Сохранить один диалог предварительного/подтверждённого броска, presentation timeline, каноничные карточки и settings. Кеш/анимация не расходуют RNG, HP или ресурсы.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.S7",
+      "task": "PERF-05",
+      "field": "steps",
+      "number": 7,
+      "requirement": "Сравнить длительность render/long tasks и кадры на тех же fixtures; не делать широкие замены механизмов без профиля.",
+      "status": "incomplete",
+      "finding": "Same-fixture JSDOM render measurements exist; required broader browser long-task/frame comparison absent.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.V1",
+      "task": "PERF-05",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Укрытие, ray/area delivery, крупные footprint, свет, маршрут, hazards и недоступная цель.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.V2",
+      "task": "PERF-05",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Два действия на одном примитиве с разными targeting/cost данными.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.V3",
+      "task": "PERF-05",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Preview не меняет исходный state/hash, RNG cursor, HP/resources или pending continuation.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.V4",
+      "task": "PERF-05",
+      "field": "verification",
+      "number": 4,
+      "requirement": "После equip/effect/turn/board revision старое preview не используется.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.V5",
+      "task": "PERF-05",
+      "field": "verification",
+      "number": 5,
+      "requirement": "Keyboard focus, каноничные previews, icon/row и 2D/3D fallback сохраняются.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.A1",
+      "task": "PERF-05",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Hover неизменной клетки/статического слоя не пересчитывает все lighting/geometry projections.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.A2",
+      "task": "PERF-05",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Расчёт preview совпадает с authoritative command для одинаковых входов.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "PERF-05.A3",
+      "task": "PERF-05",
+      "field": "acceptance",
+      "number": 3,
+      "requirement": "Есть измеренный выигрыш render/CPU без изменения игровых исходов.",
+      "status": "proven",
+      "finding": "Static projection and display identity stable; exact repeated illumination25920->0, JSDOM render sum480.63->381.69ms. Canonical preview and full-state identity memo remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05.md",
+        "docs/audits/2026-10-04/execution/PERF-05-before.log",
+        "docs/audits/2026-10-04/execution/PERF-05-after-final.log",
+        "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+      ],
+      "code": [
+        "frontend/src/components/TacticalBattleMap.tsx",
+        "frontend/src/components/TacticalBattleMap.performance.test.tsx",
+        "frontend/src/solo-combat/tacticalMapProjection.ts",
+        "frontend/src/solo-combat/displayState.ts"
+      ]
+    },
+    {
+      "id": "AI-01.S1",
+      "task": "AI-01",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Добавить structured error mapper: app authorization / upstream region / upstream permission / rate limit / network / timeout / unknown.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.S2",
+      "task": "AI-01",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Локально моделировать JSON и HTML 403, content type и provider request ID; редактировать секретные заголовки и не логировать prompt/base64.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.S3",
+      "task": "AI-01",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Проверить конфигурационный путь endpoint/model/proxy. Фактическая модель сейчас gpt-image-1; не менять её для лечения сетевого отказа.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.S4",
+      "task": "AI-01",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Подготовить runbook проверки container egress, проекта ключа и доступа к конкретной модели. GET models проверяет соединение, но не разрешение на Images API.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.S5",
+      "task": "AI-01",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Реальную внешнюю диагностику и платную пробу оставить отдельным явно разрешённым шагом. До этого точную причину текущего 403 отмечать unknown.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.V1",
+      "task": "AI-01",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Mock cases local/upstream 403 различаются.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.V2",
+      "task": "AI-01",
+      "field": "verification",
+      "number": 2,
+      "requirement": "UI показывает полезную причину без секретов.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.V3",
+      "task": "AI-01",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Логирование не содержит base64/prompt/token.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.A1",
+      "task": "AI-01",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Источник ошибки прослеживается от браузера до провайдера.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-01.A2",
+      "task": "AI-01",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Runbook ссылается на текущую официальную документацию и не обещает устранение регионального отказа VPN.",
+      "status": "proven",
+      "finding": "Local structured mapper/redaction/correlation, actual Axios interceptor regressions and official-source runbook proven. Original S5 explicitly leaves paid production diagnosis external and real403 unknown.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/openai_service.go",
+        "backend/image_controller.go",
+        "frontend/src/api/imageErrors.ts",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-02.S1",
+      "task": "AI-02",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Направить существующие маршруты в один domain service: provider → storage → entity update.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.S2",
+      "task": "AI-02",
+      "field": "steps",
+      "number": 2,
+      "requirement": "При отказе не сохранять placeholder и не возвращать ложный success; сохранять прежнее изображение.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.S3",
+      "task": "AI-02",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Новые изображения сохранять в object storage, в entity писать URL. Старые data URLs продолжают читаться до отдельной миграции.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.S4",
+      "task": "AI-02",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Логировать request ID, размер, latency и фактическую model; убрать запись полного base64 и неверную метку DALL-E.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.S5",
+      "task": "AI-02",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Согласовать timeout/cancel/error contracts обоих frontend callers, сохранив права; failures storage/DB имеют безопасный cleanup.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.V1",
+      "task": "AI-02",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Provider/storage/DB failures и cancel.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.V2",
+      "task": "AI-02",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Старый и новый endpoint дают совместимый success DTO.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.V3",
+      "task": "AI-02",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Existing image не изменяется при отказе.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.A1",
+      "task": "AI-02",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Все зарегистрированные пути имеют единый storage/error contract.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-02.A2",
+      "task": "AI-02",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Нет фиктивного успеха и новых base64 blobs в Card.ImageURL.",
+      "status": "proven",
+      "finding": "Three registered generation adapters share provider/storage/error contract; mock provider/storage+SQL and native jobs transaction checks cover no false success/base64, cancel/cleanup/unknown write. Real provider/storage execution external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ],
+      "code": [
+        "backend/generated_image_service.go",
+        "backend/image_controller.go",
+        "backend/controller.go",
+        "backend/generated_image_service_test.go",
+        "backend/generated_image_controller_test.go"
+      ]
+    },
+    {
+      "id": "AI-03.S1",
+      "task": "AI-03",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Ввести job ID/fingerprint/owner и persisted состояния queued/running/succeeded/failed/unknown; лимиты concurrency и бюджета.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.S2",
+      "task": "AI-03",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Worker lease и restart не должны повторять paid POST с неизвестным результатом. Локальная идемпотентность не доказывает exactly-once внешнего API.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.S3",
+      "task": "AI-03",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Клиентский повтор возвращает тот же job; UI восстанавливает статус после reload, результат хранится в storage.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.S4",
+      "task": "AI-03",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Для разрешённой обычной сетевой проблемы сравнить client-only CONNECT proxy, tunnel sidecar и отдельный generation service. VPN server на том же TimeWeb host не меняет его egress.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.S5",
+      "task": "AI-03",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Проверить на тестовом стенде TLS/DNS/NO_PROXY, внутренний worker/DB/storage traffic, потерю egress и откат. API key не передавать произвольному relay, TLS не отключать.",
+      "status": "incomplete",
+      "finding": "Two local CONNECT/TLS/NO_PROXY tests prove client isolation. No combined DNS/egress outage+recovery and unaffected gameplay/DB/worker/storage scenario receipt found.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.S6",
+      "task": "AI-03",
+      "field": "steps",
+      "number": 6,
+      "requirement": "Поддерживаемое размещение/правомерный доступ пользователей подтвердить до реальной настройки. Не описывать иностранный IP как гарантию обхода регионального ограничения. Внешнее изменение выполняется только по отдельному запросу.",
+      "status": "external",
+      "finding": "Actual permitted placement/account/users and external gateway configuration require a separately authorized target; no TimeWeb/VPN change performed.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.V1",
+      "task": "AI-03",
+      "field": "verification",
+      "number": 1,
+      "requirement": "S12, особенно timeout после отправки тела и потеря ответа.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.V2",
+      "task": "AI-03",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Две одинаковые заявки не создают два локальных jobs.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.V3",
+      "task": "AI-03",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Недоступность генерации не блокирует игровые команды.",
+      "status": "incomplete",
+      "finding": "Gameplay remains on separate clients by code; no concurrent real game command while generation egress fails/restarts is demonstrated.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.A1",
+      "task": "AI-03",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Нет слепых повторных платных запусков.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.A2",
+      "task": "AI-03",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Есть восстановимый статус и безопасная изоляция сети.",
+      "status": "proven",
+      "finding": "Durable owned jobs, limits, unknown lease, same UUID, history/paging/reload and no automatic paid repeat proven. Attempt quota is not a monetary guarantee.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "AI-03.A3",
+      "task": "AI-03",
+      "field": "acceptance",
+      "number": 3,
+      "requirement": "Региональный отказ либо разрешённый доступ установлен отдельно, не скрыт под network retry.",
+      "status": "external",
+      "finding": "Actual region/permission cause remains unknown as documented; external diagnostic gate, not concealed network retry.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/AI-03.md",
+        "docs/audits/2026-10-04/execution/AI-03-history-review.md",
+        "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md"
+      ],
+      "code": [
+        "backend/image_jobs.go",
+        "backend/image_jobs_test.go",
+        "backend/openai_proxy_test.go",
+        "docs/image-generation-operations.md"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S1",
+      "task": "CLEAN-02",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Составить route/API/data dependency map и измерение использования без личного содержания. Название старого каталога не доказывает неиспользуемость.",
+      "status": "external",
+      "finding": "Route/API/data map exists. Real route usage and external consumer evidence require read-only production/operator input not gathered locally.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S2",
+      "task": "CLEAN-02",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Сохранить четыре основных раздела и Профиль/Настройки/Экспорт/Инициативу; сохранить обслуживающие библиотеку редакторы, ShopDetail, inventory mechanics и шаблоны для weapon mastery.",
+      "status": "proven",
+      "finding": "Kept/hidden/deprecated/deleted:none inventory and reversible extra-section setting proven. Core/extended real routes preserve dependent features. No consumer-free deletion authorized.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S3",
+      "task": "CLEAN-02",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Кандидаты groups/standalone inventory/templates сначала скрываются profile/flag; прекращение создания legacy объектов согласовать как продуктовый переход.",
+      "status": "proven",
+      "finding": "Navigation hiding implemented; stopping legacy creation is a separate product transition and has not been silently performed.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S4",
+      "task": "CLEAN-02",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Для v1/v2 characters обеспечить экспорт/перенос, redirect/deprecation и проверить внешние API callers. Backend endpoints сегодня зарегистрированы.",
+      "status": "incomplete",
+      "finding": "V1 export and old redirects exist. V2 export/verified transfer is not implemented; it remains a local transition prerequisite before removal, with consumer discovery external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S5",
+      "task": "CLEAN-02",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Удалять UI/routes/controllers только после переходного периода и подтверждения отсутствия consumers. Данные/таблицы сохранять до отдельного DB решения.",
+      "status": "external",
+      "finding": "Deletion intentionally waits for external usage/consumer/deprecation-period evidence; no deletion is a valid conditional outcome, not a failed cleanup action.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.S6",
+      "task": "CLEAN-02",
+      "field": "steps",
+      "number": 6,
+      "requirement": "Лабораторию правил/документацию можно переместить в developer profile. Mobile/PWA и отдельные встречи решать по использованию, сохраняя общий боевой код.",
+      "status": "proven",
+      "finding": "Developer/mobile/encounter moves are optional and usage-dependent; retained routes are documented.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.V1",
+      "task": "CLEAN-02",
+      "field": "verification",
+      "number": 1,
+      "requirement": "S01–S07, старые URLs.",
+      "status": "proven",
+      "finding": "Kept/hidden/deprecated/deleted:none inventory and reversible extra-section setting proven. Core/extended real routes preserve dependent features. No consumer-free deletion authorized.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.V2",
+      "task": "CLEAN-02",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Run shop, weapon mastery, entity editors, mobile/PWA и экспорт остаются рабочими.",
+      "status": "proven",
+      "finding": "Kept/hidden/deprecated/deleted:none inventory and reversible extra-section setting proven. Core/extended real routes preserve dependent features. No consumer-free deletion authorized.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.A1",
+      "task": "CLEAN-02",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Есть kept/hidden/deprecated/deleted inventory с доказательствами.",
+      "status": "proven",
+      "finding": "Kept/hidden/deprecated/deleted:none inventory and reversible extra-section setting proven. Core/extended real routes preserve dependent features. No consumer-free deletion authorized.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-02.A2",
+      "task": "CLEAN-02",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Основные сценарии пользователя не теряют зависимые функции.",
+      "status": "proven",
+      "finding": "Kept/hidden/deprecated/deleted:none inventory and reversible extra-section setting proven. Core/extended real routes preserve dependent features. No consumer-free deletion authorized.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02.md",
+        "docs/audits/2026-10-04/execution/product-surface-inventory.json"
+      ],
+      "code": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/App.tsx",
+        "backend/main.go"
+      ]
+    },
+    {
+      "id": "CLEAN-03.S1",
+      "task": "CLEAN-03",
+      "field": "steps",
+      "number": 1,
+      "requirement": "Разделить originals и runtime media; подготовить WebP/AVIF/размеры под экран с визуальным сравнением карт и иконок.",
+      "status": "proven",
+      "finding": "Full-size lossless WebP chosen to preserve exact pixels; AVIF/downscales are implementation alternatives, not mandatory simultaneous codecs.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.S2",
+      "task": "CLEAN-03",
+      "field": "steps",
+      "number": 2,
+      "requirement": "Использовать URL с content hash и object storage/CDN либо отдельный assets layer; старые ссылки и лицензионные сведения сохранить.",
+      "status": "proven",
+      "finding": "Local hashed assets layer proven. Enabled OCI variants remain explicitly forbidden by schema v1; production-ready enabled media provenance contract is not implemented.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.S3",
+      "task": "CLEAN-03",
+      "field": "steps",
+      "number": 3,
+      "requirement": "Проверить print/export, PWA и offline shell: перенос не должен ломать обязательные ресурсы.",
+      "status": "proven",
+      "finding": "Real sheet PDF/JSON, offline shell and originals checked. Generic map print CSS does not switch back to PNG, but the plan does not explicitly demand this switch; exact pixels remain.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.S4",
+      "task": "CLEAN-03",
+      "field": "steps",
+      "number": 4,
+      "requirement": "Сравнить clone/archive/context/image/pull bytes отдельно от initial browser transfer. public примерно 155 MB не скачивается при каждом входе.",
+      "status": "external",
+      "finding": "Archive/local source inventory and selected browser transfer known. Actual Docker context/image/pull bytes absent; enabled dist grows29.4MB because originals retained.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.S5",
+      "task": "CLEAN-03",
+      "field": "steps",
+      "number": 5,
+      "requirement": "Git maintenance начать с read-only integrity/inventory. Не удалять .git tmp вручную, не выполнять aggressive gc и не переписывать историю без отдельного решения, backup и координации клонов.",
+      "status": "proven",
+      "finding": "17 lossless content-hash variants with exact Chromium RGBA, originals/oldURLs intact, real PDF/JSON and enabled UI fixtures pass. PWA precise static closure proven; Git inventory/fsck read-only.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.V1",
+      "task": "CLEAN-03",
+      "field": "verification",
+      "number": 1,
+      "requirement": "Manifest hash/URL reachability и old document/battle references.",
+      "status": "proven",
+      "finding": "17 lossless content-hash variants with exact Chromium RGBA, originals/oldURLs intact, real PDF/JSON and enabled UI fixtures pass. PWA precise static closure proven; Git inventory/fsck read-only.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.V2",
+      "task": "CLEAN-03",
+      "field": "verification",
+      "number": 2,
+      "requirement": "Изображения визуально приемлемы, прозрачность/детали и экспорт сохраняются.",
+      "status": "proven",
+      "finding": "17 lossless content-hash variants with exact Chromium RGBA, originals/oldURLs intact, real PDF/JSON and enabled UI fixtures pass. PWA precise static closure proven; Git inventory/fsck read-only.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.V3",
+      "task": "CLEAN-03",
+      "field": "verification",
+      "number": 3,
+      "requirement": "Image/pull bytes до/после.",
+      "status": "external",
+      "finding": "Requires actual OCI daemon/image/pull measurement; not provided by native browser evidence.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.A1",
+      "task": "CLEAN-03",
+      "field": "acceptance",
+      "number": 1,
+      "requirement": "Сокращение передаваемого дистрибутива измерено.",
+      "status": "incomplete",
+      "finding": "Selected image bodies42.82->29.45MB and PWA install shrink are measured. Full transferred image/pull distribution reduction is not proven; enabled OCI input contract is a local code prerequisite, actual measurements external.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    },
+    {
+      "id": "CLEAN-03.A2",
+      "task": "CLEAN-03",
+      "field": "acceptance",
+      "number": 2,
+      "requirement": "Оригиналы и старые URL доступны, история Git не переписана без разрешения.",
+      "status": "proven",
+      "finding": "17 lossless content-hash variants with exact Chromium RGBA, originals/oldURLs intact, real PDF/JSON and enabled UI fixtures pass. PWA precise static closure proven; Git inventory/fsck read-only.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-03.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-real-app.md",
+        "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json"
+      ],
+      "code": [
+        "frontend/src/utils/mediaVariants.ts",
+        "scripts/release/media-build-inputs.mjs",
+        "docs/media-storage.md",
+        "docs/git-maintenance.md"
+      ]
+    }
+  ],
+  "conditional_decisions": [
+    {
+      "task": "PERF-03",
+      "decision": "Self-contained same-frame mirrors replaces inter-request patch; bounded admission replaces unproven pool. This is documented scope decision, not claiming patch/pool exists.",
+      "evidence": "docs/audits/2026-10-04/execution/PERF-03-scope-review.md"
+    },
+    {
+      "task": "PERF-05",
+      "decision": "Identity-keyed readonly useMemo is a valid semantic-key cache; no reason to retain stale previews across world versions or add pure plan/executor absent measured bottleneck."
+    },
+    {
+      "task": "CLEAN-02",
+      "decision": "Legacy removal conditioned on consumer evidence; absence of deletion is intentional. V2 export/transfer remains a separate local prerequisite."
+    },
+    {
+      "task": "CLEAN-03",
+      "decision": "Exact lossless WebP is accepted alternative to lossy/resized/AVIF; generic map print source-switch not an explicit original requirement."
+    }
+  ],
+  "summary": {
+    "proven": 110,
+    "incomplete": 17,
+    "external": 6
+  }
+}

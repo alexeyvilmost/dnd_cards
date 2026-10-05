@@ -1,0 +1,34 @@
+name: bagofholding-image-egress
+
+# Private, application-specific egress. Sota account credentials are never
+# mounted: config contains only the selected VPN profile and dedicated auth.
+services:
+  image-egress:
+    image: node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6
+    entrypoint: ["/opt/sota/sing-box"]
+    command: ["run", "-c", "/run/sota/gateway.json"]
+    user: "65534:65534"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
+    volumes:
+      - ${SOTA_BINARY_FILE:?Verified Sota binary required}:/opt/sota/sing-box:ro
+      - ${SOTA_GATEWAY_FILE:?Restricted gateway config required}:/run/sota/gateway.json:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "const h=require('http');const q=h.request({host:'127.0.0.1',port:18080,method:'CONNECT',path:'api.openai.com:443'},r=>{r.resume();process.exit(r.statusCode===407?0:1)});q.on('connect',(r,s)=>{s.destroy();process.exit(r.statusCode===407?0:1)});q.on('error',()=>process.exit(1));q.setTimeout(3000,()=>q.destroy());q.end()"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      edge:
+        aliases: [image-egress]
+
+networks:
+  edge:
+    external: true
+    name: ${IMAGE_EGRESS_NETWORK:-bagofholding_edge}

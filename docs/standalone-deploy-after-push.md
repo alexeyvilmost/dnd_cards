@@ -1,3 +1,25 @@
+# Переход на manifest и архив прежней выкатки
+
+На 05.10.2026 `infra/compose.prod.yml` требует per-component digest из
+manifest версии 1. `infra/deploy-release` заменён отключённым manifest runner;
+описание старого single-SHA runner ниже — историческое. Не применять новый runner
+на сервере до проверки контейнеров/restore и явного запроса на выкатку. Для текущего
+плана пользователь уже разрешил коммит и выпуск после локальных проверок.
+Прежнее приложение ещё работает; на сервере подготовлены приватный Sota gateway,
+защищённая конфигурация и отдельный SSH-доступ для GitHub environment `production`.
+Репозиторий публичный: production self-hosted runner не используется. Контракт и
+preflight: [release-manifest.md](release-manifest.md).
+Текущая CI-цепочка и её переключатели: [release-ci.md](release-ci.md).
+Выборочная замена, recovery и ограничения: [release-deployment.md](release-deployment.md).
+Доказанный owned native restore: [backup-restore.md](backup-restore.md).
+
+Следующий текст сохранён как описание прежнего runner. Его правила равенства
+трёх SHA и удаления всех образов старше пяти релизов нельзя переносить на mixed
+release. Новый rollback сохраняет ссылки всех retained manifests и исторических
+боёв; runtime SOURCE_COMMIT не подменяет встроенное происхождение образа.
+
+---
+
 # Выкатка на standalone-сервер после commit и push
 
 Эта инструкция описывает production-деплой текущей архитектуры Bag of Holding

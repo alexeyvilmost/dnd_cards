@@ -17,3 +17,17 @@ export function currentResourceForMaximum(current: number, previousMaximum: numb
   const previous = Math.max(0, Math.floor(previousMaximum));
   return Math.max(0, Math.min(maximum, Math.floor(current) + Math.max(0, maximum - previous)));
 }
+
+/** The initializer and an accepted equipment transition share the same
+ * remaining-charge policy. A dormant item pool remembers that it has already
+ * been initialized; drawing the provider again is not a rest or a restore. */
+export function currentResourceAfterProjection(
+  current: number | undefined, previousMaximum: number | undefined,
+  nextMaximum: number, itemOwned: boolean,
+): number {
+  if (current == null) return nextMaximum;
+  const oldMaximum = previousMaximum ?? nextMaximum;
+  return itemOwned && oldMaximum === 0
+    ? Math.min(current, nextMaximum)
+    : currentResourceForMaximum(current, oldMaximum, nextMaximum);
+}

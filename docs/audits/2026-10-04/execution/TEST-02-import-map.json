@@ -1,0 +1,983 @@
+[
+  {
+    "file": "frontend/src/rules-core/activeSlotRecovery.ts",
+    "line": 3,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "CharacterContext",
+        "local": "CharacterContext",
+        "typeOnly": true
+      },
+      {
+        "imported": "RuntimeState",
+        "local": "RuntimeState",
+        "typeOnly": true
+      },
+      {
+        "imported": "EngineEvent",
+        "local": "EngineEvent",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/attackActionBudget.ts",
+    "line": 1,
+    "module": "../engine/actionCostPolicy",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "availableActionCostPolicies",
+        "local": "availableActionCostPolicies",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/actionCostPolicy.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/attackActionBudget.ts",
+    "line": 3,
+    "module": "../engine/modifiers",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "collectModifiers",
+        "local": "collectModifiers",
+        "typeOnly": false
+      },
+      {
+        "imported": "foldModifiers",
+        "local": "foldModifiers",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/modifiers.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/attackActionBudget.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "activeConditionsOf",
+        "local": "activeConditionsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/circumstances.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/attackRedirection.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "RollLog",
+        "local": "RollLog",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/attackRedirection.ts",
+    "line": 3,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/attackRedirection.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "activeConditionsOf",
+        "local": "activeConditionsOf",
+        "typeOnly": false
+      },
+      {
+        "imported": "matchesWhen",
+        "local": "matchesWhen",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/circumstances.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/bondLifecycle.ts",
+    "line": 2,
+    "module": "../engine/actionRequirements",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "itemSourceRequirementIssue",
+        "local": "itemSourceRequirementIssue",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/actionRequirements.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/conditionsRuntime.ts",
+    "line": 1,
+    "module": "../engine/runtimeCharacterProjection",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "projectRuntimeCharacter",
+        "local": "projectRuntimeCharacter",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/runtimeCharacterProjection.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/damageTransfer.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "EngineEvent",
+        "local": "EngineEvent",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/deathRecovery.ts",
+    "line": 2,
+    "module": "../engine/lifePolicies",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "actorIsDead",
+        "local": "actorIsDead",
+        "typeOnly": false
+      },
+      {
+        "imported": "resurrectionPermitted",
+        "local": "resurrectionPermitted",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/lifePolicies.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/deathRecovery.ts",
+    "line": 3,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/deathRecovery.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "matchesWhen",
+        "local": "matchesWhen",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/circumstances.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/deathRecovery.ts",
+    "line": 5,
+    "module": "../engine/cost",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "canPay",
+        "local": "canPay",
+        "typeOnly": false
+      },
+      {
+        "imported": "pay",
+        "local": "pay",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/cost.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/deathRecovery.ts",
+    "line": 6,
+    "module": "../engine/turn",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "longRest",
+        "local": "longRest",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/turn.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/deathRecovery.ts",
+    "line": 7,
+    "module": "../engine/deathSaves",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "emptyDeathSaves",
+        "local": "emptyDeathSaves",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/deathSaves.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/domain.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "CharacterContext",
+        "local": "CharacterContext",
+        "typeOnly": true
+      },
+      {
+        "imported": "TriggeringAttackContext",
+        "local": "TriggeringAttackContext",
+        "typeOnly": true
+      },
+      {
+        "imported": "EngineEvent",
+        "local": "EngineEvent",
+        "typeOnly": true
+      },
+      {
+        "imported": "RollLog",
+        "local": "RollLog",
+        "typeOnly": true
+      },
+      {
+        "imported": "RuntimeState",
+        "local": "RuntimeState",
+        "typeOnly": true
+      },
+      {
+        "imported": "SpellCastContext",
+        "local": "SpellCastContext",
+        "typeOnly": true
+      },
+      {
+        "imported": "SpellComponents",
+        "local": "SpellComponents",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": false,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/effectReceived.ts",
+    "line": 1,
+    "module": "../engine/conditions",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "conditionRule",
+        "local": "conditionRule",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/conditions.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/effectReceived.ts",
+    "line": 2,
+    "module": "../engine/modifiers",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "deniedCapabilities",
+        "local": "deniedCapabilities",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/modifiers.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/effectReceived.ts",
+    "line": 3,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "ActiveEffectEntry",
+        "local": "ActiveEffectEntry",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/equipmentChange.ts",
+    "line": 4,
+    "module": "../engine/itemEquipmentPolicy",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "itemEquipmentChangeIssue",
+        "local": "itemEquipmentChangeIssue",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/itemEquipmentPolicy.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/equipmentChange.ts",
+    "line": 5,
+    "module": "../engine/execute",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "emitEvent",
+        "local": "emitEvent",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/execute.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/equipmentChange.ts",
+    "line": 6,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "EngineEvent",
+        "local": "EngineEvent",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/equipmentChange.ts",
+    "line": 7,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/equipmentChange.ts",
+    "line": 8,
+    "module": "../engine/runtimeCharacterProjection",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "projectRuntimeCharacter",
+        "local": "projectRuntimeCharacter",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/runtimeCharacterProjection.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/generalFeatDamageRuntime.ts",
+    "line": 3,
+    "module": "../engine/actionRequirements",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "itemSourceRequirementIssue",
+        "local": "itemSourceRequirementIssue",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/actionRequirements.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/generalFeatReactionRuntime.ts",
+    "line": 249,
+    "module": "../engine/lifePolicies",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "actorHasConsciousVitality",
+        "local": "actorHasConsciousVitality",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/lifePolicies.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 5,
+    "module": "../engine/execute",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "emitEvent",
+        "local": "emitEngineEvent",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/execute.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 8,
+    "module": "../engine/effectRollFacts",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "effectRollFacts",
+        "local": "effectRollFacts",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/effectRollFacts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 10,
+    "module": "../engine/elapsedTime",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "advanceEffectTime",
+        "local": "advanceEffectTime",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/elapsedTime.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 11,
+    "module": "../engine/effectLifecycle",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "reconcileEndedEffects",
+        "local": "reconcileEndedEffects",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/effectLifecycle.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 12,
+    "module": "../engine/temporaryResourceGrants",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "reconcileTemporaryResourceGrants",
+        "local": "reconcileTemporaryResourceGrants",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/temporaryResourceGrants.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 18,
+    "module": "../engine/itemSpellProjectiles",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "applyItemSpellProjectiles",
+        "local": "applyItemSpellProjectiles",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/itemSpellProjectiles.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 23,
+    "module": "../engine/runtimeCharacterProjection",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "projectRuntimeCharacter",
+        "local": "projectRuntimeCharacter",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/runtimeCharacterProjection.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 24,
+    "module": "../engine/resourceRestrictions",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "availableResources",
+        "local": "availableResources",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/resourceRestrictions.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 25,
+    "module": "../engine/weapon",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "weaponActionAvailability",
+        "local": "weaponActionAvailability",
+        "typeOnly": false
+      },
+      {
+        "imported": "weaponAttackKind",
+        "local": "weaponAttackKind",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/weapon.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 29,
+    "module": "../engine/actionCostPolicy",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "availableActionCostPolicies",
+        "local": "availableActionCostPolicies",
+        "typeOnly": false
+      },
+      {
+        "imported": "applyActionCostPolicies",
+        "local": "applyActionCostPolicies",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/actionCostPolicy.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 30,
+    "module": "../engine/lifePolicies",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "collectLifePolicies",
+        "local": "collectLifePolicies",
+        "typeOnly": false
+      },
+      {
+        "imported": "actorHasConsciousVitality",
+        "local": "actorHasConsciousVitality",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/lifePolicies.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 31,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 32,
+    "module": "../engine/itemExecutionCapabilities",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "applyItemActionTargetLimit",
+        "local": "applyItemActionTargetLimit",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/itemExecutionCapabilities.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/handler.ts",
+    "line": 35,
+    "module": "../engine/concentration",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "concentrationProtectedUntilDeath",
+        "local": "concentrationProtectedUntilDeath",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/concentration.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/itemWeaponLifecycle.ts",
+    "line": 4,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/itemWeaponLifecycle.ts",
+    "line": 5,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "matchesWhen",
+        "local": "matchesWhen",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/circumstances.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/itemWeaponLifecycle.ts",
+    "line": 6,
+    "module": "../engine/itemEquipmentPolicy",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "itemEquipmentChangeIssue",
+        "local": "itemEquipmentChangeIssue",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/itemEquipmentPolicy.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/magicSuppression.ts",
+    "line": 3,
+    "module": "../engine/magic",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "isAntimagicField",
+        "local": "isAntimagicField",
+        "typeOnly": false
+      },
+      {
+        "imported": "isMagicalMechanics",
+        "local": "isMagicalMechanics",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/magic.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/magicSuppression.ts",
+    "line": 4,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/magicSuppression.ts",
+    "line": 5,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "matchesWhen",
+        "local": "matchesWhen",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/circumstances.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/projectileReflection.ts",
+    "line": 2,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/projectileReflection.ts",
+    "line": 3,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "activeConditionsOf",
+        "local": "activeConditionsOf",
+        "typeOnly": false
+      },
+      {
+        "imported": "matchesWhen",
+        "local": "matchesWhen",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/circumstances.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/projectileReflection.ts",
+    "line": 4,
+    "module": "../engine/triggerChance",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "triggerChance",
+        "local": "triggerChance",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/triggerChance.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/projectileReflection.ts",
+    "line": 5,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "EngineEvent",
+        "local": "EngineEvent",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/recipientBindings.ts",
+    "line": 2,
+    "module": "../mvp/contracts",
+    "typeOnly": true,
+    "symbols": [
+      {
+        "imported": "ActiveEffectEntry",
+        "local": "ActiveEffectEntry",
+        "typeOnly": true
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "retain active type-only mvp/contracts",
+    "actualImplementation": "frontend/src/mvp/contracts.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/recipientBindings.ts",
+    "line": 3,
+    "module": "../engine/mechanicsView",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "payloadsOf",
+        "local": "payloadsOf",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "move implementation to shared primitive",
+    "actualImplementation": "frontend/src/rules-primitives/mechanicsView.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/recipientBindings.ts",
+    "line": 4,
+    "module": "../engine/circumstances",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "matchesWhen",
+        "local": "matchesWhen",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/circumstances.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/recipientBindings.ts",
+    "line": 5,
+    "module": "../engine/actionRequirements",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "itemSourceRequirementIssue",
+        "local": "itemSourceRequirementIssue",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/actionRequirements.ts"
+  },
+  {
+    "file": "frontend/src/rules-core/worldMigration.ts",
+    "line": 1,
+    "module": "../engine/actionUses",
+    "typeOnly": false,
+    "symbols": [
+      {
+        "imported": "parseResourceRestRecovery",
+        "local": "parseResourceRestRecovery",
+        "typeOnly": false
+      }
+    ],
+    "countedAsOriginalViolation": true,
+    "decision": "explicit named legacy adapter",
+    "actualImplementation": "frontend/src/engine/actionUses.ts"
+  }
+]

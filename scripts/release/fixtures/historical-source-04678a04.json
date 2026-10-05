@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "kind": "historical-source-certification-descriptor",
+  "commit": "aec0f3205d4bfeee02a6e2b2fcf2132eed4002d5",
+  "releaseHash": "sha256:04678a044c4dc809d213e01e392bc0f16562d5103ee96e070089c1edf7e7100b",
+  "certificatePath": "frontend/src/character/sheetCombatCertification.generated.json",
+  "files": [
+    {
+      "path": "frontend/src/character/sheetCombatCertification.generated.json",
+      "gitBlob": "59c557d10c0936f633c2b7534da969e1c3379930",
+      "sha256": "sha256:c884e4f0d11aa84973cbc6aed7c7ce8440508f45e331d015b6b2301287b6e9c0",
+      "bytes": 180998
+    },
+    {
+      "path": "frontend/src/character/sheetCombatCertifiedCatalog.ts",
+      "gitBlob": "407387296fa559e029e284fad0848c124eee211c",
+      "sha256": "sha256:5c7d79260ba9824eda954adc8be438183372d362870917d9d6476f16132545c2",
+      "bytes": 33544
+    },
+    {
+      "path": "frontend/src/character/sheetCombatCertificationGenerator.ts",
+      "gitBlob": "8dbc4c976b9c6349f4ef96786b887e5496b32951",
+      "sha256": "sha256:6af76a0f7eccca742bdd62d72fac99cff0fd71100accaab8df3898d343bda08c",
+      "bytes": 11874
+    },
+    {
+      "path": "frontend/src/canon/microMvpL1Overlay.ts",
+      "gitBlob": "db41e1c0078a86a5345754d10e6ea5e2b214de07",
+      "sha256": "sha256:57dce2da2bcdb970aa3b26cd63b9079b1afa52e3eeacac739ece748a48163956",
+      "bytes": 114188
+    },
+    {
+      "path": "frontend/src/canon/microMvpL1ReleaseIdentity.ts",
+      "gitBlob": "49141de43492b90d57be2b3fec0d7669c234a26c",
+      "sha256": "sha256:5666e91a7d882bda3a490e38510f2db6ae4a6b5f1908b86386c3e31f0f583fd6",
+      "bytes": 1001
+    },
+    {
+      "path": "frontend/src/canon/prodSnapshotL1Fixtures.ts",
+      "gitBlob": "3b556267430717c5e93ce9e1f9696e086bb72e1e",
+      "sha256": "sha256:1e6d37a8828dbede81360ef8b180993d06ea04f288ae583dd6f502a4940e631c",
+      "bytes": 36190
+    },
+    {
+      "path": "frontend/src/rules-core/determinism.ts",
+      "gitBlob": "c20dfd58ec0ad679896504d7cb4f171682417c45",
+      "sha256": "sha256:8543db123598f373c8417ff9cf768fc8474882efe539ae17af0003d6c20db513",
+      "bytes": 4260
+    },
+    {
+      "path": "frontend/src/rules-worker/execute.ts",
+      "gitBlob": "3aeaa31729c88f4a98b122a89cf893fe102b25a0",
+      "sha256": "sha256:8dd7a0b251da309d388cd17c473f087225dd24dc52de064d9281ed74244c3f3a",
+      "bytes": 8306
+    },
+    {
+      "path": "backend/migrations/register_micro_mvp_rules_release.go",
+      "gitBlob": "be69930e81236472613f0f39361d6ab8879e076d",
+      "sha256": "sha256:03c342e6633029f6a4bb9af6414d27a507397b8a688b63d0ea2ff8c369a72dc8",
+      "bytes": 3612
+    }
+  ],
+  "scope": "Exact historical certificate and source-release provenance; not a CJS executable or complete compiler dependency closure"
+}

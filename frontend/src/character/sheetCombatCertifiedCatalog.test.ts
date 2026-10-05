@@ -1,4 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import {
   compileMicroMvpL1Overlay,
   type CompiledMicroMvpL1Provider,
@@ -33,7 +35,7 @@ function combatActions(root: CompiledMicroMvpL1Provider['roots'][number]): RuleA
   return root.rulesActions.filter(actionBelongsToSheetCombatSlice);
 }
 
-describe('450-root sheet combat certification', () => {
+describe('450-root sheet combat certification and historical compatibility', () => {
   let provider: CompiledMicroMvpL1Provider;
   let artifact: SheetCombatCertificationArtifact;
   let certified: CertifiedSheetCombatCatalog;
@@ -43,7 +45,7 @@ describe('450-root sheet combat certification', () => {
       compileMicroMvpL1Overlay(),
       buildSheetCombatCertificationArtifact(),
     ]);
-    certified = await certifySheetCombatArtifact(generatedArtifact);
+    certified = await certifySheetCombatArtifact(artifact);
   }, 30_000);
 
   it('keeps higher-level triggered attack riders outside the pinned L1 primitive slice', () => {
@@ -70,10 +72,9 @@ describe('450-root sheet combat certification', () => {
     expect(actionBelongsToSheetCombatSlice(martialArtsRider)).toBe(false);
   });
 
-  it('is byte-for-byte generated from the complete current compiler output', () => {
-    expect(serializeSheetCombatCertificationArtifact(
-      generatedArtifact as unknown as SheetCombatCertificationArtifact,
-    ))
+  it('deterministically generates the complete current compiler output without repinning history', async () => {
+    const repeated = await buildSheetCombatCertificationArtifact();
+    expect(serializeSheetCombatCertificationArtifact(repeated))
       .toBe(serializeSheetCombatCertificationArtifact(artifact));
     expect(artifact.summary).toEqual({
       rootCount: 450,
@@ -81,6 +82,30 @@ describe('450-root sheet combat certification', () => {
       actionOccurrenceCount: 2344,
       uniqueActionCount: 18,
     });
+  });
+
+  it('preserves the frozen certificate and rejects changed current execution projections', async () => {
+    const historicalBytes = readFileSync(
+      new URL('./sheetCombatCertification.generated.json', import.meta.url), 'utf8',
+    ).replace(/\r\n/g, '\n');
+    expect(createHash('sha256').update(historicalBytes).digest('hex'))
+      .toBe('2d0223520018d285250e88182d4e82df4c89cd80a3a0836e1ef580439d012c86');
+    const historical = await certifySheetCombatArtifact(generatedArtifact);
+    for (const action of historical.actions) {
+      expect(assertCertifiedSheetCombatAction(action, historical)).toEqual(action);
+    }
+    const changed = artifact.actions.filter((action) => {
+      const old = historical.catalog.getAction(action.id);
+      if (!old) return true;
+      const { name: _oldName, ...oldExecution } = old;
+      const { name: _name, ...execution } = action;
+      return canonicalStringify(execution) !== canonicalStringify(oldExecution);
+    });
+    expect(changed.length).toBeGreaterThan(0);
+    for (const action of changed) {
+      expect(() => assertCertifiedSheetCombatAction(action, historical)).toThrow(/differs/);
+    }
+    expect(historical.artifact).toEqual(generatedArtifact);
   });
 
   it('has one exact coverage row for every root and no uncovered combat action/access signature', () => {

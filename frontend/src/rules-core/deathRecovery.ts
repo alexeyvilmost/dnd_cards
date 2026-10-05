@@ -1,10 +1,10 @@
 import type {ActorState,DeterministicEnvironment} from './domain';
-import {actorIsDead,resurrectionPermitted} from '../engine/lifePolicies';
-import {payloadsOf} from '../engine/mechanicsView';
-import {matchesWhen} from '../engine/circumstances';
-import {canPay,pay} from '../engine/cost';
-import {longRest} from '../engine/turn';
-import {emptyDeathSaves} from '../engine/deathSaves';
+import {actorIsDead,resurrectionPermitted} from './legacy/engineAdapter';
+import {payloadsOf} from '../rules-primitives/mechanicsView';
+import {matchesWhen} from './legacy/engineAdapter';
+import {canPay,pay} from './legacy/engineAdapter';
+import {longRest} from './legacy/engineAdapter';
+import {emptyDeathSaves} from './legacy/engineAdapter';
 type Dict=Record<string,unknown>;
 const object=(value:unknown):value is Dict=>!!value&&typeof value==='object'&&!Array.isArray(value);
 

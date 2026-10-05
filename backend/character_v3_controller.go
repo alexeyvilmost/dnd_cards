@@ -892,6 +892,9 @@ func (cc *CharacterV3Controller) PostCharacterEvents(c *gin.Context) {
 
 // PatchCharacterRuntime обновляет только runtime-поля (экипировка, инвентарь, ресурсы).
 func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
+	local := *cc
+	local.db = cc.db.WithContext(c.Request.Context())
+	cc = &local
 	userID, ok := requireCharacterV3UserID(c)
 	if !ok {
 		return
@@ -915,7 +918,7 @@ func (cc *CharacterV3Controller) PatchCharacterRuntime(c *gin.Context) {
 	}
 
 	var full CharacterV3
-	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
+	txErr := performanceTransaction(cc.db, c.Request.Context(), func(tx *gorm.DB) error {
 		var roguelikeRun *RoguelikeRun
 		var locked CharacterV3
 		if err := characterV3OwnerScope(tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID).

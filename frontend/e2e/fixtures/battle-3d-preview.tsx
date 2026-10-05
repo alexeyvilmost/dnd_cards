@@ -7,7 +7,8 @@ import SettingsPanel from '../../src/components/SettingsPanel';
 import compiled from '../../src/pages/rulesLabFixture.generated.json';
 import monsterCatalog from '../../src/battle3d/miniatures/catalog.snapshot.json';
 import {BATTLE_MAPS, materializeMapAreas, packBattleMap} from '../../src/solo-combat/battleMaps';
-import {terrainFits} from '../../src/solo-combat/boardGeometry';
+import {terrainFits,boardCells,boardDimensions} from '../../src/solo-combat/boardGeometry';
+import {footprintCells,actorFootprint} from '../../src/solo-combat/footprint';
 import {reachableRoutes} from '../../src/solo-combat/tacticalGrid';
 import type {CombatBeat} from '../../src/solo-combat/presentation';
 import type {GridPosition, SoloCombatState} from '../../src/solo-combat/types';
@@ -67,6 +68,8 @@ function Preview() {
   const [inspected, setInspected] = useState<string | null>(null);
   const sequence = useRef(0);
   const targetId = 'monster-goblin-warrior';
+  const occupied=new Set(Object.values(state.tokens).flatMap(token=>footprintCells(token.position,actorFootprint(state.world.actors[token.actorId],state))).map(cell=>`${cell.x}:${cell.y}`));
+  const emptyCell=boardCells(state).find(cell=>cell.x>1&&cell.y>1&&terrainFits(state,cell,1)&&!occupied.has(`${cell.x}:${cell.y}`));
   const beat = (kind: 'before' | 'hit' | 'miss', visual:CombatBeat['visual']='slashing') => {
     const held = kind === 'before';
     const sourceId=visual==='ranged'?'hero-1':'hero-0';
@@ -130,6 +133,8 @@ function Preview() {
       <output data-testid="inspected">{inspected ?? '—'}</output>
       <output data-testid="fixture-health">{state.world.actors[targetId].runtime.hp.current}</output>
       <output data-testid="roster-count">{Object.keys(state.tokens).length}</output>
+      <output hidden data-testid="fixture-geometry">{JSON.stringify({...boardDimensions(state),emptyCell,
+        goblin:state.tokens[targetId].position})}</output>
     </div>
     <section className="combat-map-wrap" aria-label="Проверочное поле боя">
       <TacticalBattleMap state={state} actorId="hero-0" selectedActionId={null} movementMode={false}

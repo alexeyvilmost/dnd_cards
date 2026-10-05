@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "run_id": "test_2869395c337b56c6b3d189c7",
+  "manifest_sha256": "717efcbaf8ac0aa4cb77d3978bcbcfe359c62da47ded699175d7f856f19034ae",
+  "started_at": "2026-10-04T15:54:04.017Z",
+  "results": [
+    {
+      "package": ".",
+      "status": "passed",
+      "required": 351,
+      "passed": 351
+    },
+    {
+      "package": "./animationpresentation",
+      "status": "passed",
+      "required": 4,
+      "passed": 4
+    },
+    {
+      "package": "./audiopresentation",
+      "status": "passed",
+      "required": 3,
+      "passed": 3
+    },
+    {
+      "package": "./charactertemplates",
+      "tests": 0
+    },
+    {
+      "package": "./itemsource",
+      "status": "passed",
+      "required": 5,
+      "passed": 5
+    },
+    {
+      "package": "./itemsource/cmd/audit",
+      "tests": 0
+    },
+    {
+      "package": "./migrations",
+      "status": "passed",
+      "required": 321,
+      "passed": 321
+    },
+    {
+      "package": "./passivepresentation",
+      "tests": 0
+    },
+    {
+      "package": "./roguelikecontent",
+      "status": "passed",
+      "required": 1,
+      "passed": 1
+    },
+    {
+      "package": "./weapondata",
+      "status": "passed",
+      "required": 1,
+      "passed": 1
+    }
+  ],
+  "manual_go_cases": [
+    {
+      "package": ".",
+      "file": "backend/martial_party_local_test.go",
+      "test": "TestMartialPartyLocalInitialization",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/catalog_completion_279_test.go",
+      "test": "TestCatalogCompletion279OnRestoredProductionSnapshot",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/catalog_variants_280_test.go",
+      "test": "TestCatalogVariants280OnRestoredProductionSnapshot",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/clarify_general_feat_effect_cards_test.go",
+      "test": "TestGeneralFeatEffectClarityAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/harden_level_five_runtime_test.go",
+      "test": "TestHardenLevelFiveRuntimeProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/martial_classes_256_test.go",
+      "test": "TestMartialClassesLocalMigration256",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_d20_interrupts_184_test.go",
+      "test": "TestD20InterruptProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_general_feat_signatures_test.go",
+      "test": "TestGeneralFeatSignaturesMigrationAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_level_five_progression_test.go",
+      "test": "TestLevelFiveProgressionPostgresClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_level_four_general_feats_test.go",
+      "test": "TestLevelFourGeneralFeatsMigrationAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_mobile_emanations_196_test.go",
+      "test": "TestAasimarMobileRadianceAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_owned_summons_195_test.go",
+      "test": "TestOwnedSummonMigrationAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_remaining_level_five_general_feats_187_test.go",
+      "test": "TestRemainingLevelFiveGeneralFeatsAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_remaining_level_five_general_feats_187_test.go",
+      "test": "TestLevelFiveTailReplayRestoresCertifiedGuardsAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_warlock_invocations_180_test.go",
+      "test": "TestMaterializeWarlockInvocationsLevelFiveClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/materialize_wizard_memorize_spell_188_test.go",
+      "test": "TestWizardMemorizeSpellMigrationOnClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_class_level_five_integrity_185_test.go",
+      "test": "TestRepairClassLevelFiveIntegrityProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_draconic_sorcery_spell_ability_193_test.go",
+      "test": "TestDraconicSorcerySpellAbilityRepairAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_general_feat_choice_integrity_178_test.go",
+      "test": "TestGeneralFeatChoiceIntegrityPostgresClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_general_feat_runtime_integrity_182_test.go",
+      "test": "TestGeneralFeatRuntimeIntegrityProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_level_five_base_progression_179_test.go",
+      "test": "TestRepairLevelFiveBaseProgressionProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_level_five_spell_area_runtime_191_test.go",
+      "test": "TestLevelFiveSpellAreaRuntimeAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_level_five_spell_interactions_192_test.go",
+      "test": "TestLevelFiveSpellInteractionRepairProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_level_five_spell_targeting_186_test.go",
+      "test": "TestLevelFiveSpellTargetingIntegrityProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_level_five_strict_conditions_177_test.go",
+      "test": "TestRepairLevelFiveStrictConditionsProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_level_five_subclass_actions_181_test.go",
+      "test": "TestRepairLevelFiveSubclassActionsProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_species_level_five_integrity_183_test.go",
+      "test": "TestSpeciesLevelFiveIntegrityProductionClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_species_levelled_spell_access_test.go",
+      "test": "TestSpeciesLevelledSpellAccessPostgresClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_subclass_primary_runtime_194_test.go",
+      "test": "TestSubclassPrimaryRuntimeAgainstPostgres",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/repair_wizard_cantrip_growth_176_test.go",
+      "test": "TestWizardCantripGrowthPostgresClone",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/resource_declarations_294_test.go",
+      "test": "TestResourceDeclarations294ReadOnlySnapshotPlan",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": ".",
+      "file": "backend/roguelike_worker_catalog_integration_test.go",
+      "test": "TestRoguelikeCatalogResolvesEnglishSpellSlugFromSnapshot",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": ".",
+      "file": "backend/roguelike_worker_catalog_integration_test.go",
+      "test": "TestRoguelikeExistingRunCanInitializeCombatReadOnly",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": ".",
+      "file": "backend/roguelike_worker_catalog_integration_test.go",
+      "test": "TestRoguelikeExistingRunCanHealInCampReadOnly",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    },
+    {
+      "package": ".",
+      "file": "backend/spell_update_editorial_test.go",
+      "test": "TestMageHandEditorialSaveWithFullEditorPayload",
+      "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+    }
+  ],
+  "dedicated_go_routes": [
+    {
+      "package": ".",
+      "test": "TestCatalogBatchActualWorkerEquivalentForOwnedFixtures",
+      "runner": "scripts/performance/check-catalog.mjs",
+      "reason": "Required separate owned API fixtures party1/2/6 and actual worker; root-authorized dedicated route, not historical exclusion"
+    }
+  ],
+  "cleanup": "stopped",
+  "completed_at": "2026-10-04T15:55:36.049Z",
+  "status": "passed-database-only-layer",
+  "required_top_level_tests": 686,
+  "limitation": "Dedicated performance route and explicit historical cases were not executed in this database-only run; see dedicated_go_routes/manual_go_cases."
+}

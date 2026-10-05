@@ -1,0 +1,53 @@
+{
+  "task": "REF-02-combat-dispatch",
+  "sourceHashes": {
+    "frontend/src/hooks/useCombatCommandDispatch.ts": "bc7404cf63966c1b0d65b19652f0f77e4cbe0771769b124fcefd236c440b8088",
+    "frontend/src/pages/SoloCombatPage.tsx": "273c624913f52869580f38b018944d6f48866f6cd12647ebf635cc8557eaa3aa"
+  },
+  "runId": "test_d22a019f6c48c72bdc49302d",
+  "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+  "uiBuild": {
+    "reused": false,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_d22a019f6c48c72bdc49302d\\ui-dist",
+    "indexHash": "63273df31539cc850b83449627366bc87b368ef40a9e53a8b24b9ba3f2a63cbb",
+    "manifestHash": "a1b6b680b23ddf44890a024252a17a7669f49412e77319a530567dad3309cb38",
+    "files": 628,
+    "bytes": 169182466
+  },
+  "runtime": {
+    "runId": "test_d22a019f6c48c72bdc49302d",
+    "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+    "uiBuild": {
+      "reused": false,
+      "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_d22a019f6c48c72bdc49302d\\ui-dist",
+      "indexHash": "63273df31539cc850b83449627366bc87b368ef40a9e53a8b24b9ba3f2a63cbb",
+      "manifestHash": "a1b6b680b23ddf44890a024252a17a7669f49412e77319a530567dad3309cb38",
+      "files": 628,
+      "bytes": 169182466
+    },
+    "equipmentPosts": 3,
+    "samePendingCommandAfterReload": true,
+    "exactRetry": true,
+    "inventoryPreserved": true,
+    "equipmentBrowserBuildCalls": 0,
+    "initiativeBrowserBuildCalls": 0,
+    "optionsRequests": 1,
+    "initializeRequests": 1,
+    "pageErrors": 0,
+    "sourceIsolated": true,
+    "outcomeHash": "sha256:6a1d99ce101257fbe8112f640cb285d1e022eb6d371fe2cd9ce45bbad389665f"
+  },
+  "browser": {
+    "startTime": "2026-10-04T19:30:04.147Z",
+    "duration": 17060.634000000002,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "sourceStable": true,
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  }
+}

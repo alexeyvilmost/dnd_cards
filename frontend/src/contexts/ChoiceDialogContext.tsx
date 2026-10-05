@@ -4,10 +4,10 @@
  * через useChoiceDialog().request(choices, title) — вернётся Promise с картой id→значения
  * или null при отмене. Переиспользует ChoiceResolver и стили dice-диалога.
  */
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, lazy, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { PendingChoice } from '../mechanics/collectChoices';
-import { ChoiceResolver } from '../character/components';
-import DialogShell from '../components/DialogShell';
+import DeferredDialog from '../components/DeferredDialog';
+const ChoiceDialogHost = lazy(() => import('./ChoiceDialogHost'));
 import type {Feat} from '../types';
 import './DiceDialog.css';
 import './ForgeChoiceDialog.css';
@@ -36,10 +36,10 @@ export function useChoiceDialog(): ChoiceDialogApi {
   return api;
 }
 
-interface DialogState { choices: PendingChoice[]; title: string; options?: ChoiceDialogOptions; }
+export interface ChoiceDialogState { choices: PendingChoice[]; title: string; options?: ChoiceDialogOptions; }
 
 export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
-  const [dialog, setDialog] = useState<DialogState | null>(null);
+  const [dialog, setDialog] = useState<ChoiceDialogState | null>(null);
   const [values, setValues] = useState<Record<string, string[]>>({});
   const resolver = useRef<((r: ChoiceResult) => void) | null>(null);
   useEffect(() => () => {
@@ -73,39 +73,9 @@ export function ChoiceDialogProvider({ children }: { children: ReactNode }) {
     <Ctx.Provider value={{ request }}>
       {children}
       {dialog && (
-        <DialogShell label={dialog.title} onCancel={() => finish(null)} wrap
-          initialFocus={dialog.options?.presentation === 'levelup' ? 'dialog' : 'first'}
-          className={dialog.options?.presentation === 'levelup' ? 'forge-choice-dialog' : undefined}>
-              <div className="dice-dialog-title">{dialog.title}</div>
-              <div className="dice-dialog-summary">{dialog.options?.summary ?? 'Выберите вариант применения:'}</div>
-              <div className="dice-dialog-list">
-                {dialog.choices.map((c) => (
-                  <ChoiceResolver
-                    key={c.id}
-                    choice={c}
-                    value={values[c.id] || []}
-                    feats={dialog.options?.feats}
-                    groupSpellLevels={dialog.options?.presentation === 'levelup'}
-                    unavailableOptions={dialog.options?.unavailableOptions?.(c, values[c.id] || [])}
-                    onChange={(v) => setValues((prev) => ({ ...prev, [c.id]: v }))}
-                  />
-                ))}
-              </div>
-              <div className="dice-dialog-actions">
-                <button
-                  type="button"
-                  className="dice-dialog-btn primary"
-                  disabled={!ready}
-                  aria-description={ready ? undefined : 'Сделайте выбор'}
-                  onClick={() => finish(values)}
-                >
-                  Применить
-                </button>
-                <button type="button" className="dice-dialog-btn ghost" onClick={() => finish(null)}>
-                  Отмена
-                </button>
-              </div>
-        </DialogShell>
+        <DeferredDialog label={dialog.title} onCancel={() => finish(null)}>
+          <ChoiceDialogHost dialog={dialog} values={values} ready={ready} setValues={setValues} finish={finish} />
+        </DeferredDialog>
       )}
     </Ctx.Provider>
   );

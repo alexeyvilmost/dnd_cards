@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "suite": "core",
+  "status": "passed",
+  "scope": "Native Windows, owned PostgreSQL/API/worker/browser, fresh UI; no OCI, Linux race or production execution",
+  "started_at": "2026-10-04T21:37:29.015Z",
+  "duration_ms": 268898,
+  "report": "outputs/testing/final-core-5/report.json",
+  "report_sha256": "ea9ceea8fed28fb8747c38946fda8f7674237450ec31c11b35fc2f207bfa2101",
+  "baseline_commit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "manifest_sha256": "943baefeab262ddb562d86cfa878ab8b6e2c838376fdfd865007decce8116b1d",
+  "source_snapshot": {
+    "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+    "files": 4313
+  },
+  "run_id": "test_22b875c9d2f46f4833e5b51d",
+  "artifact_hash": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+  "ui_build": {
+    "reused": false,
+    "manifestHash": "2a562f13aab53051d724f6c8b5aaf88dc2136f816a10795dd202a98ba392fe83",
+    "files": 628,
+    "bytes": 169187399
+  },
+  "checks": [
+    {
+      "id": "source-hygiene",
+      "status": "passed",
+      "duration_ms": 5165
+    },
+    {
+      "id": "node-contracts",
+      "status": "passed",
+      "duration_ms": 9996,
+      "tests_passed": 162,
+      "skipped": 0
+    },
+    {
+      "id": "isolated-stack",
+      "status": "passed",
+      "duration_ms": 130059
+    },
+    {
+      "id": "vitest",
+      "status": "passed",
+      "duration_ms": 35079,
+      "tests_passed": 227,
+      "skipped": 0
+    },
+    {
+      "id": "worker-and-database-node",
+      "status": "passed",
+      "duration_ms": 3465,
+      "tests_passed": 12,
+      "skipped": 0
+    },
+    {
+      "id": "backend-compile",
+      "status": "passed",
+      "duration_ms": 2889
+    },
+    {
+      "id": "go-backend",
+      "status": "passed",
+      "duration_ms": 19117,
+      "tests_passed": 81
+    },
+    {
+      "id": "go-migrations",
+      "status": "passed",
+      "duration_ms": 8590,
+      "tests_passed": 10
+    },
+    {
+      "id": "local-api-spine",
+      "status": "passed",
+      "duration_ms": 1073
+    },
+    {
+      "id": "local-browser-flows",
+      "status": "passed",
+      "duration_ms": 45620,
+      "tests_passed": 12,
+      "skipped": 0
+    },
+    {
+      "id": "source-stability",
+      "status": "passed",
+      "duration_ms": 1368
+    }
+  ],
+  "numerically_counted_tests": 504,
+  "count_note": "Suite counts overlap; scenario/matrix gates and build checks are listed separately, not added to the test total.",
+  "historical_chain_verified": false,
+  "go_race": false,
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  }
+}

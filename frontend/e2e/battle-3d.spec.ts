@@ -20,6 +20,22 @@ async function enable3d(page:Page) {
   }).toBe(true);
 }
 
+async function projection(page:Page) {
+  await scene(page).scrollIntoViewIfNeeded();
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  const geometry=JSON.parse((await page.getByTestId('fixture-geometry').textContent())!) as {width:number;height:number;emptyCell:{x:number;y:number};goblin:{x:number;y:number}};
+  expect(geometry.emptyCell,'Fixture must declare a genuinely unoccupied walkable cell').toBeTruthy();
+  const box=(await scene(page).locator('canvas').boundingBox())!;
+  const camera=new PerspectiveCamera(42,box.width/box.height,.1,250);
+  frameBattleCamera(camera,geometry.width,geometry.height,2.4);
+  camera.updateProjectionMatrix();camera.updateMatrixWorld();
+  const project=(x:number,z:number,elevation=.07)=>{
+    const point=new Vector3(x,elevation,z).project(camera);
+    return {x:box.x+(point.x+1)*box.width/2,y:box.y+(1-point.y)*box.height/2};
+  };
+  return {geometry,box,project};
+}
+
 function errorsFrom(page:Page) {
   const errors:string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -43,13 +59,9 @@ test('3D setting persists and both presentations dispatch the same actor and gri
   await enable3d(page);
   await capture(page, testInfo.outputPath('battle-3d-desktop.png'));
   const selected = JSON.parse(from2d!) as {position:{x:number;y:number}};
-  const canvas = scene(page).locator('canvas');
-  const box = (await canvas.boundingBox())!;
-  const camera = new PerspectiveCamera(42, box.width / box.height, .1, 250);
-  frameBattleCamera(camera, 18, 12, 2.4);
-  camera.updateProjectionMatrix(); camera.updateMatrixWorld();
-  const projected = new Vector3(selected.position.x+.5,.3,selected.position.y+.5).project(camera);
-  await page.mouse.click(box.x+(projected.x+1)*box.width/2,box.y+(1-projected.y)*box.height/2);
+  const {project}=await projection(page);
+  const projected=project(selected.position.x+.5,selected.position.y+.5,.3);
+  await page.mouse.click(projected.x,projected.y);
   await expect(page.getByTestId('selection')).toHaveText(from2d!);
   await expect(page.getByTestId('selection-count')).toHaveText('2');
   await page.reload();
@@ -67,9 +79,10 @@ test('canvas raycasts the intended board cell, camera controls work and dragging
   await enable3d(page);
   const heroLabel = scene(page).locator('[data-actor-id="hero-0"]');
   const original = await heroLabel.boundingBox();
-  await page.getByRole('button', {name:'Приблизить поле', exact:true}).click();
+  await scene(page).focus();
+  await page.keyboard.press('+');
   await expect.poll(async () => JSON.stringify(await heroLabel.boundingBox())).not.toBe(JSON.stringify(original));
-  await page.getByRole('button', {name:'Показать всё поле', exact:true}).click();
+  await page.keyboard.press('Home');
   const reset = await heroLabel.boundingBox();
   await expect(page.getByRole('button', {name:/Повернуть камеру/})).toHaveCount(0);
   const panCanvas=scene(page).locator('canvas');
@@ -79,22 +92,16 @@ test('canvas raycasts the intended board cell, camera controls work and dragging
   await page.mouse.move(panBox.x+panBox.width*.5+95,panBox.y+panBox.height*.5-35,{steps:10});
   await page.mouse.up();
   await expect.poll(async () => JSON.stringify(await heroLabel.boundingBox())).not.toBe(JSON.stringify(reset));
-  await page.getByRole('button', {name:'Показать всё поле', exact:true}).click();
+  await scene(page).focus();
+  await page.keyboard.press('Home');
   await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
 
   // Project a known unoccupied cell using the same public framing convention;
   // the pointer still passes through the real browser canvas/raycaster.
-  const canvas = scene(page).locator('canvas');
-  const box = (await canvas.boundingBox())!;
-  const camera = new PerspectiveCamera(42, box.width / box.height, .1, 250);
-  frameBattleCamera(camera, 18, 12, 2.4);
-  camera.updateProjectionMatrix();
-  camera.updateMatrixWorld();
-  const projected = new Vector3(2.5, .02, 6.5).project(camera);
-  const x = box.x + (projected.x + 1) * box.width / 2;
-  const y = box.y + (1 - projected.y) * box.height / 2;
+  const {geometry,project}=await projection(page);
+  const {x,y}=project(geometry.emptyCell.x+.5,geometry.emptyCell.y+.5,.02);
   await page.mouse.click(x, y);
-  await expect(page.getByTestId('selection')).toHaveText(JSON.stringify({position:{x:2,y:6}}));
+  await expect(page.getByTestId('selection')).toHaveText(JSON.stringify({position:geometry.emptyCell}));
   await expect(page.getByTestId('selection-count')).toHaveText('1');
   await page.mouse.move(x, y);
   await page.mouse.down();
@@ -210,27 +217,20 @@ test('coin hover ends in empty canvas space and resumes on the board', async ({p
   await page.goto(fixture);
   await enable3d(page);
   await scene(page).scrollIntoViewIfNeeded();
-  const canvas = scene(page).locator('canvas');
-  const box = (await canvas.boundingBox())!;
-  const camera = new PerspectiveCamera(42, box.width / box.height, .1, 250);
-  frameBattleCamera(camera, 18, 12, 2.4);
-  camera.updateProjectionMatrix();
-  camera.updateMatrixWorld();
-  const project = (x:number, z:number) => {
-    const point = new Vector3(x, .07, z).project(camera);
-    return {x:box.x + (point.x + 1) * box.width / 2, y:box.y + (1 - point.y) * box.height / 2};
-  };
+  const {box,geometry,project}=await projection(page);
   const goblin = scene(page).locator('[data-actor-id="monster-goblin-warrior"]');
-  const goblinPoint = project(6.5, .5);
-  const emptyCell = project(2.5, 6.5);
+  const goblinPoint = project(geometry.goblin.x+.5,geometry.goblin.y+.5);
+  const emptyCell = project(geometry.emptyCell.x+.5,geometry.emptyCell.y+.5);
   await page.mouse.move(goblinPoint.x, goblinPoint.y);
   await expect(goblin).toHaveClass(/is-expanded/);
-  await expect(goblin.locator('.battle-scene-3d__name')).toBeVisible();
+  const enemyPreview = page.locator('.combat-enemy-preview');
+  await expect(enemyPreview).toContainText('Гоблин');
+  await expect(enemyPreview).toBeVisible();
   // This point remains inside the viewport but is outside the projected board,
   // so only surface pointer-out handling can clear the former actor hover.
   await page.mouse.move(box.x + box.width * .04, box.y + box.height * .1, {steps:5});
   await expect(goblin).not.toHaveClass(/is-expanded/);
-  await expect(goblin.locator('.battle-scene-3d__name')).toBeHidden();
+  await expect(enemyPreview).toBeHidden();
   await page.mouse.move(goblinPoint.x, goblinPoint.y);
   await expect(goblin).toHaveClass(/is-expanded/);
   await page.mouse.move(emptyCell.x, emptyCell.y);

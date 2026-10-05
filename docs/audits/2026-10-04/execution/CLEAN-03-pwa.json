@@ -1,0 +1,17 @@
+{
+  "run_id": "test_b743a453dad7e62c2976bbe3",
+  "ui_build": {
+    "reused": true,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_b743a453dad7e62c2976bbe3\\ui-dist",
+    "indexHash": "dd2c86e957460dcddb68d1b93a17dae81bea87e29f43398bcb1fca8a8dd2ae0d",
+    "manifestHash": "7d9b7cf8c2eb9f3503cba69d2bc49bd337ba19e7d6e8a137e370db79a76c2b0f",
+    "files": 628,
+    "bytes": 169174309
+  },
+  "precache_entries": 19,
+  "static_chunks": 1,
+  "offline_visited_login": true,
+  "api_cache_entries": 0,
+  "page_errors": 0,
+  "status": "passed"
+}

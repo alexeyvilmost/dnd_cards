@@ -2,10 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -16,28 +14,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 const imageGenerationRequestBudget = 175 * time.Second
-
-func writeImageContextError(c *gin.Context, err error) bool {
-	if !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
-		return false
-	}
-	if errors.Is(err, context.DeadlineExceeded) {
-		c.JSON(http.StatusGatewayTimeout, gin.H{"error": "превышен общий лимит времени генерации изображения"})
-	} else {
-		c.Status(499) // Client Closed Request (de-facto nginx convention).
-	}
-	return true
-}
 
 // ImageController контроллер для работы с изображениями
 type ImageController struct {
 	db            *gorm.DB
 	yandexStorage *YandexStorageService
-	openAIService *OpenAIService
-	imageLibrary  *ImageLibraryController
+	generation    *generatedImageService
 }
 
 // NewImageController создает новый экземпляр контроллера
@@ -45,8 +32,7 @@ func NewImageController(db *gorm.DB, yandexStorage *YandexStorageService, openAI
 	return &ImageController{
 		db:            db,
 		yandexStorage: yandexStorage,
-		openAIService: openAIService,
-		imageLibrary:  NewImageLibraryController(db),
+		generation:    newGeneratedImageService(openAIService, yandexStorage),
 	}
 }
 
@@ -189,92 +175,69 @@ func (ic *ImageController) GenerateImage(c *gin.Context) {
 		return
 	}
 
-	// Получаем информацию о сущности для создания промпта
-	var entityInfo map[string]interface{}
-	var err error
+	ic.generateEntityImage(c, req, false)
+}
 
-	// Если переданы данные сущности, используем их, иначе получаем из базы
-	if req.EntityData != nil && len(req.EntityData) > 0 {
-		entityInfo = req.EntityData
-		log.Printf("Используем переданные данные сущности: %+v", req.EntityData)
-	} else {
-		entityInfo, err = ic.getEntityInfo(req.EntityType, req.EntityID)
-		if err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": "сущность не найдена"})
+// Legacy cards and current entity routes use the same persistence path. The
+// adapter changes only the response DTO, not paid calls or storage semantics.
+func (ic *ImageController) generateEntityImage(c *gin.Context, req ImageGenerationRequest, legacy bool) {
+	folder, supported := map[string]string{"card": "cards", "monster": "monster_tokens", "spell": "spell_icons", "action": "action_icons", "effect": "effect_icons", "feat": "feat_icons"}[req.EntityType]
+	if _, err := uuid.Parse(req.EntityID); err != nil || !supported {
+		writeImageGenerationError(c, imagePipelineError("image_entity_invalid", "Сначала сохраните поддерживаемую сущность, затем генерируйте изображение.", "application", "not_started", http.StatusBadRequest, nil))
+		return
+	}
+	if ic.useImageJob(c) {
+		if c.Writer.Written() {
 			return
 		}
-		log.Printf("Получены данные сущности из базы: %+v", entityInfo)
+		kind := "entity"
+		if legacy {
+			kind = "card"
+		}
+		ic.enqueueImageJob(c, kind, req, func() (ImageJob, error) {
+			info, err := ic.getEntityInfoContext(c.Request.Context(), req.EntityType, req.EntityID)
+			if err != nil {
+				return ImageJob{}, imagePipelineError("image_entity_not_found", "Сущность для изображения не найдена.", "application", "not_started", 404, err)
+			}
+			info = mergeEntityInfo(info, req.EntityData)
+			prompt, size := ic.createImagePrompt(req.Prompt, req.Style, info)
+			return ImageJob{EntityType: req.EntityType, EntityID: req.EntityID, Label: "Изображение сущности", Prompt: prompt, Size: size, Quality: normalizeImageQuality(req.Quality), Folder: folder}, nil
+		})
+		return
 	}
-
-	// Создаем промпт и подбираем размер холста для генерации
-	prompt, imageSize := ic.createImagePrompt(req.Prompt, req.Style, entityInfo)
-
-	// Генерируем изображение с помощью OpenAI
-	log.Printf("Отправляем промпт в OpenAI DALL-E (size=%s): %s", imageSize, prompt)
-	startTime := time.Now()
 	ctx, cancel := context.WithTimeout(c.Request.Context(), imageGenerationRequestBudget)
 	defer cancel()
-	generatedImageURL, err := ic.openAIService.GenerateImageContext(ctx, prompt, req.Quality, imageSize)
+	// Always verify the existing entity, even when prompt data is supplied.
+	entityInfo, err := ic.getEntityInfoContext(ctx, req.EntityType, req.EntityID)
 	if err != nil {
-		log.Printf("Ошибка генерации изображения: %v", err)
-		if writeImageContextError(c, err) {
+		if ctx.Err() != nil {
+			writeImageGenerationError(c, imagePipelineContextError(ctx.Err(), "not_started"))
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка генерации изображения: %v", err)})
-		return
-	}
-	log.Printf("Получен URL изображения от OpenAI: %s", generatedImageURL)
-	generationTime := int(time.Since(startTime).Milliseconds())
-
-	// Скачиваем сгенерированное изображение
-	imageData, err := ic.downloadImage(ctx, generatedImageURL)
-	if err != nil {
-		if writeImageContextError(c, err) {
-			return
+		problem := imagePipelineError("image_entity_unavailable", "Не удалось проверить сущность. Генерация не запущена.", "persistence", "not_started", http.StatusServiceUnavailable, err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			problem = imagePipelineError("image_entity_not_found", "Сущность не найдена. Генерация не запущена.", "application", "not_started", http.StatusNotFound, err)
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка скачивания сгенерированного изображения: %v", err)})
+		writeImageGenerationError(c, problem)
 		return
 	}
-
-	// Определяем папку для загрузки
-	folder := "cards"
-	if req.EntityType == "weapon_template" {
-		folder = "weapon_templates"
-	}
-
-	// Загружаем сгенерированное изображение в Yandex Cloud Storage
-	imageURL, cloudinaryID, err := ic.yandexStorage.UploadImageFromBytes(ctx, imageData, "generated.png", "image/png", folder)
+	entityInfo = mergeEntityInfo(entityInfo, req.EntityData)
+	prompt, imageSize := ic.createImagePrompt(req.Prompt, req.Style, entityInfo)
+	result, err := ic.generation.Generate(ctx, generatedImageInput{Prompt: prompt, Quality: req.Quality, Size: imageSize, Folder: folder, RequestID: c.GetString(requestIDContextKey)}, func(ctx context.Context, image generatedImageResult) error {
+		return ic.updateEntityImageContext(ctx, req.EntityType, req.EntityID, image.URL, image.StorageID, true, prompt)
+	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка загрузки сгенерированного изображения: %v", err)})
+		writeImageGenerationError(c, err)
 		return
 	}
-
-	// Обновляем запись в базе данных
-	if err := ic.updateEntityImage(req.EntityType, req.EntityID, imageURL, cloudinaryID, true, prompt); err != nil {
-		// Если не удалось обновить БД, удаляем загруженный файл
-		ic.yandexStorage.DeleteImage(ctx, cloudinaryID)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка обновления базы данных: %v", err)})
+	ic.recordGeneratedEntity(ctx, c.GetString(requestIDContextKey), req.EntityType, req.EntityID, prompt, result, entityInfo)
+	if legacy {
+		c.JSON(http.StatusOK, gin.H{"image_url": result.URL, "message": "Изображение сгенерировано"})
 		return
 	}
-
-	// Логируем генерацию изображения
-	ic.logImageGeneration(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime)
-
-	// Автоматически добавляем в библиотеку изображений (для всех сгенерированных изображений)
-	libraryEntityInfo := entityInfo
-	if req.EntityID != "" && !isTemporaryID(req.EntityID) {
-		if dbInfo, err := ic.getEntityInfo(req.EntityType, req.EntityID); err == nil {
-			libraryEntityInfo = mergeEntityInfo(dbInfo, entityInfo)
-		}
-	}
-	ic.addToImageLibrary(req.EntityType, req.EntityID, cloudinaryID, imageURL, prompt, "openai-dall-e", generationTime, libraryEntityInfo)
-
 	c.JSON(http.StatusOK, ImageGenerationResponse{
-		Success:        true,
-		ImageURL:       imageURL,
-		CloudinaryID:   cloudinaryID,
-		GenerationTime: generationTime,
-		Message:        "Изображение успешно сгенерировано",
+		Success: true, ImageURL: result.URL, CloudinaryID: result.StorageID, GenerationTime: result.GenerationTime,
+		Message: "Изображение успешно сгенерировано",
 	})
 }
 
@@ -314,51 +277,23 @@ func (ic *ImageController) GenerateStandaloneImage(c *gin.Context) {
 	} else {
 		prompt = generateSpellIconPrompt(req.Subject, req.Element, req.Extra)
 	}
-
-	log.Printf("Standalone-генерация (style=%s): %s", req.Style, prompt)
-	startTime := time.Now()
-	ctx, cancel := context.WithTimeout(c.Request.Context(), imageGenerationRequestBudget)
-	defer cancel()
-	generatedImageURL, err := ic.openAIService.GenerateImageContext(ctx, prompt, req.Quality, "1024x1024")
-	if err != nil {
-		if writeImageContextError(c, err) {
+	if ic.useImageJob(c) {
+		if c.Writer.Written() {
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("ошибка генерации изображения: %v", err)})
-		return
-	}
-	generationTime := int(time.Since(startTime).Milliseconds())
-
-	// Если Yandex Storage недоступен — отдаём data URL напрямую
-	if ic.yandexStorage == nil {
-		c.JSON(http.StatusOK, StandaloneImageResponse{
-			Success: true, ImageURL: generatedImageURL, Prompt: prompt, GenerationTime: generationTime,
+		ic.enqueueImageJob(c, "standalone", req, func() (ImageJob, error) {
+			return ImageJob{Label: "Изображение", Prompt: prompt, Size: "1024x1024", Quality: normalizeImageQuality(req.Quality), Folder: "spell_icons"}, nil
 		})
 		return
 	}
 
-	// Иначе загружаем в хранилище и возвращаем постоянную ссылку
-	imageData, err := ic.downloadImage(ctx, generatedImageURL)
+	result, err := ic.generation.Generate(c.Request.Context(), generatedImageInput{Prompt: prompt, Quality: req.Quality, Size: "1024x1024", Folder: "spell_icons", RequestID: c.GetString(requestIDContextKey)}, nil)
 	if err != nil {
-		if writeImageContextError(c, err) {
-			return
-		}
-		// fallback: вернуть data URL
-		c.JSON(http.StatusOK, StandaloneImageResponse{
-			Success: true, ImageURL: generatedImageURL, Prompt: prompt, GenerationTime: generationTime,
-		})
+		writeImageGenerationError(c, err)
 		return
 	}
-	imageURL, _, err := ic.yandexStorage.UploadImageFromBytes(ctx, imageData, "spell_icon.png", "image/png", "spell_icons")
-	if err != nil {
-		c.JSON(http.StatusOK, StandaloneImageResponse{
-			Success: true, ImageURL: generatedImageURL, Prompt: prompt, GenerationTime: generationTime,
-		})
-		return
-	}
-
 	c.JSON(http.StatusOK, StandaloneImageResponse{
-		Success: true, ImageURL: imageURL, Prompt: prompt, GenerationTime: generationTime,
+		Success: true, ImageURL: result.URL, Prompt: prompt, GenerationTime: result.GenerationTime,
 	})
 }
 
@@ -446,58 +381,48 @@ func (ic *ImageController) GetStatus(c *gin.Context) {
 
 // updateEntityImage обновляет информацию об изображении в базе данных
 func (ic *ImageController) updateEntityImage(entityType, entityID, imageURL, cloudinaryID string, isGenerated bool, prompt string) error {
-	switch entityType {
-	case "card":
-		cardID, err := uuid.Parse(entityID)
-		if err != nil {
-			return fmt.Errorf("неверный ID карты: %v", err)
-		}
+	return ic.updateEntityImageContext(context.Background(), entityType, entityID, imageURL, cloudinaryID, isGenerated, prompt)
+}
 
-		updates := map[string]interface{}{
-			"image_url":           imageURL,
-			"image_cloudinary_id": cloudinaryID,
-			"image_generated":     isGenerated,
-		}
+func (ic *ImageController) imageDB(ctx context.Context) *gorm.DB {
+	// Generated prompts are persisted metadata, not SQL log parameters.
+	return ic.db.WithContext(ctx).Session(&gorm.Session{Logger: logger.Default.LogMode(logger.Silent)})
+}
 
-		if isGenerated {
-			updates["image_generation_prompt"] = prompt
-		}
-
-		return ic.db.Model(&Card{}).Where("id = ?", cardID).Updates(updates).Error
-	case "monster":
-		monsterID, err := uuid.Parse(entityID)
-		if err != nil {
-			return fmt.Errorf("неверный ID монстра: %v", err)
-		}
-		return ic.db.Model(&Monster{}).Where("id = ?", monsterID).Updates(map[string]interface{}{
-			"token_url": imageURL, "token_storage_id": cloudinaryID,
-		}).Error
-	case "spell", "action", "effect", "feat":
-		id, err := uuid.Parse(entityID)
-		if err != nil {
-			return fmt.Errorf("неверный ID сущности: %w", err)
-		}
-		models := map[string]interface{}{
-			"spell": &Spell{}, "action": &Action{}, "effect": &Effect{}, "feat": &Feat{},
-		}
-		updates := map[string]interface{}{
-			"image_url": imageURL, "image_cloudinary_id": cloudinaryID, "image_generated": isGenerated,
-		}
-		if isGenerated {
-			updates["image_generation_prompt"] = prompt
-		}
-		result := ic.db.Model(models[entityType]).Where("id = ? AND deleted_at IS NULL", id).Updates(updates)
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return gorm.ErrRecordNotFound
-		}
-		return nil
-
-	default:
-		return fmt.Errorf("неподдерживаемый тип сущности: %s", entityType)
+func (ic *ImageController) updateEntityImageContext(ctx context.Context, entityType, entityID, imageURL, storageID string, isGenerated bool, prompt string) error {
+	if err := ctx.Err(); err != nil {
+		return err
 	}
+	id, err := uuid.Parse(entityID)
+	if err != nil {
+		return err
+	}
+	if ic.db == nil {
+		return fmt.Errorf("image persistence unavailable")
+	}
+	models := map[string]interface{}{"card": &Card{}, "monster": &Monster{}, "spell": &Spell{}, "action": &Action{}, "effect": &Effect{}, "feat": &Feat{}}
+	model, supported := models[entityType]
+	if !supported {
+		return fmt.Errorf("unsupported image entity")
+	}
+	updates := map[string]interface{}{"image_url": imageURL, "image_cloudinary_url": imageURL, "image_cloudinary_id": storageID, "image_generated": isGenerated}
+	if isGenerated {
+		updates["image_generation_prompt"] = prompt
+	}
+	if entityType == "monster" {
+		updates = map[string]interface{}{"token_url": imageURL, "token_storage_id": storageID}
+	}
+	result := ic.imageDB(ctx).Model(model).Where("id = ? AND deleted_at IS NULL", id).Updates(updates)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if result.RowsAffected != 1 {
+		return fmt.Errorf("unexpected image update row count")
+	}
+	return nil
 }
 
 // getEntityImageID получает ID изображения сущности
@@ -533,6 +458,17 @@ func (ic *ImageController) getEntityImageID(entityType, entityID string) (string
 
 // getEntityInfo получает информацию о сущности для создания промпта
 func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[string]interface{}, error) {
+	return ic.getEntityInfoContext(context.Background(), entityType, entityID)
+}
+
+func (ic *ImageController) getEntityInfoContext(ctx context.Context, entityType, entityID string) (map[string]interface{}, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if ic.db == nil {
+		return nil, fmt.Errorf("image entity store unavailable")
+	}
+	db := ic.imageDB(ctx)
 	switch entityType {
 	case "card":
 		cardID, err := uuid.Parse(entityID)
@@ -541,7 +477,7 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 		}
 
 		var card Card
-		if err := ic.db.Where("id = ?", cardID).First(&card).Error; err != nil {
+		if err := db.Where("id = ? AND deleted_at IS NULL", cardID).First(&card).Error; err != nil {
 			return nil, err
 		}
 
@@ -552,7 +488,7 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 			return nil, fmt.Errorf("неверный ID монстра: %v", err)
 		}
 		var monster Monster
-		if err := ic.db.Where("id = ?", monsterID).First(&monster).Error; err != nil {
+		if err := db.Where("id = ? AND deleted_at IS NULL", monsterID).First(&monster).Error; err != nil {
 			return nil, err
 		}
 		return map[string]interface{}{
@@ -565,7 +501,7 @@ func (ic *ImageController) getEntityInfo(entityType, entityID string) (map[strin
 			return nil, err
 		}
 		var info struct{ Name, Rarity string }
-		if err := ic.db.Table(entityType+"s").Select("name, rarity").Where("id = ? AND deleted_at IS NULL", id).Take(&info).Error; err != nil {
+		if err := db.Table(entityType+"s").Select("name, rarity").Where("id = ? AND deleted_at IS NULL", id).Take(&info).Error; err != nil {
 			return nil, err
 		}
 		return map[string]interface{}{"name": info.Name, "rarity": info.Rarity}, nil
@@ -611,25 +547,7 @@ func (ic *ImageController) createImagePrompt(userPrompt, style string, entityInf
 		ImagePromptExtra: imagePromptExtra,
 	})
 	size := GenerateImageSize(itemType, name, description)
-	log.Printf("Сгенерированный промпт (стиль %q, size %s): %s", style, size, prompt)
 	return prompt, size
-}
-
-// logImageGeneration логирует генерацию изображения
-func (ic *ImageController) logImageGeneration(entityType, entityID, cloudinaryID, imageURL, prompt, model string, generationTime int) {
-	entityUUID, _ := uuid.Parse(entityID)
-
-	log := ImageGenerationLog{
-		EntityType:       entityType,
-		EntityID:         entityUUID,
-		CloudinaryID:     cloudinaryID,
-		CloudinaryURL:    imageURL,
-		GenerationPrompt: prompt,
-		GenerationModel:  model,
-		GenerationTimeMs: generationTime,
-	}
-
-	ic.db.Create(&log)
 }
 
 // isValidImageType проверяет, является ли файл изображением
@@ -651,85 +569,32 @@ func isValidImageType(contentType string) bool {
 	return false
 }
 
-// downloadImage скачивает изображение по URL или обрабатывает data URL
-func (ic *ImageController) downloadImage(ctx context.Context, url string) ([]byte, error) {
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	// Проверяем, является ли это data URL
-	if strings.HasPrefix(url, "data:image/") {
-		// Извлекаем base64 данные из data URL
-		parts := strings.Split(url, ",")
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("неверный формат data URL")
-		}
-
-		// Декодируем base64
-		data, err := base64.StdEncoding.DecodeString(parts[1])
-		if err != nil {
-			return nil, fmt.Errorf("ошибка декодирования base64: %v", err)
-		}
-
-		return data, nil
-	}
-
-	// Обычный HTTP URL
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка создания запроса изображения: %w", err)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка скачивания изображения: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("ошибка HTTP: %d", resp.StatusCode)
-	}
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("ошибка чтения данных изображения: %v", err)
-	}
-
-	return data, nil
+// Kept for existing callers/tests; the generator owns the bounded downloader.
+func (ic *ImageController) downloadImage(ctx context.Context, source string) ([]byte, error) {
+	return downloadGeneratedImage(ctx, source)
 }
 
-// addToImageLibrary автоматически добавляет изображение в библиотеку
-func (ic *ImageController) addToImageLibrary(entityType, entityID, cloudinaryID, imageURL, prompt, model string, generationTime int, entityInfo map[string]interface{}) {
-	if entityInfo == nil {
-		var err error
-		entityInfo, err = ic.getEntityInfo(entityType, entityID)
-		if err != nil {
-			log.Printf("Предупреждение: не удалось получить данные сущности для библиотеки: %v", err)
-			entityInfo = map[string]interface{}{}
+// The entity URL is already committed. Ancillary library/history metadata must
+// not turn that known success into a failed generation or delete its image.
+func (ic *ImageController) recordGeneratedEntity(ctx context.Context, requestID, entityType, entityID, prompt string, result generatedImageResult, info map[string]interface{}) {
+	id, err := uuid.Parse(entityID)
+	if err != nil {
+		return
+	}
+	tags := extractLibraryTags(info)
+	row := ImageGenerationLog{EntityType: entityType, EntityID: id, CloudinaryID: result.StorageID, CloudinaryURL: result.URL,
+		GenerationPrompt: prompt, GenerationModel: result.Model, GenerationTimeMs: result.GenerationTime}
+	image := ImageLibrary{CloudinaryID: result.StorageID, CloudinaryURL: result.URL, FileSize: &result.Bytes,
+		CardName: tags.CardName, CardRarity: tags.CardRarity, ItemType: tags.ItemType, WeaponType: tags.WeaponType,
+		ArmorType: tags.ArmorType, Slot: tags.Slot, GenerationPrompt: &prompt, GenerationModel: &result.Model, GenerationTimeMs: &result.GenerationTime}
+	err = ic.imageDB(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&row).Error; err != nil {
+			return err
 		}
-	}
-
-	tags := extractLibraryTags(entityInfo)
-	image := ImageLibrary{
-		CloudinaryID:     cloudinaryID,
-		CloudinaryURL:    imageURL,
-		OriginalName:     nil,
-		FileSize:         nil,
-		CardName:         tags.CardName,
-		CardRarity:       tags.CardRarity,
-		ItemType:         tags.ItemType,
-		WeaponType:       tags.WeaponType,
-		ArmorType:        tags.ArmorType,
-		Slot:             tags.Slot,
-		GenerationPrompt: &prompt,
-		GenerationModel:  &model,
-		GenerationTimeMs: &generationTime,
-	}
-
-	if upsertImageLibraryEntryToDB(ic.db, image) {
-		log.Printf("Изображение %s автоматически добавлено в библиотеку с тегами: name=%s, rarity=%s, type=%s",
-			cloudinaryID,
-			getStringValue(tags.CardName),
-			getStringValue(tags.CardRarity),
-			getStringValue(tags.ItemType))
+		return tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "cloudinary_id"}}, DoNothing: true}).Create(&image).Error
+	})
+	if err != nil {
+		log.Printf("[image] request_id=%s code=image_metadata_not_recorded source=persistence", requestID)
 	}
 }
 
@@ -773,9 +638,4 @@ func getStringValue(s *string) string {
 		return ""
 	}
 	return *s
-}
-
-// isTemporaryID проверяет, является ли ID временным (для новых карт)
-func isTemporaryID(id string) bool {
-	return strings.HasPrefix(id, "temp-") || len(id) < 32 // UUID должен быть минимум 32 символа без дефисов
 }

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "kind": "typed-rule-reference-inventory",
+  "status": "passed",
+  "runId": "test_eaacd283321c86d1f04f406f",
+  "checks": [
+    "canonical-semantic-vs-executable",
+    "all-detected-hashes-preserved",
+    "same-hash-in-executable-context-not-ignored",
+    "exact-certification-binding-required",
+    "unknown-or-mismatched-canonical-binding-rejected",
+    "changed-canonical-manifest-bytes-rejected"
+  ],
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "scope": "owned-native-postgresql-reference-fixture",
+  "nodeContracts": {
+    "passed": 20,
+    "failed": 0,
+    "skipped": 0,
+    "command": "node --test scripts/release/capture-host-backup.test.mjs scripts/release/docker-deployment.test.mjs scripts/release/local-registry-rehearsal.test.mjs"
+  },
+  "independentReview": "tests_architecture: typed scanner/capture/restore/common cutover source coverage PASS",
+  "limits": [
+    "The original production observation with 19 detected hashes is not rewritten.",
+    "Exact source-release certification is preserved separately; semantic identity alone never satisfies an executable CJS reference.",
+    "Native and unit fixtures are not a claim of full actual Docker migration/adoption execution."
+  ]
+}

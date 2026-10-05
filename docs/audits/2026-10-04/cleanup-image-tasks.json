@@ -1,0 +1,131 @@
+[
+  {
+    "id": "AI-01",
+    "title": "Различить источник 403 и обеспечить безопасную диагностику",
+    "priority": "P0",
+    "owner": "images",
+    "depends_on": [],
+    "scope": ["backend/openai_service.go:21,70,139", "backend/image_controller.go:215", "backend/main.go:204,236,397", "frontend/src/api/imagesApi.ts"],
+    "effort_workdays": [1, 2],
+    "status": "not_started",
+    "steps": [
+      "Добавить structured error mapper: app authorization / upstream region / upstream permission / rate limit / network / timeout / unknown.",
+      "Локально моделировать JSON и HTML 403, content type и provider request ID; редактировать секретные заголовки и не логировать prompt/base64.",
+      "Проверить конфигурационный путь endpoint/model/proxy. Фактическая модель сейчас gpt-image-1; не менять её для лечения сетевого отказа.",
+      "Подготовить runbook проверки container egress, проекта ключа и доступа к конкретной модели. GET models проверяет соединение, но не разрешение на Images API.",
+      "Реальную внешнюю диагностику и платную пробу оставить отдельным явно разрешённым шагом. До этого точную причину текущего 403 отмечать unknown."
+    ],
+    "verification": ["Mock cases local/upstream 403 различаются.", "UI показывает полезную причину без секретов.", "Логирование не содержит base64/prompt/token."],
+    "acceptance": ["Источник ошибки прослеживается от браузера до провайдера.", "Runbook ссылается на текущую официальную документацию и не обещает устранение регионального отказа VPN."],
+    "risks": ["Сам сервис имеет contentAdminAuth и может вернуть 403 до OpenAI.", "Доступ аккаунта/организации не доказан исходниками."],
+    "rollback": "Вернуть mapper при необходимости; безопасную redaction сохранить; credentials не менять."
+  },
+  {
+    "id": "AI-02",
+    "title": "Единый сервис генерации и хранения изображений",
+    "priority": "P1",
+    "owner": "images",
+    "depends_on": ["AI-01"],
+    "scope": ["backend/controller.go:873", "backend/image_controller.go:185,231", "backend/openai_service.go", "frontend/src/api/client.ts:216", "frontend/src/api/imagesApi.ts"],
+    "effort_workdays": [2, 3],
+    "status": "not_started",
+    "steps": [
+      "Направить существующие маршруты в один domain service: provider → storage → entity update.",
+      "При отказе не сохранять placeholder и не возвращать ложный success; сохранять прежнее изображение.",
+      "Новые изображения сохранять в object storage, в entity писать URL. Старые data URLs продолжают читаться до отдельной миграции.",
+      "Логировать request ID, размер, latency и фактическую model; убрать запись полного base64 и неверную метку DALL-E.",
+      "Согласовать timeout/cancel/error contracts обоих frontend callers, сохранив права; failures storage/DB имеют безопасный cleanup."
+    ],
+    "verification": ["Provider/storage/DB failures и cancel.", "Старый и новый endpoint дают совместимый success DTO.", "Existing image не изменяется при отказе."],
+    "acceptance": ["Все зарегистрированные пути имеют единый storage/error contract.", "Нет фиктивного успеха и новых base64 blobs в Card.ImageURL."],
+    "risks": ["Storage cleanup не должен становиться бесконечным после отмены; нужен отдельный ограниченный контекст.", "Старый endpoint всё ещё зарегистрирован — нельзя просто удалить без проверки callers."],
+    "rollback": "Сохранить adapters старых endpoint; вернуть предыдущий writer при необходимости, не возвращая ложный placeholder success."
+  },
+  {
+    "id": "AI-03",
+    "title": "Фоновые image jobs и изолированная исходящая сеть",
+    "priority": "P2",
+    "owner": "images",
+    "depends_on": ["AI-02", "TEST-01"],
+    "scope": ["backend image jobs (new)", "backend/migrations image_jobs (new)", "frontend generation status", "infra optional generation service"],
+    "effort_workdays": [3, 5],
+    "status": "not_started",
+    "steps": [
+      "Ввести job ID/fingerprint/owner и persisted состояния queued/running/succeeded/failed/unknown; лимиты concurrency и бюджета.",
+      "Worker lease и restart не должны повторять paid POST с неизвестным результатом. Локальная идемпотентность не доказывает exactly-once внешнего API.",
+      "Клиентский повтор возвращает тот же job; UI восстанавливает статус после reload, результат хранится в storage.",
+      "Для разрешённой обычной сетевой проблемы сравнить client-only CONNECT proxy, tunnel sidecar и отдельный generation service. VPN server на том же TimeWeb host не меняет его egress.",
+      "Проверить на тестовом стенде TLS/DNS/NO_PROXY, внутренний worker/DB/storage traffic, потерю egress и откат. API key не передавать произвольному relay, TLS не отключать.",
+      "Поддерживаемое размещение/правомерный доступ пользователей подтвердить до реальной настройки. Не описывать иностранный IP как гарантию обхода регионального ограничения. Внешнее изменение выполняется только по отдельному запросу."
+    ],
+    "verification": ["S12, особенно timeout после отправки тела и потеря ответа.", "Две одинаковые заявки не создают два локальных jobs.", "Недоступность генерации не блокирует игровые команды."],
+    "acceptance": ["Нет слепых повторных платных запусков.", "Есть восстановимый статус и безопасная изоляция сети.", "Региональный отказ либо разрешённый доступ установлен отдельно, не скрыт под network retry."],
+    "risks": ["Неопределённый исход у провайдера может потребовать ручного решения.", "Tunnel всего хоста может нарушить SSH/DB/Docker/storage; изоляция предпочтительнее."],
+    "rollback": "Остановить приём jobs, завершить или пометить текущие без повторов. Вернуть сеть генерации из сохранённой конфигурации; gameplay сеть не менять."
+  },
+  {
+    "id": "CLEAN-01",
+    "title": "Упорядочить локальные артефакты и действующую документацию",
+    "priority": "P2",
+    "owner": "repository",
+    "depends_on": ["REL-02"],
+    "scope": [".gitignore", "docs index/archive", "output", "outputs", "tmp", "references"],
+    "effort_workdays": [1, 3],
+    "status": "not_started",
+    "steps": [
+      "Разделить tracked/untracked/generated/original/evidence/cache; проверить единственные оригиналы и хэши перед любыми переносами.",
+      "Определить единый каталог результата и ignore rules. Уже tracked файлы не исключаются автоматически через .gitignore.",
+      "Создать current docs index с датой проверки и supersedes; законченные задачи перенести в archive с сохранением ссылок.",
+      "До перемещения проверить ?raw imports, go:embed, fixture generators, CLI, build contexts и skills. src/mvp и src/canon не удалять целиком.",
+      "Подготовить dry-run manifest очистки с точными resolved paths и backup references. На Windows операции выполнять одной оболочкой без перехода в cmd и без следования symlink за workspace.",
+      "В согласованном обратимом scope переносить по manifest; необратимое удаление originals/history требует отдельного решения."
+    ],
+    "verification": ["Build и link checker после переносов.", "Dry-run targets находятся в ожидаемой workspace directory.", "Размеры Git history/working files/Docker context/local artifacts указаны раздельно."],
+    "acceptance": ["Актуальные инструкции легко найти; архив не выглядит текущим источником.", "Нет потери единственных оригиналов или доказательств проверки."],
+    "risks": ["В output десятки GB могут содержать единственные художественные исходники.", "Архивирование внутри Git не уменьшает историю."],
+    "rollback": "Вернуть по move manifest; originals и evidence оставлять в проверенном хранилище."
+  },
+  {
+    "id": "CLEAN-02",
+    "title": "Постепенно убрать старые продуктовые ветки",
+    "priority": "P2",
+    "owner": "product",
+    "depends_on": ["TEST-04"],
+    "scope": ["frontend/src/components/Layout.tsx", "frontend/src/App.tsx", "backend/main.go:372", "legacy group/inventory/character controllers"],
+    "effort_workdays": [2, 5],
+    "status": "not_started",
+    "steps": [
+      "Составить route/API/data dependency map и измерение использования без личного содержания. Название старого каталога не доказывает неиспользуемость.",
+      "Сохранить четыре основных раздела и Профиль/Настройки/Экспорт/Инициативу; сохранить обслуживающие библиотеку редакторы, ShopDetail, inventory mechanics и шаблоны для weapon mastery.",
+      "Кандидаты groups/standalone inventory/templates сначала скрываются profile/flag; прекращение создания legacy объектов согласовать как продуктовый переход.",
+      "Для v1/v2 characters обеспечить экспорт/перенос, redirect/deprecation и проверить внешние API callers. Backend endpoints сегодня зарегистрированы.",
+      "Удалять UI/routes/controllers только после переходного периода и подтверждения отсутствия consumers. Данные/таблицы сохранять до отдельного DB решения.",
+      "Лабораторию правил/документацию можно переместить в developer profile. Mobile/PWA и отдельные встречи решать по использованию, сохраняя общий боевой код."
+    ],
+    "verification": ["S01–S07, старые URLs.", "Run shop, weapon mastery, entity editors, mobile/PWA и экспорт остаются рабочими."],
+    "acceptance": ["Есть kept/hidden/deprecated/deleted inventory с доказательствами.", "Основные сценарии пользователя не теряют зависимые функции."],
+    "risks": ["Отдельная вкладка Инвентарь и игровые операции инвентаря — разные объекты очистки.", "ShopDetail используется забегами и листом."],
+    "rollback": "Вернуть navigation/profile flag. До удаления данных маршруты и экспорт должны оставаться восстановимыми."
+  },
+  {
+    "id": "CLEAN-03",
+    "title": "Сократить media-дистрибутив и подготовить обслуживание Git",
+    "priority": "P2",
+    "owner": "repository",
+    "depends_on": ["CLEAN-01", "REL-06"],
+    "scope": ["frontend/public", "media manifest (new)", "references", "Git maintenance runbook"],
+    "effort_workdays": [2, 4],
+    "status": "not_started",
+    "steps": [
+      "Разделить originals и runtime media; подготовить WebP/AVIF/размеры под экран с визуальным сравнением карт и иконок.",
+      "Использовать URL с content hash и object storage/CDN либо отдельный assets layer; старые ссылки и лицензионные сведения сохранить.",
+      "Проверить print/export, PWA и offline shell: перенос не должен ломать обязательные ресурсы.",
+      "Сравнить clone/archive/context/image/pull bytes отдельно от initial browser transfer. public примерно 155 MB не скачивается при каждом входе.",
+      "Git maintenance начать с read-only integrity/inventory. Не удалять .git tmp вручную, не выполнять aggressive gc и не переписывать историю без отдельного решения, backup и координации клонов."
+    ],
+    "verification": ["Manifest hash/URL reachability и old document/battle references.", "Изображения визуально приемлемы, прозрачность/детали и экспорт сохраняются.", "Image/pull bytes до/после."],
+    "acceptance": ["Сокращение передаваемого дистрибутива измерено.", "Оригиналы и старые URL доступны, история Git не переписана без разрешения."],
+    "risks": ["Уменьшение PNG может ухудшить читаемость карты.", "Moving files в archive внутри Git не уменьшает pack."],
+    "rollback": "Вернуть прошлый media manifest/URLs; originals и предыдущие assets retained."
+  }
+]

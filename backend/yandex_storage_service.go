@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -21,6 +22,18 @@ type YandexStorageService struct {
 	s3Client *s3.S3
 	bucket   string
 	region   string
+}
+
+// PreflightImageGeneration checks configuration before a paid provider call.
+// It deliberately adds no HeadBucket/ListBucket permission requirement.
+func (s *YandexStorageService) PreflightImageGeneration(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if s == nil || s.s3Client == nil || strings.TrimSpace(s.bucket) == "" {
+		return fmt.Errorf("image storage is not configured")
+	}
+	return nil
 }
 
 // NewYandexStorageService создает новый экземпляр сервиса
@@ -125,7 +138,9 @@ func (s *YandexStorageService) UploadImageFromBytes(ctx context.Context, data []
 	})
 
 	if err != nil {
-		return "", "", fmt.Errorf("ошибка загрузки файла: %v", err)
+		// The caller can clean up this newly allocated object if the upload
+		// reached storage but its acknowledgement was lost. No old key is reused.
+		return "", uniqueFilename, fmt.Errorf("ошибка загрузки файла: %v", err)
 	}
 
 	// Формируем URL для доступа к файлу

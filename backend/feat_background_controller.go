@@ -43,6 +43,11 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 
 	page, limit, offset := parseListPagination(c)
 
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "feats")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения черт"})
@@ -82,7 +87,7 @@ func (fc *FeatController) GetFeats(c *gin.Context) {
 		}
 		responses = append(responses, r)
 	}
-	c.JSON(http.StatusOK, gin.H{"feats": responses, "total": total, "page": page, "limit": limit})
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{"feats": responses, "total": total, "page": page, "limit": limit}))
 }
 
 func (fc *FeatController) GetFeat(c *gin.Context) {
@@ -276,6 +281,11 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 
 	page, limit, offset := parseListPagination(c)
 
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "backgrounds")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	query.Count(&total)
 
@@ -312,7 +322,7 @@ func (bc *BackgroundController) GetBackgrounds(c *gin.Context) {
 		}
 		responses = append(responses, r)
 	}
-	c.JSON(http.StatusOK, gin.H{"backgrounds": responses, "total": total, "page": page, "limit": limit})
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{"backgrounds": responses, "total": total, "page": page, "limit": limit}))
 }
 
 func (bc *BackgroundController) GetBackground(c *gin.Context) {

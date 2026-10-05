@@ -1,0 +1,12 @@
+[
+  [
+    "src/engine/modifiers.ts",
+    "src/engine/senses.ts"
+  ],
+  [
+    "src/character/itemFeatProjection.ts",
+    "src/engine/actionGrantContext.ts",
+    "src/engine/actionRequirements.ts",
+    "src/engine/runtimeCharacterProjection.ts"
+  ]
+]

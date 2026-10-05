@@ -1,7 +1,7 @@
 import type {ActorState,RuleActionDefinition,WorldState,SpatialFacts} from './domain';
 import type {RollLog} from '../mvp/contracts';
-import {payloadsOf} from '../engine/mechanicsView';
-import {activeConditionsOf,matchesWhen} from '../engine/circumstances';
+import {payloadsOf} from '../rules-primitives/mechanicsView';
+import {activeConditionsOf,matchesWhen} from './legacy/engineAdapter';
 
 type Dict=Record<string,unknown>;
 export function attackRedirectionRules(source:ActorState,action:RuleActionDefinition,weaponId?:string):Dict[]{

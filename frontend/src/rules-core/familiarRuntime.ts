@@ -219,9 +219,35 @@ export function familiarActorStateIssue(input: {
   // Combat history is an event-owned observation appended during the fight,
   // not a stat from the pinned familiar form. Keep every other character
   // property under the exact catalog comparison.
-  const { combatHistory, ...staticCharacter } = actor.character;
-  const { combatHistory: _expectedHistory, ...expectedCharacter } = expected.character;
+  const { combatHistory, spatialObservations, illumination, environmentObservations, ...staticCharacter } = actor.character;
+  const { combatHistory: _expectedHistory, spatialObservations: _expectedSpatial,
+    illumination: _expectedLight, environmentObservations: _expectedEnvironment, ...expectedCharacter } = expected.character;
   if (!same(staticCharacter, expectedCharacter)) return 'Familiar actor has forged character';
+  // The board refreshes these observations after movement. They are not form
+  // stats, but malformed facts must still fail the persisted-state boundary.
+  if (spatialObservations !== undefined && (!spatialObservations
+    || !Number.isSafeInteger(spatialObservations.boardRevision) || spatialObservations.boardRevision < 0
+    || !Array.isArray(spatialObservations.nearby)
+    || new Set(spatialObservations.nearby.map(row => row?.actorId)).size !== spatialObservations.nearby.length
+    || spatialObservations.nearby.some(row => !row || typeof row.actorId !== 'string' || !row.actorId.trim()
+      || row.actorId === actor.id || !['self', 'ally', 'enemy', 'neutral'].includes(row.relation)
+      || !Number.isFinite(row.distanceFt) || row.distanceFt < 0
+      || ['conscious', 'lineOfSight', 'canSeeTarget', 'targetCanSeeSource'].some(key =>
+        (row as unknown as Record<string, unknown>)[key] !== undefined && typeof (row as unknown as Record<string, unknown>)[key] !== 'boolean')
+      || row.cover !== undefined && !['none', 'half', 'three_quarters', 'total'].includes(row.cover)))) {
+    return 'Familiar actor has invalid spatial observations';
+  }
+  if (illumination !== undefined && (!illumination || !['bright', 'dim', 'dark'].includes(illumination.level)
+    || typeof illumination.daylight !== 'boolean' || typeof illumination.magicalDarkness !== 'boolean'
+    || !Number.isSafeInteger(illumination.boardRevision) || illumination.boardRevision < 0)) {
+    return 'Familiar actor has invalid illumination';
+  }
+  if (environmentObservations !== undefined && (!environmentObservations
+    || typeof environmentObservations.openNightSky !== 'boolean'
+    || !Number.isSafeInteger(environmentObservations.boardRevision) || environmentObservations.boardRevision < 0
+    || environmentObservations.nearestSeaFt !== undefined && (!Number.isFinite(environmentObservations.nearestSeaFt) || environmentObservations.nearestSeaFt < 0))) {
+    return 'Familiar actor has invalid environment observations';
+  }
   if (combatHistory !== undefined && (!combatHistory
     || Object.keys(combatHistory).sort().join(',') !== 'damageDealt,turnEnded'
     || !Number.isSafeInteger(combatHistory.damageDealt) || combatHistory.damageDealt < 0
@@ -234,7 +260,10 @@ export function familiarActorStateIssue(input: {
   ] as const) {
     if (!same(actor[key], expected[key])) return `Familiar actor has forged ${key}`;
   }
-  if (!same(actor.runtime.maxResources, expected.runtime.maxResources)) {
+  // Movement is an authoritative board projection, not a form resource cap.
+  const { movement, ...staticMaxResources } = actor.runtime.maxResources;
+  if (movement !== undefined && (!Number.isFinite(movement) || movement < 0)) return 'Familiar actor has invalid movement maximum';
+  if (!same(staticMaxResources, expected.runtime.maxResources)) {
     return 'Familiar actor has forged maximum resources';
   }
   if (actor.runtime.hp.max !== expected.runtime.hp.max

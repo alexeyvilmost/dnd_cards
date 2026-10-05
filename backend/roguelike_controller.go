@@ -140,7 +140,7 @@ func newRoguelikeSeed() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func ownedRoguelikeRun(tx *gorm.DB, id, userID uuid.UUID, lock bool) (*RoguelikeRun, error) {
+func ownedRoguelikeRun(tx *gorm.DB, id, userID uuid.UUID, lock bool, catalogs ...*frozenCatalogReadScope) (*RoguelikeRun, error) {
 	query := tx.Preload("Character").Where("id = ? AND user_id = ?", id, userID)
 	if lock {
 		query = query.Clauses(clause.Locking{Strength: "UPDATE"})
@@ -154,6 +154,14 @@ func ownedRoguelikeRun(tx *gorm.DB, id, userID uuid.UUID, lock bool) (*Roguelike
 	}
 	if run.Character != nil {
 		run.Character.AccessMode = characterV3AccessOwner
+	}
+	if err := loadFrozenCombatCatalog(tx, &run, catalogs...); err != nil {
+		return nil, err
+	}
+	if lock {
+		if err := captureColdRunColumns(&run); err != nil {
+			return nil, err
+		}
 	}
 	if len(run.Party) > 0 {
 		if err := loadRoguelikeParty(tx, &run, lock); err != nil {
@@ -479,7 +487,7 @@ func roguelikeRestElapsedSeconds(run *RoguelikeRun, commandType string) int {
 }
 
 func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
-	return tx.Model(&RoguelikeRun{}).Where("id = ?", run.ID).Updates(map[string]any{
+	columns := map[string]any{
 		"status": run.Status, "phase": run.Phase, "revision": run.Revision,
 		"experience": run.Experience, "gold": run.Gold, "supplies": run.Supplies,
 		"encounters_won": run.EncountersWon, "attempt": run.Attempt,
@@ -489,7 +497,11 @@ func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
 		"shop": run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
 		"mode": run.Mode, "journey": nonNilRoguelikeMap(run.Journey), "mode_rules": nonNilRoguelikeMap(run.ModeRules), "journey_private": nonNilRoguelikeMap(run.JourneyPrivate),
 		"updated_at": time.Now().UTC(),
-	}).Error
+	}
+	if err := prepareRunStorageColumns(tx, run, columns); err != nil {
+		return err
+	}
+	return tx.Model(&RoguelikeRun{}).Where("id = ?", run.ID).Updates(columns).Error
 }
 
 func (rc *RoguelikeController) Create(c *gin.Context) {

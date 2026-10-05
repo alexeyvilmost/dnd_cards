@@ -47,20 +47,23 @@ type RoguelikeRun struct {
 	RunSeed                      string         `json:"-" gorm:"type:varchar(64);not null"`
 	CombatEnvelope               JSONMap        `json:"-" gorm:"type:jsonb;not null;default:'{}'"`
 	CombatCatalog                JSONMap        `json:"-" gorm:"type:jsonb;not null;default:'{}'"`
-	CombatState                  JSONMap        `json:"combat_state,omitempty" gorm:"-"`
-	TrustedCombatAvailable       bool           `json:"trusted_combat_available" gorm:"-"`
-	Encounter                    JSONMap        `json:"encounter" gorm:"type:jsonb;not null"`
-	Shop                         JSONMap        `json:"shop" gorm:"type:jsonb;not null"`
-	Checkpoint                   JSONMap        `json:"-" gorm:"type:jsonb;not null"`
-	LastReward                   JSONMap        `json:"last_reward" gorm:"type:jsonb;not null"`
-	CreatedAt                    time.Time      `json:"created_at"`
-	UpdatedAt                    time.Time      `json:"updated_at"`
-	Character                    *CharacterV3   `json:"character,omitempty" gorm:"foreignKey:CharacterID"`
+	CombatCatalogRef             *string        `json:"-" gorm:"type:varchar(64)"`
+	storageOriginal              map[string][]byte
+	CombatState                  JSONMap      `json:"combat_state,omitempty" gorm:"-"`
+	TrustedCombatAvailable       bool         `json:"trusted_combat_available" gorm:"-"`
+	Encounter                    JSONMap      `json:"encounter" gorm:"type:jsonb;not null"`
+	Shop                         JSONMap      `json:"shop" gorm:"type:jsonb;not null"`
+	Checkpoint                   JSONMap      `json:"-" gorm:"type:jsonb;not null"`
+	LastReward                   JSONMap      `json:"last_reward" gorm:"type:jsonb;not null"`
+	CreatedAt                    time.Time    `json:"created_at"`
+	UpdatedAt                    time.Time    `json:"updated_at"`
+	Character                    *CharacterV3 `json:"character,omitempty" gorm:"foreignKey:CharacterID"`
 }
 
 func (RoguelikeRun) TableName() string { return "roguelike_runs" }
 
 type RoguelikeCommandReceipt struct {
+	ReceiptStorage
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	RunID       uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_roguelike_run_command"`
 	UserID      uuid.UUID `gorm:"type:uuid;not null"`

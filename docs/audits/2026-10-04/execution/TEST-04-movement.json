@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "task": "TEST-04",
+  "scope": "movement continuation and saved outcome override",
+  "status": "passed",
+  "recordedAt": "2026-10-04T21:38:07.108Z",
+  "runId": "test_e7c31469fcd9235675a784dc",
+  "command": "node scripts/testing/stack.mjs --profile integration -- node frontend/node_modules/@playwright/test/cli.js test --config=frontend/playwright.local.config.ts frontend/e2e-local/combat.spec.ts --repeat-each 3",
+  "stats": {
+    "startTime": "2026-10-04T21:35:41.361Z",
+    "duration": 78000.256,
+    "expected": 9,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "scenarios": [
+    {
+      "title": "S05 direct movement and authoritative held attack survive reload and retry one paid influence",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 10290,
+          "movement": [
+            {
+              "declaredOutcome": "miss",
+              "destination": {
+                "x": 3,
+                "y": 2
+              },
+              "oldPosition": {
+                "x": 3,
+                "y": 3
+              },
+              "movementReactions": 0,
+              "movementBefore": 30,
+              "movementAfter": 25,
+              "acceptedPendingType": null,
+              "committedOpportunityOutcomes": [
+                "miss"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "S05 held movement and authoritative held attack survive reload and retry one paid influence",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 9608,
+          "movement": [
+            {
+              "declaredOutcome": "hit",
+              "destination": {
+                "x": 3,
+                "y": 2
+              },
+              "oldPosition": {
+                "x": 3,
+                "y": 3
+              },
+              "movementReactions": 1,
+              "movementBefore": 30,
+              "movementAfter": 25,
+              "acceptedPendingType": "attack_reaction",
+              "committedOpportunityOutcomes": [
+                "hit",
+                "hit"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "S10 real victory grants rewards once and returns to the same camp after reload",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 6831,
+          "movement": []
+        }
+      ]
+    },
+    {
+      "title": "S05 direct movement and authoritative held attack survive reload and retry one paid influence",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 9959,
+          "movement": [
+            {
+              "declaredOutcome": "miss",
+              "destination": {
+                "x": 3,
+                "y": 2
+              },
+              "oldPosition": {
+                "x": 3,
+                "y": 3
+              },
+              "movementReactions": 0,
+              "movementBefore": 30,
+              "movementAfter": 25,
+              "acceptedPendingType": null,
+              "committedOpportunityOutcomes": [
+                "miss"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "S05 held movement and authoritative held attack survive reload and retry one paid influence",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 9692,
+          "movement": [
+            {
+              "declaredOutcome": "hit",
+              "destination": {
+                "x": 3,
+                "y": 2
+              },
+              "oldPosition": {
+                "x": 3,
+                "y": 3
+              },
+              "movementReactions": 1,
+              "movementBefore": 30,
+              "movementAfter": 25,
+              "acceptedPendingType": "attack_reaction",
+              "committedOpportunityOutcomes": [
+                "hit",
+                "hit"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "S10 real victory grants rewards once and returns to the same camp after reload",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 6749,
+          "movement": []
+        }
+      ]
+    },
+    {
+      "title": "S05 direct movement and authoritative held attack survive reload and retry one paid influence",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 10067,
+          "movement": [
+            {
+              "declaredOutcome": "miss",
+              "destination": {
+                "x": 3,
+                "y": 2
+              },
+              "oldPosition": {
+                "x": 3,
+                "y": 3
+              },
+              "movementReactions": 0,
+              "movementBefore": 30,
+              "movementAfter": 25,
+              "acceptedPendingType": null,
+              "committedOpportunityOutcomes": [
+                "miss"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "S05 held movement and authoritative held attack survive reload and retry one paid influence",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 10141,
+          "movement": [
+            {
+              "declaredOutcome": "hit",
+              "destination": {
+                "x": 3,
+                "y": 2
+              },
+              "oldPosition": {
+                "x": 3,
+                "y": 3
+              },
+              "movementReactions": 1,
+              "movementBefore": 30,
+              "movementAfter": 25,
+              "acceptedPendingType": "attack_reaction",
+              "committedOpportunityOutcomes": [
+                "hit",
+                "hit"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "S10 real victory grants rewards once and returns to the same camp after reload",
+      "status": "expected",
+      "results": [
+        {
+          "status": "passed",
+          "retry": 0,
+          "durationMs": 1986,
+          "movement": []
+        }
+      ]
+    }
+  ],
+  "workerArtifactHash": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+  "uiBuild": {
+    "reused": false,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_e7c31469fcd9235675a784dc\\ui-dist",
+    "indexHash": "a9a926a63c65838e8144897a70b2773243788e5ba8e795948a8b3bb105d14f06",
+    "manifestHash": "2a562f13aab53051d724f6c8b5aaf88dc2136f816a10795dd202a98ba392fe83",
+    "files": 628,
+    "bytes": 169187399
+  },
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "sourceFiles": [
+    {
+      "path": "frontend/src/mvp/contracts.ts",
+      "sha256": "7951d9d4bb0cd0d2bd8b0f8ff5aa2511d47aad73de4820685e5c83c7de9de5ba"
+    },
+    {
+      "path": "frontend/src/engine/roll.ts",
+      "sha256": "bfbaff4b77ef4e00e18de2db2860bfa47782e126df41b974f1db473ce5911c22"
+    },
+    {
+      "path": "frontend/src/engine/rollRules.ts",
+      "sha256": "4c2b8556557e15b15c9ff00ce0981f4ddb2212a53f469da6a523d46f2c0737cf"
+    },
+    {
+      "path": "frontend/src/engine/savedOutcomeOverride.test.ts",
+      "sha256": "ce51f0950fd395de8dd6ea536f5168f03667c26bca5cd53ec4d7708ae383abd7"
+    },
+    {
+      "path": "frontend/e2e-local/combat.spec.ts",
+      "sha256": "6514aa4e750104461beb74a0d93f14f2165b6686bde11cea1ed906cfabfe612c"
+    },
+    {
+      "path": "frontend/e2e-local/fixtures.ts",
+      "sha256": "8e09ea0038a8b07b4820ef1c0119b099aa8f959932fa0bb7bc8d526567ca06d2"
+    },
+    {
+      "path": "scripts/testing/movement-encounter-fixture.mjs",
+      "sha256": "4de2949d18295428c930efb5dd7cfff3c53049f120837331dd58845d1e884e98"
+    },
+    {
+      "path": "scripts/testing/movement-encounter-fixture.test.mjs",
+      "sha256": "d84cd96fb1c4253b9e37f4188f45028df1332d726ab0f02edbead25da13fce09"
+    }
+  ],
+  "relatedTests": {
+    "unit": {
+      "passed": 58,
+      "failed": 0,
+      "log": "outputs/testing/saved-outcome-after.log"
+    },
+    "redBaseline": {
+      "passed": 1,
+      "failed": 5,
+      "log": "outputs/testing/saved-outcome-before.log"
+    },
+    "fixtureGuardCleanup": {
+      "passed": 4,
+      "failed": 0,
+      "log": "outputs/testing/movement-fixture-unit.log"
+    }
+  },
+  "redBrowser": {
+    "runId": "test_b45ddba4cdc5300589c14b4a",
+    "passed": 8,
+    "failed": 1,
+    "reason": "Saved declared hit was retargeted to miss after declining reaction"
+  },
+  "limitations": [
+    "Training outcome modifiers prove both phase branches, not ordinary random hit probability",
+    "Integration profile does not prove historical fresh migration chain",
+    "Local native browser evidence, not OCI/Linux deployment proof",
+    "Archived executable artifacts and historical snapshots/certificates unchanged"
+  ],
+  "evidence": {
+    "playwright": "outputs/testing/runs/test_e7c31469fcd9235675a784dc/acceptance/playwright.json",
+    "playwrightSha256": "847e067a42484c90afd103012471b7fa14b73eca359065f3f07806a27b836a17",
+    "log": "outputs/testing/runs/test_e7c31469fcd9235675a784dc/command.log",
+    "registry": "outputs/testing/runs/test_e7c31469fcd9235675a784dc/registry.json"
+  }
+}

@@ -28,12 +28,12 @@ function cacheKey(kind: EntityKind, slug: string): string {
   return `${kind}:${slug}`;
 }
 
-export function createRegistry(resolver: EntityResolver): Registry {
+export function createRegistry(resolver: EntityResolver, options: {cache?: boolean} = {}): Registry {
   const cache = new Map<string, unknown | null>();
 
   async function resolveOne<T>(kind: EntityKind, slug: string): Promise<T | null> {
     const key = cacheKey(kind, slug);
-    if (cache.has(key)) return cache.get(key) as T | null;
+    if (options.cache !== false && cache.has(key)) return cache.get(key) as T | null;
 
     let entity: unknown | null = null;
     switch (kind) {
@@ -50,7 +50,7 @@ export function createRegistry(resolver: EntityResolver): Registry {
         entity = await resolver.resolveFeat(slug);
         break;
     }
-    cache.set(key, entity);
+    if (options.cache !== false) cache.set(key, entity);
     return entity as T | null;
   }
 

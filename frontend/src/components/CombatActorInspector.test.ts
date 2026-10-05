@@ -1,8 +1,14 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CombatActorInspector, { collectCombatDefenses } from './CombatActorInspector';
 import { combatGrappleStatusRows } from '../solo-combat/grapplePresentation';
+
+beforeEach(() => {
+  let stored: string | null = JSON.stringify({entityDisplay: {effects: 'row'}});
+  vi.stubGlobal('localStorage', {getItem: () => stored, setItem: (_key: string, value: string) => {stored = value;}});
+});
+afterEach(() => vi.unstubAllGlobals());
 
 describe('combat actor inspector defenses', () => {
   it('derives defenses recursively from mechanics primitives and deduplicates them', () => {
@@ -65,7 +71,7 @@ describe('combat actor inspector defenses', () => {
     }));
     state.world.actors.goblin.runtime.activeEffects.push({id: 'bait', name: 'Bait', source: 'fighter', mechanics: {kind: 'modifier', op: 'add', value: 7, applies_to: {roll: 'ac'}}});
     const protectedHtml = renderToStaticMarkup(createElement(CombatActorInspector, {state, actorId: 'goblin', onClose: () => {}}));
-    expect(protectedHtml).toContain('<b>22</b><small>Класс доспеха</small>');
+    expect(protectedHtml).toContain('<b>22</b><small>КД</small>');
     expect(html).toContain('Отравлен');
     expect(html).toContain('Источник: Луч болезни');
     expect(html).toContain('Длительность: до конца следующего хода источника');

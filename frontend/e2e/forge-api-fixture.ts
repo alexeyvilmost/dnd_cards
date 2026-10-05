@@ -283,6 +283,10 @@ export async function installForgeApiFixture(
 
     if (segments[1] === 'characters-v3') {
       const id = segments[2];
+      if (id === 'equipment-authority' && request.method() === 'GET') {
+        await json(route, 200, {enabled: false});
+        return;
+      }
       if (id === 'runtime-commands' && request.method() === 'POST') {
         const payload = request.postDataJSON() as JsonRecord & {
           command_id?: string;
@@ -484,6 +488,23 @@ export async function installForgeApiFixture(
       const pageNumber = Number(url.searchParams.get('page')) || 1;
       const limit = Number(url.searchParams.get('limit')) || 100;
       await json(route, 200, { cards: [], total: 0, page: pageNumber, limit });
+      return;
+    }
+
+    if (segments[1] === 'cards' && segments[2] === 'runtime' && segments[3] === 'resolve'
+      && segments.length === 4 && request.method() === 'GET') {
+      const values = url.searchParams.getAll('ids');
+      const rawIds = values.length === 1 ? values[0].split(',') : [];
+      if (!rawIds.length || rawIds.length > 128 || rawIds.some(id => (
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)
+        || id === '00000000-0000-0000-0000-000000000000'
+      ))) {
+        await json(route, 400, { code: 'invalid_card_ids' });
+        return;
+      }
+      const rows = [...new Set(rawIds)].map(id => COLLECTIONS.cards.rows.find(row => row.id === id));
+      if (rows.some(row => !row)) await json(route, 404, { code: 'cards_unavailable' });
+      else await json(route, 200, { cards: rows });
       return;
     }
 

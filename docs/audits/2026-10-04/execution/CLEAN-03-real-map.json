@@ -1,0 +1,92 @@
+{
+  "runId": "test_ba1bb438be4081bf86675343",
+  "uiBuild": {
+    "reused": true,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_ba1bb438be4081bf86675343\\ui-dist",
+    "indexHash": "0e1afa41664d191d645045445e8c3c51334ca54965dba0f9186e145b8f87a4e6",
+    "manifestHash": "6d536042f99b7836ff08679e6fbd72641ec647828d6dfbfcbbdd4289e2c1ac5f",
+    "files": 645,
+    "bytes": 198636716
+  },
+  "fixture": "integration-baseline",
+  "mainFlows": {
+    "status": "not_run",
+    "reason": "Explicit maps-only diagnostic; see separate whole browser receipt"
+  },
+  "map": {
+    "status": "passed",
+    "attempts": [
+      {
+        "runId": "75d61e58-2bce-4946-83f1-8537189f73cf",
+        "map": "tavern-v2",
+        "source": "/assets/battle-maps/tavern-floor-v1.png",
+        "kind": "variant"
+      },
+      {
+        "runId": "3bae75a0-a2fd-4124-a738-4f16855e0032",
+        "map": "tavern-v2",
+        "source": "/assets/battle-maps/tavern-floor-v1.png",
+        "kind": "variant"
+      },
+      {
+        "runId": "831ad67e-1163-470b-8a97-eeb37d8957fd",
+        "map": "quarry-v1",
+        "source": "/assets/battle-maps/quarry-floor-v1.png",
+        "kind": "original"
+      }
+    ],
+    "checks": [
+      {
+        "kind": "variant",
+        "runId": "75d61e58-2bce-4946-83f1-8537189f73cf",
+        "source": "/assets/battle-maps/tavern-floor-v1.png",
+        "screenURL": "/media/variants/e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f.webp",
+        "canonicalSavedURL": "/assets/battle-maps/tavern-floor-v1.png",
+        "decoded": {
+          "width": 1448,
+          "height": 1086
+        },
+        "response": {
+          "path": "/media/variants/e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f.webp",
+          "status": 200,
+          "type": "image/webp"
+        },
+        "bodyBytes": 1770492,
+        "bodyHash": "e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f",
+        "originalBytes": 2292577,
+        "originalStillServed": true,
+        "originalScreenRequested": false,
+        "screenshot": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_ba1bb438be4081bf86675343\\acceptance\\media-map-variant.png",
+        "pageErrors": []
+      },
+      {
+        "kind": "original",
+        "runId": "831ad67e-1163-470b-8a97-eeb37d8957fd",
+        "source": "/assets/battle-maps/quarry-floor-v1.png",
+        "screenURL": "/assets/battle-maps/quarry-floor-v1.png",
+        "canonicalSavedURL": "/assets/battle-maps/quarry-floor-v1.png",
+        "decoded": {
+          "width": 1619,
+          "height": 971
+        },
+        "response": {
+          "path": "/assets/battle-maps/quarry-floor-v1.png",
+          "status": 200,
+          "type": "image/png"
+        },
+        "bodyBytes": 3373397,
+        "bodyHash": "31c6358876e43143fcb4749e259d494c0ea7223f798c4586fcccc271b8a7c9aa",
+        "originalBytes": 3373397,
+        "originalStillServed": true,
+        "originalScreenRequested": true,
+        "screenshot": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_ba1bb438be4081bf86675343\\acceptance\\media-map-original.png",
+        "pageErrors": []
+      }
+    ],
+    "method": "Natural canonical encounter generation; no saved combat, seed, map or receipt mutation; all APIs real",
+    "printBoundary": "Paper print/export is covered by the real main flows. Tactical map screen mapping does not rewrite saved original URLs; no claim that browser printing TacticalBattleMap switches its CSS back to PNG.",
+    "defaultDisabledBuild": "Not exercised by this opt-in build; resolver/build unit proof is separate"
+  },
+  "status": "passed",
+  "cleanup": "stopped"
+}

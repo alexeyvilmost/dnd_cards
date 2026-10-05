@@ -29,10 +29,16 @@ func (cc *ConceptController) GetConcepts(c *gin.Context) {
 	var concepts []ConceptEntity
 	query := cc.db.Model(&ConceptEntity{}).Where("deleted_at IS NULL")
 	query = entityTagFilter(query, c, "concept", "concepts")
+	query = referenceCatalogSearch(query, c, "name, concept_id, description")
 	// Preserve the pre-pagination complete glossary response for UI callers that
 	// omit page/limit, while giving snapshot clients a bounded stable contract.
 	explicitPagination := c.Query("page") != "" || c.Query("limit") != ""
 	page, limit, offset := parseListPaginationWithDefault(c, maxListLimit)
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "concepts")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения понятий"})
@@ -50,12 +56,12 @@ func (cc *ConceptController) GetConcepts(c *gin.Context) {
 		page = 1
 		limit = len(concepts)
 	}
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{
 		"concepts": concepts,
 		"total":    total,
 		"page":     page,
 		"limit":    limit,
-	})
+	}))
 }
 
 func (cc *ConceptController) GetConcept(c *gin.Context) {

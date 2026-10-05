@@ -1,4 +1,5 @@
 import {movementEffectExpiryEvents} from './movementEffectExpiry';
+import {triggerOwner} from '../rules-core/triggerOwnership';
 import {FACING_DIRECTIONS,FACING_LABELS,facingToward,type CombatFacing} from './facing';
 import {illuminationAt} from './combatIllumination';
 import {teleportDestinationIssue} from '../rules-core/teleportDestination';
@@ -3519,7 +3520,7 @@ function triggerEvents(action: RuleActionDefinition): string[] {
 /** Triggered catalog actions are capabilities/listeners, not proactive buttons. */
 export function isTriggeredCombatAction(action: RuleActionDefinition, event?: string): boolean {
   const activation = action.mechanics.activation as Record<string, unknown> | undefined;
-  if (activation?.mode !== 'triggered') return false;
+  if (activation?.mode !== 'triggered' || triggerOwner(action) === 'unsupported') return false;
   const events = triggerEvents(action);
   return event === undefined ? events.length > 0 : events.includes(event);
 }

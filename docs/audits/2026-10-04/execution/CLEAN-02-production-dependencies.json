@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-05T01:25:07.813Z",
+  "readOnly": true,
+  "productionMutated": false,
+  "inventory": {
+    "relations": [
+      {
+        "relname": "characters",
+        "total_bytes": 524288
+      },
+      {
+        "relname": "characters_v2",
+        "total_bytes": 147456
+      },
+      {
+        "relname": "characters_v3",
+        "total_bytes": 9428992
+      },
+      {
+        "relname": "inventories",
+        "total_bytes": 114688
+      },
+      {
+        "relname": "inventory_items",
+        "total_bytes": 180224
+      }
+    ],
+    "foreignKeys": [
+      {
+        "conname": "characters_group_id_fkey",
+        "source": "characters",
+        "target": "groups",
+        "definition": "FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL"
+      },
+      {
+        "conname": "characters_user_id_fkey",
+        "source": "characters",
+        "target": "users",
+        "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+      },
+      {
+        "conname": "characters_v2_group_id_fkey",
+        "source": "characters_v2",
+        "target": "groups",
+        "definition": "FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE SET NULL"
+      },
+      {
+        "conname": "characters_v2_user_id_fkey",
+        "source": "characters_v2",
+        "target": "users",
+        "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+      },
+      {
+        "conname": "inventories_group_id_fkey",
+        "source": "inventories",
+        "target": "groups",
+        "definition": "FOREIGN KEY (group_id) REFERENCES groups(id) ON DELETE CASCADE"
+      },
+      {
+        "conname": "inventories_user_id_fkey",
+        "source": "inventories",
+        "target": "users",
+        "definition": "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"
+      },
+      {
+        "conname": "inventory_items_card_id_fkey",
+        "source": "inventory_items",
+        "target": "cards",
+        "definition": "FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE"
+      },
+      {
+        "conname": "inventory_items_inventory_id_fkey",
+        "source": "inventory_items",
+        "target": "inventories",
+        "definition": "FOREIGN KEY (inventory_id) REFERENCES inventories(id) ON DELETE CASCADE"
+      }
+    ],
+    "triggers": [
+      {
+        "relation": "characters",
+        "tgname": "update_characters_updated_at",
+        "definition": "CREATE TRIGGER update_characters_updated_at BEFORE UPDATE ON public.characters FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+      },
+      {
+        "relation": "inventories",
+        "tgname": "update_inventories_updated_at",
+        "definition": "CREATE TRIGGER update_inventories_updated_at BEFORE UPDATE ON public.inventories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+      },
+      {
+        "relation": "inventory_items",
+        "tgname": "update_inventory_items_updated_at",
+        "definition": "CREATE TRIGGER update_inventory_items_updated_at BEFORE UPDATE ON public.inventory_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()"
+      }
+    ],
+    "dependentViews": [],
+    "rows": {
+      "characters": 21,
+      "charactersV2": 12,
+      "inventoriesWithCharacter": 10,
+      "preservedPersonalOrGroupWithCharacter": 0,
+      "itemsWithCharacterParent": 45
+    }
+  }
+}

@@ -331,10 +331,10 @@ describe('solo combat data-owned action choices', () => {
     const state = {
       characterId: 'cleric',
       sideByActorId: { cleric: 'player', skeleton: 'enemy', distant: 'enemy' },
-      world: { actors: {
-        cleric: { id: 'cleric', runtime: { hp: { current: 10 } } },
-        skeleton: { id: 'skeleton', runtime: { hp: { current: 10 } } },
-        distant: { id: 'distant', runtime: { hp: { current: 10 } } },
+      world: { objects: {}, actors: {
+        cleric: { id: 'cleric', character: {}, runtime: { hp: { current: 10 }, activeEffects: [] } },
+        skeleton: { id: 'skeleton', character: {}, runtime: { hp: { current: 10 }, activeEffects: [] } },
+        distant: { id: 'distant', character: {}, runtime: { hp: { current: 10 }, activeEffects: [] } },
       } },
       tokens: {
         cleric: { actorId: 'cleric', side: 'player', position: { x: 4, y: 4 } },

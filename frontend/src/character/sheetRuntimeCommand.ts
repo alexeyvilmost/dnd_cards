@@ -5,6 +5,10 @@ import type {
 } from './api';
 import type { ForgeCharacter } from './types';
 
+export type RuntimeCommandReceiptIdentity = Pick<CharacterRuntimeCommandRequest, 'command_id' | 'events'> & {
+  participants: Array<Pick<CharacterRuntimeCommandRequest['participants'][number], 'character_id' | 'expected_runtime_revision'>>;
+};
+
 export class SheetRuntimeCommandError extends Error {
   constructor(message: string) {
     super(message);
@@ -13,7 +17,7 @@ export class SheetRuntimeCommandError extends Error {
 }
 
 function expectedCommittedRevisions(
-  request: CharacterRuntimeCommandRequest,
+  request: RuntimeCommandReceiptIdentity,
 ): Map<string, number> {
   const expected = new Map<string, number>();
   for (const participant of request.participants) {
@@ -42,7 +46,7 @@ function expectedCommittedRevisions(
  * still the participant's latest state.
  */
 export function acceptedRuntimeCommandReceipt(
-  request: CharacterRuntimeCommandRequest,
+  request: RuntimeCommandReceiptIdentity,
   response: CharacterRuntimeCommandResponse,
 ): Record<string, ForgeCharacter> {
   if (typeof response.replayed !== 'boolean') {
@@ -81,7 +85,7 @@ export function acceptedRuntimeCommandReceipt(
  * rolled back in the browser by the older receipt snapshot.
  */
 export async function currentRuntimeCommandCharacters(input: {
-  request: CharacterRuntimeCommandRequest;
+  request: RuntimeCommandReceiptIdentity;
   response: CharacterRuntimeCommandResponse;
   loadCurrent: (characterId: string) => Promise<ForgeCharacter>;
 }): Promise<Record<string, ForgeCharacter>> {
@@ -127,7 +131,7 @@ export interface CommittedSheetRuntimeCommand {
  * retry (which could otherwise strand the UI behind a false retry lock).
  */
 export async function commitSheetRuntimeCommand(input: {
-  request: CharacterRuntimeCommandRequest;
+  request: RuntimeCommandReceiptIdentity;
   commit: () => Promise<CharacterRuntimeCommandResponse>;
   loadCurrent: (characterId: string) => Promise<ForgeCharacter>;
   viewingCharacterId: string;

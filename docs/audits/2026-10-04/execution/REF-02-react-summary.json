@@ -1,0 +1,265 @@
+{
+  "task": "REF-02",
+  "method": "React development profiler in jsdom; graphics stubbed, canonical UI and engine real",
+  "scenarioCount": 14,
+  "before": {
+    "commits": 178,
+    "totalActualDurationMs": 619.5015000001586,
+    "p50ActualDurationMs": 2.607700000044133,
+    "p95ActualDurationMs": 10.055500000049506,
+    "maxActualDurationMs": 47.825799999965966
+  },
+  "after": {
+    "commits": 179,
+    "totalActualDurationMs": 826.5126999998329,
+    "p50ActualDurationMs": 3.269399999995585,
+    "p95ActualDurationMs": 13.833000000062384,
+    "maxActualDurationMs": 70.8406999999861
+  },
+  "scenarios": [
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "before": {
+        "commits": 11,
+        "totalActualDurationMs": 26.08920000004946,
+        "p50ActualDurationMs": 2.607700000044133,
+        "p95ActualDurationMs": 8.558599999949365,
+        "maxActualDurationMs": 8.558599999949365
+      },
+      "after": {
+        "commits": 11,
+        "totalActualDurationMs": 39.63979999999265,
+        "p50ActualDurationMs": 3.663200000011784,
+        "p95ActualDurationMs": 11.449099999997088,
+        "maxActualDurationMs": 11.449099999997088
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "before": {
+        "commits": 11,
+        "totalActualDurationMs": 30.096599999946193,
+        "p50ActualDurationMs": 2.8959000000395463,
+        "p95ActualDurationMs": 10.779900000001362,
+        "maxActualDurationMs": 10.779900000001362
+      },
+      "after": {
+        "commits": 11,
+        "totalActualDurationMs": 36.041099999992184,
+        "p50ActualDurationMs": 3.544700000004923,
+        "p95ActualDurationMs": 13.421799999987343,
+        "maxActualDurationMs": 13.421799999987343
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "before": {
+        "commits": 19,
+        "totalActualDurationMs": 81.83519999974305,
+        "p50ActualDurationMs": 3.8210000000181026,
+        "p95ActualDurationMs": 14.67009999993752,
+        "maxActualDurationMs": 14.67009999993752
+      },
+      "after": {
+        "commits": 20,
+        "totalActualDurationMs": 103.18560000002253,
+        "p50ActualDurationMs": 4.3087000000141416,
+        "p95ActualDurationMs": 11.703200000021752,
+        "maxActualDurationMs": 13.833000000062384
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "before": {
+        "commits": 17,
+        "totalActualDurationMs": 36.3954000000158,
+        "p50ActualDurationMs": 2.575799999984156,
+        "p95ActualDurationMs": 5.998700000014651,
+        "maxActualDurationMs": 5.998700000014651
+      },
+      "after": {
+        "commits": 17,
+        "totalActualDurationMs": 45.138199999910285,
+        "p50ActualDurationMs": 3.269399999995585,
+        "p95ActualDurationMs": 8.132000000017797,
+        "maxActualDurationMs": 8.132000000017797
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "before": {
+        "commits": 9,
+        "totalActualDurationMs": 18.536000000025524,
+        "p50ActualDurationMs": 0.604799999982788,
+        "p95ActualDurationMs": 7.284900000009657,
+        "maxActualDurationMs": 7.284900000009657
+      },
+      "after": {
+        "commits": 9,
+        "totalActualDurationMs": 29.515699999978096,
+        "p50ActualDurationMs": 1.3322000000043772,
+        "p95ActualDurationMs": 10.224000000023807,
+        "maxActualDurationMs": 10.224000000023807
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "before": {
+        "commits": 14,
+        "totalActualDurationMs": 129.15439999997034,
+        "p50ActualDurationMs": 6.25870000001305,
+        "p95ActualDurationMs": 47.825799999965966,
+        "maxActualDurationMs": 47.825799999965966
+      },
+      "after": {
+        "commits": 14,
+        "totalActualDurationMs": 164.31419999997615,
+        "p50ActualDurationMs": 6.406500000003689,
+        "p95ActualDurationMs": 70.8406999999861,
+        "maxActualDurationMs": 70.8406999999861
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "before": {
+        "commits": 15,
+        "totalActualDurationMs": 82.61229999990246,
+        "p50ActualDurationMs": 2.00970000002053,
+        "p95ActualDurationMs": 34.08770000000368,
+        "maxActualDurationMs": 34.08770000000368
+      },
+      "after": {
+        "commits": 15,
+        "totalActualDurationMs": 122.63519999994787,
+        "p50ActualDurationMs": 3.1871999999948457,
+        "p95ActualDurationMs": 50.27599999998802,
+        "maxActualDurationMs": 50.27599999998802
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "before": {
+        "commits": 14,
+        "totalActualDurationMs": 35.999700000123994,
+        "p50ActualDurationMs": 0.7048999999751686,
+        "p95ActualDurationMs": 10.055500000049506,
+        "maxActualDurationMs": 10.055500000049506
+      },
+      "after": {
+        "commits": 14,
+        "totalActualDurationMs": 48.94070000003285,
+        "p50ActualDurationMs": 0.8094999999993888,
+        "p95ActualDurationMs": 16.591800000007424,
+        "maxActualDurationMs": 16.591800000007424
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "before": {
+        "commits": 12,
+        "totalActualDurationMs": 26.116900000091846,
+        "p50ActualDurationMs": 0.9877000000051339,
+        "p95ActualDurationMs": 11.182900000014342,
+        "maxActualDurationMs": 11.182900000014342
+      },
+      "after": {
+        "commits": 12,
+        "totalActualDurationMs": 35.66380000005665,
+        "p50ActualDurationMs": 1.0705000000089058,
+        "p95ActualDurationMs": 15.728000000015527,
+        "maxActualDurationMs": 15.728000000015527
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "before": {
+        "commits": 11,
+        "totalActualDurationMs": 29.633000000194443,
+        "p50ActualDurationMs": 1.9191000000100757,
+        "p95ActualDurationMs": 7.447500000012951,
+        "maxActualDurationMs": 7.447500000012951
+      },
+      "after": {
+        "commits": 11,
+        "totalActualDurationMs": 45.645399999950314,
+        "p50ActualDurationMs": 2.7668999999859807,
+        "p95ActualDurationMs": 12.934399999989182,
+        "maxActualDurationMs": 12.934399999989182
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "before": {
+        "commits": 18,
+        "totalActualDurationMs": 51.33989999992991,
+        "p50ActualDurationMs": 2.605500000016036,
+        "p95ActualDurationMs": 8.389699999948789,
+        "maxActualDurationMs": 8.389699999948789
+      },
+      "after": {
+        "commits": 18,
+        "totalActualDurationMs": 61.694799999961106,
+        "p50ActualDurationMs": 2.669899999991685,
+        "p95ActualDurationMs": 12.343099999990955,
+        "maxActualDurationMs": 12.343099999990955
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "before": {
+        "commits": 11,
+        "totalActualDurationMs": 33.171500000131346,
+        "p50ActualDurationMs": 3.686900000029709,
+        "p95ActualDurationMs": 9.058500000021013,
+        "maxActualDurationMs": 9.058500000021013
+      },
+      "after": {
+        "commits": 11,
+        "totalActualDurationMs": 40.21260000000257,
+        "p50ActualDurationMs": 4.339600000002974,
+        "p95ActualDurationMs": 8.656800000026124,
+        "maxActualDurationMs": 8.656800000026124
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "before": {
+        "commits": 11,
+        "totalActualDurationMs": 23.433900000014546,
+        "p50ActualDurationMs": 2.064700000006269,
+        "p95ActualDurationMs": 6.869699999992008,
+        "maxActualDurationMs": 6.869699999992008
+      },
+      "after": {
+        "commits": 11,
+        "totalActualDurationMs": 33.391300000004776,
+        "p50ActualDurationMs": 3.033100000000559,
+        "p95ActualDurationMs": 8.793000000016036,
+        "maxActualDurationMs": 8.793000000016036
+      }
+    },
+    {
+      "name": "real combat page uses one canonical pipeline in 2D and 3D > uses refreshed bestiary portraits for old combat tokens without rewriting the saved state",
+      "before": {
+        "commits": 5,
+        "totalActualDurationMs": 15.087500000019645,
+        "p50ActualDurationMs": 0.526400000002468,
+        "p95ActualDurationMs": 10.02169999997568,
+        "maxActualDurationMs": 10.02169999997568
+      },
+      "after": {
+        "commits": 5,
+        "totalActualDurationMs": 20.49430000000484,
+        "p50ActualDurationMs": 0.6043999999992593,
+        "p95ActualDurationMs": 14.81180000000677,
+        "maxActualDurationMs": 14.81180000000677
+      }
+    }
+  ],
+  "interpretation": "Observational React development render CPU profile. Setup, async timing, JIT and other concurrent UI changes differ; these single fixture runs do not establish a causal performance win or a latency budget. Graphics are stubbed; no GPU/FPS/mobile claim.",
+  "sourceProof": "REF-02-combat-extraction.json",
+  "rawSamples": [
+    "REF-02-react-before.json",
+    "REF-02-react-after.json"
+  ]
+}

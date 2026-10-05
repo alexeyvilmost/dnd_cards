@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "suite": "extended",
+  "status": "passed",
+  "scope": "Native Windows, owned PostgreSQL/API/worker/browser, fresh UI; no OCI, Linux race or production execution",
+  "started_at": "2026-10-04T21:42:13.441Z",
+  "duration_ms": 1095961,
+  "report": "outputs/testing/final-extended-3/report.json",
+  "report_sha256": "e652a6b52c15bdbee3e093253822c383634d2ba1a73fa89bca7a1d3cd0a9f043",
+  "baseline_commit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "manifest_sha256": "943baefeab262ddb562d86cfa878ab8b6e2c838376fdfd865007decce8116b1d",
+  "source_snapshot": {
+    "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+    "files": 4313
+  },
+  "run_id": "test_81930a27890169f6f980d8fc",
+  "artifact_hash": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+  "ui_build": {
+    "reused": false,
+    "manifestHash": "2a562f13aab53051d724f6c8b5aaf88dc2136f816a10795dd202a98ba392fe83",
+    "files": 628,
+    "bytes": 169187399
+  },
+  "checks": [
+    {
+      "id": "source-hygiene",
+      "status": "passed",
+      "duration_ms": 4373
+    },
+    {
+      "id": "node-contracts",
+      "status": "passed",
+      "duration_ms": 33956,
+      "tests_passed": 559,
+      "skipped": 0
+    },
+    {
+      "id": "isolated-stack",
+      "status": "passed",
+      "duration_ms": 128895
+    },
+    {
+      "id": "vitest",
+      "status": "passed",
+      "duration_ms": 335946,
+      "tests_passed": 6196,
+      "skipped": 0
+    },
+    {
+      "id": "worker-and-database-node",
+      "status": "passed",
+      "duration_ms": 10170,
+      "tests_passed": 17,
+      "skipped": 0
+    },
+    {
+      "id": "backend-compile",
+      "status": "passed",
+      "duration_ms": 2889
+    },
+    {
+      "id": "go-backend",
+      "status": "passed",
+      "duration_ms": 49975,
+      "tests_passed": 392
+    },
+    {
+      "id": "go-animationpresentation",
+      "status": "passed",
+      "duration_ms": 2364,
+      "tests_passed": 4
+    },
+    {
+      "id": "go-audiopresentation",
+      "status": "passed",
+      "duration_ms": 2334,
+      "tests_passed": 3
+    },
+    {
+      "id": "go-charactertemplates",
+      "status": "passed",
+      "duration_ms": 406,
+      "no_tests_in_package": true
+    },
+    {
+      "id": "go-itemsource",
+      "status": "passed",
+      "duration_ms": 2206,
+      "tests_passed": 5
+    },
+    {
+      "id": "go-itemsource-cmd-audit",
+      "status": "passed",
+      "duration_ms": 539,
+      "no_tests_in_package": true
+    },
+    {
+      "id": "go-migrations",
+      "status": "passed",
+      "duration_ms": 37222,
+      "tests_passed": 331
+    },
+    {
+      "id": "go-passivepresentation",
+      "status": "passed",
+      "duration_ms": 455,
+      "no_tests_in_package": true
+    },
+    {
+      "id": "go-roguelikecontent",
+      "status": "passed",
+      "duration_ms": 1959,
+      "tests_passed": 1
+    },
+    {
+      "id": "go-weapondata",
+      "status": "passed",
+      "duration_ms": 1988,
+      "tests_passed": 1
+    },
+    {
+      "id": "local-api-spine",
+      "status": "passed",
+      "duration_ms": 973
+    },
+    {
+      "id": "local-browser-flows",
+      "status": "passed",
+      "duration_ms": 49357,
+      "tests_passed": 12,
+      "skipped": 0
+    },
+    {
+      "id": "process-crash-recovery",
+      "status": "passed",
+      "duration_ms": 35255
+    },
+    {
+      "id": "supported-upgrade-baselines",
+      "status": "passed",
+      "duration_ms": 48792,
+      "matrix_cases": 3
+    },
+    {
+      "id": "candidate-rehearsal-api",
+      "status": "passed",
+      "duration_ms": 2786,
+      "scenario_checks": 6
+    },
+    {
+      "id": "catalog-equivalence",
+      "status": "passed",
+      "duration_ms": 5395,
+      "tests_passed": 4
+    },
+    {
+      "id": "preparation-cache-equivalence",
+      "status": "passed",
+      "duration_ms": 4844,
+      "tests_passed": 5
+    },
+    {
+      "id": "worker-wire-mirror-equivalence",
+      "status": "passed",
+      "duration_ms": 18498
+    },
+    {
+      "id": "equipment-authority-flow",
+      "status": "passed",
+      "duration_ms": 1943
+    },
+    {
+      "id": "initiative-options-flow",
+      "status": "passed",
+      "duration_ms": 4020
+    },
+    {
+      "id": "library-review-pages",
+      "status": "passed",
+      "duration_ms": 844
+    },
+    {
+      "id": "equipment-runtime-browser",
+      "status": "passed",
+      "duration_ms": 4616
+    },
+    {
+      "id": "pwa-offline-shell",
+      "status": "passed",
+      "duration_ms": 1023
+    },
+    {
+      "id": "urvin-owned-journey",
+      "status": "passed",
+      "duration_ms": 87269,
+      "scenario_checks": 27
+    },
+    {
+      "id": "browser-ui-fixtures-production",
+      "status": "passed",
+      "duration_ms": 111521,
+      "tests_passed": 48,
+      "skipped": 0
+    },
+    {
+      "id": "browser-ui-fixtures-battle3d",
+      "status": "passed",
+      "duration_ms": 81085,
+      "tests_passed": 8,
+      "skipped": 0
+    },
+    {
+      "id": "source-stability",
+      "status": "passed",
+      "duration_ms": 19489
+    }
+  ],
+  "numerically_counted_tests": 7586,
+  "count_note": "Suite counts overlap; scenario/matrix gates and build checks are listed separately, not added to the test total.",
+  "historical_chain_verified": false,
+  "go_race": false,
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  }
+}

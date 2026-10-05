@@ -124,7 +124,7 @@ func ContentAdminAuthMiddleware(authService *AuthService) gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "авторизация администраторов контента не настроена"})
 				return
 			}
-			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "нет прав администратора контента"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "нет прав администратора контента", "code": "content_admin_required", "source": "application", "request_id": c.GetString(requestIDContextKey)})
 			return
 		}
 		c.Set("user_id", claims.UserID)

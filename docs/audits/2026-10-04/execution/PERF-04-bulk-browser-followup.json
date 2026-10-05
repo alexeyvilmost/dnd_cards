@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "startedAt": "2026-10-05T01:36:05.309Z",
+  "source": {
+    "files": 2260,
+    "sha256": "fc2cee855aa81a4f0d2b55e57416a2deae8d9fbd2448626769aeae718a2cdb2c"
+  },
+  "runId": "test_547e09db3a40b02ba5468462",
+  "uiBuild": {
+    "reused": false,
+    "isolatedBuild": true,
+    "reactProfile": false,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_547e09db3a40b02ba5468462\\ui-dist",
+    "indexHash": "c2bda27e99e3dade2605d3d234061aecd2e62d989227b4456e8cd21b4e16b9f7",
+    "manifestHash": "02c63259d152dfcbf536a2b44ec7abf49b75cf04f9b08fbf5ea7c466df2fb38b",
+    "files": 631,
+    "bytes": 169173559
+  },
+  "browser": {
+    "tests": 20,
+    "passed": 20,
+    "skipped": 0,
+    "projects": [
+      "desktop-chromium",
+      "mobile-chromium"
+    ]
+  },
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "finishedAt": "2026-10-05T01:38:26.521Z"
+}

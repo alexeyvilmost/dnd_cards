@@ -1,6 +1,6 @@
 import type { CharacterContext, RuntimeState } from '../mvp/contracts';
 import { activeConditionsOf, matchesWhen } from './circumstances';
-import { matchingRuntimeActionGrants } from './actionGrantContext';
+import { matchingRuntimeActionGrants } from '../rules-primitives/runtimeActionGrants';
 import { itemGate,attunementCapacity } from '../character/attunement';
 import {isMagicalMechanics} from './magic';
 import {resourceRestrictionIssue} from './resourceRestrictions';

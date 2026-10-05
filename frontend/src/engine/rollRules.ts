@@ -171,8 +171,13 @@ export function d20MinimumDie(rules: Dict[], faces:number): {value:number;source
 
 /** Переопределение исхода по натуральному значению; undefined — базовая логика. */
 export function outcomeOverride(rules: Dict[], natural: number): string | undefined {
-  for (const r of rules) if (r.op === 'outcome' && matchesNatural(natural, r.natural)) return String(r.value ?? r.outcome ?? '');
-  return undefined;
+  const rule = matchedOutcomeRule(rules, natural);
+  return rule ? String(rule.value ?? rule.outcome ?? '') : undefined;
+}
+
+/** The same first-match policy, exposed so a held roll can save its provenance. */
+export function matchedOutcomeRule(rules: Dict[], natural: number): Dict | undefined {
+  return rules.find(rule => rule.op === 'outcome' && matchesNatural(natural, rule.natural));
 }
 
 /** Payload-ы (then) всех on_roll-правил, чьё условие по натуральному значению совпало. */

@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "scope": "sheet-action-model-availability-presentation",
+  "status": "targeted-passed-awaiting-common-suite",
+  "beforePanelLines": 3565,
+  "afterPanelLines": 3153,
+  "availabilityUnchangedAfterWhitespaceNormalization": true,
+  "availabilityTokenTextHash": "e72ddeff539cdd08f35bc51e92bee7c8ff4be0ce0f322e53fa7407e5d430ad1a",
+  "targeted": {
+    "tests": 46,
+    "passed": 46,
+    "failed": 0,
+    "skipped": 0
+  },
+  "canonicalRenderer": "SheetActionLine",
+  "executionUnchanged": true,
+  "newRendererSurfaces": [
+    "desktop sheet",
+    "encounter sheet inspector",
+    "mobile full-screen inspection"
+  ],
+  "limitations": [
+    "Fresh common core/extended and browser checks pending",
+    "No reduction in total repository lines claimed; new module interfaces and tests are additive"
+  ]
+}

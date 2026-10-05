@@ -47,3 +47,9 @@
 .combat-actor-inspector__effects--icons > div:has(.active-effect-card--icon) {
   padding: 0; border: 0; background: transparent;
 }
+.sheet-active-effects--icons:has(.active-effect-card__summary),
+.sheet-conditions--icons:has(.active-effect-card__summary),
+.combat-sheet-effects--icons:has(.active-effect-card__summary),
+.combat-actor-inspector__effects--icons:has(.active-effect-card__summary) {
+  flex-direction: column; align-items: stretch;
+}

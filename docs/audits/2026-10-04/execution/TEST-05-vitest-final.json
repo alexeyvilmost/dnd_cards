@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "tests": 6073,
+  "passed": 6073,
+  "skipped": 0,
+  "files": 717,
+  "sourceFilesVerified": 1680,
+  "sourceChanged": [],
+  "durationMs": 297243.24072265625,
+  "manifestHashAtSelection": "528c900c2a1ab0892dd705b14d86dcaa88fdd76a81026ecc462183f6d17515b5",
+  "manifestHashNow": "528c900c2a1ab0892dd705b14d86dcaa88fdd76a81026ecc462183f6d17515b5",
+  "report": "outputs/testing/test05-extended-freeze.json",
+  "selection": "outputs/testing/test05-extended-freeze-selection.json",
+  "sourceReceipt": "outputs/testing/test05-extended-freeze-source.json"
+}

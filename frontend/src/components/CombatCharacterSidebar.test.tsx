@@ -1,9 +1,15 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ActiveEffectEntry } from '../mvp/contracts';
 import { CombatActiveEffects } from './CombatCharacterSidebar';
 import CombatCharacterSidebar from './CombatCharacterSidebar';
+
+beforeEach(() => {
+  let stored: string | null = JSON.stringify({entityDisplay: {effects: 'row'}});
+  vi.stubGlobal('localStorage', {getItem: () => stored, setItem: (_key: string, value: string) => {stored = value;}});
+});
+afterEach(() => vi.unstubAllGlobals());
 
 describe('CombatActiveEffects', () => {
   it('shows an ally how to use Bardic Inspiration at the combat point of inspection', () => {

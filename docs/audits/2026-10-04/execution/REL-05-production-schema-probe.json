@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-05T01:29:47.054Z",
+  "readOnly": true,
+  "productionMutated": false,
+  "scope": "schema-and-ledger",
+  "elapsedMs": 505.462269,
+  "queries": 1,
+  "migrationCount": 302,
+  "schemaFingerprint": "sha256:6d00949de56ee849345194c42e0326a73a49cdb62b1df69251541807648dbc58",
+  "exactOriginalObservedSchema": true,
+  "exactOriginalObservedLedger": true,
+  "referenceCompletenessClaim": false
+}

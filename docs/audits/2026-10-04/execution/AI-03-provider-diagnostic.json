@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-04T23:10:27.911Z",
+  "method": "GET",
+  "endpoint": "https://api.openai.com/v1/models",
+  "paidRequest": false,
+  "configuredCustomBase": false,
+  "keyConfigured": true,
+  "source": "TimeWeb host direct TLS; same host egress as containers, not a paid Images API request",
+  "httpStatus": 403,
+  "contentType": "application/json",
+  "requestId": null,
+  "server": "cloudflare",
+  "errorCode": "unsupported_country_region_territory",
+  "errorType": "request_forbidden",
+  "status": "read_only_api_access_denied",
+  "messageClass": "region"
+}

@@ -399,7 +399,7 @@ const CharacterSheetV2 = ({
           conditions={readOnly
             ? runtimeState?.activeEffects.length
               ? <div className="cs-active-effects">{groupActiveEffectsForDisplay(runtimeState.activeEffects)
-                .map((group) => <ActiveEffectCard key={group.key} group={group} variant="icon" />)}</div>
+                .map((group) => <ActiveEffectCard key={group.key} group={group} />)}</div>
               : <p className="cs-hook-note">Активных состояний и эффектов нет.</p>
             : <SheetConditionsPanel character={character} onUpdated={onUpdated} onEvents={onEvents} passives={passives} embedded encounterApply={encounterApply} />}
           breakdownFor={sheetCtx && runtimeState

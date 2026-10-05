@@ -49,6 +49,9 @@ export type AdvantageState = 'none' | 'advantage' | 'disadvantage';
 
 export interface RollLog {
   automaticHit?: {reason:string;sourceEntityIds:string[]};
+  /** Matched data-owned outcome rule at roll time. Optional for historical logs;
+   * continuation must not reconstruct it from changed current declarations. */
+  outcomeOverride?: {outcome: NonNullable<RollLog['outcome']>; rule: Record<string, unknown>};
   /** Canonical action payment preserved with held attack rolls. */
   actionCostResources?: string[];
   /** A data-owned bow replaces advantage/disadvantage with sequential arrows. */

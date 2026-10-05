@@ -1,17 +1,7 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
 import AudioDirector from './audio/AudioDirector';
-import {
-  loadConditions,
-  MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
-  type ConditionLoadResult,
-} from './api/conditionsApi';
-import {
-  PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
-  PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
-  PINNED_MICRO_MVP_CONDITION_RULES_HASH,
-} from './canon/microMvpL1ReleaseIdentity';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DiceDialogProvider } from './contexts/DiceDialogContext';
@@ -86,23 +76,7 @@ const MonsterLibrary = lazy(() => import('./pages/MonsterLibrary'));
 const MonsterCreator = lazy(() => import('./pages/MonsterCreator'));
 const SoloCombatPage = lazy(() => import('./pages/SoloCombatPage'));
 const RoguelikePage = lazy(() => import('./pages/RoguelikePage'));
-const RULE_BOOTSTRAP_TIMEOUT_MS = 15_000;
-const RULE_BOOTSTRAP_RETRY_MS = 5_000;
-const CONDITION_RELEASE_BINDING = Object.freeze({
-  certificationVersion: MICRO_MVP_CONDITION_CERTIFICATION_VERSION,
-  rulesHash: PINNED_MICRO_MVP_CONDITION_RULES_HASH,
-  releaseContentHash: PINNED_MICRO_MVP_CONDITION_RELEASE_CONTENT_HASH,
-  releaseHash: PINNED_MICRO_MVP_CONDITION_RELEASE_HASH,
-});
-
-function RulesAuthorityBoundary({ ready, children }: { ready: boolean; children: ReactNode }) {
-  if (ready) return <>{children}</>;
-  return (
-    <div role="status" aria-live="polite" style={{ padding: '60px 24px', textAlign: 'center', color: '#a59886' }}>
-      Проверяем правила для игрового экрана…
-    </div>
-  );
-}
+const RulesAuthorityBoundary = lazy(() => import('./components/RulesAuthorityBoundary'));
 
 const isRulesLabPath = (path: string) => path === '/rules-lab' || path.startsWith('/rules-lab/');
 
@@ -110,54 +84,6 @@ function AppContent() {
   const location = useLocation();
   const isRulesLab = isRulesLabPath(location.pathname);
   const isPaperSheet = /^\/paper-sheet(?:\/[^/]+(?:\/(?:forge|level-up))?)?\/?$/.test(location.pathname);
-  const isHome = location.pathname === '/';
-  const [conditionsReady, setConditionsReady] = useState(false);
-  const [conditionAuthority, setConditionAuthority] = useState<ConditionLoadResult | null>(null);
-  const conditionLoadRef = useRef<ReturnType<typeof loadConditions> | null>(null);
-  // Активировать только полный сертифицированный набор из 15 состояний БД;
-  // при любой неполноте движок явно остаётся в offline-fixture режиме и
-  // автоматически повторяет bootstrap. Временный cold start backend не должен
-  // оставлять вкладку в offline-режиме до ручной перезагрузки.
-  useEffect(() => {
-    if (isRulesLab || isPaperSheet || isHome) return undefined;
-    let active = true;
-    let retryTimer: number | undefined;
-    setConditionsReady(false);
-    const bootstrap = () => {
-      conditionLoadRef.current ??= loadConditions({
-        timeoutMs: RULE_BOOTSTRAP_TIMEOUT_MS,
-        expectedRelease: CONDITION_RELEASE_BINDING,
-      });
-      void conditionLoadRef.current
-        .then((result) => {
-          if (!active) return;
-          setConditionAuthority(result);
-          setConditionsReady(true);
-          if (result.mode === 'offline_fixture') {
-            conditionLoadRef.current = null;
-            retryTimer = window.setTimeout(bootstrap, RULE_BOOTSTRAP_RETRY_MS);
-          }
-        })
-        .catch(() => {
-          // `loadConditions` is fail-closed itself. Keep the shell safe even if
-          // a future adapter unexpectedly rejects instead of returning a mode.
-          if (!active) return;
-          setConditionAuthority({
-            mode: 'offline_fixture',
-            reason: 'condition authority bootstrap failed',
-          });
-          setConditionsReady(true);
-          conditionLoadRef.current = null;
-          retryTimer = window.setTimeout(bootstrap, RULE_BOOTSTRAP_RETRY_MS);
-        });
-    };
-    bootstrap();
-    return () => {
-      active = false;
-      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
-    };
-  }, [isRulesLab, isPaperSheet, isHome]);
-
   // Acceptance lab deliberately has no API/auth dependency or application-wide providers.
   if (isRulesLab) {
     return (
@@ -197,28 +123,11 @@ function AppContent() {
   }
 
   const withRulesAuthority = (children: ReactNode) => (
-    <RulesAuthorityBoundary ready={conditionsReady}>{children}</RulesAuthorityBoundary>
+    <RulesAuthorityBoundary>{children}</RulesAuthorityBoundary>
   );
 
   return (
     <>
-    {!isHome && conditionAuthority?.mode === 'offline_fixture' && (
-      <div
-        role="status"
-        data-testid="offline-rules-authority"
-        style={{
-          position: 'sticky', top: 0, zIndex: 10000, padding: '8px 16px',
-          textAlign: 'center', color: '#2f2418', background: '#f3d28b',
-          pointerEvents: 'none',
-        }}
-      >
-        Офлайн-набор правил: сертифицированные данные сервера сейчас недоступны.{' '}
-        Повторяем подключение автоматически.
-        {conditionAuthority.reason && (
-          <span aria-description={conditionAuthority.reason}> Причина: {conditionAuthority.reason}</span>
-        )}
-      </div>
-    )}
       <ToastProvider>
         <CharacterV3AccessNotice />
         <CharacterFormulaRoot>
@@ -418,13 +327,9 @@ function AppContent() {
           </ProtectedRoute>
         } />
         
-        {/* Character routes: легаси-поколения (v1/v2/v3-old) удалены 2026-07-05,
-            старые URL ведут в актуальную систему (Forge). */}
-        <Route path="/characters" element={<Navigate to="/characters-forge" replace />} />
-        <Route path="/characters-v2" element={<Navigate to="/characters-forge" replace />} />
+        {/* Актуальные персонажи V3: список и создание через Forge. */}
         <Route path="/characters-v3" element={<Navigate to="/characters-forge" replace />} />
         <Route path="/characters-v3/create" element={<Navigate to="/character-forge" replace />} />
-        <Route path="/characters/create" element={<Navigate to="/character-forge" replace />} />
         <Route path="/characters-v3/:id/edit" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
         
         {/* Настройки сайта */}

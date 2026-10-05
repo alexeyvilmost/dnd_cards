@@ -944,6 +944,7 @@ describe('micro-MVP compiled spell entity semantics', () => {
       ]);
       startEncounter(test.session, `false-${existingTemp}`, [source.id, observer.id]);
       const before = copy(test.session.getState().actors[source.id].runtime);
+      const observerBefore = copy(test.session.getState().actors[observer.id].runtime);
       const result = dispatchAccepted(test.session, {
         type: 'UseAction', commandId: `false-${existingTemp}:cast`, actorId: source.id,
         actionId: spell.action.id, targetIds: [source.id],
@@ -954,7 +955,7 @@ describe('micro-MVP compiled spell entity semantics', () => {
       expect(after.hp).toEqual({ current: 7, max: 15, temp: expectedTemp });
       expect(after.resources.action).toBe(before.resources.action - 1);
       expect(after.resources.spell_slot_1).toBe(before.resources.spell_slot_1 - 1);
-      expect(test.session.getState().actors[observer.id].runtime).toEqual(observer.runtime);
+      expect(test.session.getState().actors[observer.id].runtime).toEqual(observerBefore);
       test.tape.assertExhausted();
       expectReplay(test);
     };

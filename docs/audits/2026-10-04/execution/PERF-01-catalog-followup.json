@@ -1,0 +1,162 @@
+{
+  "status": "targeted_passed_full_suite_pending",
+  "runId": "test_a15cf644f2a4ec7d716b9ac6",
+  "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+  "fixture": {
+    "profile": "integration-baseline",
+    "schemaHash": "296d25beb5723f77b91f418f96d57add118438b49ae539071354ef681dce2cc2",
+    "migrationBaseline": "297_retain_generic_spell_free_uses",
+    "historicalChainVerified": false,
+    "catalog": [
+      {
+        "source": "officials/canon/prod-snapshot/classes.json",
+        "rows": 60,
+        "sha256": "2124cffa17579481185c30454bdd7139c52f9e48f45376417d05a1070a879cf7"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/races.json",
+        "rows": 39,
+        "sha256": "6a34f538f03db6f5f2665dee1b840337f6b471e437457e7e1aef7bdf347d7e1c"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/effects.json",
+        "rows": 452,
+        "sha256": "0e4a5edd1dc7e536106aabf68b9a1c63cd1a824e65ac2754f02c87101af74523"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/actions.json",
+        "rows": 40,
+        "sha256": "f3702a0dca6f4dc784f714cbded73a044185ecbba006b1fc759d6ffb3c530bd5"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/spells.json",
+        "rows": 393,
+        "sha256": "da763e12c75177ef0e85bcd5ca3157e3cfd8404eb51a0984855b13d71456e495"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/feats.json",
+        "rows": 77,
+        "sha256": "769295768512a3c490c41d3580284b56e4935b4077e0967006b5663fa04b83fa"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/backgrounds.json",
+        "rows": 16,
+        "sha256": "b356a2abe7381d3109a18d98081b84e93c47e9ffdc4c59b3ae63c108b5fb7161"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/cards.json",
+        "rows": 768,
+        "sha256": "c110a67bbf2e3b5707a1e65abde62f5a84860da2f101704fd1aca4666e36ebd5"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/resources.json",
+        "rows": 26,
+        "sha256": "ab1aa68dd3ef5f059c4176daff815c27c5ed5b481c767cd0ecae6970db0571d6"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/variables.json",
+        "rows": 5,
+        "sha256": "c204da89f22044950548b51034dd799ade6944c700615e2e923fc77172b9c0a5"
+      },
+      {
+        "source": "backend/migrations/data/catalog-audit-20260929/spells.json",
+        "sha256": "4bb1192d1cbfb578741c993661ccab959ec0048eff68e093d919e4e4dba4b281",
+        "projection": "public spell preimage + patch; no review/support"
+      },
+      {
+        "source": "frontend/src/roguelike/pinnedFighter.fixture.json",
+        "sha256": "0803e14781eb81aef18b7f8897c5bf5f64e55bb0cb588926a3eb39d8dc3f3c49",
+        "projection": "catalog.entities only; no character/owner"
+      },
+      {
+        "source": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+        "sha256": "f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+        "projection": "conditionPatches.fields + card fieldPatches; no generated certificates"
+      },
+      {
+        "source": "backend/migrations/generic_spell_freeuses_297_manifest.json",
+        "sha256": "2926f0264534669439bfd8219fea445274d373667bca8b8819d920f1d3fb64a5",
+        "rows": 12,
+        "excludedEffectIds": [
+          "16700000-0000-4000-8000-000000000109",
+          "17000000-0000-4000-8000-000000000011",
+          "17000000-0000-4000-8000-000000000012",
+          "17000000-0000-4000-8000-000000000037",
+          "18000000-0000-4000-8000-000000000005"
+        ],
+        "projection": "mechanics of effects present in this minimal public catalog only; item patches/new high-level effects excluded; generic pools remain virtual"
+      },
+      {
+        "source": "scripts/content/data/spell-grant-abilities-20261001.json",
+        "sha256": "310047ba934a9fed8bba48476eee4491670be698fe07bf9391762664d7580add",
+        "rows": 1,
+        "entityIds": [
+          "bcb05701-70ac-4b48-8e60-4cf46f6ea544"
+        ],
+        "projection": "evidence.fields.mechanics for existing EFF-wizard-spellcasting only; no certificates; not_tested",
+        "projectionSha256": "6da54a207ed4a62cccbd0a00938e7f7f02e2cdd7247c913c68cc593829d51b85"
+      }
+    ],
+    "syntheticMonsters": 2,
+    "source": "checked-in canonical catalog plus synthetic test creatures",
+    "templates": {
+      "source": "backend/charactertemplates/presets.json",
+      "rows": 3,
+      "sha256": "099be9fe5499d34db2d0173d6d467e6deacaef497c762ac1773e7e7b9eb7d4cb"
+    },
+    "statistics": "analyzed-after-seed"
+  },
+  "cleanup": "stopped",
+  "actualCacheGate": {
+    "required": 7,
+    "passed": 7,
+    "classes": [
+      "fighter",
+      "wizard"
+    ],
+    "modes": [
+      "legacy",
+      "cold",
+      "warm",
+      "evicted",
+      "prefetch"
+    ],
+    "assertions": [
+      "full worker result equality with same command ID/seed/artifact",
+      "warm one-worker-call cache hit",
+      "new alias collision cold restart",
+      "exact card-number precedence"
+    ]
+  },
+  "additionalUnitFlights": {
+    "tests": 4,
+    "passed": 4
+  },
+  "flagsDefaultOff": [
+    "RULES_CATALOG_PREFETCH_ENABLED",
+    "RULES_PREPARATION_CACHE_ENABLED"
+  ],
+  "nativeCatalogFollowup": {
+    "runId": "test_0dca31d1aafc4c159ef2fffa",
+    "required": 7,
+    "passed": 7,
+    "cleanup": "stopped"
+  },
+  "currentFixtureCompatibility": {
+    "historicalInputUnmodified": true,
+    "declaredContainerRowsAdded": 13,
+    "replayHttp": {
+      "passed": 3,
+      "failed": 0
+    },
+    "fixtureGuards": {
+      "passed": 2,
+      "failed": 0
+    },
+    "vitest": {
+      "files": 11,
+      "passed": 85,
+      "failed": 0
+    }
+  }
+}

@@ -1,3 +1,6 @@
 *.sh text eol=lf
 frontend/public/assets/dice-box/**/*.json -text
 backend/migrations/effect_classification_*_manifest.json text eol=lf
+backend/migrations/compact_receipts_298.go text eol=lf
+backend/migrations/frozen_catalogs_299.go text eol=lf
+backend/migrations/image_jobs_300.go text eol=lf

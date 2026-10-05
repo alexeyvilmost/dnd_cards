@@ -20,7 +20,7 @@ describe('catalog Pushing Attack', () => {
     const result = executeAction(fresh(), mechanics, context(critical));
     expect(result.state.resources.superiority_die).toBe(3);
     expect(result.targetState?.hp.current).toBe(critical ? 40 : 45);
-    expect(result.events).toContainEqual({type: 'movement', mode: 'push', distanceFt: 15});
+    expect(result.events).toContainEqual({type: 'movement', mode: 'push', distanceFt: 15, recipientActorId: 'target', relativeToActorId: 'source'});
   });
   it.each([4, 5])('adds damage but skips the save for size %s', size => {
     let rolls = 0;
@@ -53,7 +53,7 @@ it.each([0, 5, 10, 15])('honors selected push distance %s', distance => {
   const ctx = context(false);
   ctx.choices = {pushing_attack_distance: [String(distance)]};
   const result = executeAction(fresh(), mechanics, ctx);
-  expect(result.events).toContainEqual({type: 'movement', mode: 'push', distanceFt: distance});
+  expect(result.events).toContainEqual({type: 'movement', mode: 'push', distanceFt: distance, recipientActorId: 'target', relativeToActorId: 'source'});
 });
 it.each([undefined, ['20'], ['5', '15']])('rejects absent or invalid distance before dice or cost: %s', distance => {
   let rolls = 0;

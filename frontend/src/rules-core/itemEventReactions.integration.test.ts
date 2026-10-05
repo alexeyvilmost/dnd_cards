@@ -40,6 +40,24 @@ function setup(actions:RuleActionDefinition[],attackDice:Array<number|{sides:num
 }
 
 describe('item after-event reactions',()=>{
+  it.each([
+    {id:'source-board-rider',trigger:{requires_weapon_or_unarmed_hit:true}},
+    {id:'source-renamed-rider',trigger:{requires_melee_hit:true}},
+    {id:'source-unknown-predicate',trigger:{unimplemented_gate:true}},
+  ])('does not execute an unowned predicate as an unconditional world event: $id', row => {
+    const action = reaction(row.id,'hit',7);
+    const activation = action.mechanics.activation as Record<string,unknown>;
+    action.mechanics.activation = {...activation,mode:'triggered',trigger:{event:'hit',...row.trigger}};
+    const session = setup([action]);
+    session.dispatch({type:'UseAction',actionId:'strike',targetIds:['b'],factsByTarget:{b:facts}});
+    expect(session.get().pendingResolution).toBeNull();
+    expect(session.get().eventReactions ?? []).toEqual([]);
+    expect(session.get().actors.b.runtime.hp.current).toBe(27);
+    expect(session.get().actors.a.runtime.resources.reaction).toBe(1);
+    session.reload();
+    expect(session.get().pendingResolution).toBeNull();
+  });
+
   it.each([1,.5])('echoes fraction %s only after the protected actor settles damage; the source gets its own defenses',fraction=>{
     const attack:RuleActionDefinition={...strike,id:'source-bond-strike',mechanics:{activation:{mode:'active',cost:[{resource:'action'}]},effects:[{resolution:'auto',who:'target',result:[{kind:'damage',amount:12,type:'fire'}]}]}};
     const guard:RuleActionDefinition={id:'guard',name:'Guard',kind:'nonSpell',sourceEntityIds:['guard-source'],mechanics:{activation:{mode:'reaction',cost:[{resource:'reaction'}],trigger:{event:'damage_taken',timing:'before'}},

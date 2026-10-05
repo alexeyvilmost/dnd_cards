@@ -239,7 +239,9 @@ func TestExactUpdateValidationPreservesIdentityAndServerFields(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if desired["id"] != expected["id"] || desired["card_number"] != expected["card_number"] || desired["support"] != nil {
+	if desired["id"] != expected["id"] || desired["card_number"] != expected["card_number"] ||
+		!reflect.DeepEqual(desired["support"], map[string]any{"status": "not_verified"}) ||
+		desired["created_at"] != expected["created_at"] || desired["updated_at"] != expected["updated_at"] {
 		t.Fatalf("identity/support semantics changed: %#v", desired)
 	}
 	metadataSupport := map[string]any{"status": "verified_mechanical", "mechanics_locked": true}

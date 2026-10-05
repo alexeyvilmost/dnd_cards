@@ -1,4 +1,5 @@
 import {combatHideFacts, combatHideIssue} from './hide';
+import {projectCombatAuras} from './combatAuras';
 import {previewAttackCover,attackCoverLabel} from './attackCoverPreview';
 import {foldEvents} from '../rules-core/reducer';
 import {approachAndExecuteCombatAction, canEscapeActorGrapple, escapeActorGrapple, previewCombatAttackRoll, previewMovementThreats, offerZeroDamageFollowUps, triggeredSecondaryTargetIds} from './engine';
@@ -823,7 +824,9 @@ describe('solo combat engine vertical integration', () => {
     expect(previewMovementThreats(state,actorId,path)).toEqual([]);
   });
   it('previews the actual attack modifiers without changing the world or spending a resource', async () => {
-    const {state, actorId, enemyId, attack} = await championMovementEncounter();
+    const setup = await championMovementEncounter();
+    const {actorId, enemyId, attack} = setup;
+    const state = projectCombatAuras(setup.state);
     const before = clone(state);
     const input = {state, actorId, actionId: attack.id, targetIds: [enemyId]};
     const preview = previewCombatAttackRoll(input);
@@ -839,7 +842,9 @@ describe('solo combat engine vertical integration', () => {
   });
   it.each([true,false])('persists an inspiration decision before applying damage, use=%s', async use => {
     const {resolveD20Interrupt} = await import('./engine');
-    const {state, actorId, enemyId, attack} = await championMovementEncounter();
+    const setup = await championMovementEncounter();
+    const {actorId, enemyId, attack} = setup;
+    const state = projectCombatAuras(setup.state);
     state.world.actors[actorId].runtime.resources.heroic_inspiration = 1;
     const before = clone(state);
     const held = executeCombatAction({state,actorId,actionId:attack.id,targetIds:[enemyId],rng:()=>0});
@@ -1050,6 +1055,30 @@ describe('solo combat engine vertical integration', () => {
     if (!held) state.world.actors[monsterId].runtime.equipment = {};
     return {state, actorId: actor.id, monsterId, actionId: incoming.id, parryId: parry.id};
   }
+
+  it.each([{part:'grasp-a',dc:12},{part:'grasp-b',dc:16}])('holds declared monster grapple $part across a saved attack reaction', async policy => {
+    const setup=await parryEncounter();let state=setup.state;
+    const player=state.world.actors[setup.actorId],monster=state.world.actors[setup.monsterId];
+    player.ac=15;player.runtime.hp={current:100,max:100,temp:0};
+    player.capabilities.actionIds.push(setup.parryId);
+    player.runtime.equipment.main_hand=CARD_LONGSWORD.id;
+    player.character.knownCards=[...(player.character.knownCards??[]),CARD_LONGSWORD];
+    monster.attackProfile!.graspingParts=[policy.part];
+    for(const action of state.catalogActions.filter(row=>state.monsterActionIds[monster.id].includes(row.id))) {
+      if(action.mechanics.activation && (action.mechanics.activation as Record<string,unknown>).mode==='reaction')continue;
+      action.mechanics={...action.mechanics,npc_grapple_on_hit:{source_part:policy.part,escape_dc:policy.dc,max_target_size:4}};
+    }
+    state=runMonsterTurn(advanceTurn(state,()=>0.5),()=>0.2);
+    expect(state.world.pendingResolution?.type).toBe('attack_reaction');
+    expect(state.pendingMonsterOnHitGrapple).toMatchObject({actorId:monster.id,targetId:player.id});
+    expect(Object.keys(state.world.grapples)).toHaveLength(0);
+    state=resolvePlayerReaction(clone(state),{kind:'reaction',actionId:null},()=>{throw Error('Held attack must not reroll');});
+    state=runMonsterTurn(clone(state),()=>{throw Error('Single strike must not reroll');});
+    expect(state.pendingMonsterOnHitGrapple).toBeUndefined();
+    expect(Object.values(state.world.grapples)).toEqual([expect.objectContaining({grapplerActorId:monster.id,targetActorId:player.id,sourcePart:policy.part,escapeDc:policy.dc})]);
+    const repeated=runMonsterTurn(clone(state),()=>{throw Error('Completed turn must not reroll');});
+    expect(repeated).toEqual(state);
+  });
 
   it.each([true, false])('keeps the mover in place until a saved Parry decision settles (%s)', async parry => {
     const setup = await parryEncounter();
@@ -2192,15 +2221,16 @@ describe('solo combat engine vertical integration', () => {
       targetIds: [monsterId], rng: () => 0.99,
     }), () => 0.99);
 
-    expect(state.pendingTriggeredAction).toEqual(expect.objectContaining({
-      event: 'hit', sourceActionId: attack.id,
-      optionActionIds: [rider.id], targetIds: [monsterId],
-    }));
+    expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.pendingResolution).toMatchObject({ type: 'event_reaction',
+      opportunity: { actorId: participant.character.id, targetActorId: monsterId, event: { kind: 'hit' } },
+      request: { options: [expect.objectContaining({ actionId: rider.id })] },
+    });
     expect(state.world.actors[participant.character.id].runtime.resources.giant_legacy).toBe(1);
     const hpAfterAttack = state.world.actors[monsterId].runtime.hp.current;
     expect(hpAfterAttack).toBeLessThan(hpBefore);
 
-    state = resolveTriggeredCombatAction(state, rider.id, () => 0.5);
+    state = resolvePlayerReaction(clone(state), { kind: 'reaction', actionId: rider.id }, () => 0.5);
     expect(state.pendingTriggeredAction).toBeUndefined();
     expect(state.world.actors[participant.character.id].runtime.resources.giant_legacy).toBe(0);
     expect(state.world.actors[monsterId].runtime.hp.current).toBeLessThan(hpAfterAttack);
@@ -2260,8 +2290,11 @@ describe('solo combat engine vertical integration', () => {
       targetIds: [monsterId], rng: () => 0.99,
     }), () => 0.99);
 
-    expect(state.pendingTriggeredAction?.optionActionIds).toContain(rider.id);
-    state = autoResolveSystemDecisions(resolveTriggeredCombatAction(state, rider.id, () => 0.5), () => 0.5);
+    expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.pendingResolution).toMatchObject({ type: 'event_reaction',
+      request: { options: [expect.objectContaining({ actionId: rider.id })] },
+    });
+    state = autoResolveSystemDecisions(resolvePlayerReaction(clone(state), { kind: 'reaction', actionId: rider.id }, () => 0.5), () => 0.5);
     expect(state.pendingTriggeredAction).toBeUndefined();
     expect(state.world.pendingResolution).toBeNull();
     expect(state.world.actors[participant.character.id].runtime.resources.bonus_action).toBe(0);
@@ -4581,8 +4614,9 @@ it.each([{ critical: false, withSave: false }, { critical: true, withSave: false
   }
 });
 
-it.each(['weapon_melee', 'weapon_ranged', 'unarmed', 'spell_melee', 'spell_ranged'])(
-  'Trip Attack is offered only after weapon or unarmed hits: %s', async attackKind => {
+it.each(['weapon_melee', 'weapon_ranged', 'unarmed', 'spell_melee', 'spell_ranged'].flatMap(attackKind =>
+  [false, true].map(independent => ({attackKind, independent}))))(
+  'data-owned hit predicate offers one rider: $attackKind / independent=$independent', async ({attackKind, independent}) => {
   const participant = fighterSeed();
   const actorId = participant.character.id;
   const actor = participant.canonical.world.actors[actorId];
@@ -4599,6 +4633,12 @@ it.each(['weapon_melee', 'weapon_ranged', 'unarmed', 'spell_melee', 'spell_range
     } } as unknown as Action);
   const rider = projectRuleAction({ id: '21100000-0000-4000-8000-000000000092', name: 'Post-hit die',
     type: 'class_feature', resource: 'free_action', mechanics: JSON.parse(readFileSync(new URL('../../../backend/migrations/battle_master_trip_212.go', import.meta.url), 'utf8').match(/const battleMasterTrip212 = `([^`]+)`/)![1]) } as unknown as Action);
+  if (independent) {
+    rider.id = 'different-hit-rider'; rider.name = 'Different charged rider';
+    rider.sourceEntityIds = ['different-catalog-source'];
+    (rider.mechanics.activation as Record<string,unknown>).cost = [{resource:'rider_charge',amount:2}];
+    actor.runtime.resources.rider_charge = 3; actor.runtime.maxResources.rider_charge = 3;
+  }
   const actions = [...participant.canonical.actions, attack, rider];
   actor.capabilities.actionIds.push(attack.id, rider.id);
   participant.canonical = { ...participant.canonical, actions,
@@ -4610,6 +4650,14 @@ it.each(['weapon_melee', 'weapon_ranged', 'unarmed', 'spell_melee', 'spell_range
   state = executeCombatAction({ state, actorId, actionId: attack.id, targetIds: [targetId], rng: () => 0.6 });
   expect(Boolean(state.pendingTriggeredAction?.optionActionIds.includes(rider.id)))
     .toBe(!attackKind.startsWith('spell'));
+  expect(state.world.pendingResolution).toBeNull();
+  if (!attackKind.startsWith('spell')) {
+    expect(state.pendingTriggeredAction?.optionActionIds.filter(id => id === rider.id)).toHaveLength(1);
+    state = autoResolveSystemDecisions(resolveTriggeredCombatAction(clone(state), rider.id, () => 0), () => 0);
+    expect(state.world.pendingResolution).toBeNull(); expect(state.pendingTriggeredAction).toBeUndefined();
+    expect(state.world.actors[actorId].runtime.resources[independent ? 'rider_charge' : 'superiority_die']).toBe(independent ? 1 : 3);
+    expect(() => resolveTriggeredCombatAction(clone(state), rider.id, () => {throw Error('Duplicate may not roll');})).toThrow();
+  }
 });
 
 it.each([0, 5, 10, 15])('Pushing Attack carries a saved distance through the triggered command: %s', async distance => {
@@ -5472,7 +5520,7 @@ it.each(['round_trip','existing_card','consume_last','virtual_held','occupied_ha
 });
 
 
-it('routes a newly scoped spell through ordinary solo rules while keeping the certified session strict', async()=>{
+it('routes a newly scoped spell through the same actor-owned live catalog in sheet and solo combat', async()=>{
  const participant=wizardSeed();const actorId=participant.character.id;const actor=participant.canonical.world.actors[actorId];
  const original=participant.canonical.actions.find(action=>primitive(action)==='magic_missile')!;expect(original).toBeDefined();
  const alias={...clone(original),id:original.id+'@new-caster-source'};
@@ -5485,9 +5533,11 @@ it('routes a newly scoped spell through ordinary solo rules while keeping the ce
    source.availableActionIds=source.availableActionIds.map(rewrite);source.preparedActionIds=source.preparedActionIds.map(rewrite);
  }
  participant.canonical={...participant.canonical,actions,catalog:{getAction:id=>actions.find(action=>action.id===id),listActions:()=>actions}};
- await expect(createSheetCombatSession({source:participant,targets:[]})).rejects.toThrow(/outside the reviewed/);
+ const session = await createSheetCombatSession({source:participant,targets:[]});
+ expect(session.catalogAuthority).toBe('live');
+ expect(session.certifiedActionIdsByActor[actorId]).toContain(alias.id);
  let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:{...goblin(),max_hp:100},quantity:1}],actions:[scimitar()],effects:[],rng:()=>.5});
- expect(state.certifiedPlayerActionIds).not.toContain(alias.id);expect(state.playerActionIds).toContain(alias.id);
+ expect(state.certifiedPlayerActionIds).toContain(alias.id);expect(state.playerActionIds).toContain(alias.id);
  const enemyId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
  const slots=state.world.actors[actorId].runtime.resources.spell_slot_1;
  state=autoResolveSystemDecisions(executeCombatAction({state,actorId,actionId:alias.id,targetIds:[enemyId],rng:()=>0}),()=>0);

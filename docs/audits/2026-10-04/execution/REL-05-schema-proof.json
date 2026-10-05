@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "status": "targeted-passed",
+  "nodeTests": {
+    "passed": 57,
+    "failed": 0,
+    "skipped": 0
+  },
+  "nativeTests": [
+    {
+      "path": "outputs/testing/runs/test_fb0fb1a02d46b87b97b93737/bounded-reference-inventory.json",
+      "schemaVersion": 1,
+      "kind": "bounded-reference-inventory",
+      "runId": "test_fb0fb1a02d46b87b97b93737",
+      "status": "passed",
+      "checks": [
+        "all-pages-all-columns",
+        "nested-array-and-alias-keys",
+        "text-and-compact-storage",
+        "same-results-different-page-sizes",
+        "adaptive-bound-same-cursor",
+        "one-row-limit-fail-closed",
+        "20MiB-inline-byte-fingerprint-no-body-export",
+        "old-literal-media-dual-read",
+        "concurrent-mutation-fail-closed",
+        "unknown-reference-fail-closed"
+      ],
+      "maxQueryBytes": 2314,
+      "maxResponseBytes": 2612,
+      "pages": {
+        "fine": 77,
+        "coarse": 6
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "path": "outputs/testing/runs/test_03892b90cfc45a05153a82e3/typed-reference-inventory.json",
+      "schemaVersion": 1,
+      "kind": "typed-rule-reference-inventory",
+      "status": "passed",
+      "runId": "test_03892b90cfc45a05153a82e3",
+      "checks": [
+        "canonical-semantic-vs-executable",
+        "all-detected-hashes-preserved",
+        "same-hash-in-executable-context-not-ignored",
+        "exact-certification-binding-required",
+        "unknown-or-mismatched-canonical-binding-rejected",
+        "changed-canonical-manifest-bytes-rejected"
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    }
+  ],
+  "productionReadOnlyMetadata": {
+    "schemaVersion": 1,
+    "capturedAt": "2026-10-05T01:29:47.054Z",
+    "readOnly": true,
+    "productionMutated": false,
+    "scope": "schema-and-ledger",
+    "elapsedMs": 505.462269,
+    "queries": 1,
+    "migrationCount": 302,
+    "schemaFingerprint": "sha256:6d00949de56ee849345194c42e0326a73a49cdb62b1df69251541807648dbc58",
+    "exactOriginalObservedSchema": true,
+    "exactOriginalObservedLedger": true,
+    "referenceCompletenessClaim": false
+  },
+  "sourceFiles": [
+    {
+      "path": "scripts/release/database-schema-proof.mjs",
+      "sha256": "0f186928157607d0fddc1bd085ccfa2f242972216b507db5b1cfaed7a0f623b7"
+    },
+    {
+      "path": "scripts/release/artifact-references.mjs",
+      "sha256": "1e9f5f0a38ac74538a6d876109f3a3c62ff0c93a11ea9251ca760971e394547c"
+    },
+    {
+      "path": "scripts/release/read-snapshot.mjs",
+      "sha256": "a2a627ab07dcd7f3cc13ee88eb08f9295ba03fedbbb941b3c01eee0e70e8c85c"
+    },
+    {
+      "path": "scripts/release/docker-deployment.mjs",
+      "sha256": "078a73bd7a28b3ba6119b3fc56ea1c2542d8a270a98fd0dd9288f75bf66e8b37"
+    }
+  ],
+  "limits": [
+    "No artifact/media completeness from metadata proof",
+    "Full fresh typed history gate retained",
+    "No production mutation by subagent",
+    "Full latest common suite and Linux adapter session reported separately"
+  ]
+}

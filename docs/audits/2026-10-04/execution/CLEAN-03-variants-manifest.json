@@ -1,0 +1,1472 @@
+{
+  "schemaVersion": 1,
+  "kind": "pixel_verified_lossless_webp",
+  "startedAt": "2026-10-04T18:00:47.286Z",
+  "completedAt": "2026-10-04T18:01:00.820Z",
+  "encoder": {
+    "name": "sharp",
+    "versions": {
+      "aom": "3.14.1",
+      "archive": "3.8.9",
+      "cairo": "1.18.4",
+      "cgif": "0.5.3",
+      "exif": "0.6.26",
+      "expat": "2.8.3",
+      "ffi": "3.8.0",
+      "fontconfig": "2.18.3",
+      "freetype": "2.14.3",
+      "fribidi": "1.0.16",
+      "glib": "2.89.4",
+      "harfbuzz": "14.3.1",
+      "heif": "1.23.2",
+      "highway": "1.4.0",
+      "imagequant": "2.4.1",
+      "lcms": "2.19.1",
+      "mozjpeg": "0826579",
+      "pango": "1.58.2",
+      "pixman": "0.46.4",
+      "png": "1.6.58",
+      "proxy-libintl": "0.5",
+      "rsvg": "2.62.91",
+      "tiff": "4.7.2",
+      "uhdr": "2.0.2",
+      "vips": "8.18.6",
+      "webp": "1.6.0",
+      "xml2": "2.15.3",
+      "zlib-ng": "2.3.3",
+      "sharp": "0.35.4"
+    },
+    "moduleEntrySha256": "d69f275bc49fcd2a6188b26b35c986d4db32a1b008653fef88adb4598688232a",
+    "options": {
+      "lossless": true,
+      "exact": true,
+      "effort": 6
+    }
+  },
+  "entries": [
+    {
+      "sourcePath": "assets/battle-maps/cavern-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/cavern-floor-v1.png",
+      "sourceSha256": "fcf275a561fe0108831fca127f25a4029b5e267877368e51c88bf6a857b96998",
+      "sourceBytes": 3491234,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1572528
+    },
+    {
+      "sourcePath": "assets/battle-maps/clearing-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/clearing-floor-v1.png",
+      "sourceSha256": "98a8d2aee002c5018659db2fc447b7434cb17c7a1c3d87e0103ea84727e5239b",
+      "sourceBytes": 3640117,
+      "status": "variant",
+      "variantURL": "/media/variants/2931453ee3f7d4158b23ddbe27fdab223bcc38c24c6b5b8d1b2b4cab1cc4f7f5.webp",
+      "variantSha256": "2931453ee3f7d4158b23ddbe27fdab223bcc38c24c6b5b8d1b2b4cab1cc4f7f5",
+      "variantBytes": 2751056,
+      "proof": {
+        "width": 1402,
+        "height": 1122,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "ba554b5417c4b0175a0648b7975d24f49abd493362daf9ff22fa534338eb2696",
+        "rgbaBytes": 6292176,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/courtyard-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/courtyard-floor-v1.png",
+      "sourceSha256": "083196239e214fe1916203b9568839b8b79d02693e41e730a942e31548cb97a9",
+      "sourceBytes": 3217459,
+      "status": "variant",
+      "variantURL": "/media/variants/2826029936b6d9fea27e4dfbe682101f655b95327c4ae03b28135be6a00100d8.webp",
+      "variantSha256": "2826029936b6d9fea27e4dfbe682101f655b95327c4ae03b28135be6a00100d8",
+      "variantBytes": 2264416,
+      "proof": {
+        "width": 1402,
+        "height": 1122,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "9690797fa2da63e959248f552da25cf890951d3e90ad2cb7f7290d2ad59d2505",
+        "rgbaBytes": 6292176,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/crypt-annex-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/crypt-annex-floor-v1.png",
+      "sourceSha256": "9138370fdd032594dcfae17a835df29c6f22e935168a3103ca91bcef937ed187",
+      "sourceBytes": 2700796,
+      "status": "variant",
+      "variantURL": "/media/variants/6be6ed4a5c9c2059ac55afaef8f8be3b3c68b20c5aabd509b4c02b594cc886d0.webp",
+      "variantSha256": "6be6ed4a5c9c2059ac55afaef8f8be3b3c68b20c5aabd509b4c02b594cc886d0",
+      "variantBytes": 1947662,
+      "proof": {
+        "width": 1619,
+        "height": 971,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "ef954468739da8f1b0638f4375dc226938f671ae1b69122c222defa88113a9d5",
+        "rgbaBytes": 6288196,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/crypt-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/crypt-floor-v1.png",
+      "sourceSha256": "55f94a8e0828dc49e6c4909fe3361e727b9eaf4d23e02f0ed2416c30f9ca1247",
+      "sourceBytes": 3135308,
+      "status": "variant",
+      "variantURL": "/media/variants/316cf32edd987e1414403e6e5e5507324cbe0ceefb482a604ad70420242c6d3f.webp",
+      "variantSha256": "316cf32edd987e1414403e6e5e5507324cbe0ceefb482a604ad70420242c6d3f",
+      "variantBytes": 2213136,
+      "proof": {
+        "width": 1448,
+        "height": 1086,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "d3df74d00f4bc06e22388861dad6c65f42b767b34c773d3524654f69142ae823",
+        "rgbaBytes": 6290112,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/forest-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/forest-floor-v1.png",
+      "sourceSha256": "68f434846e38798274bbd43e8b72ba4cf1a9c8a98e13df8a426434670ad65322",
+      "sourceBytes": 3280718,
+      "status": "variant",
+      "variantURL": "/media/variants/b06907ec4e21f4de28ecdbc4fa13148f7dac50493b28c5ffef077c6615d9b8a2.webp",
+      "variantSha256": "b06907ec4e21f4de28ecdbc4fa13148f7dac50493b28c5ffef077c6615d9b8a2",
+      "variantBytes": 2235238,
+      "proof": {
+        "width": 1536,
+        "height": 1024,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "3bad2c1aa640c19f79c3f81a334b89c89afadd61972b654c13b6271055c0f975",
+        "rgbaBytes": 6291456,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/masonry-atlas-v2.png",
+      "sourceURL": "/assets/battle-maps/masonry-atlas-v2.png",
+      "sourceSha256": "8d7c588ebcce38be9f7bfbcf295ee82f9ea239cb1fc54978a0f16587e5c2b6db",
+      "sourceBytes": 2422616,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 990605
+    },
+    {
+      "sourcePath": "assets/battle-maps/props-atlas-v1.png",
+      "sourceURL": "/assets/battle-maps/props-atlas-v1.png",
+      "sourceSha256": "6b5b2a0717f1bc5ad03153ba0e751dbfb60944357b3e3699dbc19f5548a8edae",
+      "sourceBytes": 1956635,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 884301
+    },
+    {
+      "sourcePath": "assets/battle-maps/quarry-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/quarry-floor-v1.png",
+      "sourceSha256": "31c6358876e43143fcb4749e259d494c0ea7223f798c4586fcccc271b8a7c9aa",
+      "sourceBytes": 3373397,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1572049
+    },
+    {
+      "sourcePath": "assets/battle-maps/sanctuary-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/sanctuary-floor-v1.png",
+      "sourceSha256": "ab6de1f089d6cac60c6cdc7cf853e945f4870c7e9882e66f2a4a3d04748f6aa5",
+      "sourceBytes": 3443119,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1572864
+    },
+    {
+      "sourcePath": "assets/battle-maps/snow-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/snow-floor-v1.png",
+      "sourceSha256": "b030f526b1953967a535c7841878832274e3abafa3b89f834e9f957f67c6a4fe",
+      "sourceBytes": 3116204,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1572864
+    },
+    {
+      "sourcePath": "assets/battle-maps/table-v2.png",
+      "sourceURL": "/assets/battle-maps/table-v2.png",
+      "sourceSha256": "4339b1c4608e61e26b81bfdd58c8786baa18eea1dda074aec82398d4a5e786bd",
+      "sourceBytes": 2835079,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1245339
+    },
+    {
+      "sourcePath": "assets/battle-maps/tavern-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/tavern-floor-v1.png",
+      "sourceSha256": "5faa9179458f502cad278ea3c47dfc006042f18d7b05389cfb8d72ebea78609e",
+      "sourceBytes": 2292577,
+      "status": "variant",
+      "variantURL": "/media/variants/e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f.webp",
+      "variantSha256": "e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f",
+      "variantBytes": 1770492,
+      "proof": {
+        "width": 1448,
+        "height": 1086,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "b92d738b99ccc09cd7daa6519577b32f675d237fac52570a37c1daa6f8e079fd",
+        "rgbaBytes": 6290112,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/urvin-archive-v1.png",
+      "sourceURL": "/assets/battle-maps/urvin-archive-v1.png",
+      "sourceSha256": "46ec7e7019225a667fdfde372d66c7cfa2edb225056a6ee941b5de55d33d2e19",
+      "sourceBytes": 3777465,
+      "status": "variant",
+      "variantURL": "/media/variants/e700cb69488751036cf8f898aa059c57bf251afdc34d42ea60651b3e36ff6c89.webp",
+      "variantSha256": "e700cb69488751036cf8f898aa059c57bf251afdc34d42ea60651b3e36ff6c89",
+      "variantBytes": 2467494,
+      "proof": {
+        "width": 1536,
+        "height": 1024,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "339c1729f50ac3b39363e2e3829cd1fae9bb392baae9b218e0810147745315ec",
+        "rgbaBytes": 6291456,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/urvin-causeway-v1.png",
+      "sourceURL": "/assets/battle-maps/urvin-causeway-v1.png",
+      "sourceSha256": "fe388e4fb0621faafec27a4418c8ad2d2dc7af18d47caf4f7346912c1f946dcc",
+      "sourceBytes": 3770501,
+      "status": "variant",
+      "variantURL": "/media/variants/5ecb29356f2a1878297fe53828abdfae25496c310c966a8fa33f3a17e70fbf0c.webp",
+      "variantSha256": "5ecb29356f2a1878297fe53828abdfae25496c310c966a8fa33f3a17e70fbf0c",
+      "variantBytes": 2428420,
+      "proof": {
+        "width": 1536,
+        "height": 1024,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "02481b1432bba190bca08b0d5c615a01c7ad4598e8658447700ec76b57b3c01c",
+        "rgbaBytes": 6291456,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/urvin-court-v1.png",
+      "sourceURL": "/assets/battle-maps/urvin-court-v1.png",
+      "sourceSha256": "9fb42a2f64673cf6e05f610bf8ffb22ef615c27ab3d9e917e034294e51b54c0b",
+      "sourceBytes": 3323107,
+      "status": "variant",
+      "variantURL": "/media/variants/9e68f0803c0cef59068c130831b503555a8a98a6875278f351de1aefcd011aba.webp",
+      "variantSha256": "9e68f0803c0cef59068c130831b503555a8a98a6875278f351de1aefcd011aba",
+      "variantBytes": 2197718,
+      "proof": {
+        "width": 1536,
+        "height": 1024,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "4d6c9afbbe0f9db54658c362eb96c84c7d73b749e86e64f851b57e72e8baeea7",
+        "rgbaBytes": 6291456,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/valley-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/valley-floor-v1.png",
+      "sourceSha256": "e1e171ef3d774ea5631e1c4f1f14d7656bfd88201ae171054091415e25a3d154",
+      "sourceBytes": 3696826,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1572049
+    },
+    {
+      "sourcePath": "assets/battle-maps/valley-river-v2.png",
+      "sourceURL": "/assets/battle-maps/valley-river-v2.png",
+      "sourceSha256": "b672dc05b679411e22bdd29ac4cc9478773ee9af37172ad2dc4e355883121192",
+      "sourceBytes": 2905084,
+      "status": "variant",
+      "variantURL": "/media/variants/2dbecf5f9e1c9331e3d7559c7201db1757f063d9fb77dfc7114bbea86350c8fd.webp",
+      "variantSha256": "2dbecf5f9e1c9331e3d7559c7201db1757f063d9fb77dfc7114bbea86350c8fd",
+      "variantBytes": 2004556,
+      "proof": {
+        "width": 1619,
+        "height": 971,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "5863c6e15335756714cff3931a9fa3db0e9c70257c5ae471e019871812a1e2ce",
+        "rgbaBytes": 6288196,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/battle-maps/watchpost-floor-v1.png",
+      "sourceURL": "/assets/battle-maps/watchpost-floor-v1.png",
+      "sourceSha256": "9bc3fe668d6fa7d407512211d1e846ad3d1ca1b825df1ad2a8d9709ef84ddf07",
+      "sourceBytes": 3234655,
+      "status": "variant",
+      "variantURL": "/media/variants/094cce6f8cc5398ce50e465033fd0409e23fbbbb05b2d5acb8ab2dc40761e892.webp",
+      "variantSha256": "094cce6f8cc5398ce50e465033fd0409e23fbbbb05b2d5acb8ab2dc40761e892",
+      "variantBytes": 2277304,
+      "proof": {
+        "width": 1564,
+        "height": 1006,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "ca076cd81c26ecd317473872cf04935931b4ff5107fe9ec8e1e5a870a8d96922",
+        "rgbaBytes": 6293536,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/dice-box/themes/default/diffuse-dark.png",
+      "sourceURL": "/assets/dice-box/themes/default/diffuse-dark.png",
+      "sourceSha256": "acf62205d3af969375998cf00af402959da870e846712b45ddbd8df5ddf5d21f",
+      "sourceBytes": 19883,
+      "status": "original",
+      "reason": "only_8_bit_PNG_supported"
+    },
+    {
+      "sourcePath": "assets/dice-box/themes/default/diffuse-light.png",
+      "sourceURL": "/assets/dice-box/themes/default/diffuse-light.png",
+      "sourceSha256": "de15a8eed40be8123d301f8d0dff19be4d6577cc9ffb11086b81d7e38afd62a0",
+      "sourceBytes": 19934,
+      "status": "original",
+      "reason": "only_8_bit_PNG_supported"
+    },
+    {
+      "sourcePath": "assets/dice-box/themes/default/normal.png",
+      "sourceURL": "/assets/dice-box/themes/default/normal.png",
+      "sourceSha256": "77b7b5102d4190391d1189c8ef9eedf6d4d483afa18ce50e57f3335f13b7f5f9",
+      "sourceBytes": 64073,
+      "status": "variant",
+      "variantURL": "/media/variants/edb82d498cb53e0495f31425a1a2b91962ff66d4f6b3f67c555ba293268a434b.webp",
+      "variantSha256": "edb82d498cb53e0495f31425a1a2b91962ff66d4f6b3f67c555ba293268a434b",
+      "variantBytes": 59062,
+      "proof": {
+        "width": 512,
+        "height": 512,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "b7cf465d3e61787f5d2f52346c9a298bfb90cfa81c7e520cd21be2f28de8fc50",
+        "rgbaBytes": 1048576,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "assets/urvin/auras/ferocity.png",
+      "sourceURL": "/assets/urvin/auras/ferocity.png",
+      "sourceSha256": "4c558b83fae0d9358860589702f90ce7f9db5941fb5f42d849e530f04f108818",
+      "sourceBytes": 785292,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 300500
+    },
+    {
+      "sourcePath": "assets/urvin/auras/phoenix.png",
+      "sourceURL": "/assets/urvin/auras/phoenix.png",
+      "sourceSha256": "b96cd74bbe33cd12f30bee88ac19d9e674c8132f9033e0bdc22e72382b80240b",
+      "sourceBytes": 615942,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 262516
+    },
+    {
+      "sourcePath": "assets/urvin/auras/restoration.png",
+      "sourceURL": "/assets/urvin/auras/restoration.png",
+      "sourceSha256": "2919f03a8a7825f7accc9db6837f0a94a72f7ea8172d3364e7872e8bd4696d32",
+      "sourceBytes": 406214,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 171937
+    },
+    {
+      "sourcePath": "assets/urvin/auras/solitude.png",
+      "sourceURL": "/assets/urvin/auras/solitude.png",
+      "sourceSha256": "5eef325b7d901dc9ac5ace99b8850caa1f809cca77138ee916715f1dcb7abfa8",
+      "sourceBytes": 517350,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 212359
+    },
+    {
+      "sourcePath": "assets/urvin/auras/wealth.png",
+      "sourceURL": "/assets/urvin/auras/wealth.png",
+      "sourceSha256": "f71ad9ad5cda1aaae27e832c90e81d3b9e772498fb3e8d3fb2134cbe9883921c",
+      "sourceBytes": 527377,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 203393
+    },
+    {
+      "sourcePath": "default_image.png",
+      "sourceURL": "/default_image.png",
+      "sourceSha256": "8bdd7064f72008974fe5b1eae0ff47e6edbb1031667ed97842dab89f29fbea19",
+      "sourceBytes": 193746,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "groovepaper.png",
+      "sourceURL": "/groovepaper.png",
+      "sourceSha256": "4c5770fd8c9fab271bb2adbad14b51af3be47e61e838713c552f2476184c1d78",
+      "sourceBytes": 37500,
+      "status": "original",
+      "reason": "nonstandard_chromaticity_original_preserved"
+    },
+    {
+      "sourcePath": "icons/actions/dodge.png",
+      "sourceURL": "/icons/actions/dodge.png",
+      "sourceSha256": "be3a1560429c48c7b9692fc8409cdba5ef7011fd5e2cda3d63bca3ea4198733d",
+      "sourceBytes": 1718721,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 309940
+    },
+    {
+      "sourcePath": "icons/actions/offhand_attack.png",
+      "sourceURL": "/icons/actions/offhand_attack.png",
+      "sourceSha256": "a4d67b428a3196e84411809058976e88bed09237c3587d03c3dd49f37a3d7082",
+      "sourceBytes": 1784217,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 327162
+    },
+    {
+      "sourcePath": "icons/actions/ranged_weapon_attack.png",
+      "sourceURL": "/icons/actions/ranged_weapon_attack.png",
+      "sourceSha256": "ef1c824cfa2d3764014548cfcbb79c621ae2b41b55768ae934806ebd93b239a0",
+      "sourceBytes": 123009,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 49482
+    },
+    {
+      "sourcePath": "icons/actions/unarmed_strike.png",
+      "sourceURL": "/icons/actions/unarmed_strike.png",
+      "sourceSha256": "10050857f5f921d3ccd9983a42fd656406339df90e1998efb4fea34cdb063f1f",
+      "sourceBytes": 2040365,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 351658
+    },
+    {
+      "sourcePath": "icons/actions/weapon_attack.png",
+      "sourceURL": "/icons/actions/weapon_attack.png",
+      "sourceSha256": "0c98fd6c8cc7e1ca18bdb40d9cd530f16fe51e3903c9e4719347d73025beff03",
+      "sourceBytes": 1708344,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 291644
+    },
+    {
+      "sourcePath": "icons/ammunition.png",
+      "sourceURL": "/icons/ammunition.png",
+      "sourceSha256": "4774cba09a4969d58f306d3df5af35f05aec2b9d8b4c709b584d8c0b119621cd",
+      "sourceBytes": 13915,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1144
+    },
+    {
+      "sourcePath": "icons/attunement.png",
+      "sourceURL": "/icons/attunement.png",
+      "sourceSha256": "b10144b73eca6e4f10da1da3d6cf8f9f22ce462e4aa519282d8b1066a88ad3a3",
+      "sourceBytes": 19915,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2837
+    },
+    {
+      "sourcePath": "icons/belt.png",
+      "sourceURL": "/icons/belt.png",
+      "sourceSha256": "b3ef3c3de0d8ed44acae0eabb421c93aa3ed71a5b4d8078d347a7345a7adc83b",
+      "sourceBytes": 17004,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 205602
+    },
+    {
+      "sourcePath": "icons/bludgeoning.png",
+      "sourceURL": "/icons/bludgeoning.png",
+      "sourceSha256": "27ada77b805881cf876ccf07709f9cb5699d57eccb37c5893ae2f019f633e812",
+      "sourceBytes": 13276,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1607
+    },
+    {
+      "sourcePath": "icons/bow-hand.png",
+      "sourceURL": "/icons/bow-hand.png",
+      "sourceSha256": "9702aa2dacf90af7a1131c3463d2266d1f0099b42924ddef061320e3cdc9e4a9",
+      "sourceBytes": 16960,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 232346
+    },
+    {
+      "sourcePath": "icons/cloth.png",
+      "sourceURL": "/icons/cloth.png",
+      "sourceSha256": "d29427212d9e305cbfb716f751ca2f3df9dd474ddbb8dea5c191703dfe448947",
+      "sourceBytes": 12241,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1294
+    },
+    {
+      "sourcePath": "icons/coin.png",
+      "sourceURL": "/icons/coin.png",
+      "sourceSha256": "d5ba51a8e2f4637bab307cea8a5f31b5789718d12f02604052c65f37236ac20c",
+      "sourceBytes": 17415,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2201
+    },
+    {
+      "sourcePath": "icons/consumable.png",
+      "sourceURL": "/icons/consumable.png",
+      "sourceSha256": "0c559f51783d61871b531a78953063aef7df151760084a696c20a546c4da5c39",
+      "sourceBytes": 15165,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2430
+    },
+    {
+      "sourcePath": "icons/currency/copper.png",
+      "sourceURL": "/icons/currency/copper.png",
+      "sourceSha256": "584a2b6746721a38095806c95505c7e7d2bd5bddc5fe5714a025fc641148c483",
+      "sourceBytes": 1512344,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 102672
+    },
+    {
+      "sourcePath": "icons/currency/gold.png",
+      "sourceURL": "/icons/currency/gold.png",
+      "sourceSha256": "a017132079e49e2998c39931d75d1301791fe0482cb091727f559c1e88ef0da4",
+      "sourceBytes": 991526,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 92836
+    },
+    {
+      "sourcePath": "icons/currency/silver.png",
+      "sourceURL": "/icons/currency/silver.png",
+      "sourceSha256": "4dcecd496c12e68f013a00a3800b05a30933c9f962c527f5be74cf2e3c12c79c",
+      "sourceBytes": 950528,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 149537
+    },
+    {
+      "sourcePath": "icons/damage_types/acid.png",
+      "sourceURL": "/icons/damage_types/acid.png",
+      "sourceSha256": "15748bedcdf61b2983820e25ff13b72930a05f5f6221f5d7fa816e95137907ea",
+      "sourceBytes": 4846,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1477
+    },
+    {
+      "sourcePath": "icons/damage_types/bludgeoning.png",
+      "sourceURL": "/icons/damage_types/bludgeoning.png",
+      "sourceSha256": "507ea61cc0f7da5e6951b05efd37572cebdd1af05d650d2fc517290a93f92a97",
+      "sourceBytes": 3694,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1295
+    },
+    {
+      "sourcePath": "icons/damage_types/cold.png",
+      "sourceURL": "/icons/damage_types/cold.png",
+      "sourceSha256": "509289ad60e9b9c6352eb2a384523e79d80d349f3cf52fb47301fcd74b6d88fd",
+      "sourceBytes": 4338,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1310
+    },
+    {
+      "sourcePath": "icons/damage_types/fire.png",
+      "sourceURL": "/icons/damage_types/fire.png",
+      "sourceSha256": "0950776056b383a04c04a0ecf93d2313416b7865a949e85d6f57eefd2e67dbc7",
+      "sourceBytes": 4069,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1370
+    },
+    {
+      "sourcePath": "icons/damage_types/force.png",
+      "sourceURL": "/icons/damage_types/force.png",
+      "sourceSha256": "25e63bec7e2fcf77ff506e3aa22add3c228e54d165a5526ec8544a3589ba48c7",
+      "sourceBytes": 4431,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1284
+    },
+    {
+      "sourcePath": "icons/damage_types/healing.png",
+      "sourceURL": "/icons/damage_types/healing.png",
+      "sourceSha256": "9d513971b5f9a55e6b0e310ac52f15d3bc74ff08eac99a9c856dd27eaf053678",
+      "sourceBytes": 2616,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 314
+    },
+    {
+      "sourcePath": "icons/damage_types/lightning.png",
+      "sourceURL": "/icons/damage_types/lightning.png",
+      "sourceSha256": "1da84508ab4901a29caa14ad121bd735585f26f9611edec106259019de76599a",
+      "sourceBytes": 3384,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1100
+    },
+    {
+      "sourcePath": "icons/damage_types/necrotic.png",
+      "sourceURL": "/icons/damage_types/necrotic.png",
+      "sourceSha256": "3b3821f1990730e30a687c29433283cb075f21462f5dcf4aa9830a4fded88aaf",
+      "sourceBytes": 4500,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1111
+    },
+    {
+      "sourcePath": "icons/damage_types/piercing.png",
+      "sourceURL": "/icons/damage_types/piercing.png",
+      "sourceSha256": "68cb77b979c69ac80ba76d13804adbc950e04a93bb61e6781037f09b0ec22911",
+      "sourceBytes": 3504,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1189
+    },
+    {
+      "sourcePath": "icons/damage_types/poison.png",
+      "sourceURL": "/icons/damage_types/poison.png",
+      "sourceSha256": "af05c4cc8edb37aadbe26c34f7f795cba011699926f269d2af6dc95ede8adeb9",
+      "sourceBytes": 4693,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1070
+    },
+    {
+      "sourcePath": "icons/damage_types/psychic.png",
+      "sourceURL": "/icons/damage_types/psychic.png",
+      "sourceSha256": "4e2ead5810205f592c17e18e9c243620782c7be24b2ba52b7e58afb7724b93fc",
+      "sourceBytes": 4036,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1327
+    },
+    {
+      "sourcePath": "icons/damage_types/radiant.png",
+      "sourceURL": "/icons/damage_types/radiant.png",
+      "sourceSha256": "66cc8437663c069b3031f66fd1058661a10b8ac60e5651a8dc761a64b8dd4af8",
+      "sourceBytes": 4744,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1669
+    },
+    {
+      "sourcePath": "icons/damage_types/slashing.png",
+      "sourceURL": "/icons/damage_types/slashing.png",
+      "sourceSha256": "4ca433410240bb4fb9bb7c4293c18e5ca36c9b2a8730a88a040a9c84f553f642",
+      "sourceBytes": 3452,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1207
+    },
+    {
+      "sourcePath": "icons/damage_types/thunder.png",
+      "sourceURL": "/icons/damage_types/thunder.png",
+      "sourceSha256": "6ce806d03ddb20d5bee9c1a160138145524c779344c54d1a7088454bbedc0cd8",
+      "sourceBytes": 4623,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1438
+    },
+    {
+      "sourcePath": "icons/defense.png",
+      "sourceURL": "/icons/defense.png",
+      "sourceSha256": "81bc95369c0bd01be0815e61a06e9caeb0fea7611373af4a874b5576d53fffe5",
+      "sourceBytes": 11862,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 732
+    },
+    {
+      "sourcePath": "icons/finesse.png",
+      "sourceURL": "/icons/finesse.png",
+      "sourceSha256": "148ed5cecab10017fc0f1a1bc47577ccea869fa7cc418c4712fa047002ab28e3",
+      "sourceBytes": 7396,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2165
+    },
+    {
+      "sourcePath": "icons/heavy_defense.png",
+      "sourceURL": "/icons/heavy_defense.png",
+      "sourceSha256": "20e7243d65c75cd1117ee89df3a8a578df41740b97ea5aca7fccd96675b177a9",
+      "sourceBytes": 12551,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 732
+    },
+    {
+      "sourcePath": "icons/heavy.png",
+      "sourceURL": "/icons/heavy.png",
+      "sourceSha256": "19f69e5fbc84580c58d909c87f734067f3e9f43d6e5c01977c909219254e442b",
+      "sourceBytes": 10006,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2232
+    },
+    {
+      "sourcePath": "icons/light_defense.png",
+      "sourceURL": "/icons/light_defense.png",
+      "sourceSha256": "9e70fa250045dfd9cf4452767e3048513b52cb837d8616bf2bb9a11497060d78",
+      "sourceBytes": 12334,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 732
+    },
+    {
+      "sourcePath": "icons/light.png",
+      "sourceURL": "/icons/light.png",
+      "sourceSha256": "ef7598905e96d3282d54b2b4cad290b69a7e76c5cd0d86f639b8bdc46b77dfe0",
+      "sourceBytes": 13984,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2141
+    },
+    {
+      "sourcePath": "icons/loading.png",
+      "sourceURL": "/icons/loading.png",
+      "sourceSha256": "13ae1ae6b11b81d651ba9ddfe5b2869e66003b72e80816f0710782e33d399609",
+      "sourceBytes": 16854,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 3399
+    },
+    {
+      "sourcePath": "icons/medium_defense.png",
+      "sourceURL": "/icons/medium_defense.png",
+      "sourceSha256": "c1c9155538a6864bc5ef915c2abb9e73decdd569a965751e40c24dd8a61aded6",
+      "sourceBytes": 16899,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 732
+    },
+    {
+      "sourcePath": "icons/melee-hand.png",
+      "sourceURL": "/icons/melee-hand.png",
+      "sourceSha256": "2cb423e33df7afa5f516df2c1ed7a3f28d6223c7fea21eb17a2de1d2ea538c1f",
+      "sourceBytes": 27236,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 195230
+    },
+    {
+      "sourcePath": "icons/piercing.png",
+      "sourceURL": "/icons/piercing.png",
+      "sourceSha256": "50244305e31f10af354813ddf331ffffb4f6cc9d24ac46387e2d32b1779bd908",
+      "sourceBytes": 14413,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1547
+    },
+    {
+      "sourcePath": "icons/range.png",
+      "sourceURL": "/icons/range.png",
+      "sourceSha256": "38196acb3d2751249eb38c234e6b7c7e810c39051770ff50f63de1ad802100ae",
+      "sourceBytes": 10013,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 888
+    },
+    {
+      "sourcePath": "icons/reach.png",
+      "sourceURL": "/icons/reach.png",
+      "sourceSha256": "22bdb8162c607e7c7fa7832e09d2a132bc476a22a27a1fd6d6ae936b2879e805",
+      "sourceBytes": 12941,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1773
+    },
+    {
+      "sourcePath": "icons/resources/action.png",
+      "sourceURL": "/icons/resources/action.png",
+      "sourceSha256": "ccfc7db3d802a7ff2e48540864e515b24b31c9a486f96aa642f979a855184750",
+      "sourceBytes": 920890,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 874797
+    },
+    {
+      "sourcePath": "icons/resources/bonus_action.png",
+      "sourceURL": "/icons/resources/bonus_action.png",
+      "sourceSha256": "e338b3ab9d5db0b5d9b1ef00cebfdd8ad51953387a5ce6b2b49dce71913ed82b",
+      "sourceBytes": 580478,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 512171
+    },
+    {
+      "sourcePath": "icons/resources/reaction.png",
+      "sourceURL": "/icons/resources/reaction.png",
+      "sourceSha256": "047ffa6e972b70affebf1d2a583d9ca7a504bc0cbb6cec8028bcbde171a310c3",
+      "sourceBytes": 422701,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 340134
+    },
+    {
+      "sourcePath": "icons/resources/ritual.png",
+      "sourceURL": "/icons/resources/ritual.png",
+      "sourceSha256": "91465e290021aa0ac742416ca0f54d686f332ce87391132075a9b8a9403c5638",
+      "sourceBytes": 798757,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 523486
+    },
+    {
+      "sourcePath": "icons/resources/spell_slot.png",
+      "sourceURL": "/icons/resources/spell_slot.png",
+      "sourceSha256": "f7362389ab044c7f60675b0d67228e0023fbc162a840794ccfcb508df0239ed5",
+      "sourceBytes": 759301,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 865478
+    },
+    {
+      "sourcePath": "icons/resources/warlock_spell_slot.png",
+      "sourceURL": "/icons/resources/warlock_spell_slot.png",
+      "sourceSha256": "8153251e03e49f8fee5b257ac1e677efb486ad713eddb08b81195a6bc07b2b8e",
+      "sourceBytes": 690533,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 868909
+    },
+    {
+      "sourcePath": "icons/single_use.png",
+      "sourceURL": "/icons/single_use.png",
+      "sourceSha256": "aaf1ea410ed7ca73bf971dc3cd8a687c01991c75fa21289ce2627c6548211f97",
+      "sourceBytes": 10356,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 360
+    },
+    {
+      "sourcePath": "icons/slashing.png",
+      "sourceURL": "/icons/slashing.png",
+      "sourceSha256": "e71ecbce44d851eafd1ececf9dda305fbb50b68e049356771fe191e0c7e8f258",
+      "sourceBytes": 17261,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1773
+    },
+    {
+      "sourcePath": "icons/slots/armor.png",
+      "sourceURL": "/icons/slots/armor.png",
+      "sourceSha256": "20d975a68b579476d851e9e722e422c0a8f5acb3043541e7d99966a86d4d5e0c",
+      "sourceBytes": 15925,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2273
+    },
+    {
+      "sourcePath": "icons/slots/boots.png",
+      "sourceURL": "/icons/slots/boots.png",
+      "sourceSha256": "30fdcf24d9cb92ff997eb96b6c21f4bb3391f014d77d081f266b7848d84bd994",
+      "sourceBytes": 18479,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2594
+    },
+    {
+      "sourcePath": "icons/slots/cloak.png",
+      "sourceURL": "/icons/slots/cloak.png",
+      "sourceSha256": "c36e43085b0489ef6f75b6959dae37d6f4047331fa2a85011340b3f7b9e13430",
+      "sourceBytes": 17253,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2260
+    },
+    {
+      "sourcePath": "icons/slots/gloves.png",
+      "sourceURL": "/icons/slots/gloves.png",
+      "sourceSha256": "89a4f5e8cb355d22c9e7b9c692c268bd833d287ba9e88684485be932bbd5bc5c",
+      "sourceBytes": 26093,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 3380
+    },
+    {
+      "sourcePath": "icons/slots/hand.png",
+      "sourceURL": "/icons/slots/hand.png",
+      "sourceSha256": "033e925b2e702b2af18ae5b2771d09673e87095254f6ed9c0fc53662ef4a0eb6",
+      "sourceBytes": 15892,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1871
+    },
+    {
+      "sourcePath": "icons/slots/helm.png",
+      "sourceURL": "/icons/slots/helm.png",
+      "sourceSha256": "32773e4e43fe9bf280e7c6434054718c2b247561fc9702e04f6b2884e510b7d7",
+      "sourceBytes": 19566,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 3673
+    },
+    {
+      "sourcePath": "icons/slots/necklace.png",
+      "sourceURL": "/icons/slots/necklace.png",
+      "sourceSha256": "ebf5cbfaebe89ca1fa36cc1034744faa9b4a3e88e85114347318aa00c8465b00",
+      "sourceBytes": 15316,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1528
+    },
+    {
+      "sourcePath": "icons/slots/ring.png",
+      "sourceURL": "/icons/slots/ring.png",
+      "sourceSha256": "758326cb8f222c9345d780a69caade21e6f1f67b48a3ee8157a1e8c0ceeefb7d",
+      "sourceBytes": 13529,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1434
+    },
+    {
+      "sourcePath": "icons/special.png",
+      "sourceURL": "/icons/special.png",
+      "sourceSha256": "36a34570c23c804a2d1017ce1e1433069555f08ca14498b3057b6db0b1130907",
+      "sourceBytes": 13636,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1979
+    },
+    {
+      "sourcePath": "icons/thrown.png",
+      "sourceURL": "/icons/thrown.png",
+      "sourceSha256": "22728c0254ff958e3fc01f09624165c4728c27b2a4b6a0b50a58086235b8a985",
+      "sourceBytes": 15240,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 2344
+    },
+    {
+      "sourcePath": "icons/two_handed.png",
+      "sourceURL": "/icons/two_handed.png",
+      "sourceSha256": "9fabe088d1ea4ef6474c5f52f21d3f18077563dbd7166cd1a553b5d09e158b83",
+      "sourceBytes": 18504,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 3380
+    },
+    {
+      "sourcePath": "icons/versatile.png",
+      "sourceURL": "/icons/versatile.png",
+      "sourceSha256": "8fdd239f4f940081b9cbbb04c1455d6263cb150cf934fe0792f2b1eaf8b2b944",
+      "sourceBytes": 13927,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 1859
+    },
+    {
+      "sourcePath": "icons/weight.png",
+      "sourceURL": "/icons/weight.png",
+      "sourceSha256": "aadfbf280c44ccf2fbdc59393f865abc4f29119a02274c8f9f3a8cceb75ba910",
+      "sourceBytes": 16592,
+      "status": "original",
+      "reason": "partial_alpha_browser_rounding_original_preserved",
+      "partialAlphaPixels": 983
+    },
+    {
+      "sourcePath": "images/weapons/battleaxe.png",
+      "sourceURL": "/images/weapons/battleaxe.png",
+      "sourceSha256": "b95241942cd06411752c135c77fa1d983c00dade4d1f94e5656a91466efab513",
+      "sourceBytes": 84982,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/club.png",
+      "sourceURL": "/images/weapons/club.png",
+      "sourceSha256": "449849d352f0a97cd49d56a9e1745e81e70b299552e01ecaed10e28bc1d9d031",
+      "sourceBytes": 87412,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/dagger.png",
+      "sourceURL": "/images/weapons/dagger.png",
+      "sourceSha256": "a30b0b8f5ec5c79b73f20dc69984978f7c56002782b63ebb66e0dad4d81aea88",
+      "sourceBytes": 75685,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/dart.png",
+      "sourceURL": "/images/weapons/dart.png",
+      "sourceSha256": "8012cb5318434f1cdca202cfaa972769a9766c3c8827a62ee69ed9311fe01d5b",
+      "sourceBytes": 69874,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/flail.png",
+      "sourceURL": "/images/weapons/flail.png",
+      "sourceSha256": "dd83a4279bf42f8a1e3b5f5c316d8974f7d057554fd1f17051e032e0fbce7718",
+      "sourceBytes": 91987,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/glaive.png",
+      "sourceURL": "/images/weapons/glaive.png",
+      "sourceSha256": "58bf5863151dc1e9cccc5d52dddf342a68907f98d9ae053f8571e8372bd904cc",
+      "sourceBytes": 75524,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/greataxe.png",
+      "sourceURL": "/images/weapons/greataxe.png",
+      "sourceSha256": "3e6792fa582a37e8c97bf0304b2c1ab8f8f0eb733cd6f39b6abc77a60647d962",
+      "sourceBytes": 128576,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/greatclub.png",
+      "sourceURL": "/images/weapons/greatclub.png",
+      "sourceSha256": "5ce1f6f4431159a9008be7a9a9c4ee2cffb4e771fa0537529e2974eac2deefef",
+      "sourceBytes": 104820,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/greatsword.png",
+      "sourceURL": "/images/weapons/greatsword.png",
+      "sourceSha256": "15434cfac7f85d342898d2cecf6480c9e853ea7a8ad0311a8ad5b451ed2bb498",
+      "sourceBytes": 129105,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/halberd.png",
+      "sourceURL": "/images/weapons/halberd.png",
+      "sourceSha256": "88057e8e24ccd705b92ef84839395a17750e5ea71217b8dfb3e6174f329e44e2",
+      "sourceBytes": 94051,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/hand_crossbow.png",
+      "sourceURL": "/images/weapons/hand_crossbow.png",
+      "sourceSha256": "b869465840214002cefe6bbd2152074bf22775fa37034ebec1b35c52695d7a4b",
+      "sourceBytes": 122926,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/handaxe.png",
+      "sourceURL": "/images/weapons/handaxe.png",
+      "sourceSha256": "845a0cb25d6b85d15d0ccf52121c2c1c2e502e77d273d7610cf7850edf7ba902",
+      "sourceBytes": 95635,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/heavy_crossbow.png",
+      "sourceURL": "/images/weapons/heavy_crossbow.png",
+      "sourceSha256": "26b2413f97abfb7ecb33664b991044a0bb34c585216c714151664ffb3b010801",
+      "sourceBytes": 131395,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/javelin.png",
+      "sourceURL": "/images/weapons/javelin.png",
+      "sourceSha256": "6b5eeb0f9b62c8fa17240319d8404fb75872544a6f4eed54aed57574669724c6",
+      "sourceBytes": 112237,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/lance.png",
+      "sourceURL": "/images/weapons/lance.png",
+      "sourceSha256": "b5dd57bab64247f9696e8d2528d69f9907763fa2a95cd6518f549f2b46a6711e",
+      "sourceBytes": 70372,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/light_crossbow.png",
+      "sourceURL": "/images/weapons/light_crossbow.png",
+      "sourceSha256": "692e9eaf5cd3fe96a394057f35d6e5fd9851d00359841a53c36a513ca9d0fc2c",
+      "sourceBytes": 133547,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/light_hammer.png",
+      "sourceURL": "/images/weapons/light_hammer.png",
+      "sourceSha256": "4fb9e9a2c5b523073e259a3e97a6bb1a6233752baadfb6b79ea3b51324bc1919",
+      "sourceBytes": 92384,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/longbow.png",
+      "sourceURL": "/images/weapons/longbow.png",
+      "sourceSha256": "8ba9762edb07ef36ab2650cb888d4c0374cc1a51ecdaa1034d0b08c6e1abf9ee",
+      "sourceBytes": 96506,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/longsword.png",
+      "sourceURL": "/images/weapons/longsword.png",
+      "sourceSha256": "0a941332abc2768118adcf2660ba6c6610172af683ca2775b5bd38c8d623095e",
+      "sourceBytes": 105050,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/mace.png",
+      "sourceURL": "/images/weapons/mace.png",
+      "sourceSha256": "424df8b39f7f6441d0a1691467fa624e36ac40d3a0a4d094074291c55c8739f8",
+      "sourceBytes": 94201,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/maul.png",
+      "sourceURL": "/images/weapons/maul.png",
+      "sourceSha256": "2647c35f4e3494ba3999ec3a31f9b86dada2c1603931b7031925c9d7371b4a66",
+      "sourceBytes": 119973,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/morningstar.png",
+      "sourceURL": "/images/weapons/morningstar.png",
+      "sourceSha256": "d452b9f9087a27d06334f6e5f1166bac5ecdf68ebf8e281e2198765d0373577e",
+      "sourceBytes": 109479,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/net.png",
+      "sourceURL": "/images/weapons/net.png",
+      "sourceSha256": "a9bd307002147f961104b45b86cb42559652e20cfc0676d90f6011b41a29b3e9",
+      "sourceBytes": 289635,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/pike.png",
+      "sourceURL": "/images/weapons/pike.png",
+      "sourceSha256": "76d479f2a98c3061aed93e48d0ea1f3780aac077539a5d7e2790a8ecf80d4940",
+      "sourceBytes": 70329,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/quarterstaff.png",
+      "sourceURL": "/images/weapons/quarterstaff.png",
+      "sourceSha256": "bf3f1db863ac26c8e21b9a24877e813e1065d36d53389be643176a063c2a9341",
+      "sourceBytes": 82356,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/rapier.png",
+      "sourceURL": "/images/weapons/rapier.png",
+      "sourceSha256": "d9feb03e8a23e17f4a924cbddd18acc63474e3408233ce2a8bf4babb985f3fae",
+      "sourceBytes": 88431,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/scimitar.png",
+      "sourceURL": "/images/weapons/scimitar.png",
+      "sourceSha256": "1523e20ae461baa456f973f7beb016dbff6b71076d78fa6af368b4e709ab6529",
+      "sourceBytes": 87415,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/shield.png",
+      "sourceURL": "/images/weapons/shield.png",
+      "sourceSha256": "e400f936caaaeaab18bc8a19b6469abb75729fd2a98e737563638e52e8efd1d8",
+      "sourceBytes": 251126,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/shortbow.png",
+      "sourceURL": "/images/weapons/shortbow.png",
+      "sourceSha256": "e596c6c98b347bb083a9515bac7884c246a0310afdf84d3c09079200b49407dd",
+      "sourceBytes": 82432,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/shortsword.png",
+      "sourceURL": "/images/weapons/shortsword.png",
+      "sourceSha256": "9530e34cd73d2552e36740633bcebd8cd767ee6239e658f58a9d1647271d4bf3",
+      "sourceBytes": 103072,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/sickle.png",
+      "sourceURL": "/images/weapons/sickle.png",
+      "sourceSha256": "4a77f715f834be771bd27a164aa417ad342f369a83225ccb758ed5ebbb9df9d2",
+      "sourceBytes": 78395,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/sling.png",
+      "sourceURL": "/images/weapons/sling.png",
+      "sourceSha256": "5583f8b8d8c315aadb7433caecd0c61c54b1aa7aaca196308f0a209e16afa548",
+      "sourceBytes": 116538,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/spear.png",
+      "sourceURL": "/images/weapons/spear.png",
+      "sourceSha256": "02922b2304d21d03fb3a3d26080aa98baa80ee2da8b5922b1cf299043076e061",
+      "sourceBytes": 80891,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/trident.png",
+      "sourceURL": "/images/weapons/trident.png",
+      "sourceSha256": "5ad6d8ab3caa87ff056b3d6c5b80ca6e3d46169a85503f6b1a319bc9ccfadde4",
+      "sourceBytes": 108609,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/warhammer.png",
+      "sourceURL": "/images/weapons/warhammer.png",
+      "sourceSha256": "0cc77e0fc2f5c2cfd02108465232f1d8550b74920b84b7b0ac67f5bc9aecfbcc",
+      "sourceBytes": 106159,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/warpick.png",
+      "sourceURL": "/images/weapons/warpick.png",
+      "sourceSha256": "f971690903f8a83e5b7a0eae47f2e03df464e3386500520518b59646813d69bb",
+      "sourceBytes": 73683,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "images/weapons/whip.png",
+      "sourceURL": "/images/weapons/whip.png",
+      "sourceSha256": "b5b90a81b68c972d88216ee0fd0c35b8725f89c617618cbc3e4b361ae274fe5d",
+      "sourceBytes": 216085,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    },
+    {
+      "sourcePath": "portraits/presets/archer.png",
+      "sourceURL": "/portraits/presets/archer.png",
+      "sourceSha256": "a1f0c30e81cbdc6176dd7a05d493c4322e79650dfbd6fc7e043e685f030feb3c",
+      "sourceBytes": 2151347,
+      "status": "variant",
+      "variantURL": "/media/variants/1cc9a1865c7ebd0ec60639253001a810f5311861fed2b39f351271fdac1ed7b4.webp",
+      "variantSha256": "1cc9a1865c7ebd0ec60639253001a810f5311861fed2b39f351271fdac1ed7b4",
+      "variantBytes": 1364292,
+      "proof": {
+        "width": 1280,
+        "height": 1280,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "9133af5048bc85f2205cebe901eb4795e2c7592e1c404c94e9d4258f4575ff40",
+        "rgbaBytes": 6553600,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "portraits/presets/line.png",
+      "sourceURL": "/portraits/presets/line.png",
+      "sourceSha256": "04a5076b39f386d19773660104923537111123bba908d2b377ae6b0c36d2140a",
+      "sourceBytes": 2468282,
+      "status": "variant",
+      "variantURL": "/media/variants/4326488aa6cace4f4156c916bf8995fab80e860c324bb80de7bb098bab4a2bea.webp",
+      "variantSha256": "4326488aa6cace4f4156c916bf8995fab80e860c324bb80de7bb098bab4a2bea",
+      "variantBytes": 1599288,
+      "proof": {
+        "width": 1280,
+        "height": 1280,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "1d15727e7a3dcc61f86094c34e1634ce493c93652f0e17f2bbf0f3cb5d4de95d",
+        "rgbaBytes": 6553600,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "portraits/presets/swordsman.png",
+      "sourceURL": "/portraits/presets/swordsman.png",
+      "sourceSha256": "7804d0f4022e5d085b5d98be5fdeb2021d103ca4b632f2ef3df8ab2f916a4c04",
+      "sourceBytes": 2392230,
+      "status": "variant",
+      "variantURL": "/media/variants/e868f9d87d09e77c69a2b52cf7db5636d0f574656225c05c008315596921743a.webp",
+      "variantSha256": "e868f9d87d09e77c69a2b52cf7db5636d0f574656225c05c008315596921743a",
+      "variantBytes": 1570986,
+      "proof": {
+        "width": 1280,
+        "height": 1280,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "96df40f995a7085c46f5aabe0c59cfb9660866bf0154dab049daa89147b0c3ad",
+        "rgbaBytes": 6553600,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "pwa-192x192.png",
+      "sourceURL": "/pwa-192x192.png",
+      "sourceSha256": "09e9c87fd2b327ea126e37ce09ac592b2e5d32c2bfe5b5f5e3115805e079ad2a",
+      "sourceBytes": 55868,
+      "status": "variant",
+      "variantURL": "/media/variants/2b6b11306b5a06a5b31577183c2d203c738498cf8aa9ede55f74c8615b315e47.webp",
+      "variantSha256": "2b6b11306b5a06a5b31577183c2d203c738498cf8aa9ede55f74c8615b315e47",
+      "variantBytes": 35314,
+      "proof": {
+        "width": 192,
+        "height": 192,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "c9ec598d4b47ab5e971cf0cd305a65244f8e7499c741c888017edd0e7d4ad313",
+        "rgbaBytes": 147456,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "pwa-512x512.png",
+      "sourceURL": "/pwa-512x512.png",
+      "sourceSha256": "c5e088eaf99fe593f0df1cc39f6ec5cbafda8a5cc2ba0d0f591a0cefe9e1c2ed",
+      "sourceBytes": 409325,
+      "status": "variant",
+      "variantURL": "/media/variants/6f7e02692a6828a4bfd21e5829d57dec634b2b9fcb25f06fe148038922c63cea.webp",
+      "variantSha256": "6f7e02692a6828a4bfd21e5829d57dec634b2b9fcb25f06fe148038922c63cea",
+      "variantBytes": 261914,
+      "proof": {
+        "width": 512,
+        "height": 512,
+        "channels": 4,
+        "depth": "uchar",
+        "rgbaSha256": "476360a78c2d9b5da1af006f8a560c422d3d451a48c33086e872037f0d1d65cd",
+        "rgbaBytes": 1048576,
+        "iccSha256": null,
+        "iccBytes": 0,
+        "transparentRGB": "exact_compared",
+        "alphaPolicy": "opaque_or_binary_alpha_only",
+        "colorPolicy": "sRGB_or_byte_identical_ICC; standard_PNG_gamma_chromaticity_only"
+      }
+    },
+    {
+      "sourcePath": "site_logo.png",
+      "sourceURL": "/site_logo.png",
+      "sourceSha256": "c3480355eede7ef3e0d21257080e5ae755e614bb62c75e6232ae178f17ae7fdc",
+      "sourceBytes": 587764,
+      "status": "original",
+      "reason": "unsupported_color_or_orientation_metadata"
+    }
+  ],
+  "summary": {
+    "PNGFiles": 135,
+    "variants": 17,
+    "originalOnly": 118,
+    "allSourcePNGBytes": 90524494,
+    "selectedSourceBytes": 42818912,
+    "selectedVariantBytes": 29448348,
+    "requestBytesSaved": 13370564,
+    "originalsRetained": true,
+    "gitBytesRemoved": 0,
+    "HTTPTransfer": "not_measured",
+    "visualPrintAcceptance": "pending_default_OFF"
+  }
+}

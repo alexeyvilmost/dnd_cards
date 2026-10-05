@@ -5,15 +5,22 @@ services:
     depends_on:
       rules-worker:
         condition: service_healthy
-    image: bagofholding-backend:${SOURCE_COMMIT:?SOURCE_COMMIT is required}
+    image: ${BACKEND_IMAGE:?Validated manifest BACKEND_IMAGE digest is required}
     env_file:
       - ${APP_ENV_FILE:-/opt/bagofholding/shared/app.env}
-      - /opt/bagofholding/shared/rules-worker.env
+      - ${WORKER_ENV_FILE:-/opt/bagofholding/shared/rules-worker.env}
     environment:
       PORT: "8080"
-      SOURCE_COMMIT: ${SOURCE_COMMIT}
+      RELEASE_COMMIT: ${BACKEND_RELEASE_COMMIT:-${RELEASE_COMMIT:?Validated launch identity is required}}
+      RELEASE_ID: ${BACKEND_RELEASE_ID:-${RELEASE_ID:?Validated launch identity is required}}
       RULES_WORKER_URL: http://rules-worker:8090
+      RULES_WORKER_MAX_INFLIGHT: ${RULES_WORKER_MAX_INFLIGHT:-4}
       TRUSTED_PROXY_CIDRS: 172.20.0.0/24
+      # Expansion rollout must keep old readers compatible until a separately
+      # reviewed writer-enable release changes this explicit policy.
+      DB_COMPACT_RECEIPTS: "0"
+      DB_FROZEN_CATALOGS: "0"
+      IMAGE_JOBS_ENABLED: "0"
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -30,18 +37,20 @@ services:
       - edge
 
   rules-worker:
-    image: bagofholding-rules-worker:${SOURCE_COMMIT:?SOURCE_COMMIT is required}
+    image: ${RULES_WORKER_IMAGE:?Validated manifest RULES_WORKER_IMAGE digest is required}
     env_file:
-      - /opt/bagofholding/shared/rules-worker.env
+      - ${WORKER_ENV_FILE:-/opt/bagofholding/shared/rules-worker.env}
     environment:
-      SOURCE_COMMIT: ${SOURCE_COMMIT}
+      RELEASE_COMMIT: ${RULES_WORKER_RELEASE_COMMIT:-${RELEASE_COMMIT:?Validated launch identity is required}}
+      RELEASE_ID: ${RULES_WORKER_RELEASE_ID:-${RELEASE_ID:?Validated launch identity is required}}
       PORT: "8090"
+      RULES_WORKER_MAX_CACHED_ARTIFACTS: ${RULES_WORKER_MAX_CACHED_ARTIFACTS:-4}
     restart: unless-stopped
     read_only: true
     tmpfs:
       - /tmp:size=32m,mode=1777
     volumes:
-      - /opt/bagofholding/shared/rules-artifacts:/artifacts
+      - ${RULES_ARTIFACTS_DIRECTORY:-/opt/bagofholding/shared/rules-artifacts}:/artifacts
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -55,11 +64,12 @@ services:
 
   frontend:
     volumes:
-      - /opt/bagofholding/shared/frontend-assets:/var/lib/bagofholding/frontend:ro
-    image: bagofholding-frontend:${SOURCE_COMMIT:?SOURCE_COMMIT is required}
+      - ${FRONTEND_ASSETS_DIRECTORY:-/opt/bagofholding/shared/frontend-assets}:/var/lib/bagofholding/frontend:ro
+    image: ${FRONTEND_IMAGE:?Validated manifest FRONTEND_IMAGE digest is required}
     environment:
       PORT: "3000"
-      SOURCE_COMMIT: ${SOURCE_COMMIT}
+      RELEASE_COMMIT: ${FRONTEND_RELEASE_COMMIT:-${RELEASE_COMMIT:?Validated launch identity is required}}
+      RELEASE_ID: ${FRONTEND_RELEASE_ID:-${RELEASE_ID:?Validated launch identity is required}}
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

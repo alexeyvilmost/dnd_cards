@@ -1,0 +1,550 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "authorized_scope": "Пользователь поручил автономно выполнить весь план; 2026-10-05 явно разрешил коммит и выкатку после локальных проверок. Необходимый push входит в release workflow. Повторное разрешение этих действий не требуется; секреты, пользовательские данные и исторические артефакты сохраняются.",
+  "goal_status": "active",
+  "tasks": [
+    {
+      "id": "TEST-01",
+      "title": "Создать воспроизводимый локальный тестовый стенд и изолировать старые опасные сценарии",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/TEST-01.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": []
+    },
+    {
+      "id": "TEST-02",
+      "title": "Восстановить согласованную архитектурную границу движка",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/TEST-02.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": []
+    },
+    {
+      "id": "TEST-03",
+      "title": "Объединить основной набор, расширенный набор и выбор проверок в одном манифесте",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/TEST-03.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "Operational four-lane CI/local orchestration now owns separate DB/process/build resources; aggregation enforces exact once global assignment, current source/manifest, same artifact/UI and stopped cleanup. Partial shard reports are release-ineligible.56 targeted checks and private build/no-shared-write proof passed. The complete fresh sharded run remains pending root source freeze.",
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "completion_evidence": [
+        "docs/audits/2026-10-04/execution/TEST-05-shards.md",
+        "docs/audits/2026-10-04/execution/TEST-05-shards.json"
+      ],
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "TEST-04",
+      "title": "Покрыть основные пользовательские сценарии реальным локальным E2E",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/TEST-04.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries."
+    },
+    {
+      "id": "TEST-05",
+      "title": "Добавить расширенную регрессию, replay/migration matrix и контроль производительности",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/TEST-05.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "ENV-LINUX-RACE",
+        "DATA-FRESH"
+      ],
+      "acceptance_scope": "All17 persisted Solo continuation/queue fields have positive durable API coverage:220 accepted cases,440 exact retries across reload/restart, and2 separate fail-closed boundary cases. The immutable corpus has222 entries;224 unit checks pass. Actual owned stack stopped. These targeteds do not substitute for the final combined suite. Historical fresh001/pre102 provenance and Linux race are independent remaining gates; supported297/298/299 upgrade receipts stay unchanged.",
+      "previous_status": "in_progress_solo_pending_matrix_and_external_gates",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "completion_evidence": [
+        "docs/audits/2026-10-04/execution/TEST-05-solo-durable.md",
+        "docs/audits/2026-10-04/execution/TEST-05-solo-durable.json",
+        "docs/audits/2026-10-04/execution/TEST-05-shards.md",
+        "docs/audits/2026-10-04/execution/TEST-05-shards.json"
+      ],
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "OBS-01",
+      "title": "Воспроизводимый baseline загрузки и игровых команд",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/OBS-01.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "latest_evidence_note": "Закрыт ранее отсутствовавший локальный equipment React/INP срез:120 измерений, отдельные обычные/resource-changing ветви. Не выдавать bounded page-lifetime INP и диагностический profiler за production percentile.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/OBS-01-equipment-browser-profile.json"
+      ],
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "PERF-01",
+      "title": "Пакетное разрешение зависимостей и безопасный кеш неизменяемого каталога",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/PERF-01.md",
+      "remaining_gates": [
+        "PERF-HOST"
+      ],
+      "previous_status": "verified_default_off",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "followup_evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.md",
+        "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.json"
+      ],
+      "latest_cache_review": {
+        "status": "targeted_passed_full_suite_pending",
+        "regressions_before": {
+          "failed": 4
+        },
+        "targeted_after": {
+          "files": 7,
+          "passed": 40,
+          "failed": 0
+        },
+        "typecheck": "passed",
+        "independent_read_only_review": "passed",
+        "tests": [
+          "frontend/src/api/apiCache.test.ts",
+          "frontend/src/character/assemblyFactory.freshness.test.ts"
+        ],
+        "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
+      },
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "PERF-02",
+      "title": "Короткая транзакция экипировки и единая подготовка начала боя",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/PERF-02.md",
+      "remaining_gates": [
+        "PERF-HOST"
+      ],
+      "acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
+      "previous_status": "verified_default_off",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "followup_evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.md",
+        "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.json"
+      ],
+      "latest_cache_review": {
+        "status": "targeted_passed_full_suite_pending",
+        "regressions_before": {
+          "failed": 4
+        },
+        "targeted_after": {
+          "files": 7,
+          "passed": 40,
+          "failed": 0
+        },
+        "typecheck": "passed",
+        "independent_read_only_review": "passed",
+        "tests": [
+          "frontend/src/api/apiCache.test.ts",
+          "frontend/src/character/assemblyFactory.freshness.test.ts"
+        ],
+        "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
+      },
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "PERF-03",
+      "title": "Сокращение runtime payload и устранение CPU-очереди worker по измерениям",
+      "status": "verified_default_off",
+      "evidence": "docs/audits/2026-10-04/execution/PERF-03.md",
+      "remaining_gates": [
+        "PERF-HOST"
+      ],
+      "acceptance_scope": "Mirrors transport OFF; CPU fix и пределы admission/LRU реализованы. Process-kill2phase и long-combat160+100 с exact retries/replays PASS. Общего memory bound нет: processedCommandIds +195B/turn в измеренном сценарии. Это dedup ledger, не доказанная heap leak.",
+      "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "final_local_suite_status": "pending_fresh_source_after_completion_followup",
+      "followup_evidence": []
+    },
+    {
+      "id": "PERF-04",
+      "title": "Сокращение frontend graph и устранение полного обхода библиотеки",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/PERF-04.md",
+      "remaining_gates": [],
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "followup_evidence": [
+        "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.md",
+        "docs/audits/2026-10-04/execution/PERF-04-pwa-update.md",
+        "docs/audits/2026-10-04/execution/PERF-04-pwa-update.json"
+      ],
+      "latest_cache_review": {
+        "status": "targeted_passed_full_suite_pending",
+        "regressions_before": {
+          "failed": 4
+        },
+        "targeted_after": {
+          "files": 7,
+          "passed": 40,
+          "failed": 0
+        },
+        "typecheck": "passed",
+        "independent_read_only_review": "passed",
+        "tests": [
+          "frontend/src/api/apiCache.test.ts",
+          "frontend/src/character/assemblyFactory.freshness.test.ts"
+        ],
+        "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
+      },
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "PERF-05",
+      "title": "Стабильные проекции карты и быстрые каноничные превью",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/PERF-05.md",
+      "remaining_gates": [],
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "followup_evidence": [
+        "docs/audits/2026-10-04/execution/PERF-05-browser-map.md",
+        "docs/audits/2026-10-04/execution/PERF-05-browser-map.json"
+      ],
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "REF-01",
+      "title": "Границы правил и небольшие извлечения из крупных исполнителей",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/REF-01.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "completion_evidence": [
+        "docs/audits/2026-10-04/execution/REF-01-continuations.md",
+        "docs/audits/2026-10-04/execution/REF-01-continuations.json"
+      ],
+      "acceptance_scope": "Typed exhaustive routers now cover 44 commands and 15 saved decisions; cohesive attack/damage continuations extracted without a second rules owner. Exact immutable before/after executable replay84 and targeted100 plus TypeScript passed; the full combined suite on the latest source remains pending.",
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "REF-02",
+      "title": "Разделение orchestration и каноничного отображения на крупных экранах",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/REF-02.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются."
+    },
+    {
+      "id": "REL-01",
+      "title": "Единая карта зависимостей для проверок, сборки и выкатки",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/REL-01.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": []
+    },
+    {
+      "id": "REL-02",
+      "title": "Минимальные Docker-контексты и измеряемый кеш сборки",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/REL-02.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "latest_evidence_note": "Статус pending_oci устарел: настоящий локальный registry build/publish/pull/reuse9/9 и collector health/history/migration8+7 выполнены. Это сохранённые local-only fixtures, не CI-attested текущий production candidate.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json",
+        "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.json",
+        "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+      ],
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "REL-03",
+      "title": "Manifest релиза и достоверная идентификация компонентов",
+      "status": "local_oci_passed_exact_production_candidate_pending",
+      "evidence": "docs/audits/2026-10-04/execution/REL-03.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "OCI-CANDIDATE"
+      ],
+      "latest_evidence_note": "Статус pending_oci устарел: настоящий локальный registry build/publish/pull/reuse9/9 и collector health/history/migration8+7 выполнены. Это сохранённые local-only fixtures, не CI-attested текущий production candidate.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json",
+        "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.json",
+        "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+      ],
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "REL-04",
+      "title": "CI-сборка проверенных образов и подготовка доставки через реестр",
+      "status": "local_oci_passed_exact_production_candidate_pending",
+      "evidence": "docs/audits/2026-10-04/execution/REL-04.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "REL-ENABLE"
+      ],
+      "previous_status": "in_progress_local_registry_adapter",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "completion_evidence": [
+        "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json"
+      ],
+      "latest_evidence_note": "Exact-source локальный producer принят9/9; сохранённые localOnly/deployable:false/ciProvenance:null нельзя повышать до внешнего CI release.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json",
+        "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+      ],
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "REL-05",
+      "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
+      "status": "local_oci_passed_exact_production_candidate_pending",
+      "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "OCI-SELECTIVE",
+        "OCI-CANDIDATE",
+        "REL-ENABLE"
+      ],
+      "previous_status": "pending_oci",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "latest_evidence_note": "Local OCI collector действительно passed8/8 плюс7/7 additive matrix с stopped cleanup; полная legacy-adapter adoption/rollback и production first adoption пока не подтверждены этой квитанцией.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.json",
+        "docs/audits/2026-10-04/execution/REL-05-typed-reference-inventory.json",
+        "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+      ]
+    },
+    {
+      "id": "REL-06",
+      "title": "Проверяемый backup/restore для БД, правил и релизов",
+      "status": "local_oci_passed_exact_production_candidate_pending",
+      "evidence": "docs/audits/2026-10-04/execution/REL-06.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "OCI-CANDIDATE"
+      ],
+      "acceptance_scope": "Принят native dump/restore с историческими artifacts и точным повтором команд. Production/offsite/RTO и exact-container drill остаются отдельными доказательствами.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+      ]
+    },
+    {
+      "id": "DB-01",
+      "title": "Измерение размера БД и роста хранения по игровым сценариям",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/DB-01.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД.",
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "completion_evidence": [
+        "docs/audits/2026-10-04/execution/DB-01-seeded-series.json"
+      ]
+    },
+    {
+      "id": "DB-02",
+      "title": "Компактные новые квитанции команд без потери идемпотентности",
+      "status": "verified_default_off",
+      "evidence": "docs/audits/2026-10-04/execution/DB-02.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "REL-ENABLE"
+      ]
+    },
+    {
+      "id": "DB-03",
+      "title": "Неизменяемые каталоги по хэшу и разделение горячего состояния",
+      "status": "verified_default_off",
+      "evidence": "docs/audits/2026-10-04/execution/DB-03.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "REL-ENABLE"
+      ],
+      "acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF.",
+      "completion_evidence": [
+        "docs/audits/2026-10-04/execution/DB-03-latency100.json",
+        "docs/audits/2026-10-04/execution/DB-03-latency100-optimized.json"
+      ]
+    },
+    {
+      "id": "DB-04",
+      "title": "Адресная уборка хранения: retention, индексы и встроенные изображения",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/DB-04.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "completion_evidence": [
+        "docs/audits/2026-10-04/execution/DB-04-followup.json"
+      ],
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "AI-01",
+      "title": "Различить источник 403 и обеспечить безопасную диагностику",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/AI-01.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено.",
+      "followup_evidence": [
+        "AI-03-provider-diagnostic.json",
+        "AI-03-sota-image-probe.json"
+      ]
+    },
+    {
+      "id": "AI-02",
+      "title": "Единый сервис генерации и хранения изображений",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/AI-02.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "APPLICATION-CUTOVER"
+      ],
+      "acceptance_scope": "Единый provider→storage→entity путь проверен локально. TimeWeb provider ImagesPOST подтверждён отдельно: один PNG1024x1024/200 без retries. Production endpoint нового backend ожидаетвыкатки."
+    },
+    {
+      "id": "AI-03",
+      "title": "Фоновые image jobs и изолированная исходящая сеть",
+      "status": "in_progress_completion_audit",
+      "evidence": "docs/audits/2026-10-04/execution/AI-03.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [
+        "APPLICATION-CUTOVER",
+        "COMPATIBLE-WRITER-ROLLOUT"
+      ],
+      "acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline.",
+      "previous_status": "verified_default_off",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json"
+    },
+    {
+      "id": "CLEAN-01",
+      "title": "Упорядочить локальные артефакты и действующую документацию",
+      "status": "done_local",
+      "evidence": "docs/audits/2026-10-04/execution/CLEAN-01.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены."
+    },
+    {
+      "id": "CLEAN-02",
+      "title": "Постепенно убрать старые продуктовые ветки",
+      "status": "local_checks_passed_exact_commit_ci_pending",
+      "evidence": "docs/audits/2026-10-04/execution/CLEAN-02.md",
+      "remaining_gates": [],
+      "acceptance_scope": "Explicitly authorized V1/V2 code/support removal completed with native PG11 and fresh UI/worker13 checks. Current V3, paper, runs, shared inventories and historical DB rows preserved; physical retired-storage removal requires verified backup/migration separately. Fresh full suite pending.",
+      "previous_status": "done_local",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "followup_evidence": [
+        "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.md",
+        "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.json"
+      ],
+      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "id": "CLEAN-03",
+      "title": "Сократить media-дистрибутив и подготовить обслуживание Git",
+      "status": "in_progress_completion_audit",
+      "evidence": "docs/audits/2026-10-04/execution/CLEAN-03.md",
+      "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
+      "remaining_gates": [],
+      "acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты.",
+      "previous_status": "verified_default_off",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json"
+    }
+  ],
+  "notes": [
+    "Requirement-by-requirement completion audit нашёл незавершённые обязательные локальные требования. Предыдущие native PASS сохраняют силу для соответствующего snapshot, но не доказывают полноту первоначального плана. Статусы уточняются по отдельным audit matrices.",
+    "Текущий статус брать из tasks и completion-followup; final_verification/source_snapshot пока относятся к предыдущему принятому снимку, новая общая проверка ожидается. historical_notes сохраняет хронологию.",
+    "Core/extended counts не суммировать как уникальное покрытие: часть групп повторяется, scenario gates и builds учитываются отдельно.",
+    "Source snapshot включает26 настоящих файлов rules-core/coverage. Старые receipts сохранены без пересчёта hashes задним числом.",
+    "Generic saved outcome override исправлен после S05 failure; старые executable, snapshots и сертификаты не переписаны.",
+    "В длинной легальной последовательности260 commits прошли260 exact API retries и260 full worker replays. Выявлен рост processedCommandIds; автоматическое удаление этих ID не реализовано.",
+    "Docker Engine работает. На TimeWeb установлен постоянный приватный Sota gateway; одна реальная генерация прошла. Приложение4549fb3c остаётся прежним. Исторические receipts сохранены.",
+    "Core5 passed on f951e207/4400 inputs. Extended2 unit, flows and extended lanes passed; backend failed only dedicated observed-baseline routing. Historical aggregate remains unchanged; repair checks and exact-commit Linux CI pending.",
+    "First adoption keeps new receipt/catalog/image-job writers OFF. Prepared production environment enables catalog batching and wire mirrors; running old application is unchanged until verified cutover."
+  ],
+  "updated_at": "2026-10-05T02:15:18.972Z",
+  "work_status": "local_commit_gate_passed_exact_commit_ci_pending",
+  "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
+  "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
+  "source_snapshot": {
+    "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+    "files": 4313
+  },
+  "status_semantics": {
+    "done_local": "Предусмотренный локальный срез реализован и проверен; это не утверждение о production или всех внешних acceptance gates.",
+    "verified_default_off": "Локальные контракты и выбранные реальные сценарии проверены. Экспериментальная часть остаётся выключенной; активные независимые исправления перечислены в evidence.",
+    "pending_oci": "Код и native/static/config проверки выполнены; реальные container build/pull/rehearsal/cutover/rollback ещё не подтверждены.",
+    "pending_environment_and_trusted_preimage": "Native набор принят; полная acceptance требует Linux race и доверенных исторических данных или проверенной clean-install стратегии.",
+    "targeted_passed_full_suite_pending": "Адресные проверки текущего среза пройдены; полный набор на новом неизменном снимке ещё не принят. Предыдущие receipts не подтверждают новые исходники.",
+    "local_checks_passed_exact_commit_ci_pending": "Новые локальные проверки пройдены; сохранённые успешные части большого набора привязаны к исходным входам. Полный Linux CI точного коммита предстоит выполнить; не заявляется новый общий локальный extended PASS."
+  },
+  "historical_notes": [
+    "Чужие untracked output/tmp/skills сохранены.",
+    "Только фактически принятые задачи получают done.",
+    "DB-01 завершён на owned native fixture с реальными командами; production объём не измерялся. Подробности DB-01/DB-02 receipts.",
+    "REL-02: подготовка конфигурации параллельно завершению TEST-01; Docker runtime verification ждёт доступной виртуализации, task не считается завершённым.",
+    "PERF-01/DB-03 dependency уточнена по доказательствам: DB-03 требует принятой batch части PERF-01; shared immutable cache финализируется после versioned catalog DB-03. Это убирает цикл зависимостей без ложного завершения всего PERF-01. Batch full differential PASS, SQL172→33; flag по умолчанию выключен.",
+    "CLEAN-01 принят в обратимом локальном scope: 3 сохранённых архивных оригинала, актуальный индекс, scoped artifact inventory, локальные Markdown links и свежая сборка. Production/Docker runtime не нужны для этих файловых изменений и остаются отдельными gates.",
+    "TEST-05: 6073/6073 Vitest PASS, 717 файлов, hashes исходников стабильны в том прогоне. После этого PERF-01 продолжает отдельную реализацию cache; общий финальный core/extended ещё обязателен.",
+    "CLEAN-03: enabled v2 media build прошёл 11/11 real E2E, accepted/original map paths проверены в настоящем UI. OCI v1 media flag жёстко OFF, enabled bundle имеет только nondeployable provenance до manifest extension.",
+    "REL-05: исходный no-schema-change path готов; additive migration executor 298–300 реализуется отдельно перед общей приёмкой. Фактический Docker/TimeWeb запуск не выполнялся.",
+    "Интеграционный review REL03–05 выявил незаконченные стыки: автоматический CI→imagebuild trigger, различениеcontrolCommit/releaseCommit и producer полного candidate bundle. Они требуют кода и проверок; отсутствие Docker не является единственным оставшимся ограничением.",
+    "PERF-01 cache: 3 arms × 30 paired repeats, одинаковые backend/UI/worker/fixture hashes; resource median около79→56ms, ordinary legacy38ms остаётся быстрее authority56ms. Native/API/browser/replay gates passed, все новые flags OFF.",
+    "REL-05 additive298–300 native PG7 top-level+10 subcases PASS; исправлены schema trigger identity, immutable application state vs database journal и stale recovery. Source/control provenance и CI main extended policy реализованы; candidate rehearsal+fresh host capture ещё интегрируются.",
+    "Release pipeline/candidate collector/additive298–300 интегрированы. Final release+CI-policy154/154 и независимые24/24 PASS; настоящий Compose config-only proof PASS. Docker daemon недоступен, OCI acceptance не выполнен. После последнего Solo lifecycle guard общий core/extended обязателен."
+  ],
+  "deployment_authorization": {
+    "authorized": true,
+    "date": "2026-10-05",
+    "user_request": "Разрешаю сделать коммит и выкатку, если от меня требуются дополнительные разрешения или помощь в локальном запуске - пиши.",
+    "skill": ".agents/skills/timeweb-deploy/SKILL.md",
+    "ssh_identity_verified": true,
+    "production_mutated": true,
+    "production_mutation_scope": "Permanent private Sota gateway, protected host configuration and historical certificate recovery, dedicated main-only GitHub SSH environment; one paid ImagesPOST successful. Existing application4549fb3c unchanged."
+  },
+  "previous_verified_source": {
+    "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+    "files": 4313
+  },
+  "environment_readiness": "docs/audits/2026-10-04/execution/environment-docker-ready.json",
+  "latest_verification": "docs/audits/2026-10-04/execution/verification-20261005.json",
+  "local_commit_gate": {
+    "status": "passed",
+    "verification": "docs/audits/2026-10-04/execution/verification-20261005.json",
+    "sourceSnapshot": {
+      "sha256": "0a7ff8a034d83eb0de82a06f907ac660eec5f0f0fa6b539458080ecb73ccfb2a",
+      "files": 4401
+    },
+    "fullLocalExtendedAggregate": false
+  }
+}

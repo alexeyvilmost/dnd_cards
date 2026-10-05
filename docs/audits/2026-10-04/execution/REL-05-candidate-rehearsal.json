@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "status": "implemented_local_verification_passed_oci_not_executed",
+  "sourceFiles": [
+    {
+      "file": "scripts/release/candidate-rehearsal.mjs",
+      "sha256": "4d117df40e7c3399da9973b24cfb6cc5b8278d366c403702270d57d2c587dd10"
+    },
+    {
+      "file": "scripts/release/docker-rehearsal.mjs",
+      "sha256": "a475e3400ab6922ba845929c206f749e670a2cf3c7e27fa1dbacc233fba57d62"
+    },
+    {
+      "file": "scripts/release/rehearsal-command.mjs",
+      "sha256": "8a038d8161c995bdaf8ea644f61ac9746727570ac95421fd62e152fcc8dd70aa"
+    },
+    {
+      "file": "scripts/release/assemble-bundle.mjs",
+      "sha256": "7c9e5db0e31bebf467a19398e8022127193cb760e6d711f8387ba06ed4a2f8c6"
+    },
+    {
+      "file": "scripts/release/rehearsal-scenarios.mjs",
+      "sha256": "18d1327128a5ca987a9a2400abc2df6b622edb2a00e8cf03f56ea659b44a0bb0"
+    },
+    {
+      "file": "scripts/release/rehearsal-scenarios-local.mjs",
+      "sha256": "63fe22220f6cae6d739017cc1aad6b95761879c756512bec66da259f0f177dc6"
+    },
+    {
+      "file": "scripts/release/validate-manifest.mjs",
+      "sha256": "7ad5d2f26d75ebf163d45d6f1624eb887496f5ff9433273bc2101a1e08b0719d"
+    },
+    {
+      "file": "scripts/release/migration-rehearsal.mjs",
+      "sha256": "d94f0d0ee0209f272d6d28b144e1c57f4b92a9b240ec90cc61de8c44ecbfd96f"
+    }
+  ],
+  "unit": {
+    "status": "passed",
+    "files": 8,
+    "tests": 65,
+    "skips": 0,
+    "log": "outputs/testing/candidate-rehearsal-unit.log"
+  },
+  "native": {
+    "schemaVersion": 1,
+    "status": "passed",
+    "execution": "native-owned-api",
+    "runId": "test_5b778b8f3b672ecfc1f9f992",
+    "checks": [
+      "canonical-pending-choice",
+      "read-without-mutation",
+      "decode-accepted-receipt",
+      "duplicate-accepted-twice",
+      "continue-pending-choice",
+      "duplicate-continuation"
+    ],
+    "pendingHash": "sha256:49bdef64daac24d538f4157bfb6d96c1d868f7f2f5943b31d58cdf143308dc92",
+    "acceptedHash": "sha256:f49a008bfc6ffbfa7d4565fa010e7205ee18fea0fe8f3d155efd4f1b5163795f",
+    "continuedHash": "sha256:584af4f2b30a984432b818a80f902694596cf69520f07a364ffd5c98273eaea4",
+    "invariantHash": "sha256:c8c1d75d91550158fb6125c43279f10b154289dcd140c4bdb807eb5960fd05db",
+    "limitations": [
+      "Not an OCI image rehearsal",
+      "Does not prove production historical corpus or fresh migration chain"
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "oci": {
+    "status": "not_executed",
+    "reason": "Docker Desktop daemon unavailable: WSL virtualization disabled"
+  },
+  "commonCore": {
+    "status": "awaiting_root_run"
+  },
+  "limitations": [
+    "native proof is not OCI proof",
+    "remote media bytes not restored",
+    "missing historical replay corpus fails closed"
+  ],
+  "priorSourceFiles": [
+    {
+      "file": "scripts/release/candidate-rehearsal.mjs",
+      "sha256": "4d117df40e7c3399da9973b24cfb6cc5b8278d366c403702270d57d2c587dd10"
+    },
+    {
+      "file": "scripts/release/docker-rehearsal.mjs",
+      "sha256": "667cf648d953476f81cc1a9eaec9fc8035846c161f1d91670e49e1b061592e2f"
+    },
+    {
+      "file": "scripts/release/assemble-bundle.mjs",
+      "sha256": "7c9e5db0e31bebf467a19398e8022127193cb760e6d711f8387ba06ed4a2f8c6"
+    },
+    {
+      "file": "scripts/release/rehearsal-scenarios.mjs",
+      "sha256": "c2396904566908ba8f39d36cf060e42f0ac78c316b251ee5b1145008c556567d"
+    },
+    {
+      "file": "scripts/release/rehearsal-scenarios-local.mjs",
+      "sha256": "ab8b8139fca51b54e0bd7e6101835c6c13aee7f9900f8676d87e13be3a7ce8a7"
+    },
+    {
+      "file": "scripts/release/validate-manifest.mjs",
+      "sha256": "7ad5d2f26d75ebf163d45d6f1624eb887496f5ff9433273bc2101a1e08b0719d"
+    },
+    {
+      "file": "scripts/release/migration-rehearsal.mjs",
+      "sha256": "ad96a24c20c59b4c88b36d92644304a2b27a86a84cd5bce4185ea7224d14b917"
+    }
+  ],
+  "authorizationFollowup": {
+    "opaqueCapability": true,
+    "arbitraryHttpAdapterRejected": true,
+    "guardsAndScanner": {
+      "tests": 14,
+      "passed": 14,
+      "skips": 0,
+      "log": "outputs/testing/rehearsal-owned-guards.log"
+    },
+    "sharedGate": "scripts/performance/check-rehearsal-scenario.mjs#checkRehearsalScenario",
+    "requiredChecks": 6,
+    "receiptAndRelatedTests": {
+      "tests": 11,
+      "passed": 11
+    },
+    "positiveNativeAfterGuard": "awaiting_shared_extended_gate"
+  }
+}

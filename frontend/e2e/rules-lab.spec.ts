@@ -66,7 +66,7 @@ function captureExternalTypographyRequests(page: Page): string[] {
   page.on('request', (request) => {
     if (request.resourceType() !== 'font' && request.resourceType() !== 'stylesheet') return;
     const url = new URL(request.url());
-    if (url.origin !== 'http://127.0.0.1:4173') requests.push(request.url());
+    if (url.origin !== new URL(page.url()).origin) requests.push(request.url());
   });
   return requests;
 }
@@ -294,11 +294,11 @@ async function runPersistedSheetWeaponAttack(
   const sheetHp = page.locator('.cs-hp-cur, .sheet-hp-main strong').first();
   await expect(sheetHp).toHaveText(String(hpAfter));
   await expect(page.locator('.sheet-conditions')
-    .getByText('Ослабляющее', { exact: true })).toBeVisible();
+    .getByRole('button', { name: 'Ослабляющее', exact: true })).toBeVisible();
   await page.reload();
   await expect(page.locator('.cs-hp-cur, .sheet-hp-main strong').first()).toHaveText(String(hpAfter));
   await expect(page.locator('.sheet-conditions')
-    .getByText('Ослабляющее', { exact: true })).toBeVisible();
+    .getByRole('button', { name: 'Ослабляющее', exact: true })).toBeVisible();
 }
 
 test('creates two exact compiled-root characters before running their canonical two-PC world', async ({ page }) => {
@@ -420,7 +420,7 @@ test('fails closed in the browser when an IndexedDB snapshot diverges from canon
 
 test('runs the two-PC flow offline and restores the persisted world after reload', async ({ page, context }) => {
   const browserErrors = captureBrowserErrors(page);
-  await page.goto('/rules-lab');
+  await openCachedScenario(page, '/rules-lab');
 
   await expect(page.getByTestId('rules-lab-page')).toBeVisible();
   await expect(page.locator('[data-testid^="rules-lab-actor-"]')).toHaveCount(2);

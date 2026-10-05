@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "status": "applied",
+  "date": "2026-10-04",
+  "rows": [
+    {
+      "name": "project-review-2026-07-12.md",
+      "source": "C:\\Projects\\dnd_cards\\docs\\project-review-2026-07-12.md",
+      "destination": "C:\\Projects\\dnd_cards\\docs\\archive\\2026-07\\project-review-2026-07-12.md",
+      "original_sha256": "7017deb68e00846fdac16233afe8d306e80cd179df4a5aa0dffa63b8d180aef3",
+      "stub_sha256": "9b67ac2ca5841e63038412ee2f33ccc0985a50dd54ca987c635d89feaad8aafd",
+      "action": "copy-original-then-install-forwarding-stub",
+      "reason": "knowledge-base.md marks this report superseded/completed; references retained by forwarding stub",
+      "reference_review": "No runtime ?raw/dynamic/go:embed/CLI/skill use found; documentation references retained. Archive bytes preserve historical line numbers."
+    },
+    {
+      "name": "remediation-progress-2026-07-08.md",
+      "source": "C:\\Projects\\dnd_cards\\docs\\remediation-progress-2026-07-08.md",
+      "destination": "C:\\Projects\\dnd_cards\\docs\\archive\\2026-07\\remediation-progress-2026-07-08.md",
+      "original_sha256": "e15040f4e83e68cd629fb072a1bc748f72279439b12bbc7a78d75ffc19dcbffc",
+      "stub_sha256": "ea523d79ec410ddeef5e2f8456d25be80b5a8ecc6d7aa34f8db6d7220873a627",
+      "action": "copy-original-then-install-forwarding-stub",
+      "reason": "knowledge-base.md marks this report superseded/completed; references retained by forwarding stub",
+      "reference_review": "No runtime ?raw/dynamic/go:embed/CLI/skill use found; documentation references retained. Archive bytes preserve historical line numbers."
+    },
+    {
+      "name": "constructors-audit-2026-07-13.md",
+      "source": "C:\\Projects\\dnd_cards\\docs\\constructors-audit-2026-07-13.md",
+      "destination": "C:\\Projects\\dnd_cards\\docs\\archive\\2026-07\\constructors-audit-2026-07-13.md",
+      "original_sha256": "2123fb90d445783958a83eb8454c183b6c0ed21960798fe2a11fd24c3ef2707c",
+      "stub_sha256": "04e811a29f6c0d71dd836e11c937a15922adf8cdb10b9f401882b9b565696980",
+      "action": "copy-original-then-install-forwarding-stub",
+      "reason": "knowledge-base.md marks this report superseded/completed; references retained by forwarding stub",
+      "reference_review": "No runtime ?raw/dynamic/go:embed/CLI/skill use found; documentation references retained. Archive bytes preserve historical line numbers."
+    }
+  ],
+  "files_deleted": 0,
+  "original_bytes_preserved": true,
+  "rollback": "For each row, verify destination original_sha256 and copy its bytes back to source. Keep archive evidence; no recursive deletion is required."
+}

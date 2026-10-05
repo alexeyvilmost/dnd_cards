@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "kind": "read-only-original-plan-completion-audit",
+  "date": "2026-10-05",
+  "sourceSnapshot": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+  "sourceFiles": 4313,
+  "sourceChanged": false,
+  "testsRerun": false,
+  "evidence": ["outputs/testing/final-core-5/report.json", "outputs/testing/final-extended-3/report.json"],
+  "finalSuites": {"core": {"status": "passed", "durationMs": 268898}, "extended": {"status": "passed", "durationMs": 1095961}, "cleanup": "stopped", "cleanupErrors": [], "goRace": false},
+  "matrix": [
+    {"task": "TEST-01", "requirement": "Изоляция, guards, lifecycle, required database, producer/consumer", "status": "proven", "scope": "native supervisor", "evidence": ["docs/audits/2026-10-04/execution/TEST-01.md", "outputs/testing/final-core-5/report.json"], "external": ["OCI build/health/cleanup"]},
+    {"task": "TEST-02", "requirement": "AST/transitive architecture boundary, headless worker, negative fixtures and replay equivalence", "status": "proven", "evidence": ["docs/audits/2026-10-04/execution/TEST-02.md", "docs/audits/2026-10-04/execution/TEST-02-differential.json", "outputs/testing/final-extended-3/report.json"]},
+    {"task": "TEST-03", "requirement": "Unified manifest/planner, exact required selection and skip rejection, shared local/CI runner", "status": "proven", "evidence": ["tests/suites.json", "scripts/testing/run.mjs", "scripts/testing/ci-policy.mjs", ".github/workflows/ci.yml"], "localStepGap": "GAP-SHARDS"},
+    {"task": "TEST-04", "requirement": "Real UI/API/worker/DB main flows, ownership, reload, exact retry, export and canonical presentation", "status": "proven", "evidence": ["outputs/testing/final-core-5/report.json", "outputs/testing/final-extended-3/report.json", "docs/audits/2026-10-04/execution/TEST-04-movement.json"], "limits": ["Synthetic declared hit/miss does not measure ordinary random attack probability"]},
+    {"task": "TEST-05", "requirement": "Full current native regression, historical executable, supported upgrades, concurrency and mobile", "status": "proven", "evidence": ["outputs/testing/final-extended-3/report.json", "docs/audits/2026-10-04/execution/TEST-05-upgrade-matrix.json"], "remaining": ["GAP-SOLO-PENDING", "GAP-SHARDS", "DATA-FRESH", "ENV-LINUX-RACE"]},
+    {"task": "OBS-01", "requirement": "30-repeat server baseline, party1/2/6, equipment branches and genuine cold/warm navigation", "status": "proven", "evidence": ["docs/audits/2026-10-04/execution/OBS-01-final-server-baseline.json", "docs/audits/2026-10-04/execution/OBS-01-browser-baseline.json"], "remaining": ["GAP-OBS-METRICS"]},
+    {"task": "REF-01", "requirement": "First cohesive extraction with same authoritative executor and replay", "status": "proven", "scope": "event reaction queue", "evidence": ["docs/audits/2026-10-04/execution/REF-01-evidence.json", "frontend/src/rules-core/eventReactionQueue.ts"], "remaining": ["GAP-REF-PHASES"]},
+    {"task": "REF-02", "requirement": "Library registry, Solo lifecycle/selection/dialog hosts, Sheet model/availability/canonical renderers and route/profile validation", "status": "proven", "evidence": ["docs/audits/2026-10-04/execution/REF-02.md", "docs/audits/2026-10-04/execution/REF-02-route-graph.json", "docs/audits/2026-10-04/execution/REF-02-react-summary.json", "outputs/testing/final-extended-3/report.json"], "limits": ["React evidence is development/jsdom; numerical improvement is not claimed"]}
+  ],
+  "gaps": [
+    {
+      "id": "GAP-OBS-METRICS", "task": "OBS-01", "status": "incomplete", "environmentDependent": false,
+      "originalCriteria": ["steps[4]: INP and React profile for equipment/hover"],
+      "evidence": ["docs/audits/2026-10-04/execution/OBS-01.md:60", "docs/audits/2026-10-04/execution/OBS-01.md:62", "scripts/performance/browser.mjs:116", "backend/performance_observability.go:124", "backend/performance_observability.go:156"],
+      "finding": "Full INP and equipment component profiling remain unmeasured. Later hover JSDOM profiling and equipment DOM+2RAF timings are useful but different evidence. Acquisition/hold-to-return/persist already have separate numeric proxies with documented RTT/scan/commit-ack error; the original plan does not require exact PostgreSQL server time. Worker callback/process CPU must not be presented as a measured pre-callback queue.",
+      "statusMismatch": "progress.json marks done_local with no remaining gates",
+      "minimumNextStep": "Add explicit local measured profiles or narrow completion to accepted baseline and retain original unmeasured criteria as incomplete."
+    },
+    {
+      "id": "GAP-REF-PHASES", "task": "REF-01", "status": "incomplete", "environmentDependent": false,
+      "originalCriteria": ["steps[5]: cohesive equipment/cost/roll/damage/reaction transfers", "steps[6]: generic command dispatch/phase orchestration extraction"],
+      "evidence": ["docs/audits/2026-10-04/execution/REF-01.md:60", "frontend/src/rules-core/handler.ts:5236", "frontend/src/rules-core/handler.ts:5596", "frontend/src/rules-core/handler.ts:11828"],
+      "finding": "The event queue first slice passes; remaining generic command dispatch and attack/damage continuations are still in handler.",
+      "statusMismatch": "progress.json marks the whole original task done_local without first-slice boundary",
+      "minimumNextStep": "Transfer subsequent cohesive phases with immutable before/after replay cases, or explicitly preserve partial completion status."
+    },
+    {
+      "id": "GAP-SOLO-PENDING", "task": "TEST-05", "status": "incomplete", "environmentDependent": false,
+      "originalCriteria": ["steps[3]: table of saved phases and reload/restart/retry for every supported phase"],
+      "evidence": ["frontend/src/rules-core/pendingLifecycleCorpus.test.ts:12", "frontend/src/solo-combat/types.ts:346", "frontend/src/solo-combat/types.ts:403", "frontend/src/solo-combat/types.ts:423", "docs/audits/2026-10-04/execution/TEST-05-pending-matrix.md"],
+      "finding": "Exhaustiveness checks all 15 rules-core PendingResolution variants, but not additional persisted SoloCombatState continuations. Existing scattered reload tests do not provide a complete phase-to-restart/retry matrix.",
+      "statusMismatch": "TEST-05 remaining gates list only Linux race and trusted fresh preimage",
+      "minimumNextStep": "Inventory board/worker continuation fields, map existing proofs, add missing serialized worker restart/retry cases without regenerating frozen current/historical corpora."
+    },
+    {
+      "id": "GAP-SHARDS", "tasks": ["TEST-03", "TEST-05"], "status": "incomplete", "environmentDependent": false,
+      "originalCriteria": ["TEST-03 steps[7]: independent Go/Vitest/browser jobs", "TEST-05 steps[9]: isolated shards and per-shard reporting"],
+      "evidence": [".github/workflows/ci.yml:26", "scripts/testing/run.mjs:108", "scripts/testing/run.mjs:126", "scripts/testing/run.mjs:150"],
+      "finding": "One CI job and sequential runner stages. Native duration budgets already achieved; this is an unimplemented original operational step, not a correctness failure.",
+      "minimumNextStep": "Track explicit deferral or add isolated shards with shared source/manifest binding. Manual execution already satisfies the nightly-or-manual alternative."
+    }
+  ],
+  "external": [
+    {"id": "DATA-FRESH", "tasks": ["TEST-01", "TEST-05"], "status": "external", "reason": "Trusted pre102 historical catalog/preimage missing; imported schema297 is not fresh001 chain", "dockerRequired": false},
+    {"id": "ENV-LINUX-RACE", "task": "TEST-05", "status": "external", "reason": "Final native Windows receipts have go_race:false; Linux race environment required"},
+    {"id": "ENV-OCI-TEST-STACK", "task": "TEST-01", "status": "external", "reason": "Compose config validated; actual OCI build/health/cleanup not executed without working daemon"}
+  ],
+  "nonFindings": [
+    "Final green reports are valid for their explicit native selection and share the same full source snapshot.",
+    "Final full extended already starts from imported schema297 with actual298–300 startup migrations; separate298/299 storage matrix is complementary.",
+    "No new blocker found in TEST-02, main TEST-03/04 acceptance or completed REF-02 boundaries.",
+    "No code, manifest, progress or historical artifact was changed by this audit."
+  ]
+}

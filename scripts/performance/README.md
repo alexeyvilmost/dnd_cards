@@ -1,0 +1,56 @@
+# Local performance baseline
+
+Run from the repository root with Node 24 and the portable stand prerequisites in `scripts/testing/README.md`:
+
+```sh
+node scripts/performance/run.mjs
+node scripts/performance/run.mjs --smoke --skip-browser
+node scripts/performance/run.mjs --browser-only --reuse-ui-build
+node scripts/performance/run.mjs --equipment-only --repetitions 30
+node scripts/performance/run.mjs --skip-browser --catalog-batch
+node scripts/performance/check-catalog.mjs
+node scripts/performance/check-equipment.mjs --full --compare --measure
+node scripts/performance/check-initiative.mjs --measure
+node scripts/performance/check-runtime-browser.mjs --reuse-ui-build
+node scripts/performance/build-report.mjs path/to/build-report.json
+```
+
+The default runs 30 independent battle initializations and continuations for each party size 1/2/6, 30 real camp turns, and 30 equip/unequip samples for both an ordinary and a resource-granting item, followed by three cold/primed browser navigations per screen. `--smoke` uses one server sample, two camp turns and one browser sample. `--commands N` and `--repetitions N` override the series length. `--reuse-ui-build` requires a current local `frontend/dist`; otherwise a browser run builds it first. Artifact hashes and fixture hashes are recorded; it is not a production workload replica.
+
+Everything runs through the ownership-checked, loopback-only integration stand. The stand creates and removes its own PostgreSQL database and processes; provider/remote egress is blocked. No production credentials, snapshots or hand-written game state are used. Canonical template copies initialize battles through the real API. Equipment preparation uses the same assembly and equipment command implementation as the sheet, compiled into a local test bridge. Command retries compare the complete saved response and a private-state fingerprint without printing the state. New encounters have independently generated IDs and RNG seeds; cross-encounter hashes are **not** normalized to pretend deterministic replay.
+
+Results live in `outputs/testing/runs/<run>/performance/`: `samples.jsonl` is appended after each measured response, `server-baseline.json` preserves the completed server series before browser work, and `baseline.json` contains the final report. Samples contain only fixed scenario labels, numeric measurements, request IDs and hashes. No token, entropy seed, prompt, full state, SQL or base64 belongs in these files. `runCommandSeries` is exported for DB storage measurements; it distinguishes committed commands from receipt replays. Optional recorded command plans preserve exact command IDs/payloads; attaching a restored synthetic solo run is supported, but restoring that fixture remains the stand owner's responsibility.
+
+## Meaning of measurements
+
+- Opt-in requires both `RULES_PERFORMANCE_ENABLED=1` in server configuration and `X-Performance-Trace: 1` on the request. Frontend tracing additionally needs `window.__DND_PERFORMANCE__=true`. There is no persistent telemetry collector.
+- Client latency includes loopback HTTP and decoding. API JSON is measured before browser rendering. `backend_to_first_write_ms` includes JSON response serialization; `backend_first_write_uncompressed_bytes` is the first write, not a streaming total.
+- SQL metrics cover controller/catalog operations carrying the request context, not every authentication or unrelated library query. GORM preload queries are counted once. `sql_operation_ms` includes round trip and scanning; it is not PostgreSQL CPU.
+- `lock_statement_ms` includes the locking query's round trip and wait. `lock_acquired_to_tx_return_ms` starts after the first successful locking statement and ends after transaction return/commit acknowledgement; neither is an exact database lock-wait/hold statistic.
+- Worker phases start at Node's HTTP callback. Time before the callback is not observable as queue latency. Process CPU deltas may overlap concurrent work. Clone cost inside a pinned artifact is not independently instrumented. Missing metrics mean unmeasured, never zero.
+- Needs rounds count actual responses requiring content; maximum loop budgets are not measured rounds. Worker cache-hit numbers aggregate individual worker calls, including needs rounds.
+- Browser timings use production bundles, Chrome desktop, loopback and no CPU/network throttle. Local assets are uncompressed; the build report supplies separate estimated gzip sizes. Hashed assets can use immutable HTTP caching only in the performance stand. A local allowlist proxy blocks remote requests and all CONNECT tunnels without Playwright routing (which disables HTTP cache); actual cache hits are checked with ResourceTiming, and primed requests with no hits are explicitly labelled as such.
+- Browser readiness includes Playwright's 500 ms network quiet window. Hover waits two animation frames and includes automation overhead. Equipment click-to-commit excludes human decision time but precedes proof of every rendered frame. Event Timing observations are not a complete INP implementation. Standard production React does not emit component commit profiles; the runner reports Chrome CPU/task metrics and marks React component profiling unmeasured.
+- Build static closures are not network waterfalls. Separately named route CSS is reported, but CSS inherited via shared/preloaded chunks is attributed only by actual browser resource observations. All assets and PWA install bytes are separate from first-page cost.
+
+Historical OBS/PERF-01 results retain the resource projection defect observed before PERF-02. Current ChangeEquipment fixes item grant capacity before declared draw events through the shared initializer operations. The intent runner requires immediate placement/capacity alignment; old numeric artifacts are not rewritten.
+
+`check-equipment.mjs` runs seven native PG transaction/rights/concurrency checks. `--full` adds real worker intent, exact retry/reload and source isolation; `--measure` takes30 samples per ordinary/resource equip/unequip, and `--compare` runs both endpoints sequentially on one stack. Old API timings exclude client preparation. Moving preparation to the server may worsen API latency while shortening resource-changing locks. Do not infer a browser speedup; the feature remains OFF by default.
+
+`check-initiative.mjs` repeats readonly offers for party1/2/6, compares full saved row fingerprints, then executes real initialization/retry/reload. `check-runtime-browser.mjs` checks a lost accepted equipment response, reload with the same ID, and zero full browser participant preparations on the enabled paths. It blocks remote egress; one fault-injected POST goes through the guarded local API helper because Playwright route.fetch uses CONNECT, which the browser proxy intentionally denies. It does not fake the result.
+
+Reuse an enabled full stack through `checkEquipmentFlow(stack)`, `checkInitiativeOptions(stack)` and `checkRuntimeBrowserFlow(stack)`; `checkEquipmentTransactions(stack)` also supports DB-only. Stack opt-in: equipmentIntent:true, initiativeOptions:true, performance:true. Production RULES_EQUIPMENT_INTENT_ENABLED and RULES_INITIATIVE_OPTIONS_ENABLED remain OFF; accepted equipment receipts remain readable after rollback.
+
+At 30 samples p95 remains preliminary. Compare repeated runs on an idle equivalent machine before creating a blocking latency budget; correctness, bounded query counts and repeat/reload invariants are independent of timing noise.
+
+`--catalog-batch` enables the opt-in Go wave resolver only in the owned test backend. The ordinary run explicitly uses the legacy resolver for comparison. Compare identical fixture hashes and `fixture.statistics` values: analyzed and unanalyzed seeded databases are different conditions. Neither flag changes production configuration.
+
+`check-catalog.mjs` requires the real worker and seeds owned API fixtures for party 1/2/6. It compares all four preparation paths against the legacy resolver on the same repeatable-read DB snapshot and fixed seeds, without normalizing game state. Three lower-level tests verify byte-identical catalogs, reduced SQL, missing/ambiguous refs, soft deletes and immutable historical rows. `--unit-only` runs just those three with an owned DB. The exported `checkCatalog(stack)` uses an existing full stack without creating/rebuilding a second one; fullstack coverage must not be classified as a historical test merely because a DB-only runner cannot provide its inputs.
+
+`profile-worker.mjs --mirrors` measures 30 identical seeded transitions for party1/2/6, numeric payload composition, standalone clone/JSON/hash probes, V8 CPU samples and concurrency1/4/16. It compares full results, actual committed private envelopes, every character mirror, retry and source isolation. Private snapshots stay in memory. `--smoke` uses one sample. `--baseline-artifact=<owned-runs absolute path>/<hash>.cjs` also alternates old/new pure execution on identical input and replays the retained artifact through HTTP with its original pin. No historical bytes are regenerated. `checkWorkerMirrors(stack)` exports both native protocol tests and actual flow for one shared stack with performance:true,workerMirrors:true. Production RULES_WORKER_MIRRORS_ENABLED remainsOFF.
+
+`profile-equipment-browser.mjs --compare` measures actual equipment click→committed DOM+two frames in two fresh stacks (legacy/intent), checks equal UI manifest/artifact/fixture,30 repetitions per ordinary/resource equip/unequip. Browser preparation is included; opening the card preview is excluded. `--batch` opts into the Go catalog wave resolver in both compared stacks; `--smoke` takes one repetition. Auth/state/seed bodies are never logged. `profileEquipmentBrowser(stack,{intent,repetitions})` reuses a shared stack whose equipment feature matches the supplied intent flag.
+
+`--cache-compare --batch --fresh-ui` measures three paths sequentially: legacy, authoritative intent/cache OFF, authoritative intent/cache ON. The first arm builds a fresh UI, the others use that same snapshot source; manifest/artifact/fixture equality is required. `--cache` enables the immutable input cache for a single intent run. Production RULES_PREPARATION_CACHE_ENABLED stays OFF. Cache profiles must retain numeric hit/miss/retained/validation/publication phases and distinguish worker calls from health/SQL/browser requests.
+
+`check-preparation-cache.mjs` exports `checkPreparationCache(stack)` for a shared full stack. It creates two independent owned preset builds with ordinary and resource-grant items, then compares actual seeded worker commands and full cold/warm/evicted results through Go. Native checks cover current-artifact selection, candidate rejection, full-row content/membership/rights proof, numeric-key JS serializer parity, metadata memory quotas, independent copies and UUID→new alias/exact-selector changes. `--unit-only` uses just a DB; the full gate must never silently skip its actual-worker case. Real API/browser feature flags are preparationCache:true,equipmentIntent:true,catalogBatch:true,performance:true; read-only initiative additionally needs initiativeOptions:true. No historical DB catalog or battle artifact is repinned.

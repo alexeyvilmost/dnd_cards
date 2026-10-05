@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "scope": "local-owned-database-and-docker-exported-snapshot",
+  "scanner": {
+    "schemaVersion": 1,
+    "kind": "bounded-reference-inventory",
+    "runId": "test_6dcbdcfe2cfbaca83bc6d20f",
+    "status": "passed",
+    "checks": [
+      "all-pages-all-columns",
+      "nested-array-and-alias-keys",
+      "text-and-compact-storage",
+      "same-results-different-page-sizes",
+      "adaptive-bound-same-cursor",
+      "one-row-limit-fail-closed",
+      "20MiB-inline-byte-fingerprint-no-body-export",
+      "old-literal-media-dual-read",
+      "concurrent-mutation-fail-closed",
+      "unknown-reference-fail-closed"
+    ],
+    "maxQueryBytes": 2281,
+    "maxResponseBytes": 2564,
+    "pages": {
+      "fine": 77,
+      "coarse": 6
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "exporter": {
+    "schemaVersion": 1,
+    "kind": "actual-docker-exported-snapshot-proof",
+    "execution": "docker",
+    "status": "passed",
+    "runId": "65ab18f5-f173-4566-81db-d56710bf2419",
+    "checks": [
+      "actual-export-import",
+      "concurrent-commit-invisible-in-held-snapshot",
+      "bounded-scanner-exact-stable-view",
+      "exporter-cleaned",
+      "fresh-view-sees-commit"
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "limitations": [
+    "Does not itself inspect or approve production",
+    "Individual pathological one-row page still fails closed rather than asserting complete",
+    "No historical migration checksums inferred"
+  ]
+}

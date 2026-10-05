@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { effectsApi } from '../api/client';
 import type { ActiveEffectDisplayGroup } from '../engine/effects';
 import ActiveEffectCard from './ActiveEffectCard';
+import {setEntityDisplay} from '../settings';
 vi.mock('../utils/resources', async original => ({...await original<typeof import('../utils/resources')>(), useResourceOptions: () => []}));
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -15,6 +16,8 @@ describe('ActiveEffectCard', () => {
   let root: Root;
 
   beforeEach(() => {
+    let stored: string | null = null;
+    vi.stubGlobal('localStorage', {getItem: () => stored, setItem: (_key: string, value: string) => {stored = value;}});
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
@@ -24,6 +27,19 @@ describe('ActiveEffectCard', () => {
     await act(async () => root.unmount());
     container.remove();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it.each(['Отравлен', 'Защита'])('uses the saved effect display setting for %s and updates in place', async name => {
+    const group: ActiveEffectDisplayGroup = {key: name, name, source: 'Источник', duration: '1 раунд',
+      instructions: ['Сохранённое описание'], effects: [{id: name, name, source: 'Источник', mechanics: {}}]};
+    setEntityDisplay('effects', 'row');
+    await act(async () => root.render(<ActiveEffectCard group={group}/>));
+    expect(container.querySelector('.active-effect-card__summary')?.textContent).toContain(name);
+    expect(container.querySelector('.active-effect-card--icon')).toBeNull();
+    await act(async () => setEntityDisplay('effects', 'icon'));
+    expect(container.querySelector('.active-effect-card__summary')).toBeNull();
+    expect(container.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')?.getAttribute('aria-label')).toBe(name);
   });
 
   it('loads the exact library effect identity carried by runtime data', async () => {

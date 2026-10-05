@@ -1,4 +1,4 @@
-import { projectCombatIllumination } from './combatIllumination';
+import { boardLightSources, projectCombatIllumination, type BoardLightSource } from './combatIllumination';
 import {projectMagicSuppression} from '../rules-core/magicSuppression';
 import {isMagicalMechanics,isAntimagicField} from '../engine/magic';
 import type { ActorState, RuleAutomaticHazardDefinition } from '../rules-core/domain';
@@ -79,11 +79,15 @@ export function projectCombatAuras(state: SoloCombatState): SoloCombatState {
     return [actor.id, { ...actor, character, passives: cleanPassives(actor) }];
   }));
   let next: SoloCombatState = { ...state, world: { ...state.world, actors } };
+  // All pair observations below read exactly this state. Collect light sources
+  // lazily once; the later projection still collects from the updated aura world.
+  let lights:BoardLightSource[]|undefined;
+  const illuminationSources=()=>lights??=(boardLightSources(state));
   for (const actor of Object.values(actors)) {
     actor.character = { ...actor.character, spatialObservations: { boardRevision: state.boardRevision,
       nearby: !state.tokens[actor.id] ? [] : Object.values(actors).filter(target => target.id !== actor.id && state.tokens[target.id]
         && target.planeId === actor.planeId && !actorIsDead(target)).map(target => ({ actorId: target.id,
-        ...spatialFacts(state,actor.id,target.id,false),relation: relation(state, actor.id, target.id), conscious:actorHasConsciousVitality(target),distanceFt: distance(state, actor.id, target.id) })) } };
+        ...spatialFacts(state,actor.id,target.id,false,illuminationSources),relation: relation(state, actor.id, target.id), conscious:actorHasConsciousVitality(target),distanceFt: distance(state, actor.id, target.id) })) } };
   }
   for (const entry of auras(next)) {
     if (entry.payload.events !== undefined) continue;

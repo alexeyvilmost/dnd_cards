@@ -1,4 +1,4 @@
-import { illuminationAt, seesInIllumination } from './combatIllumination';
+import { illuminationAt, seesInIllumination, type BoardLightSource } from './combatIllumination';
 import {isBehindFacing,type CombatFacing} from './facing';
 import {magicAreaSuppressed} from './combatAntimagic';
 import {actorHasConsciousVitality} from '../engine/lifePolicies';
@@ -508,6 +508,7 @@ export function spatialFacts(
   sourceActorId: string,
   targetActorId: string,
   includeDamageObservers = true,
+  illuminationSources?:()=>BoardLightSource[],
 ): SpatialFacts {
   const effectiveSourceId = state.world?.actors[sourceActorId]?.itemTurn?.ownerActorId ?? sourceActorId;
   const source = state.tokens[effectiveSourceId]?.position;
@@ -535,7 +536,7 @@ export function spatialFacts(
     const observed = state.world?.actors[observedId];
     if (observer && perceivesWithoutSight(observer.runtime, observer.passives ?? [], distanceFt)) return true;
     return !obscured
-      && seesInIllumination(observer, illuminationAt(state, state.tokens[observedId].position), distanceFt)
+      && seesInIllumination(observer, illuminationAt(state, state.tokens[observedId].position,illuminationSources?.()), distanceFt)
       && !(observer && activeConditionWorldFactEnabled(observer.runtime, 'cannot_see'))
       && !(observed && activeConditionWorldFactEnabled(observed.runtime, 'cannot_be_targeted_by_requires_sight_unless_seen'));
   };
@@ -559,7 +560,7 @@ export function spatialFacts(
     && movement.to.x === source.x && movement.to.y === source.y ? movement.distanceFt : 0;
   return {
     ...(includeDamageObservers && state.world ? {damageObservers: Object.keys(state.world.actors).filter(id => state.tokens[id]&&!state.world?.actors[id]?.itemTurn).sort().map(actorId => {
-      const observation = spatialFacts(state, actorId, targetActorId, false);
+      const observation = spatialFacts(state, actorId, targetActorId, false,illuminationSources);
       return {actorId, distanceFt: observation.distanceFt, canSeeTarget: observation.canSeeTarget === true};
     })} : {}),
     factsSource: 'board',

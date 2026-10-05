@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"dnd-cards-backend/itemsource"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -48,6 +49,16 @@ func source262Fixture(t *testing.T) *sql.DB {
 	if _, err = db.Exec(`INSERT INTO cards SELECT * FROM jsonb_populate_record(NULL::cards,
 		$1::jsonb || '{"id":"26200000-0000-4000-8000-000000000099","card_number":"DELETED-262","source":"Historical source","deleted_at":"2020-01-01T00:00:00Z"}')`, string(fixtures[0])); err != nil {
 		t.Fatal(err)
+	}
+	// The production projection installer also reinstalls guards on every
+	// certified catalog. Supply those empty dependencies in this private schema.
+	for _, table := range supportCertifiedTables {
+		if table == "cards" {
+			continue
+		}
+		if _, err = db.Exec(fmt.Sprintf("CREATE TABLE %s (LIKE cards INCLUDING ALL)", table)); err != nil {
+			t.Fatal(err)
+		}
 	}
 	if err = alignCertifiedMetadataProjection(db); err != nil {
 		t.Fatal(err)

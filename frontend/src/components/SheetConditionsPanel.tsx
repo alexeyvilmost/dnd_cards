@@ -164,7 +164,7 @@ export default function SheetConditionsPanel({ character, onUpdated, onEvents, p
           {effectGroups.map((group) => {
             return (
               <li key={group.key} className="sheet-condition">
-                <ActiveEffectCard group={group} variant="icon" actions={<button
+                <ActiveEffectCard group={group} actions={<button
                   type="button"
                   className="sheet-active-effect-dismiss"
                   disabled={busy || Boolean(mutationBlockReason)}

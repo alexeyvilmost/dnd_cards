@@ -26,15 +26,16 @@ describe('shared card index', () => {
     identity.token = null;
   });
 
-  it('paginates through the lightweight list projection and caches the result', async () => {
+  it('paginates lightweight rows once for concurrent selectors', async () => {
     const firstPage = Array.from({ length: 100 }, (_, index) => card(String(index)));
     getCards
       .mockResolvedValueOnce({ cards: firstPage, total: 101 })
       .mockResolvedValueOnce({ cards: [card('100')], total: 101 });
 
     const { getCardsIndex } = await import('./cardsIndex');
-    const first = await getCardsIndex();
+    const pending = getCardsIndex();
     const cached = await getCardsIndex();
+    const first = await pending;
 
     expect(first).toBe(cached);
     expect(first).toHaveLength(101);
@@ -141,12 +142,33 @@ describe('shared card index', () => {
     expect((await old).has('acquired')).toBe(true);
   });
 
-  it('keeps the index cached for unrelated spell changes', async () => {
+  it('rechecks same-session rights on every new selector invocation', async () => {
+    identity.token = 'player';
     getCards.mockResolvedValue({ cards: [card('public')], total: 1 });
+    getMyItemCatalog.mockResolvedValueOnce({cards: [card('private')], total: 1}).mockResolvedValueOnce({cards: [], total: 0});
     const { getCardsIndex } = await import('./cardsIndex');
-    const { bustPrefix } = await import('../api/apiCache');
     const initial = await getCardsIndex();
-    bustPrefix('/api/spells');
-    expect(await getCardsIndex()).toBe(initial);
+    expect(initial.has('private')).toBe(true);
+    expect((await getCardsIndex()).has('private')).toBe(false);
+    expect(getCards).toHaveBeenCalledTimes(2);
+  });
+
+  it('retains an in-flight index for proven runtime-only changes but invalidates the next acquisition', async () => {
+    identity.token = 'player';
+    let finish!: (value: unknown) => void;
+    getCards.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }))
+      .mockResolvedValue({cards: [card('public')], total: 1});
+    const {getCardsIndex, getCachedCardsIndex} = await import('./cardsIndex');
+    const {bustPrefix} = await import('../api/apiCache');
+    const pending = getCardsIndex();
+    bustPrefix('/api/characters-v3', true);
+    const concurrent = getCardsIndex();
+    finish({cards: [card('public')], total: 1});
+    expect(await concurrent).toBe(await pending);
+    expect(getCards).toHaveBeenCalledOnce();
+    bustPrefix('/api/roguelike');
+    expect(getCachedCardsIndex()).toBeNull();
+    await getCardsIndex();
+    expect(getCards).toHaveBeenCalledTimes(2);
   });
 });

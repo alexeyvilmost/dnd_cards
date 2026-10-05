@@ -16,6 +16,8 @@ import (
 // capacity. Its allowed resource maps must equal the ordinary canonical
 // assembler's saved or requested placement projection, never a browser grant.
 func validateRoguelikeCampEquipmentResources(ctx context.Context, tx *gorm.DB, character CharacterV3, patch CharacterRuntimeCommandPatch) error {
+	defer performanceSince(ctx, "equipment_resource_validation_ms")()
+	performanceAdd(ctx, "equipment_resource_validation_calls", 1)
 	if patch.MaxResources == nil || roguelikeJSONEqual(patch.MaxResources, character.MaxResources) {
 		return validateRoguelikeCampAction(character, patch)
 	}
@@ -42,6 +44,7 @@ func validateRoguelikeCampEquipmentResources(ctx context.Context, tx *gorm.DB, c
 		candidateInventory = append(candidateInventory, (*inventory)...)
 	}
 	client := roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}
+	performanceAdd(ctx, "equipment_resource_worker_calls", 1)
 	result, err := executeRoguelikeCampInventoryWorker(ctx, tx, client, &character, map[string]any{"placement": map[string]any{"equipment": candidateEquipment, "inventoryItems": candidateInventory}})
 	if err != nil {
 		return err
@@ -62,6 +65,8 @@ func validateRoguelikeCampEquipmentResources(ctx context.Context, tx *gorm.DB, c
 }
 
 func executeRoguelikeCampInventoryWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, mutation map[string]any) (*roguelikeWorkerResult, error) {
+	defer performanceSince(ctx, "catalog_resolution_total_ms")()
+	tx = tx.WithContext(ctx)
 	catalog := emptyRoguelikeFrozenCatalog()
 	var basics []Action
 	if err := tx.Where("type = ?", "basic").Order("id").Find(&basics).Error; err != nil {
@@ -90,13 +95,16 @@ func executeRoguelikeCampInventoryWorker(ctx context.Context, tx *gorm.DB, clien
 			return nil, err
 		}
 		if result.Status != "needs_content" {
+			if performanceFrom(ctx) != nil {
+				encoded, _ := json.Marshal(catalog)
+				performanceAdd(ctx, "catalog_final_bytes", float64(len(encoded)))
+			}
 			return result, nil
 		}
+		performanceAdd(ctx, "catalog_needs_rounds", 1)
 		previous, _ := json.Marshal(catalog)
-		for _, need := range result.Needs {
-			if err = catalog.fulfill(tx, need); err != nil {
-				return nil, err
-			}
+		if err = catalog.fulfillWave(tx, result.Needs); err != nil {
+			return nil, err
 		}
 		next, _ := json.Marshal(catalog)
 		if string(previous) == string(next) {

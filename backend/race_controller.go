@@ -44,6 +44,11 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 
 	page, limit, offset := parseListPagination(c)
 
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "races")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	query.Count(&total)
 
@@ -80,7 +85,7 @@ func (rc *RaceController) GetRaces(c *gin.Context) {
 		}
 		responses = append(responses, response)
 	}
-	c.JSON(http.StatusOK, gin.H{"races": responses, "total": total, "page": page, "limit": limit})
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{"races": responses, "total": total, "page": page, "limit": limit}))
 }
 
 func (rc *RaceController) GetRace(c *gin.Context) {

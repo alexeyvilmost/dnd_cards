@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -228,30 +229,46 @@ type roguelikeWorkerNeed struct {
 	EffectType string `json:"effectType"`
 }
 type roguelikeWorkerResult struct {
-	Public              JSONMap               `json:"public"`
-	ArtifactHash        string                `json:"artifactHash"`
-	ElapsedSeconds      int                   `json:"elapsedSeconds"`
-	GoldSpent           int                   `json:"goldSpent"`
-	Events              []JSONMap             `json:"events"`
-	Status              string                `json:"status"`
-	Needs               []roguelikeWorkerNeed `json:"needs"`
-	Envelope            JSONMap               `json:"envelope"`
-	CombatOpeningState  JSONMap               `json:"combatOpeningState"`
-	Patch               JSONMap               `json:"patch"`
-	PreviousPatch       JSONMap               `json:"previousPatch"`
-	Patches             map[string]JSONMap    `json:"patches"`
-	ContentManifestHash string                `json:"contentManifestHash"`
-	RandomValues        []float64             `json:"randomValues"`
-	Trace               JSONMap               `json:"trace"`
+	CatalogSelection    *roguelikeCatalogSelection      `json:"catalogSelection"`
+	InitiativeOptions   []JSONMap                       `json:"initiativeOptions"`
+	PreparedCommand     *CharacterRuntimeCommandRequest `json:"preparedCommand"`
+	Public              JSONMap                         `json:"public"`
+	ArtifactHash        string                          `json:"artifactHash"`
+	ElapsedSeconds      int                             `json:"elapsedSeconds"`
+	GoldSpent           int                             `json:"goldSpent"`
+	Events              []JSONMap                       `json:"events"`
+	Status              string                          `json:"status"`
+	Needs               []roguelikeWorkerNeed           `json:"needs"`
+	Envelope            JSONMap                         `json:"envelope"`
+	CombatOpeningState  JSONMap                         `json:"combatOpeningState"`
+	Patch               JSONMap                         `json:"patch"`
+	PreviousPatch       JSONMap                         `json:"previousPatch"`
+	Patches             map[string]JSONMap              `json:"patches"`
+	ContentManifestHash string                          `json:"contentManifestHash"`
+	RandomValues        []float64                       `json:"randomValues"`
+	Trace               JSONMap                         `json:"trace"`
 }
 
 func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, body any) (*roguelikeWorkerResult, error) {
+	defer performanceSince(ctx, "worker_client_total_ms")()
 	if client.URL == "" || len(client.Token) < 32 {
 		return nil, fmt.Errorf("rules worker is not configured")
 	}
-	data, err := json.Marshal(body)
+	release, err := sharedWorkerAdmission.acquire(ctx)
 	if err != nil {
 		return nil, err
+	}
+	defer release()
+	marshalDone := performanceSince(ctx, "backend_worker_marshal_ms")
+	data, err := json.Marshal(body)
+	marshalDone()
+	performanceAdd(ctx, "worker_calls", 1)
+	performanceAdd(ctx, "worker_request_bytes", float64(len(data)))
+	if err != nil {
+		return nil, err
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("rules worker unavailable: %w", err)
 	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(client.URL, "/")+endpoint, bytes.NewReader(data))
 	if err != nil {
@@ -259,15 +276,40 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 	}
 	request.Header.Set("Authorization", "Bearer "+client.Token)
 	request.Header.Set("Content-Type", "application/json")
+	if os.Getenv("RULES_WORKER_MIRRORS_ENABLED") == "1" {
+		request.Header.Set("X-Rules-Wire", workerMirrorWire)
+	}
+	if requestID, ok := ctx.Value(requestCorrelationKey{}).(string); ok && validRequestID(requestID) {
+		request.Header.Set("X-Request-ID", requestID)
+	}
+	if performanceFrom(ctx) != nil {
+		request.Header.Set("X-Performance-Trace", "1")
+	}
 	transport := client.HTTP
 	if transport == nil {
 		transport = &http.Client{Timeout: 20 * time.Second}
 	}
+	roundTripDone := performanceSince(ctx, "worker_http_headers_ms")
 	response, err := transport.Do(request)
+	roundTripDone()
 	if err != nil {
 		return nil, fmt.Errorf("rules worker unavailable: %w", err)
 	}
 	defer response.Body.Close()
+	if performanceFrom(ctx) != nil {
+		var metrics map[string]float64
+		raw := response.Header.Get("X-Rules-Performance")
+		if len(raw) <= 8192 && json.Unmarshal([]byte(raw), &metrics) == nil {
+			for _, key := range []string{"worker_body_read_ms", "worker_parse_ms", "worker_artifact_load_ms", "worker_artifact_cache_hit", "worker_execute_ms", "worker_project_ms", "worker_snapshot_hash_ms", "worker_stringify_ms", "worker_mirror_compact_ms", "worker_callback_to_send_ms", "worker_process_cpu_ms"} {
+				if value, exists := metrics[key]; exists {
+					performanceAdd(ctx, key, value)
+				}
+			}
+		}
+		if response.Header.Get("X-Request-ID") == request.Header.Get("X-Request-ID") {
+			performanceAdd(ctx, "worker_correlated_calls", 1)
+		}
+	}
 	// Never log response bodies: they can contain private combat entropy.
 	if response.StatusCode != http.StatusOK {
 		var failure struct {
@@ -283,7 +325,10 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		return nil, fmt.Errorf("rules worker rejected command (HTTP %d)", response.StatusCode)
 	}
 	const maximum = 16 << 20
+	readDone := performanceSince(ctx, "backend_worker_body_read_ms")
 	payload, err := io.ReadAll(io.LimitReader(response.Body, maximum+1))
+	readDone()
+	performanceAdd(ctx, "worker_response_bytes", float64(len(payload)))
 	if err != nil {
 		return nil, err
 	}
@@ -291,12 +336,31 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		return nil, fmt.Errorf("rules worker response too large")
 	}
 	var result roguelikeWorkerResult
-	if err = json.Unmarshal(payload, &result); err != nil {
+	if request.Header.Get("X-Rules-Wire") == workerMirrorWire {
+		expandDone := performanceSince(ctx, "backend_worker_mirror_expand_ms")
+		payload, err = expandWorkerMirrors(payload)
+		expandDone()
+		if err != nil {
+			return nil, err
+		}
+	}
+	decodeDone := performanceSince(ctx, "backend_worker_unmarshal_ms")
+	err = json.Unmarshal(payload, &result)
+	decodeDone()
+	if err != nil {
 		return nil, fmt.Errorf("invalid rules worker response")
 	}
 	if result.Status == "needs_content" {
 		if len(result.Needs) == 0 || len(result.Needs) > 2048 {
 			return nil, fmt.Errorf("invalid dependency request")
+		}
+	} else if endpoint == "/initiative-options" {
+		if result.Status != "ready" || result.InitiativeOptions == nil || len(result.InitiativeOptions) > 256 {
+			return nil, fmt.Errorf("incomplete initiative options result")
+		}
+	} else if endpoint == "/equipment" {
+		if result.Status != "ready" || result.PreparedCommand == nil {
+			return nil, fmt.Errorf("incomplete equipment intent result")
 		}
 	} else if endpoint == "/journey-check" {
 		if len(result.Envelope) == 0 || len(result.Public) == 0 {

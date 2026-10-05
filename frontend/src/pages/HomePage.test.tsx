@@ -12,7 +12,8 @@ it('offers four illustrated destinations publicly and removes secondary game too
  expect(node.querySelectorAll('.home-tile')).toHaveLength(4);
  expect(node.querySelectorAll('.home-tile-art')).toHaveLength(4);
  expect(node.querySelector('.home-catalog-links [href="/monsters"]')).not.toBeNull();
- for (const path of ['/monsters','/encounters','/shop/new','/initiative','/image-generator','/docs/engine']) expect(node.querySelector(`header a[href="${path}"]`)).toBeNull();
+ for (const path of ['/monsters','/encounters','/shop/new','/image-generator','/docs/engine']) expect(node.querySelector(`header a[href="${path}"]`)).toBeNull();
+ expect(node.querySelector('header a[href="/initiative"]')).not.toBeNull();
  expect(node.querySelector('header a[href="/library"]')).not.toBeNull();
  expect(node.querySelector('header a[href="/login"]')).not.toBeNull();
  await act(async () => root.unmount());

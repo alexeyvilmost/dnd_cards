@@ -66,7 +66,7 @@ function aiState(monsterPosition: { x: number; y: number }, playerPosition: { x:
       monster: { actorId: 'monster', position: monsterPosition },
       player: { actorId: 'player', position: playerPosition },
     },
-    world: { actors: { monster: worldActor('monster'), player: worldActor('player') } },
+    world: { objects: {}, actors: { monster: worldActor('monster'), player: worldActor('player') } },
   } as unknown as SoloCombatState;
   return { state, monster };
 }

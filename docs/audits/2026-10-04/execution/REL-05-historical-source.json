@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "status": "targeted-passed-full-suite-pending",
+  "recoveryDirectory": "outputs/release-recovery/source-release-04678a04",
+  "databaseWrites": false,
+  "remoteActions": false,
+  "proof": {
+    "schemaVersion": 1,
+    "kind": "historical-source-release",
+    "releaseHash": "sha256:04678a044c4dc809d213e01e392bc0f16562d5103ee96e070089c1edf7e7100b",
+    "releaseId": "prod-snapshot@2026-08-06.micro-mvp-l1.overlay.1.10.0",
+    "contentHash": "sha256:4ee64d32fffe6b88e797a10ae89207d5f88c0f2214cc16df043d6b9464e9f056",
+    "artifactVersion": "1.0.0",
+    "certificateContentHash": "sha256:c7d28beda4ee169df4a424c1c547fd12f68dec1756f3cf5083a91a3485bbf22b",
+    "sourceProjectionHash": "sha256:d45f8d97601e6eba0640e6b1c0d95eaf26fc67cb6889187de45a3b5769d187ca",
+    "manifestHash": "sha256:3dda1b242973905d6793412c1407adedd72779ac8ce73461ee19686b88c122a4",
+    "databaseBinding": {
+      "rulesetReleaseId": "54abf005-a210-4ce7-8511-6f03eea02ed7",
+      "manifestHash": "sha256:3dda1b242973905d6793412c1407adedd72779ac8ce73461ee19686b88c122a4",
+      "manifestCanonicalBytesSha256": "sha256:3dda1b242973905d6793412c1407adedd72779ac8ce73461ee19686b88c122a4",
+      "manifest": {
+        "artifactVersion": "1.0.0",
+        "releaseId": "prod-snapshot@2026-08-06.micro-mvp-l1.overlay.1.10.0",
+        "source": "checked-in:sheetCombatCertification.generated.json"
+      },
+      "serializerVersion": "rules-core-canonical-json-v1",
+      "manifestSchemaVersion": 1,
+      "protocolSchemaVersion": 1,
+      "artifactVersion": "prod-snapshot@2026-08-06.micro-mvp-l1.overlay.1.10.0"
+    },
+    "systemId": "dnd5e-2024",
+    "rulesetVersion": "2024",
+    "errataVersion": "phb-2024-errata-v1",
+    "sourceReleaseId": "prod-snapshot@2026-08-06.micro-mvp-l1.v2",
+    "sourceReleaseHash": "sha256:306bcbcac6bfc154b27d067a2ee8b52c9e1f0dd1e0bc96a065f106761c72fda1",
+    "sourceContentHash": "sha256:95556fca97630dd76af1cdc5e991635f42eca5379d85432c23075c0cb0bfb17d",
+    "rulesHash": "sha256:743d07a76b6bb459062a055daa360bf80c28de43e16b27be61e1ae2783221c3b",
+    "overlayHash": "sha256:bb83dc32c63f72c7c29cb81128aa309e580f36eeb17bc6f72db6bd437836ffbc",
+    "descriptorHash": "sha256:cce2e438c2ae49c901307af7d76b5b5a8a619cfdfa60b76d9d4389752be691f0",
+    "commit": "aec0f3205d4bfeee02a6e2b2fcf2132eed4002d5",
+    "executable": false,
+    "verification": {
+      "certificateContentHash": true,
+      "sourceProjectionHash": true,
+      "sourceReleaseFormula": true,
+      "overlayReleaseFormula": true,
+      "databaseManifestHash": true
+    },
+    "limits": {
+      "fullSourceRecompile": false,
+      "historicalCommandReplay": false,
+      "completeCompilerDependencyClosure": false
+    },
+    "files": [
+      {
+        "path": "sources/frontend/src/character/sheetCombatCertification.generated.json",
+        "sha256": "sha256:c884e4f0d11aa84973cbc6aed7c7ce8440508f45e331d015b6b2301287b6e9c0",
+        "bytes": 180998
+      },
+      {
+        "path": "sources/frontend/src/character/sheetCombatCertifiedCatalog.ts",
+        "sha256": "sha256:5c7d79260ba9824eda954adc8be438183372d362870917d9d6476f16132545c2",
+        "bytes": 33544
+      },
+      {
+        "path": "sources/frontend/src/character/sheetCombatCertificationGenerator.ts",
+        "sha256": "sha256:6af76a0f7eccca742bdd62d72fac99cff0fd71100accaab8df3898d343bda08c",
+        "bytes": 11874
+      },
+      {
+        "path": "sources/frontend/src/canon/microMvpL1Overlay.ts",
+        "sha256": "sha256:57dce2da2bcdb970aa3b26cd63b9079b1afa52e3eeacac739ece748a48163956",
+        "bytes": 114188
+      },
+      {
+        "path": "sources/frontend/src/canon/microMvpL1ReleaseIdentity.ts",
+        "sha256": "sha256:5666e91a7d882bda3a490e38510f2db6ae4a6b5f1908b86386c3e31f0f583fd6",
+        "bytes": 1001
+      },
+      {
+        "path": "sources/frontend/src/canon/prodSnapshotL1Fixtures.ts",
+        "sha256": "sha256:1e6d37a8828dbede81360ef8b180993d06ea04f288ae583dd6f502a4940e631c",
+        "bytes": 36190
+      },
+      {
+        "path": "sources/frontend/src/rules-core/determinism.ts",
+        "sha256": "sha256:8543db123598f373c8417ff9cf768fc8474882efe539ae17af0003d6c20db513",
+        "bytes": 4260
+      },
+      {
+        "path": "sources/frontend/src/rules-worker/execute.ts",
+        "sha256": "sha256:8dd7a0b251da309d388cd17c473f087225dd24dc52de064d9281ed74244c3f3a",
+        "bytes": 8306
+      },
+      {
+        "path": "sources/backend/migrations/register_micro_mvp_rules_release.go",
+        "sha256": "sha256:03c342e6633029f6a4bb9af6414d27a507397b8a688b63d0ea2ff8c369a72dc8",
+        "bytes": 3612
+      },
+      {
+        "path": "provenance.json",
+        "sha256": "sha256:9909145ba32517c95a675ba1d5fa1dffee073be0be18134888818c064e450015",
+        "bytes": 4201
+      }
+    ]
+  },
+  "tests": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "command": "node --test scripts/release/historical-source-certification.test.mjs",
+    "log": "outputs/testing/historical-source-certification.log"
+  }
+}

@@ -1,0 +1,1151 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-04",
+  "source": "Local route declarations; API list covers directly registered named groups in backend/main.go, not registrations in other modules",
+  "usage_evidence": "unknown; no production reads",
+  "deleted": [],
+  "routes": [
+    {
+      "path": "/rules-lab/:scenarioId?",
+      "status": "kept"
+    },
+    {
+      "path": "/paper-sheet/create",
+      "status": "kept"
+    },
+    {
+      "path": "/paper-sheet/:id/forge",
+      "status": "kept"
+    },
+    {
+      "path": "/paper-sheet/:id/level-up",
+      "status": "kept"
+    },
+    {
+      "path": "/paper-sheet/:id?",
+      "status": "kept"
+    },
+    {
+      "path": "/login",
+      "status": "kept"
+    },
+    {
+      "path": "/register",
+      "status": "kept"
+    },
+    {
+      "path": "/account",
+      "status": "kept"
+    },
+    {
+      "path": "/character-forge",
+      "status": "kept"
+    },
+    {
+      "path": "/character-forge/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/characters-forge",
+      "status": "kept"
+    },
+    {
+      "path": "/spell/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/entity/:type/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/characters-v3/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/characters-v3/:id/combat",
+      "status": "kept"
+    },
+    {
+      "path": "/roguelike",
+      "status": "kept"
+    },
+    {
+      "path": "/roguelike/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/m",
+      "status": "kept"
+    },
+    {
+      "path": "/m/characters",
+      "status": "kept"
+    },
+    {
+      "path": "/m/characters/new",
+      "status": "kept"
+    },
+    {
+      "path": "/m/characters/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/m/characters/:id/edit",
+      "status": "kept"
+    },
+    {
+      "path": "/m/characters/:id/level-up",
+      "status": "kept"
+    },
+    {
+      "path": "/m/characters/:id/add",
+      "status": "kept"
+    },
+    {
+      "path": "/m/characters/:id/add/:type",
+      "status": "kept"
+    },
+    {
+      "path": "/",
+      "status": "kept"
+    },
+    {
+      "path": "/library",
+      "status": "kept"
+    },
+    {
+      "path": "/docs/mechanics",
+      "status": "kept"
+    },
+    {
+      "path": "/docs/engine",
+      "status": "kept"
+    },
+    {
+      "path": "/encounters",
+      "status": "kept"
+    },
+    {
+      "path": "/encounter/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/create",
+      "status": "kept"
+    },
+    {
+      "path": "/card-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/edit/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/export",
+      "status": "kept"
+    },
+    {
+      "path": "/templates",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/card-creator/weapon",
+      "status": "kept"
+    },
+    {
+      "path": "/card-creator/equipment",
+      "status": "kept"
+    },
+    {
+      "path": "/card-creator/potion",
+      "status": "kept"
+    },
+    {
+      "path": "/card-creator/ingredient",
+      "status": "kept"
+    },
+    {
+      "path": "/card-creator/trinket",
+      "status": "kept"
+    },
+    {
+      "path": "/groups",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/groups/create",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/groups/join",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/groups/:id",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/inventory",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/inventory/create",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/inventory/:id",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/inventory/:id/add-item",
+      "status": "hidden_in_navigation"
+    },
+    {
+      "path": "/characters",
+      "status": "deprecated_redirect"
+    },
+    {
+      "path": "/characters-v2",
+      "status": "deprecated_redirect"
+    },
+    {
+      "path": "/characters-v3",
+      "status": "kept"
+    },
+    {
+      "path": "/characters-v3/create",
+      "status": "kept"
+    },
+    {
+      "path": "/characters/create",
+      "status": "deprecated_redirect"
+    },
+    {
+      "path": "/characters-v3/:id/edit",
+      "status": "kept"
+    },
+    {
+      "path": "/settings",
+      "status": "kept"
+    },
+    {
+      "path": "/initiative",
+      "status": "kept"
+    },
+    {
+      "path": "/monsters",
+      "status": "kept"
+    },
+    {
+      "path": "/monster-forge",
+      "status": "kept"
+    },
+    {
+      "path": "/monster-forge/:id",
+      "status": "kept"
+    },
+    {
+      "path": "/shop/new",
+      "status": "kept"
+    },
+    {
+      "path": "/shop/:slug",
+      "status": "kept"
+    },
+    {
+      "path": "/action-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/resource-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/variable-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/concept-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/passive-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/effect-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/image-generator",
+      "status": "kept"
+    },
+    {
+      "path": "/spell-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/feat-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/background-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/race-creator",
+      "status": "kept"
+    },
+    {
+      "path": "/class-creator",
+      "status": "kept"
+    },
+    {
+      "path": "*",
+      "status": "kept"
+    }
+  ],
+  "registered_api": [
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/auth/register",
+      "handler": "authRateLimit.Handler(), authController.Register"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/auth/login",
+      "handler": "authRateLimit.Handler(), authController.Login"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/auth/profile",
+      "handler": "StrictAuthMiddleware(authService), JSONBodyLimitMiddleware(4096), authController.UpdateProfile"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/auth/change-password",
+      "handler": "StrictAuthMiddleware(authService), authRateLimit.Handler(), JSONBodyLimitMiddleware(4096), authController.ChangePassword"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/auth/elevate-admin",
+      "handler": "StrictAuthMiddleware(authService), NewFixedWindowRateLimiter(5, time.Hour).Handler(), JSONBodyLimitMiddleware(1024), authController.ElevateAdmin"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/content-images/:entityType/:id",
+      "handler": "contentImageController.Get"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/integrations/ttg/bestiary/:slug",
+      "handler": "ttgBestiaryRateLimit.Handler(), ttgBestiaryController.Get"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/shops/:slug",
+      "handler": "shopController.GetShop"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/content-capabilities",
+      "handler": "StrictAuthMiddleware(authService), func(c *gin.Context) {"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/cards",
+      "handler": "OptionalAuthMiddleware(authService), cardController.GetCards"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/cards/:id",
+      "handler": "OptionalAuthMiddleware(authService), cardController.GetCard"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/cards/:id/battle-stats",
+      "handler": "OptionalAuthMiddleware(authService), cardController.GetCardBattleStats"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/cards/battle-stats",
+      "handler": "OptionalAuthMiddleware(authService), cardController.GetBatchCardBattleStats"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/cards",
+      "handler": "ContentEntityMutation(authService, db, \"cards\", true), cardController.CreateCard"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/cards/:id",
+      "handler": "ContentEntityMutation(authService, db, \"cards\", false), cardController.UpdateCard"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/cards/:id",
+      "handler": "ContentEntityMutation(authService, db, \"cards\", false), cardController.DeleteCard"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/cards/generate-image",
+      "handler": "contentAdminAuth, cardController.GenerateImage"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/cards/export",
+      "handler": "AuthMiddleware(authService), cardController.ExportCards"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/actions",
+      "handler": "OptionalAuthMiddleware(authService), actionController.GetActions"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/actions/:id",
+      "handler": "OptionalAuthMiddleware(authService), actionController.GetAction"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/actions",
+      "handler": "ContentEntityMutation(authService, db, \"actions\", true), actionController.CreateAction"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/actions/:id",
+      "handler": "ContentEntityMutation(authService, db, \"actions\", false), actionController.UpdateAction"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/actions/:id",
+      "handler": "ContentEntityMutation(authService, db, \"actions\", false), actionController.DeleteAction"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/monsters",
+      "handler": "OptionalAuthMiddleware(authService), monsterController.List"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/monsters/:id",
+      "handler": "OptionalAuthMiddleware(authService), monsterController.Get"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/monsters",
+      "handler": "ContentEntityMutation(authService, db, \"monsters\", true), monsterController.Create"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/monsters/:id",
+      "handler": "ContentEntityMutation(authService, db, \"monsters\", false), monsterController.Update"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/monsters/:id",
+      "handler": "ContentEntityMutation(authService, db, \"monsters\", false), monsterController.Delete"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/effects",
+      "handler": "OptionalAuthMiddleware(authService), effectController.GetEffects"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/effects/:id",
+      "handler": "OptionalAuthMiddleware(authService), effectController.GetEffect"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/effects",
+      "handler": "ContentEntityMutation(authService, db, \"effects\", true), effectController.CreateEffect"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/effects/:id",
+      "handler": "ContentEntityMutation(authService, db, \"effects\", false), effectController.UpdateEffect"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/effects/:id",
+      "handler": "ContentEntityMutation(authService, db, \"effects\", false), effectController.DeleteEffect"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/spells",
+      "handler": "OptionalAuthMiddleware(authService), spellController.GetSpells"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/spells/:id",
+      "handler": "OptionalAuthMiddleware(authService), spellController.GetSpell"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/spells",
+      "handler": "ContentEntityMutation(authService, db, \"spells\", true), spellController.CreateSpell"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/spells/:id",
+      "handler": "ContentEntityMutation(authService, db, \"spells\", false), spellController.UpdateSpell"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/spells/:id",
+      "handler": "ContentEntityMutation(authService, db, \"spells\", false), spellController.DeleteSpell"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/images/generate-standalone",
+      "handler": "contentAdminAuth, imageController.GenerateStandaloneImage"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/ai/mechanics",
+      "handler": "contentAdminAuth, aiMechanicsController.GenerateMechanics"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/feats",
+      "handler": "OptionalAuthMiddleware(authService), featController.GetFeats"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/feats/:id",
+      "handler": "OptionalAuthMiddleware(authService), featController.GetFeat"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/feats",
+      "handler": "ContentEntityMutation(authService, db, \"feats\", true), featController.CreateFeat"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/feats/:id",
+      "handler": "ContentEntityMutation(authService, db, \"feats\", false), featController.UpdateFeat"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/feats/:id",
+      "handler": "ContentEntityMutation(authService, db, \"feats\", false), featController.DeleteFeat"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/backgrounds",
+      "handler": "OptionalAuthMiddleware(authService), backgroundController.GetBackgrounds"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/backgrounds/:id",
+      "handler": "OptionalAuthMiddleware(authService), backgroundController.GetBackground"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/backgrounds",
+      "handler": "ContentEntityMutation(authService, db, \"backgrounds\", true), backgroundController.CreateBackground"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/backgrounds/:id",
+      "handler": "ContentEntityMutation(authService, db, \"backgrounds\", false), backgroundController.UpdateBackground"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/backgrounds/:id",
+      "handler": "ContentEntityMutation(authService, db, \"backgrounds\", false), backgroundController.DeleteBackground"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/races",
+      "handler": "OptionalAuthMiddleware(authService), raceController.GetRaces"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/races/:id",
+      "handler": "OptionalAuthMiddleware(authService), raceController.GetRace"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/races",
+      "handler": "ContentEntityMutation(authService, db, \"races\", true), raceController.CreateRace"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/races/:id",
+      "handler": "ContentEntityMutation(authService, db, \"races\", false), raceController.UpdateRace"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/races/:id",
+      "handler": "ContentEntityMutation(authService, db, \"races\", false), raceController.DeleteRace"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/classes",
+      "handler": "OptionalAuthMiddleware(authService), classController.GetClasses"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/classes/:id",
+      "handler": "OptionalAuthMiddleware(authService), classController.GetClass"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/classes",
+      "handler": "ContentEntityMutation(authService, db, \"classes\", true), classController.CreateClass"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/classes/:id",
+      "handler": "ContentEntityMutation(authService, db, \"classes\", false), classController.UpdateClass"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/classes/:id",
+      "handler": "ContentEntityMutation(authService, db, \"classes\", false), classController.DeleteClass"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/content-support/:entityType/:id",
+      "handler": "contentAdminAuth, retiredContentCertification"
+    },
+    {
+      "group": "api",
+      "method": "PATCH",
+      "path": "/content-review/:entityType/:id",
+      "handler": "ContentReviewMutation(authService, db), contentSupportController.UpdateReview"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/content-migrations/:bundleId/effects",
+      "handler": "contentAdminAuth, contentMigrationController.CreateEffect"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/content-migrations/:bundleId/actions",
+      "handler": "contentAdminAuth, contentMigrationController.CreateAction"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/content-migrations/:bundleId/:entityType/:id/exact-update",
+      "handler": "contentAdminAuth, contentMigrationController.ExactUpdate"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/content-rollback/effect/:id/hard-delete-created",
+      "handler": "contentAdminAuth, contentMigrationController.RollbackCreatedEffect"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/content-rollback/action/:id/hard-delete-created",
+      "handler": "contentAdminAuth, contentMigrationController.RollbackCreatedAction"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/content-rollback/:entityType/:id/support",
+      "handler": "contentAdminAuth, retiredContentCertification"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/resources",
+      "handler": "OptionalAuthMiddleware(authService), resourceController.GetResources"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/resources/:id",
+      "handler": "OptionalAuthMiddleware(authService), resourceController.GetResource"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/resources",
+      "handler": "ContentEntityMutation(authService, db, \"resources\", true), resourceController.CreateResource"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/resources/:id",
+      "handler": "ContentEntityMutation(authService, db, \"resources\", false), resourceController.UpdateResource"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/resources/:id",
+      "handler": "ContentEntityMutation(authService, db, \"resources\", false), resourceController.DeleteResource"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/variables",
+      "handler": "OptionalAuthMiddleware(authService), variableController.GetVariables"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/variables/:id",
+      "handler": "OptionalAuthMiddleware(authService), variableController.GetVariable"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/variables",
+      "handler": "ContentEntityMutation(authService, db, \"variables\", true), variableController.CreateVariable"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/variables/:id",
+      "handler": "ContentEntityMutation(authService, db, \"variables\", false), variableController.UpdateVariable"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/variables/:id",
+      "handler": "ContentEntityMutation(authService, db, \"variables\", false), variableController.DeleteVariable"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/encounters",
+      "handler": "encounterAuth, encounterController.Create"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/encounters",
+      "handler": "encounterAuth, encounterController.List"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/encounters/:id",
+      "handler": "encounterAuth, encounterController.Get"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/encounters/:id",
+      "handler": "encounterAuth, encounterController.Delete"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/encounters/:id/events",
+      "handler": "encounterAuth, encounterController.Events"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/encounters/:id/invite",
+      "handler": "encounterAuth, encounterController.IssueInvite"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/encounters/:id/join",
+      "handler": "encounterAuth, RequestBodyLimitMiddleware(8<<10), encounterController.Join"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/encounters/:id/apply",
+      "handler": "encounterAuth, JSONBodyLimitMiddleware(maxEncounterApplyBodyBytes), RequestBodyLimitMiddleware(maxEncounterApplyBodyBytes), encounterController.Apply"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/encounters/:id/stream",
+      "handler": "encounterAuth, encounterController.Stream"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/concepts",
+      "handler": "OptionalAuthMiddleware(authService), conceptController.GetConcepts"
+    },
+    {
+      "group": "api",
+      "method": "GET",
+      "path": "/concepts/:id",
+      "handler": "OptionalAuthMiddleware(authService), conceptController.GetConcept"
+    },
+    {
+      "group": "api",
+      "method": "POST",
+      "path": "/concepts",
+      "handler": "ContentEntityMutation(authService, db, \"concepts\", true), conceptController.CreateConcept"
+    },
+    {
+      "group": "api",
+      "method": "PUT",
+      "path": "/concepts/:id",
+      "handler": "ContentEntityMutation(authService, db, \"concepts\", false), conceptController.UpdateConcept"
+    },
+    {
+      "group": "api",
+      "method": "DELETE",
+      "path": "/concepts/:id",
+      "handler": "ContentEntityMutation(authService, db, \"concepts\", false), conceptController.DeleteConcept"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/shops",
+      "handler": "shopCreateRateLimit.AnonymousOnly(), shopController.CreateShop"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/auth/profile",
+      "handler": "authController.GetProfile"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/auth/logout",
+      "handler": "authController.Logout"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/groups",
+      "handler": "groupController.CreateGroup"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/groups",
+      "handler": "groupController.GetGroups"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/groups/:id",
+      "handler": "groupController.GetGroup"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/groups/join",
+      "handler": "groupController.JoinGroup"
+    },
+    {
+      "group": "protected",
+      "method": "DELETE",
+      "path": "/groups/:id/leave",
+      "handler": "groupController.LeaveGroup"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/groups/:id/members",
+      "handler": "groupController.GetGroupMembers"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/inventories",
+      "handler": "inventoryController.CreateInventory"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/inventories",
+      "handler": "inventoryController.GetInventories"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/inventories/:id",
+      "handler": "inventoryController.GetInventory"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/inventories/:id/items",
+      "handler": "inventoryController.AddItemToInventory"
+    },
+    {
+      "group": "protected",
+      "method": "PUT",
+      "path": "/inventories/:id/items/:itemId",
+      "handler": "inventoryController.UpdateInventoryItem"
+    },
+    {
+      "group": "protected",
+      "method": "DELETE",
+      "path": "/inventories/:id/items/:itemId",
+      "handler": "inventoryController.RemoveItemFromInventory"
+    },
+    {
+      "group": "protected",
+      "method": "PUT",
+      "path": "/inventories/items/:itemId/equip",
+      "handler": "inventoryController.EquipItem"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/characters",
+      "handler": "characterController.CreateCharacter"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters",
+      "handler": "characterController.GetCharacters"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters/:id/inventories",
+      "handler": "inventoryController.GetCharacterInventories"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters/:id",
+      "handler": "characterController.GetCharacter"
+    },
+    {
+      "group": "protected",
+      "method": "PUT",
+      "path": "/characters/:id",
+      "handler": "characterController.UpdateCharacter"
+    },
+    {
+      "group": "protected",
+      "method": "DELETE",
+      "path": "/characters/:id",
+      "handler": "characterController.DeleteCharacter"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/characters/import",
+      "handler": "characterController.ImportCharacter"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters/:id/export",
+      "handler": "characterController.ExportCharacter"
+    },
+    {
+      "group": "protected",
+      "method": "PATCH",
+      "path": "/characters/:id/stats/:statName",
+      "handler": "characterController.UpdateCharacterStat"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/characters-v2",
+      "handler": "characterV2Controller.CreateCharacterV2"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters-v2",
+      "handler": "characterV2Controller.GetCharactersV2"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters-v2/:id",
+      "handler": "characterV2Controller.GetCharacterV2"
+    },
+    {
+      "group": "protected",
+      "method": "PUT",
+      "path": "/characters-v2/:id",
+      "handler": "characterV2Controller.UpdateCharacterV2"
+    },
+    {
+      "group": "protected",
+      "method": "DELETE",
+      "path": "/characters-v2/:id",
+      "handler": "characterV2Controller.DeleteCharacterV2"
+    },
+    {
+      "group": "protected",
+      "method": "PATCH",
+      "path": "/characters-v2/:id/stats/:statName",
+      "handler": "characterV2Controller.UpdateCharacterV2Stat"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters-v2/:id/inventories",
+      "handler": "inventoryController.GetCharacterInventories"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters-v2/:id/armor",
+      "handler": "characterV2Controller.GetCharacterArmor"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/characters-v2/:id/inventories/items",
+      "handler": "characterV2Controller.AddItemsToCharacterInventory"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/characters-v2/:id/equip",
+      "handler": "characterV2Controller.EquipItem"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/characters-v2/:id/active-effects",
+      "handler": "characterV2Controller.GetActiveEffects"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/images/upload",
+      "handler": "StrictAuthMiddleware(authService), RequestBodyLimitMiddleware(maxMultipartSafetyBytes), ContentEntityImageMutation(db), imageController.UploadImage"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/images/generate",
+      "handler": "contentAdminAuth, imageController.GenerateImage"
+    },
+    {
+      "group": "protected",
+      "method": "DELETE",
+      "path": "/images/:entity_type/:entity_id",
+      "handler": "StrictAuthMiddleware(authService), ContentEntityImageMutation(db), imageController.DeleteImage"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/images/setup-cors",
+      "handler": "contentAdminAuth, imageController.SetupCORS"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/images/status",
+      "handler": "contentAdminAuth, imageController.GetStatus"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/image-library",
+      "handler": "imageLibraryController.GetImageLibrary"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/image-library",
+      "handler": "contentAdminAuth, imageLibraryController.AddToLibrary"
+    },
+    {
+      "group": "protected",
+      "method": "PUT",
+      "path": "/image-library/:id",
+      "handler": "contentAdminAuth, imageLibraryController.UpdateImageLibrary"
+    },
+    {
+      "group": "protected",
+      "method": "DELETE",
+      "path": "/image-library/:id",
+      "handler": "contentAdminAuth, imageLibraryController.DeleteFromLibrary"
+    },
+    {
+      "group": "protected",
+      "method": "GET",
+      "path": "/image-library/rarities",
+      "handler": "imageLibraryController.GetRarities"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/image-library/update-from-cards",
+      "handler": "contentAdminAuth, imageLibraryController.UpdateImageLibraryFromCards"
+    },
+    {
+      "group": "protected",
+      "method": "POST",
+      "path": "/image-library/sync-missing",
+      "handler": "contentAdminAuth, imageLibraryController.SyncMissingImages"
+    }
+  ]
+}

@@ -23,6 +23,7 @@ describe('sheet compact check',()=>{
     roll.mockClear();done.mockClear();container=document.createElement('div');document.body.append(container);root=createRoot(container);
     await act(async()=>root.render(<DiceDialogProvider><Harness/></DiceDialogProvider>));
     await act(async()=>container.querySelector('button')!.click());
+    await act(async()=>{await import('../contexts/DiceDialogHost');});
   });
   afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.useRealTimers();vi.restoreAllMocks();vi.unstubAllGlobals();});
   it('waits for Throw even with skip settings, rolls once and returns the exact log',async()=>{

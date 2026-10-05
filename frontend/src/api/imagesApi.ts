@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { generateImageRequest } from './imageJobs';
 import { API_BASE_URL } from './client';
 import { readPersistedAuthToken, signalUnauthorized } from './authSession';
+import { imageAPIError } from './imageErrors';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -28,10 +30,7 @@ apiClient.interceptors.response.use(
       signalUnauthorized();
     }
     
-    if (error.response?.data?.error) {
-      throw new Error(error.response.data.error);
-    }
-    throw new Error('Произошла ошибка при выполнении запроса');
+    throw imageAPIError(error.response?.status, error.response?.data, error.response?.headers?.['x-request-id'], error.code);
   }
 );
 
@@ -82,13 +81,8 @@ export interface StandaloneImageResponse {
 
 export const imagesApi = {
   // Standalone-генерация изображения (без привязки к сущности) — вкладка «Генерация»
-  generateStandalone: async (req: StandaloneImageRequest): Promise<StandaloneImageResponse> => {
-    const response = await apiClient.post<StandaloneImageResponse>(
-      '/api/images/generate-standalone',
-      req,
-      { timeout: 180000 }
-    );
-    return response.data;
+  generateStandalone: async (req: StandaloneImageRequest, options: { signal?: AbortSignal } = {}): Promise<StandaloneImageResponse> => {
+    return generateImageRequest<StandaloneImageResponse>(apiClient, '/api/images/generate-standalone', req, options);
   },
 
   // Загрузка изображения
@@ -126,17 +120,17 @@ export const imagesApi = {
       properties?: string[];
     },
     style: ImageGenerationStyle = 'fantasy',
-    quality: ImageGenerationQuality = 'high'
+    quality: ImageGenerationQuality = 'high',
+    options: { signal?: AbortSignal } = {}
   ): Promise<ImageGenerationResponse> => {
-    const response = await apiClient.post<ImageGenerationResponse>('/api/images/generate', {
+    return generateImageRequest<ImageGenerationResponse>(apiClient, '/api/images/generate', {
       entity_type: entityType,
       entity_id: entityId,
       prompt: prompt || '',
       style,
       quality,
       entity_data: entityData,
-    });
-    return response.data;
+    }, options);
   },
 
   // Удаление изображения

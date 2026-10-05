@@ -104,6 +104,7 @@ it('sheet dice planning reads the Fighter variable, not the companion context', 
 
 it('the existing board picker explains Rally target restrictions before sending a command', () => {
   const state = { characterId: 'fighter', catalogActions: [rally],
+    world: createWorld({ id: 'rally-picker', ruleset, actors: [actor('fighter', 3), actor('ally', 1), actor('enemy', 1)] }),
     sideByActorId: { fighter: 'heroes', ally: 'heroes', enemy: 'monsters' } } as unknown as SoloCombatState;
   const select = (clickedActorId: string) => selectedTargetsForAction({ state, actionId: rally.id,
     clickedActorId, clickedPosition: { x: 1, y: 1 } });

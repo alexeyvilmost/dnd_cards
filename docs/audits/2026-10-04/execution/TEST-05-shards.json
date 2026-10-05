@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "status": "local-components-passed",
+  "operationalCompleteSuite": "awaiting-root-final-source-freeze-run",
+  "privateBuild": {
+    "status": "passed",
+    "stacks": [
+      {
+        "runId": "test_ab22e36eb0fbab752e2a1116",
+        "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+        "ui": {
+          "reused": false,
+          "isolatedBuild": true,
+          "reactProfile": false,
+          "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_ab22e36eb0fbab752e2a1116\\ui-dist",
+          "indexHash": "55764c912bec4964350eb8205fb5c957a9a2530766580a160ff2c7faa0e89ada",
+          "manifestHash": "7857a429897a5f9c8138a03e815e0249a4312e0155aa53ba43a2e1fecf0f46d9",
+          "files": 631,
+          "bytes": 169173472
+        },
+        "ports": {
+          "database": 52748,
+          "worker": 55994,
+          "api": 55995,
+          "ui": 55996,
+          "outbound": 55997
+        },
+        "cleanup": "stopped"
+      }
+    ],
+    "checks": [
+      "fresh-owned-private-build",
+      "worker-suites-read-private-distribution",
+      "both-ui-health-after-second-build",
+      "shared-dist-and-typescript-caches-unchanged"
+    ]
+  },
+  "earlierTwoLiveStacks": {
+    "status": "isolation-passed-worker-fixture-failed",
+    "stacks": [
+      {
+        "runId": "test_dcca23a24c78e41d05963d80",
+        "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+        "ui": {
+          "reused": false,
+          "isolatedBuild": true,
+          "reactProfile": false,
+          "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_dcca23a24c78e41d05963d80\\ui-dist",
+          "indexHash": "88957e17965e7bef3c5958f7140df9ddb072f543cb29fa8f2e940cab16b5d452",
+          "manifestHash": "01ce9739bc8ceca37350842aeed0ae5970b676002d5cf1377ae2258e619c0d58",
+          "files": 631,
+          "bytes": 169175820
+        },
+        "ports": {
+          "database": 51623,
+          "worker": 55583,
+          "api": 55584,
+          "ui": 55585,
+          "outbound": 55586
+        },
+        "cleanup": "stopped"
+      },
+      {
+        "runId": "test_97da8d29d7167af2901f6ecb",
+        "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+        "ui": {
+          "reused": false,
+          "isolatedBuild": true,
+          "reactProfile": false,
+          "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_97da8d29d7167af2901f6ecb\\ui-dist",
+          "indexHash": "88957e17965e7bef3c5958f7140df9ddb072f543cb29fa8f2e940cab16b5d452",
+          "manifestHash": "01ce9739bc8ceca37350842aeed0ae5970b676002d5cf1377ae2258e619c0d58",
+          "files": 631,
+          "bytes": 169175820
+        },
+        "ports": {
+          "database": 55610,
+          "worker": 55934,
+          "api": 55935,
+          "ui": 55936,
+          "outbound": 55937
+        },
+        "cleanup": "stopped"
+      }
+    ],
+    "checks": [
+      "two-live-owned-stacks-same-build-distinct-ports"
+    ],
+    "failure": "node.exe exited 1; see C:\\Projects\\dnd_cards\\outputs\\testing\\shards-next\\private-worker-tests.log"
+  },
+  "unit": {
+    "passed": 56,
+    "failed": 0,
+    "skipped": 0,
+    "latestShardSpecificTests": 26
+  },
+  "independentReview": "No remaining correctness blocker; duration aggregation corrected to execution span.",
+  "limits": [
+    "Not evidence of a completed GitHub Actions run.",
+    "The final operational shard suite must cover every mandatory unit and aggregate on one source snapshot."
+  ]
+}

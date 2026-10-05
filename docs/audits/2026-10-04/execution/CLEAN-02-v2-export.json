@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "status": "passed_local",
+  "scope": "owned legacy V2 archive export and exact V2 storage round trip",
+  "backendRun": "test_beed7a7c608adadd1aefe674",
+  "backendTest": "TestLegacyV2ExportPreservesStoredFieldsAndOwnedRoundTrip",
+  "backendRequiredPassed": 1,
+  "frontendTests": "frontend/src/components/LegacyCharacterExports.test.tsx",
+  "frontendPassed": 3,
+  "checks": [
+    "anonymous request denied and other owner's character hidden",
+    "repeatable-read read-only export of character, inventories and inventory items",
+    "unknown stored fields and integers beyond JavaScript safe range preserved",
+    "downloaded payload SHA-256 matches exact embedded JSON bytes",
+    "export restored to disposable cloned V2 tables with exact full-row equality",
+    "source rows unchanged",
+    "no automatic request before opening legacy exports",
+    "late completion after account component unmount cannot trigger download"
+  ],
+  "automaticV3Migration": false,
+  "oldDataOrEndpointsDeleted": false,
+  "remainingBeforeRemoval": ["aggregate real route usage", "external API consumers", "deprecation period", "separate migration decision if V3 conversion is required"]
+}

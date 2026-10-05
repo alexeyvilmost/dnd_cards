@@ -40,7 +40,9 @@ export interface SheetCombatActionInventory {
 }
 
 export interface SheetCombatDataSource {
-  cardsApi: Pick<typeof import('../api/client')['cardsApi'], 'getCard'>;
+  cardsApi: Pick<typeof import('../api/client')['cardsApi'], 'getCard'> & {
+    getCardsByIds?: (ids: readonly string[]) => Promise<Card[]>;
+  };
   actionsApi: Pick<typeof import('../api/client')['actionsApi'], 'getAction'>;
   effectsApi: Pick<typeof import('../api/client')['effectsApi'], 'getEffect'>;
   spellsApi?: Pick<typeof import('../api/client')['spellsApi'], 'getSpell'>;
@@ -82,22 +84,41 @@ async function hydrateSheetCombatCards(input: {
       .filter((id): id is string => typeof id === 'string' && id.length > 0),
   ]);
   const loadCard = input.loadCard ?? dependencies.cardsApi.getCard;
-  const details = await Promise.all([...cardIds].map(async (cardId) => {
-    try {
-      const card = await loadCard(cardId);
-      if (card.id !== cardId) {
-        throw new Error(`detail endpoint returned ${card.id || '<empty id>'}`);
-      }
-      return card;
-    } catch (cause) {
-      const message = cause instanceof Error ? cause.message : String(cause);
-      throw new Error(
-        `Не удалось загрузить механику предмета ${cardId} для боя «${input.character.name}»: ${message}`,
-      );
-    }
-  }));
   const hydrated = new Map(input.cards);
-  for (const card of details) hydrated.set(card.id, card);
+  const visited = new Set<string>();
+  let wave = [...cardIds];
+  while (wave.length) {
+    if (visited.size + wave.length > 4096) throw new Error('Слишком много связанных предметов для подготовки боя');
+    const next = new Set<string>();
+    // A request-local closure, never a complete public/private catalog. The
+    // same adapter is used by the worker needs resolver and browser bulk read.
+    for (let offset = 0; offset < wave.length; offset += 128) {
+      const ids = wave.slice(offset, offset + 128);
+      let details: Card[];
+      try {
+        details = !input.loadCard && dependencies.cardsApi.getCardsByIds
+          ? await dependencies.cardsApi.getCardsByIds(ids)
+          : await Promise.all(ids.map(loadCard));
+        const expected = new Set(ids);
+        for (const card of details) {
+          if (!card?.id || !expected.delete(card.id)) throw new Error('Ответ каталога содержит посторонний или повторный предмет');
+        }
+        if (expected.size) throw new Error('Каталог не вернул все необходимые предметы');
+      } catch (cause) {
+        const message = cause instanceof Error ? cause.message : String(cause);
+        throw new Error(`Не удалось загрузить механику предмета ${ids.join(', ')} для боя «${input.character.name}»: ${message}`);
+      }
+      for (const card of details) {
+        hydrated.set(card.id, card); visited.add(card.id);
+        // Contents drive the canonical container actions and their previews.
+        // Cycles and duplicates do not require another request.
+        if (card.container_mode === 'all' || card.container_mode === 'choice') {
+          for (const item of card.contents ?? []) if (item.card_id && !visited.has(item.card_id)) next.add(item.card_id);
+        }
+      }
+    }
+    wave = [...next].filter(id => !visited.has(id));
+  }
 
   for (const cardId of Object.values(input.character.equipment ?? {})) {
     if (!cardId) continue;

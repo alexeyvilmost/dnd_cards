@@ -15,7 +15,7 @@ import {
   critRangeShift,
   shouldReroll,
   d20DieBonus,
-  outcomeOverride,
+  matchedOutcomeRule,
   rollTriggers,
   rollD20BonusDice,
   rollD20FailureBonusDice,
@@ -167,7 +167,8 @@ export function rollD20(opts: RollD20Options): RollLog {
     }
   }
   // outcome-override (крит-промах 11–14 и т.п.) — по натуральному значению, поверх базовой логики.
-  const forced = outcomeOverride(rules, natural);
+  const outcomeRule = matchedOutcomeRule(rules, natural);
+  const forced = outcomeRule ? String(outcomeRule.value ?? outcomeRule.outcome ?? '') : undefined;
   if (forced) outcome = forced as RollLog['outcome'];
   if (rules.some(rule => rule.op === 'critical_on_hit') && outcome === 'hit') outcome = 'crit';
   if (rules.some(rule => rule.op === 'force_success')) outcome = opts.target?.type === 'ac' ? 'crit' : 'success';
@@ -199,6 +200,7 @@ export function rollD20(opts: RollD20Options): RollLog {
     total,
     target: opts.target,
     outcome,
+    ...(forced && outcome ? {outcomeOverride: {outcome, rule: JSON.parse(JSON.stringify(outcomeRule))}} : {}),
     text: buildD20Text(
       dice, modifiers, total, opts.target, outcome, dieBonus, [...bonusDice, ...failureBonusDice],
     ),
@@ -222,7 +224,9 @@ export function addBonusDieToD20Roll(
   const bonusDie: DieRoll = { sides: faces, result, source, sign: 1, role: 'bonus' };
   const total = roll.total + result;
   let outcome = roll.outcome;
-  if (roll.target?.type === 'dc') outcome = total >= roll.target.value ? 'success' : 'fail';
+  if (roll.automaticHit) outcome = 'hit';
+  else if (roll.outcomeOverride) outcome = roll.outcomeOverride.outcome;
+  else if (roll.target?.type === 'dc') outcome = total >= roll.target.value ? 'success' : 'fail';
   else if (roll.target?.type === 'ac' && outcome !== 'crit' && outcome !== 'crit_miss') {
     const natural = roll.dice.find(die => die.sides === 20 && !die.discarded)?.result;
     outcome = natural === 1 ? 'miss' : total >= roll.target.value ? 'hit' : 'miss';
@@ -255,7 +259,7 @@ export function retargetAttackRoll(roll: RollLog, targetAc: number): RollLog {
   const natural = roll.dice.find((die) => !die.discarded)?.result;
   if (natural == null) throw new Error('Attack roll has no kept die');
 
-  const outcome: RollLog['outcome'] = roll.automaticHit ? 'hit' : roll.outcome === 'crit' || roll.outcome === 'crit_miss'
+  const outcome: RollLog['outcome'] = roll.automaticHit ? 'hit' : roll.outcomeOverride ? roll.outcomeOverride.outcome : roll.outcome === 'crit' || roll.outcome === 'crit_miss'
     ? roll.outcome
     : natural <= 1
       ? 'miss'

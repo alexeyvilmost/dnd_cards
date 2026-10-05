@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "browser": "154.0.8037.93",
+  "checks": [
+    {
+      "sourceURL": "/assets/battle-maps/clearing-floor-v1.png",
+      "variantURL": "/media/variants/2931453ee3f7d4158b23ddbe27fdab223bcc38c24c6b5b8d1b2b4cab1cc4f7f5.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6292176
+    },
+    {
+      "sourceURL": "/assets/battle-maps/courtyard-floor-v1.png",
+      "variantURL": "/media/variants/2826029936b6d9fea27e4dfbe682101f655b95327c4ae03b28135be6a00100d8.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6292176
+    },
+    {
+      "sourceURL": "/assets/battle-maps/crypt-annex-floor-v1.png",
+      "variantURL": "/media/variants/6be6ed4a5c9c2059ac55afaef8f8be3b3c68b20c5aabd509b4c02b594cc886d0.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6288196
+    },
+    {
+      "sourceURL": "/assets/battle-maps/crypt-floor-v1.png",
+      "variantURL": "/media/variants/316cf32edd987e1414403e6e5e5507324cbe0ceefb482a604ad70420242c6d3f.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6290112
+    },
+    {
+      "sourceURL": "/assets/battle-maps/forest-floor-v1.png",
+      "variantURL": "/media/variants/b06907ec4e21f4de28ecdbc4fa13148f7dac50493b28c5ffef077c6615d9b8a2.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6291456
+    },
+    {
+      "sourceURL": "/assets/battle-maps/tavern-floor-v1.png",
+      "variantURL": "/media/variants/e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6290112
+    },
+    {
+      "sourceURL": "/assets/battle-maps/urvin-archive-v1.png",
+      "variantURL": "/media/variants/e700cb69488751036cf8f898aa059c57bf251afdc34d42ea60651b3e36ff6c89.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6291456
+    },
+    {
+      "sourceURL": "/assets/battle-maps/urvin-causeway-v1.png",
+      "variantURL": "/media/variants/5ecb29356f2a1878297fe53828abdfae25496c310c966a8fa33f3a17e70fbf0c.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6291456
+    },
+    {
+      "sourceURL": "/assets/battle-maps/urvin-court-v1.png",
+      "variantURL": "/media/variants/9e68f0803c0cef59068c130831b503555a8a98a6875278f351de1aefcd011aba.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6291456
+    },
+    {
+      "sourceURL": "/assets/battle-maps/valley-river-v2.png",
+      "variantURL": "/media/variants/2dbecf5f9e1c9331e3d7559c7201db1757f063d9fb77dfc7114bbea86350c8fd.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6288196
+    },
+    {
+      "sourceURL": "/assets/battle-maps/watchpost-floor-v1.png",
+      "variantURL": "/media/variants/094cce6f8cc5398ce50e465033fd0409e23fbbbb05b2d5acb8ab2dc40761e892.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6293536
+    },
+    {
+      "sourceURL": "/assets/dice-box/themes/default/normal.png",
+      "variantURL": "/media/variants/edb82d498cb53e0495f31425a1a2b91962ff66d4f6b3f67c555ba293268a434b.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 1048576
+    },
+    {
+      "sourceURL": "/portraits/presets/archer.png",
+      "variantURL": "/media/variants/1cc9a1865c7ebd0ec60639253001a810f5311861fed2b39f351271fdac1ed7b4.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6553600
+    },
+    {
+      "sourceURL": "/portraits/presets/line.png",
+      "variantURL": "/media/variants/4326488aa6cace4f4156c916bf8995fab80e860c324bb80de7bb098bab4a2bea.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6553600
+    },
+    {
+      "sourceURL": "/portraits/presets/swordsman.png",
+      "variantURL": "/media/variants/e868f9d87d09e77c69a2b52cf7db5636d0f574656225c05c008315596921743a.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 6553600
+    },
+    {
+      "sourceURL": "/pwa-192x192.png",
+      "variantURL": "/media/variants/2b6b11306b5a06a5b31577183c2d203c738498cf8aa9ede55f74c8615b315e47.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 147456
+    },
+    {
+      "sourceURL": "/pwa-512x512.png",
+      "variantURL": "/media/variants/6f7e02692a6828a4bfd21e5829d57dec634b2b9fcb25f06fe148038922c63cea.webp",
+      "equal": true,
+      "differentBytes": 0,
+      "maxDifference": 0,
+      "opaqueDifferences": 0,
+      "alphaDifferences": 0,
+      "rgbaBytes": 1048576
+    }
+  ],
+  "summary": {
+    "enabled": true,
+    "variants": 17,
+    "uniqueFiles": 17,
+    "variantBytes": 29448348,
+    "originals": true,
+    "decodedPairs": 17,
+    "browserRGBAEqual": true,
+    "failedPairs": 0,
+    "servedBodyBytes": 72267260,
+    "networkBasis": "local validation deliberately fetches both original and variant; not app transfer or latency",
+    "applicationEnabledE2E": "pending",
+    "printVisualReview": "pending",
+    "deployment": "not_attempted"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-docker-exported-snapshot-proof",
+  "commandMode": "async-spawn-private-env",
+  "execution": "docker",
+  "status": "passed",
+  "runId": "95bd363d-1df7-43cf-bef1-e1c46e0cf8cd",
+  "checks": [
+    "actual-export-import",
+    "concurrent-commit-invisible-in-held-snapshot",
+    "bounded-scanner-exact-stable-view",
+    "exporter-cleaned",
+    "fresh-view-sees-commit",
+    "actual-shared-docker-inventory-wrapper",
+    "idle-progress-loss-releases-transaction",
+    "renewal-keeps-transaction",
+    "absolute-ceiling-cannot-be-renewed",
+    "all-lease-helpers-cleaned"
+  ],
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "evidenceSource": "outputs/release-measure/snapshot-export-95bd363d-1df7-43cf-bef1-e1c46e0cf8cd/report.json",
+  "source": "final scripts/release/read-snapshot.mjs + rehearsal-command.mjs",
+  "targeted": {
+    "passed": 26,
+    "failed": 0,
+    "skipped": 0,
+    "independentReview": "tests_architecture PASS"
+  },
+  "limits": [
+    "Exporter/lease proof only; full candidate restore/migration/adoption has its own pending receipt.",
+    "First clone inventory attempt rejected changed snapshot and was cleaned; second rejected temporary-init Postgres socket readiness and was cleaned."
+  ]
+}

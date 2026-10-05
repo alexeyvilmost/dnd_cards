@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import {act} from 'react';
+import {act, Profiler} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 import {MemoryRouter, Route, Routes} from 'react-router-dom';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {readFileSync} from 'node:fs';
+import {afterAll, afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import {readFileSync, writeFileSync} from 'node:fs';
 import type {BattleSceneProps} from '../battle3d/types';
 import type {Card} from '../types';
 import type {ActorState, RuleActionDefinition, RulesetReference} from '../rules-core/domain';
@@ -49,6 +49,9 @@ const HASH = `sha256:${'a'.repeat(64)}`;
 const HERO = 'parity-archer';
 const ENEMY = 'parity-guard';
 const OTHER = 'parity-other-guard';
+const profilePath = process.env.REF02_REACT_PROFILE;
+const profile: Array<{scenario:string;phase:string;actualDuration:number;baseDuration:number}> = [];
+afterAll(() => { if (profilePath) writeFileSync(profilePath, JSON.stringify({environment:'React development profiler in jsdom; graphics stubbed, canonical UI and engine real',samples:profile}, null, 2)); });
 
 function attack(id:string, name:string, range=60):RuleActionDefinition {
   return {id, name, kind:'nonSpell', sourceEntityIds:[`source:${id}`],
@@ -164,7 +167,9 @@ describe('real combat page uses one canonical pipeline in 2D and 3D', () => {
       return structuredClone(run);
     });
     await act(async () => root.render(<MemoryRouter initialEntries={[`/characters-v3/${state.characterId}/combat?roguelike=parity-run`]}>
-      <Routes><Route path="/characters-v3/:id/combat" element={<SoloCombatPage/>}/></Routes>
+      <Routes><Route path="/characters-v3/:id/combat" element={<Profiler id="SoloCombatPage" onRender={(_id,phase,actualDuration,baseDuration)=>{
+        if(profilePath)profile.push({scenario:expect.getState().currentTestName??'unknown',phase,actualDuration,baseDuration});
+      }}><SoloCombatPage/></Profiler>}/></Routes>
     </MemoryRouter>));
     await settle();
     expect(container.querySelectorAll('.initiative-card')).toHaveLength(state.initiative.length);
@@ -220,10 +225,13 @@ describe('real combat page uses one canonical pipeline in 2D and 3D', () => {
   });
 
   it.each([false,true])('ranged selection, canonical command and real roll dialog work with 3D=%s', async three => {
+    setSetting('combatRollMode','standard');
     await mount(three);
     await choose('parity-shot');
     await act(async()=>actorButton(ENEMY).dispatchEvent(new MouseEvent('mouseover',{bubbles:true})));
-    expect(document.querySelector('.combat-hit-chance')?.textContent).toContain('КД');
+    await act(async()=>{await new Promise(resolve=>setTimeout(resolve,250));});
+    expect(document.querySelector('.combat-enemy-preview')?.textContent).toContain('КД');
+    expect(document.querySelector('.combat-hit-chance__details')).not.toBeNull();
     if(three) expect(mocks.scene.current?.trajectory).not.toBeNull();
     await click(actorButton(ENEMY));
     expect(mocks.command.mock.calls[0]?.[3].intent).toMatchObject({type:'approach_action',actorId:HERO,actionId:'parity-shot',targetActorId:ENEMY});
@@ -347,17 +355,20 @@ describe('real combat page uses one canonical pipeline in 2D and 3D', () => {
     expect(container.querySelector('.combat-error')?.textContent).toBeFalsy();
   });
 
-  it.skipIf(!process.env.BATTLE3D_COMBAT_SNAPSHOT)('loads an isolated saved encounter and changes only its renderer', async () => {
-    const state=JSON.parse(readFileSync(process.env.BATTLE3D_COMBAT_SNAPSHOT!, 'utf8')) as SoloCombatState;
+  it('loads an isolated saved encounter and changes only its renderer', async () => {
+    const serialized=process.env.BATTLE3D_COMBAT_SNAPSHOT
+      ? readFileSync(process.env.BATTLE3D_COMBAT_SNAPSHOT, 'utf8')
+      : JSON.stringify(fixtureState());
+    const state=JSON.parse(serialized) as SoloCombatState;
     const snapshot=JSON.stringify(state);
     await mount(true,state);
-    const active=container.querySelector('.initiative-card.is-active')!.getAttribute('aria-label');
+    const active=container.querySelector('.combat-round')!.textContent;
     const actions=Array.from(container.querySelectorAll('.combat-sheet-action')).map(element=>({id:element.getAttribute('data-action-id'),disabled:element.querySelector('button')?.disabled}));
     expect(actions.length).toBeGreaterThan(0);
     expect(mocks.scene.current?.state.world).toEqual(state.world);
     await act(async()=>setSetting('combat3d',false));
     expect(container.querySelector('[data-testid="tactical-map"]')).not.toBeNull();
-    expect(container.querySelector('.initiative-card.is-active')!.getAttribute('aria-label')).toBe(active);
+    expect(container.querySelector('.combat-round')!.textContent).toBe(active);
     expect(Array.from(container.querySelectorAll('.combat-sheet-action')).map(element=>({id:element.getAttribute('data-action-id'),disabled:element.querySelector('button')?.disabled}))).toEqual(actions);
     await act(async()=>setSetting('combat3d',true));
     expect(mocks.scene.current?.state.world).toEqual(state.world);

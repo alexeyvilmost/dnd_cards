@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "checks": [
+    {
+      "id": "snapshot",
+      "status": "passed"
+    },
+    {
+      "id": "artifacts",
+      "status": "passed"
+    },
+    {
+      "id": "migrations",
+      "status": "passed"
+    },
+    {
+      "id": "media-references",
+      "status": "passed"
+    },
+    {
+      "id": "pending-decision",
+      "status": "passed",
+      "heldHash": "sha256:e91d8dde78559fdb9356bd0f26ac2509480b7df3d1906e6cbfe9e5545766b5cf",
+      "previousArtifact": "sha256:b59a1f04700f196b5cb210bd1b24dcd84d3ccea1e1c9b6772876bacd82f59955",
+      "currentArtifact": "sha256:ddd56dec5121d4ce076b2f90df3e8bcf76b88537ed1b72e6784ad3874974ca00"
+    },
+    {
+      "id": "duplicate-command",
+      "status": "passed",
+      "before": {
+        "revision": 3,
+        "envelope_hash": "21d4396da4e649e71184ce1621c75409",
+        "catalog_hash": "3ab3c947b36c8c09f1d165279755e376",
+        "entropy_cursor": 4,
+        "receipts": 3,
+        "journal": 2,
+        "command_receipts": 1
+      },
+      "after": {
+        "revision": 4,
+        "envelope_hash": "e5f3f33c01a0f50837c9046f831f0d19",
+        "catalog_hash": "3ab3c947b36c8c09f1d165279755e376",
+        "entropy_cursor": 5,
+        "receipts": 4,
+        "journal": 3,
+        "command_receipts": 1
+      }
+    }
+  ],
+  "limitations": [
+    "synthetic local integration data",
+    "new current CJS byte revision is a comment-only routing fixture; not all historical production artifacts",
+    "media URLs restored, off-host object bytes not copied",
+    "UI assets reuse existing local build; browser correctness belongs to TEST-04"
+  ],
+  "backupHash": "sha256:846908677eb13a91a287edc88d06d93b6c2276f766d1addcfe0aaaae4100fb40",
+  "schemaFingerprint": "sha256:541911e04e33a4f8de807810f331744220705a354e05ff9a206931f8339eaa7d",
+  "sourceRunId": "test_af403ad68445bc7c6fea3e66",
+  "snapshotBytes": 1162597,
+  "snapshotDurationMs": 2082.089399999997,
+  "restoredRunId": "test_ec8344340c9a56096f265581",
+  "restoreDurationMs": 2371.5100999999995,
+  "cleanup": [
+    {
+      "runId": "test_ec8344340c9a56096f265581",
+      "status": "stopped"
+    },
+    {
+      "runId": "test_af403ad68445bc7c6fea3e66",
+      "status": "stopped"
+    }
+  ],
+  "totalDurationMs": 70644.71310000001
+}

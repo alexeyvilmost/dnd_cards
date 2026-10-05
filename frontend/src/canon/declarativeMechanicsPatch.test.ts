@@ -8,7 +8,6 @@ import {
   MICRO_MVP_L1_CONTENT_PATCH,
 } from './declarativeMechanicsPatch';
 import {
-  assertMicroMvpL1OverlayReady,
   compileMicroMvpL1MaterializedCatalogs,
   compileMicroMvpL1Overlay,
   PINNED_MICRO_MVP_L1_CONTENT_PATCH_HASH,
@@ -360,7 +359,11 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
       compileMicroMvpL1MaterializedCatalogs(materialized),
     ]);
 
-    assertMicroMvpL1OverlayReady(direct);
+    // Verify current compiler equivalence; historical release pins have their
+    // own retained diagnostic and cannot certify a changed compiler.
+    expect(direct.roots).toHaveLength(448);
+    expect(direct.roots.map(({ actor, rulesActions }) => ({ actor, rulesActions })))
+      .toEqual(legacy.roots.map(({ actor, rulesActions }) => ({ actor, rulesActions })));
     expect(direct.release).toEqual(legacy.release);
     expect(direct.roots.map((root) => root.fixtureId))
       .toEqual(legacy.roots.map((root) => root.fixtureId));

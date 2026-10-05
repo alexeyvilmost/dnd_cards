@@ -19,6 +19,8 @@ type roguelikeFrozenCatalog struct {
 	CompleteEffectTypes []string             `json:"completeEffectTypes"`
 }
 
+const catalogSpellAliasSQL = `trim(both '_' from lower(regexp_replace(regexp_replace(coalesce(name_en, ''), '''', '', 'g'), '[^a-zA-Z0-9]+', '_', 'g')))`
+
 func emptyRoguelikeFrozenCatalog() roguelikeFrozenCatalog {
 	catalog := roguelikeFrozenCatalog{SchemaVersion: 1, Entities: map[string][]JSONMap{}, Variables: []Variable{}, CompleteEffectTypes: []string{}}
 	for _, kind := range []string{"race", "class", "background", "feat", "effect", "action", "spell", "card", "resource"} {
@@ -26,14 +28,14 @@ func emptyRoguelikeFrozenCatalog() roguelikeFrozenCatalog {
 	}
 	return catalog
 }
-func (catalog *roguelikeFrozenCatalog) add(kind string, entity any) error {
+func projectFrozenCatalogEntity(kind string, entity any) (JSONMap, error) {
 	row, err := mapFromJSON(entity)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	id, _ := row["id"].(string)
 	if id == "" {
-		return fmt.Errorf("catalog entity missing id")
+		return nil, fmt.Errorf("catalog entity missing id")
 	}
 	// Art is loaded independently by the canonical image endpoint. Freeze the
 	// complete mechanics/text, not hundreds of KB of base64 on every 5ft move.
@@ -44,6 +46,14 @@ func (catalog *roguelikeFrozenCatalog) add(kind string, entity any) error {
 			row["image_url"] = "/api/content-images/" + table + "/" + id
 		}
 	}
+	return row, nil
+}
+func (catalog *roguelikeFrozenCatalog) add(kind string, entity any) error {
+	row, err := projectFrozenCatalogEntity(kind, entity)
+	if err != nil {
+		return err
+	}
+	id := row["id"].(string)
 	for _, existing := range catalog.Entities[kind] {
 		if existing["id"] == id {
 			return nil
@@ -56,6 +66,8 @@ func (catalog *roguelikeFrozenCatalog) add(kind string, entity any) error {
 	return nil
 }
 func (catalog *roguelikeFrozenCatalog) fulfill(tx *gorm.DB, need roguelikeWorkerNeed) error {
+	defer performanceSince(tx.Statement.Context, "catalog_fulfill_ms")()
+	performanceAdd(tx.Statement.Context, "catalog_needs_count", 1)
 	if need.Kind == "variables" {
 		if err := tx.Order("id").Find(&catalog.Variables).Error; err != nil {
 			return err
@@ -123,7 +135,7 @@ func (catalog *roguelikeFrozenCatalog) fulfill(tx *gorm.DB, need roguelikeWorker
 			alias := strings.ToLower(strings.TrimSpace(need.Reference))
 			if alias != "" {
 				var spells []Spell
-				if aliasErr := tx.Where(`trim(both '_' from lower(regexp_replace(regexp_replace(coalesce(name_en, ''), '''', '', 'g'), '[^a-zA-Z0-9]+', '_', 'g'))) = ?`, alias).
+				if aliasErr := tx.Where(catalogSpellAliasSQL+" = ?", alias).
 					Order("id").Limit(2).Find(&spells).Error; aliasErr != nil {
 					return aliasErr
 				}
@@ -143,6 +155,8 @@ func (catalog *roguelikeFrozenCatalog) fulfill(tx *gorm.DB, need roguelikeWorker
 // Resolve the existing assembler's dependency closure. The final snapshot is
 // immutable; an incomplete optional dependency cannot silently remove a feature.
 func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, run *RoguelikeRun, seed string, initiativeManeuverActionID string) (*roguelikeWorkerResult, JSONMap, error) {
+	defer performanceSince(ctx, "catalog_resolution_total_ms")()
+	tx = tx.WithContext(ctx)
 	// Each initialization starts a new attempt with its current owned loadout.
 	// The opponent roster/stat blocks remain frozen in run.Encounter. Once this
 	// initialization commits, transitions use its exact artifact/catalog envelope.
@@ -177,17 +191,20 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 			return nil, nil, err
 		}
 		if result.Status != "needs_content" {
+			if performanceFrom(ctx) != nil {
+				encoded, _ := json.Marshal(catalog)
+				performanceAdd(ctx, "catalog_final_bytes", float64(len(encoded)))
+			}
 			frozen, err := mapFromJSON(catalog)
 			if err == nil {
 				frozen["artifactHash"] = result.Envelope["artifactHash"]
 			}
 			return result, frozen, err
 		}
+		performanceAdd(ctx, "catalog_needs_rounds", 1)
 		previous, _ := json.Marshal(catalog)
-		for _, need := range result.Needs {
-			if err = catalog.fulfill(tx, need); err != nil {
-				return nil, nil, err
-			}
+		if err = catalog.fulfillWave(tx, result.Needs); err != nil {
+			return nil, nil, err
 		}
 		next, _ := json.Marshal(catalog)
 		if string(previous) == string(next) {
@@ -220,11 +237,10 @@ func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client rogueli
 		if result.Status != "needs_content" {
 			return result, nil
 		}
+		performanceAdd(ctx, "catalog_needs_rounds", 1)
 		previous, _ := json.Marshal(catalog)
-		for _, need := range result.Needs {
-			if err = catalog.fulfill(tx, need); err != nil {
-				return nil, err
-			}
+		if err = catalog.fulfillWave(tx, result.Needs); err != nil {
+			return nil, err
 		}
 		next, _ := json.Marshal(catalog)
 		if string(previous) == string(next) {
@@ -235,19 +251,26 @@ func executeRoguelikeRestWorker(ctx context.Context, tx *gorm.DB, client rogueli
 }
 
 func executeRoguelikeCampActionWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, request RoguelikeCommandRequest, party ...*CharacterV3) (*roguelikeWorkerResult, error) {
-	catalog := emptyRoguelikeFrozenCatalog()
 	seed, err := newRoguelikeSeed()
 	if err != nil {
 		return nil, err
 	}
+	return executeSeededRoguelikeCampActionWorker(ctx, tx, client, character, request, seed, party...)
+}
+
+// The HTTP command always obtains its seed from newRoguelikeSeed above. A
+// separate deterministic boundary permits exact resolver differential tests;
+// there is no browser-supplied seed and no alternate mechanics implementation.
+func executeSeededRoguelikeCampActionWorker(ctx context.Context, tx *gorm.DB, client roguelikeWorkerClient, character *CharacterV3, request RoguelikeCommandRequest, seed string, party ...*CharacterV3) (*roguelikeWorkerResult, error) {
+	catalog := emptyRoguelikeFrozenCatalog()
 	var basics []Action
-	if err = tx.Where("type = ?", "basic").Order("id").Find(&basics).Error; err != nil {
+	if err := tx.Where("type = ?", "basic").Order("id").Find(&basics).Error; err != nil {
 		return nil, err
 	}
 	ids := []string{}
 	for _, action := range basics {
 		ids = append(ids, action.ID.String())
-		if err = catalog.add("action", action); err != nil {
+		if err := catalog.add("action", action); err != nil {
 			return nil, err
 		}
 	}
@@ -266,11 +289,10 @@ func executeRoguelikeCampActionWorker(ctx context.Context, tx *gorm.DB, client r
 		if result.Status != "needs_content" {
 			return result, nil
 		}
+		performanceAdd(ctx, "catalog_needs_rounds", 1)
 		previous, _ := json.Marshal(catalog)
-		for _, need := range result.Needs {
-			if err = catalog.fulfill(tx, need); err != nil {
-				return nil, err
-			}
+		if err = catalog.fulfillWave(tx, result.Needs); err != nil {
+			return nil, err
 		}
 		next, _ := json.Marshal(catalog)
 		if string(previous) == string(next) {

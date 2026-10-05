@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "preparedAt": "2026-10-05T00:27:30.836Z",
+  "status": "host_prepared_application_not_released",
+  "repository": "alexeyvilmost/dnd_cards",
+  "repositoryVisibility": "public",
+  "transport": "hosted GitHub Actions via dedicated restricted SSH identity",
+  "productionEnvironment": {
+    "name": "production",
+    "allowedBranches": [
+      "main"
+    ],
+    "secretNames": [
+      "DEPLOY_SSH_KNOWN_HOSTS",
+      "DEPLOY_SSH_PRIVATE_KEY"
+    ]
+  },
+  "publicationEnvironment": {
+    "name": "release-publication",
+    "allowedBranches": [
+      "main"
+    ]
+  },
+  "variables": {
+    "DEPLOY_SSH_HOST": "77.95.206.239",
+    "DEPLOY_SSH_USER": "root",
+    "DEPLOY_SSH_PORT": "22",
+    "DEPLOY_SSH_ATTEMPT_ROOT": "/opt/bagofholding/deploy-attempts",
+    "DEPLOY_SSH_NODE": "/opt/bagofholding/deploy-tools/node",
+    "DEPLOY_HOST_CONFIG_FILE": "/opt/bagofholding/deploy-tools/host-config.json",
+    "REHEARSAL_CONFIG_FILE": "/opt/bagofholding/deploy-tools/rehearsal-template.json",
+    "RELEASE_BUILD_ENABLED": "false",
+    "RELEASE_PUBLICATION_ENABLED": "false",
+    "PRODUCTION_DEPLOY_ENABLED": "false",
+    "AUTO_RELEASE_MAIN_ENABLED": "false",
+    "AUTO_DEPLOY_MAIN_ENABLED": "false"
+  },
+  "serverNode": "24.19.0",
+  "hostConfig": "/opt/bagofholding/deploy-tools/host-config.json",
+  "rehearsalConfig": "/opt/bagofholding/deploy-tools/rehearsal-template.json",
+  "currentApplicationCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "productionApplicationChanged": false,
+  "operationalChanges": [
+    "private deployment/inspection directories and Node runtime",
+    "dedicated CI public key added; personal persistent deploy key preserved",
+    "private Sota gateway with automatic restart; no published ports",
+    "staged backend environment with provider proxy and two accepted performance flags",
+    "verified historical semantic certification recovered without database changes"
+  ],
+  "gateway": {
+    "project": "bagofholding-image-egress",
+    "status": "healthy",
+    "publicPorts": 0,
+    "restart": "unless-stopped"
+  },
+  "stagedPerformanceFlags": {
+    "RULES_CATALOG_BATCH_ENABLED": 1,
+    "RULES_WORKER_MIRRORS_ENABLED": 1
+  },
+  "expansionWritersEnabled": false,
+  "evidence": [
+    "AI-03-sota-image-probe.json",
+    "REL-05-historical-source.json",
+    "DB-01-production-size-metadata.json"
+  ],
+  "secretsIncluded": false
+}

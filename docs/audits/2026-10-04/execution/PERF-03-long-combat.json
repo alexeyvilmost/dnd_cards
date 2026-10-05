@@ -1,0 +1,2304 @@
+{
+  "schemaVersion": 1,
+  "kind": "bounded-native-long-combat-summary",
+  "status": "passed",
+  "measuredAt": "2026-10-05",
+  "runs": [
+    {
+      "schemaVersion": 1,
+      "kind": "bounded-native-long-combat",
+      "status": "passed",
+      "sourceRun": "test_e7c31469fcd9235675a784dc",
+      "binaryHash": "sha256:4b4d45b39d1668a27258e069d4649e82835f54542af0673bf8343d85688a16d1",
+      "artifactHash": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+      "nodeVersion": "v24.19.0",
+      "limits": {
+        "targetCommands": 160,
+        "timeLimitMs": 420000
+      },
+      "samples": [
+        {
+          "index": 0,
+          "revision": 2,
+          "round": 1,
+          "logs": 4,
+          "lastSequence": 4,
+          "records": 3,
+          "actors": 2,
+          "stateBytes": 82535,
+          "worldBytes": 42453,
+          "logBytes": 2421,
+          "catalogBytes": 12211,
+          "envelopeBytes": 4,
+          "workerRequestBytes": 0,
+          "workerResponseBytes": 0,
+          "saved": {
+            "runHash": "6834b8366a048451bfd8a506441061a5",
+            "characterHash": "5606da5b1ab525b7096fd95b44e505fa",
+            "receipts": 2,
+            "journal": 1,
+            "characterEvents": 0,
+            "rngCursor": 2
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 1,
+            "forcedGC": false,
+            "rss": 80732160,
+            "heapTotal": 28348416,
+            "heapUsed": 19141080,
+            "external": 4193298,
+            "arrayBuffers": 232516,
+            "maxRSS": 83009536,
+            "cpu": {
+              "user": 156000,
+              "system": 93000
+            }
+          }
+        },
+        {
+          "index": 10,
+          "revision": 12,
+          "round": 11,
+          "logs": 55,
+          "lastSequence": 55,
+          "records": 100,
+          "actors": 2,
+          "stateBytes": 208630,
+          "worldBytes": 44512,
+          "logBytes": 126442,
+          "catalogBytes": 12211,
+          "envelopeBytes": 208845,
+          "workerRequestBytes": 404028,
+          "workerResponseBytes": 419174,
+          "saved": {
+            "runHash": "7ce786dace0c51abc44190ea3c1014cb",
+            "characterHash": "c3a0b85773ba46df2037c822ccc4e9aa",
+            "receipts": 12,
+            "journal": 11,
+            "characterEvents": 0,
+            "rngCursor": 12
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 2,
+            "forcedGC": false,
+            "rss": 128405504,
+            "heapTotal": 90476544,
+            "heapUsed": 20959944,
+            "external": 4107680,
+            "arrayBuffers": 146879,
+            "maxRSS": 135147520,
+            "cpu": {
+              "user": 1062000,
+              "system": 500000
+            }
+          }
+        },
+        {
+          "index": 20,
+          "revision": 22,
+          "round": 21,
+          "logs": 80,
+          "lastSequence": 105,
+          "records": 158,
+          "actors": 2,
+          "stateBytes": 288042,
+          "worldBytes": 46464,
+          "logBytes": 203902,
+          "catalogBytes": 12211,
+          "envelopeBytes": 288257,
+          "workerRequestBytes": 591808,
+          "workerResponseBytes": 577999,
+          "saved": {
+            "runHash": "fb1f65df3ac1b87dd04463e4cefa4df8",
+            "characterHash": "5b55d836e65a0ac42ca761575475e01e",
+            "receipts": 22,
+            "journal": 21,
+            "characterEvents": 0,
+            "rngCursor": 22
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 3,
+            "forcedGC": false,
+            "rss": 154849280,
+            "heapTotal": 95662080,
+            "heapUsed": 33428608,
+            "external": 4699488,
+            "arrayBuffers": 738687,
+            "maxRSS": 160673792,
+            "cpu": {
+              "user": 1906000,
+              "system": 640000
+            }
+          }
+        },
+        {
+          "index": 30,
+          "revision": 32,
+          "round": 31,
+          "logs": 80,
+          "lastSequence": 155,
+          "records": 156,
+          "actors": 2,
+          "stateBytes": 286943,
+          "worldBytes": 48414,
+          "logBytes": 200853,
+          "catalogBytes": 12211,
+          "envelopeBytes": 287158,
+          "workerRequestBytes": 583428,
+          "workerResponseBytes": 575802,
+          "saved": {
+            "runHash": "3bdc2dc9e27cfb6c7afe0b840ff8bf21",
+            "characterHash": "3e47c45334cfe7a9ad2bea7735a98f74",
+            "receipts": 32,
+            "journal": 31,
+            "characterEvents": 0,
+            "rngCursor": 32
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 4,
+            "forcedGC": false,
+            "rss": 216035328,
+            "heapTotal": 159469568,
+            "heapUsed": 22948336,
+            "external": 4107680,
+            "arrayBuffers": 146879,
+            "maxRSS": 232443904,
+            "cpu": {
+              "user": 2937000,
+              "system": 703000
+            }
+          }
+        },
+        {
+          "index": 40,
+          "revision": 42,
+          "round": 41,
+          "logs": 80,
+          "lastSequence": 205,
+          "records": 152,
+          "actors": 2,
+          "stateBytes": 282675,
+          "worldBytes": 50364,
+          "logBytes": 194635,
+          "catalogBytes": 12211,
+          "envelopeBytes": 282890,
+          "workerRequestBytes": 574869,
+          "workerResponseBytes": 567264,
+          "saved": {
+            "runHash": "dac830606b7c2c85037337e8129fca1c",
+            "characterHash": "c2122267fc9bb37fb3129dd216e8bd0c",
+            "receipts": 42,
+            "journal": 41,
+            "characterEvents": 0,
+            "rngCursor": 42
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 5,
+            "forcedGC": false,
+            "rss": 228044800,
+            "heapTotal": 166506496,
+            "heapUsed": 70500896,
+            "external": 7254521,
+            "arrayBuffers": 3293720,
+            "maxRSS": 233869312,
+            "cpu": {
+              "user": 3781000,
+              "system": 906000
+            }
+          }
+        },
+        {
+          "index": 50,
+          "revision": 52,
+          "round": 51,
+          "logs": 80,
+          "lastSequence": 255,
+          "records": 154,
+          "actors": 2,
+          "stateBytes": 287741,
+          "worldBytes": 52316,
+          "logBytes": 197749,
+          "catalogBytes": 12211,
+          "envelopeBytes": 287956,
+          "workerRequestBytes": 585030,
+          "workerResponseBytes": 577396,
+          "saved": {
+            "runHash": "9b1c2394279d2c3c2366dfc9d335a992",
+            "characterHash": "76e41542f132c17a09722520293c2720",
+            "receipts": 52,
+            "journal": 51,
+            "characterEvents": 0,
+            "rngCursor": 52
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 6,
+            "forcedGC": false,
+            "rss": 220450816,
+            "heapTotal": 161951744,
+            "heapUsed": 31865072,
+            "external": 4973841,
+            "arrayBuffers": 1019845,
+            "maxRSS": 233869312,
+            "cpu": {
+              "user": 4640000,
+              "system": 1109000
+            }
+          }
+        },
+        {
+          "index": 60,
+          "revision": 62,
+          "round": 61,
+          "logs": 80,
+          "lastSequence": 305,
+          "records": 160,
+          "actors": 2,
+          "stateBytes": 299040,
+          "worldBytes": 54267,
+          "logBytes": 207097,
+          "catalogBytes": 12211,
+          "envelopeBytes": 299255,
+          "workerRequestBytes": 601382,
+          "workerResponseBytes": 599994,
+          "saved": {
+            "runHash": "057be63167efe426c3971894644ffd37",
+            "characterHash": "31922aeb75d70871b32dc4bf1177b36c",
+            "receipts": 62,
+            "journal": 61,
+            "characterEvents": 0,
+            "rngCursor": 62
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 7,
+            "forcedGC": false,
+            "rss": 222052352,
+            "heapTotal": 163147776,
+            "heapUsed": 30356488,
+            "external": 4702257,
+            "arrayBuffers": 748261,
+            "maxRSS": 234266624,
+            "cpu": {
+              "user": 5359000,
+              "system": 1359000
+            }
+          }
+        },
+        {
+          "index": 70,
+          "revision": 72,
+          "round": 71,
+          "logs": 80,
+          "lastSequence": 355,
+          "records": 160,
+          "actors": 2,
+          "stateBytes": 301030,
+          "worldBytes": 56217,
+          "logBytes": 207137,
+          "catalogBytes": 12211,
+          "envelopeBytes": 301245,
+          "workerRequestBytes": 605362,
+          "workerResponseBytes": 603974,
+          "saved": {
+            "runHash": "250e2fa6cbd467319fe63768d8e03d69",
+            "characterHash": "97e3c69e44c183eace4bc7fb5abbf4d8",
+            "receipts": 72,
+            "journal": 71,
+            "characterEvents": 0,
+            "rngCursor": 72
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 8,
+            "forcedGC": false,
+            "rss": 221569024,
+            "heapTotal": 162672640,
+            "heapUsed": 29992808,
+            "external": 4706237,
+            "arrayBuffers": 752241,
+            "maxRSS": 234450944,
+            "cpu": {
+              "user": 6046000,
+              "system": 1765000
+            }
+          }
+        },
+        {
+          "index": 80,
+          "revision": 82,
+          "round": 81,
+          "logs": 80,
+          "lastSequence": 405,
+          "records": 152,
+          "actors": 2,
+          "stateBytes": 290505,
+          "worldBytes": 58167,
+          "logBytes": 194662,
+          "catalogBytes": 12211,
+          "envelopeBytes": 290720,
+          "workerRequestBytes": 596790,
+          "workerResponseBytes": 582924,
+          "saved": {
+            "runHash": "6c6e531670d9c7fcc23493413cf3a43f",
+            "characterHash": "c1e72298ee15978ca308303913d1e4e8",
+            "receipts": 82,
+            "journal": 81,
+            "characterEvents": 0,
+            "rngCursor": 82
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 9,
+            "forcedGC": false,
+            "rss": 231403520,
+            "heapTotal": 169308160,
+            "heapUsed": 84126872,
+            "external": 7946483,
+            "arrayBuffers": 3992487,
+            "maxRSS": 234450944,
+            "cpu": {
+              "user": 6828000,
+              "system": 1937000
+            }
+          }
+        },
+        {
+          "index": 90,
+          "revision": 92,
+          "round": 91,
+          "logs": 80,
+          "lastSequence": 455,
+          "records": 154,
+          "actors": 2,
+          "stateBytes": 295572,
+          "worldBytes": 60117,
+          "logBytes": 197779,
+          "catalogBytes": 12211,
+          "envelopeBytes": 295787,
+          "workerRequestBytes": 606929,
+          "workerResponseBytes": 593059,
+          "saved": {
+            "runHash": "b70149695d6c4dad897342111e6da1d6",
+            "characterHash": "3426b41062eb94d666c8ea37133d8b98",
+            "receipts": 92,
+            "journal": 91,
+            "characterEvents": 0,
+            "rngCursor": 92
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 10,
+            "forcedGC": false,
+            "rss": 228954112,
+            "heapTotal": 167444480,
+            "heapUsed": 69414984,
+            "external": 7184536,
+            "arrayBuffers": 3230540,
+            "maxRSS": 234799104,
+            "cpu": {
+              "user": 7484000,
+              "system": 2218000
+            }
+          }
+        },
+        {
+          "index": 100,
+          "revision": 102,
+          "round": 101,
+          "logs": 80,
+          "lastSequence": 505,
+          "records": 150,
+          "actors": 2,
+          "stateBytes": 291280,
+          "worldBytes": 62068,
+          "logBytes": 191534,
+          "catalogBytes": 12211,
+          "envelopeBytes": 291496,
+          "workerRequestBytes": 592098,
+          "workerResponseBytes": 584478,
+          "saved": {
+            "runHash": "7e4732013d728f68ed6147ac69c29584",
+            "characterHash": "1db61209315ee40d209d3f9c4058e6ac",
+            "receipts": 102,
+            "journal": 101,
+            "characterEvents": 0,
+            "rngCursor": 102
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 11,
+            "forcedGC": false,
+            "rss": 225308672,
+            "heapTotal": 163360768,
+            "heapUsed": 40745424,
+            "external": 5632715,
+            "arrayBuffers": 1678719,
+            "maxRSS": 234799104,
+            "cpu": {
+              "user": 8281000,
+              "system": 2375000
+            }
+          }
+        },
+        {
+          "index": 110,
+          "revision": 112,
+          "round": 111,
+          "logs": 80,
+          "lastSequence": 555,
+          "records": 148,
+          "actors": 2,
+          "stateBytes": 290148,
+          "worldBytes": 64018,
+          "logBytes": 188452,
+          "catalogBytes": 12211,
+          "envelopeBytes": 290364,
+          "workerRequestBytes": 589834,
+          "workerResponseBytes": 582214,
+          "saved": {
+            "runHash": "ae9c352cf823f23b50ef7bfef9cdaa97",
+            "characterHash": "1a2cd64ddaf1888c44ffd68a8644b916",
+            "receipts": 112,
+            "journal": 111,
+            "characterEvents": 0,
+            "rngCursor": 112
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 12,
+            "forcedGC": false,
+            "rss": 215986176,
+            "heapTotal": 158896128,
+            "heapUsed": 19790408,
+            "external": 4166412,
+            "arrayBuffers": 212416,
+            "maxRSS": 235614208,
+            "cpu": {
+              "user": 8984000,
+              "system": 2625000
+            }
+          }
+        },
+        {
+          "index": 120,
+          "revision": 122,
+          "round": 121,
+          "logs": 80,
+          "lastSequence": 605,
+          "records": 148,
+          "actors": 2,
+          "stateBytes": 292104,
+          "worldBytes": 65968,
+          "logBytes": 188458,
+          "catalogBytes": 12211,
+          "envelopeBytes": 292320,
+          "workerRequestBytes": 587502,
+          "workerResponseBytes": 586125,
+          "saved": {
+            "runHash": "be67c8a7fe995a480c596c662f572952",
+            "characterHash": "f0d9f72bb5f514638ec5b1798c35bda3",
+            "receipts": 122,
+            "journal": 121,
+            "characterEvents": 0,
+            "rngCursor": 122
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 13,
+            "forcedGC": false,
+            "rss": 225771520,
+            "heapTotal": 163934208,
+            "heapUsed": 60465168,
+            "external": 6512387,
+            "arrayBuffers": 2558391,
+            "maxRSS": 235614208,
+            "cpu": {
+              "user": 9984000,
+              "system": 2718000
+            }
+          }
+        },
+        {
+          "index": 130,
+          "revision": 132,
+          "round": 131,
+          "logs": 80,
+          "lastSequence": 655,
+          "records": 154,
+          "actors": 2,
+          "stateBytes": 303423,
+          "worldBytes": 67918,
+          "logBytes": 197827,
+          "catalogBytes": 12211,
+          "envelopeBytes": 303639,
+          "workerRequestBytes": 616368,
+          "workerResponseBytes": 608763,
+          "saved": {
+            "runHash": "3d7951e2ac1c2eb2bb1f9c3f71166df4",
+            "characterHash": "74ca1615e0561e9397d57f2173e40c54",
+            "receipts": 132,
+            "journal": 131,
+            "characterEvents": 0,
+            "rngCursor": 132
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 14,
+            "forcedGC": false,
+            "rss": 227913728,
+            "heapTotal": 167026688,
+            "heapUsed": 64339616,
+            "external": 6621663,
+            "arrayBuffers": 2667667,
+            "maxRSS": 235614208,
+            "cpu": {
+              "user": 10921000,
+              "system": 2843000
+            }
+          }
+        },
+        {
+          "index": 140,
+          "revision": 142,
+          "round": 141,
+          "logs": 80,
+          "lastSequence": 705,
+          "records": 152,
+          "actors": 2,
+          "stateBytes": 302256,
+          "worldBytes": 69868,
+          "logBytes": 194710,
+          "catalogBytes": 12211,
+          "envelopeBytes": 302472,
+          "workerRequestBytes": 620300,
+          "workerResponseBytes": 606431,
+          "saved": {
+            "runHash": "a5fd2080b8122e7e5b9a9ad89ea460fc",
+            "characterHash": "a343ad49d2f7f375102c5315fc0273a5",
+            "receipts": 142,
+            "journal": 141,
+            "characterEvents": 0,
+            "rngCursor": 142
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 15,
+            "forcedGC": false,
+            "rss": 227987456,
+            "heapTotal": 166522880,
+            "heapUsed": 63763296,
+            "external": 6631030,
+            "arrayBuffers": 2677034,
+            "maxRSS": 235614208,
+            "cpu": {
+              "user": 11781000,
+              "system": 2984000
+            }
+          }
+        },
+        {
+          "index": 150,
+          "revision": 152,
+          "round": 151,
+          "logs": 80,
+          "lastSequence": 755,
+          "records": 152,
+          "actors": 2,
+          "stateBytes": 304217,
+          "worldBytes": 71818,
+          "logBytes": 194721,
+          "catalogBytes": 12211,
+          "envelopeBytes": 304433,
+          "workerRequestBytes": 617956,
+          "workerResponseBytes": 610349,
+          "saved": {
+            "runHash": "8e63fa8286828914d32088b985a6b9af",
+            "characterHash": "41c9ef7c066bab9f558e089e949e979e",
+            "receipts": 152,
+            "journal": 151,
+            "characterEvents": 0,
+            "rngCursor": 152
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 16,
+            "forcedGC": false,
+            "rss": 228540416,
+            "heapTotal": 165351424,
+            "heapUsed": 48111128,
+            "external": 6001573,
+            "arrayBuffers": 2047577,
+            "maxRSS": 235618304,
+            "cpu": {
+              "user": 12703000,
+              "system": 3187000
+            }
+          }
+        },
+        {
+          "index": 160,
+          "revision": 162,
+          "round": 161,
+          "logs": 80,
+          "lastSequence": 805,
+          "records": 152,
+          "actors": 2,
+          "stateBytes": 306164,
+          "worldBytes": 73768,
+          "logBytes": 194718,
+          "catalogBytes": 12211,
+          "envelopeBytes": 306380,
+          "workerRequestBytes": 621882,
+          "workerResponseBytes": 614246,
+          "saved": {
+            "runHash": "52f8de144ac1339b1c0473adea0e9206",
+            "characterHash": "31ee648281ca9d34e5e626ab6e1966d0",
+            "receipts": 162,
+            "journal": 161,
+            "characterEvents": 0,
+            "rngCursor": 162
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 17,
+            "forcedGC": false,
+            "rss": 224563200,
+            "heapTotal": 165048320,
+            "heapUsed": 42581272,
+            "external": 5707149,
+            "arrayBuffers": 1753153,
+            "maxRSS": 235716608,
+            "cpu": {
+              "user": 13640000,
+              "system": 3281000
+            }
+          }
+        }
+      ],
+      "runId": "test_7158fd3b3f3b171f761ed567",
+      "goRuntime": "go1.25.12",
+      "fixture": {
+        "preset": "line",
+        "partySize": 1,
+        "scenery": "clearing-v1/7 before initialize",
+        "enemyDamage": "declared zero before initialize; ordinary attacks and RNG retained",
+        "syntheticMonsterCount": 2,
+        "runId": "fff76a7d-b9c8-4a03-93d0-781a259562dc"
+      },
+      "elapsedMs": 92824.5687,
+      "finishedReason": "target_commands",
+      "committedCommands": 160,
+      "exactReceiptRetries": 160,
+      "fullWorkerReplays": 160,
+      "verification": {
+        "runId": "fff76a7d-b9c8-4a03-93d0-781a259562dc",
+        "revision": 162,
+        "outcomeHash": "sha256:6c0de85c45ec28a19cfc3f953bbeca73631d7ca88a6d931ca7e28a623e0c5a89",
+        "sourceUnchanged": true,
+        "exactRetry": true
+      },
+      "finalMemoryAfterForcedGC": {
+        "type": "sample",
+        "id": 18,
+        "forcedGC": true,
+        "rss": 216035328,
+        "heapTotal": 159158272,
+        "heapUsed": 19910176,
+        "external": 5707190,
+        "arrayBuffers": 212713,
+        "maxRSS": 235716608,
+        "cpu": {
+          "user": 13640000,
+          "system": 3281000
+        }
+      },
+      "binaryAfter": "sha256:4b4d45b39d1668a27258e069d4649e82835f54542af0673bf8343d85688a16d1",
+      "artifactAfter": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "proof": {
+        "commandCount": 160,
+        "intents": {
+          "end_turn": 160
+        },
+        "allExactReceiptRetries": true,
+        "allFullWorkerReplays": true,
+        "commandEvidenceHash": "sha256:3a492f90b78e4786ba68e072fdf96389730e48f1867ff6d3832fe92bdb7254bb"
+      },
+      "rawEvidence": {
+        "path": "outputs/testing/runs/test_7158fd3b3f3b171f761ed567/long-combat.json",
+        "bytes": 311197,
+        "sha256": "sha256:3c7088c87d13e3a293aaa9cb755b85b064ac9102961077466264001dc8b937cd"
+      },
+      "notes": {
+        "initializeTransportSampleUnavailable": true,
+        "executionIncludesDirectWorkerReplays": true,
+        "concurrentSuites": true
+      }
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "bounded-native-long-combat",
+      "status": "passed",
+      "sourceRun": "test_e7c31469fcd9235675a784dc",
+      "binaryHash": "sha256:4b4d45b39d1668a27258e069d4649e82835f54542af0673bf8343d85688a16d1",
+      "artifactHash": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+      "nodeVersion": "v24.19.0",
+      "limits": {
+        "targetCommands": 100,
+        "timeLimitMs": 420000
+      },
+      "samples": [
+        {
+          "index": 0,
+          "revision": 2,
+          "round": 1,
+          "logs": 4,
+          "lastSequence": 4,
+          "records": 3,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41711,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 1
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 1
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 79,
+              "entries": 2
+            },
+            "revision": {
+              "bytes": 1
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 258,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23760,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1615,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 1
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 83637,
+          "worldBytes": 42503,
+          "logBytes": 2427,
+          "catalogBytes": 13099,
+          "envelopeBytes": 4,
+          "workerRequestBytes": 0,
+          "workerResponseBytes": 0,
+          "saved": {
+            "runHash": "e39ef2d19f31cff4d1aebb0517709e5d",
+            "characterHash": "01b92157205d1bf7192880bb6d879093",
+            "receipts": 2,
+            "journal": 1,
+            "characterEvents": 0,
+            "rngCursor": 2
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 1,
+            "forcedGC": false,
+            "rss": 81977344,
+            "heapTotal": 27688960,
+            "heapUsed": 16790800,
+            "external": 4107624,
+            "arrayBuffers": 146863,
+            "maxRSS": 86781952,
+            "cpu": {
+              "user": 218000,
+              "system": 156000
+            }
+          }
+        },
+        {
+          "index": 10,
+          "revision": 12,
+          "round": 11,
+          "logs": 55,
+          "lastSequence": 55,
+          "records": 96,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41814,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 2
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 2
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 2029,
+              "entries": 52
+            },
+            "revision": {
+              "bytes": 2
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23752,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 203347,
+          "worldBytes": 44560,
+          "logBytes": 120064,
+          "catalogBytes": 13099,
+          "envelopeBytes": 203562,
+          "workerRequestBytes": 393494,
+          "workerResponseBytes": 408608,
+          "saved": {
+            "runHash": "2e6d2c7c51e668ab4e7f9622f85e7364",
+            "characterHash": "f42c9cffaa7350ad4e5be22f40bf0de8",
+            "receipts": 12,
+            "journal": 11,
+            "characterEvents": 0,
+            "rngCursor": 12
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 2,
+            "forcedGC": false,
+            "rss": 137093120,
+            "heapTotal": 98078720,
+            "heapUsed": 20838552,
+            "external": 4107680,
+            "arrayBuffers": 146879,
+            "maxRSS": 145309696,
+            "cpu": {
+              "user": 1015000,
+              "system": 468000
+            }
+          }
+        },
+        {
+          "index": 20,
+          "revision": 22,
+          "round": 21,
+          "logs": 80,
+          "lastSequence": 105,
+          "records": 150,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41814,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 2
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 3979,
+              "entries": 102
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23752,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 276377,
+          "worldBytes": 46512,
+          "logBytes": 191142,
+          "catalogBytes": 13099,
+          "envelopeBytes": 276592,
+          "workerRequestBytes": 556041,
+          "workerResponseBytes": 554668,
+          "saved": {
+            "runHash": "1f75db3ec35224dddef4499a79fa97a8",
+            "characterHash": "7887804a387b4cdffceb4d42f7607123",
+            "receipts": 22,
+            "journal": 21,
+            "characterEvents": 0,
+            "rngCursor": 22
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 3,
+            "forcedGC": false,
+            "rss": 157282304,
+            "heapTotal": 100397056,
+            "heapUsed": 23747360,
+            "external": 4107680,
+            "arrayBuffers": 146879,
+            "maxRSS": 166064128,
+            "cpu": {
+              "user": 1796000,
+              "system": 734000
+            }
+          }
+        },
+        {
+          "index": 30,
+          "revision": 32,
+          "round": 31,
+          "logs": 80,
+          "lastSequence": 155,
+          "records": 154,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41814,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 2
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 5929,
+              "entries": 152
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23752,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 284626,
+          "worldBytes": 48462,
+          "logBytes": 197441,
+          "catalogBytes": 13099,
+          "envelopeBytes": 284841,
+          "workerRequestBytes": 578784,
+          "workerResponseBytes": 571167,
+          "saved": {
+            "runHash": "ccecfb11313cffbb68c0ee6b1178bb94",
+            "characterHash": "a06cdf0a50dcf6da09201bf212708e01",
+            "receipts": 32,
+            "journal": 31,
+            "characterEvents": 0,
+            "rngCursor": 32
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 4,
+            "forcedGC": false,
+            "rss": 232730624,
+            "heapTotal": 164651008,
+            "heapUsed": 63675672,
+            "external": 6412544,
+            "arrayBuffers": 2451743,
+            "maxRSS": 241332224,
+            "cpu": {
+              "user": 2562000,
+              "system": 1140000
+            }
+          }
+        },
+        {
+          "index": 40,
+          "revision": 42,
+          "round": 41,
+          "logs": 80,
+          "lastSequence": 205,
+          "records": 150,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41814,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 2
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 7879,
+              "entries": 202
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23752,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 280382,
+          "worldBytes": 50412,
+          "logBytes": 191247,
+          "catalogBytes": 13099,
+          "envelopeBytes": 280597,
+          "workerRequestBytes": 570315,
+          "workerResponseBytes": 562679,
+          "saved": {
+            "runHash": "e727d84e930faa2ac6fe9b011b24082c",
+            "characterHash": "b53895a6bf69a00e125c4594201166ea",
+            "receipts": 42,
+            "journal": 41,
+            "characterEvents": 0,
+            "rngCursor": 42
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 5,
+            "forcedGC": false,
+            "rss": 230821888,
+            "heapTotal": 162955264,
+            "heapUsed": 44788032,
+            "external": 5519548,
+            "arrayBuffers": 1558747,
+            "maxRSS": 242462720,
+            "cpu": {
+              "user": 3453000,
+              "system": 1375000
+            }
+          }
+        },
+        {
+          "index": 50,
+          "revision": 52,
+          "round": 51,
+          "logs": 80,
+          "lastSequence": 255,
+          "records": 154,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41815,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 3
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 9829,
+              "entries": 252
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23753,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 288569,
+          "worldBytes": 52364,
+          "logBytes": 197482,
+          "catalogBytes": 13099,
+          "envelopeBytes": 288784,
+          "workerRequestBytes": 586664,
+          "workerResponseBytes": 579052,
+          "saved": {
+            "runHash": "fbb06252f4c95e743e6d16a421c22e7d",
+            "characterHash": "cbc69a85aa6a716771896817c77fde58",
+            "receipts": 52,
+            "journal": 51,
+            "characterEvents": 0,
+            "rngCursor": 52
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 6,
+            "forcedGC": false,
+            "rss": 233480192,
+            "heapTotal": 164458496,
+            "heapUsed": 47926848,
+            "external": 5849024,
+            "arrayBuffers": 1888223,
+            "maxRSS": 242622464,
+            "cpu": {
+              "user": 4250000,
+              "system": 1703000
+            }
+          }
+        },
+        {
+          "index": 60,
+          "revision": 62,
+          "round": 61,
+          "logs": 80,
+          "lastSequence": 305,
+          "records": 152,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41816,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 3
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 11779,
+              "entries": 302
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23754,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 287386,
+          "worldBytes": 54315,
+          "logBytes": 194348,
+          "catalogBytes": 13099,
+          "envelopeBytes": 287601,
+          "workerRequestBytes": 584308,
+          "workerResponseBytes": 576686,
+          "saved": {
+            "runHash": "adbe72b6876a36d82a72ab86f2bf22ba",
+            "characterHash": "0f5bd3288723bbc55ea289c7fe32714d",
+            "receipts": 62,
+            "journal": 61,
+            "characterEvents": 0,
+            "rngCursor": 62
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 7,
+            "forcedGC": false,
+            "rss": 228818944,
+            "heapTotal": 161681408,
+            "heapUsed": 33585288,
+            "external": 4972735,
+            "arrayBuffers": 1018739,
+            "maxRSS": 243298304,
+            "cpu": {
+              "user": 5125000,
+              "system": 1906000
+            }
+          }
+        },
+        {
+          "index": 70,
+          "revision": 72,
+          "round": 71,
+          "logs": 80,
+          "lastSequence": 355,
+          "records": 150,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41816,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 3
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 13729,
+              "entries": 352
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23754,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 286208,
+          "worldBytes": 56265,
+          "logBytes": 191220,
+          "catalogBytes": 13099,
+          "envelopeBytes": 286423,
+          "workerRequestBytes": 588148,
+          "workerResponseBytes": 574330,
+          "saved": {
+            "runHash": "1907a1b753efb3f083fd32737a52f249",
+            "characterHash": "5d6cf6bc37fb72fc00ca359a7d86715c",
+            "receipts": 72,
+            "journal": 71,
+            "characterEvents": 0,
+            "rngCursor": 72
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 8,
+            "forcedGC": false,
+            "rss": 223621120,
+            "heapTotal": 158371840,
+            "heapUsed": 19531088,
+            "external": 4100875,
+            "arrayBuffers": 146879,
+            "maxRSS": 243298304,
+            "cpu": {
+              "user": 5828000,
+              "system": 2218000
+            }
+          }
+        },
+        {
+          "index": 80,
+          "revision": 82,
+          "round": 81,
+          "logs": 80,
+          "lastSequence": 405,
+          "records": 150,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41816,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 3
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 15679,
+              "entries": 402
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23754,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 288172,
+          "worldBytes": 58215,
+          "logBytes": 191234,
+          "catalogBytes": 13099,
+          "envelopeBytes": 288387,
+          "workerRequestBytes": 579646,
+          "workerResponseBytes": 578258,
+          "saved": {
+            "runHash": "1c40ba3609a1d2e394f7133ac79ff4fa",
+            "characterHash": "a5e3de21d5145dd1be7e5a269efa5aad",
+            "receipts": 82,
+            "journal": 81,
+            "characterEvents": 0,
+            "rngCursor": 82
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 9,
+            "forcedGC": false,
+            "rss": 240316416,
+            "heapTotal": 169369600,
+            "heapUsed": 81385952,
+            "external": 7853686,
+            "arrayBuffers": 3899690,
+            "maxRSS": 243298304,
+            "cpu": {
+              "user": 6656000,
+              "system": 2468000
+            }
+          }
+        },
+        {
+          "index": 90,
+          "revision": 92,
+          "round": 91,
+          "logs": 80,
+          "lastSequence": 455,
+          "records": 152,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41816,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 3
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 17629,
+              "entries": 452
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 259,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23754,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 2
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 293226,
+          "worldBytes": 60165,
+          "logBytes": 194338,
+          "catalogBytes": 13099,
+          "envelopeBytes": 293441,
+          "workerRequestBytes": 595978,
+          "workerResponseBytes": 588365,
+          "saved": {
+            "runHash": "38d9875f68ec1f63f699491c8763835b",
+            "characterHash": "69ad5101f3c2e76c824d6e24b7432fe5",
+            "receipts": 92,
+            "journal": 91,
+            "characterEvents": 0,
+            "rngCursor": 92
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 10,
+            "forcedGC": false,
+            "rss": 225046528,
+            "heapTotal": 159752192,
+            "heapUsed": 21307528,
+            "external": 4166412,
+            "arrayBuffers": 212416,
+            "maxRSS": 244555776,
+            "cpu": {
+              "user": 7562000,
+              "system": 2687000
+            }
+          }
+        },
+        {
+          "index": 100,
+          "revision": 102,
+          "round": 101,
+          "logs": 80,
+          "lastSequence": 505,
+          "records": 152,
+          "actors": 2,
+          "worldFields": {
+            "actors": {
+              "bytes": 41816,
+              "entries": 2
+            },
+            "attackActions": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "combatHistorySequence": {
+              "bytes": 3
+            },
+            "concentrations": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "grapples": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "id": {
+              "bytes": 51
+            },
+            "logicalClock": {
+              "bytes": 3
+            },
+            "objects": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "pendingResolution": {
+              "bytes": 4
+            },
+            "processedCommandIds": {
+              "bytes": 19579,
+              "entries": 502
+            },
+            "revision": {
+              "bytes": 3
+            },
+            "ruleset": {
+              "bytes": 179,
+              "entries": 4
+            },
+            "scene": {
+              "bytes": 260,
+              "entries": 6
+            },
+            "schemaVersion": {
+              "bytes": 1
+            }
+          },
+          "actorFields": {
+            "ac": 4,
+            "attackProfile": 259,
+            "capabilities": 832,
+            "character": 23754,
+            "controllerId": 78,
+            "grantedEffects": 6,
+            "id": 148,
+            "kind": 26,
+            "lifecycle": 36,
+            "masteryEffects": 11879,
+            "name": 62,
+            "passives": 2535,
+            "runtime": 1726,
+            "traits": 30
+          },
+          "sceneFields": {
+            "activeIndex": {
+              "bytes": 1
+            },
+            "initiative": {
+              "bytes": 151,
+              "entries": 2
+            },
+            "initiativeSwapActorIds": {
+              "bytes": 2,
+              "entries": 0
+            },
+            "mode": {
+              "bytes": 11
+            },
+            "round": {
+              "bytes": 3
+            },
+            "turnStarted": {
+              "bytes": 4
+            }
+          },
+          "stateBytes": 295172,
+          "worldBytes": 62116,
+          "logBytes": 194331,
+          "catalogBytes": 13099,
+          "envelopeBytes": 295388,
+          "workerRequestBytes": 599866,
+          "workerResponseBytes": 592262,
+          "saved": {
+            "runHash": "a4330bde219d102d20920d78e64ce688",
+            "characterHash": "383184949f6af7a072be4e3dc6f2e139",
+            "receipts": 102,
+            "journal": 101,
+            "characterEvents": 0,
+            "rngCursor": 102
+          },
+          "workerMemory": {
+            "type": "sample",
+            "id": 11,
+            "forcedGC": false,
+            "rss": 224653312,
+            "heapTotal": 159199232,
+            "heapUsed": 20740776,
+            "external": 4166412,
+            "arrayBuffers": 212416,
+            "maxRSS": 244555776,
+            "cpu": {
+              "user": 8312000,
+              "system": 2859000
+            }
+          }
+        }
+      ],
+      "runId": "test_889cd2171abd6190096c6441",
+      "goRuntime": "go1.25.12",
+      "fixture": {
+        "preset": "line",
+        "partySize": 1,
+        "scenery": "clearing-v1/7 before initialize",
+        "enemyDamage": "declared zero before initialize; ordinary attacks and RNG retained",
+        "syntheticMonsterCount": 2,
+        "runId": "b8c6939b-e2eb-41d1-bf4e-3815c2b364cb"
+      },
+      "elapsedMs": 58935.541000000005,
+      "finishedReason": "target_commands",
+      "committedCommands": 100,
+      "exactReceiptRetries": 100,
+      "fullWorkerReplays": 100,
+      "verification": {
+        "runId": "b8c6939b-e2eb-41d1-bf4e-3815c2b364cb",
+        "revision": 102,
+        "outcomeHash": "sha256:675c2cfd0a0153d6b1b47ec674e9cc26d60552682f951b80d67017ae9d0bd0f1",
+        "sourceUnchanged": true,
+        "exactRetry": true
+      },
+      "finalMemoryAfterForcedGC": {
+        "type": "sample",
+        "id": 12,
+        "forcedGC": true,
+        "rss": 224296960,
+        "heapTotal": 158633984,
+        "heapUsed": 19710648,
+        "external": 4166453,
+        "arrayBuffers": 212415,
+        "maxRSS": 244555776,
+        "cpu": {
+          "user": 8359000,
+          "system": 2875000
+        }
+      },
+      "binaryAfter": "sha256:4b4d45b39d1668a27258e069d4649e82835f54542af0673bf8343d85688a16d1",
+      "artifactAfter": "sha256:baecf7238e60633604dc8028ca89d33a1f96383c1db92326c86680e696aae528",
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "proof": {
+        "commandCount": 100,
+        "intents": {
+          "end_turn": 100
+        },
+        "allExactReceiptRetries": true,
+        "allFullWorkerReplays": true,
+        "commandEvidenceHash": "sha256:f68cd03b31ad5358ec45df35945014882276805df6dda19ebddb2a9d7d743003"
+      },
+      "rawEvidence": {
+        "path": "outputs/testing/runs/test_889cd2171abd6190096c6441/long-combat.json",
+        "bytes": 215684,
+        "sha256": "sha256:f12ffd998f27ea75a96f37e64810a03384c5620b1c62f053c5c90193eab5df49"
+      },
+      "notes": {
+        "initializeTransportSampleUnavailable": true,
+        "executionIncludesDirectWorkerReplays": true,
+        "concurrentSuites": true
+      }
+    }
+  ],
+  "diagnosis": {
+    "worldDeltaBytes": 19613,
+    "worldFieldDeltaBytes": {
+      "actors": 105,
+      "attackActions": 0,
+      "combatHistorySequence": 2,
+      "concentrations": 0,
+      "grapples": 0,
+      "id": 0,
+      "logicalClock": 2,
+      "objects": 0,
+      "pendingResolution": 0,
+      "processedCommandIds": 19500,
+      "revision": 2,
+      "ruleset": 0,
+      "scene": 2,
+      "schemaVersion": 0
+    },
+    "dedupEntriesDelta": 500,
+    "dedupBytesDelta": 19500,
+    "bytesPerPlayerEndTurn": 195,
+    "actorFieldDeltaBytes": {
+      "ac": 0,
+      "attackProfile": 0,
+      "capabilities": 0,
+      "character": -6,
+      "controllerId": 0,
+      "grantedEffects": 0,
+      "id": 0,
+      "kind": 0,
+      "lifecycle": 0,
+      "masteryEffects": 0,
+      "name": 0,
+      "passives": 0,
+      "runtime": 111,
+      "traits": 0
+    },
+    "mechanism": "processedCommandIds: reducer appends every CommandCommitted; handler checks duplicate ID before revision",
+    "locations": [
+      "frontend/src/rules-core/reducer.ts:790",
+      "frontend/src/rules-core/handler.ts:344"
+    ],
+    "notObserved": "unbounded actor modifiers, attackActions, objects, concentrations or grapples in this scenario"
+  },
+  "driver": {
+    "path": "outputs/testing/long-combat.mjs",
+    "sha256": "sha256:4c99c6df53584a296129bce132e7fe70f379e726573688f375cb16caea0d7698",
+    "workerPath": "outputs/testing/long-combat-worker.mjs",
+    "workerSha256": "sha256:70291de944dd84974f802da9eb32ebeafaabf28ccea8cc3feb7add791822cf7b"
+  },
+  "limitations": [
+    "one player and one selected synthetic enemy, no summoning or player attack ledger growth",
+    "zero enemy damage declared before initialization; ordinary attacks and RNG retained",
+    "current full wire protocol, compact receipts/frozen catalog flags off",
+    "serial load; latency not causal performance acceptance under parallel suites",
+    "memory sampled at boundaries; maxRSS is process high-water, final forcedGC diagnostic only",
+    "retained dedup IDs grow linearly; no arbitrary pruning, history rewrite or memory bound claimed"
+  ]
+}

@@ -3,6 +3,8 @@ import { createWorld, type ActorState } from '../rules-core/domain';
 import { effectiveArmorClass } from '../rules-core/actorArmorClass';
 import { collectModifiers } from '../engine/modifiers';
 import { projectCombatAuras } from './combatAuras';
+import {boardLightSources,type BoardLightSource} from './combatIllumination';
+import {spatialFacts} from './types';
 import { executeCombatAction, moveActor, runCombatAuraLifecycle } from './engine';
 import type { SoloCombatState } from './types';
 
@@ -30,6 +32,25 @@ function setup(): SoloCombatState {
 const ac = (value: number): Dict => ({ kind: 'modifier', applies_to: { roll: 'ac' }, op: 'add', value });
 
 describe('board-owned item auras', () => {
+  it('shares light discovery only within one unchanged projection and retains two-source visibility after changes',()=>{
+    const state=setup();
+    state.battleMap={id:'dark-test',name:'Dark',description:'Local lighting fixture',background:'',maxFootprint:4,maxActors:12,width:8,height:8,features:[],ambientLight:'dark'};
+    state.world.actors.source.passives=[passive('warm-lamp',[{kind:'illumination',bright_radius_ft:5,dim_additional_radius_ft:5}])];
+    state.world.actors.ally.passives=[passive('cold-lamp',[{kind:'illumination',bright_radius_ft:0,dim_additional_radius_ft:20}])];
+    for(const change of [()=>{},()=>{state.tokens.source.position={x:7,y:7};},()=>{state.world.actors.ally.passives=[];},()=>{state.boardRevision++;state.battleMap!.ambientLight='bright';}]){
+      change();const before=structuredClone(state);let sources:BoardLightSource[]|undefined;let collections=0;
+      const query=()=>{if(!sources){collections++;sources=boardLightSources(state);}return sources;};
+      for(const from of ['source','ally','enemy'])for(const to of ['source','ally','enemy']){
+        expect(spatialFacts(state,from,to,true,query)).toEqual(spatialFacts(state,from,to,true));
+      }
+      expect(collections).toBe(1);expect(state).toEqual(before);
+      const projected=projectCombatAuras(state);
+      for(const actor of Object.values(projected.world.actors))for(const observed of actor.character.spatialObservations!.nearby){
+        const canonical=spatialFacts(state,actor.id,observed.actorId,false);
+        expect(observed.canSeeTarget).toBe(canonical.canSeeTarget);expect(observed.targetCanSeeSource).toBe(canonical.targetCanSeeSource);
+      }
+    }
+  });
   it('projects two different recipient filters and strips old generations after reload, movement and revocation', () => {
     const state = setup();
     state.world.actors.source.passives = [aura('shelter', [ac(2)], { recipients: 'others' })];

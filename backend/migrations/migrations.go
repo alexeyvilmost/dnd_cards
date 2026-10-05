@@ -1544,6 +1544,15 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: genericSpellFreeuses297Version, Description: "Retain generic spell free uses and archive unshipped per-spell resource declarations without changing saved charges or historical receipts", Up: retainGenericSpellFreeuses297, Down: func(db *sql.DB) error {
 			return fmt.Errorf("Generic spell free-use rollback requires a reviewed inverse manifest and retained archive")
 		}},
+		{Version: compactReceipts298Version, Description: "Add opt-in immutable compressed receipt storage; retain all historical responses and the dual reader", Up: addCompactReceipts298, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Disable the compact writer and retain the dual reader; compressed receipts cannot be dropped")
+		}},
+		{Version: frozenCatalogs299Version, Description: "Store new frozen initialization catalogs by owner-scoped immutable identity; retain legacy inline catalogs", Up: addFrozenCatalogs299, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Disable new catalog pins and retain the reader; referenced immutable catalogs cannot be removed")
+		}},
+		{Version: "300_image_jobs", Description: "Persist owned image jobs and uncertain paid outcomes", Up: addImageJobs300, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Disable image job admission; retain jobs and their outcomes for reconciliation")
+		}},
 		// Здесь можно добавлять новые миграции
 	}
 }

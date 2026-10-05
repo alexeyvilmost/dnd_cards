@@ -15,6 +15,9 @@ import (
 // All calculations use the ordinary worker. Only orchestration, membership and
 // the shared wallet/clock live here. CAS includes every participant, not just the leader.
 func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *RoguelikeRun, request RoguelikeCommandRequest, requestHash string) {
+	local := *rc
+	local.db = rc.db.WithContext(c.Request.Context())
+	rc = &local
 	if err := urvinCommandAllowed(run, request.Type); err != nil {
 		writeRoguelikeError(c, err)
 		return
@@ -172,8 +175,10 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		}
 	}
 	var response JSONMap
-	err = rc.db.Transaction(func(tx *gorm.DB) error {
-		locked, err := ownedRoguelikeRun(tx, run.ID, run.UserID, true)
+	err = performanceTransaction(rc.db, c.Request.Context(), func(tx *gorm.DB) error {
+		catalogReads := newFrozenCatalogReadScope(tx)
+		defer catalogReads.close()
+		locked, err := ownedRoguelikeRun(tx, run.ID, run.UserID, true, catalogReads)
 		if err != nil {
 			return err
 		}
@@ -228,6 +233,11 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		if !camp {
 			locked.CombatEnvelope = result.Envelope
 			locked.CombatCatalog = catalog
+			if request.Type == "initialize_combat" {
+				if err = pinFrozenCombatCatalog(tx, locked, catalogReads); err != nil {
+					return err
+				}
+			}
 			applyTrustedCombatConclusion(locked)
 		}
 		locked.Revision++
@@ -253,7 +263,7 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 				rows = append(rows, row)
 			}
 		}
-		accepted, err := ownedRoguelikeRun(tx, run.ID, run.UserID, false)
+		accepted, err := ownedRoguelikeRun(tx, run.ID, run.UserID, false, catalogReads)
 		if err != nil {
 			return err
 		}

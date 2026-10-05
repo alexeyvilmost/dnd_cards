@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "before": {
+    "build": {
+      "reused": true,
+      "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_3b1cd5fa4ff4d787e84e184e\\ui-dist",
+      "indexHash": "41a69771305c40bf0bd4c0b7c2c096b8088f7d1c39519f0209c85845c11cf2b7",
+      "manifestHash": "c1fa3b42968918e8d649b2f4b9d8616f849507325759dc8f21e617a05824ea47",
+      "files": 589,
+      "bytes": 168982519
+    },
+    "entry": 801703,
+    "gzip": 233337,
+    "pwa": 2489918,
+    "scenarios": {
+      "library": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 4719.987400000005,
+          "lcpMedian": 224,
+          "jsMedian": 988653,
+          "apiMedian": 16,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 3923.873099999997,
+          "lcpMedian": 112,
+          "jsMedian": 988653,
+          "apiMedian": 17,
+          "pageErrors": 0
+        }
+      },
+      "forge": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 989.0532000000094,
+          "lcpMedian": 276,
+          "jsMedian": 1534147,
+          "apiMedian": 32,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 834.3594000000012,
+          "lcpMedian": 136,
+          "jsMedian": 1534147,
+          "apiMedian": 32,
+          "pageErrors": 0
+        }
+      },
+      "sheet": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 952.5265000000072,
+          "lcpMedian": 372,
+          "jsMedian": 2708692,
+          "apiMedian": 33,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 754.9025999999867,
+          "lcpMedian": 212,
+          "jsMedian": 2708692,
+          "apiMedian": 33,
+          "pageErrors": 0
+        }
+      },
+      "paper": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 632.3457999999955,
+          "lcpMedian": 136,
+          "jsMedian": 1095520,
+          "apiMedian": 3,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 555.745900000009,
+          "lcpMedian": 48,
+          "jsMedian": 1095520,
+          "apiMedian": 3,
+          "pageErrors": 0
+        }
+      }
+    }
+  },
+  "after": {
+    "build": {
+      "reused": false,
+      "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_3dfa2e937b243c65adf1f67d\\ui-dist",
+      "indexHash": "c2e299bf5267ecf1077ac783f78862ef18122f5ecb719fd4834b9892e61b82d1",
+      "manifestHash": "29eaf05ac159b069e924b53063fa2eeb9962815a0f2363f04f1b89f09ce00565",
+      "files": 627,
+      "bytes": 169015936
+    },
+    "entry": 460224,
+    "gzip": 130601,
+    "pwa": 2101049,
+    "scenarios": {
+      "library": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 893.891799999983,
+          "lcpMedian": 192,
+          "jsMedian": 820964,
+          "apiMedian": 15,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 782.9084999999905,
+          "lcpMedian": 92,
+          "jsMedian": 820964,
+          "apiMedian": 16,
+          "pageErrors": 0
+        }
+      },
+      "forge": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 1054.093200000003,
+          "lcpMedian": 300,
+          "jsMedian": 1490291,
+          "apiMedian": 32,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 918.6514000000025,
+          "lcpMedian": 172,
+          "jsMedian": 1490291,
+          "apiMedian": 32,
+          "pageErrors": 0
+        }
+      },
+      "sheet": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 1007.5536000000138,
+          "lcpMedian": 456,
+          "jsMedian": 2661624,
+          "apiMedian": 33,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 803.9159999999974,
+          "lcpMedian": 260,
+          "jsMedian": 2661624,
+          "apiMedian": 33,
+          "pageErrors": 0
+        }
+      },
+      "paper": {
+        "cold_http_cache": {
+          "n": 3,
+          "readyMedian": 624.8147999999928,
+          "lcpMedian": 140,
+          "jsMedian": 983136,
+          "apiMedian": 3,
+          "pageErrors": 0
+        },
+        "warm_http_cache": {
+          "n": 3,
+          "readyMedian": 568.7889000000141,
+          "lcpMedian": 64,
+          "jsMedian": 983136,
+          "apiMedian": 3,
+          "pageErrors": 0
+        }
+      }
+    }
+  },
+  "scope": "Dialog/choice lazy split and gameplay-only rules bootstrap; includes concurrent local generic runtime fixes. Three navigations per route/cache state: diagnostic medians, not p95 or production SLA. Service workers blocked in browser profile."
+}

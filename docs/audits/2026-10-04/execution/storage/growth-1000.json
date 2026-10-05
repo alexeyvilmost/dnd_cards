@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "run_id": "test_cefb02b27f052aae9700d740",
+  "commands": 1000,
+  "replay_requests": 1000,
+  "fixture": {
+    "profile": "integration-baseline",
+    "schemaHash": "1aa941fb0f5fdc3bea0016e5352ddacc1767b83be7f6710f9ad22e82aa237b0a",
+    "migrationBaseline": "297_retain_generic_spell_free_uses",
+    "historicalChainVerified": false,
+    "catalog": [
+      {
+        "source": "officials/canon/prod-snapshot/classes.json",
+        "rows": 60,
+        "sha256": "2124cffa17579481185c30454bdd7139c52f9e48f45376417d05a1070a879cf7"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/races.json",
+        "rows": 39,
+        "sha256": "6a34f538f03db6f5f2665dee1b840337f6b471e437457e7e1aef7bdf347d7e1c"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/effects.json",
+        "rows": 452,
+        "sha256": "0e4a5edd1dc7e536106aabf68b9a1c63cd1a824e65ac2754f02c87101af74523"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/actions.json",
+        "rows": 40,
+        "sha256": "f3702a0dca6f4dc784f714cbded73a044185ecbba006b1fc759d6ffb3c530bd5"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/spells.json",
+        "rows": 393,
+        "sha256": "da763e12c75177ef0e85bcd5ca3157e3cfd8404eb51a0984855b13d71456e495"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/feats.json",
+        "rows": 77,
+        "sha256": "769295768512a3c490c41d3580284b56e4935b4077e0967006b5663fa04b83fa"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/backgrounds.json",
+        "rows": 16,
+        "sha256": "b356a2abe7381d3109a18d98081b84e93c47e9ffdc4c59b3ae63c108b5fb7161"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/cards.json",
+        "rows": 768,
+        "sha256": "c110a67bbf2e3b5707a1e65abde62f5a84860da2f101704fd1aca4666e36ebd5"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/resources.json",
+        "rows": 26,
+        "sha256": "ab1aa68dd3ef5f059c4176daff815c27c5ed5b481c767cd0ecae6970db0571d6"
+      },
+      {
+        "source": "officials/canon/prod-snapshot/variables.json",
+        "rows": 5,
+        "sha256": "c204da89f22044950548b51034dd799ade6944c700615e2e923fc77172b9c0a5"
+      },
+      {
+        "source": "frontend/src/roguelike/pinnedFighter.fixture.json",
+        "sha256": "0803e14781eb81aef18b7f8897c5bf5f64e55bb0cb588926a3eb39d8dc3f3c49",
+        "projection": "catalog.entities only; no character/owner"
+      }
+    ],
+    "syntheticMonsters": 2,
+    "source": "checked-in canonical catalog plus synthetic test creatures",
+    "templates": {
+      "source": "backend/charactertemplates/presets.json",
+      "rows": 3,
+      "sha256": "099be9fe5499d34db2d0173d6d467e6deacaef497c762ac1773e7e7b9eb7d4cb"
+    }
+  },
+  "artifact_hash": "sha256:97e8d25465ba0ad7411f12fef7bab5f178bd4a123b1f26a92b257a9ea9d3b4b8",
+  "counts_before": {
+    "receipts": 0,
+    "character_events": 0
+  },
+  "counts_after": {
+    "receipts": 1000,
+    "character_events": 2000
+  },
+  "database_growth_bytes": 78430208,
+  "wal_growth_bytes": 101029062,
+  "wal_same_stats_window": true,
+  "relation_deltas": [
+    {
+      "relation": "roguelike_command_receipts",
+      "total_bytes": 44335104,
+      "table_bytes": 44154880,
+      "index_bytes": 180224,
+      "toast_with_index_bytes": 43925504
+    },
+    {
+      "relation": "characters_v3",
+      "total_bytes": 28819456,
+      "table_bytes": 28819456,
+      "index_bytes": 0,
+      "toast_with_index_bytes": 27271168
+    },
+    {
+      "relation": "roguelike_runs",
+      "total_bytes": 3383296,
+      "table_bytes": 3276800,
+      "index_bytes": 106496,
+      "toast_with_index_bytes": 3227648
+    },
+    {
+      "relation": "character_events",
+      "total_bytes": 491520,
+      "table_bytes": 278528,
+      "index_bytes": 212992,
+      "toast_with_index_bytes": 0
+    },
+    {
+      "relation": "entity_reference_nodes",
+      "total_bytes": 483328,
+      "table_bytes": 8192,
+      "index_bytes": 475136,
+      "toast_with_index_bytes": 0
+    },
+    {
+      "relation": "cards",
+      "total_bytes": 147456,
+      "table_bytes": 8192,
+      "index_bytes": 139264,
+      "toast_with_index_bytes": 0
+    },
+    {
+      "relation": "spells",
+      "total_bytes": 81920,
+      "table_bytes": 16384,
+      "index_bytes": 65536,
+      "toast_with_index_bytes": 8192
+    },
+    {
+      "relation": "effects",
+      "total_bytes": 81920,
+      "table_bytes": 8192,
+      "index_bytes": 73728,
+      "toast_with_index_bytes": 0
+    },
+    {
+      "relation": "actions",
+      "total_bytes": 32768,
+      "table_bytes": 8192,
+      "index_bytes": 24576,
+      "toast_with_index_bytes": 0
+    },
+    {
+      "relation": "entity_reference_edges",
+      "total_bytes": 8192,
+      "table_bytes": 8192,
+      "index_bytes": 0,
+      "toast_with_index_bytes": 0
+    },
+    {
+      "relation": "classes",
+      "total_bytes": 8192,
+      "table_bytes": 8192,
+      "index_bytes": 0,
+      "toast_with_index_bytes": 0
+    },
+    {
+      "relation": "feats",
+      "total_bytes": 8192,
+      "table_bytes": 8192,
+      "index_bytes": 0,
+      "toast_with_index_bytes": 0
+    }
+  ],
+  "timings": {
+    "camp_turn_party_1": {
+      "count": 1000,
+      "median_ms": 66.97980000000098,
+      "p95_ms": 87.75900000000547,
+      "p95_preliminary": false,
+      "min_ms": 48.685700000001816,
+      "max_ms": 533.534599999999,
+      "phase_means": {
+        "backend_first_write_uncompressed_bytes": 94322.234,
+        "backend_to_first_write_ms": 57.452166999999996,
+        "backend_worker_body_read_ms": 0.2900919999999996,
+        "backend_worker_marshal_ms": 5.261131000000002,
+        "backend_worker_unmarshal_ms": 0.7431410000000008,
+        "catalog_fulfill_ms": 7.048788999999992,
+        "catalog_needs_count": 25,
+        "catalog_needs_rounds": 5,
+        "lock_acquired_to_tx_return_ms": 14.24795799999999,
+        "lock_statement_ms": 2.071325,
+        "persist_sql_ms": 7.0039700000000025,
+        "sql_count": 40,
+        "sql_operation_ms": 21.106552000000033,
+        "sql_rows": 58,
+        "transaction_ms": 14.882431999999978,
+        "worker_artifact_cache_hit": 5.999,
+        "worker_artifact_load_ms": 0.07514400000000034,
+        "worker_body_read_ms": 0.6179869999999993,
+        "worker_callback_to_send_ms": 18.754373999999977,
+        "worker_calls": 6,
+        "worker_client_total_ms": 26.53828700000002,
+        "worker_correlated_calls": 6,
+        "worker_execute_ms": 14.789181999999972,
+        "worker_http_headers_ms": 20.045047000000032,
+        "worker_parse_ms": 2.9767350000000037,
+        "worker_process_cpu_ms": 13.744,
+        "worker_request_bytes": 837240.078,
+        "worker_response_bytes": 87893.341,
+        "worker_stringify_ms": 0.20388400000000026
+      }
+    }
+  },
+  "outcome": {
+    "commandCount": 1000,
+    "committedCommands": 1000,
+    "replayRequests": 1000,
+    "partySize": 1,
+    "beforeRevision": 0,
+    "afterRevision": 1000,
+    "commandOutcomeDigest": "sha256:a0dae62ed3a5313c0e0fba7ef34be2675447466994afbe5ebb38ad30d1e99165",
+    "verification": {
+      "runId": "f02a65c2-2b87-4bcd-a00f-8fc90a4613f9",
+      "revision": 1000,
+      "outcomeHash": "sha256:6d2a840f706abdace184985d64ca66b1d80e87e37b76a172956db56b4e3586cf",
+      "sourceUnchanged": true,
+      "exactRetry": true
+    }
+  },
+  "limitations": [
+    "Only a local synthetic line-fighter camp-turn workload; no production size or saving is inferred.",
+    "Each paid-free gameplay command was retried exactly; persisted responses matched within this run.",
+    "Backend allocates fresh RNG and wall-clock timestamps per camp turn. Full state equality across fresh runs is NOT established by this report.",
+    "Other local agent builds may contend for CPU. Timings are diagnostic, not an uncontended performance baseline.",
+    "PostgreSQL table/TOAST/index growth is allocated physical bytes, including page granularity; column samples are bounded and separate."
+  ]
+}

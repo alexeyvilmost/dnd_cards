@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -117,16 +116,17 @@ func listLegacyImageIDs(db *gorm.DB, entityType string, entityIDs []uuid.UUID) (
 
 // CardController - контроллер для работы с карточками
 type CardController struct {
-	db            *gorm.DB
-	openaiService *OpenAIService
+	db              *gorm.DB
+	imageController *ImageController
 }
 
 // NewCardController - создание нового контроллера
-func NewCardController(db *gorm.DB) *CardController {
-	return &CardController{
-		db:            db,
-		openaiService: NewOpenAIService(),
+func NewCardController(db *gorm.DB, images ...*ImageController) *CardController {
+	controller := &CardController{db: db}
+	if len(images) > 0 {
+		controller.imageController = images[0]
 	}
+	return controller
 }
 
 // GetCards - получение списка карточек с фильтрацией
@@ -179,6 +179,11 @@ func (cc *CardController) GetCards(c *gin.Context) {
 	// Пагинация
 	page, limit, offset := parseListPagination(c)
 
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "cards")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		log.Printf("Ошибка подсчета карточек: %v", err)
@@ -222,7 +227,7 @@ func (cc *CardController) GetCards(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения карточек"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"cards": responses, "total": total, "page": page, "limit": limit})
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{"cards": responses, "total": total, "page": page, "limit": limit}))
 }
 
 // Both public and personal indexes use the canonical card/list projection.
@@ -877,57 +882,11 @@ func (cc *CardController) GenerateImage(c *gin.Context) {
 		return
 	}
 
-	var card Card
-	if err := cc.db.Where("id = ?", req.CardID).First(&card).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Карточка не найдена"})
+	if cc.imageController == nil {
+		writeImageGenerationError(c, &ImageGenerationError{Code: "image_provider_not_configured", Message: "Сервис генерации не настроен.", Source: "application", Outcome: "not_started", Status: http.StatusServiceUnavailable})
 		return
 	}
-
-	// Генерация промпта для ИИ
-	prompt := req.Prompt
-	imageSize := "" // пустой размер → квадрат по умолчанию (для ручного промпта)
-	if prompt == "" {
-		itemType := ""
-		if card.Type != nil {
-			itemType = *card.Type
-		}
-		prompt = GenerateImagePrompt(card.Name, card.Description, string(card.Rarity), ImageStyleFantasy, ImagePromptOptions{
-			ItemType: itemType,
-		})
-		imageSize = GenerateImageSize(itemType, card.Name, card.Description)
-	}
-
-	// Генерация изображения через OpenAI API
-	var imageURL string
-	if cc.openaiService != nil {
-		ctx, cancel := context.WithTimeout(c.Request.Context(), imageGenerationRequestBudget)
-		defer cancel()
-		generatedURL, err := cc.openaiService.GenerateImageContext(ctx, prompt, "high", imageSize)
-		if err != nil {
-			if writeImageContextError(c, err) {
-				return
-			}
-			// Если OpenAI недоступен, используем заглушку
-			imageURL = "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")
-		} else {
-			imageURL = generatedURL
-		}
-	} else {
-		// Если OpenAI API не настроен, используем заглушку
-		imageURL = "https://via.placeholder.com/300x400/FFFFFF/000000?text=" + strings.ReplaceAll(card.Name, " ", "+")
-	}
-
-	// Обновление карточки с URL изображения
-	card.ImageURL = imageURL
-	if err := contentEntityWrite(cc.db).Save(&card).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка сохранения изображения"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"image_url": imageURL,
-		"message":   "Изображение сгенерировано",
-	})
+	cc.imageController.generateEntityImage(c, ImageGenerationRequest{EntityType: "card", EntityID: req.CardID.String(), Prompt: req.Prompt, Style: ImageStyleFantasy, Quality: "high"}, true)
 }
 
 // ExportCards - экспорт карточек для печати
@@ -1040,6 +999,11 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	page, limit, offset := parseListPagination(c)
 
 	// Подсчет общего количества
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "actions")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	query.Count(&total)
 
@@ -1080,12 +1044,12 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 		responses = append(responses, r)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{
 		"actions": responses,
 		"total":   total,
 		"page":    page,
 		"limit":   limit,
-	})
+	}))
 }
 
 // GetAction - получение действия по ID (UUID) или card_number
@@ -1499,6 +1463,11 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	page, limit, offset := parseListPagination(c)
 
 	// Подсчет общего количества
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "effects")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Ошибка получения эффектов"})
@@ -1556,12 +1525,12 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 		responses = append(responses, r)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{
 		"effects": responses,
 		"total":   total,
 		"page":    page,
 		"limit":   limit,
-	})
+	}))
 }
 
 // GetEffect - получение эффекта по ID (UUID) или card_number

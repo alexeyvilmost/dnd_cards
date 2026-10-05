@@ -7,7 +7,7 @@ import type {RoguelikeCombatIntent} from './combatWorker';
 function run() {
   const actor=structuredClone(compiled.roots.magicInitiateFighter.actor);
   return {id:'run', revision:7, combat_state:{characterId:'hero', outcome:'active',
-    world:{actors:{hero:{...actor,id:'hero'},enemy:{...actor,id:'enemy'}}},
+    world:{objects:{},actors:{hero:{...actor,id:'hero'},enemy:{...actor,id:'enemy'}}},
     tokens:{hero:{position:{x:1,y:3}},enemy:{position:{x:5,y:3}}},
     combatAreas:{}, movementRemainingFt:{hero:30},
     catalogActions:[{id:'attack',mechanics:{primitive:{type:'weapon_attack'}},targeting:{rangeFt:5}}],

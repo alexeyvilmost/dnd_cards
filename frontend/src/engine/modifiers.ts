@@ -9,7 +9,7 @@
  */
 import type { AdvantageState, RollModifier, RuntimeState } from '../mvp/contracts';
 import { conditionModifierPayloads, conditionRule } from './conditions';
-import {perceivesWithoutSight} from './senses';
+import {perceivesWithoutSight} from '../rules-primitives/sensePerception';
 import { payloadsOf } from './mechanicsView';
 import { evaluate, type FormulaContext } from './formula';
 import { matchesWhen,suppressedConditionsOf, type EvalContext } from './circumstances';

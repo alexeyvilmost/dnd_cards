@@ -58,6 +58,9 @@ func applyTrustedRoguelikePatch(character *CharacterV3, patch JSONMap) error {
 // revisions, commits the private envelope and character together, then records
 // the exact response under the original command id.
 func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userID uuid.UUID, request RoguelikeCommandRequest, requestHash string) {
+	local := *rc
+	local.db = rc.db.WithContext(c.Request.Context())
+	rc = &local
 	receiptResponse := func(tx *gorm.DB) (JSONMap, bool, error) {
 		var receipt RoguelikeCommandReceipt
 		err := tx.Where("run_id = ? AND user_id = ? AND command_id = ?", runID, userID, request.CommandID).First(&receipt).Error
@@ -161,8 +164,10 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		return
 	}
 	var response JSONMap
-	err = rc.db.Transaction(func(tx *gorm.DB) error {
-		locked, err := ownedRoguelikeRun(tx, runID, userID, true)
+	err = performanceTransaction(rc.db, c.Request.Context(), func(tx *gorm.DB) error {
+		catalogReads := newFrozenCatalogReadScope(tx)
+		defer catalogReads.close()
+		locked, err := ownedRoguelikeRun(tx, runID, userID, true, catalogReads)
 		if err != nil {
 			return err
 		}
@@ -180,6 +185,12 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			return roguelikeError(http.StatusConflict, "run_revision_conflict", "состояние забега изменилось в другой вкладке")
 		}
 		if isRest {
+			// Preparation may materialize a declared item/feature pool that was
+			// absent from the saved sheet. Bound this trusted result by the same
+			// worker's canonical maxima, already accepted above; keep the locked
+			// pre-rest currents for the hit-die spending/healing check. Browser
+			// runtime/max_resources fields never enter this request.
+			character.MaxResources = run.Character.MaxResources
 			locked.Character = &character
 			restRequest := request
 			restRequest.Payload = JSONMap{"hit_die_rolls": request.Payload["hit_die_rolls"], "runtime": JSONMap{
@@ -192,6 +203,11 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		} else if !isCamp {
 			locked.CombatEnvelope = result.Envelope
 			locked.CombatCatalog = catalog
+			if request.Type == "initialize_combat" {
+				if err = pinFrozenCombatCatalog(tx, locked, catalogReads); err != nil {
+					return err
+				}
+			}
 			applyTrustedCombatConclusion(locked)
 		}
 		if result.GoldSpent < 0 || (!isCampAction && result.GoldSpent != 0) {
@@ -228,7 +244,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 				return err
 			}
 		}
-		accepted, err := ownedRoguelikeRun(tx, runID, userID, false)
+		accepted, err := ownedRoguelikeRun(tx, runID, userID, false, catalogReads)
 		if err != nil {
 			return err
 		}

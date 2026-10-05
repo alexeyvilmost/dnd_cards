@@ -4,12 +4,14 @@ import { createRoot, type Root } from 'react-dom/client';
 import { Link, MemoryRouter, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import Layout from './Layout';
+import { setSetting } from '../settings';
 import { WORKSPACE_EXPANDED_KEY, WorkspaceExpandButton } from './WorkspaceNavigation';
 
-vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: null, logout: vi.fn() }) }));
+const auth = vi.hoisted(() => ({ user: null as null | { username: string } }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: auth.user, logout: vi.fn() }) }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let node: HTMLDivElement, root: Root;
-beforeEach(() => { sessionStorage.clear(); node = document.createElement('div'); root = createRoot(node); });
+beforeEach(() => { auth.user = null; localStorage.clear(); sessionStorage.clear(); node = document.createElement('div'); root = createRoot(node); });
 afterEach(async () => { await act(async () => root.unmount()); });
 async function render(path: string) {
   await act(async () => root.render(<MemoryRouter initialEntries={[path]}><Layout><div data-entity>Unchanged entity</div></Layout></MemoryRouter>));
@@ -27,6 +29,24 @@ it('uses shared chrome and marks Monsters as part of the Library', async () => {
   expect(node.querySelector('.site-page-theme')).not.toBeNull();
   expect(node.querySelector('nav a[href="/library"]')?.getAttribute('aria-current')).toBe('page');
   expect(node.querySelector('[title]')).toBeNull();
+});
+
+it('keeps main navigation and restores additional sections through the saved preference', async () => {
+  auth.user = { username: 'Local player' };
+  await render('/library');
+  for (const path of ['/library', '/characters-forge', '/paper-sheet', '/roguelike', '/account', '/settings', '/export', '/initiative']) {
+    expect(node.querySelector(`nav a[href="${path}"]`)).not.toBeNull();
+  }
+  for (const path of ['/groups', '/inventory', '/templates']) expect(node.querySelector(`a[href="${path}"]`)).toBeNull();
+  await act(async () => setSetting('showAdditionalSections', true));
+  for (const path of ['/groups', '/inventory', '/templates']) expect(node.querySelector(`nav a[href="${path}"]`)).not.toBeNull();
+  await act(async () => root.unmount());
+  root = createRoot(node);
+  await render('/inventory');
+  expect(node.querySelector('nav a[href="/inventory"]')).not.toBeNull();
+  await act(async () => setSetting('showAdditionalSections', false));
+  expect(node.querySelector('nav a[href="/inventory"]')).toBeNull();
+  expect(node.querySelector('[data-entity]')?.textContent).toBe('Unchanged entity');
 });
 
 it.each(['/characters-v3/hero', '/characters-v3/hero/combat'])('toggles navigation at %s without remounting or changing the workspace', async path => {

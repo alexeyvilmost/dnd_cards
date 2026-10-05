@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-04T23:54:11.714Z",
+  "readOnly": true,
+  "migrationCount": 302,
+  "retiredIds": [
+    "011_add_detailed_description_formatting",
+    "096_register_micro_mvp_rules_release",
+    "097_repair_micro_mvp_rules_release_identity",
+    "098_repair_magic_initiate_2024"
+  ],
+  "databaseBytes": 2315220659,
+  "largestRelations": [
+    {
+      "relname": "roguelike_command_receipts",
+      "bytes": 1809063936
+    },
+    {
+      "relname": "character_runtime_commands",
+      "bytes": 138027008
+    },
+    {
+      "relname": "classes",
+      "bytes": 110559232
+    },
+    {
+      "relname": "roguelike_combat_events",
+      "bytes": 64200704
+    },
+    {
+      "relname": "spells",
+      "bytes": 44851200
+    },
+    {
+      "relname": "roguelike_runs",
+      "bytes": 27779072
+    },
+    {
+      "relname": "races",
+      "bytes": 25395200
+    },
+    {
+      "relname": "actions",
+      "bytes": 11255808
+    }
+  ]
+}

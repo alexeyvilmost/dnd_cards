@@ -146,6 +146,23 @@ function createClientEventId(): string {
 // API новой системы персонажей (characters_v3). Весь surface защищён строгой
 // JWT-аутентификацией; 403 означает отсутствие ownership/write-доступа.
 export const charactersV3Api = {
+  equipmentAuthority: (): Promise<{enabled: boolean}> => characterV3Request('runtime_command', async () => {
+    try {
+      const {data} = await apiClient.get<{enabled: boolean}>('/api/characters-v3/equipment-authority');
+      if (typeof data?.enabled !== 'boolean') throw Error('Некорректный ответ сервера о смене экипировки');
+      return data;
+    } catch (error) {
+      // A new frontend may be deployed before the additive capability route.
+      // Auth/network failures must not silently select another authority.
+      if (requestStatus(error) === 404) return {enabled: false};
+      throw error;
+    }
+  }),
+  postEquipmentIntent: (request: CharacterEquipmentIntentRequest): Promise<CharacterRuntimeCommandResponse> => characterV3Request('runtime_command', async () => {
+    const {kind: _kind, character_id, ...intent} = request;
+    const {data} = await apiClient.post<CharacterRuntimeCommandResponse>(`/api/characters-v3/${character_id}/equipment-commands`, intent);
+    return data;
+  }),
   sellItem: (characterId:string,request:{command_id:string;expected_runtime_revision:number;card_id:string;quantity:number}):Promise<ForgeCharacter> => characterV3Request('runtime_command',async()=>{
     const {data}=await apiClient.post<{character:ForgeCharacter;replayed:boolean}>(`/api/characters-v3/${characterId}/item-sales`,request);
     if(data.replayed){const latest=await apiClient.get<ForgeCharacter>(`/api/characters-v3/${characterId}`);return latest.data;}
@@ -292,6 +309,20 @@ export interface CharacterRuntimeCommandRequest {
   participants: CharacterRuntimeCommandParticipant[];
   events: CharacterRuntimeCommandEvent[];
 }
+
+/** Persist this exact identity-only request before sending. Resources, random
+ * outcomes and compiled rules are server outputs on this path. */
+export interface CharacterEquipmentIntentRequest {
+  kind: 'equipment_intent';
+  character_id: string;
+  command_id: string;
+  expected_runtime_revision: number;
+  roguelike_run_id?: string;
+  expected_run_revision?: number;
+  operation: {equip: string} | {unequip: string};
+}
+
+export type SheetEquipmentPendingRequest = CharacterRuntimeCommandRequest | CharacterEquipmentIntentRequest;
 
 export interface CharacterRuntimeCommandResponse {
   command_id: string;

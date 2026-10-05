@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "rejections": {
+    "38c3dac8eb9c89a9d262bd7988286a22bce5f96f7dea4f721c156823b7f42f4d": "Board-only movement of a monster is not a player-owned move intent. Other accepted player movement cases cover both durable fields.",
+    "af6e6ad7db7d9afe04db4b1e76c9234f8d1a38500d266335fc65c4954d953bc9": "The narrow death-save fixture lacks the monster action catalog needed for the worker's subsequent AI turn. Other complete death-save states cover both phases through the worker."
+  }
+}

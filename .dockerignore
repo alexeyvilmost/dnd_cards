@@ -1,31 +1,57 @@
-# Shared repository-root context for frontend and rules-worker builds.
-# Keep this at the context root: the production host uses the legacy Docker
-# builder, which does not honor Dockerfile-specific ignore files.
-.git
-outputs
-.env
-.env.*
-
-frontend/node_modules
-frontend/dist
-frontend/.env
-frontend/.env.*
-frontend/README.md
-frontend/tsconfig.tsbuildinfo
-frontend/tsconfig.node.tsbuildinfo
-frontend/vite.config.d.ts
-frontend/vite.config.js
-
-# Production typechecking must not require local snapshots or sibling test
-# fixtures. Engine source, shared metadata, and scripts remain build inputs.
-frontend/**/*.test.ts
-frontend/**/*.test.tsx
-frontend/src/testing/featAuditFixtures.ts
-frontend/test-fixtures
-frontend/e2e
-frontend/e2e-live
-frontend/.micro-mvp-evidence
+# Safe root fallback. Supported Dockerfiles have narrower per-file policies.
+# BuildKit is required: see docs/release-builds.md.
+**
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/.npmrc
+!frontend/index.html
+!frontend/tsconfig.json
+!frontend/tsconfig.node.json
+!frontend/vite.config.ts
+!frontend/postcss.config.js
+!frontend/tailwind.config.js
+!frontend/nginx.conf.template
+!frontend/start.sh
+!frontend/write-build-info.sh
+!scripts/release/write-build-identity.mjs
+!frontend/Dockerfile
+!frontend/Dockerfile.dockerignore
+!frontend/src/**
+!frontend/utils/**
+!frontend/charges/charges.json
+!frontend/public/**
+!frontend/scripts/check-dice-box-assets.mjs
+!frontend/scripts/pwa-shell.mjs
+!frontend/scripts/media-variants.mjs
+!backend/animationpresentation/catalog.json
+!backend/audiopresentation/catalog.json
+!LICENSE*
+!frontend/worker/artifact.ts
+!frontend/worker/build.mjs
+!frontend/worker/server.mjs
+!frontend/worker/replay.mjs
+!scripts/release/plan-components.mjs
+!scripts/release/component-dependencies.json
+!infra/Dockerfile.rules-worker
+!infra/Dockerfile.rules-worker.dockerignore
+**/.git
+**/.env
+**/.env.*
+**/node_modules
+**/dist
+**/output
+**/outputs
+**/tmp
+**/backups
+**/.local-postgres
 frontend/coverage
-frontend/test-results
-frontend/playwright-report
-frontend/blob-report
+**/test-results
+**/playwright-report
+**/*.test.ts
+**/*.test.tsx
+**/*.test.mjs
+**/*.tsbuildinfo
+frontend/src/testing/featAuditFixtures.ts
+frontend/src/roguelike/testing/currentPinnedFixture.ts
+frontend/src/rules-core/testing/fixtures
+frontend/src/rules-core/testing/pendingReplay.*

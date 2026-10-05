@@ -1,11 +1,11 @@
 import type {ActorState,DeterministicEnvironment} from './domain';
 import {equipCardSwapping,unequipToInventory} from '../character/inventory';
 import {collectItemMechanics} from '../character/attunement';
-import {itemEquipmentChangeIssue} from '../engine/itemEquipmentPolicy';
-import {emitEvent} from '../engine/execute';
+import {itemEquipmentChangeIssue} from './legacy/engineAdapter';
+import {emitEvent} from './legacy/engineAdapter';
 import type {EngineEvent} from '../mvp/contracts';
-import {payloadsOf} from '../engine/mechanicsView';
-import {projectRuntimeCharacter} from '../engine/runtimeCharacterProjection';
+import {payloadsOf} from '../rules-primitives/mechanicsView';
+import {projectRuntimeCharacter,reconcileEquipmentResourceGrants} from './legacy/engineAdapter';
 
 /** The requested operation carries identity only; inventory, slots and effects
  * are recomputed from the same immutable cards used by ordinary equipment UI. */
@@ -31,6 +31,9 @@ export function changeEquipment(actor:ActorState,operation:{equip:string}|{unequ
   ...collectItemMechanics(next.equipment,new Map(cards.map(card=>[card.id,card])),{attuned_ids:actor.character.attunedIds??[]},next.inventory)
    .filter(source=>(source.mechanics.activation as Record<string,unknown>|undefined)?.mode!=='active').map(source=>source.mechanics)];
  const character={...actor.character,equippedCards:cards.filter(card=>Object.values(next.equipment).includes(card.id))};
+ // The draw event may restore a newly granted pool. Reconcile capacity before
+ // emitting it, in the same accepted transition as the physical placement.
+ next=reconcileEquipmentResourceGrants(actor.character,projectRuntimeCharacter(character,next,passives),actor.runtime,next,cards);
  const events:EngineEvent[]=[];
  const beforeIds=new Set(Object.values(actor.runtime.equipment));
  for(const cardId of new Set(Object.values(next.equipment))){

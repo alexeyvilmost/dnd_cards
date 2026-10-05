@@ -1,0 +1,136 @@
+{
+  "measuredAt": "2026-10-04",
+  "buildSeconds": 112.16,
+  "viteSeconds": 30.07,
+  "entry": "index-C6lDBuEK.js",
+  "initialJs": {
+    "files": 1,
+    "rawBytes": 795117,
+    "gzipBytes": 231511
+  },
+  "initialCss": {
+    "files": 1,
+    "rawBytes": 178920,
+    "gzipBytes": 33500
+  },
+  "allBuiltJs": {
+    "files": 259,
+    "rawBytes": 13020491,
+    "gzipBytes": 3661500
+  },
+  "distFiles": 589,
+  "distBytes": 168974643,
+  "initialFiles": [
+    "index-C6lDBuEK.js"
+  ],
+  "routes": {
+    "CardLibrary": {
+      "file": "CardLibrary-fX5dUYJR.js",
+      "own": {
+        "files": 1,
+        "rawBytes": 83848,
+        "gzipBytes": 18244
+      },
+      "staticClosure": {
+        "files": 47,
+        "rawBytes": 976267,
+        "gzipBytes": 294343
+      },
+      "additionalToEntry": {
+        "files": 46,
+        "rawBytes": 181150,
+        "gzipBytes": 62832
+      }
+    },
+    "CharacterSheetMVP": {
+      "file": "CharacterSheetMVP-BP6xaDHo.js",
+      "own": {
+        "files": 1,
+        "rawBytes": 79435,
+        "gzipBytes": 25534
+      },
+      "staticClosure": {
+        "files": 62,
+        "rawBytes": 2695460,
+        "gzipBytes": 759104
+      },
+      "additionalToEntry": {
+        "files": 61,
+        "rawBytes": 1900343,
+        "gzipBytes": 527593
+      }
+    },
+    "CharacterForge": {
+      "file": "CharacterForge-DgG0F2V4.js",
+      "own": {
+        "files": 1,
+        "rawBytes": 79967,
+        "gzipBytes": 24496
+      },
+      "staticClosure": {
+        "files": 30,
+        "rawBytes": 1521175,
+        "gzipBytes": 455855
+      },
+      "additionalToEntry": {
+        "files": 29,
+        "rawBytes": 726058,
+        "gzipBytes": 224344
+      }
+    },
+    "SoloCombatPage": {
+      "file": "SoloCombatPage-D7ROF-2_.js",
+      "own": {
+        "files": 1,
+        "rawBytes": 565156,
+        "gzipBytes": 158471
+      },
+      "staticClosure": {
+        "files": 35,
+        "rawBytes": 2852645,
+        "gzipBytes": 779700
+      },
+      "additionalToEntry": {
+        "files": 34,
+        "rawBytes": 2057528,
+        "gzipBytes": 548189
+      }
+    },
+    "RoguelikePage": {
+      "file": "RoguelikePage-DlTZABUD.js",
+      "own": {
+        "files": 1,
+        "rawBytes": 34119,
+        "gzipBytes": 11492
+      },
+      "staticClosure": {
+        "files": 27,
+        "rawBytes": 1486583,
+        "gzipBytes": 445275
+      },
+      "additionalToEntry": {
+        "files": 26,
+        "rawBytes": 691466,
+        "gzipBytes": 213764
+      }
+    },
+    "PaperSheetEntry": {
+      "file": "PaperSheetEntry-DPJK0GCb.js",
+      "own": {
+        "files": 1,
+        "rawBytes": 132120,
+        "gzipBytes": 41591
+      },
+      "staticClosure": {
+        "files": 17,
+        "rawBytes": 1083229,
+        "gzipBytes": 327459
+      },
+      "additionalToEntry": {
+        "files": 16,
+        "rawBytes": 288112,
+        "gzipBytes": 95948
+      }
+    }
+  }
+}

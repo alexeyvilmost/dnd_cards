@@ -79,6 +79,27 @@ function rejectAllRequests(error: unknown): void {
 describe('charactersV3Api access handling', () => {
   afterEach(() => vi.restoreAllMocks());
 
+  it('uses compatibility only when the additive equipment capability route is absent', async () => {
+    const get = vi.spyOn(apiClient, 'get').mockRejectedValueOnce(new ApiRequestError('old backend', 404));
+    expect(await charactersV3Api.equipmentAuthority()).toEqual({enabled: false});
+    for (const status of [401, 403, 503, undefined]) {
+      get.mockRejectedValueOnce(new ApiRequestError('unavailable', status));
+      await expect(charactersV3Api.equipmentAuthority()).rejects.toBeInstanceOf(Error);
+    }
+    get.mockResolvedValueOnce({data: {}} as never);
+    await expect(charactersV3Api.equipmentAuthority()).rejects.toThrow('Некорректный ответ');
+  });
+
+  it('sends only equipment identity and the original run context, without a client runtime patch', async () => {
+    const post = vi.spyOn(apiClient, 'post').mockResolvedValue({data: {}} as never);
+    const intent = {kind: 'equipment_intent' as const, character_id: character.id,
+      command_id: runtimeCommand.command_id, expected_runtime_revision: 2,
+      operation: {unequip: 'body'}, roguelike_run_id: runtimeCommand.command_id, expected_run_revision: 3};
+    await charactersV3Api.postEquipmentIntent(intent);
+    const {kind: _kind, character_id: _characterId, ...wire} = intent;
+    expect(post).toHaveBeenCalledExactlyOnceWith(`/api/characters-v3/${character.id}/equipment-commands`, wire);
+  });
+
   it('keeps a sale receipt immutable while displaying the latest character after replay', async () => {
     const receipt={...character,runtime_revision:3,current_hp:10},latest={...character,runtime_revision:8,current_hp:4};
     vi.spyOn(apiClient,'post').mockResolvedValue({data:{character:receipt,replayed:true}} as never);

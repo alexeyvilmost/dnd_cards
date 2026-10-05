@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import fixtureJson from './pinnedFighter.fixture.json';
+import fixtureJson from './testing/currentPinnedFixture';
 import itemTriggerPatches from '../../../scripts/content/data/item-triggers-20260929.json';
 import {readSoloCombatState,writeSoloCombatState} from '../solo-combat/persistence';
 import {effectiveCombatActorSpeedFt} from '../solo-combat/tacticalGrid';

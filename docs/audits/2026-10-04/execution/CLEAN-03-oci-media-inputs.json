@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "kind": "media-build-input-proposal",
+  "status": "prepared_not_release_authorized",
+  "deployable": false,
+  "bundleFingerprint": "sha256:b7c9a812753d56f8c0aac28dc43047f127784f5a052f8eb07867d9b7fbec590f",
+  "manifestHash": "sha256:e4a16d54d1cf6fbd2d7f7b60a1b83eb45c091c0e82d3163d3da39f71788f26ec",
+  "files": [
+    {
+      "path": "files/094cce6f8cc5398ce50e465033fd0409e23fbbbb05b2d5acb8ab2dc40761e892.webp",
+      "bytes": 2277304,
+      "sha256": "sha256:094cce6f8cc5398ce50e465033fd0409e23fbbbb05b2d5acb8ab2dc40761e892"
+    },
+    {
+      "path": "files/1cc9a1865c7ebd0ec60639253001a810f5311861fed2b39f351271fdac1ed7b4.webp",
+      "bytes": 1364292,
+      "sha256": "sha256:1cc9a1865c7ebd0ec60639253001a810f5311861fed2b39f351271fdac1ed7b4"
+    },
+    {
+      "path": "files/2826029936b6d9fea27e4dfbe682101f655b95327c4ae03b28135be6a00100d8.webp",
+      "bytes": 2264416,
+      "sha256": "sha256:2826029936b6d9fea27e4dfbe682101f655b95327c4ae03b28135be6a00100d8"
+    },
+    {
+      "path": "files/2931453ee3f7d4158b23ddbe27fdab223bcc38c24c6b5b8d1b2b4cab1cc4f7f5.webp",
+      "bytes": 2751056,
+      "sha256": "sha256:2931453ee3f7d4158b23ddbe27fdab223bcc38c24c6b5b8d1b2b4cab1cc4f7f5"
+    },
+    {
+      "path": "files/2b6b11306b5a06a5b31577183c2d203c738498cf8aa9ede55f74c8615b315e47.webp",
+      "bytes": 35314,
+      "sha256": "sha256:2b6b11306b5a06a5b31577183c2d203c738498cf8aa9ede55f74c8615b315e47"
+    },
+    {
+      "path": "files/2dbecf5f9e1c9331e3d7559c7201db1757f063d9fb77dfc7114bbea86350c8fd.webp",
+      "bytes": 2004556,
+      "sha256": "sha256:2dbecf5f9e1c9331e3d7559c7201db1757f063d9fb77dfc7114bbea86350c8fd"
+    },
+    {
+      "path": "files/316cf32edd987e1414403e6e5e5507324cbe0ceefb482a604ad70420242c6d3f.webp",
+      "bytes": 2213136,
+      "sha256": "sha256:316cf32edd987e1414403e6e5e5507324cbe0ceefb482a604ad70420242c6d3f"
+    },
+    {
+      "path": "files/4326488aa6cace4f4156c916bf8995fab80e860c324bb80de7bb098bab4a2bea.webp",
+      "bytes": 1599288,
+      "sha256": "sha256:4326488aa6cace4f4156c916bf8995fab80e860c324bb80de7bb098bab4a2bea"
+    },
+    {
+      "path": "files/5ecb29356f2a1878297fe53828abdfae25496c310c966a8fa33f3a17e70fbf0c.webp",
+      "bytes": 2428420,
+      "sha256": "sha256:5ecb29356f2a1878297fe53828abdfae25496c310c966a8fa33f3a17e70fbf0c"
+    },
+    {
+      "path": "files/6be6ed4a5c9c2059ac55afaef8f8be3b3c68b20c5aabd509b4c02b594cc886d0.webp",
+      "bytes": 1947662,
+      "sha256": "sha256:6be6ed4a5c9c2059ac55afaef8f8be3b3c68b20c5aabd509b4c02b594cc886d0"
+    },
+    {
+      "path": "files/6f7e02692a6828a4bfd21e5829d57dec634b2b9fcb25f06fe148038922c63cea.webp",
+      "bytes": 261914,
+      "sha256": "sha256:6f7e02692a6828a4bfd21e5829d57dec634b2b9fcb25f06fe148038922c63cea"
+    },
+    {
+      "path": "files/9e68f0803c0cef59068c130831b503555a8a98a6875278f351de1aefcd011aba.webp",
+      "bytes": 2197718,
+      "sha256": "sha256:9e68f0803c0cef59068c130831b503555a8a98a6875278f351de1aefcd011aba"
+    },
+    {
+      "path": "files/b06907ec4e21f4de28ecdbc4fa13148f7dac50493b28c5ffef077c6615d9b8a2.webp",
+      "bytes": 2235238,
+      "sha256": "sha256:b06907ec4e21f4de28ecdbc4fa13148f7dac50493b28c5ffef077c6615d9b8a2"
+    },
+    {
+      "path": "files/e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f.webp",
+      "bytes": 1770492,
+      "sha256": "sha256:e4d5f8213b79b072b1097e24e15f53763fbe51ad573718ac9ad9d1bb10efa32f"
+    },
+    {
+      "path": "files/e700cb69488751036cf8f898aa059c57bf251afdc34d42ea60651b3e36ff6c89.webp",
+      "bytes": 2467494,
+      "sha256": "sha256:e700cb69488751036cf8f898aa059c57bf251afdc34d42ea60651b3e36ff6c89"
+    },
+    {
+      "path": "files/e868f9d87d09e77c69a2b52cf7db5636d0f574656225c05c008315596921743a.webp",
+      "bytes": 1570986,
+      "sha256": "sha256:e868f9d87d09e77c69a2b52cf7db5636d0f574656225c05c008315596921743a"
+    },
+    {
+      "path": "files/edb82d498cb53e0495f31425a1a2b91962ff66d4f6b3f67c555ba293268a434b.webp",
+      "bytes": 59062,
+      "sha256": "sha256:edb82d498cb53e0495f31425a1a2b91962ff66d4f6b3f67c555ba293268a434b"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 59160,
+      "sha256": "sha256:e4a16d54d1cf6fbd2d7f7b60a1b83eb45c091c0e82d3163d3da39f71788f26ec"
+    }
+  ],
+  "browserEvidence": {
+    "reportHash": "sha256:f476ec909777207cf5150e25a26a361aea27f7ce3776801b74bd8bd265665e15",
+    "browser": "154.0.8037.93",
+    "verifiedPairs": 17,
+    "binding": "retrospective_exact_URL_set_and_content_hash_match; not signed release attestation"
+  },
+  "runtimeManifestHash": "sha256:1592e14385e1d8e495a8e387a8f7863849101209e321de72409022099448f678",
+  "eligibility": "opaque_or_binary_alpha_only",
+  "sourceOriginalsRetained": true,
+  "futureBuildInputs": {
+    "VITE_MEDIA_VARIANTS": "1",
+    "MEDIA_VARIANTS_BUNDLE": "/app/media-bundle"
+  },
+  "requiredBeforeOCI": [
+    "versioned release manifest/config extension",
+    "named immutable bundle context included in frontend fingerprint",
+    "complete originals visible to build adapter",
+    "enabled build/HTTP/print and OCI acceptance",
+    "explicit authorized publication and production deployment"
+  ],
+  "note": "Current release schema v1 and Dockerfile deliberately reject enabled media; this proposal is not a component fingerprint or OCI digest"
+}

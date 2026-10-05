@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ImageJobsPanel from '../components/ImageJobsPanel';
 import { Sparkles, Download, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { imagesApi } from '../api/imagesApi';
 import type { ImageGenerationQuality } from '../api/imagesApi';
@@ -85,6 +86,7 @@ const ImageStudio = () => {
           </p>
         </div>
 
+        <ImageJobsPanel />
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Форма */}
           <div className="lg:col-span-5">

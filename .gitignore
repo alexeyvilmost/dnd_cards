@@ -51,6 +51,10 @@ backups/
 dump*.sql
 *.dump
 /outputs/
+# Local generated artwork, captures and disposable comparison checkouts.
+# Existing tracked files remain versioned; these rules do not remove originals.
+/output/
+/tmp/
 /.local-postgres/
 /bestiary/
 *.tsbuildinfo

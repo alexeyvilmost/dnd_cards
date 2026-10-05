@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "kind": "post-live-scan-backup-freshness",
+  "status": "passed",
+  "command": "node --test scripts/release/deploy-state.test.mjs scripts/release/docker-deployment.test.mjs scripts/release/backup-manifest.test.mjs",
+  "tests": 34,
+  "failures": 0,
+  "skips": 0,
+  "peerReview": "tests_architecture and root: PASS",
+  "sourceFiles": [
+    {
+      "path": "scripts/release/deploy-state.mjs",
+      "sha256": "sha256:feb216cfcd5faa15852905172d53dcd80ee2165ea65612eab65291dd19f973bb"
+    },
+    {
+      "path": "scripts/release/deploy-state.test.mjs",
+      "sha256": "sha256:f837861b0fa69c701180192953d336f174df9749e540821f414db80cb3df2402"
+    }
+  ],
+  "checks": [
+    "no-schema stale-during-scan: zero replacements",
+    "additive stale-during-scan: zero replacements, expanded database proof and old application retained",
+    "fresh backup checked again after scan",
+    "backup expires after candidate failure: compatible rollback still succeeds",
+    "same captured previous release and restore proof; no dump or timestamp renewal"
+  ]
+}

@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "scope": "Local core on frozen working-tree source; production and OCI not exercised",
+  "status": "passed",
+  "suite": "core",
+  "started_at": "2026-10-04T20:02:15.545Z",
+  "duration_ms": 246073,
+  "manifest_sha256": "fda2c317fc80240fe9d4ab48338d4d0595e154ccf0e96494660f827f3636500c",
+  "source_sha256": "6977e30cb60685f6795b6f8ee2738eb3eb647060876c9bd46290b67180fd7f82",
+  "source_files": 4252,
+  "report": "outputs/testing/final-core-3/report.json",
+  "run_id": "test_cd204c423ae3c24b17436501",
+  "artifact_hash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+  "checks": [
+    {
+      "id": "source-hygiene",
+      "status": "passed",
+      "started_at": "2026-10-04T20:02:16.292Z",
+      "result": {
+        "status": "passed"
+      },
+      "duration_ms": 5682
+    },
+    {
+      "id": "node-contracts",
+      "status": "passed",
+      "started_at": "2026-10-04T20:02:21.977Z",
+      "result": {
+        "tests": 150,
+        "passed": 150,
+        "skipped": 0
+      },
+      "duration_ms": 8958
+    },
+    {
+      "id": "isolated-stack",
+      "status": "passed",
+      "started_at": "2026-10-04T20:02:30.936Z",
+      "result": {
+        "run_id": "test_cd204c423ae3c24b17436501",
+        "mode": "integration"
+      },
+      "duration_ms": 143035
+    },
+    {
+      "id": "vitest",
+      "status": "passed",
+      "started_at": "2026-10-04T20:04:53.973Z",
+      "result": {
+        "tests": 221,
+        "passed": 221,
+        "skipped": 0
+      },
+      "duration_ms": 21099
+    },
+    {
+      "id": "worker-and-database-node",
+      "status": "passed",
+      "started_at": "2026-10-04T20:05:15.073Z",
+      "result": {
+        "tests": 10,
+        "passed": 10,
+        "skipped": 0
+      },
+      "duration_ms": 3145
+    },
+    {
+      "id": "backend-compile",
+      "status": "passed",
+      "started_at": "2026-10-04T20:05:18.291Z",
+      "result": {
+        "compiled": true,
+        "tests_executed": false
+      },
+      "duration_ms": 1512
+    },
+    {
+      "id": "go-backend",
+      "status": "passed",
+      "started_at": "2026-10-04T20:05:19.805Z",
+      "result": {
+        "required": 75,
+        "passed": 75
+      },
+      "duration_ms": 17529
+    },
+    {
+      "id": "go-migrations",
+      "status": "passed",
+      "started_at": "2026-10-04T20:05:37.336Z",
+      "result": {
+        "required": 10,
+        "passed": 10
+      },
+      "duration_ms": 7926
+    },
+    {
+      "id": "local-api-spine",
+      "status": "passed",
+      "started_at": "2026-10-04T20:05:45.266Z",
+      "result": {
+        "exit_code": 0,
+        "contract": "Actual API/worker/PostgreSQL: template copy, run, initialize, exact retry, reload and source isolation"
+      },
+      "duration_ms": 1089
+    },
+    {
+      "id": "local-browser-flows",
+      "status": "passed",
+      "started_at": "2026-10-04T20:05:46.357Z",
+      "result": {
+        "tests": 11,
+        "passed": 11,
+        "skipped": 0,
+        "projects": [
+          ""
+        ]
+      },
+      "duration_ms": 28747
+    },
+    {
+      "id": "source-stability",
+      "status": "passed",
+      "started_at": "2026-10-04T20:06:15.106Z",
+      "result": {
+        "unchanged": true,
+        "files": 4252,
+        "sha256": "6977e30cb60685f6795b6f8ee2738eb3eb647060876c9bd46290b67180fd7f82"
+      },
+      "duration_ms": 1181
+    }
+  ],
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "go_race": false,
+  "limitations": []
+}

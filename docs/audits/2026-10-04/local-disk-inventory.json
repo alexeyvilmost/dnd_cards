@@ -1,0 +1,42 @@
+{
+  "tmp": {
+    "files": 3235,
+    "bytes": 1072320742
+  },
+  "output": {
+    "files": 29493,
+    "bytes": 13457760300
+  },
+  "outputs": {
+    "files": 19325,
+    "bytes": 19345832105
+  },
+  "references": {
+    "files": 23,
+    "bytes": 36871926
+  },
+  "frontend/public": {
+    "files": 285,
+    "bytes": 155121376
+  },
+  "frontend/dist": {
+    "files": 589,
+    "bytes": 168974643
+  },
+  "node_modules": {
+    "files": 39806,
+    "bytes": 423640632
+  },
+  "frontend/node_modules": {
+    "files": 82300,
+    "bytes": 933211518
+  },
+  "backups": {
+    "files": 6,
+    "bytes": 1688551546
+  },
+  ".local-postgres": {
+    "files": 13944,
+    "bytes": 22147249031
+  }
+}

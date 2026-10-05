@@ -7,6 +7,7 @@ import type { PassiveEffect } from '../types';
 import EffectPreview from './EffectPreview';
 import HoverCard from './HoverCard';
 import DialogShell from './DialogShell';
+import {useSiteSettings} from '../settings';
 import './ActiveEffectCard.css';
 
 function entityReference(group: ActiveEffectDisplayGroup) {
@@ -36,7 +37,7 @@ export default function ActiveEffectCard({
   group,
   className = '',
   actions,
-  variant = 'icon',
+  variant: requestedVariant,
   onInspect,
 }: {
   group: ActiveEffectDisplayGroup;
@@ -45,6 +46,8 @@ export default function ActiveEffectCard({
   variant?: 'row' | 'icon';
   onInspect?: (entity: PassiveEffect) => void;
 }) {
+  const settings = useSiteSettings();
+  const variant = requestedVariant ?? settings.entityDisplay.effects;
   const [detailsOpen, setDetailsOpen] = useState(false);
   const entity = useActiveEffectEntity(group);
   const icon = entity?.image_url?.trim();

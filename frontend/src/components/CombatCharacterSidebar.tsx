@@ -49,7 +49,7 @@ export function CombatActiveEffects({
       {groupActiveEffectsForDisplay(effects).map((group) => {
         const remoteManipulator = group.effects.find((effect) => remoteManipulatorSpec(effect));
         return <div key={group.key} className="combat-sheet-effect">
-          <ActiveEffectCard group={group} variant="icon" actions={(() => {
+          <ActiveEffectCard group={group} actions={(() => {
             const boon = group.effects.map(runtimeBoonSpec).find(Boolean);
             return boon && onActivateBoon ? (
               <button type="button" className="forge-btn ghost sheet-active-effect-use" disabled={boonDisabled} onClick={() => setSelectedBoon(boon)}>

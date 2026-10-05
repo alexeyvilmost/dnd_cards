@@ -1,0 +1,24 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "id": "missing-artifact",
+      "status": "passed"
+    },
+    {
+      "id": "corrupt-dump",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-manifest",
+      "status": "passed"
+    },
+    {
+      "id": "schema-mismatch",
+      "status": "passed"
+    }
+  ],
+  "sourceBackup": "test_af403ad68445bc7c6fea3e66",
+  "targetRunId": "test_12bd69aac393b68772495dd5",
+  "cleanup": "stopped"
+}

@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   backend:
-    build: 
+    build:
       context: ./backend
       dockerfile: Dockerfile
     environment:
@@ -23,11 +21,11 @@ services:
       retries: 3
 
   frontend:
-    build: 
-      context: ./frontend
-      dockerfile: Dockerfile
-    environment:
-      - VITE_API_URL=${VITE_API_URL}
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
     ports:
       - "3000:3000"
     depends_on:

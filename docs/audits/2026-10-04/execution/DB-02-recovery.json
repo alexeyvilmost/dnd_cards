@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "scope": "owned-synthetic-recovery",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "snapshot",
+      "status": "passed"
+    },
+    {
+      "id": "artifacts",
+      "status": "passed"
+    },
+    {
+      "id": "migrations",
+      "status": "passed"
+    },
+    {
+      "id": "media-references",
+      "status": "passed"
+    },
+    {
+      "id": "pending-decision",
+      "status": "passed",
+      "heldHash": "sha256:d25b31a7fda30cf0ccf78c470421d479150862a9bcd97e9b989f0931ba98c18f",
+      "previousArtifact": "sha256:5eedc099bbfc8e6e7641b9a07cbe9548e53b1881b6a1ae82d7c132300a4e697f",
+      "currentArtifact": "sha256:dd14f24b4fac79b1b815ecf69182d7a83e426d622deceefcbebea3f33c1aacae"
+    },
+    {
+      "id": "duplicate-command",
+      "status": "passed",
+      "before": {
+        "revision": 3,
+        "envelope_hash": "f399823378a2c374b94636c25eb31dbf",
+        "catalog_hash": "878b338b0340c485ca3d841bcc2aa3ce",
+        "entropy_cursor": 4,
+        "receipts": 3,
+        "journal": 2,
+        "command_receipts": 1
+      },
+      "after": {
+        "revision": 4,
+        "envelope_hash": "63fc1b6476ff5f6661bf8504bfbcf482",
+        "catalog_hash": "878b338b0340c485ca3d841bcc2aa3ce",
+        "entropy_cursor": 5,
+        "receipts": 4,
+        "journal": 3,
+        "command_receipts": 1
+      }
+    },
+    {
+      "id": "current-artifact",
+      "status": "passed",
+      "artifactHash": "sha256:dd14f24b4fac79b1b815ecf69182d7a83e426d622deceefcbebea3f33c1aacae"
+    }
+  ],
+  "limitations": [
+    "synthetic local integration data",
+    "new current CJS byte revision is a comment-only routing fixture; not all historical production artifacts",
+    "media URLs restored, off-host object bytes not copied",
+    "UI assets reuse existing local build; browser correctness belongs to TEST-04"
+  ],
+  "compactReceipts": 3,
+  "mediaReferenceCount": 4,
+  "backupHash": "sha256:172b8687ee25375cc1b6bc353b9d329b1a8b08081f05f0c4b7316a2384f1f1b6",
+  "schemaFingerprint": "sha256:0e251b1ff233f10df0be0e4bbebe49526f188c9003abe0989c1fac224f2e53b9",
+  "sourceRunId": "test_d209fcbb69433f57bfb11dec",
+  "snapshotBytes": 1212165,
+  "snapshotDurationMs": 2345.894199999995,
+  "restoredRunId": "test_bba31089ab20e73f2f9e549a",
+  "restoreDurationMs": 2650.789499999999,
+  "cleanup": [
+    {
+      "runId": "test_bba31089ab20e73f2f9e549a",
+      "status": "stopped"
+    },
+    {
+      "runId": "test_d209fcbb69433f57bfb11dec",
+      "status": "stopped"
+    }
+  ],
+  "totalDurationMs": 61710.3975
+}

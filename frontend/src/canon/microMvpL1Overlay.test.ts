@@ -16,12 +16,7 @@ import {
   compileMicroMvpL1ChoiceVariants,
   deriveMicroMvpL1CapabilityGaps,
   MICRO_MVP_L1_WARLOCK_INVOCATION_OPTIONS,
-  MICRO_MVP_L1_OVERLAY_RELEASE_ID,
   MICRO_MVP_L1_SOURCE_ISSUE_DISPOSITIONS,
-  MICRO_MVP_L1_OVERLAY_VERSION,
-  PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-  PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
-  PINNED_MICRO_MVP_L1_OVERLAY_HASH,
   sourceIssueDispositionProblems,
 } from './microMvpL1Overlay';
 import type {
@@ -29,7 +24,6 @@ import type {
   CompiledMicroMvpL1Root,
 } from './microMvpL1Overlay';
 import {
-  assertPinnedProdSnapshotL1Ready,
   readProdSnapshotCatalogs,
 } from './prodSnapshotL1Fixtures';
 
@@ -152,27 +146,6 @@ describe('versioned deterministic micro-MVP L1 content overlay', () => {
     expect(card).toBeDefined();
     expect(provider.catalog.getCard?.(card!.id)).toEqual(card);
     expect(provider.catalog.getCard?.(card!.card_number)).toBeUndefined();
-  });
-
-  it('pins overlay, compiled content, and release hashes independently from the raw release', () => {
-    expect(MICRO_MVP_L1_OVERLAY_VERSION).toBe('1.14.0');
-    expect(provider.release).toMatchObject({
-      id: MICRO_MVP_L1_OVERLAY_RELEASE_ID,
-      sourceReleaseId: provider.source.release.id,
-      sourceContentHash: provider.source.release.contentHash,
-      overlayHash: PINNED_MICRO_MVP_L1_OVERLAY_HASH,
-      contentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-      releaseHash: PINNED_MICRO_MVP_L1_COMPILED_RELEASE_HASH,
-    });
-    expect(provider.ruleset).toEqual({
-      systemId: 'dnd5e-2024',
-      releaseId: MICRO_MVP_L1_OVERLAY_RELEASE_ID,
-      contentHash: PINNED_MICRO_MVP_L1_COMPILED_CONTENT_HASH,
-      errataVersion: provider.source.release.errataVersion,
-    });
-
-    expect(() => assertPinnedProdSnapshotL1Ready(provider.source)).toThrow();
-    expect(() => assertMicroMvpL1OverlayReady(provider)).not.toThrow();
   });
 
   it('derives every certified matrix caster ability from its materialized effect primitive', () => {

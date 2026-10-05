@@ -1,0 +1,125 @@
+name: Deploy validated immutable composition
+
+# Prepared only. Both tracked policy and repository variables default disabled.
+on:
+  workflow_dispatch:
+    inputs:
+      release_run_id:
+        description: 'Successful release.yml run containing verified immutable candidate images'
+        required: true
+        type: string
+      adopt_legacy:
+        description: 'First transition from the separately inspected legacy deployment; requires exact backup and rollback rehearsal'
+        required: false
+        type: boolean
+        default: false
+  workflow_run:
+    workflows: ['Prepare immutable release images']
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+
+# Never cancel an active migration/cutover because a newer push arrives.
+concurrency:
+  group: production-composition
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: vars.PRODUCTION_DEPLOY_ENABLED == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && vars.AUTO_DEPLOY_MAIN_ENABLED == 'true'))
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      source_sha: ${{ steps.candidate.outputs.source_sha }}
+      deployment_mode: ${{ steps.identity.outputs.deployment_mode }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - id: identity
+        env:
+          DEPLOY_EVENT: ${{ github.event_name }}
+          ADOPT_LEGACY: ${{ inputs.adopt_legacy && 'true' || 'false' }}
+          DEPLOY_BRANCH: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+          DEPLOY_SHA: ${{ github.sha }}
+          UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
+          RELEASE_RUN: ${{ inputs.release_run_id || github.event.workflow_run.id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          node control/scripts/release/deployment-handoff.mjs policy control/infra/deployment-policy.json
+          echo "deployment_mode=$(node control/scripts/release/deployment-handoff.mjs mode)" >> "$GITHUB_OUTPUT"
+          node control/scripts/release/ci-release.mjs verify-run "$RELEASE_RUN" "$GITHUB_REPOSITORY" - release verified-release-run.json
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: release-candidate
+          path: candidate
+          run-id: ${{ inputs.release_run_id || github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - id: candidate
+        name: Verify application source separately from the release workflow commit
+        run: |
+          source_sha=$(node control/scripts/release/deployment-handoff.mjs candidate candidate verified-release-run.json)
+          echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
+          cp verified-release-run.json candidate/verified-release-run.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: validated-deployment-input
+          path: candidate/
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: prepare
+    environment: production
+    # Public repository: no production-capable self-hosted Actions runner.
+    # Dedicated SSH credentials belong to the main-only production environment.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: control
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: validated-deployment-input
+          path: candidate
+      - name: Transfer exact control and candidate; run verified host gates over SSH
+        env:
+          DEPLOY_MODE: ${{ needs.prepare.outputs.deployment_mode }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          PRODUCTION_DEPLOY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+          DEPLOY_HOST_CONFIG_FILE: ${{ vars.DEPLOY_HOST_CONFIG_FILE }}
+          REHEARSAL_CONFIG_FILE: ${{ vars.REHEARSAL_CONFIG_FILE }}
+          DEPLOY_SSH_HOST: ${{ vars.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_USER: ${{ vars.DEPLOY_SSH_USER }}
+          DEPLOY_SSH_PORT: ${{ vars.DEPLOY_SSH_PORT }}
+          DEPLOY_SSH_ATTEMPT_ROOT: ${{ vars.DEPLOY_SSH_ATTEMPT_ROOT }}
+          DEPLOY_SSH_NODE: ${{ vars.DEPLOY_SSH_NODE }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: node control/scripts/release/ssh-deploy.mjs control candidate deployed-release
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: deployed-release
+          path: deployed-release/
+          if-no-files-found: error
+          retention-days: 90

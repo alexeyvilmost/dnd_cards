@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "passed_local",
+  "created_at": "2026-10-04T22:00:45.885Z",
+  "source_snapshot": {
+    "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+    "files": 4313
+  },
+  "reports": [
+    {
+      "suite": "core",
+      "report": "TEST-03-final-core.json",
+      "duration_ms": 268898,
+      "numerically_counted_tests": 504
+    },
+    {
+      "suite": "extended",
+      "report": "TEST-03-final-extended.json",
+      "duration_ms": 1095961,
+      "numerically_counted_tests": 7586
+    }
+  ],
+  "exclusions": [
+    "OCI build/pull/cutover/rollback not executed",
+    "Linux Go race not executed",
+    "Historical fresh migration chain 001–300 not verified",
+    "Production/provider403 and external paid access not diagnosed"
+  ],
+  "source_modified_after_checks": false,
+  "production_modified": false,
+  "commit_created": false,
+  "push_performed": false
+}

@@ -1,0 +1,133 @@
+{
+  "task": "REF-02",
+  "core": {
+    "report": "outputs/testing/final-core-3/report.json",
+    "status": "passed",
+    "durationMs": 246073,
+    "runId": "test_cd204c423ae3c24b17436501",
+    "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+    "uiBuild": {
+      "reused": false,
+      "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_cd204c423ae3c24b17436501\\ui-dist",
+      "indexHash": "3af1ca5009b2d96a6a39a7ba0b557334d0aa5044f38450add5e8347e8d156e59",
+      "manifestHash": "b83e6ff1d4dcca7e5fae08479aa3d9139a304fad136dd2f0bcc8457bc5c33566",
+      "files": 628,
+      "bytes": 169187124
+    },
+    "checks": [
+      {
+        "id": "source-hygiene",
+        "status": "passed",
+        "result": {
+          "status": "passed"
+        }
+      },
+      {
+        "id": "node-contracts",
+        "status": "passed",
+        "result": {
+          "tests": 150,
+          "passed": 150,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "isolated-stack",
+        "status": "passed",
+        "result": {
+          "run_id": "test_cd204c423ae3c24b17436501",
+          "mode": "integration"
+        }
+      },
+      {
+        "id": "vitest",
+        "status": "passed",
+        "result": {
+          "tests": 221,
+          "passed": 221,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "worker-and-database-node",
+        "status": "passed",
+        "result": {
+          "tests": 10,
+          "passed": 10,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "backend-compile",
+        "status": "passed",
+        "result": {
+          "compiled": true,
+          "tests_executed": false
+        }
+      },
+      {
+        "id": "go-backend",
+        "status": "passed",
+        "result": {
+          "required": 75,
+          "passed": 75
+        }
+      },
+      {
+        "id": "go-migrations",
+        "status": "passed",
+        "result": {
+          "required": 10,
+          "passed": 10
+        }
+      },
+      {
+        "id": "local-api-spine",
+        "status": "passed",
+        "result": {
+          "exit_code": 0,
+          "contract": "Actual API/worker/PostgreSQL: template copy, run, initialize, exact retry, reload and source isolation"
+        }
+      },
+      {
+        "id": "local-browser-flows",
+        "status": "passed",
+        "result": {
+          "tests": 11,
+          "passed": 11,
+          "skipped": 0,
+          "projects": [
+            ""
+          ]
+        }
+      },
+      {
+        "id": "source-stability",
+        "status": "passed",
+        "result": {
+          "unchanged": true,
+          "files": 4252,
+          "sha256": "6977e30cb60685f6795b6f8ee2738eb3eb647060876c9bd46290b67180fd7f82"
+        }
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "targeted": {
+    "tests": 65,
+    "passed": 65,
+    "skipped": 0,
+    "typecheck": "passed",
+    "source": "REF-02-local-persistence.json"
+  },
+  "routeGraph": "REF-02-route-graph.json",
+  "reactProfile": "REF-02-react-summary.json",
+  "extended": {
+    "owner": "root shared final runner",
+    "status": "pending",
+    "note": "No completion claim until its actual report passes."
+  }
+}

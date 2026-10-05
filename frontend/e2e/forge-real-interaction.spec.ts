@@ -133,9 +133,8 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   // the real accessible control instead of bypassed with a forced click.
   await openForgeSection(page, 'Вид');
   await expect(page.getByRole('complementary', { name: 'Предложение мобильной версии' })).toBeHidden();
-  const showAllContent = page.getByRole('checkbox', { name: /Показать все сущности/ });
-  await showAllContent.check();
-  await expect(showAllContent).toBeChecked();
+  // The current manual-review UI exposes the catalog directly; no retired
+  // automatic-certification checkbox is required to choose these entities.
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByTestId('offline-rules-authority'),
     'the isolated server must expose the certified database condition release').toHaveCount(0);
@@ -241,7 +240,10 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   }).toBeGreaterThan(0);
 
   const writesBeforeMove = fixture.runtimePatchRequests.length;
-  await page.getByRole('button', { name: /^Движение \d+ фт\./ }).click();
+  await page.getByRole('button', { name: /^Движение: \d+ фт\./ }).click();
+  const movement = page.getByRole('dialog', { name: 'Перемещение', exact: true });
+  await expect(movement.getByRole('button', { name: /^Ходьба/ })).toHaveAttribute('aria-pressed', 'true');
+  await movement.getByRole('button', { name: 'Применить', exact: true }).click();
   await page.getByRole('button', { name: 'Клетка 4, 3', exact: true }).click();
   await expect.poll(() => fixture.runtimePatchRequests.length).toBeGreaterThan(writesBeforeMove);
 
@@ -262,6 +264,7 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
   await executableWeaponButton!.click();
   await page.locator(`.tactical-cell[data-actor-id^="${BROWSER_MONSTER.id}:"]`).click();
   await expect.poll(() => fixture.runtimePatchRequests.length).toBeGreaterThan(writesBeforeAttack);
+  await page.getByRole('button', { name: 'Показать журнал боя', exact: true }).click();
   await expect(page.locator('.combat-log')).toContainText(executableWeaponAction!.name);
   await expect.poll(() => {
     const resources = fixture.getCharacter('playwright-character-1')?.resources as

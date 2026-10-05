@@ -13,11 +13,13 @@ import { BrowserIndexedDbRulesWorldStore } from '../rules-session/indexedDbStore
 import { PersistentRulesSession } from '../rules-session/RulesSession';
 import type { RulesWorldStore } from '../rules-session/store';
 import type { Card } from '../types';
-import compiledFixture from './rulesLabFixture.generated.json';
+import compiledFixture from './rulesLabFixture.v6.generated.json';
 
 export const RULES_LAB_FIXTURE_VERSION = compiledFixture.fixtureVersion;
-export const RULES_LAB_WORLD_ID = 'rules-lab:dnd-2024:compiled-l1-v4';
-export const RULES_LAB_DATABASE_NAME = 'dnd-cards-rules-lab-v4';
+// A new compiler fixture gets a new world/store identity. Existing v4 worlds
+// and their journals stay in their original database; they are never repinned.
+export const RULES_LAB_WORLD_ID = 'rules-lab:dnd-2024:compiled-l1-v6';
+export const RULES_LAB_DATABASE_NAME = 'dnd-cards-rules-lab-v6';
 export const RULES_LAB_DATABASE_SCHEMA_VERSION = 4;
 export const RULES_LAB_ACTOR_IDS = ['fighter', 'wizard'] as const;
 export const RULES_LAB_OBJECT_ID = 'rules-lab:unsecured-crate' as const;

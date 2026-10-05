@@ -1,16 +1,25 @@
-FROM node:20-slim AS build
+# syntax=docker/dockerfile:1
+ARG NODE_IMAGE=node:24-slim
+FROM ${NODE_IMAGE} AS build
 WORKDIR /app/frontend
-COPY frontend/package*.json frontend/.npmrc ./
-RUN npm ci --ignore-scripts --include=dev --no-audit --no-fund
+COPY frontend/package.json frontend/package-lock.json frontend/.npmrc ./
+ARG BUILD_CACHE_SCOPE=bagofholding-worker
+RUN --mount=type=cache,id=${BUILD_CACHE_SCOPE}-npm,target=/root/.npm,sharing=locked \
+    npm ci --ignore-scripts --include=dev --no-audit --no-fund
 COPY frontend/src ./src
 COPY frontend/utils ./utils
-COPY frontend/charges ./charges
+COPY frontend/charges/charges.json ./charges/charges.json
 COPY frontend/worker ./worker
 COPY backend/animationpresentation/catalog.json /app/backend/animationpresentation/catalog.json
-COPY scripts /app/scripts
+# build.mjs checks its actual graph against the REL-01 dependency contract.
+COPY scripts/release/plan-components.mjs scripts/release/component-dependencies.json /app/scripts/release/
 RUN node worker/build.mjs
+COPY scripts/release/write-build-identity.mjs /app/scripts/release/write-build-identity.mjs
+ARG COMPONENT_SOURCE_COMMIT
+ARG COMPONENT_INPUT_FINGERPRINT
+RUN node /app/scripts/release/write-build-identity.mjs rulesWorker worker/dist/component-identity.json worker/dist/artifact.cjs
 
-FROM node:20-slim
+FROM ${NODE_IMAGE}
 WORKDIR /app
 COPY --from=build /app/frontend/worker/dist ./
 USER node

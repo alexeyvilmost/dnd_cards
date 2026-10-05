@@ -12,7 +12,11 @@ vi.mock('../contexts/AuthContext',()=>({
  useAuth:()=>({isAuthenticated:true,isLoading:false}),
 }));
 vi.mock('../components/Layout',()=>({default:({children}:{children:ReactNode})=><>{children}</>}));
+vi.mock('../components/RulesAuthorityBoundary',()=>({default:({children}:{children:ReactNode})=><>{children}</>}));
 vi.mock('../pages/HomePage',()=>({default:()=> <main>Главная</main>}));
+vi.mock('../pages/RoguelikePage',()=>({default:()=> <main>Забег</main>}));
+vi.mock('../pages/SoloCombatPage',()=>({default:()=> <main>Бой</main>}));
+vi.mock('../pages/CharacterSheetMVP',()=>({default:()=> <main>Лист</main>}));
 vi.mock('../pages/PaperSheetEntry',()=>({default:()=> <main>Бумажный лист</main>}));
 vi.mock('../components/CharacterV3AccessNotice',()=>({default:()=>null}));
 vi.mock('../mobile/MobileSuggestion',()=>({default:()=>null}));

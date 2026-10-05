@@ -179,16 +179,7 @@ function runWorldScenario(input: WorldScenarioInput): ScenarioRun & {
     ? [
       cast,
       ...(input.afterCast?.(context) ?? []),
-      {
-        do: 'startEncounter',
-        actor: 'subject',
-        assertions: [{
-          id: `${base.id}:EXPLORATION-TO-ENCOUNTER`,
-          type: 'equals',
-          path: 'scene.mode',
-          value: 'encounter',
-        }],
-      },
+      // The mandatory shared protocol already starts the encounter explicitly.
       ...base.spec.steps,
     ]
     : [

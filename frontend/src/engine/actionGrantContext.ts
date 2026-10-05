@@ -1,16 +1,9 @@
 import type { ActiveEffectEntry, ExecuteContext, RuntimeState } from '../mvp/contracts';
-import { collectGrantActionSlugs } from '../mechanics/actionGrants';
+import {matchingRuntimeActionGrants} from '../rules-primitives/runtimeActionGrants';
+export {matchingRuntimeActionGrants} from '../rules-primitives/runtimeActionGrants';
 import {projectRuntimeCharacter} from './runtimeCharacterProjection';
 
 type Dict = Record<string, unknown>;
-
-/** Catalog gates only; the UI cannot invent a live grant by naming an action. */
-export function matchingRuntimeActionGrants(state: RuntimeState, mechanics: Dict, level?: number): ActiveEffectEntry[] {
-  const references = mechanics.requires_runtime_action_grant;
-  if (!Array.isArray(references) || !references.length || references.some(ref => typeof ref !== 'string' || !ref.trim())) return [];
-  return state.activeEffects.filter(effect => (effect.roundsLeft === undefined || effect.roundsLeft > 0)
-    && collectGrantActionSlugs(effect.mechanics, level).some(ref => references.includes(ref)));
-}
 
 /** This snapshot was created by grant_effect in the authoritative executor and
  * travels with the recipient, including when the original caster is absent. */

@@ -34,6 +34,7 @@ vi.mock('./pages/Login', () => {
   }
   return { default: LoginMock };
 });
+vi.mock('./pages/CharacterForge', () => ({ default: () => createElement('main', { 'data-testid': 'forge-route-marker' }, 'Forge') }));
 vi.mock('./pages/RulesLab', () => ({
   default: () => createElement('main', { 'data-testid': 'rules-lab-route-marker' }, 'Rules lab'),
 }));
@@ -134,7 +135,7 @@ describe('/rules-lab route', () => {
   });
 
   it('makes the offline rules authority visible after a fail-closed bootstrap', async () => {
-    mocks.useAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
+    mocks.useAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
     mocks.loadConditions.mockResolvedValue({
       mode: 'offline_fixture',
       reason: 'condition release is incomplete',
@@ -146,7 +147,7 @@ describe('/rules-lab route', () => {
     await act(async () => {
       root.render(createElement(
         MemoryRouter,
-        { initialEntries: ['/login'] },
+        { initialEntries: ['/character-forge'] },
         createElement(App),
       ));
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -156,7 +157,7 @@ describe('/rules-lab route', () => {
       expect(container.querySelector('[data-testid="offline-rules-authority"]'))
         .not.toBeNull();
     });
-    expect(container.textContent).toContain('Офлайн-набор правил');
+    expect(container.textContent).toContain('Правила сервера пока недоступны');
 
     await act(async () => root.unmount());
   });
@@ -171,7 +172,7 @@ describe('/rules-lab route', () => {
       .mockResolvedValueOnce({
         mode: 'database_release', count: 15, setHash: 'recovered',
       });
-    mocks.useAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
+    mocks.useAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
     const container = document.createElement('div');
     document.body.append(container);
     const root = createRoot(container);
@@ -179,13 +180,15 @@ describe('/rules-lab route', () => {
     await act(async () => {
       root.render(createElement(
         MemoryRouter,
-        { initialEntries: ['/login'] },
+        { initialEntries: ['/character-forge'] },
         createElement(App),
       ));
+      await import('./components/RulesAuthorityBoundary');
+      await import('./pages/CharacterForge');
       await Promise.resolve();
     });
     expect(container.querySelector('[data-testid="offline-rules-authority"]')?.textContent)
-      .toContain('request timed out after 15000ms');
+      .toContain('Правила сервера пока недоступны');
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5_000);
@@ -193,7 +196,7 @@ describe('/rules-lab route', () => {
     });
     expect(mocks.loadConditions).toHaveBeenCalledTimes(2);
     expect(container.querySelector('[data-testid="offline-rules-authority"]')).toBeNull();
-    expect(container.querySelector('[data-testid="login-route-marker"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="forge-route-marker"]')).not.toBeNull();
 
     await act(async () => root.unmount());
   });

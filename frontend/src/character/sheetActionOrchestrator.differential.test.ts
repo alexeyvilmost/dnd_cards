@@ -720,8 +720,17 @@ describe('real-sheet deterministic action orchestration parity', () => {
     const canonical = dispatchAction({ action: SAVE_SPELL, source, target });
     expect(canonical.getState().pendingResolution?.type).toBe('target_save');
     resolveTargetSave(canonical, 5);
+    const observed = canonicalSnapshot(canonical);
+    // The multi-actor facade emits this separate owner-aware notification;
+    // the detached primitive executor has no world event queue.
+    const received = (event: any) => event.type === 'domain_event' && event.event.kind === 'effect_received';
+    expect(observed.events.filter(received)).toEqual([{ type: 'domain_event', ownerActorId: TARGET,
+      targetActorId: SOURCE, event: { kind: 'effect_received', timing: 'after', source: 'self',
+        data: { effectId: 'command:resolve-target-save:id:1', negative: true, reactionBeforeApplication: true } },
+    }]);
+    observed.events = observed.events.filter(event => !received(event));
     expect(sheetSnapshot({ result: sheet, source, target }))
-      .toEqual(canonicalSnapshot(canonical));
+      .toEqual(observed);
     expect(sheet.targetState?.activeEffects[0].mechanics).toMatchObject({
       kind: 'condition', value: 'restrained',
     });

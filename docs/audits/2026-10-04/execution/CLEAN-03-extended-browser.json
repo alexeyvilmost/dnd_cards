@@ -1,0 +1,48 @@
+{
+  "status": "passed",
+  "runId": "test_4850794b712287fa850df43e",
+  "uiBuild": {
+    "reused": true,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_4850794b712287fa850df43e\\ui-dist",
+    "indexHash": "0e1afa41664d191d645045445e8c3c51334ca54965dba0f9186e145b8f87a4e6",
+    "manifestHash": "6d536042f99b7836ff08679e6fbd72641ec647828d6dfbfcbbdd4289e2c1ac5f",
+    "files": 645,
+    "bytes": 198636716
+  },
+  "profiles": {
+    "production": {
+      "tests": 48,
+      "passed": 48,
+      "skipped": 0,
+      "projects": [
+        "desktop-chromium",
+        "mobile-chromium"
+      ],
+      "files": [
+        "frontend/e2e/characters-forge-preview.spec.ts",
+        "frontend/e2e/forge-real-interaction.spec.ts",
+        "frontend/e2e/monster-creator.spec.ts",
+        "frontend/e2e/paper-sheet-blocks.spec.ts",
+        "frontend/e2e/rules-lab.spec.ts",
+        "frontend/e2e/sheet-combat.spec.ts",
+        "frontend/e2e/solo-combat.spec.ts"
+      ],
+      "report": "outputs/testing/runs/test_4850794b712287fa850df43e/acceptance/playwright-fixtures-production.json"
+    },
+    "battle3d": {
+      "tests": 8,
+      "passed": 8,
+      "skipped": 0,
+      "projects": [
+        "battle3d-local"
+      ],
+      "files": [
+        "frontend/e2e/battle-3d.spec.ts"
+      ],
+      "report": "outputs/testing/runs/test_4850794b712287fa850df43e/acceptance/playwright-fixtures-battle3d.json"
+    }
+  },
+  "cleanup": "stopped",
+  "network": "Owned isolated browser fixtures; no real API upstream and browser loopback proxy only",
+  "profileBoundary": "production uses saved opt-in UI build; battle3d uses owned Vite dev fixture and current source, not that production artifact"
+}

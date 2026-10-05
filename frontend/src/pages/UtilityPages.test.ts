@@ -1,12 +1,14 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parse } from 'postcss';
 import { describe, expect, it } from 'vitest';
-const css = readFileSync(resolve('src/pages/UtilityPages.css'), 'utf8');
+const sourceDirectory = dirname(fileURLToPath(import.meta.url));
+const css = readFileSync(resolve(sourceDirectory, 'UtilityPages.css'), 'utf8');
 
 const stylesheet = parse(css);
-const pageSource = (name: string) => readFileSync(resolve(`src/pages/${name}.tsx`), 'utf8');
+const pageSource = (name: string) => readFileSync(resolve(sourceDirectory, `${name}.tsx`), 'utf8');
 
 describe('legacy utility page theme boundaries', () => {
   it.each([

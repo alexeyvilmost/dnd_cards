@@ -1,0 +1,14 @@
+{
+  "checked_at": "2026-10-04T14:35:15.1222095Z",
+  "platform": "Windows",
+  "node": "v24.19.0",
+  "go": "go version go1.25.12 windows/amd64",
+  "postgres": "psql (PostgreSQL) 17.11",
+  "docker": {
+    "client": "29.7.2",
+    "daemon_available": false,
+    "detail": "Docker Desktop started locally; desktop-linux pipe unavailable. wsl --status reports virtualization is not enabled. No Windows or BIOS settings were changed."
+  },
+  "production_accessed": false,
+  "paid_provider_calls": 0
+}

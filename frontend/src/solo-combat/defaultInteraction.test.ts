@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import compiled from '../pages/rulesLabFixture.generated.json';
-import pinned from '../roguelike/pinnedFighter.fixture.json';
+import pinned from '../roguelike/testing/currentPinnedFixture';
 import type { RuleActionDefinition } from '../rules-core/domain';
 import type { SoloCombatState } from './types';
 import {sheetCombatDeclarationPolicy} from '../character/sheetCombatDeclaration';

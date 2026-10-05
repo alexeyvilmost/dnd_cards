@@ -1,0 +1,176 @@
+{
+  "status": "diagnostic",
+  "invalidated_by_concurrent_dist_rebuild": true,
+  "stats": {
+    "startTime": "2026-10-04T16:01:23.456Z",
+    "duration": 436998.77,
+    "expected": 28,
+    "skipped": 0,
+    "unexpected": 20,
+    "flaky": 0
+  },
+  "failures": [
+    {
+      "file": "forge-real-interaction.spec.ts",
+      "title": "required real-interaction spine: empty Forge reaches sheet and dedicated combat",
+      "project": "desktop-chromium",
+      "message": [
+        "Test timeout of 120000ms exceeded.",
+        "Error: locator.check: Test timeout of 120000ms exceeded.\nCall log:\n  - waiting for getByRole('checkbox', { name: /Показать все сущности/ })\n\n\n  135 |   await expect(page.getByRole('complementary', { name: 'Предложение мобильной версии' })).toBeHidden();\n  136 |   const showAllContent = page.getByRole('checkbox', { name: /Показать все сущности/ });\n> 137 |   await showAllContent.check();\n      |   "
+      ]
+    },
+    {
+      "file": "forge-real-interaction.spec.ts",
+      "title": "required real-interaction spine: empty Forge reaches sheet and dedicated combat",
+      "project": "mobile-chromium",
+      "message": [
+        "Test timeout of 120000ms exceeded.",
+        "Error: locator.check: Test timeout of 120000ms exceeded.\nCall log:\n  - waiting for getByRole('checkbox', { name: /Показать все сущности/ })\n\n\n  135 |   await expect(page.getByRole('complementary', { name: 'Предложение мобильной версии' })).toBeHidden();\n  136 |   const showAllContent = page.getByRole('checkbox', { name: /Показать все сущности/ });\n> 137 |   await showAllContent.check();\n      |   "
+      ]
+    },
+    {
+      "file": "rules-lab.spec.ts",
+      "title": "persists a two-character sheet attack and mastery effect through the isolated API fixture",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: locator('.sheet-conditions').getByText('Ослабляющее', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" locator('.sheet-conditions').getByText('Ослабляющее', { exact: true }) with timeout 5000ms\n  - waiting for locator('.sheet-conditions').getByText('Ослабляющее', { exact: true })"
+      ]
+    },
+    {
+      "file": "rules-lab.spec.ts",
+      "title": "persists a two-character sheet attack and mastery effect through the isolated API fixture",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: locator('.sheet-conditions').getByText('Ослабляющее', { exact: true })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" locator('.sheet-conditions').getByText('Ослабляющее', { exact: true }) with timeout 5000ms\n  - waiting for locator('.sheet-conditions').getByText('Ослабляющее', { exact: true })"
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Thunderwave selected by a Magic Initiate Fighter is usable against the scene dummy",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  496 |     await button.click();\n  497 |     const ca"
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "unarmed strike uses the same scene-target declaration before its roll",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  535 |     await button.click();\n  536 |     const ch"
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Dash, Disengage persistence and Dodge execute from their real basic-action rows",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Отход', { exact: true }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByText('Отход', { exact: true }).first() with timeout 5000ms\n  - waiting for getByText('Отход', { exact: true }).first()\n\n\n  593 |         ]);\n  594 |         await page.reload();\n> 595 |         await"
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Burning Hands: atomic open, idempotent replay, target reload and save",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  404 |   await button.click();\n  405 |   const cast ="
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Thunderwave: atomic open, idempotent replay, target reload and save",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  404 |   await button.click();\n  405 |   const cast ="
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Magic Missile: explicit allocation, target reload and exact Shield grant",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  404 |   await button.click();\n  405 |   const cast ="
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Thunderwave selected by a Magic Initiate Fighter is usable against the scene dummy",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  496 |     await button.click();\n  497 |     const ca"
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "unarmed strike uses the same scene-target declaration before its roll",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  535 |     await button.click();\n  536 |     const ch"
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Dash, Disengage persistence and Dodge execute from their real basic-action rows",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByText('Отход', { exact: true }).first()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByText('Отход', { exact: true }).first() with timeout 5000ms\n  - waiting for getByText('Отход', { exact: true }).first()\n\n\n  593 |         ]);\n  594 |         await page.reload();\n> 595 |         await"
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Burning Hands: atomic open, idempotent replay, target reload and save",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  404 |   await button.click();\n  405 |   const cast ="
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Thunderwave: atomic open, idempotent replay, target reload and save",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  404 |   await button.click();\n  405 |   const cast ="
+      ]
+    },
+    {
+      "file": "sheet-combat.spec.ts",
+      "title": "Magic Missile: explicit allocation, target reload and exact Shield grant",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: getByRole('dialog', { name: 'Выбор при действии' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" getByRole('dialog', { name: 'Выбор при действии' }) with timeout 5000ms\n  - waiting for getByRole('dialog', { name: 'Выбор при действии' })\n\n\n  404 |   await button.click();\n  405 |   const cast ="
+      ]
+    },
+    {
+      "file": "solo-combat.spec.ts",
+      "title": "combat setup invites an owned ally and keeps shared action cards inside the viewport",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toBeVisible() failed\n\nLocator: locator('.forge-spell-icon.ready:visible').last()\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n  - Expect \"toBeVisible\" locator('.forge-spell-icon.ready:visible').last() with timeout 5000ms\n  - waiting for locator('.forge-spell-icon.ready:visible').last()\n\n\n  140 |   if ((page.viewportSize()?.width ?? 0) > 820) {\n  1"
+      ]
+    },
+    {
+      "file": "solo-combat.spec.ts",
+      "title": "real character sheet: selects a monster and executes Thunderwave on the tactical board",
+      "project": "desktop-chromium",
+      "message": [
+        "Error: expect(locator).toContainText(expected) failed\n\nLocator: getByLabel('Панель действий')\nExpected substring: \"Лучник-дварф\"\nReceived string:    \"1230Л11 / 14 ПомощьБезоружный ударРывокОтходУклонениеВторое дыханиеIВолна громаОгненный снарядМалая иллюзияЗавершить ход\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"toContainText\" getByLabel('Панель действий') with timeout 5000ms\n  - waiting for getByLab"
+      ]
+    },
+    {
+      "file": "solo-combat.spec.ts",
+      "title": "combat setup invites an owned ally and keeps shared action cards inside the viewport",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toContainText(expected) failed\n\nLocator: getByLabel('Порядок инициативы')\nExpected substring: \"Бард-помощник\"\nReceived string:    \"БЛГ\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"toContainText\" getByLabel('Порядок инициативы') with timeout 5000ms\n  - waiting for getByLabel('Порядок инициативы')\n    13 × locator resolved to <div aria-label=\"Порядок инициативы\" class=\"initiative-r"
+      ]
+    },
+    {
+      "file": "solo-combat.spec.ts",
+      "title": "real character sheet: selects a monster and executes Thunderwave on the tactical board",
+      "project": "mobile-chromium",
+      "message": [
+        "Error: expect(locator).toContainText(expected) failed\n\nLocator: getByLabel('Панель действий')\nExpected substring: \"Лучник-дварф\"\nReceived string:    \"1230Л14 / 14 ПомощьБезоружный ударРывокОтходУклонениеВторое дыханиеIВолна громаОгненный снарядМалая иллюзияЗавершить ход\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"toContainText\" getByLabel('Панель действий') with timeout 5000ms\n  - waiting for getByLab"
+      ]
+    }
+  ]
+}

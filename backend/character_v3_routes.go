@@ -1,6 +1,9 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+	"os"
+)
 
 // registerCharacterV3Routes keeps the complete CharacterV3 surface behind one
 // strict authentication boundary. Do not move individual routes to the
@@ -12,6 +15,9 @@ func registerCharacterV3Routes(
 ) {
 	routes := api.Group("/characters-v3")
 	routes.Use(StrictAuthMiddleware(authService))
+	routes.GET("/equipment-authority", func(c *gin.Context) {
+		c.JSON(200, gin.H{"enabled": os.Getenv("RULES_EQUIPMENT_INTENT_ENABLED") == "1"})
+	})
 	routes.POST("", controller.CreateCharacterV3)
 	routes.GET("", controller.GetCharactersV3)
 	routes.POST(
@@ -32,4 +38,5 @@ func registerCharacterV3Routes(
 	)
 	routes.PATCH("/:id/runtime", controller.PatchCharacterRuntime)
 	routes.POST("/:id/item-sales", JSONBodyLimitMiddleware(4096), RequestBodyLimitMiddleware(4096), controller.SellCharacterItem)
+	routes.POST("/:id/equipment-commands", JSONBodyLimitMiddleware(4096), RequestBodyLimitMiddleware(4096), controller.PostCharacterEquipmentIntent)
 }

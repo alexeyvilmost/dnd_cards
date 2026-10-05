@@ -1,8 +1,8 @@
 import type {WorldState,ActorState,RuleActionDefinition,UncommittedRuleEvent} from './domain';
 import type {Card} from '../types';
-import {isAntimagicField,isMagicalMechanics} from '../engine/magic';
-import {payloadsOf} from '../engine/mechanicsView';
-import {matchesWhen} from '../engine/circumstances';
+import {isAntimagicField,isMagicalMechanics} from './legacy/engineAdapter';
+import {payloadsOf} from '../rules-primitives/mechanicsView';
+import {matchesWhen} from './legacy/engineAdapter';
 
 type Dict=Record<string,unknown>;
 type Distance=(left:string,right:string)=>number|undefined;

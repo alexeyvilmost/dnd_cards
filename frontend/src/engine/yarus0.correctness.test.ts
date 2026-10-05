@@ -35,9 +35,10 @@ const attack: Dict = {
   name: 'Атака', activation: { cost: [] },
   effects: [{ resolution: 'attack_roll', ability: 'str', on_hit: [] }],
 };
+// Omitted check actor means the source rolls; the outcome defaults to the target.
 const shove: Dict = {
   name: 'Толчок', activation: { cost: [] },
-  effects: [{ resolution: 'ability_check', ability: 'str', skill: 'athletics', who: 'target', contest_vs: ['athletics', 'acrobatics'], on_success: [{ kind: 'condition', value: 'prone' }] }],
+  effects: [{ resolution: 'ability_check', ability: 'str', skill: 'athletics', contest_vs: ['athletics', 'acrobatics'], on_success: [{ kind: 'condition', value: 'prone' }] }],
 };
 
 // ─── 0.4: сопротивление, выданное действием, режет входящий урон ────────────────
@@ -141,7 +142,7 @@ describe('Ярус0 0.3 — runAbilityCheck (Толчок/Подножка)', ()
     const athlete: CharacterContext = { ...character, skillProficiencies: ['athletics'] };
     const shove2: Dict = {
       name: 'Толчок', activation: { cost: [] },
-      effects: [{ resolution: 'ability_check', ability: 'str', skill: 'athletics', who: 'target', contest_vs: ['athletics', 'acrobatics'], on_success: [{ kind: 'condition', value: 'prone' }] }],
+      effects: [{ resolution: 'ability_check', ability: 'str', skill: 'athletics', contest_vs: ['athletics', 'acrobatics'], on_success: [{ kind: 'condition', value: 'prone' }] }],
     };
     const ctx: Ctx = { character: athlete, rng: HIT, target: { ac: 5, checkMods: { athletics: 0, acrobatics: 2 }, runtimeState: fresh() } };
     const answers = rolls(executeAction(fresh(), shove2, ctx).events, 'Ответ');
@@ -151,7 +152,7 @@ describe('Ярус0 0.3 — runAbilityCheck (Толчок/Подножка)', ()
   it('mode:dc — успех при total ≥ DC накладывает исход', () => {
     const dcCheck: Dict = {
       name: 'ПроверкаDC', activation: { cost: [] },
-      effects: [{ resolution: 'ability_check', ability: 'str', dc: '10', who: 'target', on_success: [{ kind: 'condition', value: 'prone' }] }],
+      effects: [{ resolution: 'ability_check', ability: 'str', dc: '10', on_success: [{ kind: 'condition', value: 'prone' }] }],
     };
     const ctx: Ctx = { character, rng: HIT, target: { ac: 5, runtimeState: fresh() } }; // к20 11 + СИЛ 3 = 14 ≥ 10
     expect(hasProne(executeAction(fresh(), dcCheck, ctx))).toBe(true);
@@ -159,7 +160,7 @@ describe('Ярус0 0.3 — runAbilityCheck (Толчок/Подножка)', ()
   it('mode:dc — провал при total < DC: prone НЕ накладывается (contest-фолбэк дал бы ложный успех)', () => {
     const dcCheck: Dict = {
       name: 'ПроверкаDC', activation: { cost: [] },
-      effects: [{ resolution: 'ability_check', ability: 'str', dc: '20', who: 'target', on_success: [{ kind: 'condition', value: 'prone' }] }],
+      effects: [{ resolution: 'ability_check', ability: 'str', dc: '20', on_success: [{ kind: 'condition', value: 'prone' }] }],
     };
     const ctx: Ctx = { character, rng: HIT, target: { ac: 5, checkMods: { athletics: 0 }, runtimeState: fresh() } }; // 14 < 20
     expect(hasProne(executeAction(fresh(), dcCheck, ctx))).toBe(false);

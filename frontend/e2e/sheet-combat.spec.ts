@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { canonicalSha256Sync } from '../src/rules-core/determinism';
 import { parseWeaponProfile, weaponAttackMode } from '../src/engine/weaponProfile';
 import type { Card } from '../src/types';
 import { installForgeApiFixture, type ForgeApiFixture } from './forge-api-fixture';
@@ -155,7 +156,7 @@ function samePreparedSource(
 function certifiedWizardSpellBinding(
   api: ForgeApiFixture,
   type: string,
-): { sheetActionId: string; certifiedActionId: string } {
+): { sheetActionId: string; certifiedActionId: string; name: string } {
   const sourceId = 'CLASS-wizard';
   const actions = sheetCombatCertification.actions.filter((action) => (
     primitive(action) === type && action.spell?.sourceClass === sourceId
@@ -211,13 +212,13 @@ function certifiedWizardSpellBinding(
   if (selectedByDraft.length < 2) {
     throw new Error(`Fixture Wizard draft does not select ${type} in spellbook and preparation`);
   }
-  return { sheetActionId, certifiedActionId: action.id };
+  return { sheetActionId, certifiedActionId: action.id, name: String(sourceRows[0].name) };
 }
 
 function certifiedMagicInitiateSpellBinding(
   api: ForgeApiFixture,
   type: string,
-): { sheetActionId: string; certifiedActionId: string } {
+): { sheetActionId: string; certifiedActionId: string; name: string } {
   const sourceId = 'FEAT-0009';
   const root = compiled.roots.magicInitiateFighter;
   const actions = sheetCombatCertification.actions.filter((action) => (
@@ -253,7 +254,7 @@ function certifiedMagicInitiateSpellBinding(
   if (!root.draft.spellIds.includes(sheetActionId) || !grant || matching.length !== 1) {
     throw new Error(`Fixture Fighter / Magic Initiate access is not certified for ${type}`);
   }
-  return { sheetActionId, certifiedActionId: action.id };
+  return { sheetActionId, certifiedActionId: action.id, name: String(sourceRows[0].name) };
 }
 
 function rangedWeaponFixture(api: ForgeApiFixture): {
@@ -402,7 +403,7 @@ async function openPendingSpell(
   await expect(button).toBeEnabled({ timeout: 30_000 });
   if (options.loseResponse) api.loseNextRuntimeCommandResponse();
   await button.click();
-  const cast = page.getByRole('dialog', { name: 'Выбор при действии' });
+  const cast = page.getByRole('dialog', { name: binding.name, exact: true });
   await expect(cast).toBeVisible();
   await cast.getByRole('button', { name: 'Применить', exact: true }).click();
   await declareTarget(page, 'Target', options.darts);
@@ -416,12 +417,25 @@ async function openPendingSpell(
   }
   await expect.poll(() => Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
   const request = api.runtimeCommandRequests[0];
+  // The saved historical certification supplies fixture entities; a new live
+  // session uses the current combat runtime and pins that identity everywhere.
+  const liveReference = {
+    systemId: compiled.roots.wizard.draft.systemId,
+    releaseId: 'sheet:2024:combat-runtime-v2',
+    errataVersion: compiled.roots.wizard.draft.rulesetVersion,
+  };
+  const contentHash = canonicalSha256Sync(liveReference);
   expect(request.ruleset_ref).toEqual({
-    system_id: compiled.source.ruleset.systemId,
-    release_id: compiled.source.ruleset.releaseId,
-    content_hash: compiled.source.ruleset.contentHash,
-    errata_version: compiled.source.ruleset.errataVersion,
+    system_id: liveReference.systemId,
+    release_id: liveReference.releaseId,
+    content_hash: contentHash,
+    errata_version: liveReference.errataVersion,
   });
+  for (const participant of request.participants as JsonRecord[]) {
+    const patch = participant.patch as JsonRecord;
+    const envelope = (patch.turn_state as JsonRecord).canonical_pending_combat_v1 as JsonRecord;
+    expect((envelope.world as JsonRecord).ruleset).toEqual({ ...liveReference, contentHash });
+  }
   expect(JSON.stringify(request)).toContain(binding.certifiedActionId);
   expect((request.participants as JsonRecord[]).map((row) => row.character_id)).toEqual([
     IDS.source,
@@ -494,7 +508,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
       .first();
     await expect(button).toBeEnabled({ timeout: 30_000 });
     await button.click();
-    const cast = page.getByRole('dialog', { name: 'Выбор при действии' });
+    const cast = page.getByRole('dialog', { name: binding.name, exact: true });
     await expect(cast).toBeVisible();
     await cast.getByRole('button', { name: 'Применить', exact: true }).click();
     await declareTrainingDummy(page, 10);
@@ -533,7 +547,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     const button = page.locator(`[data-action-id="${unarmed.id}"]`).getByRole('button');
     await expect(button).toBeEnabled({ timeout: 30_000 });
     await button.click();
-    const choice = page.getByRole('dialog', { name: 'Выбор при действии' });
+    const choice = page.getByRole('dialog', { name: String(unarmed.name), exact: true });
     await expect(choice).toBeVisible();
     await expect(choice.getByRole('button', { name: 'Нанести урон' }))
       .toHaveClass(/\bon\b/);
@@ -592,7 +606,7 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
           }),
         ]);
         await page.reload();
-        await expect(page.getByText('Отход', { exact: true }).first()).toBeVisible();
+        await expect(page.locator('.sheet-conditions').getByRole('button', { name: 'Отход', exact: true })).toBeVisible();
         const expiryPatchCount = api.runtimePatchRequests.length;
         await page.getByRole('button', { name: 'Новый ход', exact: true }).click();
         await expect.poll(() => api.runtimePatchRequests.length).toBe(expiryPatchCount + 1);

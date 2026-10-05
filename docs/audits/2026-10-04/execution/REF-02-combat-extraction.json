@@ -1,0 +1,126 @@
+{
+  "task": "REF-02",
+  "movedCanonicalSelectorsAndIntentAssembly": [
+    {
+      "name": "hasManualTargetSlots",
+      "tokenCount": 65,
+      "exactTokenEquality": true,
+      "sha256": "f4b727956c7de66904ded7a38a622a1351d3f959ce5bc075160a11ab696bec22"
+    },
+    {
+      "name": "combatWorldInputContext",
+      "tokenCount": 130,
+      "exactTokenEquality": true,
+      "sha256": "77273f933f913f47716e8e609c0f45e4b8f3a4651806fed96c409c1973be8006"
+    },
+    {
+      "name": "requestCombatChoices",
+      "tokenCount": 166,
+      "exactTokenEquality": true,
+      "sha256": "7e075c4957bf6b6aecfd43e7cf247694347aaf0d7b549ccbae307e7e720bb1ee"
+    },
+    {
+      "name": "chooseAction",
+      "tokenCount": 1048,
+      "exactTokenEquality": true,
+      "sha256": "8a4eae74d1e494483a34c0b2619c1a3fff40d4668b1d112178a8d2622df54a4f"
+    },
+    {
+      "name": "confirmMultipleTargets",
+      "tokenCount": 375,
+      "exactTokenEquality": true,
+      "sha256": "9154598e0f014b7ff0f9024175f7d306575064985bcb002435c0e22898f6a5fb"
+    },
+    {
+      "name": "clickCell",
+      "tokenCount": 2526,
+      "exactTokenEquality": true,
+      "sha256": "13429d9d8d360eb61e21ff27dbddd611dde6fc65ab0aab662b6a9cca249da269"
+    }
+  ],
+  "sourceLines": {
+    "beforePage": 1537,
+    "afterPage": 711,
+    "extracted": [
+      {
+        "file": "frontend/src/hooks/useCombatCommandDispatch.ts",
+        "lines": 61
+      },
+      {
+        "file": "frontend/src/hooks/useSoloCombatBootstrap.ts",
+        "lines": 208
+      },
+      {
+        "file": "frontend/src/hooks/useSoloCombatPersistence.ts",
+        "lines": 192
+      },
+      {
+        "file": "frontend/src/hooks/useCombatTargetSelection.ts",
+        "lines": 463
+      },
+      {
+        "file": "frontend/src/components/CombatRollDialogs.tsx",
+        "lines": 52
+      },
+      {
+        "file": "frontend/src/components/CombatDecisionDialogs.tsx",
+        "lines": 142
+      }
+    ]
+  },
+  "classification": [
+    {
+      "path": "frontend/src/hooks/useCombatCommandDispatch.ts",
+      "rule": "frontend-ui",
+      "components": [
+        "frontend"
+      ]
+    },
+    {
+      "path": "frontend/src/hooks/useSoloCombatBootstrap.ts",
+      "rule": "frontend-ui",
+      "components": [
+        "frontend"
+      ]
+    },
+    {
+      "path": "frontend/src/hooks/useSoloCombatPersistence.ts",
+      "rule": "frontend-ui",
+      "components": [
+        "frontend"
+      ]
+    },
+    {
+      "path": "frontend/src/hooks/useCombatTargetSelection.ts",
+      "rule": "frontend-ui",
+      "components": [
+        "frontend"
+      ]
+    },
+    {
+      "path": "frontend/src/components/CombatRollDialogs.tsx",
+      "rule": "frontend-ui",
+      "components": [
+        "frontend"
+      ]
+    },
+    {
+      "path": "frontend/src/components/CombatDecisionDialogs.tsx",
+      "rule": "frontend-ui",
+      "components": [
+        "frontend"
+      ]
+    },
+    {
+      "path": "frontend/src/pages/SoloCombatPage.tsx",
+      "rule": "frontend-ui",
+      "components": [
+        "frontend"
+      ]
+    }
+  ],
+  "limits": [
+    "Bootstrap differs only in route-session reset/cancellation guards and named extraction; command publication adds session ownership guard. Both have dedicated tests.",
+    "Token proof covers moved target functions, not an assertion that all page behavior is proven by textual equality."
+  ]
+}

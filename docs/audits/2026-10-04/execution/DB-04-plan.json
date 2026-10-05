@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "scope": "owned-local-only",
+  "runId": "test_d99831b41b7c22001fc2c00c",
+  "createdAt": "2026-10-04T17:30:41.266Z",
+  "sourceCollectedAt": "2026-10-04T20:30:36.760808+03:00",
+  "statisticsReset": null,
+  "candidates": [],
+  "dataURLs": {
+    "scope": "bounded-reference-metadata-only",
+    "limit": 100,
+    "maxValueBytes": 2097152,
+    "maxDataURLsPerJSONRow": 128,
+    "rows": [
+      {
+        "table": "paper_documents",
+        "column": "document",
+        "sampleRows": 0,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "feats",
+        "column": "image_cloudinary_url",
+        "sampleRows": 77,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "effects",
+        "column": "image_url",
+        "sampleRows": 100,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "effects",
+        "column": "image_cloudinary_url",
+        "sampleRows": 100,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "backgrounds",
+        "column": "image_url",
+        "sampleRows": 16,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "backgrounds",
+        "column": "image_cloudinary_url",
+        "sampleRows": 16,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "audio_cues",
+        "column": "url",
+        "sampleRows": 0,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "cards",
+        "column": "image_url",
+        "sampleRows": 100,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "cards",
+        "column": "image_cloudinary_url",
+        "sampleRows": 100,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "actions",
+        "column": "image_url",
+        "sampleRows": 46,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "actions",
+        "column": "image_cloudinary_url",
+        "sampleRows": 46,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "characters_v3",
+        "column": "avatar_url",
+        "sampleRows": 0,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "concepts",
+        "column": "image_url",
+        "sampleRows": 0,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "classes",
+        "column": "image_url",
+        "sampleRows": 60,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "classes",
+        "column": "image_cloudinary_url",
+        "sampleRows": 60,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "passive_presentations",
+        "column": "image_url",
+        "sampleRows": 0,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "races",
+        "column": "image_url",
+        "sampleRows": 39,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "races",
+        "column": "image_cloudinary_url",
+        "sampleRows": 39,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "resources",
+        "column": "image_url",
+        "sampleRows": 26,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "resources",
+        "column": "image_url_spent",
+        "sampleRows": 26,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "monsters",
+        "column": "token_url",
+        "sampleRows": 2,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "spells",
+        "column": "image_url",
+        "sampleRows": 100,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "spells",
+        "column": "image_cloudinary_url",
+        "sampleRows": 100,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "feats",
+        "column": "image_url",
+        "sampleRows": 77,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      },
+      {
+        "table": "variables",
+        "column": "image_url",
+        "sampleRows": 5,
+        "oversizedRowsOmitted": 0,
+        "entries": []
+      }
+    ],
+    "limitations": [
+      "First physical rows, not a representative or complete inventory.",
+      "Oversized values and JSON matches beyond the per-row cap are omitted.",
+      "Encoded data URL byte counts are logical, not additive physical disk size.",
+      "No body, URL, file, row ID or owner ID is exported."
+    ]
+  },
+  "protected": [
+    {
+      "category": "characters,runs,paper_documents,images",
+      "decision": "retain",
+      "reason": "Owner data; soft deletion and non-use are not authorization for physical deletion."
+    },
+    {
+      "category": "command receipts and journals",
+      "decision": "retain",
+      "reason": "Durable idempotency and history; no TTL, trigger removal or response rewrite."
+    },
+    {
+      "category": "frozen catalogs and rules CJS",
+      "decision": "retain",
+      "reason": "Union of active/history/pending/backups/rollback references; incomplete inventory blocks deletion."
+    },
+    {
+      "category": "unused subsystem tables",
+      "decision": "retain",
+      "reason": "Need ownership/lifecycle, query-window and recovery evidence before any archival choice."
+    }
+  ],
+  "retentionJobsEnabled": false,
+  "productionActionsSupported": false,
+  "limitations": [
+    "Exact duplicates only; unique/partial/expression/include/replica/constraint-dependent indexes are never executable candidates.",
+    "Statistics window is reported. Zero scans alone never imply a removable index.",
+    "Data URL inventory is metadata-only; external object migration requires separate authorization and exact reference preservation.",
+    "Ordinary VACUUM may reuse dead space and is not a promise of shrinking files or OS disk usage."
+  ],
+  "planHash": "ff7f79e1b151aa1c0d51f888d7e6e17a2fb7fe00a1f2f9890900f84d40541fe0"
+}

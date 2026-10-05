@@ -1,6 +1,6 @@
 import type { ActorState } from './domain';
 import type { WeaponProfile } from './weaponProfile';
-import {itemSourceRequirementIssue} from '../engine/actionRequirements';
+import {itemSourceRequirementIssue} from './legacy/engineAdapter';
 
 type Dict = Record<string, unknown>;
 

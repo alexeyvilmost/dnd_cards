@@ -6,6 +6,15 @@ from typing import Generator, Dict, Any
 # Базовый URL для API
 BASE_URL = "http://localhost:8080/api"
 
+
+def pytest_configure(config):
+    """The historical HTTP harness has no isolated fixture/ownership contract."""
+    raise pytest.UsageError(
+        "Historical backend/tests HTTP suite is quarantined. "
+        "Use scripts/testing/stack.mjs and the current Go/PostgreSQL contracts. "
+        "No working database is cleared or contacted by this suite."
+    )
+
 def get_api_url(path: str) -> str:
     """Создает полный URL для API запроса"""
     return f"{BASE_URL}{path}"
@@ -65,20 +74,6 @@ def weapon_card_data() -> Dict[str, Any]:
         "bonus_type": "damage",
         "bonus_value": "1d8"
     }
-
-@pytest.fixture(autouse=True)
-def clean_database(api_client: requests.Session) -> None:
-    """Очищает базу данных перед каждым тестом"""
-    # Удаляем все карточки напрямую из базы данных
-    import subprocess
-    try:
-        subprocess.run([
-            "docker", "compose", "exec", "-T", "postgres", 
-            "psql", "-U", "postgres", "-d", "dnd_cards", 
-            "-c", "DELETE FROM cards;"
-        ], cwd="/Users/alexeyvilmost/dnd_cards", check=True, capture_output=True)
-    except:
-        pass
 
 @pytest.fixture
 def created_card_id(api_client: requests.Session, sample_card_data: Dict[str, Any]) -> Generator[str, None, None]:

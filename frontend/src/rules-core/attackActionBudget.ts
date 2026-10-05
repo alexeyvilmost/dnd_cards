@@ -1,7 +1,7 @@
-import {availableActionCostPolicies} from '../engine/actionCostPolicy';
+import {availableActionCostPolicies} from './legacy/engineAdapter';
 import type {ActorState} from './domain';
-import {collectModifiers,foldModifiers} from '../engine/modifiers';
-import {activeConditionsOf} from '../engine/circumstances';
+import {collectModifiers,foldModifiers} from './legacy/engineAdapter';
+import {activeConditionsOf} from './legacy/engineAdapter';
 export function attackActionBudget(actor:ActorState,costPolicyIds:readonly string[]=[],actionRefs:string[]=[]):{value:number;sources:string[]}{
  const base=actor.attackProfile?.attacksPerAction;
  if(!Number.isSafeInteger(base)||Number(base)<1)throw Error('Actor has no valid attack profile');

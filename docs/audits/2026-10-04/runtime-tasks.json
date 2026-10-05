@@ -1,0 +1,429 @@
+[
+  {
+    "id": "OBS-01",
+    "title": "Воспроизводимый baseline загрузки и игровых команд",
+    "priority": "P0",
+    "owner": "runtime-observability-agent",
+    "depends_on": [
+      "TEST-01"
+    ],
+    "scope": [
+      "frontend/src/api/client.ts",
+      "frontend/src/pages/SoloCombatPage.tsx",
+      "frontend/src/character/sheetCombatRuntimeFactory.ts",
+      "backend/roguelike_worker_client.go",
+      "backend/roguelike_worker_catalog.go",
+      "backend/character_runtime_command.go",
+      "frontend/worker/server.mjs",
+      "frontend/playwright.live.config.ts"
+    ],
+    "effort_workdays": [
+      2,
+      4
+    ],
+    "status": "not_started",
+    "steps": [
+      "Создать локальный/CI performance runner поверх изолированного тестового стенда TEST-01. Сценарии: холодное и тёплое открытие библиотеки, кузницы, бумажного листа, листа; начало и продолжение боя для 1/2/6 персонажей; действие; equip/unequip обычного предмета и предмета, меняющего ресурсы.",
+      "Зафиксировать fixture content hash, artifact hash, seed/RNG, размер карты, состав участников, CPU/network profile, версии Node/Go/Postgres и условия кеша. Минимум 30 повторов серверного сценария; исходные выборки сохранять, p95 считать предварительным при малой выборке.",
+      "Добавить корреляцию request ID frontend→backend→worker и числовые phase timings: catalog resolution, SQL count/time, worker queue/CPU, JSON parse/stringify/hash/clone, lock wait/hold, persist, response bytes. Не записывать токены, entropy, полные листы, prompts или base64.",
+      "Собирать browser navigation/resource timings, LCP/INP/long tasks, React profile для смены экипировки и hover карты. Различать время пользовательского подтверждения, анимации, вычисления и сети.",
+      "Добавить отчёт сборки по entry и транзитивным статическим route dependencies; отдельно учитывать route CSS, runtime imports, PWA install и медиа. Использовать runtime-build-metrics.json как первый build baseline, не как browser waterfall.",
+      "Опубликовать baseline JSON и краткую таблицу bottlenecks; назначить бюджеты для выбранных сценариев после измерения. Не блокировать корректное изменение правил только из-за шумного единичного performance измерения."
+    ],
+    "verification": [
+      "Повторный запуск на неизменном fixture даёт те же игровые outcomes, hashes, RNG cursor и сопоставимые распределения времени.",
+      "Логи и telemetry не содержат секретов или приватных snapshots; production URLs не вызываются.",
+      "Проверены cold/warm и все три размера партии; в отчёте обозначены число повторов и ограничения p95."
+    ],
+    "acceptance": [
+      "Есть исполняемый локальный runner и машиночитаемые результаты с разделением client/network/backend/worker/DB.",
+      "Для equip известны отдельные значения обычной ветки и условного пересчёта max_resources под lock.",
+      "Команда подготовки боя показывает фактическое число needs rounds, SQL queries и байты каталога; верхние лимиты 16/32 не выдаются за измерения."
+    ],
+    "risks": [
+      "Инструментирование меняет тайминги; минимизировать overhead и отключать дорогой tracing по умолчанию.",
+      "Случайные или неполные fixtures делают сравнение несопоставимым.",
+      "Perf runner не должен использовать live production tests со скрытыми побочными эффектами."
+    ],
+    "rollback": "Удалить или выключить telemetry feature flag и performance job; игровые команды и сохранённые данные остаются прежними. Сохранить уже полученные baseline-артефакты."
+  },
+  {
+    "id": "PERF-01",
+    "title": "Пакетное разрешение зависимостей и безопасный кеш неизменяемого каталога",
+    "priority": "P1",
+    "owner": "catalog-performance-agent",
+    "depends_on": [
+      "OBS-01",
+      "TEST-03"
+    ],
+    "scope": [
+      "backend/roguelike_worker_catalog.go",
+      "backend/roguelike_camp_inventory.go",
+      "backend/entity_references.go",
+      "frontend/src/roguelike/combatCatalog.ts",
+      "frontend/src/character/assemblyFactory.ts",
+      "frontend/src/character/sheetCombatRuntimeFactory.ts",
+      "frontend/worker/server.mjs"
+    ],
+    "effort_workdays": [
+      4,
+      8
+    ],
+    "status": "not_started",
+    "steps": [
+      "Вынести общий resolver для initialize/rest/camp-action/camp-inventory. Дедуплицировать needs и группировать по entity type и способу ссылки: UUID, card_number, resource_id; загружать одну волну пакетными SQL.",
+      "Сохранить строгую обработку отсутствующих сущностей, неизвестных needs, неоднозначных spell aliases, completeEffectTypes и variablesComplete. Собирать catalog через Map; сортировать один раз перед canonical serialization/hash вместо сортировки после каждой вставки.",
+      "Предварительно собрать известное транзитивное замыкание ссылок через общий reference registry. Не считать синтаксическое замыкание полным для динамических правил: сохранить bounded needs fallback и измерять его срабатывание.",
+      "Кешировать только immutable entity closures, indexes и compiled definitions. Ключ включает artifact hash, rules/schema version, canonical catalog/content hash и build identity, если значение зависит от сборки персонажа; private content дополнительно изолируется stable principal/tenant/access scope и revision прав. Raw access tokens в ключи и логи не помещать.",
+      "Для каждого запроса проверять право доступа до cache hit, не допускать использования чужой private entity через общий hash. Изменения механики, grants, build choices, ownership и policy должны приводить к новому ключу/инвалидации. Mutable HP/resources/equipment/pending state не сохранять в shared cache.",
+      "Установить лимиты байтов/entries и LRU eviction, in-flight deduplication, безопасный cache miss fallback и метрики hit/miss. Исторический бой всегда читает его pinned catalog/artifact, не текущий каталог.",
+      "Сравнить до/после на baseline: rounds, SQL, bytes, CPU, p50/p95. Принять выигрыш только при сохранении canonical hashes и сценарной эквивалентности."
+    ],
+    "verification": [
+      "Два класса и два предмета на одних общих примитивах с разными данными; party 1/2/6.",
+      "Missing need, alias collision, duplicated need, stalled resolver, changed content during preparation.",
+      "Два пользователя с различным доступом к private entities, смена сессии, отзыв доступа; cache hit не обходит авторизацию.",
+      "Replay старого artifact/catalog, cold cache, warm cache и eviction дают одинаковые результаты."
+    ],
+    "acceptance": [
+      "SQL queries одной волны масштабируются по группам типов/ссылок, а не по числу сущностей.",
+      "Все четыре worker preparation paths используют один resolver; нет параллельной сокращённой механики.",
+      "Ключ и инвалидация явно покрывают content+artifact+build+rights, cache ограничен по памяти.",
+      "Есть численное сравнение с OBS-01; при отсутствии выигрыша кеш не включается по умолчанию."
+    ],
+    "risks": [
+      "Неполный cache key способен смешать персонажей, доступ или версии механики.",
+      "Batch resolution может изменить порядок ссылок и canonical hash без стабильной сортировки.",
+      "Reference registry может не охватить динамические зависимости.",
+      "Предварительная загрузка слишком широкого каталога может оказаться дороже needs waterfall."
+    ],
+    "rollback": "Feature flag возвращает прежний resolver без кеша для новых preparation. Кеш удалить как воспроизводимый; сохранённые старые каталоги/артефакты и receipts не менять."
+  },
+  {
+    "id": "PERF-02",
+    "title": "Короткая транзакция экипировки и единая подготовка начала боя",
+    "priority": "P1",
+    "owner": "atomic-runtime-agent",
+    "depends_on": [
+      "OBS-01",
+      "PERF-01",
+      "TEST-04"
+    ],
+    "scope": [
+      "backend/character_runtime_command.go",
+      "backend/roguelike_camp_inventory.go",
+      "backend/roguelike_worker_controller.go",
+      "backend/roguelike_party_worker.go",
+      "frontend/src/components/SheetEquipmentPanel.tsx",
+      "frontend/src/character/useSheetEquipmentSave.ts",
+      "frontend/src/character/sheetEquipmentCommand.ts",
+      "frontend/src/pages/SoloCombatPage.tsx"
+    ],
+    "effort_workdays": [
+      3,
+      6
+    ],
+    "status": "not_started",
+    "steps": [
+      "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
+      "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
+      "Захватить fingerprints всех семантических входов: character/runtime revision, run phase/revision, owned inventory/equipment/attunement, content version и rights. Стоимость/результат должны вычисляться общей операцией на этих входах.",
+      "В короткой транзакции проверить receipt/command reuse, права, ownership, run membership/phase, ревизии и fingerprints подготовленного результата; затем атомарно записать расходы, patch, события и receipt. Под character/run write locks не выполнять HTTP/worker I/O и полную повторную сборку.",
+      "При изменении входов отклонить stale command или заново подготовить её до lock согласно явному протоколу. Не использовать новый command ID для повторной отправки уже подготовленной команды с неизвестным исходом; не бросать кости/не списывать повторно.",
+      "Переиспользовать статическую сборку в клиентском preview по корректному ключу зависимостей. После принятия применить authoritative postimage; на replay загрузить актуальное состояние, не откатывая его старым receipt.",
+      "Заменить повторную полную UI-сборку в SoloCombatPage перед trusted initialize на серверную read-only preparation инициативных options тем же builder. Сохранять каноничные entity choices, выбор по ID и повторную серверную проверку стоимости/ревизии при initialize; не пропускать предложения по имени класса.",
+      "Оставить совместимый старый endpoint до миграции открытых клиентов; сравнить timings/lock duration на baseline."
+    ],
+    "verification": [
+      "Два одновременных equip в разных вкладках, stale character/run/content revision, истечение прав и переход run camp→combat между prepare/commit.",
+      "Обрыв сети до ответа и после commit, reload с pending request, retry тем же ID, replay после более поздней команды.",
+      "Обычный предмет и второй предмет с иным ресурсом/условием/стоимостью; недопустимое equip не оставляет частичный patch.",
+      "Инициативный выбор отсутствует/доступен/отклонён; другая сущность с тем же declaration; RNG cursor и исходная инициатива не меняются при retry.",
+      "Tracing подтверждает отсутствие worker/HTTP вызова под character/run locks."
+    ],
+    "acceptance": [
+      "На новом intent path server заново проверяет допустимость и стоимость через canonical engine.",
+      "Транзакция содержит только ограниченную проверку подготовленных входов и атомарную запись; нет dependency resolution/HTTP под locks.",
+      "Pending/replay/reload сохраняют exactly-once эффект, исходный RNG и отсутствие двойной оплаты.",
+      "Перед серверным initialize больше нет обязательной полной дублирующей UI-сборки ради инициативных options."
+    ],
+    "risks": [
+      "TOCTOU по content/rights/ownership, если проверять только runtime revision.",
+      "Недопустимая очистка pending request после неопределённого сетевого результата.",
+      "Новая preparation не должна публиковать или применять итог броска до выбора.",
+      "Открытые клиенты могут продолжать пользоваться compatibility endpoint."
+    ],
+    "rollback": "Выключить новый intent/preparation routing feature flag и вернуть существующий endpoint. Уже сохранённые новые receipts должны оставаться читаемыми; не переписывать command IDs или committed outcomes."
+  },
+  {
+    "id": "PERF-03",
+    "title": "Сокращение runtime payload и устранение CPU-очереди worker по измерениям",
+    "priority": "P2",
+    "owner": "rules-transport-agent",
+    "depends_on": [
+      "OBS-01",
+      "PERF-01",
+      "TEST-05"
+    ],
+    "scope": [
+      "frontend/src/roguelike/combatWorker.ts",
+      "frontend/src/roguelike/combatInitialization.ts",
+      "frontend/src/solo-combat/persistence.ts",
+      "frontend/worker/server.mjs",
+      "backend/roguelike_worker_client.go",
+      "backend/roguelike_worker_controller.go",
+      "backend/roguelike_party_worker.go",
+      "backend/roguelike_combat_journal.go",
+      "backend/models_roguelike.go"
+    ],
+    "effort_workdays": [
+      5,
+      10
+    ],
+    "status": "not_started",
+    "steps": [
+      "Разложить размеры и CPU envelope по mutable world, immutable catalog/actions/presentation, history, mirrored character turn_state и receipts. Определить, какой участок доминирует: JSON, clone, hash, engine CPU или storage.",
+      "Спроектировать новый protocol/schema с immutable catalog blob по canonical hash и отдельным mutable snapshot. Shared artifact caches должны сохранять оригинальные исторические bytes; нового боя это касается по явной версии.",
+      "Передавать compact authoritative projection/patch с base revision и result hash только при совпадении протокола и базы; полное восстановление отдаёт snapshot. Нельзя выдавать private entropy браузеру или конструировать второй источник истины.",
+      "Добавить readers старой и новой схем, pinned artifact replay, проверку недоступного blob. Миграции — additive; старые envelopes, события и receipts не переписывать молча. Согласовать compact receipts с отдельной DB-задачей до смены storage.",
+      "По профилю заменить избыточные clone/hash или проверки прогресса на эквивалентные операции; не удалять hash-based stall guard без тестов зависания ИИ и доказательства, что новый progress marker покрывает все переходы.",
+      "Если после сокращения payload event-loop lag/очередь остаётся bottleneck, добавить ограниченный CPU pool либо stateless worker replicas: bounded queue, memory limits, cancellation до commit и насыщение. Доступ к нужным archived artifacts обязателен для каждого исполнителя.",
+      "Сравнить 1/4/16 параллельных клиентов, cold artifact load и archived combat; проверить, что shared cache не хранит mutable state и выполнение не меняет последовательность RNG."
+    ],
+    "verification": [
+      "Новый/старый transport с теми же fixture commands даёт одинаковые final hashes, события, pending continuation и RNG cursor.",
+      "Patch с неверной base revision отклоняется и вызывает full resync; отсутствующий catalog/artifact fail-closed.",
+      "Тесты crash/retry после вычисления до commit и после commit; ресурсы списаны однажды.",
+      "Нагрузочный локальный прогон показывает queue/CPU/memory; saturation не вызывает unbounded growth.",
+      "Старый клиент/бой продолжает работать с совместимой версией сервера."
+    ],
+    "acceptance": [
+      "Измерены уменьшение bytes и CPU, transport не включён без доказанной корректности.",
+      "Immutable data отделены от runtime без переписывания исторических артефактов.",
+      "Масштабирование CPU добавлено только при подтверждённом bottleneck и ограничено ресурсами.",
+      "Rollback не требует восстановления всей БД."
+    ],
+    "risks": [
+      "Новые ссылки на blobs могут сделать старый бой невосстановимым при преждевременном GC.",
+      "Слишком агрессивные patches оставляют клиент незаметно stale.",
+      "Worker pool multiplies artifact memory; thread/process model требует строгой изоляции mutable данных.",
+      "Параллельный execution не заменяет серверную идемпотентность commit."
+    ],
+    "rollback": "Сохранить full snapshot endpoint и старый reader; feature flag возвращает полный transport и один worker. Новые immutable blobs и readers сохраняются для уже созданных версий; их GC запрещён до проверки ссылок."
+  },
+  {
+    "id": "PERF-04",
+    "title": "Сокращение frontend graph и устранение полного обхода библиотеки",
+    "priority": "P2",
+    "owner": "frontend-loading-agent",
+    "depends_on": [
+      "OBS-01",
+      "TEST-04"
+    ],
+    "scope": [
+      "frontend/src/App.tsx",
+      "frontend/src/contexts/ChoiceDialogContext.tsx",
+      "frontend/src/contexts/DiceDialogContext.tsx",
+      "frontend/src/character/components.tsx",
+      "frontend/src/pages/CardLibrary.tsx",
+      "frontend/src/api/catalogPages.ts",
+      "frontend/src/utils/cardsIndex.ts",
+      "frontend/src/api/apiCache.ts",
+      "frontend/src/api/ownedItemCache.ts",
+      "frontend/src/api/client.ts",
+      "frontend/vite.config.ts",
+      "backend/content_review_controller.go",
+      "backend/controller.go"
+    ],
+    "effort_workdays": [
+      4,
+      8
+    ],
+    "status": "not_started",
+    "steps": [
+      "Получить bundle attribution общих imports; уже существующие lazy routes, lazy detail modals, dynamic 3D/PDF/Mermaid и Caddy compression сохранить. Размер всего dist не использовать как initial-load budget.",
+      "Разделить лёгкий context/API диалога и тяжёлый lazy host; извлечь ChoiceResolver из общего файла кузницы. Каноничные action/spell/item components, previews, aria и настройка icon/row остаются прежними.",
+      "Ограничить загрузку rules authority игровыми маршрутами; не блокировать библиотеку/настройки/log-in лишними запросами, но ни одна игровая mutation не выполняется до авторитетной готовности.",
+      "Для review status добавить серверные filter/summary по тем же правам и query semantics; CardLibrary получает ограниченную страницу и counts, не скачивает последовательно весь каталог ради фильтра/summary.",
+      "Для gameplay и rest заменить full cardsIndex traversal на bulk hydration нужных owned/equipped/referenced IDs. Полный индекс оставить только потребителям, которым он необходим; canonical closure достраивается общим resolver.",
+      "Разделить invalidation ownership/catalog metadata и обычных HP/turn mutations. Private acquisition, sale/reward, изменение тега/механики, logout/account switch и отзыв прав должны обновлять соответствующий кеш.",
+      "Добавлять виртуализацию длинного списка только при подтверждении profile; сохранять focus, Back/scroll restoration, previews и общие entity renderers.",
+      "Уточнить PWA precache manifest: glob index-*.js захватывает shared chunks с похожим именем. Проверить cold install, update и imports старой открытой вкладки; не нарушать согласованность release identity.",
+      "Сравнить entry/route static closure, API count/bytes, LCP/long tasks и network waterfаll. Entry ≤180 KB gzip рассматривать как предварительную цель после attribution, а не обязательное упрощение правил."
+    ],
+    "verification": [
+      "Library normal/review modes: page count, summary/filter parity, private visibility и редактирование сущности.",
+      "Cold/warm navigation, dialog first-open/cancel, paper-sheet previews, icon/row settings.",
+      "Equip/rest после purchase/sale/reward и после смены пользователя; никаких stale private cards.",
+      "PWA install/update, retained old chunks, несовместимый rules bootstrap fail-closed.",
+      "Длинный список доступен с клавиатуры и не теряет фокус/scroll."
+    ],
+    "acceptance": [
+      "Review mode не делает полный последовательный обход каталога ради first page/summary.",
+      "Gameplay не загружает полный общий cards index, если достаточно owned/referenced closure.",
+      "Общий JS граф уменьшен по измерениям без дублирующего упрощённого renderer или calculator.",
+      "Кеш остаётся согласованным и изолированным по правам/сессии."
+    ],
+    "risks": [
+      "Новая server-side фильтрация может изменить totals или раскрыть private metadata.",
+      "Удаление shared import может создать waterfall первого диалога; предусмотреть intent prefetch.",
+      "Узкая invalidation способна оставить stale предмет после покупки/продажи.",
+      "PWA shell optimization не должна разъединить код правил и release binding."
+    ],
+    "rollback": "Feature flags возвращают прежние loaders/dialog hosts и полный response contract. Старые hashed assets остаются доступными; backend сохраняет совместимость параметров прежнего каталога."
+  },
+  {
+    "id": "PERF-05",
+    "title": "Стабильные проекции карты и быстрые каноничные превью",
+    "priority": "P2",
+    "owner": "combat-render-agent",
+    "depends_on": [
+      "OBS-01",
+      "TEST-04"
+    ],
+    "scope": [
+      "frontend/src/pages/SoloCombatPage.tsx",
+      "frontend/src/components/TacticalBattleMap.tsx",
+      "frontend/src/components/CombatHotbar.tsx",
+      "frontend/src/solo-combat/engine.ts",
+      "frontend/src/solo-combat/tacticalGrid.ts",
+      "frontend/src/solo-combat/combatIllumination.ts",
+      "frontend/src/solo-combat/attackCoverPreview.ts"
+    ],
+    "effort_workdays": [
+      2,
+      5
+    ],
+    "status": "not_started",
+    "steps": [
+      "Записать CPU/React profile для hover, движения, смены цели и animation beats на большой карте с несколькими световыми областями и существами разного footprint.",
+      "Стабилизировать displayState/tokens по presented state и реальному изменению портретов; отделить авторитетный state от presentation state без новых игровых команд.",
+      "Выделить статическую геометрию, освещение, токены и hover/highlight overlays. Мемоизировать дорогие проекции по действительным семантическим ревизиям/источникам, чтобы движение указателя не считало заново свет всех клеток.",
+      "Кешировать readonly preview по world/board revision, actor, action, targets, choices и spatial context. Cache key по одному action ID запрещён; изменение runtime/effects/resources должно инвалидировать preview.",
+      "Если profile доказывает стоимость full clone/executor, выделить общую чистую plan/validate операцию из каноничного исполнителя. Preview и execution вызывают одну операцию; авторитетный execution заново проверяет стоимость, фазу и цели.",
+      "Сохранить один диалог предварительного/подтверждённого броска, presentation timeline, каноничные карточки и settings. Кеш/анимация не расходуют RNG, HP или ресурсы.",
+      "Сравнить длительность render/long tasks и кадры на тех же fixtures; не делать широкие замены механизмов без профиля."
+    ],
+    "verification": [
+      "Укрытие, ray/area delivery, крупные footprint, свет, маршрут, hazards и недоступная цель.",
+      "Два действия на одном примитиве с разными targeting/cost данными.",
+      "Preview не меняет исходный state/hash, RNG cursor, HP/resources или pending continuation.",
+      "После equip/effect/turn/board revision старое preview не используется.",
+      "Keyboard focus, каноничные previews, icon/row и 2D/3D fallback сохраняются."
+    ],
+    "acceptance": [
+      "Hover неизменной клетки/статического слоя не пересчитывает все lighting/geometry projections.",
+      "Расчёт preview совпадает с authoritative command для одинаковых входов.",
+      "Есть измеренный выигрыш render/CPU без изменения игровых исходов."
+    ],
+    "risks": [
+      "Слишком грубая revision key оставит устаревшую видимость/стоимость.",
+      "Presentation state нельзя использовать как авторитетную базу мутации.",
+      "Ранняя публикация hit/outcome нарушит выбор влияния на бросок."
+    ],
+    "rollback": "Отключить preview cache/memo layer и вернуть прежний canonical preview executor; сохранённые состояния боя не меняются."
+  },
+  {
+    "id": "REF-01",
+    "title": "Границы правил и небольшие извлечения из крупных исполнителей",
+    "priority": "P2",
+    "owner": "rules-refactor-agent",
+    "depends_on": [
+      "TEST-03",
+      "TEST-05"
+    ],
+    "scope": [
+      "frontend/src/rules-core/handler.ts",
+      "frontend/src/rules-core/legacy/engineAdapter.ts",
+      "frontend/src/rules-core/importBoundary.test.ts",
+      "frontend/src/rules-core/domain.ts",
+      "frontend/src/engine/execute.ts",
+      "frontend/src/solo-combat/engine.ts",
+      "frontend/src/character/sheetCanonicalWorld.ts",
+      "frontend/worker/build.mjs",
+      "docs/data-driven-rules.md"
+    ],
+    "effort_workdays": [
+      5,
+      10
+    ],
+    "status": "not_started",
+    "steps": [
+      "Зафиксировать реальный runtime import graph и разбирать найденное нарушение rules-core→engine/mvp по модулям. Не удалять import-boundary test ради зелёного CI и не называть действующий legacy adapter мёртвым кодом.",
+      "Описать интерфейсы данных, чистых правил, application/persistence и presentation. Общие entity operations/predicates/costs/phases остаются data-driven; namespace пакета не должен создавать другой источник истины.",
+      "Создать replay-equivalence corpus фиксированных snapshot/command/RNG для equip, action, roll influence, reaction, damage/effect, movement и rest; включить pending reload и старые artifacts.",
+      "Первыми извлечь небольшие общие фазы: equipment/resource projection и costs/availability; затем roll/damage/reaction continuations. Переносить cohesive functions без изменения semantics, не делить по названию способности.",
+      "Вынести generic command dispatch/phase orchestration из handler в отдельные модули, сохраняя deterministic events, original value breakdown и источник КД на момент броска.",
+      "После стабилизации границ рассмотреть workspace package для shared engine и явный exports API; frontend и worker используют одни исходники. Новый язык, новый repository и дополнительный микросервис не требуются.",
+      "Массовое форматирование и удаление legacy отделить от изменения механики. Семантические изменения требуют новой capability/schema/artifact и явной совместимости."
+    ],
+    "verification": [
+      "Архитектурные import boundary и worker forbidden browser imports проходят.",
+      "Replay-equivalence: одинаковые events/final hash/pending/RNG на фиксированных входах.",
+      "Две сущности с различными данными используют общий operation без изменения UI.",
+      "Старый artifact/бой продолжает исполняться; никаких UUID/name branches в новых механиках."
+    ],
+    "acceptance": [
+      "Импортная граница документирована и проверяется автоматически.",
+      "Первый срез существенно уменьшает ответственность крупных функций без второго calculator/assembler.",
+      "Перенос не меняет semantics и не переписывает исторические артефакты.",
+      "Уменьшение числа строк не используется единственным критерием успеха."
+    ],
+    "risks": [
+      "Циклические imports и tree-shaking regression после перемещения функций.",
+      "Случайное изменение порядка событий/стоимости/continuation при косметическом переносе.",
+      "Shared engine extraction расширяет impacted set frontend+worker; карта CI должна это учитывать."
+    ],
+    "rollback": "Вернуть отдельный рефакторинговый срез через revert, не меняя сохранённые данные; если уже выпущена новая semantics, продолжать поддерживать созданные ею artifacts."
+  },
+  {
+    "id": "REF-02",
+    "title": "Разделение orchestration и каноничного отображения на крупных экранах",
+    "priority": "P2",
+    "owner": "ui-refactor-agent",
+    "depends_on": [
+      "TEST-04"
+    ],
+    "scope": [
+      "frontend/src/pages/SoloCombatPage.tsx",
+      "frontend/src/components/SheetActionsPanel.tsx",
+      "frontend/src/pages/CardLibrary.tsx",
+      "frontend/src/pages/CharacterSheetMVP.tsx",
+      "frontend/src/character/components.tsx",
+      "frontend/src/components/SheetActionLine.tsx",
+      "frontend/src/contexts/ChoiceDialogContext.tsx"
+    ],
+    "effort_workdays": [
+      4,
+      8
+    ],
+    "status": "not_started",
+    "steps": [
+      "Перед изменением записать navigation/dialog/preview contracts основных экранов и определить повторяющиеся loaders, filters, pagination, command lifecycle и entity rendering boundaries.",
+      "Разделить SoloCombatPage на загрузку и command lifecycle, target selection, presentation и dialog hosts. Command ID, pending persistence, retry/replay и continuation принадлежат одному общему lifecycle.",
+      "Выделить из SheetActionsPanel общий action model/availability selector и renderer; лист, бой и мобильный экран переиспользуют каноничные операции и сущности, а не упрощённые параллельные списки.",
+      "Заменить повторяющиеся library loadCards/loadActions/loadEffects/... типизированным registry общих query/pagination/filter adapters. Специфичные права, семантика, create/edit flow, preview и тип сущности остаются явными.",
+      "Выделить ChoiceResolver и небольшие presentation components из общего character/components файла; использовать те же SheetActionLine/ActionPreview/SpellPreview и настройки icon/row во вложенных диалогах.",
+      "Сохранять aria naming/description, keyboard, focus restoration и отсутствие HTML title hover. Разделить чистый formatting и logic changes на небольшие проверяемые срезы.",
+      "Согласовать файловый scope с PERF-04/PERF-05 перед параллельной работой; не создавать конкурирующие реестры и hooks для одной функции."
+    ],
+    "verification": [
+      "Основной E2E: библиотека, создание персонажа, бумажный лист, забег, экипировка, pending roll reload.",
+      "Visual/interaction check icon/row, hover preview, keyboard и nested dialogs.",
+      "Новые сущности на существующих declarations отображаются без UI branches по имени/UUID.",
+      "До/после сравнить bundle route graph и React profile, чтобы рефакторинг не втянул lazy engine в entry."
+    ],
+    "acceptance": [
+      "Крупные экраны разделены по ответственностям без дублирования authoritative logic.",
+      "Entity registry упрощает общий loading/pagination, сохраняя каноничный renderer каждого типа.",
+      "Retry/pending/results и accessibility contracts не изменились.",
+      "Нет широкого rewrite или общего метаконструктора, скрывающего различия сущностей."
+    ],
+    "risks": [
+      "Извлечение hooks может изменить useEffect dependencies и породить повторные команды.",
+      "Новый registry может стереть различия прав/пагинации разных каталогов.",
+      "Перенос imports может увеличить initial JS; требуется build diff."
+    ],
+    "rollback": "Отменять рефакторинг по небольшому срезу; schema/API/persistence не менять. Если обновлены exports, на переходный период сохранить совместимые re-exports."
+  }
+]

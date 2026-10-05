@@ -1,3 +1,4 @@
+import type { CatalogReviewResponse } from '../api/catalogReview';
 import type { EntityReferences } from '../api/entityReferences';
 import type { EntitySupportCertification } from '../content/supportStatus';
 export type {
@@ -46,17 +47,6 @@ export interface Effect {
   targetSpecific: string | 'all';
   modifier: '+' | '-';
   value: number;
-}
-
-// Активный эффект на персонаже
-export interface ActiveEffect {
-  effect_id: string;
-  action_id: string;
-  name: string;
-  duration_remaining: number;
-  duration_type: 'rounds' | 'minutes' | 'hours' | 'until_dispelled';
-  applied_at: string;
-  script?: Record<string, any> | null;
 }
 
 export interface Card extends EntityReferences {
@@ -216,7 +206,7 @@ export interface UpdateCardRequest {
   contents?: CardRef[] | null;
 }
 
-export interface CardsResponse {
+export interface CardsResponse extends CatalogReviewResponse {
   cards: Card[];
   total: number;
   page: number;
@@ -447,188 +437,6 @@ export interface UpdateInventoryItemRequest {
   is_equipped?: boolean;
 }
 
-// Character - модель персонажа D&D
-export interface Character {
-  id: string;
-  user_id: string;
-  group_id?: string;
-  name: string;
-  data: string; // JSON строка с данными персонажа
-  weapon_proficiencies?: string[] | null; // Владения оружием (категории или конкретные типы)
-  damage_resistances?: Record<string, 'resistance' | 'immune' | 'vulnerability'> | null; // Сопротивления/иммунитеты/уязвимости
-  language_proficiencies?: string[] | null; // Владения языками
-  armor_proficiencies?: string[] | null; // Владения доспехами и щитами
-  created_at: string;
-  updated_at: string;
-  
-  // Связанные данные
-  user?: User;
-  group?: Group;
-  inventories?: Inventory[];
-}
-
-// CreateCharacterRequest - запрос на создание персонажа
-export interface CreateCharacterRequest {
-  name: string;
-  group_id?: string;
-  data: string; // JSON строка с данными персонажа
-  weapon_proficiencies?: string[] | null; // Владения оружием (категории или конкретные типы)
-  damage_resistances?: Record<string, 'resistance' | 'immune' | 'vulnerability'> | null; // Сопротивления/иммунитеты/уязвимости
-  language_proficiencies?: string[] | null; // Владения языками
-  armor_proficiencies?: string[] | null; // Владения доспехами и щитами
-}
-
-// UpdateCharacterRequest - запрос на обновление персонажа
-export interface UpdateCharacterRequest {
-  name?: string;
-  group_id?: string;
-  data?: string;
-  weapon_proficiencies?: string[] | null; // Владения оружием (категории или конкретные типы)
-  damage_resistances?: Record<string, 'resistance' | 'immune' | 'vulnerability'> | null; // Сопротивления/иммунитеты/уязвимости
-  language_proficiencies?: string[] | null; // Владения языками
-  armor_proficiencies?: string[] | null; // Владения доспехами и щитами
-}
-
-// ImportCharacterRequest - запрос на импорт персонажа из JSON
-export interface ImportCharacterRequest {
-  character_data: string; // JSON строка с данными персонажа
-  group_id?: string;
-}
-
-// ExportCharacterResponse - ответ с экспортом персонажа
-export interface ExportCharacterResponse {
-  character_data: string; // JSON строка с данными персонажа
-}
-
-// CharacterData - структура данных персонажа из JSON
-export interface CharacterData {
-  name: {
-    value: string;
-  };
-  info: {
-    charClass: {
-      name: string;
-      value: string;
-    };
-    charSubclass: {
-      name: string;
-      value: string;
-    };
-    level: {
-      name: string;
-      value: number;
-    };
-    background: {
-      name: string;
-      value: string;
-    };
-    race: {
-      name: string;
-      value: string;
-    };
-    playerName?: {
-      name: string;
-      value: string;
-    };
-    alignment?: {
-      name: string;
-      value: string;
-    };
-    experience?: {
-      name: string;
-      value: number;
-    };
-  };
-  stats: {
-    str: {
-      name: string;
-      score: number;
-      modifier: number;
-    };
-    dex: {
-      name: string;
-      score: number;
-      modifier: number;
-    };
-    con: {
-      name: string;
-      score: number;
-      modifier: number;
-    };
-    int: {
-      name: string;
-      score: number;
-      modifier: number;
-    };
-    wis: {
-      name: string;
-      score: number;
-      modifier: number;
-    };
-    cha: {
-      name: string;
-      score: number;
-      modifier: number;
-    };
-  };
-  vitality: {
-    'hp-current': {
-      value: number;
-    };
-    'hp-max': {
-      value: number;
-    };
-    'hp-temp': {
-      value: number;
-    };
-    ac: {
-      value: number;
-    };
-    speed: {
-      value: number;
-    };
-  };
-  coins: {
-    gp: {
-      value: number;
-    };
-  };
-  weaponsList?: Array<{
-    id: string;
-    name: {
-      value: string;
-    };
-    mod: {
-      value: string;
-    };
-    dmg: {
-      value: string;
-    };
-    isProf: boolean;
-    notes: {
-      value: string;
-    };
-    ability?: string;
-  }>;
-  feats?: {
-    value: {
-      data: {
-        type: string;
-        content: Array<{
-          type: string;
-          content?: Array<{
-            type: string;
-            text?: string;
-            marks?: Array<{
-              type: string;
-            }>;
-          }>;
-        }>;
-      };
-    };
-  };
-}
-
 // Константы для опций шаблонов
 export const TEMPLATE_TYPE_OPTIONS = [
   { value: 'false', label: 'Обычная карта' },
@@ -637,7 +445,7 @@ export const TEMPLATE_TYPE_OPTIONS = [
 ] as const;
 
 // Инвентарь
-export type InventoryType = 'personal' | 'group' | 'character';
+export type InventoryType = 'personal' | 'group';
 
 export interface InventoryItem {
   id: string;
@@ -655,7 +463,6 @@ export interface Inventory {
   type: InventoryType;
   user_id?: string | null;
   group_id?: string | null;
-  character_id?: string;
   name: string;
   created_at: string;
   updated_at: string;
@@ -703,7 +510,7 @@ export interface ResourceDefinition extends EntityReferences {
   updated_at?: string;
 }
 
-export interface ResourcesResponse {
+export interface ResourcesResponse extends CatalogReviewResponse {
   resources: ResourceDefinition[];
   total: number;
   page: number;
@@ -743,7 +550,7 @@ export interface Variable extends EntityReferences {
   updated_at?: string;
 }
 
-export interface VariablesResponse {
+export interface VariablesResponse extends CatalogReviewResponse {
   variables: Variable[];
   total: number;
   page: number;
@@ -779,7 +586,7 @@ export interface Concept extends EntityReferences {
   updated_at?: string;
 }
 
-export interface ConceptsResponse {
+export interface ConceptsResponse extends CatalogReviewResponse {
   concepts: Concept[];
   total: number;
   page: number;
@@ -903,7 +710,7 @@ export interface UpdateActionRequest {
   detailed_description_font_size?: number | null;
 }
 
-export interface ActionsResponse {
+export interface ActionsResponse extends CatalogReviewResponse {
   actions: Action[];
   total: number;
   page: number;
@@ -1052,7 +859,7 @@ export interface UpdatePassiveEffectRequest {
   detailed_description_font_size?: number | null;
 }
 
-export interface PassiveEffectsResponse {
+export interface PassiveEffectsResponse extends CatalogReviewResponse {
   effects: PassiveEffect[];
   total: number;
   page: number;
@@ -1196,7 +1003,7 @@ export interface UpdateSpellRequest {
   is_extended?: boolean | null;
 }
 
-export interface SpellsResponse {
+export interface SpellsResponse extends CatalogReviewResponse {
   spells: Spell[];
   total: number;
   page: number;
@@ -1342,7 +1149,7 @@ export interface CreateFeatRequest {
 
 export type UpdateFeatRequest = Partial<CreateFeatRequest>;
 
-export interface FeatsResponse {
+export interface FeatsResponse extends CatalogReviewResponse {
   feats: Feat[];
   total: number;
   page: number;
@@ -1409,7 +1216,7 @@ export interface CreateBackgroundRequest {
 
 export type UpdateBackgroundRequest = Partial<CreateBackgroundRequest>;
 
-export interface BackgroundsResponse {
+export interface BackgroundsResponse extends CatalogReviewResponse {
   backgrounds: Background[];
   total: number;
   page: number;
@@ -1492,7 +1299,7 @@ export interface CreateRaceRequest {
 
 export type UpdateRaceRequest = Partial<CreateRaceRequest>;
 
-export interface RacesResponse {
+export interface RacesResponse extends CatalogReviewResponse {
   races: Race[];
   total: number;
   page: number;
@@ -1587,7 +1394,7 @@ export interface CreateClassRequest {
 
 export type UpdateClassRequest = Partial<CreateClassRequest>;
 
-export interface ClassesResponse {
+export interface ClassesResponse extends CatalogReviewResponse {
   classes: CharacterClass[];
   total: number;
   page: number;

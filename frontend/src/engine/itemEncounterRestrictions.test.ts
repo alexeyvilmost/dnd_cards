@@ -11,7 +11,7 @@ import type { ForgeCharacter } from '../character/types';
 import { createWorld, type ActorState } from '../rules-core/domain';
 import { foldEvents } from '../rules-core/reducer';
 
-const data = JSON.parse(readFileSync('../scripts/content/data/item-completion-high-20260929.json','utf8'));
+const data = JSON.parse(readFileSync(new URL('../../../scripts/content/data/item-completion-high-20260929.json', import.meta.url), 'utf8'));
 const mechanics = (n: number) => data[`CARD-${String(n).padStart(4,'0')}`].mechanics;
 const state = () => ({ ...equippedFighterState(), hp: { current: 5, max: 30, temp: 0 } });
 

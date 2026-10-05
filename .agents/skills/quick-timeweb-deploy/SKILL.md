@@ -9,7 +9,7 @@ Use only for an explicit production-deploy request in `dnd_cards`. This skill na
 
 ## Before touching production
 
-1. Read `AGENTS.md`, `.agents/skills/timeweb-deploy/SKILL.md`, and `docs/standalone-deploy-after-push.md`. The existing TimeWeb skill and runbook remain authoritative for credentials, server paths, release runner, backup, rollback, and verification.
+1. Read `AGENTS.md`, `.agents/skills/timeweb-deploy/SKILL.md`, `docs/release-deployment.md`, and `docs/release-ci.md`. The old single-SHA runner in `docs/standalone-deploy-after-push.md` is historical; do not execute it.
 2. Inspect `git status`, the branch, and the full in-scope diff. Separate requested files from unrelated work. Never stage or archive the whole dirty workspace. Preserve unrelated edits; if a clean release checkout is needed, isolate only the reviewed commit and restore any temporarily set-aside work.
 3. Deploy only the requested scope. For a migration-only release, include the migration registration, implementation and embedded data, plus directly relevant tests. Do not silently include other app or content changes.
 
@@ -26,8 +26,8 @@ Expand the gate only for impacted components. Replay-critical rule-engine change
 
 ## Release and verify
 
-After the focused checks pass, review and stage only the requested files, scan the staged diff, and commit/push the reviewed scope to the expected release branch as authorized by the explicit deploy request. Fetch and require the exact release SHA to match `origin/main`; deploy the immutable archive from that SHA using the canonical runner. Do not build production from dirty files.
+After the focused checks pass, review and stage only the requested files, scan the staged diff, and commit/push the reviewed scope to the expected release branch as authorized by the explicit deploy request. Fetch and require the exact release SHA to match `origin/main`. Use the canonical CI/release/deployment workflow and its required suite tier; this skill does not waive the automated mandatory gate or candidate rehearsal. Do not build production from dirty files.
 
-The production runner must create its database backup before starting the new backend. Afterward independently verify edge/backend/frontend health and exact source SHA. For migrations, perform a read-only check that each expected migration version was recorded. Reuse the persistent deploy key documented in the canonical runbook; do not create or remove it during a normal release. If an explicitly authorized one-off credential is used, remove and verify only that temporary credential. Never restore production DB as part of app rollback, and do not perform unrelated certification, provider, or secret changes.
+The production runner must create its database backup and rehearse the exact candidate before starting the new backend. Afterward independently verify edge/backend/frontend/worker health, saved composition receipt, and each component's digest and source identity against its manifest entry. Selective releases may retain different component source SHAs. For migrations, perform a read-only check that each expected migration version was recorded. Reuse the persistent deploy identities; do not create or remove them during a normal release. If an explicitly authorized one-off credential is used, remove and verify only that temporary credential. Never restore production DB as part of app rollback, and do not perform unrelated certification, provider, or secret changes.
 
 Report the deployed SHA, focused checks, migration versions, health/identity results, backup location, and credential cleanup. State clearly if any separate readiness or certification phase remains incomplete.

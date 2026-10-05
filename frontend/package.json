@@ -11,7 +11,7 @@
   },
   "scripts": {
     "dev": "vite --config vite.config.ts",
-    "build": "node scripts/check-dice-box-assets.mjs && tsc && vite build --config vite.config.ts && node scripts/check-dice-box-assets.mjs --dist",
+    "build": "node scripts/media-variants.mjs && node scripts/check-dice-box-assets.mjs && tsc && vite build --config vite.config.ts && node scripts/check-dice-box-assets.mjs --dist",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --config vite.config.ts",
     "rules-lab:generate": "node scripts/generate-rules-lab-fixture.mjs",
@@ -22,7 +22,10 @@
     "mini-fighting-styles-fixture:check": "node scripts/generate-mini-mvp-fighting-style-fixture.mjs --check",
     "sheet-combat-certification:generate": "node scripts/generate-sheet-combat-certification.mjs",
     "sheet-combat-certification:check": "node scripts/generate-sheet-combat-certification.mjs --check",
-    "test": "vitest run",
+    "test": "node ../scripts/testing/run.mjs --suite core",
+    "test:core": "node ../scripts/testing/run.mjs --suite core",
+    "test:extended": "node ../scripts/testing/run.mjs --suite extended",
+    "test:legacy-manual": "node ../scripts/testing/run.mjs --suite legacy-manual",
     "test:roguelike:headless": "node scripts/check-roguelike-headless.mjs",
     "test:roguelike:manifest": "node --test ../scripts/content/roguelike-fighter-l1-5-manifest.test.mjs ../scripts/content/roguelike-fighter-audit.test.mjs",
     "test:browser": "npm run build && playwright test",
@@ -117,6 +120,7 @@
     "typescript": "^5.2.2",
     "vite": "6.4.3",
     "vite-plugin-pwa": "^1.3.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "web-vitals": "6.2.2"
   }
 }

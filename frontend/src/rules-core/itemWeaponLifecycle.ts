@@ -1,9 +1,9 @@
 import type {ActorState,UncommittedRuleEvent,WorldState} from './domain';
 import type {WorldObjectState} from './worldObjects';
 import {parseWeaponProfile} from './weaponProfile';
-import {payloadsOf} from '../engine/mechanicsView';
-import {matchesWhen} from '../engine/circumstances';
-import {itemEquipmentChangeIssue} from '../engine/itemEquipmentPolicy';
+import {payloadsOf} from '../rules-primitives/mechanicsView';
+import {matchesWhen} from './legacy/engineAdapter';
+import {itemEquipmentChangeIssue} from './legacy/engineAdapter';
 
 type Dict=Record<string,unknown>;
 type EventInput=Omit<UncommittedRuleEvent,'ordinal'>;

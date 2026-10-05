@@ -20,10 +20,27 @@ server {
         add_header Cache-Control "no-cache, no-store, must-revalidate" always;
     }
 
-    location /assets/ {
+    location ~ "^/assets/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css|woff2|png|svg|jpg|jpeg|webp|avif)$" {
         try_files $uri @retained_asset;
         expires 1y;
         add_header Cache-Control "public, immutable";
+    }
+
+    # Authored media uses stable public URLs. Revalidate those URLs instead of
+    # treating every file under /assets/ as content-addressed forever.
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, no-cache";
+    }
+
+    location ~ "^/media/variants/[a-f0-9]{64}\.webp$" {
+        try_files $uri @retained_asset;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location ~ ^/(?:images|icons|portraits)/ {
+        try_files $uri =404;
+        add_header Cache-Control "public, no-cache";
     }
 
     # Long-lived tabs may still import a content-hashed chunk from an older

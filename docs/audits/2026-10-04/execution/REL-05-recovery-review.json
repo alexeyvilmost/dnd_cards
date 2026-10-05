@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "scope": "pure deployment state-machine and local temporary journal; no Docker or network",
+  "beforeStaleRecovery": "next-two",
+  "afterStaleRecovery": "next",
+  "recoveryStatus": "succeeded",
+  "staleOperationReplacedNewerActive": true
+}

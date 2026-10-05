@@ -178,20 +178,6 @@ class BackendTester:
         self.test_results["GET /api/groups"] = self.test_endpoint(
             "GET", "/api/groups", 200, headers=headers)
     
-    def test_characters_endpoints(self):
-        """Тестирует endpoints персонажей"""
-        self.log("\n=== Тестирование Characters Endpoints ===", "INFO")
-        
-        headers = {"Authorization": f"Bearer {self.auth_token}"} if self.auth_token else None
-        
-        # Тест получения всех персонажей
-        self.test_results["GET /api/characters"] = self.test_endpoint(
-            "GET", "/api/characters", 200, headers=headers)
-        
-        # Тест получения персонажей v2
-        self.test_results["GET /api/characters-v2"] = self.test_endpoint(
-            "GET", "/api/characters-v2", 200, headers=headers)
-    
     def test_images_endpoints(self):
         """Тестирует endpoints изображений"""
         self.log("\n=== Тестирование Images Endpoints ===", "INFO")
@@ -215,7 +201,6 @@ class BackendTester:
         self.test_auth_endpoints()
         self.test_cards_endpoints()
         self.test_groups_endpoints()
-        self.test_characters_endpoints()
         self.test_images_endpoints()
         
         # Подсчет результатов

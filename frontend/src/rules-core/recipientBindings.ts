@@ -1,8 +1,8 @@
 import type {WorldState,RulesCatalog,UncommittedRuleEvent,DeterministicEnvironment} from './domain';
 import type {ActiveEffectEntry} from '../mvp/contracts';
-import {payloadsOf} from '../engine/mechanicsView';
-import {matchesWhen} from '../engine/circumstances';
-import {itemSourceRequirementIssue} from '../engine/actionRequirements';
+import {payloadsOf} from '../rules-primitives/mechanicsView';
+import {matchesWhen} from './legacy/engineAdapter';
+import {itemSourceRequirementIssue} from './legacy/engineAdapter';
 type Dict=Record<string,unknown>;
 type Event=Omit<UncommittedRuleEvent,'ordinal'>;
 const clone=<T,>(value:T):T=>JSON.parse(JSON.stringify(value));

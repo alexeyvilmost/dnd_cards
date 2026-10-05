@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "status": "implemented_awaiting_docker_acceptance",
+  "metric": "estimated source/context payload bytes; not Docker transferred bytes",
+  "measured_at": "2026-10-04T15:15:19.515Z",
+  "git_head": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "source_basis": "clean snapshot of currently allowed working-tree inputs, including authorized untracked source; not a committed git archive",
+  "components": {
+    "backend": {
+      "estimated_source_bytes": 23633782,
+      "file_count": 381,
+      "source_fingerprint": "cb15b08f7bc19e9dee8e6f6d9beb4d22c39ae7b55d185f2e9801fc33247db1ec",
+      "same_as_native_snapshot": false,
+      "baseline_tracked": {
+        "ref": "HEAD",
+        "policy": "backend/.dockerignore",
+        "estimated_source_bytes": 24304836,
+        "files": 546,
+        "basis": "committed Git blob sizes with that revision ignore policy; not Docker transferred bytes"
+      },
+      "go_embed_patterns": 35,
+      "latest_native_snapshot_matches": true
+    },
+    "frontend": {
+      "estimated_source_bytes": 166915480,
+      "file_count": 1268,
+      "source_fingerprint": "b6cd2be14687d424fef1f58e0d6dc5fe9e36b97eccad8b48e74c0d962b9b83f2",
+      "same_as_native_snapshot": true,
+      "baseline_tracked": {
+        "ref": "HEAD",
+        "policy": ".dockerignore",
+        "estimated_source_bytes": 280876256,
+        "files": 3493,
+        "basis": "committed Git blob sizes with that revision ignore policy; not Docker transferred bytes"
+      },
+      "go_embed_patterns": 0
+    },
+    "worker": {
+      "estimated_source_bytes": 8039835,
+      "file_count": 590,
+      "source_fingerprint": "c85d135562ca60ce97dbffc6c5d71896e960403c79062f3ac390f47895008a3f",
+      "same_as_native_snapshot": true,
+      "baseline_tracked": {
+        "ref": "HEAD",
+        "policy": ".dockerignore",
+        "estimated_source_bytes": 280876256,
+        "files": 3493,
+        "basis": "committed Git blob sizes with that revision ignore policy; not Docker transferred bytes"
+      },
+      "go_embed_patterns": 0
+    }
+  },
+  "docker": {
+    "status": "awaiting_environment",
+    "reason": "docker_daemon_unavailable",
+    "version": "Docker version 29.7.2, build a7dcaa6",
+    "server": null,
+    "local_context": "desktop-linux",
+    "compose": [
+      {
+        "file": "docker-compose.yml",
+        "status": "passed_configuration_only",
+        "builds": [
+          {
+            "service": "backend",
+            "context": "backend",
+            "dockerfile": "Dockerfile"
+          },
+          {
+            "service": "frontend",
+            "context": ".",
+            "dockerfile": "frontend/Dockerfile"
+          }
+        ]
+      },
+      {
+        "file": "docker-compose.local.yml",
+        "status": "passed_configuration_only",
+        "builds": [
+          {
+            "service": "backend",
+            "context": "backend",
+            "dockerfile": "Dockerfile"
+          },
+          {
+            "service": "frontend",
+            "context": ".",
+            "dockerfile": "frontend/Dockerfile"
+          }
+        ]
+      },
+      {
+        "file": "docker-compose.prod.yml",
+        "status": "passed_configuration_only",
+        "builds": [
+          {
+            "service": "backend",
+            "context": "backend",
+            "dockerfile": "Dockerfile"
+          },
+          {
+            "service": "frontend",
+            "context": ".",
+            "dockerfile": "frontend/Dockerfile"
+          }
+        ]
+      },
+      {
+        "file": "infra/compose.prod.yml",
+        "status": "passed_configuration_only",
+        "builds": []
+      },
+      {
+        "file": "infra/compose.test.yml",
+        "status": "passed_configuration_only",
+        "builds": [
+          {
+            "service": "backend",
+            "context": "backend",
+            "dockerfile": "Dockerfile"
+          },
+          {
+            "service": "frontend",
+            "context": ".",
+            "dockerfile": "frontend/Dockerfile"
+          },
+          {
+            "service": "rules-worker",
+            "context": ".",
+            "dockerfile": "infra/Dockerfile.rules-worker"
+          }
+        ]
+      }
+    ]
+  },
+  "builds": null,
+  "native": {
+    "node": "v24.19.0",
+    "dependency_basis": "existing lockfile-installed frontend/node_modules via explicit external junction; not clean npm ci",
+    "frontend": {
+      "typecheck": "passed",
+      "vite": "passed",
+      "dicebox_source_and_dist": "passed",
+      "runtime_css_urls": [
+        "/images/home/interactive.jpg",
+        "/groovepaper.png",
+        "/assets/inter-cyrillic-300-normal-BnqRxXuy.woff2",
+        "/assets/inter-latin-300-normal-BVlfKGgI.woff2",
+        "/assets/inter-cyrillic-400-normal-obahsSVq.woff2",
+        "/assets/inter-latin-400-normal-C38fXH4l.woff2",
+        "/assets/inter-cyrillic-500-normal-BasfLYem.woff2",
+        "/assets/inter-latin-500-normal-Cerq10X2.woff2",
+        "/assets/inter-cyrillic-600-normal-CWCymEST.woff2",
+        "/assets/inter-latin-600-normal-LgqL8muc.woff2",
+        "/assets/inter-cyrillic-700-normal-CjBOestx.woff2",
+        "/assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+        "/assets/pangolin-cyrillic-400-normal-DXBky3Ii.woff2",
+        "/assets/pangolin-latin-400-normal-Cx-z2UDT.woff2",
+        "/fonts/open-sans/open-sans-cyrillic-400-normal.woff2",
+        "/fonts/open-sans/open-sans-latin-400-normal.woff2",
+        "/fonts/open-sans/open-sans-cyrillic-600-normal.woff2",
+        "/fonts/open-sans/open-sans-latin-600-normal.woff2",
+        "/fonts/open-sans/open-sans-cyrillic-700-normal.woff2",
+        "/fonts/open-sans/open-sans-latin-700-normal.woff2",
+        "/images/home/runs.jpg"
+      ],
+      "missing_from_final_public_plus_dist": []
+    },
+    "worker": {
+      "build": "passed",
+      "source_inputs": 267,
+      "missing_from_clean_context": []
+    },
+    "backend": {
+      "linux_amd64_cgo0_build": "passed",
+      "go": "go1.25.12 windows/amd64",
+      "note": "fresh snapshot of final-inventory backend inputs after concurrent roguelike_camp_inventory.go change; outputs/release-measure/rel02-final-inventory/native/backend"
+    },
+    "docker": {
+      "cold_warm_times": null,
+      "cache_hits": null,
+      "container_smoke": "awaiting_environment"
+    }
+  },
+  "checks": {
+    "context_tests": 9,
+    "planner_tests": 32,
+    "release_evidence_tests": 25,
+    "bake_config": "passed",
+    "docker_build_syntax": "awaiting_environment",
+    "container_smoke": "awaiting_environment"
+  },
+  "evidence_paths": [
+    "outputs/release-measure/rel02-final-inventory/report.json",
+    "outputs/release-measure/rel02-current-v3/report.json",
+    "outputs/release-measure/rel02-current-v3/native-checks.json"
+  ]
+}

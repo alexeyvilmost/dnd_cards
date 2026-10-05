@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -19,42 +19,38 @@ type OpenAIService struct {
 	client *openai.Client
 }
 
-// newOpenAIHTTPClient — HTTP-клиент для OpenAI из production-сети:
-//   - Proxy из окружения (HTTPS_PROXY) — можно направить трафик через достижимый прокси,
-//     если прямой доступ к api.openai.com блокируется/таймаутится;
-//   - укороченный dial-timeout (15с вместо дефолтных 30с) — быстрее падаем на недостижимом
-//     Cloudflare-edge и уходим в ретрай (повторный dial часто попадает на рабочий anycast-IP);
-//   - общий бюджет запроса 180с (генерация изображения долгая, но не висит вечно).
+// Only this provider client uses OPENAI_CONNECT_PROXY_URL. Global proxy and
+// NO_PROXY settings must not silently redirect storage or rules-worker traffic.
+// CONNECT preserves provider TLS; a proxy does not receive the API credential.
 func newOpenAIHTTPClient() *http.Client {
 	tr := http.DefaultTransport.(*http.Transport).Clone()
-	tr.Proxy = http.ProxyFromEnvironment
+	tr.Proxy = imageProviderProxy(os.Getenv("OPENAI_CONNECT_PROXY_URL"))
 	tr.DialContext = (&net.Dialer{
 		Timeout:   15 * time.Second,
 		KeepAlive: 30 * time.Second,
 	}).DialContext
 	return &http.Client{
 		Timeout:   180 * time.Second,
-		Transport: tr,
+		Transport: imageProviderTransport{base: tr},
 	}
 }
 
-// isRetryableNetErr — временные сетевые сбои (dial i/o timeout, reset, EOF, TLS), на
-// которых повтор имеет смысл (в отличие от 4xx/невалидного запроса).
-func isRetryableNetErr(err error) bool {
-	if err == nil {
-		return false
+func imageProviderProxy(raw string) func(*http.Request) (*url.URL, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil
 	}
-	var netErr net.Error
-	if errors.As(err, &netErr) && netErr.Timeout() {
-		return true
-	}
-	msg := strings.ToLower(err.Error())
-	for _, s := range []string{"i/o timeout", "timeout", "connection reset", "connection refused", "no such host", "eof", "tls handshake", "network is unreachable"} {
-		if strings.Contains(msg, s) {
-			return true
+	proxy, err := url.Parse(strings.TrimSpace(raw))
+	valid := err == nil && proxy.Hostname() != "" && (proxy.Scheme == "http" || proxy.Scheme == "https") && (proxy.Path == "" || proxy.Path == "/") && proxy.RawQuery == "" && proxy.Fragment == ""
+	return func(request *http.Request) (*url.URL, error) {
+		// Never include a supplied URL in errors: it may contain proxy credentials.
+		if !valid {
+			return nil, fmt.Errorf("invalid provider CONNECT proxy configuration")
 		}
+		if request.URL.Scheme != "https" {
+			return nil, fmt.Errorf("provider CONNECT proxy requires HTTPS destination")
+		}
+		return proxy, nil
 	}
-	return false
 }
 
 // NewOpenAIService - создание нового сервиса OpenAI
@@ -69,7 +65,7 @@ func NewOpenAIService() *OpenAIService {
 	// прямой доступ недоступен (напр. Cloudflare Worker-релей). Пусто → api.openai.com.
 	if base := strings.TrimSpace(os.Getenv("OPENAI_BASE_URL")); base != "" {
 		config.BaseURL = strings.TrimRight(base, "/")
-		log.Printf("[openai] используется кастомный BaseURL: %s", config.BaseURL)
+		log.Printf("[openai] используется настроенный API endpoint")
 	}
 	config.HTTPClient = newOpenAIHTTPClient()
 	return &OpenAIService{client: openai.NewClientWithConfig(config)}
@@ -116,61 +112,37 @@ func (s *OpenAIService) GenerateImage(prompt, quality, size string) (string, err
 }
 
 // GenerateImageContext keeps every paid attempt inside the caller's lifetime.
-// A disconnected browser or exhausted overall request budget cancels the
-// provider call, retry backoff and all subsequent attempts.
+// A disconnected browser cancels the call. A failed paid POST is not retried:
+// timeout/reset does not establish whether the provider generated an image.
 func (s *OpenAIService) GenerateImageContext(parent context.Context, prompt, quality, size string) (string, error) {
-	if s.client == nil {
-		return "", fmt.Errorf("OpenAI API не настроен")
+	if s == nil || s.client == nil {
+		return "", &ImageGenerationError{Code: "image_provider_not_configured", Message: "Сервис генерации не настроен.", Source: "application", Outcome: "not_started", Status: http.StatusServiceUnavailable}
 	}
 	if err := parent.Err(); err != nil {
-		return "", fmt.Errorf("генерация изображения отменена: %w", err)
+		problem := classifyImageProviderError(err, imageProviderMetadata{})
+		problem.Outcome = "not_started"
+		return "", problem
 	}
 
 	req := openai.ImageRequest{
 		Prompt:     prompt,
-		Model:      "gpt-image-1",
+		Model:      generatedImageModel,
 		Size:       normalizeImageSize(size),
 		Quality:    normalizeImageQuality(quality),
 		Background: openai.CreateImageBackgroundTransparent,
 		N:          1,
 	}
 
-	// Ретраи на временных сетевых сбоях (dial i/o timeout к Cloudflare-edge OpenAI):
-	// повторный запрос заново резолвит DNS и часто попадает на рабочий anycast-IP.
-	const attempts = 3
-	var resp openai.ImageResponse
-	var err error
-	for i := 0; i < attempts; i++ {
-		ctx, cancel := context.WithTimeout(parent, 160*time.Second)
-		resp, err = s.client.CreateImage(ctx, req)
-		cancel()
-		if err == nil {
-			break
-		}
-		if parentErr := parent.Err(); parentErr != nil {
-			return "", fmt.Errorf("генерация изображения отменена: %w", parentErr)
-		}
-		if i == attempts-1 || !isRetryableNetErr(err) {
-			return "", fmt.Errorf("ошибка генерации изображения: %w", err)
-		}
-		wait := time.Duration(i+1) * 2 * time.Second
-		log.Printf("[openai] генерация изображения: попытка %d/%d не удалась (%v), повтор через %s", i+1, attempts, err, wait)
-		timer := time.NewTimer(wait)
-		select {
-		case <-timer.C:
-		case <-parent.Done():
-			if !timer.Stop() {
-				select {
-				case <-timer.C:
-				default:
-				}
-			}
-			return "", fmt.Errorf("генерация изображения отменена: %w", parent.Err())
-		}
+	metadata := &imageProviderMetadata{}
+	ctx, cancel := context.WithTimeout(context.WithValue(parent, imageProviderMetadataKey{}, metadata), 160*time.Second)
+	defer cancel()
+	resp, err := s.client.CreateImage(ctx, req)
+	if err != nil {
+		return "", classifyImageProviderError(err, *metadata)
 	}
 
 	if len(resp.Data) == 0 {
-		return "", fmt.Errorf("не получены данные изображения")
+		return "", &ImageGenerationError{Code: "image_provider_invalid_response", Message: "Сервис генерации вернул ответ без изображения.", Source: "provider", Outcome: "unknown", Status: http.StatusBadGateway, ProviderStatus: metadata.status, ProviderRequestID: metadata.requestID, ProviderContentType: metadata.contentType}
 	}
 
 	// При использовании B64JSON формата, данные приходят в поле B64JSON
@@ -179,12 +151,9 @@ func (s *OpenAIService) GenerateImageContext(parent context.Context, prompt, qua
 		return "data:image/png;base64," + resp.Data[0].B64JSON, nil
 	}
 
-	// Fallback на URL если доступен
-	if resp.Data[0].URL != "" {
-		return resp.Data[0].URL, nil
-	}
-
-	return "", fmt.Errorf("не получены данные изображения")
+	// GPT Image returns base64. Following a URL from an unexpected response
+	// would bypass this client's dedicated egress and its destination policy.
+	return "", &ImageGenerationError{Code: "image_provider_invalid_response", Message: "Сервис генерации вернул ответ без изображения.", Source: "provider", Outcome: "unknown", Status: http.StatusBadGateway, ProviderStatus: metadata.status, ProviderRequestID: metadata.requestID, ProviderContentType: metadata.contentType}
 }
 
 // Стили генерации изображений

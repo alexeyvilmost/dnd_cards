@@ -1,5 +1,12 @@
 # Portable production deployment
 
+Current transition (2026-10-05): the manifest runner is prepared and disabled.
+Read [the current deployment contract](../docs/release-deployment.md) before the
+historical instructions below. SHA-only archive deployment and count-based prune
+are no longer supported by the repository's `deploy-release`. The application
+still runs the previous release. A private Sota gateway and protected deployment
+configuration have been provisioned; see the current execution report.
+
 The production boundary is a regular Docker Compose project running on the
 Timecloud server.
 

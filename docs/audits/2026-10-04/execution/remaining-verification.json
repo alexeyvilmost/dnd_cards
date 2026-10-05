@@ -1,0 +1,612 @@
+{
+  "schema_version": 1,
+  "kind": "remaining-environment-verification-handoff",
+  "recorded_date": "2026-10-05",
+  "human_report": "docs/audits/2026-10-04/execution/remaining-verification.md",
+  "status": "completion_followups_in_progress_docker_available",
+  "scope": "Конкретная передача оставшихся проверок окружения и внешних действий; не новый план всех задач и не разрешение запуска.",
+  "local_suite_snapshot": {
+    "source": "docs/audits/2026-10-04/execution/final-verification.json",
+    "core": {
+      "status": "passed",
+      "report": "docs/audits/2026-10-04/execution/TEST-03-final-core.json",
+      "tests": 504,
+      "duration_ms": 268898
+    },
+    "extended": {
+      "status": "passed",
+      "report": "docs/audits/2026-10-04/execution/TEST-03-final-extended.json",
+      "tests": 7586,
+      "duration_ms": 1095961
+    },
+    "source_snapshot": {
+      "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+      "files": 4313
+    },
+    "combined_native_pass_claimed": true,
+    "historical_failed_receipts_preserved": true,
+    "coverage_snapshot_gap": "Исправлен до финальных запусков; все26 source files включены, старые hashes не переаттестованы.",
+    "release_precondition": [
+      "Полные свежие core и extended на одном замороженном source snapshot.",
+      "Exact selection; все обязательные группы и Go subtests ненулевые, без fail/skip.",
+      "Source hashes совпадают до/после; cleanup завершён без ошибок.",
+      "Адресные тесты, Docker simulations и config-only checks не заменяют фактические окруженческие receipts."
+    ],
+    "boundary": "Historical native Windows snapshot only; subsequent completion-audit implementation needs new final suites. OCI/Linux race not yet accepted."
+  },
+  "current_configuration": {
+    "sources": [
+      "infra/release-build-config.json",
+      "infra/deployment-policy.json"
+    ],
+    "release_build_enabled": false,
+    "platform": "linux/amd64",
+    "base_image_pins": "GO_IMAGE, ALPINE_IMAGE, NODE_IMAGE, NGINX_IMAGE пусты",
+    "buildkit_image_pin": "пуст",
+    "content_manifest_hash": "пуст",
+    "migration_set": [],
+    "production_enabled": false,
+    "auto_deploy_main": false,
+    "delete_backups_images_assets": false,
+    "migration_mode": "additive-298-300",
+    "configuration_changed_by_this_handoff": false
+  },
+  "authorization": {
+    "source": "AGENTS.md",
+    "quoted_rule": "Разработка, запуск и проверка локальные. Продовые снапшоты допустимы для локальной проверки. Коммит, push и TimeWeb — только по явному запросу после локальной проверки.",
+    "local_work": "Owned native/Linux/OCI проверки допустимы в пределах уже разрешённой локальной работы; не затрагивать чужие данные и ресурсы.",
+    "requires_explicit_instruction_by_agents": [],
+    "external_actions": "GitHub/registry settings, публикация, gateway и платная генерация остаются неисполненными. Выполнять в пределах конкретного поручения, не требовать повторного разрешения на уже охваченный им шаг.",
+    "known_environment_and_budget": "Среда может быть известна из конфигурации. Уточнять денежный лимит только при необходимом платном ресурсе или неизвестном расходе; не вводить общее требование бюджета для всех действий.",
+    "local_read_only_without_new_permission": [
+      "configuration inspection",
+      "manifest/provenance verification",
+      "source closure review",
+      "чтение локальных receipts"
+    ],
+    "not_authorized_by_document": true,
+    "current_user_authorization": {
+      "date": "2026-10-05",
+      "commit": true,
+      "necessaryPush": true,
+      "timewebDeploy": true,
+      "condition": "after local verification",
+      "productionMutated": false
+    }
+  },
+  "local_work_not_external_blockers": [
+    {
+      "id": "LOCAL-PROCESS-KILL",
+      "owner": "runtime/performance",
+      "status": "local_actual_pass_final_extended_rerun_pending",
+      "boundary": "Both phase-specific local process-kill scenarios passed. This is not PostgreSQL/WAL/power-loss, long-session memory, or exact-container migration fault proof. Mandatory final extended must run the integrated gate; targeted PASS does not replace it.",
+      "execution": "native-postgresql-owned-backend-process-kill",
+      "run_id": "test_b74426d134f97d09e055f94a",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.json"
+      ],
+      "checks": [
+        "Actual worker result held before Go persistence; exact full worker input/result replay after kill.",
+        "Actual committed API response held before client delivery; durable receipt recovery uses zero worker calls.",
+        "One resource charge, preserved second retry, source/copied binary+artifact equality, owned cleanup stopped."
+      ]
+    },
+    {
+      "id": "LOCAL-LONG-COMBAT",
+      "owner": "runtime/performance",
+      "status": "verified_native",
+      "boundary": "160+100 legal commands, exact API retries and full seeded worker replay PASS; both cleanup stopped. Remaining processedCommandIds growth measured at195 B/turn, preserves duplicate protection; not a heap leak claim or general memory bound. External host budget remains PERF-HOST.",
+      "evidence": [
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.json"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "ENV-LINUX-RACE",
+      "title": "Полный extended с Go race на Linux",
+      "owner": "test infrastructure",
+      "status": "awaiting_linux_environment",
+      "environment": "native Linux; Docker не требуется",
+      "prerequisites": [
+        "Linux, Node24 с зависимостями lockfile, Go1.25 с C toolchain, PostgreSQL17 binaries, браузер.",
+        "Чистый exact-source checkout для CI mode; полный локальный core5/extended3 с исправленным snapshot должен быть принят.",
+        "Отдельный новый output directory; явный TEST_PG_BIN или --pg-bin при отсутствии PostgreSQL в PATH."
+      ],
+      "commands": [
+        {
+          "command": "node scripts/testing/run.mjs --mode ci --candidate HEAD --suite extended --race --output outputs/testing/linux-extended-race-UNIQUE",
+          "source": "scripts/testing/run.mjs; .github/workflows/ci.yml",
+          "placeholders": {
+            "UNIQUE": "новый каталог для этого запуска"
+          },
+          "execution": "Только после готовности входов; не выполнять в текущем Windows окружении как якобы Linux race."
+        }
+      ],
+      "steps": [
+        "Зафиксировать exact source и toolchain; подтвердить чистоту CI checkout.",
+        "Запустить весь extended через общий runner с --race, без --select и без reuse UI build.",
+        "Сверить report.json, source-snapshot.json, test-catalog.json и inherited race для upgrade matrix.",
+        "Проверить остановку owned stack и сохранить новый receipt, не редактируя прежние."
+      ],
+      "acceptance": [
+        "go_race=true; все обязательные Go roots/subtests и matrix297/298/299 реально исполнены.",
+        "Полный extended PASS, ненулевая selection, zero fail/skip, source stable и cleanup stopped."
+      ],
+      "fail_closed": [
+        "Windows обычный Go run не считается race.",
+        "Отсутствующий C toolchain или skipped required DB test означает непрохождение."
+      ],
+      "requires_explicit_authorization": "Локальный Linux запуск — нет; подготовка GitHub запуска через commit/push — да.",
+      "references": [
+        ".github/workflows/ci.yml",
+        "scripts/testing/run.mjs",
+        "scripts/testing/check-upgrade-baselines.mjs"
+      ],
+      "environment_evidence": "outputs/testing/environment-readiness-current.json"
+    },
+    {
+      "id": "OCI-BUILD",
+      "title": "Реальные digest pins, холодная и тёплая сборка, image contracts",
+      "owner": "release/build",
+      "status": "docker_available_inputs_and_actual_drills_pending",
+      "environment": "owned local Linux/amd64 Docker daemon и BuildKit",
+      "prerequisites": [
+        "Доступный Linux Docker daemon; Docker CLI и Compose config-only недостаточны.",
+        "Проверенные platform-compatible @sha256 для четырёх base images и BuildKit; Node24.",
+        "Локальный builder rel02-local с проверенным BuildKit; исходники и lockfiles заморожены.",
+        "Не включать tracked release-build-config ради локальных измерений; его реальные значения готовятся отдельно."
+      ],
+      "commands": [
+        {
+          "command": "node scripts/release/measure-local.mjs --prepare --build --builder rel02-local --images path/to/image-pins.json",
+          "source": "docs/release-builds.md; scripts/release/measure-local.mjs",
+          "placeholders": {
+            "path/to/image-pins.json": "JSON с ровно GO_IMAGE, ALPINE_IMAGE, NODE_IMAGE, NGINX_IMAGE и реальными digest refs"
+          },
+          "execution": "Только разрешённый локальный builder; remote SSH/TCP/Kubernetes builders отвергаются."
+        }
+      ],
+      "steps": [
+        "Подтвердить digest/platform и фактический BuildKit; сохранить hashes конфигурации без секретов.",
+        "Измерить один cold и два warm build каждого компонента, сохранив actual logs/time/cache markers/image IDs/sizes.",
+        "Отдельно выполнить реальную mutation matrix UI/shared rules/media/lockfile; измеритель не делает её целиком автоматически.",
+        "Запустить image contracts и container smoke frontend/backend/worker, включая lazy UI, media, PWA и retained CJS.",
+        "Создавать только owned ресурсы; завершить cleanup без prune чужих caches."
+      ],
+      "acceptance": [
+        "Подтверждённые immutable base/BuildKit digests, реальные cold/warm результаты и корректная invalidation matrix.",
+        "Собранные образы загружают HTML/lazy chunks/preview/DiceBox/PWA/media; backend работает с owned БД; worker исполняет current и retained artifacts.",
+        "Cold явно означает изолированный application/dependency cache, а не обязательное повторное скачивание base images."
+      ],
+      "implementation_gaps": [
+        "infra/compose.test.yml и check-compose пока только config-proof; automatic Docker lifecycle, эквивалентный native startTestStack, не подтверждён.",
+        "OCI browser smoke требует owned adapter; exact candidate collector покрывает HTTP, но не автоматически все browser сценарии."
+      ],
+      "fail_closed": [
+        "Tag не равен pin.",
+        "Нельзя считать compose up на legacy bootstrap integration/fresh доказательством.",
+        "Native builds и unit simulations не называются actual OCI."
+      ],
+      "requires_explicit_authorization": "Owned локальная проверка — нет нового разрешения; внешний registry или публикация — отдельно.",
+      "references": [
+        "docs/release-builds.md",
+        "infra/release-build-config.json",
+        "scripts/release/measure-local.mjs",
+        "infra/compose.test.yml",
+        "scripts/testing/check-compose.mjs"
+      ],
+      "environment_evidence": "outputs/testing/environment-readiness-current.json"
+    },
+    {
+      "id": "OCI-SELECTIVE",
+      "title": "Registry roundtrip, frontend-only cutover, mixed versions и rollback",
+      "owner": "release orchestration",
+      "status": "docker_available_inputs_and_actual_drills_pending",
+      "environment": "local owned registry/network/volumes и disposable deployment",
+      "prerequisites": [
+        "OCI-BUILD выполнен; pinned registry image, случайный loopback port, owned volume.",
+        "Минимальный локальный driver поверх ci-images/deploy-state/createDockerDeploymentAdapter с доказуемым владением ресурсами.",
+        "Настоящие old/new images, active manifest и data/artifact preservation inventory."
+      ],
+      "commands": [],
+      "implementation_gaps": [
+        "Готовой единой CLI-команды полной actual selective matrix нет; не использовать production CLI как обход отсутствующего local adapter."
+      ],
+      "steps": [
+        "Доказать save/load/push/pull тех же bytes и exact digest resolution на собственном registry.",
+        "Выполнить UI-only замену: backend/worker digests, container IDs и launch identities не меняются; Caddy не перезапускается.",
+        "Проверить shared-rule/worker dependency selection и idempotent повтор того же release.",
+        "Ввести controlled missing image/layer/manifest, corrupt archive, stale predecessor и unhealthy candidate; проверить блокировку.",
+        "Прервать после замены одного компонента, затем restart/recover/rollback, включая stopped/missing candidate backend и проверенный private runtime snapshot.",
+        "Проверить retained HTML/chunks/WebP/CJS и завершённый cleanup; никаких удалений history/DB rollback."
+      ],
+      "acceptance": [
+        "Меняются только выбранные компоненты; старые frontend assets и referenced artifacts доступны.",
+        "DSN/env override, checksum и resource ownership mismatch блокируются.",
+        "После additive app rollback наблюдаемая новая schema/executor identity остаётся в journal; writers DB_COMPACT_RECEIPTS, DB_FROZEN_CATALOGS, IMAGE_JOBS_ENABLED выключены.",
+        "Actual failure/recovery receipts подтверждают границы, которые unit simulations не доказывают."
+      ],
+      "fail_closed": [
+        "Unknown outcome/cleanup error не превращаются в passed.",
+        "Не восстанавливать active.json вручную и не удалять новые schema/history для app rollback."
+      ],
+      "requires_explicit_authorization": "Owned локальная матрица — нет нового разрешения; TimeWeb cutover/rollback — только отдельное поручение.",
+      "references": [
+        "scripts/release/ci-images.mjs",
+        "scripts/release/deploy-state.mjs",
+        "scripts/release/docker-deployment.mjs",
+        "docs/release-deployment.md"
+      ]
+    },
+    {
+      "id": "OCI-CANDIDATE",
+      "title": "Свежий capture, exact-image rehearsal и сборка принимаемого bundle",
+      "owner": "release/database",
+      "status": "docker_available_inputs_and_actual_drills_pending",
+      "environment": "owned internal-network PostgreSQL clone и exact candidate images",
+      "prerequisites": [
+        "Candidate record с проверенной source/control SHA provenance и exact-image identities.",
+        "Inspected active manifest/DB baseline, все retained CJS и fresh capture либо принятый backup.",
+        "CONFIG_JSON schemaVersion1, pinned postgresImage, absolute activeStateFile и ровно одно captureDirectory/backupDirectory.",
+        "Настоящий опубликованный CI candidate зависит от отдельно разрешённой build/publication фазы REL-ENABLE; local builds не выдаются за CI evidence."
+      ],
+      "commands": [
+        {
+          "command": "node scripts/release/candidate-rehearsal.mjs run CANDIDATE_DIRECTORY CONFIG_JSON NEW_REHEARSAL_DIRECTORY",
+          "source": "scripts/release/candidate-rehearsal.mjs"
+        },
+        {
+          "command": "node scripts/release/assemble-bundle.mjs CANDIDATE_DIRECTORY REHEARSAL_DIRECTORY NEW_FINAL_DIRECTORY",
+          "source": "scripts/release/assemble-bundle.mjs"
+        },
+        {
+          "command": "node scripts/release/deployment-handoff.mjs verify NEW_FINAL_DIRECTORY VERIFIED_RELEASE_RUN_JSON -",
+          "source": "scripts/release/deployment-handoff.mjs"
+        }
+      ],
+      "placeholder_rule": "Верхний регистр означает обязательные реальные входы; new output directories должны быть свежими. '-' использует application SHA исходного candidate.",
+      "steps": [
+        "Проверить capture age не более30мин, active/source/container/DB binding; для backup проверить принятый restore proof.",
+        "Восстановить exact dump в owned clone, получить consistent complete inventory из восстановленного снимка.",
+        "Запустить exact images: HTTP health/identity, новый canonical battle на новом artifact, replay всего referenced historical inventory.",
+        "Проверить held decision, duplicate и continuation без повторного RNG/списания; для schema change выполнить все mandatory migration scenarios.",
+        "Остановить все owned ресурсы и проверить cleanup до passed receipt.",
+        "Собрать final manifest/bundle и проверить handoff; original candidate.json/provenance остаётся неизменным."
+      ],
+      "mandatory_additive_scenarios": [
+        "atomic-ddl-ledger",
+        "crash-before-ledger",
+        "repeat-after-commit",
+        "same-connection-lock",
+        "unknown-migration-rejected",
+        "schema-proof",
+        "old-readers-after-expansion"
+      ],
+      "acceptance": [
+        "execution:docker, exact source/image/runtime/nonce binding, full-candidate-health и cleanup.status=stopped без ошибок.",
+        "Полный historical inventory; additive report/approval привязаны к baseline/target/candidate и всем семи фактическим scenarios.",
+        "Final manifest отличается от original candidate manifest только разрешёнными validationEvidence; handoff passes.",
+        "Отдельно измерены production-sized restore/RTO, off-host durability и доступность remote media bytes; references сами по себе не доказывают bytes."
+      ],
+      "fail_closed": [
+        "Missing historical evidence, unknown migration вне298–300, checksum drift, stale capture, health failure или cleanup error блокируют bundle.",
+        "Native lock proof не заменяет exact-container fault proof; не генерировать фиктивный старый корпус.",
+        "Capture/private files не публикуются в GitHub artifacts; retention/GC не включается."
+      ],
+      "requires_explicit_authorization": "Owned локальный clone разрешён; получение TimeWeb capture, CI publication и внешняя durability проверка требуют отдельного поручения.",
+      "references": [
+        "scripts/release/candidate-rehearsal.mjs",
+        "scripts/release/docker-rehearsal.mjs",
+        "scripts/release/migration-rehearsal.mjs",
+        "scripts/release/assemble-bundle.mjs",
+        "scripts/release/deployment-handoff.mjs",
+        "docs/audits/2026-10-04/execution/REL-06.md"
+      ]
+    },
+    {
+      "id": "REL-ENABLE",
+      "title": "Включение реальной CI → release → deploy конфигурации отдельными этапами",
+      "owner": "release operator и владелец TimeWeb/GitHub",
+      "status": "disabled_awaiting_explicit_instruction_and_acceptance",
+      "environment": "GitHub/registry, затем trusted TimeWeb host",
+      "prerequisites": [
+        "Явно разрешённые commit/push после локальной проверки; exact-SHA CI.",
+        "Реальные reviewed base/BuildKit pins, contentManifestHash/migrationSet и registry/environment policies.",
+        "Для production: OCI-SELECTIVE и OCI-CANDIDATE acceptance, trusted runner Node24.19.0/Docker с недоступными PR jobs labels.",
+        "Reviewed absolute host paths и Compose/Caddy checksums; legacy migration checksums/image identities получены inspection, а не предположением."
+      ],
+      "switches": {
+        "workflow_variables": [
+          "RELEASE_BUILD_ENABLED",
+          "AUTO_RELEASE_MAIN_ENABLED",
+          "RELEASE_PUBLICATION_ENABLED",
+          "PRODUCTION_DEPLOY_ENABLED",
+          "AUTO_DEPLOY_MAIN_ENABLED"
+        ],
+        "host_path_variables": [
+          "DEPLOY_HOST_CONFIG_FILE",
+          "REHEARSAL_CONFIG_FILE"
+        ],
+        "child_production_gate": "DEPLOY_PRODUCTION_ENABLED",
+        "tracked_policy_required": true
+      },
+      "commands": [
+        {
+          "command": "node scripts/release/prepare-host-release.mjs HOSTCONFIG POLICY REHEARSAL_TEMPLATE capture-RUN_ID-ATTEMPT",
+          "source": "scripts/release/prepare-host-release.mjs",
+          "execution": "Production interface: сейчас не запускать; требует enabled env/policy и явного поручения."
+        },
+        {
+          "command": "node scripts/release/deploy.mjs plan candidate.json bundle.json active.json",
+          "source": "scripts/release/deploy.mjs",
+          "execution": "Read-only проверка реальных входных файлов перед выкаткой."
+        },
+        {
+          "command": "node scripts/release/deploy.mjs status root",
+          "source": "scripts/release/deploy.mjs",
+          "execution": "Read-only; root заменить разрешённым deployment root."
+        },
+        {
+          "command": "node scripts/release/deploy.mjs apply --production HOSTCONFIG POLICY FINAL_DIRECTORY",
+          "source": "scripts/release/deploy.mjs",
+          "execution": "Только отдельное поручение на TimeWeb после всех gates."
+        },
+        {
+          "command": "node scripts/release/deploy.mjs recover --production HOSTCONFIG POLICY RELEASE_ID",
+          "source": "scripts/release/deploy.mjs",
+          "execution": "Разрешённый recovery; RELEASE_ID, не каталог."
+        },
+        {
+          "command": "node scripts/release/deploy.mjs rollback --production HOSTCONFIG POLICY RELEASE_ID",
+          "source": "scripts/release/deploy.mjs",
+          "execution": "Разрешённый app rollback; RELEASE_ID, не каталог."
+        }
+      ],
+      "steps": [
+        "После разрешения включить exact-source build-only, отдельно разрешённую публикацию; не включать production автоматически.",
+        "Проверить workflow_run и workflow_dispatch по актуальным workflows; current main/source SHA и отдельный control SHA сохраняются.",
+        "Для production каждой попытки prepare-host-release создаёт fresh capture-<run>-<attempt> child config.root/backups.",
+        "Передать collector returned rehearsal_config с captureDirectory, а apply returned host_config с backupDirectory, указывающими на тот же новый каталог.",
+        "Проверить actual source/container/DSN binding, права0700/0600 и отсутствие production secrets у hosted build/publish jobs.",
+        "Перед cutover повторить current-main/active/live-CJS/DB identity checks; только observed success принять как deployed."
+      ],
+      "acceptance": [
+        "Repository variables не обходят tracked policy; production и auto switches включаются только явно.",
+        "Per-attempt backup wiring проверен настоящим запуском; статический устаревший backup не используется.",
+        "Release receipt различает application releaseCommit/controlCommit; candidate original provenance сохранена.",
+        "При появлении нового live artifact hash до cutover требуется новая rehearsal и retention; old DB/history/assets сохраняются."
+      ],
+      "fail_closed": [
+        "Missing pins/config/approval/baseline оставляют disabled.",
+        "Нельзя вручную править active.json для обхода unknown/recovery.",
+        "Не называть автоматическую цепочку подтверждённой только по YAML/unit tests."
+      ],
+      "requires_explicit_authorization": "AGENTS: commit/push и TimeWeb capture/cutover/recovery/rollback. Внешняя конфигурация/публикация выполняются в пределах поручения; известная из конфигурации среда не требует повторного уточнения.",
+      "references": [
+        ".github/workflows/release.yml",
+        ".github/workflows/deploy.yml",
+        "infra/release-build-config.json",
+        "infra/deployment-policy.json",
+        "scripts/release/prepare-host-release.mjs",
+        "scripts/release/deploy.mjs"
+      ]
+    },
+    {
+      "id": "DATA-FRESH",
+      "title": "Доверенный pre102 и воспроизводимая цепочка001→current",
+      "owner": "migrations/data provenance",
+      "status": "awaiting_trusted_historical_preimage",
+      "environment": "owned native PostgreSQL; Docker не требуется",
+      "prerequisites": [
+        "Разрешённый исторический preimage с provenance/hashes/mechanics/support/evidence перед102 и следующими guarded transitions.",
+        "Минимальный проверяемый public fixture либо приватный локальный loader с redaction и hashes.",
+        "Явное различение clean-install input, restored pre102 upgrade и imported schema297."
+      ],
+      "commands": [
+        {
+          "command": "node scripts/testing/stack.mjs --profile fresh",
+          "source": "scripts/testing/stack.mjs",
+          "execution": "Существующий вход; сейчас ожидаемо fail-closed на102, не принимается как PASS."
+        }
+      ],
+      "steps": [
+        "Проверить происхождение полного preimage; checked-in SPELL-0253/SPELL-0173 support:null и expected hash constants недостаточны.",
+        "Подключить trusted fixture без изменения старых сертификатов/guards/bytes; сохранить описание redaction и reproducibility.",
+        "На новом owned cluster выполнить все ordinary startup migrations001→current; повторить и подтвердить ноль новых migrations.",
+        "Отдельно выполнить upgrade из доверенного pre102 snapshot; сверить ledger/schema/catalog/support/history preservation.",
+        "Выполнить canonical character/combat smoke и cleanup, сохранив exact source/data hashes."
+      ],
+      "acceptance": [
+        "Fresh chain и historical upgrade реально проходят с проверяемыми исходными данными.",
+        "Никакой fabricated verified status, сертификатов, skipped guards или ledger marking без исполнения.",
+        "Native297/298/299→300 остаётся отдельной уже проверенной matrix, не подменой fresh001."
+      ],
+      "fail_closed": [
+        "Если trusted input отсутствует — оставить awaiting_trusted_historical_preimage и failure102.",
+        "catalog-snapshot/imported297 не являются доказательством исторической цепочки."
+      ],
+      "implementation_gaps": [
+        "Wiring полного trusted preimage пока отсутствует; после получения данных остаётся локальная работа."
+      ],
+      "requires_explicit_authorization": "Локально предоставленный разрешённый snapshot допустим; получение нового snapshot с TimeWeb требует явного поручения.",
+      "references": [
+        "docs/audits/2026-10-04/execution/TEST-05-upgrade-matrix.md",
+        "scripts/testing/stack.mjs",
+        "backend/migrations/baseline_upgrade_matrix_test.go"
+      ]
+    },
+    {
+      "id": "PERF-HOST",
+      "title": "Длинный бой, memory/history growth и бюджет реального хоста",
+      "owner": "runtime/performance",
+      "status": "native_long_combat_verified_host_budget_pending",
+      "environment": "Локальные серии уже выполнены; фактический хост требует отдельного поручения.",
+      "prerequisites": [
+        "Frozen source/artifact/UI/fixture hashes и короткие baseline receipts.",
+        "Legal long-combat driver с авторитетными командами; не SQL mutation состояния.",
+        "Для реального host budget — явное поручение на TimeWeb и безопасные aggregate metrics без состояний/seed/секретов."
+      ],
+      "commands": [
+        {
+          "command": "node scripts/performance/profile-worker.mjs --mirrors --capacity",
+          "source": "scripts/performance/profile-worker.mjs; docs/worker-capacity.md",
+          "execution": "Существующий короткий профиль; не считается long-combat driver."
+        }
+      ],
+      "steps": [
+        "Использовать принятые native long-combat receipts; повторять измерение при изменении соответствующей механики или входной нагрузки. Версионное сокращение processedCommandIds рассматривать отдельно по фактическому бюджету, без потери защиты от дублей и переписывания старых миров.",
+        "На отдельно разрешённом хосте оценить общий бюджет backend/worker/PG/прочих процессов, replicas и уже отменённые remote executions.",
+        "Решение о лимитах и opt-in флагах принимать по результатам. Native30+30 initiative click-to-ready уже измерены: builder30→0, медианы хуже, последовательные серии при конкурирующей нагрузке; общего ускорения не заявлять. Ordinary equipment tradeoff также сохраняется."
+      ],
+      "acceptance": [
+        "Long-combat рост/плато измерен без подделки состояния; точные semantic equality и cleanup сохранены.",
+        "Фактический host budget и отказ при перегрузке обоснованы измерением, а не short synthetic p95.",
+        "RULES_WORKER_MAX_INFLIGHT=4 отмечен как per-backend budget; MAX_CACHED_ARTIFACTS=4 не объявлен общим heap bound.",
+        "Нет обязательства включать catalog/cache/equipment/initiative/mirrors; они остаются OFF без отдельной приёмки и выпуска."
+      ],
+      "fail_closed": [
+        "LRU ограничивает записи кеша, но in-flight вызовы могут удерживать вытесненные модули; примерно2.9% heap difference не является значимым общим memory win.",
+        "HTTP cancellation не объявляется остановкой уже начатого synchronous JS.",
+        "Native process-kill уже PASS по PERF-03-crash-recovery.json; он не заменяет long-combat memory/host budget или actual OCI."
+      ],
+      "requires_explicit_authorization": "Native long-combat — в текущем локальном scope; TimeWeb metrics/config/повышение лимитов — отдельно.",
+      "references": [
+        "docs/worker-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+        "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+        "docs/audits/2026-10-04/execution/PERF-02.md",
+        "scripts/performance/profile-worker.mjs",
+        "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.json",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+        "docs/audits/2026-10-04/execution/PERF-03-long-combat.json",
+        "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md"
+      ],
+      "local_evidence": {
+        "report": "docs/audits/2026-10-04/execution/PERF-03-long-combat.json",
+        "commits": 260,
+        "exact_receipt_retries": 260,
+        "full_worker_replays": 260,
+        "cleanup": "stopped",
+        "remaining_world_growth": "processedCommandIds +195 B/turn in the measured scenario; duplicate-protection ledger, not a proven heap leak",
+        "initiative_browser": "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.json"
+      }
+    },
+    {
+      "id": "AI-DIAG",
+      "title": "Классифицировать фактический403 работающего image provider",
+      "owner": "backend/image operations",
+      "status": "actual_provider_error_unclassified",
+      "environment": "Работающий TimeWeb backend и его egress namespace",
+      "prerequisites": [
+        "Явное поручение на read-only production диагностику.",
+        "Существующий request_id и безопасные source/provider_status/code/type/request_id/content-type.",
+        "Актуальные официальные требования провайдера к региону/аккаунту/организации/модели проверяются во время выполнения."
+      ],
+      "commands": [],
+      "implementation_gaps": [
+        "Автоматической production diagnostic CLI нет; использовать docs/image-generation-operations.md, не придумывать shell-команды."
+      ],
+      "steps": [
+        "Прочитать безопасный correlation contract существующего сбоя; не делать платный POST ради сетевого теста.",
+        "Подтвердить только наличие actual container config и маршрут DNS/TLS/egress без раскрытия значений секретов.",
+        "Отличить HTML403, app content-admin403, provider permission403 и точный unsupported-region code.",
+        "Сопоставить с актуальными официальными требованиями; записать доказанную категорию либо unknown."
+      ],
+      "acceptance": [
+        "Причина подтверждена safe diagnostic receipt; GET models/ChatGPT website не выдаются за Images API permission."
+      ],
+      "fail_closed": [
+        "Unknown не превращать в диагноз 'VPN исправит'.",
+        "Не писать полные URL с credentials/query, ключи, prompts, body/base64.",
+        "Без бюджета не выполнять платную генерацию."
+      ],
+      "requires_explicit_authorization": "Read-only TimeWeb diagnosis is within current authorized work; paid generation is separate.",
+      "references": [
+        "docs/image-generation-operations.md",
+        "docs/audits/2026-10-04/execution/AI-01.md",
+        "docs/audits/2026-10-04/execution/AI-02.md"
+      ]
+    },
+    {
+      "id": "AI-EGRESS",
+      "title": "Разрешённый gateway, отказ/rollback и фактическая генерация с storage",
+      "owner": "network operator и image backend",
+      "status": "gateway_and_paid_path_not_deployed_or_verified",
+      "environment": "Явно выбранные gateway/TimeWeb/provider/storage",
+      "prerequisites": [
+        "AI-DIAG; подтверждённые допустимые размещение и доступ к провайдеру.",
+        "Явное поручение на gateway/TimeWeb; известные бюджет/проект/модель/storage target для платного POST. Неизвестный необходимый расход уточнить, уже разрешённый не подтверждать повторно.",
+        "Private/authenticated gateway с ограниченными destinations; client contract OPENAI_CONNECT_PROXY_URL уже реализован локально."
+      ],
+      "commands": [],
+      "implementation_gaps": [
+        "Gateway/WireGuard на TimeWeb не установлен; готового deployment CLI для него нет."
+      ],
+      "steps": [
+        "Настроить разрешённый внешний egress; VPN-сервер на том же TimeWeb не меняет исходящий адрес.",
+        "Проверить HTTP(S) CONNECT только для OpenAI HTTPS client, исходный TLS, отсутствие provider Authorization в CONNECT и неизменность DB/worker/storage routes.",
+        "Отключить gateway и проверить безопасный отказ без direct fallback/автоматического paid retry; проверить возврат к принятой конфигурации.",
+        "Только с отдельным лимитом выполнить одну реальную генерацию: provider request ID, объект/URL, entity+job transaction, reload/history.",
+        "Повторить тот же job UUID и подтвердить отсутствие нового платного POST; unknown не повторять автоматически, legacy acknowledgement не делает POST.",
+        "IMAGE_JOBS_ENABLED включать только после отдельной rollback compatibility приёмки; при rollback выключить admission и сохранить readers/history/UUID/blobs."
+      ],
+      "acceptance": [
+        "Региональные/аккаунтные ограничения решаются допустимым hosting/access/provider, не обещанием обхода маскировкой.",
+        "Invalid proxy config и outage fail closed; глобальные HTTP_PROXY/HTTPS_PROXY/NO_PROXY не подменяют dedicated client route.",
+        "Реальная генерация и storage подтверждены safe receipt с заданным бюджетом; exactly-once у внешнего провайдера не заявляется.",
+        "IMAGE_JOBS_MAX_DAILY_ATTEMPTS отмечен как количество, не денежная квота; expansion rollout сохраняет writer OFF."
+      ],
+      "fail_closed": [
+        "Не удалять image_jobs/history/blobs для отката.",
+        "Не превращать network unknown в автоматическую новую оплату.",
+        "Нет production enable или внешних действий на основании этого handoff."
+      ],
+      "requires_explicit_authorization": "TimeWeb/gateway и writer rollout должны входить в поручение. Платная генерация — в пределах известного лимита; неизвестный необходимый расход уточняется. Уже охваченные поручением шаги не требуют повторного разрешения.",
+      "references": [
+        "docs/image-generation-operations.md",
+        "docs/audits/2026-10-04/execution/AI-02.md",
+        "docs/audits/2026-10-04/execution/AI-03.md"
+      ]
+    }
+  ],
+  "evidence_contract": {
+    "required": [
+      "exact source/control/image/config hashes where applicable",
+      "фактическая среда и версии",
+      "полная selected группа",
+      "outcome и ограничения",
+      "cleanup ownership/status/errors"
+    ],
+    "distinguish": [
+      "unit",
+      "native integration",
+      "Docker simulation",
+      "Compose config-only",
+      "actual OCI",
+      "actual provider/storage",
+      "native phase-specific backend process-kill"
+    ],
+    "privacy": "Не сохранять credentials, seed, полные states/prompts/bodies; private backup файлы не публиковать как CI artifacts.",
+    "immutability": "Новые receipts в новых каталогах; прежние failed/historical evidence не переписываются.",
+    "unavailable_input": "Указать точный недостающий вход, сохранить gate закрытым и не заявлять acceptance."
+  },
+  "environment_readiness": {
+    "schemaVersion": 1,
+    "checkedAt": "2026-10-04T22:40:44.985Z",
+    "docker": {
+      "status": "available",
+      "serverVersion": "29.8.1",
+      "osType": "linux",
+      "architecture": "x86_64",
+      "context": "desktop-linux"
+    },
+    "authorization": "Пользователь сообщил: Запустил Docker Engine, продолжай",
+    "operatingSystemChangedByAgent": false,
+    "productionMutated": false,
+    "boundary": "Engine readiness is not OCI build/rehearsal/race acceptance"
+  },
+  "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json"
+}

@@ -1,0 +1,198 @@
+{
+  "task": "REF-02-local-persistence",
+  "before": {
+    "passed": 2,
+    "failed": 10,
+    "tests": [
+      {
+        "name": "legacy combat persistence route ownership ignores late single save publication and busy reset after route",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late party save publication and busy reset after route",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late single save publication and busy reset after unmount",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late party save publication and busy reset after unmount",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish a late apply error after route",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish a late apply error after unmount",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset success or navigate after route",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset error or navigate after route",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset success or navigate after unmount",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset error or navigate after unmount",
+        "status": "failed"
+      },
+      {
+        "name": "legacy combat persistence route ownership preserves canonical single save payload and publishes the accepted revision once",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership preserves canonical party save payload and publishes the accepted revision once",
+        "status": "passed"
+      }
+    ]
+  },
+  "sameCasesAfter": {
+    "passed": 12,
+    "failed": 0,
+    "tests": [
+      {
+        "name": "legacy combat persistence route ownership ignores late single save publication and busy reset after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late party save publication and busy reset after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late single save publication and busy reset after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late party save publication and busy reset after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish a late apply error after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish a late apply error after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset success or navigate after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset error or navigate after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset success or navigate after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset error or navigate after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership preserves canonical single save payload and publishes the accepted revision once",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership preserves canonical party save payload and publishes the accepted revision once",
+        "status": "passed"
+      }
+    ]
+  },
+  "finalTargeted": {
+    "passed": 65,
+    "failed": 0,
+    "skipped": 0,
+    "files": [
+      "src/hooks/useCombatCommandDispatch.test.tsx",
+      "src/hooks/useSoloCombatBootstrap.test.tsx",
+      "src/hooks/useSoloCombatPersistence.test.tsx",
+      "src/roguelike/combatInteraction.test.ts",
+      "src/pages/SoloCombatPage.3d-parity.test.tsx",
+      "src/solo-combat/useAutomaticCombatDecision.test.tsx",
+      "src/components/sheet-actions/SheetActionList.test.tsx"
+    ],
+    "persistenceCases": [
+      {
+        "name": "legacy combat persistence route ownership ignores late single save publication and busy reset after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late party save publication and busy reset after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late single save publication and busy reset after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership ignores late party save publication and busy reset after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish a late apply error after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish a late apply error after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset success or navigate after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset error or navigate after route",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset success or navigate after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not publish late reset error or navigate after unmount",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership preserves canonical single save payload and publishes the accepted revision once",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership preserves canonical party save payload and publishes the accepted revision once",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership keeps the current route reset success behavior",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership keeps the current route reset error behavior",
+        "status": "passed"
+      },
+      {
+        "name": "legacy combat persistence route ownership does not submit a stale callback after leaving its route and returning to the same character",
+        "status": "passed"
+      }
+    ]
+  },
+  "method": "Mounted real useSoloCombatPersistence with StrictMode; API boundary is deferred/mocked. Canonical finalize/turn-state/inventory serialization and command ID generator are real. Initial red code is a mechanical move of the existing page callbacks before adding session guards.",
+  "unchanged": [
+    "Accepted server writes are not cancelled or undone",
+    "No automatic resend or extra command ID",
+    "Current-route single/party accepted revisions and reset behavior",
+    "Saved payload/RNG and original input are unchanged by inspection"
+  ],
+  "limits": [
+    "Unit lifecycle proof does not replace the fresh common browser/real API suite.",
+    "Publication guard preserves current-session UI ownership; it does not change server authorization or transaction semantics."
+  ]
+}

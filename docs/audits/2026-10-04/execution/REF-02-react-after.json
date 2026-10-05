@@ -1,0 +1,1079 @@
+{
+  "environment": "React development profiler in jsdom; graphics stubbed, canonical UI and engine real",
+  "samples": [
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "mount",
+      "actualDuration": 9.184299999998984,
+      "baseDuration": 5.739399999999478
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 2.108900000000176,
+      "baseDuration": 1.9405000000006112
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 70.8406999999861,
+      "baseDuration": 28.857699999999568
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 6.1971999999886975,
+      "baseDuration": 19.931999999993423
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 8.328999999995176,
+      "baseDuration": 12.42439999999624
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "nested-update",
+      "actualDuration": 0.018900000003668538,
+      "baseDuration": 12.42439999999624
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 7.559100000002218,
+      "baseDuration": 5.390700000001743
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 24.701500000012857,
+      "baseDuration": 9.50289999999859
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 6.406500000003689,
+      "baseDuration": 4.534199999999146
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 0.007799999998496787,
+      "baseDuration": 4.534199999999146
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 7.958499999986998,
+      "baseDuration": 5.470399999991969
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 4.221400000010362,
+      "baseDuration": 3.196000000000822
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 13.533100000008744,
+      "baseDuration": 4.511399999997593
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > opens combat settings and keeps selected action, initiative and world while switching renderers",
+      "phase": "update",
+      "actualDuration": 3.2472999999799868,
+      "baseDuration": 3.953499999995074
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > uses refreshed bestiary portraits for old combat tokens without rewriting the saved state",
+      "phase": "mount",
+      "actualDuration": 0.6043999999992593,
+      "baseDuration": 0.3910999999989144
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > uses refreshed bestiary portraits for old combat tokens without rewriting the saved state",
+      "phase": "update",
+      "actualDuration": 0.25530000000071595,
+      "baseDuration": 0.2481999999999971
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > uses refreshed bestiary portraits for old combat tokens without rewriting the saved state",
+      "phase": "update",
+      "actualDuration": 14.81180000000677,
+      "baseDuration": 4.312600000010207
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > uses refreshed bestiary portraits for old combat tokens without rewriting the saved state",
+      "phase": "update",
+      "actualDuration": 4.816499999997177,
+      "baseDuration": 3.4941000000053464
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > uses refreshed bestiary portraits for old combat tokens without rewriting the saved state",
+      "phase": "update",
+      "actualDuration": 0.006300000000919681,
+      "baseDuration": 3.4941000000053464
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "mount",
+      "actualDuration": 0.5484000000005835,
+      "baseDuration": 0.3271999999997206
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.25610000000142463,
+      "baseDuration": 0.22890000000097643
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 21.622199999997974,
+      "baseDuration": 8.386300000001938
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 4.196399999991627,
+      "baseDuration": 7.738399999992907
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 1.2335999999977503,
+      "baseDuration": 4.806199999989076
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.0033999999996012775,
+      "baseDuration": 4.806199999989076
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 3.1871999999948457,
+      "baseDuration": 3.9587999999894237
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 6.725199999988945,
+      "baseDuration": 4.291899999990164
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 50.27599999998802,
+      "baseDuration": 47.661499999991065
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 6.467700000002878,
+      "baseDuration": 4.83150000000569
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "nested-update",
+      "actualDuration": 0.010199999999713327,
+      "baseDuration": 4.83150000000569
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 9.89560000000165,
+      "baseDuration": 6.926199999996243
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 17.28929999997672,
+      "baseDuration": 12.439199999985249
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.9217000000053304,
+      "baseDuration": 8.819899999989502
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.002200000000811997,
+      "baseDuration": 8.819899999989502
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "mount",
+      "actualDuration": 0.5461999999997715,
+      "baseDuration": 0.3364999999994325
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.1665000000002692,
+      "baseDuration": 0.15669999999954598
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 10.25010000000475,
+      "baseDuration": 3.838000000003376
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 1.1872000000003027,
+      "baseDuration": 3.7929000000040105
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.0029000000013184035,
+      "baseDuration": 3.7929000000040105
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 4.373899999999594,
+      "baseDuration": 2.769000000000233
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.0034000000005107722,
+      "baseDuration": 2.769000000000233
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 16.591800000007424,
+      "baseDuration": 15.211500000007618
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.3168000000105167,
+      "baseDuration": 3.4542000000010376
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "nested-update",
+      "actualDuration": 0.003899999999703141,
+      "baseDuration": 3.4542000000010376
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 4.460400000001755,
+      "baseDuration": 2.90940000000046
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 7.226000000010572,
+      "baseDuration": 4.176100000004226
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.8094999999993888,
+      "baseDuration": 4.03330000000642
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > ranged selection, canonical command and real roll dialog work with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.0020999999969717464,
+      "baseDuration": 4.03330000000642
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "mount",
+      "actualDuration": 0.5674999999973807,
+      "baseDuration": 0.2602999999990061
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 0.2533999999986918,
+      "baseDuration": 0.24509999999918364
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 13.421799999987343,
+      "baseDuration": 7.214099999995597
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 0.977099999998245,
+      "baseDuration": 5.6919000000007145
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 0.003099999998084968,
+      "baseDuration": 5.6919000000007145
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 4.02539999999135,
+      "baseDuration": 2.9095999999899504
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 0.00240000000121654,
+      "baseDuration": 2.9095999999899504
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 3.813500000013846,
+      "baseDuration": 2.429400000010901
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 4.80390000000898,
+      "baseDuration": 3.755400000002737
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 3.544700000004923,
+      "baseDuration": 2.436999999999898
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-crossbow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 4.628299999992123,
+      "baseDuration": 3.328999999993357
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "mount",
+      "actualDuration": 0.47189999999773136,
+      "baseDuration": 0.2529999999987922
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 0.16129999999975553,
+      "baseDuration": 0.14859999999953288
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 11.449099999997088,
+      "baseDuration": 4.058699999996861
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 1.5145000000002256,
+      "baseDuration": 4.3276999999943655
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 0.0027000000027328497,
+      "baseDuration": 4.3276999999943655
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 3.8195000000041546,
+      "baseDuration": 2.7891000000026906
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 0.0020000000013169483,
+      "baseDuration": 2.7891000000026906
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 8.92059999999583,
+      "baseDuration": 7.5022000000071785
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 5.084899999990739,
+      "baseDuration": 3.5714999999963766
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 3.663200000011784,
+      "baseDuration": 2.612800000007155
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > binds the shared weapon template to card:parity-bow and consumes its own ammo",
+      "phase": "update",
+      "actualDuration": 4.550099999991289,
+      "baseDuration": 3.440199999973629
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "mount",
+      "actualDuration": 0.4429000000018277,
+      "baseDuration": 0.22190000000227883
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.13080000000081782,
+      "baseDuration": 0.12380000000121072
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 13.833000000062384,
+      "baseDuration": 4.810300000037387
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 3.632899999998699,
+      "baseDuration": 4.597500000008949
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 1.1978999999992084,
+      "baseDuration": 4.196299999986877
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.0018999999992956873,
+      "baseDuration": 4.196299999986877
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 2.900500000027023,
+      "baseDuration": 3.3720000000139407
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 5.322699999982433,
+      "baseDuration": 3.1172999999798776
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 6.680199999973411,
+      "baseDuration": 4.709900000008929
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 7.664200000039273,
+      "baseDuration": 4.80480000002899
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "nested-update",
+      "actualDuration": 3.972799999972267,
+      "baseDuration": 3.5113999999648513
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 7.419899999975314,
+      "baseDuration": 5.022599999976592
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 5.755099999971208,
+      "baseDuration": 3.9930999999887717
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 4.3087000000141416,
+      "baseDuration": 2.761000000018612
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 3.7969999999731954,
+      "baseDuration": 3.583599999990838
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 5.4306999999898835,
+      "baseDuration": 3.371599999989485
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 9.430700000011711,
+      "baseDuration": 5.800000000019281
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 11.703200000021752,
+      "baseDuration": 6.779400000023088
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 2.3231999999952677,
+      "baseDuration": 5.9905000000198925
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=false",
+      "phase": "update",
+      "actualDuration": 7.23730000001342,
+      "baseDuration": 4.8857999999963795
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "mount",
+      "actualDuration": 0.45239999999830616,
+      "baseDuration": 0.23769999999967695
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.15240000000267173,
+      "baseDuration": 0.14250000000356522
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 8.132000000017797,
+      "baseDuration": 3.1832999999969616
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 1.2120999999824562,
+      "baseDuration": 3.464799999990646
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.001799999998183921,
+      "baseDuration": 3.464799999990646
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.4759000000085507,
+      "baseDuration": 2.1530000000147993
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.00240000000121654,
+      "baseDuration": 2.1530000000147993
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.823599999981525,
+      "baseDuration": 2.7981999999847176
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.510600000010527,
+      "baseDuration": 2.5133000000205357
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.801000000004933,
+      "baseDuration": 2.7427999999945314
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.5322999999934837,
+      "baseDuration": 2.363500000003114
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 2.6071999999967375,
+      "baseDuration": 1.6578000000099564
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 1.5371999999861146,
+      "baseDuration": 1.887300000013056
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.269399999995585,
+      "baseDuration": 1.9970000000066648
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.626399999975547,
+      "baseDuration": 2.8158999999959633
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 2.459599999974671,
+      "baseDuration": 1.8154000000049564
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > empty-cell area targeting and movement use canonical geometry with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.541899999981979,
+      "baseDuration": 2.379799999993338
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "mount",
+      "actualDuration": 0.3261999999976979,
+      "baseDuration": 0.17269999999916763
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.12780000000202563,
+      "baseDuration": 0.12070000000312575
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 8.656800000026124,
+      "baseDuration": 2.6049000000039086
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 2.4469999999946594,
+      "baseDuration": 2.5124999999934516
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.9079000000056112,
+      "baseDuration": 2.492499999994834
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.002299999996466795,
+      "baseDuration": 2.492499999994834
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 4.339600000002974,
+      "baseDuration": 2.772999999991953
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 6.534800000006726,
+      "baseDuration": 4.465299999999843
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 5.218899999972564,
+      "baseDuration": 3.308899999998175
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 6.747900000007576,
+      "baseDuration": 4.817500000010114
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=false",
+      "phase": "update",
+      "actualDuration": 4.9033999999901425,
+      "baseDuration": 3.2295999999805645
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "mount",
+      "actualDuration": 0.5302000000046974,
+      "baseDuration": 0.33770000000185973
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.10870000000431901,
+      "baseDuration": 0.10440000000562577
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 8.375699999987773,
+      "baseDuration": 2.9624999999887223
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 1.175599999996848,
+      "baseDuration": 2.8747999999905005
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.0017000000007101335,
+      "baseDuration": 2.8747999999905005
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.033100000000559,
+      "baseDuration": 1.8945999999978085
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.0036999999992985977,
+      "baseDuration": 1.8945999999978085
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 8.793000000016036,
+      "baseDuration": 5.724500000014814
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 4.489399999987654,
+      "baseDuration": 2.956899999984671
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.8319999999985157,
+      "baseDuration": 2.6058000000120956
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > the same worker executes both enemy turns after ending a player turn with 3D=true",
+      "phase": "update",
+      "actualDuration": 3.0482000000083644,
+      "baseDuration": 2.109600000001592
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "mount",
+      "actualDuration": 0.3561999999983527,
+      "baseDuration": 0.18140000000130385
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 0.18449999999756983,
+      "baseDuration": 0.1793999999990774
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 8.66519999999764,
+      "baseDuration": 3.279500000004191
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 1.022000000004482,
+      "baseDuration": 3.2225000000053114
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 0.0013999999973748345,
+      "baseDuration": 3.2225000000053114
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 2.669899999991685,
+      "baseDuration": 1.8090999999749329
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 0.0012000000024272595,
+      "baseDuration": 1.8090999999749329
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 4.245200000003024,
+      "baseDuration": 2.7837999999846943
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 5.000899999975445,
+      "baseDuration": 3.1182999999837193
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 1.0469000000066444,
+      "baseDuration": 3.1616999999951076
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 0.0031000000017229468,
+      "baseDuration": 3.1616999999951076
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 12.343099999990955,
+      "baseDuration": 4.658899999991263
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 2.7020999999786,
+      "baseDuration": 3.9069999999846914
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 5.791600000062317,
+      "baseDuration": 3.6396000000277127
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 5.925000000037471,
+      "baseDuration": 4.002499999995052
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 6.732999999958338,
+      "baseDuration": 3.7116999999543623
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 0.7659999999978027,
+      "baseDuration": 3.626499999963926
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > switching renderers preserves a held roll and its canonical decision until confirmation",
+      "phase": "update",
+      "actualDuration": 4.237499999959255,
+      "baseDuration": 3.08329999995658
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "mount",
+      "actualDuration": 0.308999999995649,
+      "baseDuration": 0.16389999999773863
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.14069999999992433,
+      "baseDuration": 0.13100000000122236
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 15.728000000015527,
+      "baseDuration": 6.022500000000946
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 2.590200000004188,
+      "baseDuration": 5.0891999999730615
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 1.0705000000089058,
+      "baseDuration": 4.873099999984333
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.00240000000121654,
+      "baseDuration": 4.873099999984333
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 3.224000000012893,
+      "baseDuration": 1.5819999999821448
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.0030000000006111804,
+      "baseDuration": 1.5819999999821448
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 3.873100000018894,
+      "baseDuration": 2.5503000000189786
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 5.0508000000136235,
+      "baseDuration": 3.3088000000007014
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 3.6714999999840074,
+      "baseDuration": 2.521600000001854
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=false",
+      "phase": "update",
+      "actualDuration": 0.0006000000012136297,
+      "baseDuration": 2.521600000001854
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "mount",
+      "actualDuration": 0.42480000000250584,
+      "baseDuration": 0.23219999999855645
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.14059999999699357,
+      "baseDuration": 0.1301999999996042
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 12.934399999989182,
+      "baseDuration": 3.9131999999754044
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 1.1819000000014057,
+      "baseDuration": 3.797099999974307
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.0020999999960622517,
+      "baseDuration": 3.797099999974307
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 8.579599999984566,
+      "baseDuration": 3.1278999999813095
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 2.7668999999859807,
+      "baseDuration": 3.2330999999830965
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 4.682099999990896,
+      "baseDuration": 2.9743000000053144
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 6.017499999981737,
+      "baseDuration": 4.318600000002334
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 8.371500000021115,
+      "baseDuration": 5.09970000001158
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > restores and resolves a canonical defensive reaction with 3D=true",
+      "phase": "update",
+      "actualDuration": 0.543999999999869,
+      "baseDuration": 4.680900000010297
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "mount",
+      "actualDuration": 0.40970000000379514,
+      "baseDuration": 0.23660000000199943
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 0.11040000000502914,
+      "baseDuration": 0.10210000000188302
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 10.19619999999486,
+      "baseDuration": 4.864499999976033
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 1.3322000000043772,
+      "baseDuration": 3.3012999999900785
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 0.0036999999992985977,
+      "baseDuration": 3.3012999999900785
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 10.224000000023807,
+      "baseDuration": 3.5315000000155123
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 2.6652999999678286,
+      "baseDuration": 3.022999999977401
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 4.571299999977782,
+      "baseDuration": 1.8187999999809108
+    },
+    {
+      "scenario": "real combat page uses one canonical pipeline in 2D and 3D > loads an isolated saved encounter and changes only its renderer",
+      "phase": "update",
+      "actualDuration": 0.0029000000013184035,
+      "baseDuration": 1.8187999999809108
+    }
+  ]
+}

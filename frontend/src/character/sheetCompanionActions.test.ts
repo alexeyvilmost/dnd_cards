@@ -195,6 +195,7 @@ describe('data-owned CharacterV3 companion controls', () => {
     const displayOnly = {
       ...clone(summoned.action),
       id: 'spell:display-only-touch',
+      spell: { ...summoned.action.spell!, level: 0 },
       mechanics: { ...clone(summoned.action.mechanics), targeting: { range: 'Касание' } },
       targeting: { ...summoned.action.targeting!, rangeFt: 5 },
     } as RuleActionDefinition;

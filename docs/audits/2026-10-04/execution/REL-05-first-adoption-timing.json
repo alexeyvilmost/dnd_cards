@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "kind": "read-only-production-path-timing-map",
+  "status": "costs-partially-measured",
+  "backupAgeAnchor": "captureHostBackup.createdAt, immediately before pg_dump begins",
+  "maximumBackupAgeMs": 1800000,
+  "productionTypedInventoryCount": 2,
+  "localOutputDriverTypedInventoryCount": 3,
+  "note": "The current output driver prepares the backup using a separate disposable adapter before constructing its local-only input. Production main reuses the same adapter/pgReady snapshot, so it does not repeat the restored inventory.",
+  "phases": [
+    {"id": "capture", "source": "scripts/release/capture-host-backup.mjs", "operations": ["createdAt fixed", "pg_dump", "hash and copy exact CJS/source certifications", "running DB binding recheck"], "actualProductionMs": null},
+    {"id": "restored-inventory", "source": "scripts/release/docker-rehearsal.mjs:startDatabase", "operations": ["restore one owned main clone", "one complete typed inventory in exported repeatable-read snapshot"], "productionReadonlyLiveInventoryComparisonMs": 490000, "actualProductionCloneMs": null},
+    {"id": "additive-rehearsal", "source": "scripts/release/migration-rehearsal.mjs:runMigrationRehearsal", "templateCopies": 4, "fullHistoricalRowHashSnapshots": 12, "operations": ["seven exact-image scenarios", "all old baseline table rows hashed with additive columns excluded", "old reader proof", "trial cleanup"], "actualProductionSizedMs": null},
+    {"id": "candidate-validation", "source": "scripts/release/docker-rehearsal.mjs:check", "operations": ["all three exact candidate health and identity", "new canonical encounter", "all historical combats replay", "old pending continuation and exact duplicate receipts", "owned cleanup"], "productionReplayPreflight": {"combats": 131, "events": 2256, "serializedBytes": 72252520}, "actualProductionReplayMs": null},
+    {"id": "restore-proof", "source": "scripts/release/candidate-rehearsal.mjs:main", "backupAgeChecked": true, "operations": ["write actual restore report", "verify original backup bytes and 30-minute capture age"]},
+    {"id": "prepare", "source": "scripts/release/docker-deployment.mjs", "backupAgeChecked": true, "operations": ["old actual identity and DB binding", "metadata-only schema/ledger checks", "image digest pull and baked metadata", "retain old and candidate immutable assets/artifacts"], "actualProductionMetadataQueryMs": 505.462269},
+    {"id": "migrate", "source": "scripts/release/docker-deployment.mjs:migrate", "backupAgeChecked": true, "operations": ["repeat inspect target first", "exact baseline schema/ledger proof", "fresh backup check immediately before additive apply", "exact candidate CLI additive transaction", "expanded schema proof"]},
+    {"id": "fresh-live-history", "source": "scripts/release/docker-deployment.mjs:assertHistoricalInventory", "backupAgeCheckedAfterward": true, "operations": ["one full fresh live typed inventory", "source certification and CJS closure coverage", "deploy-state re-verifies identical backup and original 30-minute capture age immediately before forward replacement"], "productionReadonlyInventoryComparisonMs": 490000},
+    {"id": "cutover", "source": "scripts/release/deploy-state.mjs", "operations": ["replace changed components", "actual per-component health/identity", "write truthful active state"]}
+  ],
+  "materialLimitations": [
+    "Two full typed inventories imply roughly 980 seconds only if the restored and fresh live workload matches the observed 490-second production inspection; this is an estimate, not a measured complete release.",
+    "Actual pg_dump/restore, four template copies, twelve whole-history hashes and historical replay on the 2.3GB production database have not yet been timed.",
+    "TTL guard was added after the successful owned adapter drill: 34 scoped tests and independent reviews prove stale-during-scan blocks forward cutover while compatible rollback remains available. The earlier Docker drill is not relabelled as proof of this later state-machine guard.",
+    "No TTL increase, timestamp reset, proof reuse or production data mutation was performed."
+  ]
+}

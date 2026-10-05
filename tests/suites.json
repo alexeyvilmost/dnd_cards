@@ -1,0 +1,741 @@
+{
+  "schema_version": 1,
+  "tiers": [
+    "core",
+    "extended",
+    "legacy-manual"
+  ],
+  "policy": {
+    "missing_selector": "fail",
+    "zero_tests": "fail",
+    "required_skip": "fail",
+    "docs_only": "security-and-manifest",
+    "unknown_change": "all-core",
+    "review_status_writes": false,
+    "build_owner": "isolated-stack"
+  },
+  "groups": [
+    {
+      "id": "selection-security",
+      "runner": "node",
+      "tier": "core",
+      "owner": "test-infrastructure",
+      "always": true,
+      "files": [
+        "scripts/release/plan-components.test.mjs",
+        "scripts/testing/guards.test.mjs",
+        "scripts/testing/acceptance-context.test.mjs",
+        "scripts/testing/movement-encounter-fixture.test.mjs",
+        "scripts/testing/ui-server.test.mjs",
+        "scripts/testing/ui-snapshot.test.mjs",
+        "scripts/release/validate-manifest.test.mjs",
+        "scripts/release/ci-release.test.mjs",
+        "scripts/release/automatic-release.test.mjs",
+        "scripts/release/deployed-baseline.test.mjs",
+        "scripts/release/capture-host-backup.test.mjs",
+        "scripts/release/read-snapshot.test.mjs",
+        "scripts/release/database-schema-proof.test.mjs",
+        "scripts/release/prepare-host-release.test.mjs",
+        "scripts/release/candidate-rehearsal.test.mjs",
+        "scripts/release/ssh-transport.test.mjs",
+        "scripts/release/docker-rehearsal.test.mjs",
+        "scripts/release/rehearsal-scenarios.test.mjs",
+        "scripts/release/migration-rehearsal.test.mjs",
+        "scripts/security/check-no-known-credentials.test.mjs",
+        "scripts/database/storage-report.test.mjs",
+        "scripts/testing/suites.test.mjs",
+        "scripts/testing/runtime.test.mjs",
+        "scripts/testing/go-test-list.test.mjs",
+        "scripts/testing/source-snapshot.test.mjs",
+        "scripts/testing/ci-policy.test.mjs",
+        "scripts/testing/shards.test.mjs",
+        "scripts/testing/worker-test-build.test.mjs",
+        "scripts/image-egress/sota-config.test.mjs",
+        "scripts/release/historical-source-certification.test.mjs",
+        "scripts/release/write-build-identity.test.mjs",
+        "scripts/release/source-content-manifest.test.mjs"
+      ],
+      "contract": "Dependency selection, local target isolation, credentials and test-count contracts",
+      "network": "local-fixtures-only",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "data-fixture-integrity",
+      "runner": "node",
+      "tier": "core",
+      "owner": "release-infrastructure",
+      "always_for_code": true,
+      "files": [
+        "frontend/worker/fixtures/container-catalog.test.mjs",
+        "scripts/release/source-release-references.test.mjs"
+      ],
+      "contract": "Container fixture closure and typed historical source references on owned PostgreSQL",
+      "network": "owned-postgresql-and-loopback-http",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "ui-auth",
+      "runner": "vitest",
+      "tier": "core",
+      "owner": "auth-ui",
+      "always_for_code": true,
+      "files": [
+        "frontend/src/contexts/AuthContext.test.tsx",
+        "frontend/src/api/authPolicy.test.ts",
+        "frontend/src/components/nativeTooltipPolicy.test.ts"
+      ],
+      "contract": "Session handling, token scope and canonical tooltip policy",
+      "network": "mock-transport",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "runtime-core",
+      "runner": "vitest",
+      "tier": "core",
+      "owner": "rules",
+      "components": [
+        "frontend",
+        "worker"
+      ],
+      "files": [
+        "frontend/src/rules-core/importBoundary.test.ts",
+        "frontend/src/rules-core/determinism.test.ts",
+        "frontend/src/engine/rollInfluence.test.ts",
+        "frontend/src/engine/savedOutcomeOverride.test.ts",
+        "frontend/src/engine/conditionActions.test.ts",
+        "frontend/src/engine/itemCost.test.ts",
+        "frontend/src/character/assemble.bundleDependency.test.ts",
+        "frontend/src/character/assemblyFactory.freshness.test.ts",
+        "frontend/src/character/sheetEquipmentCommit.test.ts",
+        "frontend/src/character/useSheetEquipmentSave.test.tsx",
+        "frontend/src/character/sheetAtomicWorldCommit.integration.test.ts",
+        "frontend/src/character/sheetRuntimeCommand.test.ts",
+        "frontend/src/hooks/useCombatCommandDispatch.test.tsx",
+        "frontend/src/hooks/useSoloCombatBootstrap.test.tsx",
+        "frontend/src/hooks/useSoloCombatPersistence.test.tsx",
+        "frontend/src/rules-core/commandDispatch.test.ts"
+      ],
+      "contract": "Data-driven actions/cost, second entity, deterministic pending decisions and atomic sheet commands",
+      "network": "mock-transport",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "catalog-paper-images",
+      "runner": "vitest",
+      "tier": "core",
+      "owner": "product-ui",
+      "components": [
+        "frontend",
+        "backend"
+      ],
+      "files": [
+        "frontend/src/api/catalogPages.test.ts",
+        "frontend/src/paper-sheet/useSavedPaperDocument.test.tsx",
+        "frontend/src/api/imageErrors.test.ts",
+        "frontend/src/api/imageGeneration.test.ts",
+        "frontend/src/api/readRetry.test.ts",
+        "frontend/src/components/ActiveEffectCard.test.tsx",
+        "frontend/src/components/SheetManualEffectAuthority.test.tsx",
+        "frontend/src/components/RulesAuthorityBoundary.test.tsx",
+        "frontend/src/components/DeferredDialog.test.tsx",
+        "frontend/src/contexts/DiceDialogContext.breakdown.test.tsx",
+        "frontend/src/api/catalogReview.test.ts",
+        "frontend/src/api/ownedItemCache.test.ts",
+        "frontend/src/api/apiCache.test.ts",
+        "frontend/src/components/library/LibraryReviewStatus.test.tsx",
+        "frontend/src/api/imageJobs.test.ts",
+        "frontend/src/api/legacyImageAttempts.test.ts",
+        "frontend/src/components/ImageJobsPanel.test.tsx",
+        "frontend/src/components/sheet-actions/SheetActionList.test.tsx",
+        "frontend/src/api/runtimeCards.test.ts"
+      ],
+      "contract": "Catalog pages, paper autosave, safe image errors and no paid POST retries",
+      "network": "mock-transport",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "worker-contracts",
+      "runner": "node",
+      "tier": "core",
+      "owner": "rules-worker",
+      "components": [
+        "worker",
+        "backend"
+      ],
+      "files": [
+        "frontend/worker/server.test.mjs",
+        "frontend/worker/replay.test.mjs",
+        "frontend/worker/historical-replay.test.mjs",
+        "scripts/performance/fresh-worker.test.mjs",
+        "scripts/performance/retained-artifacts.test.mjs",
+        "scripts/performance/crash-recovery.test.mjs"
+      ],
+      "contract": "Authenticated worker, exact archived artifact, replay and saved decisions",
+      "network": "loopback",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "backend-auth-ownership",
+      "runner": "go",
+      "tier": "core",
+      "owner": "backend",
+      "always_for_code": true,
+      "package": ".",
+      "prefixes": [
+        "TestStrictAuth",
+        "TestJWTIssuance",
+        "TestAuthTokenLifetime",
+        "TestOwnedItem",
+        "TestRetiredCharacterInventoriesRejectReadsAndWrites",
+        "TestGlobalContentReadsRemainPublicAndCharacterV3UsesStrictAuth"
+      ],
+      "database": "required",
+      "contract": "Authentication and ownership enforced by actual PostgreSQL-backed controllers",
+      "network": "loopback",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "backend-gameplay",
+      "runner": "go",
+      "tier": "core",
+      "owner": "backend-runtime",
+      "components": [
+        "backend",
+        "worker"
+      ],
+      "package": ".",
+      "prefixes": [
+        "TestCharacterTemplate",
+        "TestRuntimeEquipmentCommand",
+        "TestCharacterRuntimeCommand",
+        "TestCanonicalTransport",
+        "TestPaperDocument",
+        "TestWorkerClient",
+        "TestWorkerAdmission",
+        "TestTrustedRestUsesCanonicalResourceMaximaAndRejectsOverflow",
+        "TestLegacyRestPatchCannotSupplyMaxima",
+        "TestCombatJournal",
+        "TestRunItemSale",
+        "TestConcurrentRunSale",
+        "TestGeneratedImage",
+        "TestImageProvider",
+        "TestComponentBuildIdentity",
+        "TestBuildIdentityCommand",
+        "TestMigrationInfoCommand",
+        "TestReleaseMigrationCLI",
+        "TestCatalogReview",
+        "TestEquipmentIntent",
+        "TestEquipmentCatalog",
+        "TestInitiativeOptions",
+        "TestImageJobs",
+        "TestRuntimeCardCatalog",
+        "TestCatalogPrefetch",
+        "TestPreparationCatalogFlights"
+      ],
+      "database": "required",
+      "contract": "Atomic commands, CAS, exact retry, conservation, journal, saved paper and image pipeline",
+      "network": "loopback",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "manual-review-migration",
+      "runner": "go",
+      "tier": "core",
+      "owner": "database",
+      "components": [
+        "backend"
+      ],
+      "package": "./migrations",
+      "prefixes": [
+        "TestManualContentReview",
+        "TestReleaseAdditive"
+      ],
+      "database": "required",
+      "contract": "Review mutation/reset policy without automatic certification",
+      "network": "loopback",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "local-browser-flows",
+      "runner": "playwright",
+      "tier": "core",
+      "owner": "product-e2e",
+      "components": [
+        "frontend",
+        "backend",
+        "worker"
+      ],
+      "files": [
+        "frontend/e2e-local/main-flows.spec.ts",
+        "frontend/e2e-local/forge.spec.ts",
+        "frontend/e2e-local/combat.spec.ts",
+        "frontend/e2e-local/access.spec.ts"
+      ],
+      "database": "required",
+      "stack": "integration",
+      "contract": "Real login, creation, paper sheet, inventory, combat decision persistence and exact retry on owned API/worker/PostgreSQL",
+      "network": "owned-real-fullstack",
+      "cost": "measure-on-run"
+    },
+    {
+      "id": "local-api-spine",
+      "runner": "script",
+      "tier": "core",
+      "owner": "product-e2e",
+      "components": [
+        "frontend",
+        "backend",
+        "worker"
+      ],
+      "file": "scripts/testing/check-api.mjs",
+      "database": "required",
+      "stack": "integration",
+      "contract": "Actual API/worker/PostgreSQL: template copy, run, initialize, exact retry, reload and source isolation",
+      "network": "loopback",
+      "cost": "measure-on-run"
+    }
+  ],
+  "legacy_manual": [
+    {
+      "id": "entity-certificates",
+      "patterns": [
+        "frontend/src/rules-core/coverage/**",
+        "frontend/src/rules-core/testing/microMvpScenarioCorpus.test.ts",
+        "frontend/src/mechanics/contentSweep.test.ts",
+        "frontend/src/canon/microMvpL1Overlay.historical.test.ts",
+        "frontend/src/canon/liveMicroMvpCompiledCertification.test.ts"
+      ],
+      "reason": "Historical catalog/certification matrices; explicit diagnostic only, never writes manual review status. The exact old overlay-pin assertion lives in microMvpL1Overlay.historical.test.ts; current mixed compiler/materialization tests remain extended. liveMicroMvpCompiledCertification retains the retired pinned attestation protocol with no application runtime caller; reusable normalized/raw fingerprint and current attestation contracts remain extended in catalogFingerprint.test.ts. Old executable bytes, saved outcomes/RNG and fail-closed missing/corrupt routing are required in frontend/worker/historical-replay.test.mjs; current readers preserve original worlds in worldMigration.historicalCorpus.test.ts. Frozen certificate/artifact hashes are not regenerated.",
+      "runner": "vitest"
+    },
+    {
+      "id": "live-probes",
+      "patterns": [
+        "frontend/src/**/*.live.test.ts",
+        "frontend/e2e-live/**",
+        "frontend/src/mvp/variables.live.mvp.test.ts",
+        "frontend/src/mvp/repro.morjachok.mvp.test.ts",
+        "frontend/src/mvp/raceAbilities.mvp.test.ts",
+        "frontend/src/mvp/mini-mvp.utility-level1-spells.live.test.ts",
+        "frontend/src/mvp/mini-mvp.utility-cantrips.live.test.ts",
+        "frontend/src/mvp/mini-mvp.traversal-spells.live.test.ts",
+        "frontend/src/mvp/mini-mvp.spell-activation.live.test.ts",
+        "frontend/src/mvp/mini-mvp.ongoing-spells.live.test.ts",
+        "frontend/src/mvp/mini-mvp.forge-roots.live.test.ts",
+        "frontend/src/mvp/mini-mvp.fighting-styles-forge.live.test.ts",
+        "frontend/src/mvp/mini-mvp.fighting-style-primitives.live.test.ts",
+        "frontend/src/mvp/mini-mvp.control-spells.live.test.ts",
+        "frontend/src/mvp/microMicroQa.live.mvp.test.ts",
+        "frontend/src/mvp/micro-micro.matrix.live.test.ts",
+        "frontend/src/mvp/micro-micro.certification.live.test.ts",
+        "frontend/src/mvp/mechanics.sweep.mvp.test.ts",
+        "frontend/src/mvp/freeuse.live.mvp.test.ts",
+        "frontend/src/mvp/forge.sweep.mvp.test.ts",
+        "frontend/src/mvp/fightingstyle.forge.mvp.test.ts",
+        "frontend/src/mvp/feats.engine.mvp.test.ts",
+        "frontend/src/mvp/coverage.inert.mvp.test.ts",
+        "frontend/src/mvp/content.readiness.mvp.test.ts",
+        "frontend/src/mvp/autoBuild.canon.mvp.test.ts"
+      ],
+      "reason": "External origin/env-gated catalog probes (including explicit historical MVP_CONTENT files) require an owned-stack adaptation; never enable credentials or a default localhost API in ordinary tiers.",
+      "runner": "external-disabled"
+    },
+    {
+      "id": "retired-review-contract",
+      "patterns": [
+        "frontend/src/api/conditionsApi.test.ts",
+        "frontend/src/content/supportStatus.test.ts",
+        "frontend/src/components/forge/SupportStatusBadge.test.tsx"
+      ],
+      "reason": "Old automatic support-status UI contract replaced by manual review; retain explicit diagnostics",
+      "runner": "vitest"
+    },
+    {
+      "id": "python-http-quarantine",
+      "patterns": [
+        "backend/tests/test_*.py",
+        "scripts/test_*.py"
+      ],
+      "reason": "Old HTTP harness lacks owned fixture lifecycle; quarantined before migration of unique assertions",
+      "runner": "quarantined"
+    },
+    {
+      "id": "snapshot-migrations",
+      "patterns": [],
+      "runner": "quarantined",
+      "reason": "Exact Go cases need historical fixtures; no inherited DSN or silent skip.",
+      "go_cases": [
+        {
+          "package": ".",
+          "file": "backend/martial_party_local_test.go",
+          "test": "TestMartialPartyLocalInitialization",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/catalog_completion_279_test.go",
+          "test": "TestCatalogCompletion279OnRestoredProductionSnapshot",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/catalog_variants_280_test.go",
+          "test": "TestCatalogVariants280OnRestoredProductionSnapshot",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/clarify_general_feat_effect_cards_test.go",
+          "test": "TestGeneralFeatEffectClarityAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/harden_level_five_runtime_test.go",
+          "test": "TestHardenLevelFiveRuntimeProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/martial_classes_256_test.go",
+          "test": "TestMartialClassesLocalMigration256",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_d20_interrupts_184_test.go",
+          "test": "TestD20InterruptProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_general_feat_signatures_test.go",
+          "test": "TestGeneralFeatSignaturesMigrationAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_level_five_progression_test.go",
+          "test": "TestLevelFiveProgressionPostgresClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_level_four_general_feats_test.go",
+          "test": "TestLevelFourGeneralFeatsMigrationAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_mobile_emanations_196_test.go",
+          "test": "TestAasimarMobileRadianceAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_owned_summons_195_test.go",
+          "test": "TestOwnedSummonMigrationAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_remaining_level_five_general_feats_187_test.go",
+          "test": "TestRemainingLevelFiveGeneralFeatsAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_remaining_level_five_general_feats_187_test.go",
+          "test": "TestLevelFiveTailReplayRestoresCertifiedGuardsAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_warlock_invocations_180_test.go",
+          "test": "TestMaterializeWarlockInvocationsLevelFiveClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/materialize_wizard_memorize_spell_188_test.go",
+          "test": "TestWizardMemorizeSpellMigrationOnClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_class_level_five_integrity_185_test.go",
+          "test": "TestRepairClassLevelFiveIntegrityProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_draconic_sorcery_spell_ability_193_test.go",
+          "test": "TestDraconicSorcerySpellAbilityRepairAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_general_feat_choice_integrity_178_test.go",
+          "test": "TestGeneralFeatChoiceIntegrityPostgresClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_general_feat_runtime_integrity_182_test.go",
+          "test": "TestGeneralFeatRuntimeIntegrityProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_level_five_base_progression_179_test.go",
+          "test": "TestRepairLevelFiveBaseProgressionProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_level_five_spell_area_runtime_191_test.go",
+          "test": "TestLevelFiveSpellAreaRuntimeAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_level_five_spell_interactions_192_test.go",
+          "test": "TestLevelFiveSpellInteractionRepairProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_level_five_spell_targeting_186_test.go",
+          "test": "TestLevelFiveSpellTargetingIntegrityProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_level_five_strict_conditions_177_test.go",
+          "test": "TestRepairLevelFiveStrictConditionsProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_level_five_subclass_actions_181_test.go",
+          "test": "TestRepairLevelFiveSubclassActionsProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_species_level_five_integrity_183_test.go",
+          "test": "TestSpeciesLevelFiveIntegrityProductionClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_species_levelled_spell_access_test.go",
+          "test": "TestSpeciesLevelledSpellAccessPostgresClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_subclass_primary_runtime_194_test.go",
+          "test": "TestSubclassPrimaryRuntimeAgainstPostgres",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/repair_wizard_cantrip_growth_176_test.go",
+          "test": "TestWizardCantripGrowthPostgresClone",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": "./migrations",
+          "file": "backend/migrations/resource_declarations_294_test.go",
+          "test": "TestResourceDeclarations294ReadOnlySnapshotPlan",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": ".",
+          "file": "backend/roguelike_worker_catalog_integration_test.go",
+          "test": "TestRoguelikeCatalogResolvesEnglishSpellSlugFromSnapshot",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": ".",
+          "file": "backend/roguelike_worker_catalog_integration_test.go",
+          "test": "TestRoguelikeExistingRunCanInitializeCombatReadOnly",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": ".",
+          "file": "backend/roguelike_worker_catalog_integration_test.go",
+          "test": "TestRoguelikeExistingRunCanHealInCampReadOnly",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        },
+        {
+          "package": ".",
+          "file": "backend/spell_update_editorial_test.go",
+          "test": "TestMageHandEditorialSaveWithFullEditorPayload",
+          "reason": "Requires a separately restored historical catalog/preimage or explicit local QA fixture; ordinary disposable integration baseline does not satisfy this contract. Retain static/unit siblings in extended; adapt this exact case in TEST-05."
+        }
+      ]
+    }
+  ],
+  "dedicated_go_routes": [
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/baseline_upgrade_matrix_test.go",
+      "test": "TestSupportedBaselineUpgradeMatrix",
+      "tier": "extended",
+      "gate": "supported-upgrade-baselines",
+      "script": "scripts/performance/check-upgrade-baselines.mjs",
+      "reason": "Requires three independently owned full-schema baselines 297/298/299 and exact nonempty history fixtures. The mandatory gate runs each real startup migration and repeat; never executed against the main test database or silently skipped."
+    },
+    {
+      "package": "./migrations",
+      "file": "backend/migrations/release_baseline_test.go",
+      "test": "TestSupportedObservedLegacyBaseline",
+      "tier": "extended",
+      "gate": "observed-legacy-baseline",
+      "script": "scripts/performance/check-observed-baseline.mjs",
+      "reason": "Requires a distinct owned imported297 schema and observed302 legacy ledger, followed by exact additive adoption/repeat. The mandatory gate runs the real Go case without required skips; never run on the ordinary integration database."
+    },
+    {
+      "package": ".",
+      "file": "backend/character_preparation_cache_differential_test.go",
+      "test": "TestPreparationCatalogActualWorkerColdWarmAndEvictedEquality",
+      "tier": "extended",
+      "gate": "preparation-cache-equivalence",
+      "script": "scripts/performance/check-preparation-cache.mjs",
+      "reason": "Requires fresh API-owned character and item fixtures plus the actual worker, prepared by the mandatory shared-stack gate; it cannot run in a database-only package batch."
+    },
+    {
+      "package": ".",
+      "file": "backend/roguelike_catalog_differential_test.go",
+      "test": "TestCatalogBatchActualWorkerEquivalentForOwnedFixtures",
+      "tier": "extended",
+      "gate": "catalog-equivalence",
+      "script": "scripts/performance/check-catalog.mjs",
+      "reason": "Mandatory on the shared full stack after API-created party fixtures (1/2/6) and the real worker are ready. Routed out of the database-only package batch, never retired or silently skipped."
+    },
+    {
+      "package": ".",
+      "test": "TestSoloDurableContinuationsActualWorkerReceipts",
+      "file": "backend/solo_durable_continuation_test.go",
+      "tier": "extended",
+      "gate": "solo-durable-continuations",
+      "script": "scripts/performance/check-solo-continuations.mjs",
+      "reason": "Requires immutable 222-case corpus and exact owned worker; gate supplies them and rejects missing/zero/skip. All 17 phases have accepted cases independently of the two negative boundaries."
+    },
+    {
+      "package": ".",
+      "test": "TestImageEgressFailureDoesNotBlockActualGameplay",
+      "file": "backend/openai_egress_integration_test.go",
+      "gate": "image-egress-isolation",
+      "reason": "Requires the owned canonical fixture and actual worker; held/failing CONNECT must not block gameplay or exact receipt retries.",
+      "tier": "extended",
+      "script": "scripts/performance/check-image-egress.mjs"
+    }
+  ],
+  "extended_policy": {
+    "default": "all-other-local-tests",
+    "note": "engine/mvp/canon directory or file age alone never makes a test legacy. Browser UI-fixture tests remain a distinct layer from real API E2E.",
+    "go": "all-local-packages-with-required-test-results",
+    "performance": "explicit-fixed-fixture-profile-after-OBS-01"
+  },
+  "extended_gates": [
+    {
+      "id": "process-crash-recovery",
+      "script": "scripts/performance/check-crash-recovery.mjs",
+      "export": "checkCrashRecovery",
+      "contract": "Actual owned backend termination after canonical paid computation before commit and after durable commit before client delivery; exact worker input/result, RNG, one resource cost and receipt recovery without worker rerun. Uses the current built binary and a separate owned database; every child must stop."
+    },
+    {
+      "id": "supported-upgrade-baselines",
+      "script": "scripts/performance/check-upgrade-baselines.mjs",
+      "export": "checkUpgradeBaselines",
+      "contract": "Actual native PostgreSQL startup from supported imported baselines 297/298/299 to 300, exact ledger deltas, repeat zero, unchanged history and manual statuses. Full historical fresh install is explicitly not implied."
+    },
+    {
+      "id": "observed-legacy-baseline",
+      "script": "scripts/performance/check-observed-baseline.mjs",
+      "export": "checkObservedBaseline",
+      "contract": "Actual native owned full-schema297 observed legacy adoption with retired ledger rows, crash/repeat and exact bytes; each dedicated Go test must pass without skip, fixture hashes unchanged and owned cleanup stopped. Does not prove fresh historical install."
+    },
+    {
+      "id": "candidate-rehearsal-api",
+      "script": "scripts/performance/check-rehearsal-scenario.mjs",
+      "export": "checkRehearsalScenario",
+      "contract": "Owned native clone: canonical pending choice, unchanged read, accepted receipt decoding, repeated accepted command and continuation without duplicate effects."
+    },
+    {
+      "id": "catalog-equivalence",
+      "script": "scripts/performance/check-catalog.mjs",
+      "export": "checkCatalog",
+      "contract": "Actual-worker batch resolver equality on fresh owned parties of 1, 2 and 6; reference membership, aliases and permissions remain authoritative."
+    },
+    {
+      "id": "preparation-cache-equivalence",
+      "script": "scripts/performance/check-preparation-cache.mjs",
+      "export": "checkPreparationCache",
+      "contract": "Immutable catalog content and rights invalidation, bounded eviction, actual-worker legacy/cold/warm equality on two owned character and item fixtures."
+    },
+    {
+      "id": "worker-wire-mirror-equivalence",
+      "script": "scripts/performance/check-worker-mirrors.mjs",
+      "export": "checkWorkerMirrors",
+      "contract": "Actual worker v1/v2 full outcomes, Go mirror expansion, historical private envelopes, retries and bounded concurrency remain equivalent on the owned stack."
+    },
+    {
+      "id": "equipment-authority-flow",
+      "script": "scripts/performance/check-equipment.mjs",
+      "export": "checkEquipmentFlow",
+      "options": {
+        "repetitions": 1
+      },
+      "contract": "Real API generic resources and exact retries"
+    },
+    {
+      "id": "initiative-options-flow",
+      "script": "scripts/performance/check-initiative.mjs",
+      "export": "checkInitiativeOptions",
+      "options": {
+        "repetitions": 1
+      },
+      "contract": "Read-only offers and authoritative initialization for party sizes 1/2/6"
+    },
+    {
+      "id": "library-review-pages",
+      "script": "scripts/performance/check-library.mjs",
+      "export": "checkLibrary",
+      "contract": "Eleven catalogs: authorized full summaries and paged status filters"
+    },
+    {
+      "id": "equipment-runtime-browser",
+      "script": "scripts/performance/check-runtime-browser.mjs",
+      "export": "checkRuntimeBrowserFlow",
+      "contract": "Actual UI: lost accepted equipment response, reload with same command, no browser participant build"
+    },
+    {
+      "id": "pwa-offline-shell",
+      "script": "scripts/performance/check-pwa.mjs",
+      "export": "checkPWAShell",
+      "contract": "Exact static entry closure, no lazy route precache or API cache, offline previously visited login"
+    },
+    {
+      "id": "urvin-owned-journey",
+      "script": "scripts/performance/check-urvin.mjs",
+      "export": "checkUrvinAcceptance",
+      "contract": "Owned native Urvin route, auras, five event families/seven checks, shop, treasure, canonical rest, real battle rewards and defeat checkpoint; retry/reload/peer isolation and shared fixture restoration are mandatory."
+    },
+    {
+      "id": "solo-durable-continuations",
+      "script": "scripts/performance/check-solo-continuations.mjs",
+      "export": "checkSoloContinuations",
+      "contract": "All 17 durable board continuations: 220 real-worker accepted transactions, two explicit boundary rejections, exact duplicate receipts and SQL reload; immutable corpus restarts also run in the extended Vitest layer."
+    },
+    {
+      "id": "image-egress-isolation",
+      "script": "scripts/performance/check-image-egress.mjs",
+      "export": "checkImageEgress",
+      "contract": "Actual PG/Gin/Node gameplay continues during held and failing image CONNECT; exact retries, TLS verification, protocol storage and recovery are required."
+    }
+  ]
+}

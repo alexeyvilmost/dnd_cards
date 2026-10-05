@@ -100,6 +100,11 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 	page, limit, offset := parseListPagination(c)
 
 	// Подсчет общего количества
+	var reviewOK bool
+	query, reviewOK = applyCatalogReview(query, c, "spells")
+	if !reviewOK {
+		return
+	}
 	var total int64
 	query.Count(&total)
 
@@ -150,12 +155,12 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 		responses = append(responses, r)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.JSON(http.StatusOK, catalogReviewResponse(c, gin.H{
 		"spells": responses,
 		"total":  total,
 		"page":   page,
 		"limit":  limit,
-	})
+	}))
 }
 
 // Keep the parent relation available to acquisition filters without reading

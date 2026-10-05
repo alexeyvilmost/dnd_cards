@@ -1,0 +1,72 @@
+{
+  "run_id": "test_20f8eee4afac19094fd249fe",
+  "status": "passed",
+  "catalogs": [
+    {
+      "catalog": "cards",
+      "total": 690,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "actions",
+      "total": 46,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "effects",
+      "total": 546,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "spells",
+      "total": 393,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "feats",
+      "total": 77,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "backgrounds",
+      "total": 16,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "races",
+      "total": 39,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "classes",
+      "total": 60,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "resources",
+      "total": 26,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "variables",
+      "total": 5,
+      "page_size": 1,
+      "statuses": 8
+    },
+    {
+      "catalog": "concepts",
+      "total": 0,
+      "page_size": 0,
+      "statuses": 8
+    }
+  ]
+}

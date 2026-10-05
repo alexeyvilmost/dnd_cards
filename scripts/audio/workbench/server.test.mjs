@@ -336,16 +336,37 @@ test('browser prompt rejects website limit overflow without recording unusable j
 
 test('two workers never exceed two requests and generate exactly four unique slots per cue', async (t) => {
   let calls = 0, active = 0, maxActive = 0;
+  let announcePairStarted, releasePair;
+  const pairStarted = new Promise((resolve) => { announcePairStarted = resolve; });
+  const pairReleased = new Promise((resolve) => { releasePair = resolve; });
   const prompts = [];
   const f = await fixture(t, async (_url, init) => {
-    calls += 1; active += 1; maxActive = Math.max(maxActive, active);
+    const ordinal = ++calls;
+    active += 1; maxActive = Math.max(maxActive, active);
     prompts.push(JSON.parse(init.body).text);
-    await delay(10);
+    // Persisting the second request intent can take longer than any short sleep.
+    // Keep both requests in flight until the test observes their actual start.
+    if (ordinal <= 2) {
+      if (ordinal === 2) announcePairStarted();
+      await pairReleased;
+    }
     active -= 1;
     return goodResponse();
   }, { concurrency: 2 });
   assert.equal((await f.state()).concurrency, 2);
-  await f.connect('all');
+  let watchdog;
+  try {
+    await f.connect('all');
+    await Promise.race([pairStarted, new Promise((_, reject) => {
+      watchdog = setTimeout(() => reject(new Error('Two queue workers did not start their requests')), 10_000);
+    })]);
+    assert.equal(calls, 2);
+    assert.equal(active, 2);
+    assert.equal(f.app.workbench.snapshot().queue.running, 2);
+  } finally {
+    clearTimeout(watchdog);
+    releasePair(); // A failed assertion must not leave cleanup waiting on fetch.
+  }
   await f.app.workbench.waitForIdle();
   const state = await f.state();
   assert.equal(calls, 8);

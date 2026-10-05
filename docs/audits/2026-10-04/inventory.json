@@ -1,0 +1,285 @@
+{
+  "trackedCount": 4259,
+  "groups": {
+    ".agents": {
+      "files": 3,
+      "bytes": 8500,
+      "codeLines": 0
+    },
+    ".claude": {
+      "files": 1,
+      "bytes": 447,
+      "codeLines": 0
+    },
+    ".cursor": {
+      "files": 6,
+      "bytes": 2200,
+      "codeLines": 0
+    },
+    "(root)": {
+      "files": 29,
+      "bytes": 791795,
+      "codeLines": 0
+    },
+    ".github": {
+      "files": 1,
+      "bytes": 15191,
+      "codeLines": 0
+    },
+    "V4 System": {
+      "files": 32,
+      "bytes": 170084,
+      "codeLines": 0
+    },
+    "backend": {
+      "files": 641,
+      "bytes": 24935046,
+      "codeLines": 96422
+    },
+    "data": {
+      "files": 1,
+      "bytes": 1085935,
+      "codeLines": 0
+    },
+    "database": {
+      "files": 25,
+      "bytes": 48309,
+      "codeLines": 0
+    },
+    "docs": {
+      "files": 132,
+      "bytes": 5585056,
+      "codeLines": 0
+    },
+    "frontend": {
+      "files": 2135,
+      "bytes": 186726382,
+      "codeLines": 324524
+    },
+    "infra": {
+      "files": 6,
+      "bytes": 15466,
+      "codeLines": 0
+    },
+    "officials": {
+      "files": 794,
+      "bytes": 19930365,
+      "codeLines": 95
+    },
+    "output": {
+      "files": 4,
+      "bytes": 2252561,
+      "codeLines": 0
+    },
+    "outputs": {
+      "files": 2,
+      "bytes": 98022,
+      "codeLines": 0
+    },
+    "references": {
+      "files": 23,
+      "bytes": 36871926,
+      "codeLines": 182
+    },
+    "scripts": {
+      "files": 422,
+      "bytes": 9481220,
+      "codeLines": 47227
+    },
+    "Способности": {
+      "files": 2,
+      "bytes": 8078,
+      "codeLines": 0
+    }
+  },
+  "largestFiles": [
+    {
+      "path": "backend/migrations/data/item-completion-279/items.json",
+      "bytes": 8541256
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/urvin-archive-v1.png",
+      "bytes": 3777465
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/urvin-causeway-v1.png",
+      "bytes": 3770501
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/valley-floor-v1.png",
+      "bytes": 3696826
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/clearing-floor-v1.png",
+      "bytes": 3640117
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/cavern-floor-v1.png",
+      "bytes": 3491234
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/sanctuary-floor-v1.png",
+      "bytes": 3443119
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/quarry-floor-v1.png",
+      "bytes": 3373397
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/urvin-court-v1.png",
+      "bytes": 3323107
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/forest-floor-v1.png",
+      "bytes": 3280718
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/watchpost-floor-v1.png",
+      "bytes": 3234655
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/courtyard-floor-v1.png",
+      "bytes": 3217459
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/crypt-floor-v1.png",
+      "bytes": 3135308
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/snow-floor-v1.png",
+      "bytes": 3116204
+    },
+    {
+      "path": "officials/canon/prod-snapshot/effects.json",
+      "bytes": 2922665
+    },
+    {
+      "path": "frontend/public/assets/battle-maps/valley-river-v2.png",
+      "bytes": 2905084
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_cavern-v1.1992c5305f66.mp3",
+      "bytes": 2880619
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_clearing-v1.37fa516de5f6.mp3",
+      "bytes": 2880619
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_courtyard-small-v1.5c314b5d16ca.mp3",
+      "bytes": 2880619
+    },
+    {
+      "path": "frontend/public/audio/music-v3/music_battle_crypt-annex-rooms-v1.bcc15159a288.mp3",
+      "bytes": 2880619
+    }
+  ],
+  "largestCode": [
+    {
+      "path": "frontend/src/rules-core/handler.ts",
+      "lines": 13459
+    },
+    {
+      "path": "frontend/src/engine/execute.ts",
+      "lines": 6619
+    },
+    {
+      "path": "frontend/src/solo-combat/engine.ts",
+      "lines": 6173
+    },
+    {
+      "path": "frontend/src/solo-combat/soloCombat.engine.integration.test.ts",
+      "lines": 5869
+    },
+    {
+      "path": "backend/migrations/migrations.go",
+      "lines": 4785
+    },
+    {
+      "path": "frontend/src/components/SheetActionsPanel.tsx",
+      "lines": 3565
+    },
+    {
+      "path": "frontend/src/canon/microMvpL1Overlay.ts",
+      "lines": 3178
+    },
+    {
+      "path": "frontend/src/pages/CardLibrary.tsx",
+      "lines": 2959
+    },
+    {
+      "path": "frontend/e2e-live/real-backend-canary.spec.ts",
+      "lines": 2898
+    },
+    {
+      "path": "backend/models.go",
+      "lines": 2465
+    },
+    {
+      "path": "frontend/src/rules-core/coverage/microMvpEvidence.ts",
+      "lines": 2342
+    },
+    {
+      "path": "frontend/src/pages/CharacterForge.tsx",
+      "lines": 2300
+    },
+    {
+      "path": "scripts/content/migrate-micro-mvp-l1-mechanics.mjs",
+      "lines": 2028
+    },
+    {
+      "path": "frontend/src/rules-core/domain.ts",
+      "lines": 1940
+    },
+    {
+      "path": "backend/controller.go",
+      "lines": 1850
+    },
+    {
+      "path": "scripts/content/migrate-micro-mvp-l1-mechanics.test.mjs",
+      "lines": 1841
+    },
+    {
+      "path": "frontend/src/rules-core/testing/microMvpScenarioCorpus.ts",
+      "lines": 1823
+    },
+    {
+      "path": "frontend/src/rules-core/worldMigration.ts",
+      "lines": 1818
+    },
+    {
+      "path": "backend/roguelike_controller.go",
+      "lines": 1682
+    },
+    {
+      "path": "frontend/src/character/sheetCanonicalWorld.ts",
+      "lines": 1671
+    },
+    {
+      "path": "frontend/src/pages/CharacterSheetMVP.tsx",
+      "lines": 1665
+    },
+    {
+      "path": "frontend/src/rules-core/microMvpSpellEntitySemantics.test.ts",
+      "lines": 1651
+    },
+    {
+      "path": "backend/canonical_session_controller.go",
+      "lines": 1623
+    },
+    {
+      "path": "frontend/src/types/index.ts",
+      "lines": 1607
+    },
+    {
+      "path": "frontend/src/rules-core/findFamiliarRuntime.integration.test.ts",
+      "lines": 1569
+    }
+  ],
+  "counts": {
+    "goTests": 250,
+    "vitest": 738,
+    "browserSpecs": 9,
+    "markdown": 169
+  }
+}

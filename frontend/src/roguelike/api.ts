@@ -1,6 +1,6 @@
 import type { CharacterEventRow } from '../character/api';
 import type { SoloCombatState } from '../solo-combat/types';
-import { apiClient } from '../api/client';
+import { apiClient, ApiRequestError } from '../api/client';
 import type { ForgeCharacter } from '../character/types';
 import type { Monster } from '../monsters/types';
 import type { Action, PassiveEffect } from '../types';
@@ -120,6 +120,21 @@ export type RoguelikeCommandType =
   | 'victory';
 
 export const roguelikeApi = {
+  initiativeOptions: async (id: string, revision: number): Promise<{enabled: false} | {
+    enabled: true; run_revision: number; character_id: string; runtime_revision: number;
+    artifact_hash: string; content_manifest_hash: string; options: Action[];
+  }> => {
+    try {
+      const {data} = await apiClient.get(`/api/roguelike/runs/${id}/initiative-options`, {params: {expected_revision: revision}});
+      if (typeof data?.enabled !== 'boolean' || (data.enabled && !Array.isArray(data.options))) {
+        throw Error('Сервер не вернул доступные варианты инициативы');
+      }
+      return data;
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 404) return {enabled: false};
+      throw error;
+    }
+  },
   modes: async ():Promise<UrvinDefinition> => (await apiClient.get<{mode:UrvinDefinition}>('/api/roguelike/runs/modes')).data.mode,
   listSelection: async (): Promise<{runs: RoguelikeRun[]; unavailable_source_character_ids: string[]}> => {
     const {data} = await apiClient.get<{runs: RoguelikeRun[]; unavailable_source_character_ids?: string[]}>('/api/roguelike/runs');

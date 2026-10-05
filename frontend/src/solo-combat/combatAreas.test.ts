@@ -14,7 +14,7 @@ import {
   worldZonePayload,
 } from './combatAreas';
 import { spatialFacts, type CombatAreaState, type SoloCombatState } from './types';
-import { autoResolveSystemDecisions, executeCombatAction, moveActor, moveActorAlongRoute } from './engine';
+import { advanceTurn, resolvePlayerSavingThrow, autoResolveSystemDecisions, executeCombatAction, moveActor, moveActorAlongRoute } from './engine';
 import { reachableRoutes } from './tacticalGrid';
 
 function state(): SoloCombatState {
@@ -89,6 +89,25 @@ const grease: RuleActionDefinition = {
 afterEach(() => resetConditionsToOfflineFixture('combat_area_test_cleanup'));
 
 describe('persistent combat areas', () => {
+  it.each([{id:'ember-floor',damage:1},{id:'cold-floor',damage:2}])('persists $id end-turn save before starting the next actor',spec=>{
+    let current=state();current.tokens.caster.position={x:3,y:3};current.tokens.target.position={x:8,y:8};
+    current.world.actors.caster.runtime.activeEffects=[{id:'save-boon',name:'Save boon',source:'synthetic',
+      mechanics:{kind:'boon',die:'1d4',applies_to:['saving_throw'],timing:['after_failure']}}];
+    const action:RuleActionDefinition={...grease,id:spec.id,name:spec.id,mechanics:{targeting:grease.mechanics.targeting,effects:[{resolution:'auto',result:[{
+      kind:'world_zone',zone_type:spec.id,geometry:{shape:'cube',size_ft:5},duration:{type:'rounds',amount:3},
+      tactical:{triggers:['end_turn'],save:{ability:'dex',dc:15},on_failure:[{kind:'damage',amount:spec.damage,type:'fire'}],on_success:[]},
+    }]}]}};
+    const area=createCombatArea({state:current,action,sourceActorId:'caster',origin:{x:3,y:3}})!;
+    current.combatAreas={[area.id]:area};
+    const held=advanceTurn(current,()=>{throw Error('Pending save must not roll before choice');});
+    expect(held.pendingCombatAreaTurnContinuation).toEqual({endingActorId:'caster',startingActorId:'target'});
+    expect(held.world.pendingResolution?.type).toBe('hazard_save');
+    let draws=0;current=resolvePlayerSavingThrow(JSON.parse(JSON.stringify(held)),{kind:'roll',roll:{mode:'system'}},()=>{draws++;return 0;});
+    expect(draws).toBe(1);expect(current.pendingCombatAreaTurnContinuation).toBeUndefined();
+    expect(current.world.actors.caster.runtime.hp.current).toBe(10-spec.damage);
+    expect(current.world.scene).toMatchObject({activeIndex:1,turnStarted:true});
+    expect(autoResolveSystemDecisions(JSON.parse(JSON.stringify(current)),()=>{throw Error('Completed save must not reroll');})).toEqual(current);
+  });
   it.each([3,4])('uses an authored %i-fold area movement cost in execution and route preview',multiplier=>{
     const snapshot=state();
     snapshot.tokens.caster.position={x:2,y:3};

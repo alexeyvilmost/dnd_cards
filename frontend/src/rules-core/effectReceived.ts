@@ -1,5 +1,5 @@
-import {conditionRule} from '../engine/conditions';
-import {deniedCapabilities} from '../engine/modifiers';
+import {conditionRule} from './legacy/engineAdapter';
+import {deniedCapabilities} from './legacy/engineAdapter';
 import type {ActiveEffectEntry} from '../mvp/contracts';
 import type {ActorState,QueuedEventReaction,RuleActionDefinition,UncommittedRuleEvent,WorldState} from './domain';
 type Dict=Record<string,unknown>;

@@ -14,6 +14,7 @@ import {
   createRulesLabWorld,
   openRulesLabSession,
   RulesLabRollQueue,
+  RULES_LAB_WORLD_ID,
   type RulesLabDependencies,
 } from './rulesLabFixture';
 import type { PersistentRulesSession } from '../rules-session/RulesSession';
@@ -107,7 +108,8 @@ describe('RulesLab browser acceptance adapter', () => {
     expect({ attackDie, damageDie, strengthModifier: deterministicFighter.character.abilityMods.str })
       .toEqual({ attackDie: 14, damageDie: 2, strengthModifier: 3 });
 
-    await mount(dependenciesFor(new InMemoryRulesWorldStore()));
+    const store = new InMemoryRulesWorldStore();
+    await mount(dependenciesFor(store));
 
     expect(testNode('rules-lab-scenario-nav').getAttribute('aria-label')).toContain('Сценарии');
     expect(testNode('rules-lab-scenario-baseline').getAttribute('href')).toBe('/rules-lab/baseline');
@@ -145,7 +147,18 @@ describe('RulesLab browser acceptance adapter', () => {
     await clickAndWaitForRevision('rules-lab-action', 4);
     expect(testNode('rules-lab-hp-wizard').textContent).toBe('5/10');
     expect(testNode('rules-lab-effects-wizard').textContent).toContain('Нет активных эффектов');
-    expect(testNode('rules-lab-events').textContent).toContain('core.attack.weapon');
+    // The UI intentionally shows only the latest ten events; verify the attack
+    // ledger in storage even when effect notifications move it out of that window.
+    const entries = (await store.loadEvents(RULES_LAB_WORLD_ID))
+      .map(({ event }) => event.payload)
+      .filter((event) => event.type === 'AttackEntryCommitted');
+    expect(entries).toEqual([expect.objectContaining({
+      type: 'AttackEntryCommitted',
+      entry: expect.objectContaining({
+        kind: 'weapon_attack', actionId: 'core.attack.weapon',
+        ordinal: 1, weaponCardId: deterministicWeapon!.id,
+      }),
+    })]);
     expect(testNode('rules-lab-events').textContent).toContain('урон 5 (bludgeoning)');
     expect(testNode('rules-lab-pending-state').textContent).toBe('нет');
     expect(testNode('rules-lab-attack-state').textContent).toBe('нет');

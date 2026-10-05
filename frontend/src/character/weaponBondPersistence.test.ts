@@ -3,7 +3,7 @@ import { readWeaponBondObjects, writeWeaponBondObjects, hydrateWeaponBondObjects
 import type { WorldObjectState } from '../rules-core/worldObjects';
 import { prepareRoguelikeCombatParticipant, type FrozenCombatCatalog } from '../roguelike/combatCatalog';
 import type { ForgeCharacter } from './types';
-import inputJson from '../roguelike/pinnedFighter.fixture.json';
+import inputJson from '../roguelike/testing/currentPinnedFixture';
 const fixture = inputJson as unknown as { character: ForgeCharacter; catalog: FrozenCombatCatalog; basicActionIds: string[] };
 const weapon: WorldObjectState = { id: 'physical-weapon', name: 'Weapon', kind: 'item', size: 'small',
   itemCardId: 'card-weapon', weaponBondActorId: 'owner', ownerActorId: 'owner', unattended: true };

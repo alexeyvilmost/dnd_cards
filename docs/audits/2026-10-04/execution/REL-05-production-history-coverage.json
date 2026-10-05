@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-10-05T00:41:16.647Z",
+  "readOnly": true,
+  "groups": [
+    {
+      "hash": "sha256:02891bdfdb6ef24014e4ae9d6a9f5439860cc1ff559975a74111cb6dd095054d",
+      "events": 119,
+      "combats": 16
+    },
+    {
+      "hash": "sha256:17f22d98bbc064bdd2d1821bd81ba04415aed890b27b21647077b05f36f230a2",
+      "events": 6,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:3aca1518a5f33fd2b69899eb76cf5fe5afda86c11ce2674277f2773e8c3a8bd0",
+      "events": 711,
+      "combats": 29
+    },
+    {
+      "hash": "sha256:4b202b0506d4a086dc478333f772b69ac16b31c115919a77e18620eb2b906313",
+      "events": 31,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:4fb7c5c790d5e431fa27ba3fbcb8b0136b24c4a8317a4f120a13e5bcf29f1e7f",
+      "events": 6,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:5526413ea18c9247005057423252f413175f931308fc80e90976fccbc79552c5",
+      "events": 454,
+      "combats": 16
+    },
+    {
+      "hash": "sha256:69332cc2352925ed87c1d52f9123d4889050838e6b1713aa508037cf8bc7408c",
+      "events": 5,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:6ee8bd4cac0c30813f1187d07be3aa61f0f1e66d2659d8d73bbfb2a0e9136f21",
+      "events": 7,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:8aeb3a4ee3eb0809a75675613c2f4585ece83d86fa029eaa1d464f801e19339d",
+      "events": 101,
+      "combats": 5
+    },
+    {
+      "hash": "sha256:99da7bf8849c7b4e793c6fb11fdf3c2188fb8f3c7232f21f6fd9d89daf072b2e",
+      "events": 281,
+      "combats": 20
+    },
+    {
+      "hash": "sha256:9f61c5926ff44a8a9fc573a347d15a652754ec5e9760afa3be0aebe19638e0f2",
+      "events": 213,
+      "combats": 20
+    },
+    {
+      "hash": "sha256:c2403bfbde41792d33735c5bd0524b72df27d82d5adc4e32ad33e8747380d3f1",
+      "events": 54,
+      "combats": 5
+    },
+    {
+      "hash": "sha256:c5f2c1022e88ab7e7b8d61474fc9126972349e173769264e9ac8b42f3d6a553d",
+      "events": 94,
+      "combats": 4
+    },
+    {
+      "hash": "sha256:daf395987bcd5a29a16c0b9e863d198d60721ca8cab2cfbfd3a5b6d148f2250b",
+      "events": 34,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:e49008b782a23ebd2b5835778775c94f70f057c0822b288f8fc5d5dd4a67b3fc",
+      "events": 6,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:e837ce7c81733b8e90279a7dd66ca0ba455c0f473f0704086da7cd986d29000c",
+      "events": 21,
+      "combats": 1
+    },
+    {
+      "hash": "sha256:f69d24ecf5151c056f6e63577cff84ea2abffd0ea73cae6cb23868dbad2895da",
+      "events": 26,
+      "combats": 2
+    },
+    {
+      "hash": "sha256:f8389f45c578cd3ca44e77db3d04b88cdef2ed364e28c11dd6d4b9cd69f8000b",
+      "events": 87,
+      "combats": 6
+    }
+  ],
+  "kind": "production-historical-reference-coverage",
+  "observationHash": "sha256:ec0f3c91221acf1c53fab653017db491cc8733c5b4810d55a99ca905bd1e2a3d",
+  "baselineUnmodified": true,
+  "executableArtifacts": 18,
+  "events": 2256,
+  "combats": 131,
+  "exactCjsInventoryMatch": true,
+  "semanticSourceRelease": {
+    "hash": "sha256:04678a044c4dc809d213e01e392bc0f16562d5103ee96e070089c1edf7e7100b",
+    "executable": false,
+    "certificateReconstructedFrom": "aec0f3205d4bfeee02a6e2b2fcf2132eed4002d5",
+    "hostVerification": "passed",
+    "path": "/opt/bagofholding/shared/source-certifications/04678a044c4dc809d213e01e392bc0f16562d5103ee96e070089c1edf7e7100b"
+  },
+  "limits": {
+    "historicalCommandReplay": "pending-exact-candidate-rehearsal",
+    "databaseWrites": false,
+    "userDataIncluded": false
+  }
+}

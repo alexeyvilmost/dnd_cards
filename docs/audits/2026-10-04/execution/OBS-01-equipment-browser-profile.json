@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "status": "passed_local",
+  "runId": "test_d7424c3d389d734e19a7fda8",
+  "artifactHash": "sha256:d997f096eab284a82cfcf261cb0906d2018a0e7991ea6a9efd037101a262abbf",
+  "backendBuildHash": "sha256:34814105d1383b30aae09081cecf4c8c92b48b46c04e66f8f5df2852266ed9fc",
+  "uiBuild": {
+    "reused": false,
+    "isolatedBuild": false,
+    "reactProfile": true,
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_d7424c3d389d734e19a7fda8\\ui-dist",
+    "indexHash": "5d98aa067464430a6d36cd1a73bac4903786425c75d44f1094a8630a4471af90",
+    "manifestHash": "2b94013fc4fc29e4c317164e9216ed56dca352c9e31fdc5e4a93bb5633cfef51",
+    "files": 627,
+    "bytes": 169152138
+  },
+  "flags": {
+    "intent": true,
+    "catalogBatch": true,
+    "preparationCache": true
+  },
+  "repetitions": 30,
+  "warmupSamples": 4,
+  "measuredSamples": 120,
+  "INP": {
+    "library": "web-vitals@6.2.2",
+    "valueMs": 152,
+    "scope": "page-lifetime INP at the end of a bounded scripted visit; not a field population percentile",
+    "boundary": "reportAllChanges from before first input; snapshot after final input, two frames and idle delivery"
+  },
+  "reactProfile": {
+    "component": "SheetEquipmentPanel",
+    "records": 1074,
+    "build": "react-dom/profiling; diagnostic-only, includes profiler overhead"
+  },
+  "scenarios": [
+    {
+      "scenario": "equipment_ordinary_equip",
+      "count": 30,
+      "clickToReadyMs": {
+        "p50": 66.5,
+        "p95": 85.79999999981374
+      },
+      "componentRenderMs": {
+        "p50": 0.9999999995343387,
+        "p95": 1.6000000000931323
+      },
+      "medianAPIRequests": 16
+    },
+    {
+      "scenario": "equipment_ordinary_unequip",
+      "count": 30,
+      "clickToReadyMs": {
+        "p50": 69.10000000009313,
+        "p95": 97.79999999981374
+      },
+      "componentRenderMs": {
+        "p50": 0.8999999999068677,
+        "p95": 1.699999999254942
+      },
+      "medianAPIRequests": 16
+    },
+    {
+      "scenario": "equipment_resource_equip",
+      "count": 30,
+      "clickToReadyMs": {
+        "p50": 66.70000000018626,
+        "p95": 77.8000000002794
+      },
+      "componentRenderMs": {
+        "p50": 1,
+        "p95": 1.400000000372529
+      },
+      "medianAPIRequests": 16
+    },
+    {
+      "scenario": "equipment_resource_unequip",
+      "count": 30,
+      "clickToReadyMs": {
+        "p50": 65.40000000037253,
+        "p95": 81.20000000018626
+      },
+      "componentRenderMs": {
+        "p50": 0.900000000372529,
+        "p95": 1.599999999627471
+      },
+      "medianAPIRequests": 16
+    }
+  ],
+  "sourceUnchanged": true,
+  "pageErrors": 0,
+  "cleanup": "stopped",
+  "boundaries": [
+    "after-only current runtime, not matched before/after field experiment",
+    "one local scripted visit, not production INP population",
+    "frozen snapshot precedes user-requested legacy support removal",
+    "two frames confirm mirror render, not network-independent latency"
+  ]
+}

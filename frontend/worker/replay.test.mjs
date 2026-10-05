@@ -1,3 +1,4 @@
+import {workerTestBuild} from '../../scripts/testing/worker-test-build.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile, mkdtemp, rm} from 'node:fs/promises';
@@ -7,11 +8,17 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {createRulesWorker, snapshotHash} from './server.mjs';
 import {replayCombatRecords} from './replay.mjs';
+import {withContainerCatalog} from './fixtures/container-catalog.mjs';
+
+const currentInput = async () => withContainerCatalog(
+  JSON.parse(await readFile(new URL('../src/roguelike/pinnedFighter.fixture.json', import.meta.url), 'utf8')),
+  JSON.parse(await readFile(new URL('../../officials/canon/prod-snapshot/cards.json', import.meta.url), 'utf8')),
+);
 
 test('journey HTTP preserves a held check across worker restart and uses the retained artifact for consequences', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'journey-worker-'));
   const token = 'private-local-journey-test-token-32-characters';
-  const options = {artifactFile: new URL('./dist/artifact.cjs', import.meta.url), artifactsDirectory: directory, token};
+  const options = {artifactFile: new URL('artifact.cjs', workerTestBuild()), artifactsDirectory: directory, token};
   let server;
   const start = async () => {
     server = await createRulesWorker(options);
@@ -25,7 +32,7 @@ test('journey HTTP preserves a held check across worker restart and uses the ret
       assert.equal(response.status, 200);
       return response.json();
     };
-    const input = JSON.parse(await readFile(new URL('../src/roguelike/pinnedFighter.fixture.json', import.meta.url), 'utf8'));
+    const input = await currentInput();
     Object.assign(input, {seed: 'saved-journey-check', commandId: 'journey:hold', check: {ability: 'str', skill: 'athletics', dc: 1}});
     const held = await post('/journey-check', {input});
     assert.equal(held.status, 'ready');
@@ -57,7 +64,7 @@ test('journey HTTP preserves a held check across worker restart and uses the ret
 test('replays actual HTTP worker transitions, RNG and projected revisions after JSON export', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'combat-replay-'));
   const token = 'private-local-replay-test-token-32-characters';
-  const artifactFile = new URL('./dist/artifact.cjs', import.meta.url);
+  const artifactFile = new URL('artifact.cjs', workerTestBuild());
   const artifact = createRequire(import.meta.url)(fileURLToPath(artifactFile));
   const server = await createRulesWorker({artifactFile, artifactsDirectory: directory, token});
   try {
@@ -68,7 +75,7 @@ test('replays actual HTTP worker transitions, RNG and projected revisions after 
       assert.equal(response.status, 200);
       return response.json();
     };
-    const input = JSON.parse(await readFile(new URL('../src/roguelike/pinnedFighter.fixture.json', import.meta.url), 'utf8'));
+    const input = await currentInput();
     Object.assign(input, {seed: 'journal-real-combat', roster: [{monster_id: 'enemy', quantity: 1}],
       monsters: {version: 1, effects: [], actions: [{id: 'slam', name: 'Slam', mechanics: {
         activation: {mode: 'active', cost: [{resource: 'action', amount: 1}]},
@@ -118,10 +125,10 @@ test('replays actual HTTP worker transitions, RNG and projected revisions after 
 test('rest HTTP uses saved inputs and ignores forged runtime output', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'camp-rest-'));
   const token = 'private-local-camp-rest-token-32-characters';
-  const server = await createRulesWorker({artifactFile: new URL('./dist/artifact.cjs', import.meta.url), artifactsDirectory: directory, token});
+  const server = await createRulesWorker({artifactFile: new URL('artifact.cjs', workerTestBuild()), artifactsDirectory: directory, token});
   try {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-    const input = JSON.parse(await readFile(new URL('../src/roguelike/pinnedFighter.fixture.json', import.meta.url), 'utf8'));
+    const input = await currentInput();
     input.character.current_hp = 4;
     input.long = false;
     input.hitDieRolls = [5];

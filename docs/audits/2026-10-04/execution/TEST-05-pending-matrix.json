@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "scope": "All 15 rules-core PendingResolution variants; separate SoloCombatState continuations are covered separately, not implicitly certified",
+  "cases": 71,
+  "phase_counts": {
+    "action_cost_policy": 3,
+    "attack_reaction": 11,
+    "check_boost": 11,
+    "concentration_save": 4,
+    "damage_reaction": 9,
+    "escape_grapple": 6,
+    "event_reaction": 6,
+    "hazard_save": 1,
+    "magic_missile_reaction": 3,
+    "mastery_save": 3,
+    "protection_reaction": 2,
+    "shove_outcome": 1,
+    "slot_recovery": 3,
+    "target_save": 6,
+    "unarmed_save": 2
+  },
+  "checks": {
+    "tests": 73,
+    "passed": 73,
+    "failed": 0,
+    "skipped": 0
+  },
+  "corpus_sha256": "726929985527d894ffe6b0876aea79e2a2ed52b11fcd2eae5ef41e1c703eb726",
+  "artifact_sha256": "b63daef2388f4227b1bbea7140069d4dc2ddd5388b8ba440f0523f086ce5b064",
+  "capture_semantic_tests": 105,
+  "verification": [
+    "JSON reload exact result/events/breakdown/RNG/IDs",
+    "same saved command before commit gives same result",
+    "same accepted ID after commit rejects without resources/RNG mutation",
+    "two fresh Node processes with frozen current-handler executable"
+  ],
+  "same_capture_dry_run_sha256": "726929985527d894ffe6b0876aea79e2a2ed52b11fcd2eae5ef41e1c703eb726",
+  "report": "outputs/testing/test05-next/pending-replay-result-2.json",
+  "limitations": [
+    "Synthetic current-handler corpus, not historical production worker",
+    "HTTP artifact routing and database accepted-receipt retries verified by separate suites",
+    "Not a substitute for historical database migrations"
+  ]
+}

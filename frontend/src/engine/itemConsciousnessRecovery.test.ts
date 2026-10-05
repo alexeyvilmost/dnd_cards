@@ -4,7 +4,7 @@ import {applyIncomingDamage,executeAction} from './execute';
 import {longRest} from './turn';
 import {equippedFighterState,FIGHTER_CTX_EQUIPPED} from '../mvp/fixtures';
 import type {ExecuteContext} from '../mvp/contracts';
-const data=JSON.parse(readFileSync('../scripts/content/data/item-completion-high-20260929.json','utf8'));
+const data=JSON.parse(readFileSync(new URL('../../../scripts/content/data/item-completion-high-20260929.json', import.meta.url), 'utf8'));
 const ring=data['CARD-0936'].mechanics;
 const ctx:ExecuteContext={selfId:'owner',character:FIGHTER_CTX_EQUIPPED,passives:[ring],rng:()=>{throw Error('No random roll');}};
 const state=()=>({...equippedFighterState(),hp:{current:5,max:20,temp:0}});

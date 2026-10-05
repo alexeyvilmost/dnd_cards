@@ -108,7 +108,7 @@ export default function CombatActorInspector({
 
       <div className="combat-actor-inspector__vitals">
         <span><Heart size={16} /><b>{actor.runtime.hp.current}/{actor.runtime.hp.max}</b><small>HP{actor.runtime.hp.temp > 0 ? ` · ${actor.runtime.hp.temp} врем.` : ''}</small></span>
-        <span><Shield size={16} /><b>{effectiveArmorClass(actor)}</b><small>Класс доспеха</small></span>
+        <span><Shield size={16} /><b>{effectiveArmorClass(actor)}</b><small>КД</small></span>
         <span><b>{effectiveSpeed}</b><small>Скорость, фт.{effectiveSpeed !== baseSpeed ? ` · базовая ${baseSpeed}` : ''}</small></span>
       </div>
 
@@ -128,7 +128,7 @@ export default function CombatActorInspector({
         {effectGroups.length || grappleStatuses.length
           ? <div className="combat-actor-inspector__effects combat-actor-inspector__effects--icons">{effectGroups.map((group) => (
             <div key={group.key}>
-              <ActiveEffectCard group={group} variant="icon" />
+              <ActiveEffectCard group={group} />
             </div>
           ))}{grappleStatuses.map((status) => (
             <div key={status.key}>

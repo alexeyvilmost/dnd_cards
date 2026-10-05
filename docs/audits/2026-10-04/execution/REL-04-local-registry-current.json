@@ -1,0 +1,751 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-registry-rehearsal-result",
+  "deployable": false,
+  "ciProvenance": null,
+  "execution": "docker",
+  "planHash": "sha256:3b0a2dbb887768ee64579dd447f07919bac6e6fb006134252ad3be5bdf0b8f21",
+  "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+  "runId": "f54194e5-a93a-4795-bb81-c140aa2f3f57",
+  "status": "passed",
+  "checks": [
+    {
+      "id": "build-publish-pull-three-components",
+      "status": "passed"
+    },
+    {
+      "id": "registry-payload-byte-and-content-proof",
+      "status": "passed"
+    },
+    {
+      "id": "two-warm-builds-preserve-runtime-layers-and-identities",
+      "status": "passed"
+    },
+    {
+      "id": "repeat-publication-same-digest",
+      "status": "passed"
+    },
+    {
+      "id": "frontend-only-build-input-change-reuses-other-digests",
+      "status": "passed"
+    },
+    {
+      "id": "invalid-plan-refused-before-registry",
+      "status": "passed"
+    },
+    {
+      "id": "corrupt-archive-refused-before-publication",
+      "status": "passed"
+    },
+    {
+      "id": "missing-manifest-pull-refused",
+      "status": "passed"
+    },
+    {
+      "id": "missing-layer-manifest-refused",
+      "status": "passed"
+    }
+  ],
+  "images": {
+    "backend": "127.0.0.1:53180/backend@sha256:fb013315e36a65c5073543298b92e559efca71f4e8bf678471431315f95d5c25",
+    "frontend": "127.0.0.1:53180/frontend@sha256:80e0f6c2b52c6a618ebda5da16ba3872394848be09436bf253b4ca6b18104a13",
+    "worker": "127.0.0.1:53180/worker@sha256:815a6aa9ce70e1f8e88f2314473461bf2286f3d706c1021f82efe8d46abbb7f0"
+  },
+  "cleanup": {
+    "status": "stopped"
+  },
+  "records": {
+    "backend": {
+      "scope": "owned-loopback-registry",
+      "planHash": "sha256:3b0a2dbb887768ee64579dd447f07919bac6e6fb006134252ad3be5bdf0b8f21",
+      "name": "backend",
+      "inputFingerprint": "sha256:7f8d161c1db329c071d0735b372da769b8fc05e8d0ae636797ee15b8bf280c1d",
+      "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+      "imageId": "sha256:fb013315e36a65c5073543298b92e559efca71f4e8bf678471431315f95d5c25",
+      "runtimeContentFingerprint": "sha256:f2d9b5090aec3eca27f389cdde41b08834f93bb309ea532d553be3d1f938992e",
+      "identity": {
+        "apiProtocolVersion": 1,
+        "component": "backend",
+        "goRuntime": "go1.25.14",
+        "identitySchemaVersion": 1,
+        "inputFingerprint": "sha256:7f8d161c1db329c071d0735b372da769b8fc05e8d0ae636797ee15b8bf280c1d",
+        "provenance": "baked",
+        "readerCapabilities": [
+          "receipt-v1",
+          "receipt-v2",
+          "image-job-v1"
+        ],
+        "releaseCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "releaseId": "local-registry-rehearsal",
+        "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "source_commit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93"
+      },
+      "archive": "C:\\Projects\\dnd_cards\\outputs\\release-measure\\owned-oci-1791160453317\\fixture\\outputs\\release-measure\\local-registry\\backend-cold-7f8d161c1db3.tar",
+      "archiveHash": "sha256:134eba8655512751213406915ad17249813ad95b488aa78683e93754b878423f",
+      "tag": "bagofholding-local-registry:f54194e5-a93a-4795-bb81-c140aa2f3f57-backend-7f8d161c1db3",
+      "build": {
+        "component": "backend",
+        "mode": "cold",
+        "durationMs": 36282.6898,
+        "imageBytes": 92291699,
+        "cachedSteps": 3,
+        "log": "backend-cold-7f8d161c1db3-build.log"
+      }
+    },
+    "frontend": {
+      "scope": "owned-loopback-registry",
+      "planHash": "sha256:3b0a2dbb887768ee64579dd447f07919bac6e6fb006134252ad3be5bdf0b8f21",
+      "name": "frontend",
+      "inputFingerprint": "sha256:0a2608a11e205a3b3fcccc8edbf293c2fb5e6c3ec7ea1c5500994811da6885d9",
+      "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+      "imageId": "sha256:80e0f6c2b52c6a618ebda5da16ba3872394848be09436bf253b4ca6b18104a13",
+      "runtimeContentFingerprint": "sha256:b66d19aff163bf4cd13501540d42446bcd3bd8422628deeeabaf6b2c3e055848",
+      "identity": {
+        "identitySchemaVersion": 1,
+        "component": "frontend",
+        "provenance": "baked",
+        "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "source_commit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "inputFingerprint": "sha256:0a2608a11e205a3b3fcccc8edbf293c2fb5e6c3ec7ea1c5500994811da6885d9",
+        "apiProtocolVersion": 1,
+        "readerCapabilities": [
+          "image-job-v1"
+        ],
+        "releaseCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "releaseId": "local-registry-rehearsal"
+      },
+      "archive": "C:\\Projects\\dnd_cards\\outputs\\release-measure\\owned-oci-1791160453317\\fixture\\outputs\\release-measure\\local-registry\\frontend-cold-0a2608a11e20.tar",
+      "archiveHash": "sha256:9e0cedf16655e66f747e49067ad94499ab799987ab66302264c9bd9031ef8734",
+      "tag": "bagofholding-local-registry:f54194e5-a93a-4795-bb81-c140aa2f3f57-frontend-0a2608a11e20",
+      "build": {
+        "component": "frontend",
+        "mode": "cold",
+        "durationMs": 67881.12160000001,
+        "imageBytes": 425434070,
+        "cachedSteps": 3,
+        "log": "frontend-cold-0a2608a11e20-build.log"
+      }
+    },
+    "worker": {
+      "scope": "owned-loopback-registry",
+      "planHash": "sha256:3b0a2dbb887768ee64579dd447f07919bac6e6fb006134252ad3be5bdf0b8f21",
+      "name": "worker",
+      "inputFingerprint": "sha256:b8140c58925ec3b683cbd850c5e6204313653af5ce303cdbfe458c10a0b81461",
+      "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+      "imageId": "sha256:815a6aa9ce70e1f8e88f2314473461bf2286f3d706c1021f82efe8d46abbb7f0",
+      "runtimeContentFingerprint": "sha256:d48cbb12a2042f50d518bf3bc29934e372543172dea2981c1fa7cdf0255f5cbb",
+      "identity": {
+        "status": "ok",
+        "identitySchemaVersion": 1,
+        "component": "rulesWorker",
+        "provenance": "baked",
+        "sourceCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "source_commit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "inputFingerprint": "sha256:b8140c58925ec3b683cbd850c5e6204313653af5ce303cdbfe458c10a0b81461",
+        "apiProtocolVersion": 1,
+        "workerProtocolVersion": 1,
+        "supportedWorldSchemaVersions": [
+          5
+        ],
+        "capabilities": [
+          "pinned-artifact-routing",
+          "pending-decision-pass-through"
+        ],
+        "workerRuntime": {
+          "name": "node",
+          "version": "24.21.0"
+        },
+        "artifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+        "releaseCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93",
+        "releaseId": "local-registry-rehearsal"
+      },
+      "archive": "C:\\Projects\\dnd_cards\\outputs\\release-measure\\owned-oci-1791160453317\\fixture\\outputs\\release-measure\\local-registry\\worker-cold-b8140c58925e.tar",
+      "archiveHash": "sha256:5b8ffb1e57e283fe515fbf14e5b5639efb1b3d4a9ddf1118deebd7ff81c0d9fa",
+      "tag": "bagofholding-local-registry:f54194e5-a93a-4795-bb81-c140aa2f3f57-worker-b8140c58925e",
+      "build": {
+        "component": "worker",
+        "mode": "cold",
+        "durationMs": 21607.562600000005,
+        "imageBytes": 333283853,
+        "cachedSteps": 3,
+        "log": "worker-cold-b8140c58925e-build.log"
+      }
+    }
+  },
+  "builds": [
+    {
+      "component": "backend",
+      "mode": "cold",
+      "durationMs": 36282.6898,
+      "imageBytes": 92291699,
+      "cachedSteps": 3,
+      "log": "backend-cold-7f8d161c1db3-build.log"
+    },
+    {
+      "component": "frontend",
+      "mode": "cold",
+      "durationMs": 67881.12160000001,
+      "imageBytes": 425434070,
+      "cachedSteps": 3,
+      "log": "frontend-cold-0a2608a11e20-build.log"
+    },
+    {
+      "component": "worker",
+      "mode": "cold",
+      "durationMs": 21607.562600000005,
+      "imageBytes": 333283853,
+      "cachedSteps": 3,
+      "log": "worker-cold-b8140c58925e-build.log"
+    },
+    {
+      "component": "backend",
+      "mode": "warm-1",
+      "durationMs": 23015.374299999996,
+      "imageBytes": 92291699,
+      "cachedSteps": 10,
+      "log": "backend-warm-1-7f8d161c1db3-build.log",
+      "imageId": "sha256:a1481a406df488f7cd3e4746bd7baa10a97a7d220957ad4d97de466f9a2171c3",
+      "runtimeContentFingerprint": "sha256:f2d9b5090aec3eca27f389cdde41b08834f93bb309ea532d553be3d1f938992e"
+    },
+    {
+      "component": "backend",
+      "mode": "warm-2",
+      "durationMs": 1486.7810999999929,
+      "imageBytes": 92291699,
+      "cachedSteps": 10,
+      "log": "backend-warm-2-7f8d161c1db3-build.log",
+      "imageId": "sha256:a9c9c94a8a5bd01de1b296fd6201c32cdab89d35df82ce3319f792549a5a1d3a",
+      "runtimeContentFingerprint": "sha256:f2d9b5090aec3eca27f389cdde41b08834f93bb309ea532d553be3d1f938992e"
+    },
+    {
+      "component": "frontend",
+      "mode": "warm-1",
+      "durationMs": 1686.5094999999856,
+      "imageBytes": 425434070,
+      "cachedSteps": 27,
+      "log": "frontend-warm-1-0a2608a11e20-build.log",
+      "imageId": "sha256:a5782b0b1c8d564e85dea5b189108a5ae3c6ae6789b7736751742d4140cb6eda",
+      "runtimeContentFingerprint": "sha256:b66d19aff163bf4cd13501540d42446bcd3bd8422628deeeabaf6b2c3e055848"
+    },
+    {
+      "component": "frontend",
+      "mode": "warm-2",
+      "durationMs": 1597.2498999999953,
+      "imageBytes": 425434070,
+      "cachedSteps": 27,
+      "log": "frontend-warm-2-0a2608a11e20-build.log",
+      "imageId": "sha256:293a4f4d6a68fa0774be819a8361768290c6ca793d36c26652aa04bb17b3f737",
+      "runtimeContentFingerprint": "sha256:b66d19aff163bf4cd13501540d42446bcd3bd8422628deeeabaf6b2c3e055848"
+    },
+    {
+      "component": "worker",
+      "mode": "warm-1",
+      "durationMs": 1394.52429999999,
+      "imageBytes": 333283853,
+      "cachedSteps": 15,
+      "log": "worker-warm-1-b8140c58925e-build.log",
+      "imageId": "sha256:e29dd042eb8439acbf75d72dc9ca02049bcfb418193df242fe61b0baa29f58aa",
+      "runtimeContentFingerprint": "sha256:d48cbb12a2042f50d518bf3bc29934e372543172dea2981c1fa7cdf0255f5cbb"
+    },
+    {
+      "component": "worker",
+      "mode": "warm-2",
+      "durationMs": 1473.7165999999852,
+      "imageBytes": 333283853,
+      "cachedSteps": 15,
+      "log": "worker-warm-2-b8140c58925e-build.log",
+      "imageId": "sha256:464e82db531ae238a5d500da9600ada1edeb0c3070d86cfe151ae6af61942883",
+      "runtimeContentFingerprint": "sha256:d48cbb12a2042f50d518bf3bc29934e372543172dea2981c1fa7cdf0255f5cbb"
+    },
+    {
+      "component": "frontend",
+      "mode": "frontend-input-change",
+      "durationMs": 43677.966399999976,
+      "imageBytes": 425433740,
+      "cachedSteps": 23,
+      "log": "frontend-frontend-input-change-4ed967d6dcd7-build.log"
+    }
+  ],
+  "transfers": {
+    "backend": {
+      "measurement": "actual hash-verified HTTP response payload bytes; complete published linux/amd64 index including attestations; unique objects; excludes headers/TLS and Docker cache",
+      "imageDigest": "sha256:fb013315e36a65c5073543298b92e559efca71f4e8bf678471431315f95d5c25",
+      "objects": [
+        {
+          "digest": "sha256:fb013315e36a65c5073543298b92e559efca71f4e8bf678471431315f95d5c25",
+          "kind": "manifest",
+          "bytes": 856
+        },
+        {
+          "digest": "sha256:c365401cb9dddbdecb024f8e624eaa63e9f97d420b4e5db64906905273551e7f",
+          "kind": "manifest",
+          "bytes": 837
+        },
+        {
+          "digest": "sha256:15531985a9a125c9f790c7736448dc69e840bcde5edb3553898b28e51714f96d",
+          "kind": "manifest",
+          "bytes": 1052
+        },
+        {
+          "digest": "sha256:bcb423a6357ba958a28af628d11d8e5c0e127dbc4001c97af27b4e546b9e9c8d",
+          "kind": "config",
+          "bytes": 1901
+        },
+        {
+          "digest": "sha256:53f8f5e03afd86ade91b7aa57a749f5a3d1419c113be5d8c10e7ee61bb5ab887",
+          "kind": "layer",
+          "bytes": 3792075
+        },
+        {
+          "digest": "sha256:de3f1e8febe06bf9d7ea15581d94a1442647602cc52a14d3d96c15c9eaecbfe8",
+          "kind": "layer",
+          "bytes": 416563
+        },
+        {
+          "digest": "sha256:ffe7ef5c0647f0298412f4b02f2b84629528aa5497f85fa4bea4dd66950e9998",
+          "kind": "layer",
+          "bytes": 93
+        },
+        {
+          "digest": "sha256:628bfade37285728752a7469bef421989d7ac34c495b5cf590ecb937145f6a11",
+          "kind": "layer",
+          "bytes": 15253135
+        },
+        {
+          "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "kind": "config",
+          "bytes": 2
+        },
+        {
+          "digest": "sha256:beca79efb4be0fc75d35bf3c2854a9760c4cde6088b663d73ca22dc2b9fa29a5",
+          "kind": "attestation",
+          "bytes": 2171
+        }
+      ],
+      "totalPayloadBytes": 19468685,
+      "compressedLayerBytes": 19461866
+    },
+    "frontend": {
+      "measurement": "actual hash-verified HTTP response payload bytes; complete published linux/amd64 index including attestations; unique objects; excludes headers/TLS and Docker cache",
+      "imageDigest": "sha256:80e0f6c2b52c6a618ebda5da16ba3872394848be09436bf253b4ca6b18104a13",
+      "objects": [
+        {
+          "digest": "sha256:80e0f6c2b52c6a618ebda5da16ba3872394848be09436bf253b4ca6b18104a13",
+          "kind": "manifest",
+          "bytes": 856
+        },
+        {
+          "digest": "sha256:e15cddd1b81cd0407d262df8e4542c3d0f0158ce8ae85ece6f53ce76a49d85e8",
+          "kind": "manifest",
+          "bytes": 837
+        },
+        {
+          "digest": "sha256:a86658d0f844bb42300a87cd0224e84ee11a5ac215721d2847f2e3f306cd9347",
+          "kind": "manifest",
+          "bytes": 3324
+        },
+        {
+          "digest": "sha256:5ae40975fcbbe487f108298eafc30684f2abb7b5250cb15c386bbd0df3c1ff6b",
+          "kind": "config",
+          "bytes": 14748
+        },
+        {
+          "digest": "sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5",
+          "kind": "layer",
+          "bytes": 3849738
+        },
+        {
+          "digest": "sha256:d9aae54b58315e84b9c3ac5f00bad6610e0e28ad9ff28fcde694647e0be13131",
+          "kind": "layer",
+          "bytes": 1931156
+        },
+        {
+          "digest": "sha256:6c53d0b2a666ed8f8fad8d9982e30cf24eb085036c17b27591665ca25e1ba40c",
+          "kind": "layer",
+          "bytes": 629
+        },
+        {
+          "digest": "sha256:745dfb2690dd8627e1593941caccc756f14943df7930a478beb4e808c5695cb9",
+          "kind": "layer",
+          "bytes": 965
+        },
+        {
+          "digest": "sha256:9a9a644fdd6a3681d43dace44c8cfef374cfd7b24f433113379ea483692498a8",
+          "kind": "layer",
+          "bytes": 404
+        },
+        {
+          "digest": "sha256:64c8194480fee2c03e01cc561cf5542733627d2c7de493a028139677025f975c",
+          "kind": "layer",
+          "bytes": 1210
+        },
+        {
+          "digest": "sha256:e76228b47809e8a4bd37a6ba52a04d282d8c72ddf0ff9e8b83fd6318631abd52",
+          "kind": "layer",
+          "bytes": 1400
+        },
+        {
+          "digest": "sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e",
+          "kind": "layer",
+          "bytes": 20525064
+        },
+        {
+          "digest": "sha256:cf89421ad6e77d0bfbcc4e87f593c2e362a18076626b27c5c4bba56c4ed7f931",
+          "kind": "layer",
+          "bytes": 176
+        },
+        {
+          "digest": "sha256:0d9648ff7d6ee8dd590e181a4a8a1bfc2e78069d585f51ba7a65dd3303371f29",
+          "kind": "layer",
+          "bytes": 153844336
+        },
+        {
+          "digest": "sha256:7d0a56732fdbcfedd3cb4a43fab9ce969f7ab421ec1a581190ac44f9610cdc81",
+          "kind": "layer",
+          "bytes": 5412127
+        },
+        {
+          "digest": "sha256:a63eba97b9746f3f2ab2516f34fde24f4215a3947f07c91cdf0d9a4c97b062d9",
+          "kind": "layer",
+          "bytes": 1175
+        },
+        {
+          "digest": "sha256:4c398e545897c8f367416da5beb31db9229f3b4b7aa55777571298cb5428478a",
+          "kind": "layer",
+          "bytes": 311
+        },
+        {
+          "digest": "sha256:1f9b5e433c075a1beb62fdedff4fa70a53bad0d16e5032b8954086b980d32312",
+          "kind": "layer",
+          "bytes": 687
+        },
+        {
+          "digest": "sha256:b3eb62cf8811cbc73a70d07ad50e8eaa6829c37dca3c477e23ebbf39ac345bd2",
+          "kind": "layer",
+          "bytes": 376
+        },
+        {
+          "digest": "sha256:9626d54decbdfde4ce9acc33fd7f13177e6ca4e939c43c29e5eb4f7f15e0f0d5",
+          "kind": "layer",
+          "bytes": 868
+        },
+        {
+          "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "kind": "config",
+          "bytes": 2
+        },
+        {
+          "digest": "sha256:a851fbb9b2eb158ccadeca094cdfc523b159b29f68a36beda523a62c402aa969",
+          "kind": "attestation",
+          "bytes": 2193
+        }
+      ],
+      "totalPayloadBytes": 185592582,
+      "compressedLayerBytes": 185570622
+    },
+    "worker": {
+      "measurement": "actual hash-verified HTTP response payload bytes; complete published linux/amd64 index including attestations; unique objects; excludes headers/TLS and Docker cache",
+      "imageDigest": "sha256:815a6aa9ce70e1f8e88f2314473461bf2286f3d706c1021f82efe8d46abbb7f0",
+      "objects": [
+        {
+          "digest": "sha256:815a6aa9ce70e1f8e88f2314473461bf2286f3d706c1021f82efe8d46abbb7f0",
+          "kind": "manifest",
+          "bytes": 856
+        },
+        {
+          "digest": "sha256:5921a8946dca8b5b34ac71198c5ebc512299f3f0b58893338d7cc1b66c5c888d",
+          "kind": "manifest",
+          "bytes": 837
+        },
+        {
+          "digest": "sha256:bdfd64c68485b83437161ca4c1439e07448b4275ff26de9be05416ca3bd52149",
+          "kind": "manifest",
+          "bytes": 1622
+        },
+        {
+          "digest": "sha256:9d44b2f7877ba8ca035c078ea1ccb147adc6a5b67c0c244f869565dc6ee0c13e",
+          "kind": "config",
+          "bytes": 7826
+        },
+        {
+          "digest": "sha256:774043ccc8ccd0d0833a9ee0792142ab7ad93df971e59dd248fbf82db16d0150",
+          "kind": "layer",
+          "bytes": 28238443
+        },
+        {
+          "digest": "sha256:eab09f3e3981ba4ceab089988dd081db334f2221594d7873f6b9e123f32d2105",
+          "kind": "layer",
+          "bytes": 3309
+        },
+        {
+          "digest": "sha256:1c473ca5523b8180b93f87dd2961339837b4d84db4d4998197a64984462b5164",
+          "kind": "layer",
+          "bytes": 50860465
+        },
+        {
+          "digest": "sha256:2a11efab31915186066efa212f7ba10e7ff63c5d49d21d07c4a8377a2993e70b",
+          "kind": "layer",
+          "bytes": 1713025
+        },
+        {
+          "digest": "sha256:a0498254f698ab1b2c7d0d1ce51ebdea22c1f01e620433118a5c764fab93a3dc",
+          "kind": "layer",
+          "bytes": 445
+        },
+        {
+          "digest": "sha256:9a97e4748a576d221fb37d5fba9f942988f84680c3e75b393e76272bc8a7d474",
+          "kind": "layer",
+          "bytes": 93
+        },
+        {
+          "digest": "sha256:72a1082dc5bea1fd1b95c2641de6c47b452eecb9fef2d731eb2a3960148e5537",
+          "kind": "layer",
+          "bytes": 587393
+        },
+        {
+          "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "kind": "config",
+          "bytes": 2
+        },
+        {
+          "digest": "sha256:00e76049b2d80ae24bafbd9d3df9f7f8321a0ab99294522a09dd423bc96c5af8",
+          "kind": "attestation",
+          "bytes": 1982
+        }
+      ],
+      "totalPayloadBytes": 81416298,
+      "compressedLayerBytes": 81403173
+    }
+  },
+  "legacyFrontend": {
+    "imageId": "sha256:df7cc6a309bc7970c751c4414ba7e4b11196ab3c58d6a437ac92fc95dbee0c60",
+    "imageBytes": 421775315,
+    "provenance": "observed exact image ID; no invented source/build identity",
+    "transfer": {
+      "measurement": "actual hash-verified HTTP response payload bytes; complete published linux/amd64 index including attestations; unique objects; excludes headers/TLS and Docker cache",
+      "imageDigest": "sha256:df7cc6a309bc7970c751c4414ba7e4b11196ab3c58d6a437ac92fc95dbee0c60",
+      "objects": [
+        {
+          "digest": "sha256:df7cc6a309bc7970c751c4414ba7e4b11196ab3c58d6a437ac92fc95dbee0c60",
+          "kind": "manifest",
+          "bytes": 3135
+        },
+        {
+          "digest": "sha256:55f4a649edea431cbc7bb07b596c0e4e8e16e9456c0ef48903ee5ecbe85cf8ec",
+          "kind": "config",
+          "bytes": 13820
+        },
+        {
+          "digest": "sha256:55afa1ecc21d2bb5e5045f32dafee56272ffd89860bac26f6c32123439af26a4",
+          "kind": "layer",
+          "bytes": 3846391
+        },
+        {
+          "digest": "sha256:d94291c262619626bc7a27b61b090d85365e85c61f92ca49b190a26930121299",
+          "kind": "layer",
+          "bytes": 1902283
+        },
+        {
+          "digest": "sha256:0ea93572787841bba2f3921ece8dc2db925c22232a1388c766881ebe3bd3f67d",
+          "kind": "layer",
+          "bytes": 628
+        },
+        {
+          "digest": "sha256:1ed8e39a7434c8975957bb78530f191c92eecbd9c7309966192ba276a7c0ac61",
+          "kind": "layer",
+          "bytes": 955
+        },
+        {
+          "digest": "sha256:0d62d88506ba127db40e7c137e3a2dcf65e563709676828820b8c82277a6caeb",
+          "kind": "layer",
+          "bytes": 404
+        },
+        {
+          "digest": "sha256:8cdfe4f237782ae36780c4634b1457e8d6efa6f929fc3e46b0a2074ba54acd56",
+          "kind": "layer",
+          "bytes": 1210
+        },
+        {
+          "digest": "sha256:da4dea1b00afb53e163ae330a511ecd6978371d99794c80f439b83b609eb9d66",
+          "kind": "layer",
+          "bytes": 1397
+        },
+        {
+          "digest": "sha256:fb597529c91648bab2279939e01b745210875081852c73000aed882c000ff5de",
+          "kind": "layer",
+          "bytes": 20500627
+        },
+        {
+          "digest": "sha256:383a6360e55084ff7e360150b0afa4da60b7ac960e0473ed49c13fc79f6aec97",
+          "kind": "layer",
+          "bytes": 181
+        },
+        {
+          "digest": "sha256:036fc4bb3a3e0363e25283157a6585f43255ee5fe0a854f2541d235a30ff0e42",
+          "kind": "layer",
+          "bytes": 157860427
+        },
+        {
+          "digest": "sha256:07728cfc50fc087a90246913db150fadc0b1bedfc8b25774d7968b652e390fc8",
+          "kind": "layer",
+          "bytes": 977
+        },
+        {
+          "digest": "sha256:5f60dd4ebabef542811b70e6e14f0d4c467087e149ed69441dad2fc07f6da16a",
+          "kind": "layer",
+          "bytes": 575
+        },
+        {
+          "digest": "sha256:1f78f30ab037b8040fc1a9592e16eaa82eb5b8049d1cccebdbe9458aa9327573",
+          "kind": "layer",
+          "bytes": 577
+        }
+      ],
+      "totalPayloadBytes": 184133587,
+      "compressedLayerBytes": 184116632
+    }
+  },
+  "changedFrontendDigest": "127.0.0.1:53180/frontend@sha256:eeef3622d123d06c28a4d7314dc61c2f326f252fab00d70520b95fe3fecefbda",
+  "reused": [
+    "backend",
+    "worker"
+  ],
+  "changedFrontendTransfer": {
+    "measurement": "actual hash-verified HTTP response payload bytes; complete published linux/amd64 index including attestations; unique objects; excludes headers/TLS and Docker cache",
+    "imageDigest": "sha256:eeef3622d123d06c28a4d7314dc61c2f326f252fab00d70520b95fe3fecefbda",
+    "objects": [
+      {
+        "digest": "sha256:eeef3622d123d06c28a4d7314dc61c2f326f252fab00d70520b95fe3fecefbda",
+        "kind": "manifest",
+        "bytes": 856
+      },
+      {
+        "digest": "sha256:17c88a9dfee460633338d9603d64aeaf1bdd270767f18b8fcc65eae8fb6db9e4",
+        "kind": "manifest",
+        "bytes": 837
+      },
+      {
+        "digest": "sha256:9d7d7306a58bc1cdedf008e19403ceff4f181f1da6dc29aad3a49f614c3b2e9d",
+        "kind": "manifest",
+        "bytes": 3324
+      },
+      {
+        "digest": "sha256:cfd5af7a625219f6431cd217f705bd7178450168fd4210776470bc6dc4bbf700",
+        "kind": "config",
+        "bytes": 14753
+      },
+      {
+        "digest": "sha256:e2de96513ba9eb53b431787ec8a65cdde380ac4772a3e4c4b714dcfde2a102b5",
+        "kind": "layer",
+        "bytes": 3849738
+      },
+      {
+        "digest": "sha256:d9aae54b58315e84b9c3ac5f00bad6610e0e28ad9ff28fcde694647e0be13131",
+        "kind": "layer",
+        "bytes": 1931156
+      },
+      {
+        "digest": "sha256:6c53d0b2a666ed8f8fad8d9982e30cf24eb085036c17b27591665ca25e1ba40c",
+        "kind": "layer",
+        "bytes": 629
+      },
+      {
+        "digest": "sha256:745dfb2690dd8627e1593941caccc756f14943df7930a478beb4e808c5695cb9",
+        "kind": "layer",
+        "bytes": 965
+      },
+      {
+        "digest": "sha256:9a9a644fdd6a3681d43dace44c8cfef374cfd7b24f433113379ea483692498a8",
+        "kind": "layer",
+        "bytes": 404
+      },
+      {
+        "digest": "sha256:64c8194480fee2c03e01cc561cf5542733627d2c7de493a028139677025f975c",
+        "kind": "layer",
+        "bytes": 1210
+      },
+      {
+        "digest": "sha256:e76228b47809e8a4bd37a6ba52a04d282d8c72ddf0ff9e8b83fd6318631abd52",
+        "kind": "layer",
+        "bytes": 1400
+      },
+      {
+        "digest": "sha256:e72112c14215406dc7f23ef8e5cfdfddeb8662176167382ad64ec86f52b7a88e",
+        "kind": "layer",
+        "bytes": 20525064
+      },
+      {
+        "digest": "sha256:b5dad46f38d026390f7f24f0d8076c6ebee739f78c7d6649a716988504fb4765",
+        "kind": "layer",
+        "bytes": 177
+      },
+      {
+        "digest": "sha256:0d9648ff7d6ee8dd590e181a4a8a1bfc2e78069d585f51ba7a65dd3303371f29",
+        "kind": "layer",
+        "bytes": 153844336
+      },
+      {
+        "digest": "sha256:53def32e3e22d6e69a4c1c6c06cbeb5b49fc610c7ada790440670e000b3d35c7",
+        "kind": "layer",
+        "bytes": 5411792
+      },
+      {
+        "digest": "sha256:bb178956604835ff2ba6505cc69e08a0cbbade78e3847f5fb0d57c90a73d1d56",
+        "kind": "layer",
+        "bytes": 1175
+      },
+      {
+        "digest": "sha256:4c398e545897c8f367416da5beb31db9229f3b4b7aa55777571298cb5428478a",
+        "kind": "layer",
+        "bytes": 311
+      },
+      {
+        "digest": "sha256:1f9b5e433c075a1beb62fdedff4fa70a53bad0d16e5032b8954086b980d32312",
+        "kind": "layer",
+        "bytes": 687
+      },
+      {
+        "digest": "sha256:89b865628b1e6b38cb995d908f959f393f178e8695b1edad4d66f6b28f60bc9c",
+        "kind": "layer",
+        "bytes": 375
+      },
+      {
+        "digest": "sha256:a539ce782a08b011e6d260ee942176d2c1a3e783daae800531285043ff5aec99",
+        "kind": "layer",
+        "bytes": 868
+      },
+      {
+        "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+        "kind": "config",
+        "bytes": 2
+      },
+      {
+        "digest": "sha256:08a6b77c8acaa26649a0185247645959034258cd20cfe414508eaf3dfc49ea26",
+        "kind": "attestation",
+        "bytes": 2165
+      }
+    ],
+    "totalPayloadBytes": 185592224,
+    "compressedLayerBytes": 185570287
+  },
+  "changedFrontendMissingObjectBytes": 5436322,
+  "missingLayer": {
+    "boundary": "registry",
+    "status": "rejected",
+    "httpStatus": 400,
+    "code": "MANIFEST_BLOB_UNKNOWN"
+  },
+  "evidenceSource": "outputs/release-measure/owned-oci-1791160453317/fixture/outputs/release-measure/local-registry/report.json",
+  "sourceEvidence": {
+    "path": "C:\\Projects\\dnd_cards\\outputs\\release-measure\\owned-oci-1791160453317\\source-manifest.json",
+    "hash": "sha256:08ab2a6685546b3d043a302081b9be124d5931589552725ca3dad6d6fae4ffda",
+    "fixtureCommit": "014f7208aa5ff0488ec1fe00a2aac53e7ead7f93"
+  },
+  "scope": "owned-exact-source-fixture-with-reader-capability-metadata",
+  "limits": [
+    "Nondeployable local fixture, no CI attestation.",
+    "Shared desktop daemon base content and context filesync cache may be present despite --no-cache layers; not cold network transfer.",
+    "Concurrent general suite activity may affect times; no new performance acceptance inferred.",
+    "Full restore/migration/adoption remains a separate receipt."
+  ]
+}

@@ -1,0 +1,444 @@
+{
+  "schemaVersion": 1,
+  "measurement": "DOM click capture on the actual equipment button through committed mirror render and two animation frames; includes canonical browser preparation and actual API, excludes opening the item preview.",
+  "identity": {
+    "backendBuildHash": "sha256:91f95d4fe40f8b792ffcc9918f38cdb53cfa2eff70d7c14a645f8a43c5cfd7f2",
+    "artifactHash": "sha256:80ef5c7149be4545130d8165a34c904bab90c6d7529408f852a15ee7bce8da64",
+    "uiManifestHash": "46f754d2b030e56730115796bc6e70501691bdc9cbdf8b180f7d6bacc7b804f3",
+    "fixtureHash": "sha256:bc26c2d6abd838799ade0f4cd5b1693866dd3fb7e346a008057f4b13eb4fbc3d"
+  },
+  "arms": [
+    {
+      "mode": "legacy",
+      "runId": "test_2b3cf98e88f74abb4e1e0a15",
+      "committedCommands": 124,
+      "measuredCommands": 120,
+      "pageErrors": 0,
+      "sourceIsolated": true,
+      "scenarios": {
+        "equipment_ordinary_equip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 38.23333330949148,
+            "p50": 37.200000047683716,
+            "p95": 46.09999990463257
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 8,
+            "p50": 8,
+            "p95": 8
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 8.173333333333334,
+            "p50": 7.701,
+            "p95": 9.475
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        },
+        "equipment_ordinary_unequip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 38.140000001589456,
+            "p50": 37.799999952316284,
+            "p95": 42.80000019073486
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 9,
+            "p50": 9,
+            "p95": 9
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 8.041466666666667,
+            "p50": 7.817,
+            "p95": 9.171
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        },
+        "equipment_resource_equip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 80.22000001271566,
+            "p50": 78.70000004768372,
+            "p95": 90.59999990463257
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 20,
+            "p50": 20,
+            "p95": 20
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 6,
+            "p50": 6,
+            "p95": 6
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 48.32076666666667,
+            "p50": 47.022,
+            "p95": 55.394
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        },
+        "equipment_resource_unequip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 79.80333333810171,
+            "p50": 78.70000004768372,
+            "p95": 86.10000014305115
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 21,
+            "p50": 21,
+            "p95": 21
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 6,
+            "p50": 6,
+            "p95": 6
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 48.48443333333333,
+            "p50": 47.689,
+            "p95": 52.892
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        }
+      }
+    },
+    {
+      "mode": "off",
+      "runId": "test_5185e53f94567fa0345f6895",
+      "committedCommands": 124,
+      "measuredCommands": 120,
+      "pageErrors": 0,
+      "sourceIsolated": true,
+      "scenarios": {
+        "equipment_ordinary_equip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 89.58333333333333,
+            "p50": 89.89999985694885,
+            "p95": 93.5
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 27,
+            "p50": 27,
+            "p95": 27
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 6,
+            "p50": 6,
+            "p95": 6
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 8.404466666666668,
+            "p50": 7.848,
+            "p95": 9.063
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        },
+        "equipment_ordinary_unequip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 89.86999999682108,
+            "p50": 89.59999990463257,
+            "p95": 99.29999995231628
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 27,
+            "p50": 27,
+            "p95": 27
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 6,
+            "p50": 6,
+            "p95": 6
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 9.135966666666667,
+            "p50": 7.891,
+            "p95": 12.054
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        },
+        "equipment_resource_equip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 85.99666668574015,
+            "p50": 85.39999985694885,
+            "p95": 92.20000004768372
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 27,
+            "p50": 27,
+            "p95": 27
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 6,
+            "p50": 6,
+            "p95": 6
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 8.144133333333334,
+            "p50": 8.035,
+            "p95": 8.814
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        },
+        "equipment_resource_unequip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 86.52333331902823,
+            "p50": 86.39999985694885,
+            "p95": 92.70000004768372
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 27,
+            "p50": 27,
+            "p95": 27
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 6,
+            "p50": 6,
+            "p95": 6
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 8.0116,
+            "p50": 7.942,
+            "p95": 8.892
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 0,
+            "p50": 0,
+            "p95": 0
+          },
+          "cacheRetained": 0
+        }
+      }
+    },
+    {
+      "mode": "on",
+      "runId": "test_185e3c601a8036a0d499bad1",
+      "committedCommands": 124,
+      "measuredCommands": 120,
+      "pageErrors": 0,
+      "sourceIsolated": true,
+      "scenarios": {
+        "equipment_ordinary_equip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 58.24333333174388,
+            "p50": 56.299999952316284,
+            "p95": 80.20000004768372
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 16,
+            "p50": 16,
+            "p95": 16
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 1,
+            "p50": 1,
+            "p95": 1
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 9.245966666666666,
+            "p50": 8.469,
+            "p95": 11.588
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 6.1967333333333325,
+            "p50": 5.748,
+            "p95": 9.854
+          },
+          "cacheRetained": 30
+        },
+        "equipment_ordinary_unequip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 57.85333331425985,
+            "p50": 56.40000009536743,
+            "p95": 64.19999980926514
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 16,
+            "p50": 16,
+            "p95": 16
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 1,
+            "p50": 1,
+            "p95": 1
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 10.060766666666664,
+            "p50": 8.856,
+            "p95": 15.107
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 5.729833333333333,
+            "p50": 5.713,
+            "p95": 6.922
+          },
+          "cacheRetained": 30
+        },
+        "equipment_resource_equip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 56.243333315849306,
+            "p50": 55.60000014305115,
+            "p95": 65.59999990463257
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 16,
+            "p50": 16,
+            "p95": 16
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 1,
+            "p50": 1,
+            "p95": 1
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 8.877866666666666,
+            "p50": 8.764,
+            "p95": 10.035
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 5.364633333333333,
+            "p50": 5.202,
+            "p95": 6.728
+          },
+          "cacheRetained": 30
+        },
+        "equipment_resource_unequip": {
+          "clickToReadyMs": {
+            "n": 30,
+            "mean": 54.31333332856496,
+            "p50": 55.30000019073486,
+            "p95": 59.200000047683716
+          },
+          "sqlCount": {
+            "n": 30,
+            "mean": 16,
+            "p50": 16,
+            "p95": 16
+          },
+          "workerCalls": {
+            "n": 30,
+            "mean": 1,
+            "p50": 1,
+            "p95": 1
+          },
+          "lockAcquiredToReturnMs": {
+            "n": 30,
+            "mean": 8.437433333333335,
+            "p50": 8.423,
+            "p95": 9.16
+          },
+          "cacheValidationMs": {
+            "n": 30,
+            "mean": 5.379333333333332,
+            "p50": 5.246,
+            "p95": 7.069
+          },
+          "cacheRetained": 30
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Local sequential three-arm 30 observations per operation; not a production p95 guarantee.",
+    "Cross-run UUIDs and entropy differ; cross-run outcome hashes are not normalized to claim equality. Full seeded cold/warm/evicted differential is a separate required native proof.",
+    "Ordinary legacy handler is faster and does not call authoritative worker; all feature flags remain default OFF.",
+    "Lock-acquired-to-return includes acknowledgement, not a precise PostgreSQL lock lifetime."
+  ]
+}

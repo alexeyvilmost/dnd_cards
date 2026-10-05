@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "runId": "test_b254e5a79adae88d95241e5d",
+  "results": {
+    "required": 11,
+    "passed": 11
+  },
+  "cleanup": "stopped",
+  "scope": "V1/V2 application retirement; current V3 retained",
+  "databaseDestruction": false,
+  "historicalMigrationsChanged": false,
+  "removedControllers": [
+    "backend/character_controller.go",
+    "backend/character_v2_controller.go"
+  ],
+  "retainedCurrentComponents": [
+    "frontend/src/pages/CharacterSheetV2.tsx",
+    "frontend/src/pages/CharacterSheetMVP.tsx",
+    "backend/models_character_v3.go",
+    "backend/character_v3_routes.go"
+  ],
+  "requiredNextChecks": [
+    "shared core and extended including V3 real browser flows"
+  ],
+  "storageRemoval": "Separately versioned backup-bound migration after catalog dependency inventory; not additive298-300",
+  "freshUIBuild": {
+    "status": "passed",
+    "runId": "test_ab22e36eb0fbab752e2a1116",
+    "typescript": "passed",
+    "manifestHash": "7857a429897a5f9c8138a03e815e0249a4312e0155aa53ba43a2e1fecf0f46d9",
+    "cleanup": "stopped"
+  }
+}
