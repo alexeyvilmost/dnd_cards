@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-05T04:38:57.367Z",
+  "status": "local_failure_investigation_exact_ci_pending",
+  "ci": {
+    "runId": 37261886898,
+    "commit": "be8a87f1948f36c2b45f0c4eca8d583b1adb4386",
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37261886898",
+    "publication": false,
+    "deployment": false
+  },
+  "lanes": [
+    {
+      "lane": "unit",
+      "status": "failed",
+      "receipt": {
+        "path": "outputs/ci/37261886898/all/local-suite-unit/report.json",
+        "sha256": "sha256:65314db765cabb9f790e6d937a705d37258cfce9fc53e191da52d2412b09fe1a"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2324
+        },
+        {
+          "id": "node-contracts",
+          "status": "passed",
+          "durationMs": 41189
+        },
+        {
+          "id": "vitest",
+          "status": "failed",
+          "durationMs": 526179
+        }
+      ],
+      "cleanup": {
+        "status": "not-required",
+        "errors": []
+      }
+    },
+    {
+      "lane": "backend",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37261886898/all/local-suite-backend/report.json",
+        "sha256": "sha256:793649e5efde05461a996a078c2ca56eaba4ad834c23c108cea4b4815208a987"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2481
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 131178
+        },
+        {
+          "id": "worker-and-database-node",
+          "status": "passed",
+          "durationMs": 3389
+        },
+        {
+          "id": "backend-compile",
+          "status": "passed",
+          "durationMs": 14264
+        },
+        {
+          "id": "go-backend",
+          "status": "passed",
+          "durationMs": 149519
+        },
+        {
+          "id": "go-animationpresentation",
+          "status": "passed",
+          "durationMs": 1558
+        },
+        {
+          "id": "go-audiopresentation",
+          "status": "passed",
+          "durationMs": 1529
+        },
+        {
+          "id": "go-charactertemplates",
+          "status": "passed",
+          "durationMs": 56
+        },
+        {
+          "id": "go-itemsource",
+          "status": "passed",
+          "durationMs": 1844
+        },
+        {
+          "id": "go-itemsource-cmd-audit",
+          "status": "passed",
+          "durationMs": 108
+        },
+        {
+          "id": "go-migrations",
+          "status": "passed",
+          "durationMs": 33784
+        },
+        {
+          "id": "go-passivepresentation",
+          "status": "passed",
+          "durationMs": 57
+        },
+        {
+          "id": "go-roguelikecontent",
+          "status": "passed",
+          "durationMs": 1411
+        },
+        {
+          "id": "go-weapondata",
+          "status": "passed",
+          "durationMs": 1421
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 455
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "lane": "flows",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37261886898/all/local-suite-flows/report.json",
+        "sha256": "sha256:11f907e092c8590adb03adcc788bb75eacaa1cd8e1c5efe8a47b15dade71a186"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2340
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 130068
+        },
+        {
+          "id": "local-api-spine",
+          "status": "passed",
+          "durationMs": 762
+        },
+        {
+          "id": "local-browser-flows",
+          "status": "passed",
+          "durationMs": 58688
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 443
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "lane": "extended",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37261886898/all/local-suite-extended/report.json",
+        "sha256": "sha256:c57cd963f4225532a58ff3357caf7244336c4f715b103a3f9d86cb41d72fea34"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 1550
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 114879
+        },
+        {
+          "id": "process-crash-recovery",
+          "status": "passed",
+          "durationMs": 11270
+        },
+        {
+          "id": "supported-upgrade-baselines",
+          "status": "passed",
+          "durationMs": 38548
+        },
+        {
+          "id": "observed-legacy-baseline",
+          "status": "passed",
+          "durationMs": 4615
+        },
+        {
+          "id": "candidate-rehearsal-api",
+          "status": "passed",
+          "durationMs": 1396
+        },
+        {
+          "id": "catalog-equivalence",
+          "status": "passed",
+          "durationMs": 40026
+        },
+        {
+          "id": "preparation-cache-equivalence",
+          "status": "passed",
+          "durationMs": 11253
+        },
+        {
+          "id": "worker-wire-mirror-equivalence",
+          "status": "passed",
+          "durationMs": 15291
+        },
+        {
+          "id": "equipment-authority-flow",
+          "status": "passed",
+          "durationMs": 1016
+        },
+        {
+          "id": "initiative-options-flow",
+          "status": "passed",
+          "durationMs": 2071
+        },
+        {
+          "id": "library-review-pages",
+          "status": "passed",
+          "durationMs": 398
+        },
+        {
+          "id": "equipment-runtime-browser",
+          "status": "passed",
+          "durationMs": 17948
+        },
+        {
+          "id": "pwa-offline-shell",
+          "status": "passed",
+          "durationMs": 1127
+        },
+        {
+          "id": "urvin-owned-journey",
+          "status": "passed",
+          "durationMs": 44937
+        },
+        {
+          "id": "solo-durable-continuations",
+          "status": "passed",
+          "durationMs": 100002
+        },
+        {
+          "id": "image-egress-isolation",
+          "status": "passed",
+          "durationMs": 3128
+        },
+        {
+          "id": "browser-ui-fixtures-production",
+          "status": "passed",
+          "durationMs": 156280
+        },
+        {
+          "id": "browser-ui-fixtures-battle3d",
+          "status": "passed",
+          "durationMs": 158404
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 431
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    }
+  ],
+  "counts": {
+    "nodePassed": 668,
+    "vitestPassed": null,
+    "vitestFailureDetailsRetained": false,
+    "goPassed": 753,
+    "workerAndDatabaseNodePassed": 20,
+    "primaryBrowserPassed": 12,
+    "additionalProductionBrowserPassed": 48,
+    "battle3dPassed": 8
+  },
+  "localVitestReplay": {
+    "sourceCommit": "be8a87f1948f36c2b45f0c4eca8d583b1adb4386",
+    "archive": {
+      "path": "outputs/ci/be8-source.tar",
+      "sha256": "sha256:fbfd3c0f9738f9a26498166bf04b4fb8f29944322441d22310a6b83b7fed3114"
+    },
+    "selection": {
+      "path": "outputs/ci/full-linux-vitest-selection.json",
+      "sha256": "sha256:b3096bce007dc08921cd6922a43cc146937723034398f473f2f59cc9979c4cf8"
+    },
+    "receipt": {
+      "path": "outputs/ci/be8-linux-vitest/vitest-result.json",
+      "sha256": "sha256:9cc83221df46ed720b6cb79e41f9a3e56f35b9073de39814b2953c9395daebe9"
+    },
+    "total": 6462,
+    "passed": 6461,
+    "failed": 1,
+    "skipped": 0,
+    "cpuAffinity": "0-3",
+    "maxWorkers": 2,
+    "diagnostics": {
+      "schemaVersion": 1,
+      "kind": "safe-vitest-source-locations",
+      "failures": [
+        {
+          "file": "frontend/src/pages/rulesLabFixture.generated.test.ts",
+          "status": "failed",
+          "failedAssertions": 1,
+          "errorLocations": [
+            {
+              "file": "frontend/src/pages/rulesLabFixture.generated.test.ts",
+              "line": 159,
+              "column": 3
+            }
+          ]
+        }
+      ],
+      "rawOutputIncluded": false
+    },
+    "failedAssertionDurationMs": 30530.844511999996,
+    "explicitTestBudgetMs": 30000,
+    "cause": "Investigating a locally reproduced deadline failure; hosted failure details were not retained and are not inferred."
+  },
+  "browserReadinessRepair": {
+    "receipt": {
+      "path": "outputs/ci/battle3d-linux/readiness-repair-proof.json",
+      "sha256": "sha256:82aa7a6cd909057ebc6a4eab72ab984340c2f2442db12a564c1644f7dd5ebd86"
+    },
+    "source": {
+      "path": "frontend/e2e/battle-3d.spec.ts",
+      "sha256": "sha256:52babd8dcf21797d2b7b8c2a0198501a30184858876e01241449eabb6be42796"
+    },
+    "diagnosis": {
+      "scope": "Locally reproduced five-second readiness deadline. Does not prove every declaration failure from CI37260045226 had this cause.",
+      "width": 1404,
+      "height": 758,
+      "firstReadMs": 5431,
+      "postFailureReadMs": 430,
+      "oldDeadlineMs": 5000,
+      "newDeadlineMs": 30000,
+      "thresholdUnchanged": "width > 100 && height > 100",
+      "budgetRationale": "Same explicit budget already used by canvas visibility in enable3d. No sleeps, retries, global timeout or gameplay assertion changes."
+    },
+    "actualRuns": [
+      {
+        "path": "outputs/ci/battle3d-linux/931e-readiness-green2-proof/report.json",
+        "sha256": "sha256:a1aecec5ac73dbfbc95c623e75f42f6464576e99e067b6e6f99c98d50627d2eb",
+        "stats": {
+          "startTime": "2026-10-05T04:20:35.975Z",
+          "duration": 290196.386,
+          "expected": 8,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        }
+      },
+      {
+        "path": "outputs/ci/battle3d-linux/931e-readiness-green4-proof/report.json",
+        "sha256": "sha256:aea579c60e2ad490ac439a648549cd36be0ff9e436b482fe61852932f67e4cdc",
+        "stats": {
+          "startTime": "2026-10-05T04:26:03.275Z",
+          "duration": 177583.797,
+          "expected": 8,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        }
+      },
+      {
+        "path": "outputs/ci/battle3d-linux/readiness-windows-proof/report.json",
+        "sha256": "sha256:d2edd1e6efc5a01f263da7481d1e6715bca233177c011a841ade3237fc85ddcd",
+        "stats": {
+          "startTime": "2026-10-05T04:26:36.376Z",
+          "duration": 17284.479000000003,
+          "expected": 2,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        }
+      }
+    ],
+    "retries": 0,
+    "productionSourceChanged": false,
+    "doesNotExplainAllHistoricalFailures": true
+  },
+  "generatedFixtureRepair": {
+    "receipt": {
+      "path": "outputs/ci/ruleslab-generator/repair-proof.json",
+      "sha256": "sha256:967cd9e80c4ab2ba88355bdcc0b4c18a6c5f4faa738d70d69c6c19819aaef953"
+    },
+    "focusedReceipt": {
+      "path": "outputs/ci/ruleslab-generator/repaired-focused.json",
+      "sha256": "sha256:6a1cfae67ae9c6d95e8a472091d6e3b02e7f0152f3257666a7820692cfc4585c"
+    },
+    "source": {
+      "path": "frontend/src/pages/rulesLabFixture.generated.test.ts",
+      "sha256": "sha256:2fef97b2357ae111873c29e6a4ae97f9549c2614c20a1a7b61de1f909e66dcb1"
+    },
+    "scope": "test-only generator cost reduction; no product/compiler/artifact changes",
+    "originalFocused": {
+      "passed": 4,
+      "failed": 0,
+      "duration_ms": 25798.629306000003,
+      "stage_cumulative_ms": [
+        8700.284714,
+        17063.331704,
+        25794.704769
+      ]
+    },
+    "repairedFocused": {
+      "passed": 4,
+      "failed": 0,
+      "duration_ms": 17020.252796
+    },
+    "preserved": [
+      "two independent full compiler renders compared byte-for-byte",
+      "checked-in file exact immutability before and after all work",
+      "current/stale drift and hashes",
+      "real generator atomic temporary file write and sibling cleanup",
+      "explicit 30000ms test budget"
+    ],
+    "explicitTestBudgetMs": 30000,
+    "productionSourceChanged": false,
+    "fullRepairedRun": "running; not yet a passed receipt"
+  },
+  "diagnosticRepair": {
+    "publicFields": "Selected test files, fixed failed status, counts and same-source coordinates only; no names, assertion values, DOM, error messages or raw JSON.",
+    "windowsContracts": {
+      "passed": 56,
+      "skipped": 0,
+      "receipt": {
+        "path": "outputs/ci/vitest-diagnostics-and-policy.log",
+        "sha256": "sha256:562023ccacd102ea18292ccc9d9f88acee02c118b3b9ff99197fb0b1cc00b853"
+      }
+    },
+    "linuxRealChild": {
+      "passed": 4,
+      "skipped": 0,
+      "receipt": {
+        "path": "outputs/ci/vitest-diagnostics-linux.log",
+        "sha256": "sha256:4353330fbc09f204f866908460feab19b953e677cb136fab8975811f0ced88c0"
+      }
+    }
+  },
+  "nextGate": "Locally verified repairs are ready for commit. Full repaired Linux replay is running; publication requires a successful full CI aggregate of the next exact commit."
+}

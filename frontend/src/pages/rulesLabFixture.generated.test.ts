@@ -157,15 +157,10 @@ describe('checked-in Rules Lab compiled artifact', () => {
   });
 
   it('renders deterministic bytes and detects drift without mutating the checked-in artifact', async () => {
+    const checkedInBefore = await readFile(RULES_LAB_GENERATED_ARTIFACT_PATH, 'utf8');
     const firstRender = serializeRulesLabFixtureArtifact(
       await buildRulesLabFixtureArtifact(),
     );
-    const secondRender = serializeRulesLabFixtureArtifact(
-      await buildRulesLabFixtureArtifact(),
-    );
-    const checkedInBefore = await readFile(RULES_LAB_GENERATED_ARTIFACT_PATH, 'utf8');
-
-    expect(secondRender).toBe(firstRender);
     const current = await checkRulesLabFixtureDrift(
       RULES_LAB_GENERATED_ARTIFACT_PATH,
       firstRender,
@@ -186,8 +181,12 @@ describe('checked-in Rules Lab compiled artifact', () => {
       expect(stale.matches).toBe(false);
       expect(stale.actualHash).not.toBe(stale.expectedHash);
 
+      // generate performs the second independent compilation and atomic write.
+      // Comparing its full bytes also checks determinism without a third build.
       const generated = await generateRulesLabFixture(temporaryArtifact);
-      expect(await readFile(temporaryArtifact, 'utf8')).toBe(firstRender);
+      const secondRender = await readFile(temporaryArtifact, 'utf8');
+      expect(secondRender).toBe(firstRender);
+      expect(await readFile(RULES_LAB_GENERATED_ARTIFACT_PATH, 'utf8')).toBe(checkedInBefore);
       expect(generated).toMatchObject({
         artifactPath: temporaryArtifact,
         hash: rulesLabFixtureSha256(firstRender),

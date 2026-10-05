@@ -14,10 +14,12 @@ async function enable3d(page:Page) {
   await setting(page).check();
   await expect(scene(page).locator('canvas')).toBeVisible({timeout:30_000});
   await expect(scene(page).locator('[data-actor-id="hero-0"]')).toBeVisible();
+  // Software WebGL can delay the CDP layout read beyond the default 5s even
+  // after painting. Keep the same bounded readiness budget as canvas visibility.
   await expect.poll(async () => {
     const box = await scene(page).locator('canvas').boundingBox();
     return Boolean(box && box.width > 100 && box.height > 100);
-  }).toBe(true);
+  }, {timeout:30_000}).toBe(true);
 }
 
 async function projection(page:Page) {

@@ -15,6 +15,7 @@ import {execute, repositoryRoot, cleanEnvironment, resolveTool} from './runtime.
 import {shardPlan,assignShard,assertShardCoverage} from './shards.mjs';
 import {suiteWorkload} from './workload.mjs';
 import {safeNodeFailureDiagnostics} from './node-failure-diagnostics.mjs';
+import {safeVitestFailureDiagnostics} from './vitest-failure-diagnostics.mjs';
 
 export function suiteOptions(args) {
   const result = {suite:'core', mode:'local', candidate:'HEAD'};
@@ -53,7 +54,7 @@ export async function runSuite(argv) {
     const step = {id, status:'running', started_at:new Date().toISOString()}, at=Date.now();
     report.checks.push(step); await save(); console.log(`Checking ${id}...`);
     try {step.result = await action(); step.status='passed';}
-    catch (error) {step.status='failed'; step.reason=error.message; if(error.nodeDiagnostics||error.browserDiagnostics)step.diagnostics=error.nodeDiagnostics??error.browserDiagnostics; throw error;}
+    catch (error) {step.status='failed'; step.reason=error.message; if(error.nodeDiagnostics||error.browserDiagnostics||error.vitestDiagnostics)step.diagnostics=error.nodeDiagnostics??error.browserDiagnostics??error.vitestDiagnostics; throw error;}
     finally {step.duration_ms=Date.now()-at; await save();}
   }
   const invoke = (id, executable, argv, settings={}) => execute(executable,argv,{env:environment,log:path.join(directory,`${id}.log`),...settings});
@@ -118,9 +119,14 @@ export async function runSuite(argv) {
     if (vitestFiles.length) await check('vitest',async()=>{
       const selectionFile=path.join(directory,'vitest-selection.json'), resultFile=path.join(directory,'vitest-result.json');
       await writeFile(selectionFile,JSON.stringify(vitestFiles.map(file=>file.replace(/^frontend\//,''))));
-      await invoke('vitest',process.execPath,['node_modules/vitest/vitest.mjs','run','--config','vitest.suites.config.ts','--reporter=json',`--outputFile=${resultFile}`],{
-        cwd:path.join(repositoryRoot,'frontend'),env:{...environment,TEST_VITEST_SELECTION:selectionFile},timeout:3_600_000});
-      return verifyVitestResult(JSON.parse(readFileSync(resultFile,'utf8')),vitestFiles);
+      try {
+        await invoke('vitest',process.execPath,['node_modules/vitest/vitest.mjs','run','--config','vitest.suites.config.ts','--reporter=json',`--outputFile=${resultFile}`],{
+          cwd:path.join(repositoryRoot,'frontend'),env:{...environment,TEST_VITEST_SELECTION:selectionFile},timeout:3_600_000});
+        return verifyVitestResult(JSON.parse(readFileSync(resultFile,'utf8')),vitestFiles);
+      } catch(error) {
+        try {error.vitestDiagnostics=safeVitestFailureDiagnostics(JSON.parse(readFileSync(resultFile,'utf8')),{files:vitestFiles,root:repositoryRoot});} catch { /* Preserve the original failure when no usable report exists. */ }
+        throw error;
+      }
     });
     done(vitestFiles.map(file=>`vitest:${file}`));
     const remainingNode=nodeFiles.filter(file=>!preflight.includes(file));
