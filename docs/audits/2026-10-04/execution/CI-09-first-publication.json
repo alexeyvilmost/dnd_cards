@@ -1,0 +1,75 @@
+{
+  "recordedAt": "2026-10-05T07:28:06.311Z",
+  "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+  "ci": {
+    "id": 37271099509,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "workflow": ".github/workflows/ci.yml",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37271099509",
+    "startedAt": "2026-10-05T06:10:38Z",
+    "completedAt": "2026-10-05T06:26:18Z",
+    "aggregate": "outputs/ci/37271099509/all/local-suite-results/report.json",
+    "aggregateHash": "sha256:fe5a587d03dfa00090da086274d2bf75b4edbbdb555cf609c8d1160eb4ff0a45",
+    "counts": {
+      "node": 689,
+      "vitest": 6462,
+      "go": 753,
+      "workerAndDatabase": 20,
+      "realBrowserFlows": 12,
+      "browserUiFixtures": 48,
+      "battle3d": 8
+    },
+    "aggregateWallMs": 857336,
+    "cleanup": "stopped",
+    "workflowWallMs": 940000,
+    "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is the actual GitHub workflow start-to-completion interval, including setup and artifact handling."
+  },
+  "publication": {
+    "id": 37272499962,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "workflow": ".github/workflows/release.yml",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37272499962",
+    "startedAt": "2026-10-05T06:27:20Z",
+    "completedAt": "2026-10-05T06:32:46Z"
+  },
+  "deployment": {
+    "id": 37273035754,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "workflow": ".github/workflows/deploy.yml",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37273035754",
+    "startedAt": "2026-10-05T06:33:38Z",
+    "completedAt": "2026-10-05T07:14:00Z",
+    "outcome": "operator-stopped-expired-rehearsal-before-cutover",
+    "productionSuccess": false,
+    "audit": "outputs/operations/first-refused-deploy-2026-10-05T07-20-33.079Z/report.json",
+    "auditHash": "sha256:301c660b87aa92b0e1a8f9480056aef318a10d69bfcf48670aaa1ec2d62cb953",
+    "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+    "originalLiveHealthy": true,
+    "remainingOwnedResources": 0,
+    "dockerAuthRemoved": true,
+    "journalCreated": false,
+    "automaticTtlRejectionClaimed": false
+  },
+  "manualVariables": {
+    "RELEASE_BUILD_ENABLED": true,
+    "RELEASE_PUBLICATION_ENABLED": true,
+    "PRODUCTION_DEPLOY_ENABLED": true
+  },
+  "automationEnabled": false,
+  "firstLiveWritersEnabled": false,
+  "privateStatusMatrix": {
+    "file": "outputs/testing/recommendations-status-matrix/status-matrix.json",
+    "sha256": "sha256:e191aef9eaa2351dab02c61d4bbc2228b5f35c8a4356dc54f476c6e42131d583",
+    "recordedAt": "2026-10-05T07:03:09.765Z"
+  },
+  "next": "Measure and verify complete inventory/history acceleration, then a new fresh full legacy adoption; selective and writer opt-in require that genuine successful predecessor."
+}

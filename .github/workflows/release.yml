@@ -20,6 +20,10 @@ on:
         description: 'Latest successful deploy.yml run; blank only for initial full build'
         required: false
         type: string
+      first_adoption_recovery:
+        description: 'Explicit reviewed failed first attempt ID; manual initial full build only'
+        required: false
+        type: string
       publish:
         description: 'Publish verified component images; never deploys production'
         type: boolean
@@ -97,7 +101,7 @@ jobs:
         env:
           CANDIDATE: ${{ steps.request.outputs.candidate }}
         run: |
-          node control/scripts/release/ci-release.mjs plan source "$CANDIDATE" "$GITHUB_REPOSITORY" control/infra/release-build-config.json artifacts/verified-run.json artifacts/verification/report.json artifacts/baseline artifacts/build-plan.json >> "$GITHUB_OUTPUT"
+          node control/scripts/release/ci-release.mjs plan source "$CANDIDATE" "$GITHUB_REPOSITORY" control/infra/release-build-config.json artifacts/verified-run.json artifacts/verification/report.json artifacts/baseline artifacts/build-plan.json artifacts/request.json >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: immutable-build-plan

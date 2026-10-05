@@ -4,6 +4,7 @@ import {randomBytes} from 'node:crypto';
 import {evidenceHash,compositionFingerprint} from './validate-manifest.mjs';
 import {databaseMigrationSet,migrationScenarios,migrationRequestBaseline,assertLegacyMigrationBinding,assertExecutableMigrationRegistry} from './migration-transition.mjs';
 import {isLegacyBaseline} from './legacy-baseline.mjs';
+import {historyQuery} from './history-fingerprint.mjs';
 const equal=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const hash=value=>typeof value==='string'&&/^sha256:[a-f0-9]{64}$/.test(value);
 const allowed=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs']);
@@ -200,13 +201,13 @@ export function createMigrationDockerAdapter({command,resource,envFile,names,run
     },
     async snapshot(db){
       if(!baselineTables)throw Error('Migration preflight required');
-      const before=new Set(databaseMigrationSet(input.active).map(row=>row.id));
-      const branches=baselineTables.map(table=>{
-        identifier(table);
-        const removed=table==='roguelike_runs'&&!before.has('299_frozen_combat_catalogs')?"ARRAY['combat_catalog_ref']::text[]":['roguelike_command_receipts','character_runtime_commands'].includes(table)&&!before.has('298_compact_command_receipts')?"ARRAY['response_version','response_payload','response_sha256','response_length']::text[]":"ARRAY[]::text[]";
-        return `SELECT '${table}' AS name,count(*) AS rows,encode(sha256(convert_to(coalesce(string_agg(h,'' ORDER BY h),''),'UTF8')),'hex') AS content FROM (SELECT encode(sha256(convert_to((to_jsonb(t)-${removed})::text,'UTF8')),'hex') h FROM public.${identifier(table)} t) q`;
-      });
-      const history=branches.length?await json(db,`SELECT json_agg(q ORDER BY name) FROM (${branches.join(' UNION ALL ')}) q;`):[];
+      baselineTables.forEach(identifier);
+      // Fresh columns at every snapshot preserve the old protocol even if an
+      // unexpected extra column appears. Only the existing declared additions
+      // are omitted; the table list and every independent full scan stay intact.
+      const tables=baselineTables.length?await json(db,`SELECT json_agg(json_build_object('name',c.relname,'columns',(SELECT coalesce(json_agg(a.attname ORDER BY a.attnum),'[]'::json) FROM pg_attribute a WHERE a.attrelid=c.oid AND a.attnum>0 AND NOT a.attisdropped)) ORDER BY c.relname) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname IN (${baselineTables.map(table=>`'${table}'`).join(',')}) AND c.relkind IN ('r','p');`):[];
+      if(!Array.isArray(tables)||!equal(tables.map(table=>table.name),[...baselineTables].sort()))throw Error('Complete baseline history table set required');
+      const history=tables.length?await json(db,historyQuery(tables,databaseMigrationSet(input.active).map(row=>row.id),{project:true})):[];
       return {versions:await json(db,"SELECT coalesce(json_agg(version ORDER BY version),'[]'::json) FROM schema_migrations;"),schemaHash:evidenceHash(await schema(db)),historyHash:evidenceHash(history)};
     },
     async execute(db,request,{inspectOnly=false}={}){return finish(await start(db,request,inspectOnly));},

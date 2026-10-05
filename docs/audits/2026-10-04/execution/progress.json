@@ -7,95 +7,155 @@
     {
       "id": "TEST-01",
       "title": "Создать воспроизводимый локальный тестовый стенд и изолировать старые опасные сценарии",
-      "status": "done_local",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/TEST-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": []
+      "remaining_gates": [],
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Owned native/Docker stack, loopback credentials, private build outputs, fixture guards and cleanup; real API/worker/PG paths. CI9 Linux startup, separate shard resources and cleanup passed."
+        ],
+        "limitations": [
+          "External OAuth/provider/storage are deliberately emulated in normal suites; emulator success is not paid-provider acceptance."
+        ],
+        "nextAcceptance": []
+      }
     },
     {
       "id": "TEST-02",
       "title": "Восстановить согласованную архитектурную границу движка",
-      "status": "done_local",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/TEST-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": []
+      "remaining_gates": [],
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Headless import boundary repaired and tested; current differential and immutable historical executable replays preserve outcome, RNG, costs and saved calculation."
+        ],
+        "limitations": [
+          "The supported archived corpus is finite; no claim that unknown historical executables are automatically compatible."
+        ],
+        "nextAcceptance": []
+      }
     },
     {
       "id": "TEST-03",
       "title": "Объединить основной набор, расширенный набор и выбор проверок в одном манифесте",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/TEST-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "Operational four-lane CI/local orchestration now owns separate DB/process/build resources; aggregation enforces exact once global assignment, current source/manifest, same artifact/UI and stopped cleanup. Partial shard reports are release-ineligible.56 targeted checks and private build/no-shared-write proof passed. The complete fresh sharded run remains pending root source freeze.",
-      "previous_status": "done_local",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/TEST-05-shards.md",
         "docs/audits/2026-10-04/execution/TEST-05-shards.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "One test manifest/planner, mandatory nonzero/no-skip checks, separate historical classifications and strict shard aggregation. CI9 has complete global coverage and source stability."
+        ],
+        "limitations": [
+          "CI9 measured aggregate wall span 857336 ms (14.29 min); this is one exact run, not a permanent timing guarantee or total release latency."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_acceptance_scope": "Operational four-lane CI/local orchestration now owns separate DB/process/build resources; aggregation enforces exact once global assignment, current source/manifest, same artifact/UI and stopped cleanup. Partial shard reports are release-ineligible.56 targeted checks and private build/no-shared-write proof passed. The complete fresh sharded run remains pending root source freeze.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "TEST-04",
       "title": "Покрыть основные пользовательские сценарии реальным локальным E2E",
-      "status": "done_local",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/TEST-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries."
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "12 real API/browser flows plus separate 48 UI-fixture and 8 battle3D cases in CI9. Canonical actions, hostile requests, retry/reload and current V3 routes covered."
+        ],
+        "limitations": [
+          "Movement direct/held fixtures declare training hit/miss data and zero damage; they prove movement/continuation/exact receipt, not ordinary random hit probability. No blind Playwright retries."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries."
     },
     {
       "id": "TEST-05",
       "title": "Добавить расширенную регрессию, replay/migration matrix и контроль производительности",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "supported_matrix_ci_verified_historical_fresh_open",
       "evidence": "docs/audits/2026-10-04/execution/TEST-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
-        "ENV-LINUX-RACE",
         "DATA-FRESH"
       ],
-      "acceptance_scope": "All17 persisted Solo continuation/queue fields have positive durable API coverage:220 accepted cases,440 exact retries across reload/restart, and2 separate fail-closed boundary cases. The immutable corpus has222 entries;224 unit checks pass. Actual owned stack stopped. These targeteds do not substitute for the final combined suite. Historical fresh001/pre102 provenance and Linux race are independent remaining gates; supported297/298/299 upgrade receipts stay unchanged.",
-      "previous_status": "in_progress_solo_pending_matrix_and_external_gates",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/TEST-05-solo-durable.md",
         "docs/audits/2026-10-04/execution/TEST-05-solo-durable.json",
         "docs/audits/2026-10-04/execution/TEST-05-shards.md",
         "docs/audits/2026-10-04/execution/TEST-05-shards.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "222 Solo corpus cases cover 17 durable fields; actual API has 220 positive cases and 2 explicit rejection cases with separate positive phase coverage. 15 canonical pending variants, immutable replay, crash, Linux race, Urvin owned journeys and dedicated migration routes passed CI9."
+        ],
+        "limitations": [
+          "Trusted pre-102 historical preimage and a full fresh 001→current chain are not reconstructed. 297/298/299 upgrade fixtures and observed 302-row ledger→305 proof do not substitute for that chain."
+        ],
+        "nextAcceptance": [
+          "Recover genuine provenance-bearing pre-102 data; execute the unchanged historical chain on an owned DB. Preserve old certificates/guards and prior failed receipts."
+        ]
+      },
+      "historical_acceptance_scope": "All17 persisted Solo continuation/queue fields have positive durable API coverage:220 accepted cases,440 exact retries across reload/restart, and2 separate fail-closed boundary cases. The immutable corpus has222 entries;224 unit checks pass. Actual owned stack stopped. These targeteds do not substitute for the final combined suite. Historical fresh001/pre102 provenance and Linux race are independent remaining gates; supported297/298/299 upgrade receipts stay unchanged.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "OBS-01",
       "title": "Воспроизводимый baseline загрузки и игровых команд",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "implemented_measured_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/OBS-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "previous_status": "done_local",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "latest_evidence_note": "Закрыт ранее отсутствовавший локальный equipment React/INP срез:120 измерений, отдельные обычные/resource-changing ветви. Не выдавать bounded page-lifetime INP и диагностический profiler за production percentile.",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/OBS-01-equipment-browser-profile.json"
       ],
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "330 server observations, 24 cold/warm navigations with actual cache hits; 120 equipment interactions and 1074 React events; page INP 152 ms in the diagnostic after-profile. Acquisition, hold-to-return and persistence SQL metrics are separate."
+        ],
+        "limitations": [
+          "PG timings include transport/scan/commit acknowledgement; worker execution does not measure pre-callback queue. INP is one local profiled page, not production RUM or a before/after speedup."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "PERF-01",
       "title": "Пакетное разрешение зависимостей и безопасный кеш неизменяемого каталога",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "implemented_ci_verified_cache_enablement_unproven",
       "evidence": "docs/audits/2026-10-04/execution/PERF-01.md",
       "remaining_gates": [
         "PERF-HOST"
       ],
-      "previous_status": "verified_default_off",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "followup_evidence": [
         "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.md",
         "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.json"
@@ -118,21 +178,31 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Grouped canonical resolver and bounded immutable preparation cache; actual line/wizard cold/warm/evicted/prefetch equality and rights/content/alias invalidation. Resource equip legacy→cache p95 90.6→65.6 ms; resource unequip 86.1→59.2 ms."
+        ],
+        "limitations": [
+          "Ordinary equip median 37.3→56.4 ms and unequip 38.0→56.6 ms worsened against legacy. Latest prefetch/flights/static memo correctness has no new latency claim. Preparation cache and prefetch remain OFF in the intended initial rollout."
+        ],
+        "nextAcceptance": [
+          "Enable only a measured beneficial configuration after exact target-host comparison; retain ordinary path regression as an explicit outcome."
+        ]
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "PERF-02",
       "title": "Короткая транзакция экипировки и единая подготовка начала боя",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "evidence": "docs/audits/2026-10-04/execution/PERF-02.md",
       "remaining_gates": [
         "PERF-HOST"
       ],
-      "acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
-      "previous_status": "verified_default_off",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "followup_evidence": [
         "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.md",
         "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.json"
@@ -155,31 +225,59 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Canonical intent prepares outside locks and validates fresh ownership/content/revision before atomic write; lost-response/reload/retry gates passed. Latest current-cfe9 counterbalanced browser measurement: 30 paired samples each line/archer, batch+mirrors ON in both arms and cache OFF, restored pre-init data, 128 exact retries with zero additional worker dispatch and unchanged source/RNG fingerprints; cleanup stopped.",
+          "A quiet current-default OFF/OFF versus desired combined ON/ON comparison passed all128 correctness checks, but initiative medians regressed164.9→209.4 ms and247.4→263.8 ms; latency acceptance was rejected. Exact report: docs/audits/2026-10-04/execution/PERF-02-default-profile.json.",
+          "Default OFF/OFF parallel canonical root preparation passed25 focused tests,128 actual samples and4 complete fixed-input artifact comparisons. Latency remains mixed:155.8→163.1 ms and242.2→229.2 ms; general latency acceptance is not met. Private patch is not integrated. See PERF-02-parallel-profile.json."
+        ],
+        "limitations": [
+          "Current initiative median line165.5→198.5 ms (+19.9%) and archer238.1→257.7 ms (+8.2%); worker calls6→12/7→14, dependency waves5→10/6→12. Correctness passed, latency did not. Equipment intent and initiative options remain OFF, so the default path still retains old UI preparation. Older uncontrolled 30+30 profile stays historical.",
+          "Earlier ON→ON savings do not prove a gain over the current default. The current-versus-desired benchmark used one shared candidate worker in both arms, not the exact deployed images."
+        ],
+        "nextAcceptance": [
+          "Keep initiative/cache OFF and the mixed parallel patch private. Inspect remaining canonical needs waves and repeated card transmission before a further bounded implementation; compare both current-default actors with complete fixed-input equality."
+        ]
+      },
+      "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "PERF-03",
       "title": "Сокращение runtime payload и устранение CPU-очереди worker по измерениям",
-      "status": "verified_default_off",
+      "status": "implemented_ci_verified_bounded_capacity_scope",
       "evidence": "docs/audits/2026-10-04/execution/PERF-03.md",
       "remaining_gates": [
         "PERF-HOST"
       ],
-      "acceptance_scope": "Mirrors transport OFF; CPU fix и пределы admission/LRU реализованы. Process-kill2phase и long-combat160+100 с exact retries/replays PASS. Общего memory bound нет: processedCommandIds +195B/turn в измеренном сценарии. Это dedup ledger, не доказанная heap leak.",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "final_local_suite_status": "pending_fresh_source_after_completion_followup",
-      "followup_evidence": []
+      "followup_evidence": [],
+      "previous_status": "verified_default_off",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Exact-mirror transport reduces party 1/2/6 wire bytes by 47.3/64.7/64.8%; pure aura projection preserves output/RNG. Bounded admission and artifact LRU; actual before/after-commit process kills and 160-command/retry long-combat proof."
+        ],
+        "limitations": [
+          "160 commands are not an indefinite heap bound; retained command IDs add about 195 B/turn. No whole-process memory ceiling or target-host saturation SLA established. Mirror switch is opt-in; parent plans ON at first cutover but live adoption is unproved."
+        ],
+        "nextAcceptance": [
+          "After verified cutover, record actual runtime flags and host capacity; retain no-TTL dedup/history semantics. Additional concurrency workers require measured CPU bottleneck and host budget."
+        ]
+      },
+      "historical_acceptance_scope": "Mirrors transport OFF; CPU fix и пределы admission/LRU реализованы. Process-kill2phase и long-combat160+100 с exact retries/replays PASS. Общего memory bound нет: processedCommandIds +195B/turn в измеренном сценарии. Это dedup ledger, не доказанная heap leak.",
+      "historical_final_local_suite_status": "pending_fresh_source_after_completion_followup"
     },
     {
       "id": "PERF-04",
       "title": "Сокращение frontend graph и устранение полного обхода библиотеки",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/PERF-04.md",
       "remaining_gates": [],
-      "previous_status": "done_local",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "followup_evidence": [
         "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.md",
         "docs/audits/2026-10-04/execution/PERF-04-pwa-update.md",
@@ -203,62 +301,112 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "11 permission-aware page/summary APIs and referenced runtime-card closure remove full library traversal. Initial JS gzip 233337→130601 B (44%); rights/session invalidation and bulk request coalescing tested. Actual old/new PWA update preserves immutable chunks."
+        ],
+        "limitations": [
+          "Entry reduction is not total dist reduction; dist remained about 169 MB. Navigation figures are local, not every-device LCP guarantees."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "PERF-05",
       "title": "Стабильные проекции карты и быстрые каноничные превью",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "implemented_measured_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/PERF-05.md",
       "remaining_gates": [],
-      "previous_status": "done_local",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "followup_evidence": [
         "docs/audits/2026-10-04/execution/PERF-05-browser-map.md",
         "docs/audits/2026-10-04/execution/PERF-05-browser-map.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Actual Chrome renderer-only 30×4 profile: hover React 185→53.5 ms, Script CPU 213→69 ms, lighting calls 14256→0; target/movement/animation also measured with identical scene hashes. Canonical preview/state parity retained."
+        ],
+        "limitations": [
+          "Controlled 24×18 scene with four lights; presentation movement is not authoritative API latency or a universal FPS claim."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "REF-01",
       "title": "Границы правил и небольшие извлечения из крупных исполнителей",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/REF-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "previous_status": "done_local",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/REF-01-continuations.md",
         "docs/audits/2026-10-04/execution/REF-01-continuations.json"
       ],
-      "acceptance_scope": "Typed exhaustive routers now cover 44 commands and 15 saved decisions; cohesive attack/damage continuations extracted without a second rules owner. Exact immutable before/after executable replay84 and targeted100 plus TypeScript passed; the full combined suite on the latest source remains pending.",
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Typed router for 44 commands and 15 saved decisions; cohesive attack/damage continuations and equipment seams. 84 exact pre/post extraction scenarios (71 continuation +13 queue) preserve events/RNG/IDs; archived bytes unchanged."
+        ],
+        "limitations": [
+          "This is the requested first cohesive extraction, not a promise to eliminate the compatibility adapter or every large file. New workspace package was optional."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_acceptance_scope": "Typed exhaustive routers now cover 44 commands and 15 saved decisions; cohesive attack/damage continuations extracted without a second rules owner. Exact immutable before/after executable replay84 and targeted100 plus TypeScript passed; the full combined suite on the latest source remains pending.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "REF-02",
       "title": "Разделение orchestration и каноничного отображения на крупных экранах",
-      "status": "done_local",
+      "status": "implemented_ci_verified_no_speedup_claim",
       "evidence": "docs/audits/2026-10-04/execution/REF-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются."
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "11 typed library adapters, Solo bootstrap/dispatch/persistence/target/dialog boundaries, Sheet action model/availability/canonical renderer and ChoiceResolver; session guards close late publication defects."
+        ],
+        "limitations": [
+          "Before/after React development/JSDOM total 619.50→826.51 ms under noisy adjacent changes; no refactoring speedup claimed. Line count reduction is not acceptance evidence by itself."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются."
     },
     {
       "id": "REL-01",
       "title": "Единая карта зависимостей для проверок, сборки и выкатки",
-      "status": "done_local",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": []
+      "remaining_gates": [],
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Shared component dependency map and planner cover changes/deletes/renames, worker graph/COPY inputs and actual successful baseline rather than origin/main. CI9 and publication use exact source/input identities."
+        ],
+        "limitations": [
+          "The accelerated selective workflow is a separate private follow-on; having a correct planner does not mean production selective rollout has occurred."
+        ],
+        "nextAcceptance": []
+      }
     },
     {
       "id": "REL-02",
       "title": "Минимальные Docker-контексты и измеряемый кеш сборки",
-      "status": "done_local",
+      "status": "implemented_oci_and_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -269,13 +417,23 @@
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
       ],
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "previous_status": "done_local",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Actual local registry cold/two-warm builds of three components, clean archive/typecheck, layer invalidation/negative pull and smoke. Later CI9 + successful actual publication establish current clean Linux builds."
+        ],
+        "limitations": [
+          "REL-02.md initial awaiting_environment paragraph is historical and superseded by later actual OCI/CI evidence. Full frontend image did not shrink: earlier measured +0.79%; changed frontend push reused media and transferred 5436117 new bytes."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "REL-03",
       "title": "Manifest релиза и достоверная идентификация компонентов",
-      "status": "local_oci_passed_exact_production_candidate_pending",
+      "status": "images_published_first_adoption_failed_before_cutover",
       "evidence": "docs/audits/2026-10-04/execution/REL-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
@@ -288,19 +446,33 @@
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
       ],
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "previous_status": "local_oci_passed_exact_production_candidate_pending",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Immutable mixed manifest, baked source/input/image identity and per-component launch state; local exact 014f image adoption/rollback and readers tested. cfe9 images actually published after CI9.",
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+        ],
+        "limitations": [
+          "Current publication is not a healthy application deployment. Saved active projection will become usable only after actual successful protected-state adoption.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Accept exact current candidate health/identity, schema and retained-history proofs; record succeeded active state and rollback-compatible image set."
+        ]
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "REL-04",
       "title": "CI-сборка проверенных образов и подготовка доставки через реестр",
-      "status": "local_oci_passed_exact_production_candidate_pending",
+      "status": "ci_build_and_publication_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
         "REL-ENABLE"
       ],
-      "previous_status": "in_progress_local_registry_adapter",
+      "previous_status": "local_oci_passed_exact_production_candidate_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json"
@@ -311,13 +483,22 @@
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
       ],
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Actual GitHub publication 37272499962 succeeded at exact cfe9 after complete CI9. Digest/source/test binding, protected hosted publication and negative registry contracts implemented."
+        ],
+        "limitations": [
+          "Candidate publication does not assert host rehearsal/cutover success. Historical 014f local-only OCI receipts keep their original identity."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "REL-05",
       "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
-      "status": "local_oci_passed_exact_production_candidate_pending",
+      "status": "first_rehearsal_stopped_selective_auto_private",
       "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
@@ -325,7 +506,7 @@
         "OCI-CANDIDATE",
         "REL-ENABLE"
       ],
-      "previous_status": "pending_oci",
+      "previous_status": "local_oci_passed_exact_production_candidate_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "latest_evidence_note": "Local OCI collector действительно passed8/8 плюс7/7 additive matrix с stopped cleanup; полная legacy-adapter adoption/rollback и production first adoption пока не подтверждены этой квитанцией.",
       "current_evidence": [
@@ -333,181 +514,319 @@
         "docs/audits/2026-10-04/execution/REL-05-typed-reference-inventory.json",
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
-      ]
+      ],
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Hosted SSH handoff, fresh captured backup, typed CJS/source-cert inventory, 7 migration scenarios, per-component health and journal rollback implemented. Local exact images passed full collector + adapter rollback.",
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+        ],
+        "limitations": [
+          "First real deploy 37273035754 was operator-stopped after snapshot expiry, before cutover. The 123-path rebased selective/auto/writer package and separate retained-launch compatibility fixes are private and unapplied. Local contracts and OCI foundations do not prove production selective delivery or automatic convergence.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Finish first verified adoption; rebase private follow-on preserving cfe9 reporter/catalog/TTL fixes, validate and deploy tooling. Obtain actual immutable full anchor, execute genuine frontend-only cutover+rollback with unchanged backend/worker IDs; enable/test requested automatic main reconciliation."
+        ]
+      }
     },
     {
       "id": "REL-06",
       "title": "Проверяемый backup/restore для БД, правил и релизов",
-      "status": "local_oci_passed_exact_production_candidate_pending",
+      "status": "owned_restore_verified_host_rehearsal_incomplete",
       "evidence": "docs/audits/2026-10-04/execution/REL-06.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
         "OCI-CANDIDATE"
       ],
-      "acceptance_scope": "Принят native dump/restore с историческими artifacts и точным повтором команд. Production/offsite/RTO и exact-container drill остаются отдельными доказательствами.",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
-      ]
+      ],
+      "previous_status": "local_oci_passed_exact_production_candidate_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Native and OCI full restore, pending/duplicate/media reference preservation, hash inventory and typed historical source proof passed in owned local trials. First host capture and clone restoration completed, but the expired rehearsal was operator-stopped during schema proof; successful host release acceptance remains pending.",
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+        ],
+        "limitations": [
+          "Production-sized complete restore time/RTO, off-host durability and remote media object availability not yet established. Read-only scan ~490 s and metadata ~0.505 s are phases, not total recovery. No scheduled retention/GC or RPO guarantee.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Record actual first host recovery duration and immutable backup date; verify required external object access/durability before claiming broader recovery guarantee. Never renew age by rewriting a proof."
+        ]
+      },
+      "historical_acceptance_scope": "Принят native dump/restore с историческими artifacts и точным повтором команд. Production/offsite/RTO и exact-container drill остаются отдельными доказательствами."
     },
     {
       "id": "DB-01",
       "title": "Измерение размера БД и роста хранения по игровым сценариям",
-      "status": "done_local",
+      "status": "measured_local_and_readonly_production",
       "evidence": "docs/audits/2026-10-04/execution/DB-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД.",
       "previous_status": "done_local",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/DB-01-seeded-series.json"
-      ]
+      ],
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Read-only DB total 2315220659 B; receipts 1809063936 B, character commands 138027008 B. Top consumers/TOAST/index separated. Two independent 1000-command+1000-retry seeded series have identical logical outcomes."
+        ],
+        "limitations": [
+          "Physical relation bytes include TOAST/index overhead; local savings are not a production shrink forecast. Observation does not establish which indexes are unused over business workload."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД."
     },
     {
       "id": "DB-02",
       "title": "Компактные новые квитанции команд без потери идемпотентности",
-      "status": "verified_default_off",
+      "status": "implemented_ci_verified_writer_off_followon_pending",
       "evidence": "docs/audits/2026-10-04/execution/DB-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
         "REL-ENABLE"
-      ]
+      ],
+      "previous_status": "verified_default_off",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "New bounded gzip receipts with version/hash/length, legacy reader and exact retry. 1000-command shadow comparison relation bytes 44507136→26492928 (40.47%). Same-014f actual ON/OFF/restart/corruption+full restore proves both receipt families locally."
+        ],
+        "limitations": [
+          "DB_COMPACT_RECEIPTS remains 0 in first adoption to keep old 4549 rollback reader safe. No old receipt backfill. Private format proof is same-image, not future distinct candidate/previous acceptance."
+        ],
+        "nextAcceptance": [
+          "After genuine dual-reader first adoption, integrate ninth-stage writer gate; run exact published distinct pair on public synthetic fixture plus independent full retained-history restore; enable only new writes after accepted proof and record monotonic format obligation."
+        ]
+      }
     },
     {
       "id": "DB-03",
       "title": "Неизменяемые каталоги по хэшу и разделение горячего состояния",
-      "status": "verified_default_off",
+      "status": "enablement_rejected_measured_latency_regression",
       "evidence": "docs/audits/2026-10-04/execution/DB-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
         "REL-ENABLE"
       ],
-      "acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF.",
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/DB-03-latency100.json",
         "docs/audits/2026-10-04/execution/DB-03-latency100-optimized.json"
-      ]
+      ],
+      "previous_status": "verified_default_off",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Immutable reference storage and bounded transaction-local hydration preserve old bytes and fresh ownership/reference/hash checks. 100 paired samples: relation 9895936→6864896 B, but init p95 138.48→147.12 ms (+6.24%); continue 113.90→119.64 ms."
+        ],
+        "limitations": [
+          "Storage benefit does not satisfy latency acceptance. Current ON adds SQL versus OFF (init26→27, continue14→16); reduction29→27 was only relative to earlier ON implementation."
+        ],
+        "nextAcceptance": [
+          "Keep DB_FROZEN_CATALOGS=0. This is a completed negative decision for this iteration, not an unimplemented optimization or permission to erase compatibility code. Reopen only with a separately measured hypothesis."
+        ]
+      },
+      "historical_acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF."
     },
     {
       "id": "DB-04",
       "title": "Адресная уборка хранения: retention, индексы и встроенные изображения",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "owned_cleanup_protocol_verified_no_production_deletion",
       "evidence": "docs/audits/2026-10-04/execution/DB-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
-      "previous_status": "done_local",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/DB-04-followup.json"
       ],
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Deterministic protected-reference retention, exact preimage plans, idempotent export/apply and hash/restore checks on owned fixtures; no global receipt/artifact TTL or append-only rewrite."
+        ],
+        "limitations": [
+          "No production index removal, data-URL rewrite, garbage collection or VACUUM FULL applied. Zero fixture duplicate candidates/dataURLs is not evidence of production absence."
+        ],
+        "nextAcceptance": [
+          "Only if a real candidate exists: obtain workload/ownership/reference proof and exact backup-bound plan before destructive operation; report logical/reusable/physical space separately."
+        ]
+      },
+      "historical_acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "AI-01",
       "title": "Различить источник 403 и обеспечить безопасную диагностику",
-      "status": "done_local",
+      "status": "cause_and_actual_provider_route_verified",
       "evidence": "docs/audits/2026-10-04/execution/AI-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено.",
       "followup_evidence": [
         "AI-03-provider-diagnostic.json",
         "AI-03-sota-image-probe.json"
-      ]
+      ],
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Actual TimeWeb direct 403 classified as unsupported_country_region_territory; private authenticated CONNECT path passed TLS and one actual Images POST (gpt-image-1, 1024×1024 low, 10.56 s, HTTP200)."
+        ],
+        "limitations": [
+          "The paid provider probe explicitly did not test the deployed application endpoint. GET models success is not substituted for generation; routing does not itself establish provider eligibility or a universal VPN remedy."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено."
     },
     {
       "id": "AI-02",
       "title": "Единый сервис генерации и хранения изображений",
-      "status": "done_local",
+      "status": "implemented_ci_verified_application_cutover_pending",
       "evidence": "docs/audits/2026-10-04/execution/AI-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
         "APPLICATION-CUTOVER"
       ],
-      "acceptance_scope": "Единый provider→storage→entity путь проверен локально. TimeWeb provider ImagesPOST подтверждён отдельно: один PNG1024x1024/200 без retries. Production endpoint нового backend ожидаетвыкатки."
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Single provider→storage→entity result/error contract; no fake successful response or new data-URL image fallback. Provider/storage/DB failure preservation covered."
+        ],
+        "limitations": [
+          "Local/emulated pipeline and real provider probe are separate evidence; exact deployed application-to-storage path awaits successful cutover acceptance.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Verify intended application flow on accepted release with explicit request identity and no blind paid retry."
+        ]
+      },
+      "historical_acceptance_scope": "Единый provider→storage→entity путь проверен локально. TimeWeb provider ImagesPOST подтверждён отдельно: один PNG1024x1024/200 без retries. Production endpoint нового backend ожидаетвыкатки."
     },
     {
       "id": "AI-03",
       "title": "Фоновые image jobs и изолированная исходящая сеть",
-      "status": "in_progress_completion_audit",
+      "status": "implemented_ci_verified_jobs_off_followon_pending",
       "evidence": "docs/audits/2026-10-04/execution/AI-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
         "APPLICATION-CUTOVER",
         "COMPATIBLE-WRITER-ROLLOUT"
       ],
-      "acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline.",
-      "previous_status": "verified_default_off",
-      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json"
+      "previous_status": "in_progress_completion_audit",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Durable owner jobs, accepted-ID replay even with writer disabled, status/history recovery and explicit unknown acknowledgement. Real Go/PG/Node gameplay continues during held/failing CONNECT. Same-014f jobs/browser/expanded restore and ON→OFF→ON foundations passed."
+        ],
+        "limitations": [
+          "IMAGE_JOBS_ENABLED=0 for first adoption. Same-image emulator foundation does not authorize future distinct-image writer change; support for reading a format is distinct from evidence that data of that format was written. Concurrency bound is not a monetary quota."
+        ],
+        "nextAcceptance": [
+          "Integrate/run exact-pair hosted browser + host format/history ninth gate after actual compatible predecessor exists; preserve ON→OFF→OFF obligation and unknown outcome no-retry semantics, then enable jobs through recorded policy."
+        ]
+      },
+      "historical_acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline."
     },
     {
       "id": "CLEAN-01",
       "title": "Упорядочить локальные артефакты и действующую документацию",
-      "status": "done_local",
+      "status": "implemented_ci_verified",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены."
+      "previous_status": "done_local",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Reversible documentation archive/current index, local artifact ignore boundaries, no loss of originals/evidence; bounded link check and build included."
+        ],
+        "limitations": [
+          "Archived recommendations stay historical. Stale task not_started and old awaiting_environment wording need the parent’s evidence-based reconciliation, not deletion of source evidence."
+        ],
+        "nextAcceptance": []
+      },
+      "historical_acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены."
     },
     {
       "id": "CLEAN-02",
       "title": "Постепенно убрать старые продуктовые ветки",
-      "status": "local_checks_passed_exact_commit_ci_pending",
+      "status": "v1_v2_code_removed_ci_verified_db_retained",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-02.md",
       "remaining_gates": [],
-      "acceptance_scope": "Explicitly authorized V1/V2 code/support removal completed with native PG11 and fresh UI/worker13 checks. Current V3, paper, runs, shared inventories and historical DB rows preserved; physical retired-storage removal requires verified backup/migration separately. Fresh full suite pending.",
-      "previous_status": "done_local",
+      "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "followup_evidence": [
         "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.md",
         "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "Later explicit user request superseded gradual deprecation: obsolete V1/V2 routes/controllers/models/client/export removed, current V3 CharacterSheetV2 and shared inventory/paper/run mechanics retained; legacy inventory kind rejects rather than falls through."
+        ],
+        "limitations": [
+          "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
+        ],
+        "nextAcceptance": [
+          "Only after a V3-only compatible predecessor and retained verified backup: prepare exact FK-bound table removal migration, without deleting current shared inventory."
+        ]
+      },
+      "historical_acceptance_scope": "Explicitly authorized V1/V2 code/support removal completed with native PG11 and fresh UI/worker13 checks. Current V3, paper, runs, shared inventories and historical DB rows preserved; physical retired-storage removal requires verified backup/migration separately. Fresh full suite pending.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
     },
     {
       "id": "CLEAN-03",
       "title": "Сократить media-дистрибутив и подготовить обслуживание Git",
-      "status": "in_progress_completion_audit",
+      "status": "pwa_verified_media_variants_off_tradeoff_recorded",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
-      "acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты.",
-      "previous_status": "verified_default_off",
-      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json"
+      "previous_status": "in_progress_completion_audit",
+      "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+      "latest_execution_result": {
+        "demonstrated": [
+          "PWA shell closure 19 entries/860.35 KiB versus2101049 B; actual offline and A/B old-chunk preservation. Optional 17 image variants transfer42.82→29.45 MB with retained original URLs/native dimensions/alpha."
+        ],
+        "limitations": [
+          "Variants add about29.4 MB to dist because originals stay; no Git history or full-image shrink claimed. VITE_MEDIA_VARIANTS=0; OCI media input proposal is prepared_not_release_authorized."
+        ],
+        "nextAcceptance": [
+          "If enabling variants, bind their exact source manifest into release OCI inputs and verify final image/old document/export paths; do not trade retained originals for an unmeasured size claim."
+        ]
+      },
+      "historical_acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты."
     }
   ],
   "notes": [
-    "Requirement-by-requirement completion audit нашёл незавершённые обязательные локальные требования. Предыдущие native PASS сохраняют силу для соответствующего snapshot, но не доказывают полноту первоначального плана. Статусы уточняются по отдельным audit matrices.",
-    "Текущий статус брать из tasks и completion-followup; final_verification/source_snapshot пока относятся к предыдущему принятому снимку, новая общая проверка ожидается. historical_notes сохраняет хронологию.",
-    "Core/extended counts не суммировать как уникальное покрытие: часть групп повторяется, scenario gates и builds учитываются отдельно.",
-    "Source snapshot включает26 настоящих файлов rules-core/coverage. Старые receipts сохранены без пересчёта hashes задним числом.",
-    "Generic saved outcome override исправлен после S05 failure; старые executable, snapshots и сертификаты не переписаны.",
-    "В длинной легальной последовательности260 commits прошли260 exact API retries и260 full worker replays. Выявлен рост processedCommandIds; автоматическое удаление этих ID не реализовано.",
-    "Docker Engine работает. На TimeWeb установлен постоянный приватный Sota gateway; одна реальная генерация прошла. Приложение4549fb3c остаётся прежним. Исторические receipts сохранены.",
-    "Core5 passed on f951e207/4400 inputs. Extended2 unit, flows and extended lanes passed; backend failed only dedicated observed-baseline routing. Historical aggregate remains unchanged; repair checks and exact-commit Linux CI pending.",
-    "First adoption keeps new receipt/catalog/image-job writers OFF. Prepared production environment enables catalog batching and wire mirrors; running old application is unchanged until verified cutover."
+    "Current task status and latest_execution_result describe the CI9/publication/terminal deployment checkpoint. Original acceptance steps and earlier receipts are retained under explicitly historical fields.",
+    "CI9 passed on cfe9e54d: 689 Node, 6462 Vitest, 753 Go/race, 20 database/worker, 12 real browser flows, 48 UI and 8 battle3D. Every shard and cleanup passed. Later source changes still need their own checks.",
+    "Aggregate suite runner interval was 857336 ms; actual GitHub workflow interval was 940000 ms (15m40s). Neither is total release latency or a permanent speed guarantee.",
+    "Three images were published. First deployment 37273035754 was operator-stopped after the capture expired, before cutover. Original 4549fb3c remained healthy; owned resources were removed. No automatic TTL rejection is claimed.",
+    "Manual release gates are enabled and automation remains disabled. New writers remain OFF for first adoption. One paid provider request succeeded; the new application generation endpoint is not yet verified.",
+    "The full plan remains active. A minimally scoped full-scan repair is being measured privately before a new exact commit/CI and fresh legacy adoption; selective and writer opt-in require a genuine successful predecessor.",
+    "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim."
   ],
-  "updated_at": "2026-10-05T06:06:28.076Z",
-  "work_status": "eighth_ci_three_lanes_passed_controlled_catalog_setup_red_green",
+  "updated_at": "2026-10-05T07:48:34.055Z",
+  "work_status": "full_plan_continues_first_adoption_not_complete",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "source_snapshot": {
-    "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
-    "files": 4313
+    "sha256": "f208bca40a79416ffc926e242684fbff14ae7a5bd8f767c37ab9601682109775",
+    "files": 4407
   },
-  "status_semantics": {
-    "done_local": "Предусмотренный локальный срез реализован и проверен; это не утверждение о production или всех внешних acceptance gates.",
-    "verified_default_off": "Локальные контракты и выбранные реальные сценарии проверены. Экспериментальная часть остаётся выключенной; активные независимые исправления перечислены в evidence.",
-    "pending_oci": "Код и native/static/config проверки выполнены; реальные container build/pull/rehearsal/cutover/rollback ещё не подтверждены.",
-    "pending_environment_and_trusted_preimage": "Native набор принят; полная acceptance требует Linux race и доверенных исторических данных или проверенной clean-install стратегии.",
-    "targeted_passed_full_suite_pending": "Адресные проверки текущего среза пройдены; полный набор на новом неизменном снимке ещё не принят. Предыдущие receipts не подтверждают новые исходники.",
-    "local_checks_passed_exact_commit_ci_pending": "Новые локальные проверки пройдены; сохранённые успешные части большого набора привязаны к исходным входам. Полный Linux CI точного коммита предстоит выполнить; не заявляется новый общий локальный extended PASS."
-  },
+  "status_semantics": "tasks.status — текущее доказанное состояние на дату execution_current; original_status сохраняет исходное not_started. Шаги и acceptance исходного плана сохранены. implemented_ci_verified не означает production deployment; прочие ограничения указаны в execution_result. Не повторять завершённые срезы.",
   "historical_notes": [
     "Чужие untracked output/tmp/skills сохранены.",
     "Только фактически принятые задачи получают done.",
@@ -521,7 +840,44 @@
     "Интеграционный review REL03–05 выявил незаконченные стыки: автоматический CI→imagebuild trigger, различениеcontrolCommit/releaseCommit и producer полного candidate bundle. Они требуют кода и проверок; отсутствие Docker не является единственным оставшимся ограничением.",
     "PERF-01 cache: 3 arms × 30 paired repeats, одинаковые backend/UI/worker/fixture hashes; resource median около79→56ms, ordinary legacy38ms остаётся быстрее authority56ms. Native/API/browser/replay gates passed, все новые flags OFF.",
     "REL-05 additive298–300 native PG7 top-level+10 subcases PASS; исправлены schema trigger identity, immutable application state vs database journal и stale recovery. Source/control provenance и CI main extended policy реализованы; candidate rehearsal+fresh host capture ещё интегрируются.",
-    "Release pipeline/candidate collector/additive298–300 интегрированы. Final release+CI-policy154/154 и независимые24/24 PASS; настоящий Compose config-only proof PASS. Docker daemon недоступен, OCI acceptance не выполнен. После последнего Solo lifecycle guard общий core/extended обязателен."
+    "Release pipeline/candidate collector/additive298–300 интегрированы. Final release+CI-policy154/154 и независимые24/24 PASS; настоящий Compose config-only proof PASS. Docker daemon недоступен, OCI acceptance не выполнен. После последнего Solo lifecycle guard общий core/extended обязателен.",
+    {
+      "date": "2026-10-05T07:28:06.311Z",
+      "kind": "superseded-pre-CI9-checkpoint",
+      "git": {
+        "commit": "0125f4c8e7cb8abf1a73028503e31f2fe8a518e7",
+        "pushed": true
+      },
+      "source_snapshot": {
+        "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
+        "files": 4313
+      },
+      "local_commit_gate": {
+        "status": "passed",
+        "verification": "docs/audits/2026-10-04/execution/verification-20261005.json",
+        "sourceSnapshot": {
+          "sha256": "0a7ff8a034d83eb0de82a06f907ac660eec5f0f0fa6b539458080ecb73ccfb2a",
+          "files": 4401
+        },
+        "fullLocalExtendedAggregate": false
+      },
+      "latest_verification": "docs/audits/2026-10-04/execution/verification-20261005.json"
+    },
+    {
+      "date": "2026-10-05T07:48:34.055Z",
+      "kind": "superseded-pre-CI9-progress-notes",
+      "notes": [
+        "Requirement-by-requirement completion audit нашёл незавершённые обязательные локальные требования. Предыдущие native PASS сохраняют силу для соответствующего snapshot, но не доказывают полноту первоначального плана. Статусы уточняются по отдельным audit matrices.",
+        "Текущий статус брать из tasks и completion-followup; final_verification/source_snapshot пока относятся к предыдущему принятому снимку, новая общая проверка ожидается. historical_notes сохраняет хронологию.",
+        "Core/extended counts не суммировать как уникальное покрытие: часть групп повторяется, scenario gates и builds учитываются отдельно.",
+        "Source snapshot включает26 настоящих файлов rules-core/coverage. Старые receipts сохранены без пересчёта hashes задним числом.",
+        "Generic saved outcome override исправлен после S05 failure; старые executable, snapshots и сертификаты не переписаны.",
+        "В длинной легальной последовательности260 commits прошли260 exact API retries и260 full worker replays. Выявлен рост processedCommandIds; автоматическое удаление этих ID не реализовано.",
+        "Docker Engine работает. На TimeWeb установлен постоянный приватный Sota gateway; одна реальная генерация прошла. Приложение4549fb3c остаётся прежним. Исторические receipts сохранены.",
+        "Core5 passed on f951e207/4400 inputs. Extended2 unit, flows and extended lanes passed; backend failed only dedicated observed-baseline routing. Historical aggregate remains unchanged; repair checks and exact-commit Linux CI pending.",
+        "First adoption keeps new receipt/catalog/image-job writers OFF. Prepared production environment enables catalog batching and wire mirrors; running old application is unchanged until verified cutover."
+      ]
+    }
   ],
   "deployment_authorization": {
     "authorized": true,
@@ -537,27 +893,128 @@
     "files": 4313
   },
   "environment_readiness": "docs/audits/2026-10-04/execution/environment-docker-ready.json",
-  "latest_verification": "docs/audits/2026-10-04/execution/verification-20261005.json",
+  "latest_verification": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
   "local_commit_gate": {
-    "status": "passed",
-    "verification": "docs/audits/2026-10-04/execution/verification-20261005.json",
-    "sourceSnapshot": {
-      "sha256": "0a7ff8a034d83eb0de82a06f907ac660eec5f0f0fa6b539458080ecb73ccfb2a",
-      "files": 4401
-    },
-    "fullLocalExtendedAggregate": false
+    "status": "proportionate-local-gate-passed-exact-commit-ci-pending",
+    "baseCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "record": "docs/audits/2026-10-04/execution/REL-06-thin-recovery.json",
+    "scope": "Current integrated release-script repair; full exact committed CI is still required."
   },
   "git": {
-    "commit": "0125f4c8e7cb8abf1a73028503e31f2fe8a518e7",
-    "pushed": true
+    "commit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "pushed": true,
+    "scope": "Last verified committed application; new integrated repair and audit records await commit."
   },
   "exact_commit_ci": {
-    "runId": 37269128668,
-    "commit": "0125f4c8e7cb8abf1a73028503e31f2fe8a518e7",
-    "status": "failed",
-    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37269128668",
-    "publication": false,
-    "deployment": false,
-    "report": "docs/audits/2026-10-04/execution/CI-08-catalog-setup.json"
+    "id": 37271099509,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "workflow": ".github/workflows/ci.yml",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37271099509",
+    "startedAt": "2026-10-05T06:10:38Z",
+    "completedAt": "2026-10-05T06:26:18Z",
+    "aggregate": "outputs/ci/37271099509/all/local-suite-results/report.json",
+    "aggregateHash": "sha256:fe5a587d03dfa00090da086274d2bf75b4edbbdb555cf609c8d1160eb4ff0a45",
+    "counts": {
+      "node": 689,
+      "vitest": 6462,
+      "go": 753,
+      "workerAndDatabase": 20,
+      "realBrowserFlows": 12,
+      "browserUiFixtures": 48,
+      "battle3d": 8
+    },
+    "aggregateWallMs": 857336,
+    "cleanup": "stopped",
+    "workflowWallMs": 940000,
+    "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is the actual GitHub workflow start-to-completion interval, including setup and artifact handling."
+  },
+  "current_execution": {
+    "recordedAt": "2026-10-05T07:28:06.311Z",
+    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "ci": {
+      "id": 37271099509,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "workflow": ".github/workflows/ci.yml",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37271099509",
+      "startedAt": "2026-10-05T06:10:38Z",
+      "completedAt": "2026-10-05T06:26:18Z",
+      "aggregate": "outputs/ci/37271099509/all/local-suite-results/report.json",
+      "aggregateHash": "sha256:fe5a587d03dfa00090da086274d2bf75b4edbbdb555cf609c8d1160eb4ff0a45",
+      "counts": {
+        "node": 689,
+        "vitest": 6462,
+        "go": 753,
+        "workerAndDatabase": 20,
+        "realBrowserFlows": 12,
+        "browserUiFixtures": 48,
+        "battle3d": 8
+      },
+      "aggregateWallMs": 857336,
+      "cleanup": "stopped",
+      "workflowWallMs": 940000,
+      "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is the actual GitHub workflow start-to-completion interval, including setup and artifact handling."
+    },
+    "publication": {
+      "id": 37272499962,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "workflow": ".github/workflows/release.yml",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37272499962",
+      "startedAt": "2026-10-05T06:27:20Z",
+      "completedAt": "2026-10-05T06:32:46Z"
+    },
+    "deployment": {
+      "id": 37273035754,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "workflow": ".github/workflows/deploy.yml",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37273035754",
+      "startedAt": "2026-10-05T06:33:38Z",
+      "completedAt": "2026-10-05T07:14:00Z",
+      "outcome": "operator-stopped-expired-rehearsal-before-cutover",
+      "productionSuccess": false,
+      "audit": "outputs/operations/first-refused-deploy-2026-10-05T07-20-33.079Z/report.json",
+      "auditHash": "sha256:301c660b87aa92b0e1a8f9480056aef318a10d69bfcf48670aaa1ec2d62cb953",
+      "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+      "originalLiveHealthy": true,
+      "remainingOwnedResources": 0,
+      "dockerAuthRemoved": true,
+      "journalCreated": false,
+      "automaticTtlRejectionClaimed": false
+    },
+    "manualVariables": {
+      "RELEASE_BUILD_ENABLED": true,
+      "RELEASE_PUBLICATION_ENABLED": true,
+      "PRODUCTION_DEPLOY_ENABLED": true
+    },
+    "automationEnabled": false,
+    "firstLiveWritersEnabled": false,
+    "privateStatusMatrix": {
+      "file": "outputs/testing/recommendations-status-matrix/status-matrix.json",
+      "sha256": "sha256:e191aef9eaa2351dab02c61d4bbc2228b5f35c8a4356dc54f476c6e42131d583",
+      "recordedAt": "2026-10-05T07:03:09.765Z"
+    },
+    "next": "Measure and verify complete inventory/history acceleration, then a new fresh full legacy adoption; selective and writer opt-in require that genuine successful predecessor."
+  },
+  "last_verified_commit_gate": {
+    "status": "passed",
+    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "report": "docs/audits/2026-10-04/execution/CI-09-first-publication.json",
+    "sourceSnapshot": {
+      "sha256": "f208bca40a79416ffc926e242684fbff14ae7a5bd8f767c37ab9601682109775",
+      "files": 4407
+    },
+    "fullExtendedAggregate": true,
+    "scope": "Actual hosted CI9, unchanged clean source."
   }
 }

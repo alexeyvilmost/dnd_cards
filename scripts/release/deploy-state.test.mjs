@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, writeFileSync, rmSync,mkdirSync,unlinkSync,existsSync} from 'node:fs';
+import {mkdtempSync, writeFileSync, readFileSync, rmSync,mkdirSync,unlinkSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {compositionFingerprint, evidenceHash} from './validate-manifest.mjs';
@@ -48,6 +48,15 @@ function scenario(t, changed = ['frontend']) {
   };
   return {directory, store, candidate, bundle, active, adapter, calls, setLive: value => {live = value;}, getLive:()=>structuredClone(live), observation};
 }
+
+test('manual recovery reread is under the existing lock and refusal precedes journal or adapter mutation',async t=>{
+  const s=scenario(t),before=readFileSync(path.join(s.directory,'active.json'));
+  await assert.rejects(deploy({...s,beforePrepare:async active=>{
+    assert.equal(existsSync(path.join(s.directory,'deploy.lock')),true);assert.equal(readFileSync(path.join(s.directory,'deploy.lock','owner.json'),'utf8').includes(String(process.pid)),true);
+    assert.deepEqual(active,s.active);assert.equal(s.store.operation(s.candidate.releaseId),null);throw Error('reviewed original no longer live');
+  }}),/no longer live/);
+  assert.deepEqual(s.calls,[]);assert.deepEqual(readFileSync(path.join(s.directory,'active.json')),before);assert.equal(s.store.operation(s.candidate.releaseId),null);assert.equal(existsSync(path.join(s.directory,'deploy.lock')),false);
+});
 
 function refreshEvidence(s){
   const fingerprint=compositionFingerprint(s.candidate);

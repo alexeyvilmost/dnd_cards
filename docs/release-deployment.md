@@ -1,9 +1,11 @@
 # Выкатка по manifest и сохранение истории
 
-05.10.2026: пользователь разрешил выпуск после проверок. Tracked policy допускает
-ручное принятие старой установки; auto-main выключен. Внешние GitHub release/deploy
-variables остаются `false` до завершения общих проверок и репетиции. На TimeWeb
-подготовлены защищённые файлы и SSH-транспорт; приложение пока работает на прежнем коммите.
+05.10.2026: пользователь разрешил выпуск после проверок. CI9 и публикация трёх
+immutable образов успешны; ручные GitHub release/deploy gates включены, auto-main
+выключен. Первая серверная репетиция остановлена до cutover после истечения свежести
+снимка. Все временные ресурсы и Docker auth очищены; приложение здорово и работает
+на `4549fb3c`. Нужна проверенная оптимизация полного обхода БД и новая репетиция
+со свежим capture. [Точная запись](audits/2026-10-04/execution/CI-09-first-publication.md).
 Новый `infra/deploy-release` передаёт управление Node runner и намеренно больше
 не принимает один SHA для сборки на сервере. Старый archive-based runner удалён
 из текущего исходника вместе с опасным удалением по числу последних релизов.
@@ -87,7 +89,9 @@ Capture root — существующий protected `config.root/backups`, но�
 `capture.json` подтверждает только сохранённые bytes и active identity. До реального
 owned-clone restore/inventory в collector нет backup.json, complete/schema/PASS
 claims. Collector завершает backup/media/restore reports, а private runtime config
-указывает deployment gate на этот же каталог. Внешний capture/rehearsal не запускался.
+указывает deployment gate на этот же каталог. Первый внешний capture и restore
+выполнены; complete candidate rehearsal не принят. Исходная дата снимка сохранена,
+остановленная попытка не считается успешным backup/restore/release bundle.
 
 Перед заменой pull/inspection всех digests, проверка каждого referenced CJS,
 сохранение предыдущих и новых immutable assets/workbox/WebP. Новые копии
@@ -102,7 +106,7 @@ claims. Collector завершает backup/media/restore reports, а private ru
 compressed receipts. Появившийся unrehearsed artifact или отсутствующий/повреждённый
 CJS блокирует замену, а не исчезает из retention по устаревшему snapshot.
 
-## Отключённый внешний этап
+## Ручной внешний этап и автоматика
 
 `.github/workflows/deploy.yml` подготовлен для manual exact-main release run и
 отдельно включаемого workflow_run после release pipeline. Проверяются origin/run
@@ -150,12 +154,15 @@ backup/restore PASS, но это не production snapshot proof. Unit fault matr
 проверяет реальный persisted state/journal и injected adapter:
 frontend/backend/worker-only, no-restart unchanged, corrupt manifest, failed backup,
 pull/health failure, unknown outcome, повтор, rollback, lock и stale predecessor.
-Это **не** доказательство Docker traffic, old browser chunks или production pinned
-artifacts. Actual Docker/OCI matrix, interrupted upload, old tab/old pending battle
-и host filesystem permissions остаются awaiting_environment. Время выкатки и
-cache hits не измерены. Candidate bundle producer и CI→build→rehearsal→deploy
+Это **не** доказательство production traffic. Actual local Docker/OCI matrix,
+переключение/откат, old chunks и pending battle проверены отдельными датированными
+receipts; CI9 и GHCR publication прошли на точном текущем коммите. Полная первая
+host rehearsal осталась незавершённой, production cutover не состоялся.
+Candidate bundle producer и CI→build→rehearsal→deploy
 стык подготовлены и проверены локальными contract/fault tests; candidate-only
 artifact становится release bundle только после actual clone/health/history/
 additive rehearsal. Семь migration scenarios исполняют тот же candidate image,
 включая kill до ledger и old-backend reads. Автоматический cutover до фактического
 OCI acceptance и отдельного enablement запрещён policy.
+
+После первого отказа подготовлен явный manual first_adoption_recovery для точной попытки 37273035754-1. Он требует trusted control proof, полного CI, всех трёх новых images и свежей проверки main/истории/защищённого host до capture и под lock. Успешного predecessor ещё нет; старый capture и failed rehearsal не заменяют новый bundle. Обычный deployed discovery не изменён. [Локальная интеграция](audits/2026-10-04/execution/REL-06-thin-recovery.md).

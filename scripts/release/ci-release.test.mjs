@@ -15,6 +15,7 @@ import {sourceContentManifest} from './source-content-manifest.mjs';
 const yaml = createRequire(new URL('../../frontend/package.json', import.meta.url))('js-yaml');
 const sha = char => `sha256:${char.repeat(64)}`;
 const repository = 'fixture/project';
+import {loadControlRecovery} from './first-adoption-recovery.mjs';
 function config() {return {schemaVersion: 1, enabled: true, platform: 'linux/amd64', frontendApiUrl: '', contentManifestHash: sha('a'), migrationSet: [],
   buildkitImage: `moby/buildkit@${sha('b')}`, baseImages: Object.fromEntries(['GO_IMAGE', 'ALPINE_IMAGE', 'NODE_IMAGE', 'NGINX_IMAGE'].map((key, i) => [key, `example.test/base/${key.toLowerCase()}@${sha(String(i + 1))}`]))};}
 function report(candidate) {return {schema_version: 1, status: 'passed', suite: 'extended',ci_source:{clean_checkout:true}, source_snapshot:{sha256:'a'.repeat(64),files:4},candidate: {sha: candidate}, component_plan: {mode: 'ci', candidate: {sha: candidate}},
@@ -49,6 +50,22 @@ function recordsFor(plan) {return Object.fromEntries(plan.matrix.map((row, i) =>
       workerRuntime: {name: 'node', version: '20.20.0'}, supportedWorldSchemaVersions: [5], capabilities: ['pinned-artifact-routing', 'pending-decision-pass-through']} : {})},
 } ]));}
 function publishedFor(plan) {return Object.fromEntries(plan.matrix.map((row, i) => [row.component, `${row.imageRepository}@${sha(String(i + 5))}`]));}
+
+test('reviewed first recovery changes optional provenance and plan hash only, forcing full extended without old baseline',t=>{
+  const f=fixture(t),repository='alexeyvilmost/dnd_cards',controlRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+  const {reference}=loadControlRecovery({id:'37273035754-1',controlRoot,controlCommit:f.candidate,repository});
+  const extra={repository,verification:{id:10,sourceCommit:f.candidate,repository},firstAdoptionRecovery:reference};
+  const plan=f.plan(f.candidate,extra);validateBuildPlan(plan);assert.equal(plan.previousManifest,null);assert.equal(plan.verificationEvidence.requiredTier,'extended');assert.ok(plan.matrix.every(row=>row.operation==='build'));
+  const candidate=assembleCandidateManifest(plan,recordsFor(plan),publishedFor(plan));assert.deepEqual(candidate.provenance.firstAdoptionRecovery,reference);
+  verifyCandidateProvenance(candidate,{id:42,workflow:'.github/workflows/release.yml',controlCommit:f.candidate});
+  assert.throws(()=>f.plan(f.candidate,{...extra,suiteReport:{...report(f.candidate),suite:'core'}}),/extended/);
+  assert.throws(()=>f.plan(f.candidate,{...extra,baselineRun:{id:1}}),/cannot reuse/);
+  const changed=structuredClone(plan);changed.firstAdoptionRecovery.proofHash=sha('0');changed.planHash=evidenceHash({candidate:changed.candidate,controlCommit:changed.controlCommit,releaseRunId:changed.releaseRunId,selection:changed.selection,matrix:changed.matrix,config:changed.config,verification:changed.verificationEvidence,baselineIdentity:changed.baselineIdentity,firstAdoptionRecovery:changed.firstAdoptionRecovery});
+  assert.throws(()=>validateBuildPlan(changed),/reviewed release control/);
+  const ordinary=f.plan(f.candidate);assert.equal(ordinary.firstAdoptionRecovery,undefined);
+  assert.equal(ordinary.planHash,evidenceHash({candidate:ordinary.candidate,controlCommit:ordinary.controlCommit,releaseRunId:ordinary.releaseRunId,selection:ordinary.selection,matrix:ordinary.matrix,config:ordinary.config,verification:ordinary.verificationEvidence,baselineIdentity:ordinary.baselineIdentity}));
+  assert.equal(assembleCandidateManifest(ordinary,recordsFor(ordinary),publishedFor(ordinary)).provenance.firstAdoptionRecovery,undefined);
+});
 
 test('only a successful exact-main workflow and real API/browser report authorize builds', () => {
   const candidate = 'a'.repeat(40), run = trustedRun(candidate);

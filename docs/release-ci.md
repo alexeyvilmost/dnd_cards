@@ -1,10 +1,11 @@
 # CI образов и выборочная доставка
 
-Статус 05.10.2026: настоящая локальная Docker/registry проверка прошла девять
-сценариев. GitHub environments `release-publication` и `production` созданы с
-доступом только из `main`; сервер подготовлен. Все внешние release/deploy variables
-пока `false`, нового push и выпуска приложения ещё нет. Пользователь разрешил
-выпуск и подключение автоматической выкатки после обязательных проверок.
+Статус 05.10.2026: полный CI9 на `cfe9e54d` и реальная публикация трёх immutable
+образов успешны. Manual build/publication/deploy variables включены; auto-main
+выключен. Первая host rehearsal остановлена до cutover после истечения свежести
+снимка; исходная версия `4549fb3c` здорова, все временные ресурсы очищены.
+Пользователь разрешил выпуск и автоматику после проверок. [Точные результаты и
+границы доказательства](audits/2026-10-04/execution/CI-09-first-publication.md).
 
 ## Как устроен pipeline
 
@@ -75,14 +76,15 @@ application releaseCommit/receipt/releaseId/hash обязательно; control
 или receipt — отказ, а не переход к угадыванию базы. Пустой baseline разрешает
 только начальный full build; REL-05 всё равно обязан сверить активный manifest
 непосредственно перед cutover и не объявлять такой выпуск первым при уже
-существующем deployment/history. Отключённый deploy workflow теперь описан в
-`docs/release-deployment.md`; реальный successful baseline ещё не создан.
+существующем deployment/history. Deploy workflow с включённым ручным запуском и выключенной автоматикой описан в
+`docs/release-deployment.md`; реальный successful baseline ещё не создан:
+публикация успешна, первая выкатка не прошла полную репетицию.
 
 ## Порядок включения
 
-1. Используется GHCR namespace `ghcr.io/<owner>/<repo>/<component>`; реальные
-   packages первым выпуском ещё не созданы. Доступ существующих package policies проверяется
-   отдельно. Для другого registry нужен явный adapter/config review.
+1. Используется GHCR namespace `ghcr.io/<owner>/<repo>/<component>`; три реальные
+   packages созданы публикацией 37272499962. Для другого registry нужен явный
+   adapter/config review; publication не заменяет host acceptance.
 2. Заполнить `infra/release-build-config.json`: `enabled:true`, реальные immutable
    GO/ALPINE/NODE/NGINX и BuildKit digests, проверенный contentManifestHash и
    migrationSet. Конфигурация уже заполнена проверенными digest и наблюдённым
@@ -131,3 +133,5 @@ owned volume; три builds и identity gates; save/load/push/pull провер�
 [передача образов между jobs](https://docs.docker.com/build/ci/github-actions/share-image-jobs/).
 Action commit refs проверены read-only `git ls-remote` официальных репозиториев
 04.10.2026; никакой remote workflow при подготовке не запускался.
+
+После первого отказа подготовлен явный manual first_adoption_recovery для точной попытки 37273035754-1. Он требует trusted control proof, полного CI, всех трёх новых images и свежей проверки main/истории/защищённого host до capture и под lock. Успешного predecessor ещё нет; старый capture и failed rehearsal не заменяют новый bundle. Обычный deployed discovery не изменён. [Локальная интеграция](audits/2026-10-04/execution/REL-06-thin-recovery.md).

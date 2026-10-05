@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "kind": "perf02-default-parallel-canonical-preparation",
+  "status": "correctness-passed-latency-mixed",
+  "localOnly": true,
+  "deployable": false,
+  "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+  "patchSha256": "bb79669af731b0a8842c70e796619a02f313aa397f7dd1c427e7dfe499c7e7e6",
+  "changedPaths": [
+    "frontend/src/character/sheetCombatRuntimeFactory.ts",
+    "frontend/src/character/sheetCanonicalParticipant.test.ts",
+    "frontend/src/roguelike/combatCatalog.test.ts"
+  ],
+  "sourceHash": "7075a7dbf50764ee125955604b56b30facad9c11b30fe37893324c944198342d",
+  "evidence": [
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/parallel-canonical-preparation.patch",
+      "sha256": "bb79669af731b0a8842c70e796619a02f313aa397f7dd1c427e7dfe499c7e7e6",
+      "bytes": 8201
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/freeze.json",
+      "sha256": "29af12669a8de08d4b691b01387795fd304ea16b64eb8beacb96038b71a904e9",
+      "bytes": 791564
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/build.json",
+      "sha256": "0f1f6411ea12fa6e0271f8e55caf50955eb333c8615db73943e603e8d17f90f6",
+      "bytes": 265651
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/baseline-red.json",
+      "sha256": "c7d27577b085a521cb36400ab9888662c1e9ccfe0e86919bcc34ea63aa64282f",
+      "bytes": 7700
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/targeted-final.json",
+      "sha256": "91e45b89880bb727dd12407003d587465ef55a84983cc8fb71f2846d3d9fe36d",
+      "bytes": 10280
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/measure.mjs",
+      "sha256": "ccb6135338886de0a111309b55ab3d55d151c32cccf20bdb3c5d4c719c75bea4",
+      "bytes": 22223
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/analyze.mjs",
+      "sha256": "609de5eef5cb502fb1b68a20dc8e97dc1e42d240de1711845fa3b8b0c9b1ec99",
+      "bytes": 5599
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/measurement-1791188150892/report.json",
+      "sha256": "8a61400fd5fb0d5a18b4f1ae06fb3c7f10a33538d23ec2b9983e6f6e3481b80d",
+      "bytes": 3300981
+    },
+    {
+      "path": "outputs/testing/perf02-parallel-preparation-cfe/measurement-1791188150892/summary.json",
+      "sha256": "1e9ce48e611443dead634ca0702e951b8900e269ab17c6e93d6fb534af126c19",
+      "bytes": 37572
+    }
+  ],
+  "checks": {
+    "typecheck": {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0,
+      "evidence": "owner executed exact private source; tool execution output, no standalone log"
+    },
+    "targeted": {
+      "passed": 25,
+      "failed": 0
+    },
+    "oldSourceRegression": {
+      "passed": 3,
+      "failed": 4
+    },
+    "actualSamples": 128,
+    "fixedInputArtifactComparisons": 4,
+    "exactRetries": 128,
+    "retryWorkerCalls": 0,
+    "sourceImmutable": true,
+    "cleanup": [
+      {
+        "arm": "CANDIDATE",
+        "runId": "test_224fbbe7e70cf058af9cf5f3",
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      {
+        "arm": "BASE",
+        "runId": "test_e5a6c914dbb436cad8cf412c",
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      }
+    ]
+  },
+  "review": {
+    "reviewer": "runtime_performance",
+    "mode": "independent read-only",
+    "status": "passed",
+    "scope": "three-file diff: independent roots, sync throw capture, joined top-level failure, deterministic assembly-first error, unchanged canonical downstream and complete class/card needs"
+  },
+  "decision": {
+    "generalLatencyAcceptance": false,
+    "flagsChanged": false,
+    "browserPreparationEliminated": false,
+    "reason": "Archer saves one needs round and improves paired mean; line saves no worker round, sends more request bytes and has no demonstrated latency improvement. Both still execute the existing canonical browser preparation once."
+  },
+  "limitations": [
+    "Independent authoritative initialization entropy; results are not asserted equal across arms.",
+    "30 observations per actor/arm: p95 exploratory; bootstrap intervals are descriptive, not production SLO evidence.",
+    "Windows native PostgreSQL/Go/Node plus installed Chrome; no Linux OCI or production-latency claim.",
+    "Both arms use the exact same cfe backend, initiative/cache OFF and batch/mirrors ON. Canonical preparation changes coherently in worker and UI; e156 and e2f7 are distinct actual executable bytes. Full fixed-input/seed outcome equality is a separate pure artifact check using a common explicitly synthetic artifact namespace. No production flags changed.",
+    "Local quiet window coordinated with other agents; shared desktop scheduler was not reserved exclusively."
+  ],
+  "recordedAt": "2026-10-05T08:27:54.689Z",
+  "integrated": false,
+  "productionFlagsChanged": false,
+  "metrics": {
+    "line": {
+      "initiative": {
+        "baseline": {
+          "n": 30,
+          "mean": 161.65999999990066,
+          "p50": 155.79999999701977,
+          "p95": 186.89999999850988,
+          "min": 135.19999999552965,
+          "max": 193.20000000298023
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 166.61000000089408,
+          "p50": 163.10000000149012,
+          "p95": 194.70000000298023,
+          "min": 143.80000000447035,
+          "max": 201.30000000447035
+        },
+        "paired": {
+          "medianRatio": 1.046854942263222,
+          "medianRatioBootstrap95": [
+            0.9440389294217542,
+            1.1169665809948968
+          ],
+          "meanPairedDelta": 4.950000000993411,
+          "meanPairedDeltaBootstrap95": [
+            -1.5400000003476937,
+            11.526666667809089
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      }
+    },
+    "archer": {
+      "initiative": {
+        "baseline": {
+          "n": 30,
+          "mean": 246.85666666651767,
+          "p50": 242.19999999552965,
+          "p95": 279.30000000447035,
+          "min": 213.70000000298023,
+          "max": 300.5
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 234.71000000014902,
+          "p50": 229.20000000298023,
+          "p95": 265.3999999985099,
+          "min": 211.80000000447035,
+          "max": 281.20000000298023
+        },
+        "paired": {
+          "medianRatio": 0.9463253509793998,
+          "medianRatioBootstrap95": [
+            0.8805675995107828,
+            1.008203799680524
+          ],
+          "meanPairedDelta": -12.146666666368644,
+          "meanPairedDeltaBootstrap95": [
+            -22.379999999701976,
+            -1.7699999983112018
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      }
+    }
+  }
+}

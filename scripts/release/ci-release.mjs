@@ -10,6 +10,7 @@ import {createPlan, classifyPath} from './plan-components.mjs';
 import {componentInputFingerprint, evidenceHash, compositionFingerprint, validateManifest,validateMigrationSet} from './validate-manifest.mjs';
 import {assertOCIMediaDisabled} from './write-build-identity.mjs';
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';
+import {loadControlRecovery,recoveryFields} from './first-adoption-recovery.mjs';
 import {assertSourceContentManifest} from './source-content-manifest.mjs';
 
 const exactSHA = /^[a-f0-9]{40}$/;
@@ -73,8 +74,12 @@ export function verifyBaseline(manifest, receipt, run) {
   return manifest;
 }
 
-export function prepareBuildPlan({repo, candidate, repository, controlCommit, releaseRunId, config, verification, suiteReport, baseline, baselineReceipt, baselineRun, baselineFile, environment = process.env}) {
+export function prepareBuildPlan({repo, candidate, repository, controlCommit, releaseRunId, config, verification, suiteReport, baseline, baselineReceipt, baselineRun, baselineFile, firstAdoptionRecovery, environment = process.env}) {
   validateBuildConfig(config);
+  if(firstAdoptionRecovery) {
+    loadControlRecovery({id:firstAdoptionRecovery.id,reference:firstAdoptionRecovery,controlRoot:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),controlCommit,repository});
+    if(baseline||baselineRun||baselineReceipt||candidate!==controlCommit)throw Error('Recovery cannot reuse a deployment baseline');
+  }
   assertOCIMediaDisabled(environment);
   if(!exactSHA.test(controlCommit??'')||!Number.isSafeInteger(releaseRunId)||releaseRunId<1)throw Error('Exact release control commit and workflow run identity required');
   if (!exactSHA.test(candidate) || git(repo, ['rev-parse', 'HEAD']) !== candidate
@@ -109,8 +114,8 @@ export function prepareBuildPlan({repo, candidate, repository, controlCommit, re
   const requiredTier=requiredBuildVerificationTier({selection,matrix,config,previousManifest:baseline});
   const evidence=verifySuiteReport(suiteReport,candidate,{requiredTier});
   return {schemaVersion: 1, status: 'build-planned', candidate, controlCommit, releaseRunId, repository, config, matrix, selection, verification,
-    verificationEvidence: evidence, previousManifest: baseline ?? null, baselineIdentity,
-    planHash: evidenceHash({candidate, controlCommit, releaseRunId, selection, matrix, config, verification: evidence, baselineIdentity})};
+    verificationEvidence: evidence, previousManifest: baseline ?? null, baselineIdentity,...recoveryFields(firstAdoptionRecovery),
+    planHash: evidenceHash({candidate, controlCommit, releaseRunId, selection, matrix, config, verification: evidence, baselineIdentity,...recoveryFields(firstAdoptionRecovery)})};
 }
 function requiredBuildVerificationTier(plan){
   if(!plan.previousManifest||evidenceHash(plan.previousManifest.migrationSet)!==evidenceHash(plan.config.migrationSet)
@@ -138,9 +143,13 @@ export function validateBuildPlan(plan) {
     ||!exactSHA.test(plan.controlCommit??'')||!Number.isSafeInteger(plan.releaseRunId)||plan.releaseRunId<1
     || !/^[\w.-]+\/[\w.-]+$/.test(plan.repository) || plan.matrix?.length !== 3
     || new Set(plan.matrix.map(row => row.name)).size !== 3) throw Error('Invalid immutable build plan');
-  if (plan.planHash !== evidenceHash({candidate: plan.candidate, controlCommit:plan.controlCommit, releaseRunId:plan.releaseRunId, selection:plan.selection, matrix: plan.matrix, config: plan.config, verification: plan.verificationEvidence, baselineIdentity: plan.baselineIdentity})) throw Error('Build plan hash mismatch');
+  if (plan.planHash !== evidenceHash({candidate: plan.candidate, controlCommit:plan.controlCommit, releaseRunId:plan.releaseRunId, selection:plan.selection, matrix: plan.matrix, config: plan.config, verification: plan.verificationEvidence, baselineIdentity: plan.baselineIdentity,...recoveryFields(plan.firstAdoptionRecovery)})) throw Error('Build plan hash mismatch');
   if(plan.verificationEvidence?.requiredTier!==requiredBuildVerificationTier(plan)
     ||plan.verificationEvidence.requiredTier==='extended'&&plan.verificationEvidence.suite!=='extended')throw Error('Build verification tier does not satisfy critical path policy');
+  if(plan.firstAdoptionRecovery) {
+    loadControlRecovery({id:plan.firstAdoptionRecovery.id,reference:plan.firstAdoptionRecovery,controlRoot:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),controlCommit:plan.controlCommit,repository:plan.repository});
+    if(plan.candidate!==plan.controlCommit||plan.previousManifest||plan.baselineIdentity||plan.matrix.some(row=>row.operation!=='build')||plan.verificationEvidence?.suite!=='extended')throw Error('Recovery requires an initial full extended build');
+  }
   if (plan.previousManifest) validateManifest(plan.previousManifest);
   const baselineIdentity = plan.previousManifest ? {releaseId: plan.previousManifest.releaseId, manifestHash: evidenceHash(plan.previousManifest)} : null;
   if (evidenceHash(plan.baselineIdentity) !== evidenceHash(baselineIdentity)
@@ -187,7 +196,7 @@ export function assembleCandidateManifest(plan, records, published) {
     sourceVerification: plan.verificationEvidence, imageRecordsHash: evidenceHash(records)};
   manifest.validationEvidence[0].reportHash = evidenceHash(coreReport);
   manifest.validationEvidence[0].inputFingerprint = fingerprint;
-  const provenance={schemaVersion:1,releaseRunId:plan.releaseRunId,controlCommit:plan.controlCommit,sourceCommit:plan.candidate,planHash:plan.planHash,manifestHash:evidenceHash(manifest)};
+  const provenance={schemaVersion:1,releaseRunId:plan.releaseRunId,controlCommit:plan.controlCommit,sourceCommit:plan.candidate,planHash:plan.planHash,manifestHash:evidenceHash(manifest),...recoveryFields(plan.firstAdoptionRecovery)};
   return {status: 'candidate-only', deployable: false, manifest, provenance, reports: {core: coreReport},
     missingGates: ['full-candidate-health', 'image-contract', 'complete-historical-inventory', 'pinned-artifacts']};
 }
@@ -216,10 +225,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const [runId, repository, candidate, kind, output] = args;
     save(output, await githubRun(runId, repository, candidate === '-' ? undefined : candidate, kind));
   } else if (mode === 'plan') {
-    const [repo, candidate, repository, configFile, verificationFile, reportFile, baselineDirectory, output] = args;
+    const [repo, candidate, repository, configFile, verificationFile, reportFile, baselineDirectory, output, requestFile] = args;
     const baselineFile = path.join(baselineDirectory, 'manifest.json');
     if (existsSync(baselineFile) !== existsSync(path.join(path.dirname(baselineDirectory), 'verified-baseline-run.json'))) throw Error('Verified baseline artifact is missing or incomplete');
-    const plan = prepareBuildPlan({repo, candidate, repository, controlCommit:process.env.GITHUB_SHA,releaseRunId:Number(process.env.GITHUB_RUN_ID),config: read(configFile), verification: read(verificationFile), suiteReport: read(reportFile),
+    const plan = prepareBuildPlan({repo, candidate, repository, controlCommit:process.env.GITHUB_SHA,releaseRunId:Number(process.env.GITHUB_RUN_ID),config: read(configFile), ...recoveryFields(requestFile?read(requestFile).firstAdoptionRecovery:undefined), verification: read(verificationFile), suiteReport: read(reportFile),
       ...(existsSync(baselineFile) ? {baselineFile, baseline: read(baselineFile), baselineReceipt: read(path.join(baselineDirectory, 'deployment.json')), baselineRun: read(path.join(path.dirname(baselineDirectory), 'verified-baseline-run.json'))} : {})});
     save(output, plan);
     process.stdout.write(`matrix=${JSON.stringify({include: plan.matrix.map(row => ({name: row.name}))})}\nbuildkit_image=${plan.config.buildkitImage}\n`);

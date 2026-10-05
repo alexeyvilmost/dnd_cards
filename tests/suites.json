@@ -32,9 +32,13 @@
         "scripts/release/ci-release.test.mjs",
         "scripts/release/automatic-release.test.mjs",
         "scripts/release/deployed-baseline.test.mjs",
+        "scripts/release/first-adoption-recovery.test.mjs",
+        "scripts/release/first-adoption-recovery-host.test.mjs",
         "scripts/release/capture-host-backup.test.mjs",
         "scripts/release/backup-manifest.test.mjs",
         "scripts/release/read-snapshot.test.mjs",
+        "scripts/release/docker-read-session.test.mjs",
+        "scripts/release/reference-cursor.test.mjs",
         "scripts/release/database-schema-proof.test.mjs",
         "scripts/release/prepare-host-release.test.mjs",
         "scripts/release/candidate-rehearsal.test.mjs",
@@ -649,6 +653,12 @@
     "performance": "explicit-fixed-fixture-profile-after-OBS-01"
   },
   "extended_gates": [
+    {
+      "id": "reference-cursor-transport",
+      "script": "scripts/performance/check-reference-cursor.mjs",
+      "export": "checkReferenceCursor",
+      "contract": "Actual owned Docker PostgreSQL SELECT-only reader: one exported read-only snapshot, complete synthetic references, concurrent writes, pre-lock physical rewrite refusal, forced terminal keeper check, bounded output/process cancellation and exact helper cleanup. No production dump and no environment skip."
+    },
     {
       "id": "process-crash-recovery",
       "script": "scripts/performance/check-crash-recovery.mjs",

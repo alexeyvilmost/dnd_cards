@@ -1,16 +1,14 @@
 #!/usr/bin/env node
-import {withLegacyReadSnapshot} from './read-snapshot.mjs';
+import {readDockerInventory} from './read-snapshot.mjs';
 // Read-only live inspection. Only the protected output directory is created;
 // no application container, DB row, schema, image tag or active.json is changed.
 import {readFile,writeFile,mkdir,lstat,realpath} from 'node:fs/promises';
 import {execFileSync} from 'node:child_process';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {randomUUID} from 'node:crypto';
 import {evidenceHash} from './validate-manifest.mjs';
 import {legacyServices,validateLegacyBaseline,legacyRuntimeFingerprint} from './legacy-baseline.mjs';
 import {databaseURLFromEnvironment,databaseIdentityHash} from './database-binding.mjs';
-import {databaseRecoveryInventory} from './artifact-references.mjs';
 import {assertOutsideCheckout} from './capture-host-backup.mjs';
 const read=async file=>JSON.parse(await readFile(file,'utf8'));
 function defaultCommand(args,{input,env={}}={}){
@@ -79,20 +77,8 @@ export function createLegacyInspector(config,{command=defaultCommand}={}){
         }
       }
       const rollbackConfiguration=assertLegacyConfiguration(document,containers,config.claimedReleaseCommit);
-      const dsn=databaseURLFromEnvironment(containers.backend.Config.Env),name=`legacy_inspect_${randomUUID().replaceAll('-','')}`,label=`bagofholding.legacy-inspection=${name}`;
-      let snapshot,progress;
-      const query=async sql=>{
-        await progress();
-        try{const output=command(['run','--name',name,'--label',label,'--rm','-i','--read-only','--network',config.databaseNetwork,'-e','DATABASE_URL','-e','PGCONNECT_TIMEOUT=10','--entrypoint','sh',config.postgresImage,'-ec','exec psql "$DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1'],{input:`BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY; SET TRANSACTION SNAPSHOT '${snapshot}'; SET LOCAL statement_timeout='60s'; SET LOCAL lock_timeout='2s';\n${sql}\nCOMMIT;`,env:{DATABASE_URL:dsn}});await progress();return output;}
-        finally{
-          const listed=command(['container','ls','-a','--filter',`label=${label}`,'--format','{{.Names}}']);
-          if(listed.split(/\r?\n/).includes(name)){
-            const value=JSON.parse(command(['container','inspect',name]))[0];if(value.Config.Labels?.['bagofholding.legacy-inspection']!==name)throw Error('Inspection helper ownership changed');
-            command(['container','rm','--force',name]);
-          }
-        }
-      };
-      const inventory=await withLegacyReadSnapshot({command,config,dsn,name,label},async (exported,renew)=>{snapshot=exported;progress=renew;return databaseRecoveryInventory({query},config.inventory??{});});
+      const dsn=databaseURLFromEnvironment(containers.backend.Config.Env);
+      const inventory=await readDockerInventory({command,postgresImage:config.postgresImage,databaseNetwork:config.databaseNetwork,dsn,options:config.inventory});
       const body={schemaVersion:1,kind:'observed-legacy-baseline',status:'observed',provenance:'runtime-observation-only',deployable:false,
         observedAt:new Date().toISOString(),claimedReleaseCommit:config.claimedReleaseCommit,components,rulesArtifactHash,
         rollbackConfigurationHash:evidenceHash(rollbackConfiguration),databaseIdentityHash:databaseIdentityHash(dsn),schemaFingerprint:inventory.schemaFingerprint,

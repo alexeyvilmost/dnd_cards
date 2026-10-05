@@ -5,6 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {verifyRun} from './ci-release.mjs';
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';
+import {loadControlRecovery,assertRecoveredInitialHistory,recoveryFields} from './first-adoption-recovery.mjs';
 
 const exactSHA = /^[a-f0-9]{40}$/;
 const runID = value => /^[1-9]\d*$/.test(String(value ?? '')) && Number.isSafeInteger(Number(value));
@@ -13,10 +14,11 @@ export async function assertCurrentMainCandidate({eventName,candidate,get}) {
   if(eventName==='workflow_run'&&(await get('commits/main')).sha!==candidate)throw Error('Automatic candidate has been superseded on main');
   return {candidate,currentMainChecked:eventName==='workflow_run'};
 }
-export async function resolveReleaseRequest({eventName, event, repository, controlCommit, variables, get}) {
+export async function resolveReleaseRequest({eventName, event, repository, controlCommit, variables, get, controlRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..')}) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repository) || !exactSHA.test(controlCommit)
     || event?.repository?.full_name !== repository || variables.RELEASE_BUILD_ENABLED !== 'true') throw Error('Release build policy or repository identity is invalid');
-  let candidate, verificationRunId, baselineRunId, publish;
+  let candidate, verificationRunId, baselineRunId, publish, firstAdoptionRecovery;
+  if(eventName!=='workflow_dispatch'&&event?.inputs?.first_adoption_recovery)throw Error('Recovery is manual only');
   if (eventName === 'workflow_run') {
     if (variables.AUTO_RELEASE_MAIN_ENABLED !== 'true') throw Error('Automatic release builds are disabled');
     const upstream = event.workflow_run;
@@ -41,13 +43,20 @@ export async function resolveReleaseRequest({eventName, event, repository, contr
   } else throw Error('Unsupported release event');
   // Select the last actual successful deployment, never the preceding push.
   // Its downloaded receipt and manifest are independently checked by ci-release.
-  const last = await selectLatestDeployedRun(get, {repository});
+  let last;
+  const recoveryId=event.inputs?.first_adoption_recovery;
+  if(recoveryId) {
+    if(eventName!=='workflow_dispatch'||baselineRunId||candidate!==controlCommit||(await get('commits/main')).sha!==candidate)throw Error('Recovery requires an exact current-main initial manual full build');
+    const loaded=loadControlRecovery({id:recoveryId,controlRoot,controlCommit,repository});
+    await assertRecoveredInitialHistory(get,{proof:loaded.proof});
+    firstAdoptionRecovery=loaded.reference;
+  } else last = await selectLatestDeployedRun(get, {repository});
   if (last) {
     if (baselineRunId && baselineRunId !== String(last.id)) throw Error('Requested baseline is not the latest successful deployment');
     baselineRunId = String(last.id);
   } else if (baselineRunId) throw Error('Requested deployment baseline does not exist');
   else baselineRunId = '';
-  return {schemaVersion:1, candidate, controlCommit, repository, verificationRunId, baselineRunId, publish};
+  return {schemaVersion:1, candidate, controlCommit, repository, verificationRunId, baselineRunId, publish,...recoveryFields(firstAdoptionRecovery)};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

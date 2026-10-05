@@ -116,11 +116,12 @@ export function createDeploymentStore(root,{legacyBaselineFile}={}) {
   };
 }
 
-export async function deploy({store, adapter, candidate, bundle}) {
+export async function deploy({store, adapter, candidate, bundle, beforePrepare}) {
   const unlock = store.lock();
   let operation;
   try {
     const active = store.active();
+    if(beforePrepare)await beforePrepare(active); // lock held; before the first journal or application mutation
     const existing = store.operation(candidate.releaseId);
     if (existing) {
       if (existing.plan.candidateHash !== evidenceHash(candidate)) throw Error('Release ID collision');

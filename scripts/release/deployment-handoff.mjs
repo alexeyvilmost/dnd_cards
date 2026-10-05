@@ -3,6 +3,7 @@ import {readFileSync, writeFileSync, mkdirSync, copyFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {assertReleaseReady, evidenceHash, validateManifest} from './validate-manifest.mjs';
+import {validateRecoveryReference} from './first-adoption-recovery.mjs';
 const read = file => JSON.parse(readFileSync(file, 'utf8'));
 export function deploymentMode(event,adoptLegacy='false'){
   if(!['workflow_dispatch','workflow_run'].includes(event)||!['true','false'].includes(adoptLegacy))throw Error('Explicit deployment event and boolean adoption mode required');
@@ -21,6 +22,10 @@ export function verifyCandidateProvenance(candidate,run){
     ||run.workflow!=='.github/workflows/release.yml'||!/^([a-f0-9]{40})$/.test(p.controlCommit??'')||p.controlCommit!==run.controlCommit
     ||!/^([a-f0-9]{40})$/.test(p.sourceCommit??'')||p.sourceCommit!==candidate.manifest?.releaseCommit
     ||!/^sha256:[a-f0-9]{64}$/.test(p.planHash??'')||p.manifestHash!==evidenceHash(candidate.manifest))throw Error('Candidate provenance differs from trusted release control run');
+  if(p.firstAdoptionRecovery) {
+    validateRecoveryReference(p.firstAdoptionRecovery);
+    if(p.firstAdoptionRecovery.controlCommit!==p.controlCommit||p.sourceCommit!==p.controlCommit||candidate.manifest.previousReleaseId!==null)throw Error('Recovered first adoption provenance differs');
+  }
   return p;
 }
 export function verifyHandoff(manifest, bundle, run, sourceCommit, candidate) {

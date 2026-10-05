@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "kind": "complete-database-scan-and-explicit-first-recovery-integration",
+  "recordedAt": "2026-10-05T08:32:25.132Z",
+  "status": "proportionate-local-gate-passed-exact-commit-ci-pending",
+  "baseCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+  "firstSuccessfulProductionAdoption": false,
+  "productionFlagsChanged": false,
+  "patches": {
+    "thin": "sha256:8c87c6d75728dc210dbb6929e3c840a0759c51d5b681aaa73ffa3ad139e54ca7",
+    "recovery": "sha256:b757c39df0e04169ef4b3c05045f99bc6a7b6d6d568dda974053488481893d0e"
+  },
+  "sourceFiles": [
+    {
+      "path": "scripts/release/docker-read-session.mjs",
+      "sha256": "sha256:c605059ebec67d0d6844162a42843861084581e9256190ce43fd540606cac2a7"
+    },
+    {
+      "path": "scripts/release/docker-read-session.test.mjs",
+      "sha256": "sha256:f4f63ec88461e789501d5c40b4bf6eae5ef6777ec45e119744880d5e888cc2e4"
+    },
+    {
+      "path": "scripts/release/reference-cursor.mjs",
+      "sha256": "sha256:418fa4ab504c16b62d21fcecf5f001ee10767de219df4615ada1cbca34bb2177"
+    },
+    {
+      "path": "scripts/release/reference-cursor.test.mjs",
+      "sha256": "sha256:bb243526302ea9406a286cf3afd8715da143ccb5dd8d0ee90f05bc26c25a8bf3"
+    },
+    {
+      "path": "scripts/release/history-fingerprint.mjs",
+      "sha256": "sha256:337a77daac17d447740f2f0a8b8a2e7880ee8f667cd212fff326e64a41bd51fd"
+    },
+    {
+      "path": "scripts/release/read-snapshot.mjs",
+      "sha256": "sha256:6b77e865ec3abbbf96d5e7052f95d0eb668b7157a83ca174fb58aa72adfb93c1"
+    },
+    {
+      "path": "scripts/release/inspect-legacy.mjs",
+      "sha256": "sha256:402cfc0d7f9159e8302f00d7a69e9c63515ae1dc7475a6792967365a97999cdc"
+    },
+    {
+      "path": "scripts/release/migration-rehearsal.mjs",
+      "sha256": "sha256:4d7e696e2c016b0a10307db894b48eafc5985f9ab657e1e4be79629df73f7c83"
+    },
+    {
+      "path": "scripts/testing/reference-cursor-contract.mjs",
+      "sha256": "sha256:15dd4765e05d94363b86cd01ea87a38f780189be040103b6fd820b36e6695474"
+    },
+    {
+      "path": "scripts/performance/check-reference-cursor.mjs",
+      "sha256": "sha256:2418cd69992109660c1b5e20e9060ac4e49309b5046545163322dd45495ff0a9"
+    },
+    {
+      "path": "tests/suites.json",
+      "sha256": "sha256:d64b89f4794a8993e0df513c8ff41edbfcb1d51e4f4fa6ada4a11593cd4d6df6"
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "sha256": "sha256:4736cbaa356a966c857f35520a45b54d7514329cf57245af78ff8f13ce916d7c"
+    },
+    {
+      "path": "infra/first-adoption-recoveries/37273035754-1.json",
+      "sha256": "sha256:9b25056b76e0431d55eed773605c5a5b079f4147d1994afa36634a0dd2fc4f7d"
+    },
+    {
+      "path": "scripts/release/automatic-release.mjs",
+      "sha256": "sha256:2170d0def95247ec5c660cb0977a816463f223df20f586e25102565f091cd230"
+    },
+    {
+      "path": "scripts/release/ci-release.mjs",
+      "sha256": "sha256:4f61e00a652f7e1d2748f911a9ca16ed434584493e7bdc86a62992bd9e5354f6"
+    },
+    {
+      "path": "scripts/release/ci-release.test.mjs",
+      "sha256": "sha256:4a001b7e1c7ce88b15d4fa2c9a5316c9388ac4b96ccc4207472e5bbb160b590a"
+    },
+    {
+      "path": "scripts/release/deploy-state.mjs",
+      "sha256": "sha256:2e0494cf6066e8b1e9126c117dc5597aae477ce66d9ab371597fed352a9d9486"
+    },
+    {
+      "path": "scripts/release/deploy-state.test.mjs",
+      "sha256": "sha256:461481cd6176ef26d9e830d6bdc76877440c0b85189ffdfb093e2f194608c41d"
+    },
+    {
+      "path": "scripts/release/deploy.mjs",
+      "sha256": "sha256:a43fdd50d33b50a40e0f251da8ce31942c6ba8d0629fca8553a07b3f7bf765a2"
+    },
+    {
+      "path": "scripts/release/deployment-handoff.mjs",
+      "sha256": "sha256:4c3ea31e0dd16074e170b6fa0c8b1e3f42893fffcc54bfdabac810d7618462e6"
+    },
+    {
+      "path": "scripts/release/first-adoption-recovery-host.mjs",
+      "sha256": "sha256:f3131b7d607479ab6a7bf56f6e236b6cd68b5c01ccd4399e9b17c6e257097c86"
+    },
+    {
+      "path": "scripts/release/first-adoption-recovery-host.test.mjs",
+      "sha256": "sha256:c8f6fa58caea92077a0199178515711ffa04eaf848cdbb8d6d40e76579048b8c"
+    },
+    {
+      "path": "scripts/release/first-adoption-recovery.mjs",
+      "sha256": "sha256:79bef44ec177d3bb5c7c1210b3ede97738756945cb39fc957774f7342d195df3"
+    },
+    {
+      "path": "scripts/release/first-adoption-recovery.test.mjs",
+      "sha256": "sha256:20912be6081d5ec433a51b79b966832587609efa2483305a485fe1921e30239e"
+    },
+    {
+      "path": "scripts/release/ssh-host-release.mjs",
+      "sha256": "sha256:4dc86a5c04d4f4722b22e6117515cccb9cfa6a2f28b17ab559cfee9e0f057100"
+    },
+    {
+      "path": "scripts/release/ssh-transport.test.mjs",
+      "sha256": "sha256:d304c4ea923cf0f636d9a02821af57e8dc8f8c204ad6716691740272894d63f3"
+    }
+  ],
+  "localGate": {
+    "node": {
+      "count": 185,
+      "status": "passed",
+      "skip": 0,
+      "logHash": "sha256:7921eafc0e975caf252c8dc95d9a7ec1f5c8cb450a32921fc7a38a8689616370",
+      "parserCorrection": {
+        "originalReport": "combined-node.json",
+        "reason": "The actual Node24 default reporter emitted spec summary, not TAP. Original exit0/log and source checks retained; no tests rerun.",
+        "reporter": "spec",
+        "actualLogUnchanged": true
+      }
+    },
+    "native": {
+      "checks": 18,
+      "status": "passed",
+      "cleanup": [
+        {
+          "kind": "container",
+          "status": "stopped"
+        },
+        {
+          "kind": "network",
+          "status": "stopped"
+        },
+        {
+          "kind": "exporter-and-stream-clients",
+          "status": "stopped"
+        }
+      ],
+      "sourceFiles": [
+        {
+          "path": "scripts/release/docker-read-session.mjs",
+          "sha256": "sha256:c605059ebec67d0d6844162a42843861084581e9256190ce43fd540606cac2a7"
+        },
+        {
+          "path": "scripts/release/reference-cursor.mjs",
+          "sha256": "sha256:418fa4ab504c16b62d21fcecf5f001ee10767de219df4615ada1cbca34bb2177"
+        },
+        {
+          "path": "scripts/release/read-snapshot.mjs",
+          "sha256": "sha256:6b77e865ec3abbbf96d5e7052f95d0eb668b7157a83ca174fb58aa72adfb93c1"
+        },
+        {
+          "path": "scripts/release/history-fingerprint.mjs",
+          "sha256": "sha256:337a77daac17d447740f2f0a8b8a2e7880ee8f667cd212fff326e64a41bd51fd"
+        },
+        {
+          "path": "scripts/testing/reference-cursor-contract.mjs",
+          "sha256": "sha256:15dd4765e05d94363b86cd01ea87a38f780189be040103b6fd820b36e6695474"
+        }
+      ]
+    }
+  },
+  "measurements": {
+    "scope": "owned local private restore; PostgreSQL2CPU/3GiB, Windows controller separately",
+    "history": {
+      "oldThenProjectedMs": [
+        74079.2395,
+        44797.8251
+      ],
+      "projectedThenOldMs": [
+        43701.9125,
+        76745.292
+      ],
+      "tables": 92,
+      "exactHash": "sha256:58a3c80c60cc50ea83acfbb1c71679fd99a1025daa9cda525166035d584aac80"
+    },
+    "inventory": {
+      "cursorThenOldMs": [
+        152975.4801,
+        401807.3414
+      ],
+      "actualPersistentTransportMs": 158733.9265,
+      "domainHash": "sha256:885f4b390078c412f94c5da55b6617bdbb274f54ef8968a16900744c3f8de624",
+      "jsonColumns": 176,
+      "executableReferences": 18,
+      "semanticReleases": 1,
+      "mediaReferences": 3345,
+      "migrations": 302
+    }
+  },
+  "preserved": [
+    "all old rows/NULL/types/duplicate multiplicity",
+    "same historical fingerprint protocol",
+    "twelve independent history snapshots",
+    "existing typed semantic/CJS distinction and source certification verification",
+    "compact payload integrity checks",
+    "exported readonly RR, idle120s/total1800s and SQL60s bounds",
+    "backup age and all writer policies"
+  ],
+  "manualRecovery": {
+    "reviewedFailedAttempt": "37273035754-1",
+    "trustedControlFile": "infra/first-adoption-recoveries/37273035754-1.json",
+    "authority": "explicit-manual-full-current-main-only",
+    "freshCaptureRequired": true,
+    "allNormalGatesRequired": true,
+    "ordinaryDiscoveryUnchanged": true,
+    "hostCheckBeforeCapture": true,
+    "hostCheckUnderLockBeforeJournal": true,
+    "staleMainRejected": true,
+    "priorBackupOrRehearsalReused": false
+  },
+  "limitations": [
+    "Not a production rollout or deadline proof. First successful adoption still required.",
+    "Full private-data transport measurement source closure predates the stricter final physical-node and non-superuser guards; final mandatory synthetic gate directly binds those final production bytes.",
+    "Unsupported external/canonical inheritance and domain layouts refuse completeness, without a skip/fallback.",
+    "Per-line/per-metadata/reference-set bounds are not a whole-process RSS guarantee.",
+    "Two history orders and one complete inventory pair are local timings, not latency percentiles.",
+    "Recovery filesystem/Docker checks are local controlled tests, not a completed new host attempt.",
+    "The last successful CI9 verifies the base commit only. A new exact committed full CI and publication are required."
+  ],
+  "evidence": [
+    {
+      "path": "outputs/testing/root-repair-gate/combined-node-final.json",
+      "sha256": "sha256:80a886b0058d0898bf99c25cde3fff5c22f6b4998c808d37b6526b09a50422c9"
+    },
+    {
+      "path": "outputs/testing/root-repair-gate/native-cursor/report.json",
+      "sha256": "sha256:7e9e5d15fbec7a06193fa9d5b4d530dea08b97b84e148ad102ef9e5955a98a76"
+    },
+    {
+      "path": "outputs/testing/private-full-scan-review/production-final-review.json",
+      "sha256": "sha256:baf884b2914ec1e60917fb7da7c33d3c0ec1c131a5faa29be657a263064eaa54"
+    },
+    {
+      "path": "outputs/testing/manual-first-recovery-review/review-final.json",
+      "sha256": "sha256:650b969bf0f14ee9ba2090a43a82be574738d31c39d6a2fbf8a66037a504a23b"
+    }
+  ]
+}

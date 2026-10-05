@@ -45,7 +45,7 @@ export async function executeHostGates({directory,packet,request,token,run=execu
   const env={PATH:process.env.PATH,HOME:process.env.HOME,LANG:'C.UTF-8',GITHUB_TOKEN:token,
     GITHUB_REPOSITORY:request.repository,GITHUB_SHA:request.controlCommit,GITHUB_EVENT_NAME:request.eventName,
     GITHUB_RUN_ID:String(request.runId),GITHUB_RUN_ATTEMPT:String(request.attempt),DEPLOY_SOURCE_COMMIT:request.sourceCommit,
-    DEPLOY_PRODUCTION_ENABLED:request.productionEnabled,DOCKER_CONFIG:dockerConfig};
+    DEPLOY_PRODUCTION_ENABLED:request.productionEnabled,RECOVERY_ATTEMPT_DIRECTORY:directory,DOCKER_CONFIG:dockerConfig};
   const stages=[];let cleaned=false,aborted=false;
   const cleanup=()=>{if(cleaned)return;if(path.dirname(dockerConfig)!==path.resolve(directory)||path.basename(dockerConfig)!=='docker-auth')throw Error('Invalid auth cleanup target');rmSync(dockerConfig,{recursive:true,force:true});cleaned=true;};
   // A still-running docker login may write config.json on completion. Stop at
@@ -65,6 +65,7 @@ export async function executeHostGates({directory,packet,request,token,run=execu
     await command('ci-release.mjs',['verify-run',String(releaseRun.id),request.repository,'-','release',freshRun]);
     await command('deployment-handoff.mjs',['candidate',candidate,freshRun]);
     await command('automatic-release.mjs',['check-current',request.sourceCommit]);
+    if(JSON.parse(packet.files['candidate.json'].text).provenance?.firstAdoptionRecovery)await command('first-adoption-recovery-host.mjs',[directory,request.hostConfig]);
     await run('docker',['login','ghcr.io','--username',request.actor,'--password-stdin'],{env,input:token});
     const prepared=await command('prepare-host-release.mjs',[request.hostConfig,path.join(control,'infra/deployment-policy.json'),request.rehearsalConfig,`capture-${request.runId}-${request.attempt}`]);
     const pointers=Object.fromEntries(prepared.trim().split('\n').map(line=>line.split('=')));

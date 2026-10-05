@@ -8,7 +8,7 @@
   "status": "implementation_in_progress_completion_audit",
   "execution_progress": "docs/audits/2026-10-04/execution/progress.json",
   "execution_report": "docs/audits/2026-10-04/execution/README.md",
-  "task_status_semantics": "Статусы внутри исходных tasks фиксируют состояние предложенного плана. Текущее выполнение и доказательства читать из execution_progress; не начинать уже выполненный срез повторно.",
+  "task_status_semantics": "tasks.status — текущее доказанное состояние на дату execution_current; original_status сохраняет исходное not_started. Шаги и acceptance исходного плана сохранены. implemented_ci_verified не означает production deployment; прочие ограничения указаны в execution_result. Не повторять завершённые срезы.",
   "human_report": "docs/audits/2026-10-04/recommendations.md",
   "objective": "Ускорить основные сценарии и доставку сервиса, сделать проверки воспроизводимыми, ограничить рост хранения и уменьшить сложность без расхождения правил и потери истории.",
   "authorization": {
@@ -18,14 +18,14 @@
       "необратимое удаление пользовательских данных",
       "переписывание Git history"
     ],
-    "production_enabled": false,
+    "production_enabled": true,
     "approved_release_actions": [
       "commit verified in-scope files",
       "push exact reviewed commit",
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "Tracked manual policy prepared; external release/deploy variables remain false until required checks pass."
+    "production_enablement_status": "Manual build/publication/deploy gates enabled after CI9. First host attempt stopped before cutover; no healthy adoption. AUTO release/deploy/reconciliation/selective remain disabled."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -539,7 +539,7 @@
         2,
         4
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Зафиксировать drift текущего локального Compose: PostgreSQL закомментирован, backend по умолчанию подключается к host.docker.internal/dnd_cards, rules-worker отсутствует, frontend build context ./frontend несовместим с COPY frontend/... в актуальном Dockerfile. Не запускать этот compose как disposable test stack без исправления.",
         "Создать отдельный compose.test.yml или эквивалентный supervisor с PostgreSQL, Go API, rules-worker и production frontend preview. Использовать уникальный project/run ID, непересекающиеся локальные порты, отдельную БД/schema и отдельный каталог артефактов правил. Исправить общий локальный Compose либо явно направить тестовый runner в новую конфигурацию; не менять production Compose ради тестового стенда.",
@@ -595,6 +595,29 @@
           "infra/compose.test.yml (new)",
           "scripts/testing/ (new)"
         ]
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Owned native/Docker stack, loopback credentials, private build outputs, fixture guards and cleanup; real API/worker/PG paths. CI9 Linux startup, separate shard resources and cleanup passed."
+        ],
+        "limitations": [
+          "External OAuth/provider/storage are deliberately emulated in normal suites; emulator success is not paid-provider acceptance."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/TEST-01.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -630,7 +653,7 @@
         2,
         4
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Воспроизвести текущий failure importBoundary.test.ts: 17 modules напрямую импортируют engine/mvp вне adapter. Сохранить полный список импортируемых символов, циклов и их фактических исполнителей, отличая type-only imports от runtime dependencies.",
         "Документировать разрешённое направление зависимостей: shared pure primitives, command orchestration, legacy compatibility adapter, transport/UI. Выбрать для каждого нарушения adapter либо перенос действительно общего примитива; не создавать копии механик и не вводить blanket allowlist на весь engine.",
@@ -687,6 +710,30 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Headless import boundary repaired and tested; current differential and immutable historical executable replays preserve outcome, RNG, costs and saved calculation."
+        ],
+        "limitations": [
+          "The supported archived corpus is finite; no claim that unknown historical executables are automatically compatible."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/TEST-02.md",
+          "docs/audits/2026-10-04/execution/TEST-02-differential.json",
+          "docs/audits/2026-10-04/execution/REF-01-continuations.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -715,7 +762,7 @@
         2,
         4
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Каталогизировать tracked tests по runner, владельцу, функциональному контракту, потребности в БД/сети, стоимости и tier: core, extended, legacy-manual. Использовать начальный manifest из tests-findings.md; каждый excluded historical suite получает причину. Старый возраст или папка mvp сами по себе не делают общий контракт необязательным.",
         "Подключить общий dependency planner REL-01. Выбор должен учитывать удаления, rename, shared JSON, package lock, build configuration, транзитивные inputs worker и изменение реализации без изменения test file. Не повторять отдельную эвристику только frontend/worker/* в тестовом runner.",
@@ -766,6 +813,30 @@
           "tests/suites.json (new)",
           "scripts/testing/run.mjs (new)"
         ]
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "One test manifest/planner, mandatory nonzero/no-skip checks, separate historical classifications and strict shard aggregation. CI9 has complete global coverage and source stability."
+        ],
+        "limitations": [
+          "CI9 measured aggregate wall span 857336 ms (14.29 min); this is one exact run, not a permanent timing guarantee or total release latency."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/TEST-03.md",
+          "docs/audits/2026-10-04/execution/TEST-05-shards.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -793,7 +864,7 @@
         4,
         7
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Создать локальный full-stack Playwright profile на lifecycle TEST-01. Переиспользовать реальные UI drivers из forge-interaction-driver и real-backend-canary, извлекая общие helpers. Не включать production-mutating canary и certification-readiness как условие обычного local/CI run.",
         "Сохранить существующие API-fixture browser tests отдельным UI integration слоем. В новом профиле запрещать перехват продуктовых /api/** ради подмены успешного результата; mock допустим только для явно внешних OAuth/OpenAI/storage зависимостей.",
@@ -847,6 +918,30 @@
           "frontend/playwright.local.config.ts (new)",
           "frontend/e2e-local/ (new)"
         ]
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "12 real API/browser flows plus separate 48 UI-fixture and 8 battle3D cases in CI9. Canonical actions, hostile requests, retry/reload and current V3 routes covered."
+        ],
+        "limitations": [
+          "Movement direct/held fixtures declare training hit/miss data and zero damage; they prove movement/continuation/exact receipt, not ordinary random hit probability. No blind Playwright retries."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/TEST-04.md",
+          "docs/audits/2026-10-04/execution/TEST-04-movement.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -876,7 +971,7 @@
         4,
         8
       ],
-      "status": "not_started",
+      "status": "supported_matrix_ci_verified_historical_fresh_open",
       "steps": [
         "Сформировать расширенный manifest всех актуальных offline suites и отдельный ручной перечень historical certification suites. Общие replay/authorization/migration contracts не переносить в legacy только из-за старого имени или включения в прежний coverage pipeline.",
         "Добавить сценарии melee/ranged/caster, разные уровни и multiclass, reactions/saving throws/damage/effects/death/movement, геометрию крупных существ и area delivery, party, camp/shop/loot/journey, короткий/долгий отдых и подготовку. Новые механики проверять второй сущностью на том же примитиве.",
@@ -932,6 +1027,37 @@
           "frontend/e2e-local/"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "222 Solo corpus cases cover 17 durable fields; actual API has 220 positive cases and 2 explicit rejection cases with separate positive phase coverage. 15 canonical pending variants, immutable replay, crash, Linux race, Urvin owned journeys and dedicated migration routes passed CI9."
+        ],
+        "limitations": [
+          "Trusted pre-102 historical preimage and a full fresh 001→current chain are not reconstructed. 297/298/299 upgrade fixtures and observed 302-row ledger→305 proof do not substitute for that chain."
+        ],
+        "nextAcceptance": [
+          "Recover genuine provenance-bearing pre-102 data; execute the unchanged historical chain on an owned DB. Preserve old certificates/guards and prior failed receipts."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/TEST-05.md",
+          "docs/audits/2026-10-04/execution/TEST-05-pending-matrix.md",
+          "docs/audits/2026-10-04/execution/TEST-05-solo-durable.md",
+          "docs/audits/2026-10-04/execution/TEST-05-upgrade-matrix.md",
+          "docs/audits/2026-10-04/execution/TEST-05-urvin.md",
+          "docs/audits/2026-10-04/execution/TEST-05-shards.md",
+          "docs/audits/2026-10-04/execution/REL-05-observed-migrations.md"
+        ],
+        "acceptanceStates": [
+          "partially_met",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -956,7 +1082,7 @@
         2,
         4
       ],
-      "status": "not_started",
+      "status": "implemented_measured_ci_verified",
       "steps": [
         "Создать локальный/CI performance runner поверх изолированного тестового стенда TEST-01. Сценарии: холодное и тёплое открытие библиотеки, кузницы, бумажного листа, листа; начало и продолжение боя для 1/2/6 персонажей; действие; equip/unequip обычного предмета и предмета, меняющего ресурсы.",
         "Зафиксировать fixture content hash, artifact hash, seed/RNG, размер карты, состав участников, CPU/network profile, версии Node/Go/Postgres и условия кеша. Минимум 30 повторов серверного сценария; исходные выборки сохранять, p95 считать предварительным при малой выборке.",
@@ -997,6 +1123,28 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "330 server observations, 24 cold/warm navigations with actual cache hits; 120 equipment interactions and 1074 React events; page INP 152 ms in the diagnostic after-profile. Acquisition, hold-to-return and persistence SQL metrics are separate."
+        ],
+        "limitations": [
+          "PG timings include transport/scan/commit acknowledgement; worker execution does not measure pre-callback queue. INP is one local profiled page, not production RUM or a before/after speedup."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/OBS-01.md",
+          "docs/audits/2026-10-04/execution/OBS-01-equipment-browser-profile.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1021,7 +1169,7 @@
         4,
         8
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified_cache_enablement_unproven",
       "steps": [
         "Вынести общий resolver для initialize/rest/camp-action/camp-inventory. Дедуплицировать needs и группировать по entity type и способу ссылки: UUID, card_number, resource_id; загружать одну волну пакетными SQL.",
         "Сохранить строгую обработку отсутствующих сущностей, неизвестных needs, неоднозначных spell aliases, completeEffectTypes и variablesComplete. Собирать catalog через Map; сортировать один раз перед canonical serialization/hash вместо сортировки после каждой вставки.",
@@ -1065,6 +1213,33 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Grouped canonical resolver and bounded immutable preparation cache; actual line/wizard cold/warm/evicted/prefetch equality and rights/content/alias invalidation. Resource equip legacy→cache p95 90.6→65.6 ms; resource unequip 86.1→59.2 ms."
+        ],
+        "limitations": [
+          "Ordinary equip median 37.3→56.4 ms and unequip 38.0→56.6 ms worsened against legacy. Latest prefetch/flights/static memo correctness has no new latency claim. Preparation cache and prefetch remain OFF in the intended initial rollout."
+        ],
+        "nextAcceptance": [
+          "Enable only a measured beneficial configuration after exact target-host comparison; retain ordinary path regression as an explicit outcome."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/PERF-01.md",
+          "docs/audits/2026-10-04/execution/PERF-01-cache.md",
+          "docs/audits/2026-10-04/execution/PERF-01-cache-comparison.json",
+          "docs/audits/2026-10-04/execution/PERF-01-catalog-followup.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1091,7 +1266,7 @@
         3,
         6
       ],
-      "status": "not_started",
+      "status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "steps": [
         "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
         "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
@@ -1138,6 +1313,37 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Canonical intent prepares outside locks and validates fresh ownership/content/revision before atomic write; lost-response/reload/retry gates passed. Latest current-cfe9 counterbalanced browser measurement: 30 paired samples each line/archer, batch+mirrors ON in both arms and cache OFF, restored pre-init data, 128 exact retries with zero additional worker dispatch and unchanged source/RNG fingerprints; cleanup stopped.",
+          "A quiet current-default OFF/OFF versus desired combined ON/ON comparison passed all128 correctness checks, but initiative medians regressed164.9→209.4 ms and247.4→263.8 ms; latency acceptance was rejected. Exact report: docs/audits/2026-10-04/execution/PERF-02-default-profile.json.",
+          "Default OFF/OFF parallel canonical root preparation passed25 focused tests,128 actual samples and4 complete fixed-input artifact comparisons. Latency remains mixed:155.8→163.1 ms and242.2→229.2 ms; general latency acceptance is not met. Private patch is not integrated. See PERF-02-parallel-profile.json."
+        ],
+        "limitations": [
+          "Current initiative median line165.5→198.5 ms (+19.9%) and archer238.1→257.7 ms (+8.2%); worker calls6→12/7→14, dependency waves5→10/6→12. Correctness passed, latency did not. Equipment intent and initiative options remain OFF, so the default path still retains old UI preparation. Older uncontrolled 30+30 profile stays historical.",
+          "Earlier ON→ON savings do not prove a gain over the current default. The current-versus-desired benchmark used one shared candidate worker in both arms, not the exact deployed images."
+        ],
+        "nextAcceptance": [
+          "Keep initiative/cache OFF and the mixed parallel patch private. Inspect remaining canonical needs waves and repeated card transmission before a further bounded implementation; compare both current-default actors with complete fixed-input equality."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/PERF-02.md",
+          "docs/audits/2026-10-04/execution/PERF-02-browser-proof.json",
+          "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
+          "outputs/testing/perf02-combined/measurement-1791183280228/report.json",
+          "outputs/testing/perf02-combined/measurement-1791183280228/summary.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "partially_met"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1165,7 +1371,7 @@
         5,
         10
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified_bounded_capacity_scope",
       "steps": [
         "Разложить размеры и CPU envelope по mutable world, immutable catalog/actions/presentation, history, mirrored character turn_state и receipts. Определить, какой участок доминирует: JSON, clone, hash, engine CPU или storage.",
         "Спроектировать новый protocol/schema с immutable catalog blob по canonical hash и отдельным mutable snapshot. Shared artifact caches должны сохранять оригинальные исторические bytes; нового боя это касается по явной версии.",
@@ -1212,6 +1418,33 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Exact-mirror transport reduces party 1/2/6 wire bytes by 47.3/64.7/64.8%; pure aura projection preserves output/RNG. Bounded admission and artifact LRU; actual before/after-commit process kills and 160-command/retry long-combat proof."
+        ],
+        "limitations": [
+          "160 commands are not an indefinite heap bound; retained command IDs add about 195 B/turn. No whole-process memory ceiling or target-host saturation SLA established. Mirror switch is opt-in; parent plans ON at first cutover but live adoption is unproved."
+        ],
+        "nextAcceptance": [
+          "After verified cutover, record actual runtime flags and host capacity; retain no-TTL dedup/history semantics. Additional concurrency workers require measured CPU bottleneck and host budget."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/PERF-03.md",
+          "docs/audits/2026-10-04/execution/PERF-03-capacity.md",
+          "docs/audits/2026-10-04/execution/PERF-03-long-combat.md",
+          "docs/audits/2026-10-04/execution/PERF-03-crash-recovery.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "local_proof_only"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1242,7 +1475,7 @@
         4,
         8
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Получить bundle attribution общих imports; уже существующие lazy routes, lazy detail modals, dynamic 3D/PDF/Mermaid и Caddy compression сохранить. Размер всего dist не использовать как initial-load budget.",
         "Разделить лёгкий context/API диалога и тяжёлый lazy host; извлечь ChoiceResolver из общего файла кузницы. Каноничные action/spell/item components, previews, aria и настройка icon/row остаются прежними.",
@@ -1295,6 +1528,31 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "11 permission-aware page/summary APIs and referenced runtime-card closure remove full library traversal. Initial JS gzip 233337→130601 B (44%); rights/session invalidation and bulk request coalescing tested. Actual old/new PWA update preserves immutable chunks."
+        ],
+        "limitations": [
+          "Entry reduction is not total dist reduction; dist remained about 169 MB. Navigation figures are local, not every-device LCP guarantees."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/PERF-04.md",
+          "docs/audits/2026-10-04/execution/PERF-04-library-api.json",
+          "docs/audits/2026-10-04/execution/PERF-04-bulk-browser-followup.json",
+          "docs/audits/2026-10-04/execution/PERF-04-pwa-update.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1319,7 +1577,7 @@
         2,
         5
       ],
-      "status": "not_started",
+      "status": "implemented_measured_ci_verified",
       "steps": [
         "Записать CPU/React profile для hover, движения, смены цели и animation beats на большой карте с несколькими световыми областями и существами разного footprint.",
         "Стабилизировать displayState/tokens по presented state и реальному изменению портретов; отделить авторитетный state от presentation state без новых игровых команд.",
@@ -1362,6 +1620,29 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Actual Chrome renderer-only 30×4 profile: hover React 185→53.5 ms, Script CPU 213→69 ms, lighting calls 14256→0; target/movement/animation also measured with identical scene hashes. Canonical preview/state parity retained."
+        ],
+        "limitations": [
+          "Controlled 24×18 scene with four lights; presentation movement is not authoritative API latency or a universal FPS claim."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/PERF-05.md",
+          "docs/audits/2026-10-04/execution/PERF-05-browser-map.md",
+          "docs/audits/2026-10-04/execution/PERF-05-browser-map.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1389,7 +1670,7 @@
         5,
         10
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Использовать ADR и исправленную границу из TEST-02; не повторять её аудит. Здесь выполняются последующие вертикальные переносы крупных исполнителей.",
         "Зафиксировать реальный runtime import graph и разбирать найденное нарушение rules-core→engine/mvp по модулям. Не удалять import-boundary test ради зелёного CI и не называть действующий legacy adapter мёртвым кодом.",
@@ -1435,6 +1716,30 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Typed router for 44 commands and 15 saved decisions; cohesive attack/damage continuations and equipment seams. 84 exact pre/post extraction scenarios (71 continuation +13 queue) preserve events/RNG/IDs; archived bytes unchanged."
+        ],
+        "limitations": [
+          "This is the requested first cohesive extraction, not a promise to eliminate the compatibility adapter or every large file. New workspace package was optional."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REF-01.md",
+          "docs/audits/2026-10-04/execution/REF-01-continuations.md",
+          "docs/audits/2026-10-04/execution/REF-01-continuations.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1458,7 +1763,7 @@
         4,
         8
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified_no_speedup_claim",
       "steps": [
         "Перед изменением записать navigation/dialog/preview contracts основных экранов и определить повторяющиеся loaders, filters, pagination, command lifecycle и entity rendering boundaries.",
         "Разделить SoloCombatPage на загрузку и command lifecycle, target selection, presentation и dialog hosts. Command ID, pending persistence, retry/replay и continuation принадлежат одному общему lifecycle.",
@@ -1501,6 +1806,31 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "11 typed library adapters, Solo bootstrap/dispatch/persistence/target/dialog boundaries, Sheet action model/availability/canonical renderer and ChoiceResolver; session guards close late publication defects."
+        ],
+        "limitations": [
+          "Before/after React development/JSDOM total 619.50→826.51 ms under noisy adjacent changes; no refactoring speedup claimed. Line count reduction is not acceptance evidence by itself."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REF-02.md",
+          "docs/audits/2026-10-04/execution/REF-02-local-persistence.json",
+          "docs/audits/2026-10-04/execution/REF-02-sheet-actions.json",
+          "docs/audits/2026-10-04/execution/REF-02-react-summary.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1521,7 +1851,7 @@
         1,
         2
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Прочитать AGENTS.md, docs/data-driven-rules.md и аудит; описать реальные inputs frontend, backend, worker и инфраструктуры. Проверить транзитивные импорты worker/artifact.ts, общие engine/character/roguelike/schema inputs и backend presentation JSON.",
         "Создать один версионированный manifest зависимостей и planner, пригодный для локального gate, CI и будущего deploy. Сохранять esbuild metafile как проверяемый список worker build inputs; не объявлять ручные globs полной заменой графа импортов.",
@@ -1563,6 +1893,28 @@
           "scripts/release/plan-components.test.mjs"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Shared component dependency map and planner cover changes/deletes/renames, worker graph/COPY inputs and actual successful baseline rather than origin/main. CI9 and publication use exact source/input identities."
+        ],
+        "limitations": [
+          "The accelerated selective workflow is a separate private follow-on; having a correct planner does not mean production selective rollout has occurred."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REL-01.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1590,7 +1942,7 @@
         1,
         3
       ],
-      "status": "not_started",
+      "status": "implemented_oci_and_ci_verified",
       "steps": [
         "На изолированном локальном Linux/Docker стенде снять cold/warm baseline: размер contexts, времени dependency install/compile/bundle, image bytes и ресурсы. Разделить tracked git archive и ручную сборку из рабочего root с локальными артефактами.",
         "Сверить все COPY/embed/raw-import inputs с REL-01. Исправить устаревший frontend context ./frontend в compose-файлах, несовместимый с текущими COPY frontend/... и общими backend каталогами.",
@@ -1636,6 +1988,30 @@
           "scripts/release/measure-local.mjs"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Actual local registry cold/two-warm builds of three components, clean archive/typecheck, layer invalidation/negative pull and smoke. Later CI9 + successful actual publication establish current clean Linux builds."
+        ],
+        "limitations": [
+          "REL-02.md initial awaiting_environment paragraph is historical and superseded by later actual OCI/CI evidence. Full frontend image did not shrink: earlier measured +0.79%; changed frontend push reused media and transferred 5436117 new bytes."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REL-02.md",
+          "docs/audits/2026-10-04/execution/REL-04-local-registry.md",
+          "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1665,7 +2041,7 @@
         2,
         4
       ],
-      "status": "not_started",
+      "status": "images_published_first_adoption_failed_before_cutover",
       "steps": [
         "Зафиксировать различие release SHA, component source SHA, immutable image digest, input fingerprint, worker executable artifact hash и schema/protocol compatibility. Проверить актуальные файлы реализации health/build identity перед изменением.",
         "Создать versioned manifest schema и validator. Старые single-SHA releases читать через явный адаптер; неизвестная версия, некорректный digest или несовместимый protocol должны отклоняться до mutation.",
@@ -1713,6 +2089,34 @@
           "scripts/release/validate-manifest.mjs"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Immutable mixed manifest, baked source/input/image identity and per-component launch state; local exact 014f image adoption/rollback and readers tested. cfe9 images actually published after CI9.",
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+        ],
+        "limitations": [
+          "Current publication is not a healthy application deployment. Saved active projection will become usable only after actual successful protected-state adoption.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Accept exact current candidate health/identity, schema and retained-history proofs; record succeeded active state and rollback-compatible image set."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REL-03.md",
+          "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.md",
+          "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "local_proof_only",
+          "local_proof_only",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1738,7 +2142,7 @@
         2,
         3
       ],
-      "status": "not_started",
+      "status": "ci_build_and_publication_verified",
       "steps": [
         "Подготовить workflow_dispatch pipeline с exact candidate SHA и immutable inputs; проверять принадлежность разрешённой ветке и успешные обязательные проверки именно этого SHA. Не читать движущийся main повторно посреди выпуска.",
         "Включить REL-01 planner, parallel component build matrix и отдельные external cache scopes. Не собирать неизменившийся компонент, если его digest из доверенного manifest доступен и inputs действительно не менялись.",
@@ -1780,6 +2184,29 @@
           "infra/release-manifest.schema.json"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Actual GitHub publication 37272499962 succeeded at exact cfe9 after complete CI9. Digest/source/test binding, protected hosted publication and negative registry contracts implemented."
+        ],
+        "limitations": [
+          "Candidate publication does not assert host rehearsal/cutover success. Historical 014f local-only OCI receipts keep their original identity."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REL-04.md",
+          "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1806,7 +2233,7 @@
         2,
         4
       ],
-      "status": "not_started",
+      "status": "first_rehearsal_stopped_selective_auto_private",
       "steps": [
         "Создать новый manifest-based runner с legacy adapter: validate candidate, compare deployed manifest, pull digests, verify identities/protocol/schema, определить изменившиеся сервисы и необходимые миграции.",
         "Сохранить lock, immutable release directories, exact identities, health/readiness, retained frontend assets и старые executable artifacts. Не называть symlink switch атомарной заменой всего HTTP-трафика: Compose обновляет сервисы последовательно.",
@@ -1851,6 +2278,37 @@
           "scripts/release/plan-components.mjs"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Hosted SSH handoff, fresh captured backup, typed CJS/source-cert inventory, 7 migration scenarios, per-component health and journal rollback implemented. Local exact images passed full collector + adapter rollback.",
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+        ],
+        "limitations": [
+          "First real deploy 37273035754 was operator-stopped after snapshot expiry, before cutover. The 123-path rebased selective/auto/writer package and separate retained-launch compatibility fixes are private and unapplied. Local contracts and OCI foundations do not prove production selective delivery or automatic convergence.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Finish first verified adoption; rebase private follow-on preserving cfe9 reporter/catalog/TTL fixes, validate and deploy tooling. Obtain actual immutable full anchor, execute genuine frontend-only cutover+rollback with unchanged backend/worker IDs; enable/test requested automatic main reconciliation."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REL-05.md",
+          "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.md",
+          "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.md",
+          "docs/audits/2026-10-04/execution/REL-SSH-handoff.md",
+          "outputs/testing/selective-writer-combined-0125/receipt.json",
+          "outputs/testing/combined-writer-readiness-review/report.json"
+        ],
+        "acceptanceStates": [
+          "partially_met",
+          "local_proof_only",
+          "local_proof_only",
+          "partially_met"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1874,7 +2332,7 @@
         1,
         3
       ],
-      "status": "not_started",
+      "status": "owned_restore_verified_host_rehearsal_incomplete",
       "steps": [
         "Инвентаризировать backup categories: PostgreSQL snapshot, referenced executable artifacts, release manifest, media manifest и необходимая конфигурация. Текущий pg_dump не содержит /artifacts; не считать его доказательством полного восстановления боя.",
         "Создать backup manifest с хэшами/размерами/временем и проверкой ссылок DB snapshot на artifacts. Секреты не помещать в обычный manifest, логи или Git; отдельно описать защищённый recovery канал конфигурации.",
@@ -1917,6 +2375,35 @@
           "docs/backup-restore.md"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Native and OCI full restore, pending/duplicate/media reference preservation, hash inventory and typed historical source proof passed in owned local trials. First host capture and clone restoration completed, but the expired rehearsal was operator-stopped during schema proof; successful host release acceptance remains pending.",
+          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json."
+        ],
+        "limitations": [
+          "Production-sized complete restore time/RTO, off-host durability and remote media object availability not yet established. Read-only scan ~490 s and metadata ~0.505 s are phases, not total recovery. No scheduled retention/GC or RPO guarantee.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Record actual first host recovery duration and immutable backup date; verify required external object access/durability before claiming broader recovery guarantee. Never renew age by rewriting a proof."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/REL-06.md",
+          "docs/audits/2026-10-04/execution/REL-06-native-media.json",
+          "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.md",
+          "docs/audits/2026-10-04/execution/REL-05-first-adoption-timing.json"
+        ],
+        "acceptanceStates": [
+          "local_proof_only",
+          "partially_met",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -1939,7 +2426,7 @@
         1,
         2
       ],
-      "status": "not_started",
+      "status": "measured_local_and_readonly_production",
       "steps": [
         "Подготовить инструмент, допускающий только явно названную локальную БД/разрешённый restored snapshot, с read-only transaction, statement timeout и lock timeout. Не читать production DSN из .env автоматически.",
         "Снять PostgreSQL version, database/relation/TOAST/index sizes, live/dead tuple estimates, workload counters, autovacuum/analyze times и stats reset metadata. Разделить локальный cluster directory, одну БД, dump, WAL и production storage.",
@@ -1981,6 +2468,30 @@
           "docs/database-storage.md"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Read-only DB total 2315220659 B; receipts 1809063936 B, character commands 138027008 B. Top consumers/TOAST/index separated. Two independent 1000-command+1000-retry seeded series have identical logical outcomes."
+        ],
+        "limitations": [
+          "Physical relation bytes include TOAST/index overhead; local savings are not a production shrink forecast. Observation does not establish which indexes are unused over business workload."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/DB-01.md",
+          "docs/audits/2026-10-04/execution/DB-01-production-size-metadata.json",
+          "docs/audits/2026-10-04/execution/DB-01-seeded-series.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2008,7 +2519,7 @@
         3,
         6
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified_writer_off_followon_pending",
       "steps": [
         "По DB-01 подтвердить, что полноразмерные receipt responses существенно влияют на рост/время. Если гипотеза не подтверждена, оформить no-change decision и выбрать фактический consumer вместо внедрения новой схемы ради предположения.",
         "Спроектировать versioned receipt/result contract: durable command identity, request fingerprint, outcome/revision, exact immutable result или ссылка на exact snapshot/result. Сохранить возможность вернуть прежний ответ после дальнейших ходов; не восстанавливать его из текущего персонажа.",
@@ -2053,6 +2564,33 @@
           "docs/database-storage.md"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "New bounded gzip receipts with version/hash/length, legacy reader and exact retry. 1000-command shadow comparison relation bytes 44507136→26492928 (40.47%). Same-014f actual ON/OFF/restart/corruption+full restore proves both receipt families locally."
+        ],
+        "limitations": [
+          "DB_COMPACT_RECEIPTS remains 0 in first adoption to keep old 4549 rollback reader safe. No old receipt backfill. Private format proof is same-image, not future distinct candidate/previous acceptance."
+        ],
+        "nextAcceptance": [
+          "After genuine dual-reader first adoption, integrate ninth-stage writer gate; run exact published distinct pair on public synthetic fixture plus independent full retained-history restore; enable only new writes after accepted proof and record monotonic format obligation."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/DB-02.md",
+          "docs/audits/2026-10-04/execution/DB-02-storage.json",
+          "outputs/testing/writer-policy-draft/actual-compact-1791169663857/report.json",
+          "outputs/testing/writer-policy-draft/actual-expanded-restore-1791172479381/report.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2081,7 +2619,7 @@
         3,
         6
       ],
-      "status": "not_started",
+      "status": "enablement_rejected_measured_latency_regression",
       "steps": [
         "Связать DB-01 measurements с PERF-01 resolver contract. Выяснить, какие immutable catalogs реально повторяются и какие JSONB поля сериализуются/перезаписываются на каждом ходу; не считать физический TOAST rewrite доказанным только по SQL UPDATE.",
         "Спроектировать новый versioned envelope с content-addressed immutable catalog и отдельным изменяемым состоянием. Хэш включает каноничный полный input и версию serializer/protocol; проверять права и полноту dependency closure до reuse.",
@@ -2126,6 +2664,31 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Immutable reference storage and bounded transaction-local hydration preserve old bytes and fresh ownership/reference/hash checks. 100 paired samples: relation 9895936→6864896 B, but init p95 138.48→147.12 ms (+6.24%); continue 113.90→119.64 ms."
+        ],
+        "limitations": [
+          "Storage benefit does not satisfy latency acceptance. Current ON adds SQL versus OFF (init26→27, continue14→16); reduction29→27 was only relative to earlier ON implementation."
+        ],
+        "nextAcceptance": [
+          "Keep DB_FROZEN_CATALOGS=0. This is a completed negative decision for this iteration, not an unimplemented optimization or permission to erase compatibility code. Reopen only with a separately measured hypothesis."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/DB-03-transaction-scope.md",
+          "docs/audits/2026-10-04/execution/DB-03-latency100-optimized.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "measured_rejection"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2154,7 +2717,7 @@
         2,
         5
       ],
-      "status": "not_started",
+      "status": "owned_cleanup_protocol_verified_no_production_deletion",
       "steps": [
         "По DB-01 составить ownership/retention matrix для пользовательских документов, active/ended runs, receipts, append-only journals, migration archives, OAuth/outbox, legacy tables, backups и media. Сроки хранения и удаление пользовательских данных не придумывать без решения владельца.",
         "Проверить candidate duplicate indexes через фактические definitions/constraints/query plans и статистику с известным окном наблюдения. Рассмотреть cloudinary_id UNIQUE плюс обычный индекс и session_id/seq индексы как кандидаты, а не как разрешённые удаления.",
@@ -2203,6 +2766,31 @@
           "docs/backup-restore.md"
         ],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Deterministic protected-reference retention, exact preimage plans, idempotent export/apply and hash/restore checks on owned fixtures; no global receipt/artifact TTL or append-only rewrite."
+        ],
+        "limitations": [
+          "No production index removal, data-URL rewrite, garbage collection or VACUUM FULL applied. Zero fixture duplicate candidates/dataURLs is not evidence of production absence."
+        ],
+        "nextAcceptance": [
+          "Only if a real candidate exists: obtain workload/ownership/reference proof and exact backup-bound plan before destructive operation; report logical/reusable/physical space separately."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/DB-04.md",
+          "docs/audits/2026-10-04/execution/DB-04-followup.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2221,7 +2809,7 @@
         1,
         2
       ],
-      "status": "not_started",
+      "status": "cause_and_actual_provider_route_verified",
       "steps": [
         "Добавить structured error mapper: app authorization / upstream region / upstream permission / rate limit / network / timeout / unknown.",
         "Локально моделировать JSON и HTML 403, content type и provider request ID; редактировать секретные заголовки и не логировать prompt/base64.",
@@ -2255,6 +2843,28 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Actual TimeWeb direct 403 classified as unsupported_country_region_territory; private authenticated CONNECT path passed TLS and one actual Images POST (gpt-image-1, 1024×1024 low, 10.56 s, HTTP200)."
+        ],
+        "limitations": [
+          "The paid provider probe explicitly did not test the deployed application endpoint. GET models success is not substituted for generation; routing does not itself establish provider eligibility or a universal VPN remedy."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/AI-01.md",
+          "docs/audits/2026-10-04/execution/AI-03-provider-diagnostic.json",
+          "docs/audits/2026-10-04/execution/AI-03-sota-image-probe.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2276,7 +2886,7 @@
         2,
         3
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified_application_cutover_pending",
       "steps": [
         "Направить существующие маршруты в один domain service: provider → storage → entity update.",
         "При отказе не сохранять placeholder и не возвращать ложный success; сохранять прежнее изображение.",
@@ -2311,6 +2921,31 @@
         ],
         "proposed": [],
         "descriptive": []
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Single provider→storage→entity result/error contract; no fake successful response or new data-URL image fallback. Provider/storage/DB failure preservation covered."
+        ],
+        "limitations": [
+          "Local/emulated pipeline and real provider probe are separate evidence; exact deployed application-to-storage path awaits successful cutover acceptance.",
+          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+        ],
+        "nextAcceptance": [
+          "Verify intended application flow on accepted release with explicit request identity and no blind paid retry."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/AI-02.md",
+          "docs/audits/2026-10-04/execution/AI-03-interceptor-regression.md",
+          "docs/audits/2026-10-04/execution/AI-03.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2332,7 +2967,7 @@
         3,
         5
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified_jobs_off_followon_pending",
       "steps": [
         "Ввести job ID/fingerprint/owner и persisted состояния queued/running/succeeded/failed/unknown; лимиты concurrency и бюджета.",
         "Worker lease и restart не должны повторять paid POST с неизвестным результатом. Локальная идемпотентность не доказывает exactly-once внешнего API.",
@@ -2368,6 +3003,33 @@
           "frontend generation status",
           "infra optional generation service"
         ]
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Durable owner jobs, accepted-ID replay even with writer disabled, status/history recovery and explicit unknown acknowledgement. Real Go/PG/Node gameplay continues during held/failing CONNECT. Same-014f jobs/browser/expanded restore and ON→OFF→ON foundations passed."
+        ],
+        "limitations": [
+          "IMAGE_JOBS_ENABLED=0 for first adoption. Same-image emulator foundation does not authorize future distinct-image writer change; support for reading a format is distinct from evidence that data of that format was written. Concurrency bound is not a monetary quota."
+        ],
+        "nextAcceptance": [
+          "Integrate/run exact-pair hosted browser + host format/history ninth gate after actual compatible predecessor exists; preserve ON→OFF→OFF obligation and unknown outcome no-retry semantics, then enable jobs through recorded policy."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/AI-03.md",
+          "docs/audits/2026-10-04/execution/AI-03-egress-isolation.json",
+          "outputs/testing/writer-policy-draft/actual-registry-browser-1791178416446/report.json",
+          "outputs/testing/writer-policy-draft/actual-policy-sequence-1791174803626/report.json",
+          "outputs/testing/writer-policy-draft/actual-expanded-restore-1791172479381/report.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2390,7 +3052,7 @@
         1,
         3
       ],
-      "status": "not_started",
+      "status": "implemented_ci_verified",
       "steps": [
         "Разделить tracked/untracked/generated/original/evidence/cache; проверить единственные оригиналы и хэши перед любыми переносами.",
         "Определить единый каталог результата и ignore rules. Уже tracked файлы не исключаются автоматически через .gitignore.",
@@ -2428,6 +3090,26 @@
         "descriptive": [
           "docs index/archive"
         ]
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Reversible documentation archive/current index, local artifact ignore boundaries, no loss of originals/evidence; bounded link check and build included."
+        ],
+        "limitations": [
+          "Archived recommendations stay historical. Stale task not_started and old awaiting_environment wording need the parent’s evidence-based reconciliation, not deletion of source evidence."
+        ],
+        "nextAcceptance": [],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/CLEAN-01.md"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2448,7 +3130,7 @@
         2,
         5
       ],
-      "status": "not_started",
+      "status": "v1_v2_code_removed_ci_verified_db_retained",
       "steps": [
         "Составить route/API/data dependency map и измерение использования без личного содержания. Название старого каталога не доказывает неиспользуемость.",
         "Сохранить четыре основных раздела и Профиль/Настройки/Экспорт/Инициативу; сохранить обслуживающие библиотеку редакторы, ShopDetail, inventory mechanics и шаблоны для weapon mastery.",
@@ -2483,6 +3165,30 @@
         "descriptive": [
           "legacy group/inventory/character controllers"
         ]
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "Later explicit user request superseded gradual deprecation: obsolete V1/V2 routes/controllers/models/client/export removed, current V3 CharacterSheetV2 and shared inventory/paper/run mechanics retained; legacy inventory kind rejects rather than falls through."
+        ],
+        "limitations": [
+          "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
+        ],
+        "nextAcceptance": [
+          "Only after a V3-only compatible predecessor and retained verified backup: prepare exact FK-bound table removal migration, without deleting current shared inventory."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.md",
+          "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.json",
+          "docs/audits/2026-10-04/execution/CLEAN-02-production-dependencies.json"
+        ],
+        "acceptanceStates": [
+          "supported_by_code_local_and_ci",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     },
     {
@@ -2504,7 +3210,7 @@
         2,
         4
       ],
-      "status": "not_started",
+      "status": "pwa_verified_media_variants_off_tradeoff_recorded",
       "steps": [
         "Разделить originals и runtime media; подготовить WebP/AVIF/размеры под экран с визуальным сравнением карт и иконок.",
         "Использовать URL с content hash и object storage/CDN либо отдельный assets layer; старые ссылки и лицензионные сведения сохранить.",
@@ -2539,6 +3245,32 @@
           "media manifest (new)",
           "Git maintenance runbook"
         ]
+      },
+      "original_status": "not_started",
+      "execution_result": {
+        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "demonstrated": [
+          "PWA shell closure 19 entries/860.35 KiB versus2101049 B; actual offline and A/B old-chunk preservation. Optional 17 image variants transfer42.82→29.45 MB with retained original URLs/native dimensions/alpha."
+        ],
+        "limitations": [
+          "Variants add about29.4 MB to dist because originals stay; no Git history or full-image shrink claimed. VITE_MEDIA_VARIANTS=0; OCI media input proposal is prepared_not_release_authorized."
+        ],
+        "nextAcceptance": [
+          "If enabling variants, bind their exact source manifest into release OCI inputs and verify final image/old document/export paths; do not trade retained originals for an unmeasured size claim."
+        ],
+        "evidence": [
+          "docs/audits/2026-10-04/execution/CLEAN-03.md",
+          "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
+          "docs/audits/2026-10-04/execution/CLEAN-03-pwa.json",
+          "docs/audits/2026-10-04/execution/CLEAN-03-oci-media-inputs.json",
+          "docs/audits/2026-10-04/execution/PERF-04-pwa-update.json"
+        ],
+        "acceptanceStates": [
+          "partially_met",
+          "supported_by_code_local_and_ci"
+        ],
+        "productionAcceptance": "not_claimed",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
       }
     }
   ],
@@ -2656,5 +3388,82 @@
   },
   "scope_note": "scope содержит существующие точки изменения и предлагаемые новые файлы. scope_inventory показывает наличие на дату аудита; proposed могут создаваться задачей или её зависимостью. Descriptive уточняются исполнителем до изменения.",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
-  "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json"
+  "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
+  "execution_current": {
+    "recordedAt": "2026-10-05T07:28:06.311Z",
+    "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+    "ci": {
+      "id": 37271099509,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "workflow": ".github/workflows/ci.yml",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37271099509",
+      "startedAt": "2026-10-05T06:10:38Z",
+      "completedAt": "2026-10-05T06:26:18Z",
+      "aggregate": "outputs/ci/37271099509/all/local-suite-results/report.json",
+      "aggregateHash": "sha256:fe5a587d03dfa00090da086274d2bf75b4edbbdb555cf609c8d1160eb4ff0a45",
+      "counts": {
+        "node": 689,
+        "vitest": 6462,
+        "go": 753,
+        "workerAndDatabase": 20,
+        "realBrowserFlows": 12,
+        "browserUiFixtures": 48,
+        "battle3d": 8
+      },
+      "aggregateWallMs": 857336,
+      "cleanup": "stopped",
+      "workflowWallMs": 940000,
+      "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is the actual GitHub workflow start-to-completion interval, including setup and artifact handling."
+    },
+    "publication": {
+      "id": 37272499962,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "workflow": ".github/workflows/release.yml",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37272499962",
+      "startedAt": "2026-10-05T06:27:20Z",
+      "completedAt": "2026-10-05T06:32:46Z"
+    },
+    "deployment": {
+      "id": 37273035754,
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "failure",
+      "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "workflow": ".github/workflows/deploy.yml",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37273035754",
+      "startedAt": "2026-10-05T06:33:38Z",
+      "completedAt": "2026-10-05T07:14:00Z",
+      "outcome": "operator-stopped-expired-rehearsal-before-cutover",
+      "productionSuccess": false,
+      "audit": "outputs/operations/first-refused-deploy-2026-10-05T07-20-33.079Z/report.json",
+      "auditHash": "sha256:301c660b87aa92b0e1a8f9480056aef318a10d69bfcf48670aaa1ec2d62cb953",
+      "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+      "originalLiveHealthy": true,
+      "remainingOwnedResources": 0,
+      "dockerAuthRemoved": true,
+      "journalCreated": false,
+      "automaticTtlRejectionClaimed": false
+    },
+    "manualVariables": {
+      "RELEASE_BUILD_ENABLED": true,
+      "RELEASE_PUBLICATION_ENABLED": true,
+      "PRODUCTION_DEPLOY_ENABLED": true
+    },
+    "automationEnabled": false,
+    "firstLiveWritersEnabled": false,
+    "privateStatusMatrix": {
+      "file": "outputs/testing/recommendations-status-matrix/status-matrix.json",
+      "sha256": "sha256:e191aef9eaa2351dab02c61d4bbc2228b5f35c8a4356dc54f476c6e42131d583",
+      "recordedAt": "2026-10-05T07:03:09.765Z"
+    },
+    "next": "Commit and verify the integrated thin/manual recovery with exact full CI, then new initial publication and fresh full legacy adoption. Selective/writer opt-in require a genuine successful predecessor.",
+    "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
+    "record": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+  }
 }

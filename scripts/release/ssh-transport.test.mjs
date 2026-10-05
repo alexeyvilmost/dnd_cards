@@ -88,6 +88,14 @@ test('host gates re-fetch workflow metadata, preserve every proof and return onl
   ['candidate-rehearsal.mjs','run'],['assemble-bundle.mjs',path.join(directory,'candidate')],['deployment-handoff.mjs','verify'],['automatic-release.mjs','check-current'],['deploy.mjs','adopt'],['deployment-handoff.mjs','receipt'],['active-projection.mjs','/private/capture/host.json']]);
  assert.ok(calls.find(row=>path.basename(row.args[0])==='deployment-handoff.mjs'&&row.args[1]==='verify').args.includes(path.join(directory,'verified-release-run.json')));
 });
+test('recovered first deployment rechecks protected host before capture, and guard refusal cannot login or mutate',async t=>{
+ const directory=await temp(t),packet=fixture(),calls=[];
+ const candidate=JSON.parse(packet.files['candidate.json'].text);candidate.provenance.firstAdoptionRecovery={id:'5-1',proofHash:hash('8'),controlCommit:candidate.provenance.controlCommit};
+ packet.files['candidate.json'].text=JSON.stringify(candidate);packet.files['candidate.json'].sha256=digest(packet.files['candidate.json'].text);
+ const run=async(bin,args,options)=>{assert.equal(options.env.RECOVERY_ATTEMPT_DIRECTORY,directory);calls.push(path.basename(args[0]));if(path.basename(args[0])==='first-adoption-recovery-host.mjs')throw Error('original no longer matches');return '';};
+ await assert.rejects(executeHostGates({directory,packet,request:request(),token:'unit-token',run}),/no longer matches/);
+ assert.deepEqual(calls,['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs','first-adoption-recovery-host.mjs']);assert.equal(existsSync(path.join(directory,'docker-auth')),false);
+});
 test('every host gate failure cleans attempt credentials and never retries cutover',async t=>{
  for(let failure=0;failure<11;failure++){const directory=await temp(t),packet=fixture();let calls=0,applies=0;
   await assert.rejects(executeHostGates({directory,packet,request:request(),token:'unit-read-token',run:async(bin,args)=>{if(path.basename(args[0])==='deploy.mjs')applies++;if(calls++===failure)throw Error('injected gate failure');if(path.basename(args[0])==='prepare-host-release.mjs')return 'capture_directory=/private/capture\nhost_config=/private/capture/host.json\nrehearsal_config=/private/capture/rehearsal.json\n';if(path.basename(args[0])==='deploy.mjs')return '{}';return '';}}));

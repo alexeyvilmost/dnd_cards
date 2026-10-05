@@ -1,6 +1,7 @@
 import {randomUUID} from 'node:crypto';
-import {databaseRecoveryInventory} from './artifact-references.mjs';
 import {databaseSchemaLedgerProof} from './database-schema-proof.mjs';
+import {cursorInventory} from './reference-cursor.mjs';
+import {withDockerReadSession} from './docker-read-session.mjs';
 export async function withLegacyReadSnapshot({command,cleanupCommand=command,config,dsn,name,label},visit){
   if(!/^legacy_inspect_[a-z0-9_]+$/.test(name)||label!==`bagofholding.legacy-inspection=${name}`)throw Error('Generated read-snapshot ownership required');
   const {idleSeconds=120,totalSeconds=1800,renewSeconds=30}=config.snapshotLease??{};
@@ -28,8 +29,8 @@ export async function withLegacyReadSnapshot({command,cleanupCommand=command,con
     }
     if(!snapshot)throw Error('Read snapshot export unavailable');
     let lastProgress=Date.now();
-    const progress=async()=>{
-      if(Date.now()-lastProgress<renewSeconds*1000)return;
+    const progress=async(force=false)=>{
+      if(!force&&Date.now()-lastProgress<renewSeconds*1000)return;
       const value=JSON.parse(await command(['container','inspect',keeper]))[0];
       if(value.State?.Running!==true||value.Config.Labels?.['bagofholding.legacy-inspection']!==name)throw Error('Read snapshot progress lease expired or ownership changed');
       await command(['exec',keeper,'touch','/tmp/lease']);lastProgress=Date.now();
@@ -55,5 +56,9 @@ async function readDockerDatabase({command,cleanupCommand=command,postgresImage,
   });
 }
 
-export const readDockerInventory=options=>readDockerDatabase(options,database=>databaseRecoveryInventory(database,options.options));
+export async function readDockerInventory({command,cleanupCommand=command,postgresImage,databaseNetwork,dsn,options,spawnProcess}){
+  const name=`legacy_inspect_${randomUUID().replaceAll('-','')}`,label=`bagofholding.legacy-inspection=${name}`,config={postgresImage,databaseNetwork};
+  return withLegacyReadSnapshot({command,cleanupCommand,config,dsn,name,label},(snapshot,progress)=>
+    withDockerReadSession({command,cleanupCommand,config,dsn,name,label,snapshot,progress,spawnProcess},database=>cursorInventory(database,options)));
+}
 export const readDockerSchemaLedgerProof=options=>readDockerDatabase(options,databaseSchemaLedgerProof);

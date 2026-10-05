@@ -1,0 +1,249 @@
+{
+  "schemaVersion": 1,
+  "kind": "perf02-current-versus-desired-profile",
+  "status": "latency-acceptance-rejected",
+  "correctness": "passed",
+  "localOnly": true,
+  "deployable": false,
+  "baseCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+  "parentPatchSha256": "f1b0563450548012fdcfd16b412cebaffdfcb245d4c40ad5a18133b055d837d8",
+  "parentFilesChanged": false,
+  "sharedFilesChanged": false,
+  "productionFlagsChanged": false,
+  "sampleCount": 128,
+  "pairsPerActor": 30,
+  "actors": [
+    "line",
+    "archer"
+  ],
+  "profiles": {
+    "OFF": {
+      "label": "cfe backend/default flags plus shared candidate worker",
+      "initiativeOptions": false,
+      "catalogBatch": true,
+      "workerMirrors": true,
+      "preparationCache": false,
+      "catalogPrefetch": false
+    },
+    "ON": {
+      "label": "desired f1b0 combined profile",
+      "initiativeOptions": true,
+      "catalogBatch": true,
+      "workerMirrors": true,
+      "preparationCache": true,
+      "catalogPrefetch": false
+    }
+  },
+  "driver": {
+    "sha256": "sha256:eebb0f2cdd34e7d7e4e21dba1fbb976bc7bc329b02e76da0c875ef325de74178",
+    "bytes": 20374,
+    "unchanged": true
+  },
+  "proof": {
+    "sameRestoredPreinitRows": true,
+    "sameCandidateWorkerBothArms": true,
+    "sameCurrentUIBothArms": true,
+    "independentInitializeEntropy": true,
+    "exactCommandRetries": 128,
+    "retryWorkerCalls": 0,
+    "DBRngCountsUnchangedAfterRetry": true,
+    "originalSheetsUnchanged": true,
+    "cleanupStopped": true
+  },
+  "decision": "Keep initiative and preparation-cache flags OFF. Previous ON→ON improvement does not establish improvement over the current default profile.",
+  "diagnosis": {
+    "line": {
+      "browserPreparationOffMs": 19.683,
+      "optionsOnMs": 69.664,
+      "initializeOffMs": 103.787,
+      "initializeOnMs": 90.582
+    },
+    "archer": {
+      "browserPreparationOffMs": 67.497,
+      "optionsOnMs": 104.017,
+      "initializeOffMs": 137.022,
+      "initializeOnMs": 118.082
+    },
+    "note": "Endpoint timings are observed server first-write durations; do not add overlapping subphases as independent latency.",
+    "coldOptionsRounds": [
+      5,
+      6
+    ],
+    "optionsPublicationMs": [
+      9.953,
+      13.94
+    ],
+    "candidateInitializeCalls": 1
+  },
+  "independentReview": {
+    "agent": "runtime_performance",
+    "mode": "read-only",
+    "status": "no remaining blocker after prebuilt-hash and partial-startup-cleanup fixes"
+  },
+  "evidence": [
+    {
+      "file": "outputs/testing/perf02-combined/default-desired/measure.mjs",
+      "sha256": "eebb0f2cdd34e7d7e4e21dba1fbb976bc7bc329b02e76da0c875ef325de74178",
+      "bytes": 20374
+    },
+    {
+      "file": "outputs/testing/perf02-combined/default-desired/analyze.mjs",
+      "sha256": "1583fc42890d3365d021033653caa57cf6f6262b125f7fe5f0ed4ffc3b3fa09b",
+      "bytes": 5316
+    },
+    {
+      "file": "outputs/testing/perf02-combined/default-desired/measurement-1791186231197/report.json",
+      "sha256": "cf726b59d9e69773e9f3bc8ae0c6b3600503cb3f8dad0b45c01bef877a14fe17",
+      "bytes": 3485605
+    },
+    {
+      "file": "outputs/testing/perf02-combined/default-desired/measurement-1791186231197/summary.json",
+      "sha256": "3230889b11207ea5f419d6b32d14476e6ba854d67e2f2bb4665db2f5da30f898",
+      "bytes": 39585
+    }
+  ],
+  "limitations": [
+    "Windows native local, not exact deployed image composition or production latency.",
+    "Combined backend-code/initiative/cache profile comparison, not single-flag causality.",
+    "30-sample p95 exploratory; both map-ready confidence intervals include no change."
+  ],
+  "recordedAt": "2026-10-05T08:05:49.026Z",
+  "metrics": {
+    "line": {
+      "initiative": {
+        "baseline": {
+          "n": 30,
+          "mean": 171.4333333335817,
+          "p50": 164.89999999850988,
+          "p95": 208.39999999850988,
+          "min": 148.5,
+          "max": 222.69999999925494
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 207.2633333331595,
+          "p50": 209.39999999850988,
+          "p95": 234.70000000298023,
+          "min": 175.10000000149012,
+          "max": 240.39999999850988
+        },
+        "paired": {
+          "medianRatio": 1.2698605215306376,
+          "medianRatioBootstrap95": [
+            1.169994295472104,
+            1.3230672532874197
+          ],
+          "meanPairedDelta": 35.8299999995778,
+          "meanPairedDeltaBootstrap95": [
+            27.096666664878526,
+            44.13666666547457
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      },
+      "mapReady": {
+        "baseline": {
+          "n": 30,
+          "mean": 381.6233333333085,
+          "p50": 268.5,
+          "p95": 579,
+          "min": 253,
+          "max": 591.3000000007451
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 446.35666666664184,
+          "p50": 360.3999999985099,
+          "p95": 633.1999999992549,
+          "min": 274.70000000298023,
+          "max": 660.1000000014901
+        },
+        "paired": {
+          "medianRatio": 1.342271880813817,
+          "medianRatioBootstrap95": [
+            0.5807598727202388,
+            2.166604685744319
+          ],
+          "meanPairedDelta": 64.73333333333333,
+          "meanPairedDeltaBootstrap95": [
+            -8.973333333060145,
+            139.37999999920527
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      }
+    },
+    "archer": {
+      "initiative": {
+        "baseline": {
+          "n": 30,
+          "mean": 254.69000000047188,
+          "p50": 247.39999999850988,
+          "p95": 325.5,
+          "min": 222.5,
+          "max": 330.5999999977648
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 271.2366666674614,
+          "p50": 263.80000000447035,
+          "p95": 311.1000000014901,
+          "min": 240.80000000447035,
+          "max": 316.5
+        },
+        "paired": {
+          "medianRatio": 1.0662894098870623,
+          "medianRatioBootstrap95": [
+            1.0133542812195206,
+            1.1600496277701164
+          ],
+          "meanPairedDelta": 16.546666666989527,
+          "meanPairedDeltaBootstrap95": [
+            6.786666668454806,
+            25.923333332811794
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      },
+      "mapReady": {
+        "baseline": {
+          "n": 30,
+          "mean": 410.9333333335817,
+          "p50": 366.5,
+          "p95": 651.3000000007451,
+          "min": 349.6000000014901,
+          "max": 663.8999999985099
+        },
+        "candidate": {
+          "n": 30,
+          "mean": 428.14000000059605,
+          "p50": 372.0999999977648,
+          "p95": 675.6000000014901,
+          "min": 350.1000000014901,
+          "max": 685.9000000022352
+        },
+        "paired": {
+          "medianRatio": 1.015279672572346,
+          "medianRatioBootstrap95": [
+            0.9667705088532769,
+            1.0990450204760447
+          ],
+          "meanPairedDelta": 17.20666666701436,
+          "meanPairedDeltaBootstrap95": [
+            -33.49333333298564,
+            68.55666666614512
+          ],
+          "replicates": 10000,
+          "seed": 20261005,
+          "p95Exploratory": true
+        }
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@ import {createDeploymentStore, planDeployment, deploy, recover} from './deploy-s
 import {adaptLegacyManifest} from './validate-manifest.mjs';
 import {assertHostConfiguration, createDockerDeploymentAdapter} from './docker-deployment.mjs';
 import {isLegacyBaseline} from './legacy-baseline.mjs';
+import {assertHostFirstAdoptionRecovery} from './first-adoption-recovery-host.mjs';
 const read = file => JSON.parse(readFileSync(file, 'utf8'));
 export async function main(args) {
   const [mode, ...rest] = args;
@@ -19,7 +20,15 @@ export async function main(args) {
   if(mode==='apply'&&isLegacyBaseline(store.active()))throw Error('First legacy transition requires explicit adopt mode');
   if(mode==='adopt'&&!config.legacyBaselineDirectory)throw Error('Reviewed observed legacy baseline directory required');
   const adapter = await createDockerDeploymentAdapter(config);
-  if (mode === 'apply'||mode==='adopt') return deploy({store, adapter, candidate: read(path.join(target, 'manifest.json')), bundle: read(path.join(target, 'bundle.json'))});
+  if (mode === 'apply'||mode==='adopt') {
+    const published=read(path.join(target,'candidate.json'));
+    let beforePrepare;
+    if(published.provenance?.firstAdoptionRecovery) {
+      if(mode!=='adopt'||!path.isAbsolute(process.env.RECOVERY_ATTEMPT_DIRECTORY??''))throw Error('Recovered first adoption requires the authenticated host attempt');
+      beforePrepare=()=>assertHostFirstAdoptionRecovery({directory:process.env.RECOVERY_ATTEMPT_DIRECTORY,config,underLock:true});
+    }
+    return deploy({store, adapter, candidate: read(path.join(target, 'manifest.json')), bundle: read(path.join(target, 'bundle.json')),beforePrepare});
+  }
   return recover({store, adapter, releaseId: target, rollback: mode === 'rollback'});
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
