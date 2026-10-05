@@ -132,7 +132,7 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		var seed string
 		seed, err = newRoguelikeSeed()
 		if err == nil {
-			result, catalog, err = initializeRoguelikeWorker(c.Request.Context(), rc.db, client, run, seed, roguelikePayloadString(request, "initiative_maneuver_action_id"))
+			result, catalog, err = prepareRoguelikeInitialization(c.Request.Context(), rc.db, client, run, seed, roguelikePayloadString(request, "initiative_maneuver_action_id"))
 		}
 	} else {
 		if len(run.CombatEnvelope) == 0 {
@@ -200,6 +200,11 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		for _, member := range locked.Characters {
 			if member.RuntimeRevision != expected[member.ID.String()] {
 				return roguelikeError(409, "party_revision_conflict", "Лист участника изменился в другой вкладке")
+			}
+		}
+		if request.Type == "initialize_combat" {
+			if err := validateRoguelikeInitializationProof(tx, result); err != nil {
+				return err
 			}
 		}
 		if rest {

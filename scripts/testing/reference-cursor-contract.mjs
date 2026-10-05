@@ -8,7 +8,7 @@ import {withDockerReadSession} from '../release/docker-read-session.mjs';
 import {cursorInventory} from '../release/reference-cursor.mjs';
 import {checksum} from '../release/backup-manifest.mjs';
 import {evidenceHash} from '../release/validate-manifest.mjs';
-import {historyQuery} from '../release/history-fingerprint.mjs';
+import {historyQuery,parallelHistoryReadSQL} from '../release/history-fingerprint.mjs';
 
 // Public synthetic rows only. No supplied DSN/dump, host mount, provider or
 // production configuration can redirect this mandatory transport acceptance.
@@ -44,14 +44,22 @@ export async function checkReferenceCursorTransport(directory){
   for(let attempt=0;;attempt++){try{await command(['exec',pg,'pg_isready','-h','127.0.0.1','-U','cursor_contract','-d','cursor_contract']);break;}catch{if(attempt===100)throw Error('Synthetic PostgreSQL startup deadline');await new Promise(resolve=>setTimeout(resolve,100));}}
   const net=JSON.parse(await command(['network','inspect',network]))[0],state=JSON.parse(await command(['container','inspect',pg]))[0];
   check(net.Internal===true&&Object.keys(state.NetworkSettings.Networks).join(',')===network&&!Object.values(state.NetworkSettings.Ports??{}).some(Boolean),'owned-internal-only-no-published-ports');
-  await sql('CREATE TABLE zero_history(); INSERT INTO zero_history DEFAULT VALUES; INSERT INTO zero_history DEFAULT VALUES; CREATE TABLE roguelike_command_receipts(response_version int,response_payload bytea,response_sha256 text,response_length int); INSERT INTO roguelike_command_receipts VALUES(1,NULL,NULL,NULL);');
-  const historyTables=[{name:'zero_history',columns:[]},{name:'roguelike_command_receipts',columns:['response_version','response_payload','response_sha256','response_length']}];
+  await sql(`CREATE TABLE zero_history(); INSERT INTO zero_history DEFAULT VALUES; INSERT INTO zero_history DEFAULT VALUES;
+   CREATE TABLE empty_history(); CREATE TABLE history_semantics(payload jsonb,note text);
+   INSERT INTO history_semantics VALUES('{"items":["Ж😀",null,2],"nested":{"value":"other data"}}',NULL),('{"items":["Ж😀",null,2],"nested":{"value":"other data"}}',NULL),(NULL,'different row');
+   CREATE TABLE roguelike_command_receipts(response_version int,response_payload bytea,response_sha256 text,response_length int); INSERT INTO roguelike_command_receipts VALUES(1,NULL,NULL,NULL);
+   CREATE TABLE roguelike_runs(context jsonb,combat_catalog_ref text); INSERT INTO roguelike_runs VALUES('{"label":"Вторая сущность","values":[null,"🙂"]}','new-catalog-reference');`);
+  const historyTables=[{name:'zero_history',columns:[]},{name:'empty_history',columns:[]},{name:'history_semantics',columns:['payload','note']},{name:'roguelike_command_receipts',columns:['response_version','response_payload','response_sha256','response_length']},{name:'roguelike_runs',columns:['context','combat_catalog_ref']}];
   const baselineHistory=JSON.parse(await sql(historyQuery(historyTables,[]))),projectedHistory=JSON.parse(await sql(historyQuery(historyTables,[],{project:true})));
   check(evidenceHash(baselineHistory)===evidenceHash(projectedHistory),'zero-column-and-all-excluded-records-preserve-empty-object-multiset');
+  check(evidenceHash(JSON.parse(await sql(parallelHistoryReadSQL(historyTables,[]))))===evidenceHash(baselineHistory),'parallel-complete-history-preserves-empty-tables-duplicates-unicode-arrays-nulls-and-excluded-columns');
+  await sql("UPDATE roguelike_runs SET combat_catalog_ref='other-new-reference'; UPDATE roguelike_command_receipts SET response_version=2,response_sha256='new-storage-metadata';");
+  check(evidenceHash(JSON.parse(await sql(parallelHistoryReadSQL(historyTables,[]))))===evidenceHash(baselineHistory),'both-declared-additive-formats-preserve-complete-predecessor-history');
   await sql("ALTER TABLE zero_history ADD COLUMN unexpected text; UPDATE zero_history SET unexpected='new-data';");historyTables[0].columns=['unexpected'];
   const changed=JSON.parse(await sql(historyQuery(historyTables,[],{project:true})));
   check(evidenceHash(changed)!==evidenceHash(baselineHistory)&&evidenceHash(changed)===evidenceHash(JSON.parse(await sql(historyQuery(historyTables,[])))),'fresh-columns-retain-unexpected-added-data');
-  await sql('DROP TABLE zero_history; DROP TABLE roguelike_command_receipts;');
+  check(evidenceHash(changed)===evidenceHash(JSON.parse(await sql(parallelHistoryReadSQL(historyTables,[])))),'parallel-complete-history-retains-unexpected-new-column-data');
+  await sql('DROP TABLE zero_history; DROP TABLE empty_history; DROP TABLE history_semantics; DROP TABLE roguelike_command_receipts; DROP TABLE roguelike_runs;');
   await sql(`CREATE TABLE schema_migrations(version text); INSERT INTO schema_migrations VALUES('297_public_fixture'); CREATE TABLE unknown_json(payload jsonb,other json); INSERT INTO unknown_json VALUES(jsonb_build_object('nested',jsonb_build_array(jsonb_build_object('artifactHash','${artifact('a')}','image_url','https://example.invalid/Ж😀'))),'null');
    CREATE ROLE inventory_reader LOGIN PASSWORD '${readerPassword}'; GRANT CONNECT ON DATABASE cursor_contract TO inventory_reader; GRANT USAGE ON SCHEMA public TO inventory_reader; GRANT SELECT ON ALL TABLES IN SCHEMA public TO inventory_reader;`);
   const initial=await readDockerInventory({command,...config,dsn});check(initial.artifactHashes.join(',')===artifact('a')&&initial.mediaReferences.length===1,'actual-export-import-complete-inventory');

@@ -46,6 +46,7 @@
         "scripts/release/active-projection.test.mjs",
         "scripts/release/docker-rehearsal.test.mjs",
         "scripts/release/rehearsal-scenarios.test.mjs",
+        "scripts/release/stdin-utf8.test.mjs",
         "scripts/release/migration-rehearsal.test.mjs",
         "scripts/security/check-no-known-credentials.test.mjs",
         "scripts/database/storage-report.test.mjs",
@@ -243,7 +244,8 @@
         "TestImageJobs",
         "TestRuntimeCardCatalog",
         "TestCatalogPrefetch",
-        "TestPreparationCatalogFlights"
+        "TestPreparationCatalogFlights",
+        "TestInitializationPreparationCommitRaces"
       ],
       "database": "required",
       "contract": "Atomic commands, CAS, exact retry, conservation, journal, saved paper and image pipeline",

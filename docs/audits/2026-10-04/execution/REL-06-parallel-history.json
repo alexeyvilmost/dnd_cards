@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "status": "integrated-local-measured-checks-passed",
+  "createdAt": "2026-10-05T21:11:59.249Z",
+  "baseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+  "probe": {
+    "report": "outputs/operations/first-capture-private-cfe9/history_parallel_29495ee587f9f99c49f013c0/report.json",
+    "hash": "sha256:eb964b806a42df6fe8f9c0b9f532909a5f66f821642c4413e95a1e748318e291",
+    "rows": 36468,
+    "tables": 92,
+    "sourceSnapshotHash": "sha256:6469765cc24ce8c7458843c94292d026b5957928c7b92206710cc080685f917b",
+    "measurements": [
+      {
+        "variant": "old",
+        "seconds": 50.8082556,
+        "hash": "sha256:58a3c80c60cc50ea83acfbb1c71679fd99a1025daa9cda525166035d584aac80",
+        "rows": 36468
+      },
+      {
+        "variant": "candidate-parallel",
+        "seconds": 32.14174009999999,
+        "hash": "sha256:58a3c80c60cc50ea83acfbb1c71679fd99a1025daa9cda525166035d584aac80",
+        "rows": 36468
+      },
+      {
+        "variant": "candidate-parallel",
+        "seconds": 28.680502099999984,
+        "hash": "sha256:58a3c80c60cc50ea83acfbb1c71679fd99a1025daa9cda525166035d584aac80",
+        "rows": 36468
+      },
+      {
+        "variant": "old",
+        "seconds": 46.6363456,
+        "hash": "sha256:58a3c80c60cc50ea83acfbb1c71679fd99a1025daa9cda525166035d584aac80",
+        "rows": 36468
+      }
+    ]
+  },
+  "native": {
+    "report": "outputs/testing/history-native-contract-v2-20261006/report.json",
+    "hash": "sha256:c9ef61c5bec8ad548e5c52937f43dfd43934654396306af37c719cb0247fb018",
+    "checks": 22,
+    "skipped": 0
+  },
+  "source": {
+    "queryExactlyMatchesMeasuredProducer": true,
+    "sessionSettingsExactlyMatchMeasuredProducer": true,
+    "paths": [
+      {
+        "file": "scripts/release/history-fingerprint.mjs",
+        "sha256": "sha256:5b215a9dff88202a090f76bb8c356034ce37989ca390f6a41cec267f17de13e6"
+      },
+      {
+        "file": "scripts/release/migration-rehearsal.mjs",
+        "sha256": "sha256:5e564e9214087e8bea863c4640fb9e72424e2be78d88d40e93fe9df5f6eef80d"
+      },
+      {
+        "file": "scripts/testing/reference-cursor-contract.mjs",
+        "sha256": "sha256:5025607fa528659beb162b88e3eb864102fe8127b5fa479e72942be94d73ea4a"
+      }
+    ]
+  },
+  "preserved": {
+    "allRows": true,
+    "allTables": true,
+    "allIndependentSnapshots": true,
+    "rowBytesAndDigestProtocol": true,
+    "duplicatesAndEmptyTables": true,
+    "declaredExclusionsOnly": true,
+    "unknownAddedColumnsRetained": true,
+    "readOnlyRepeatableRead": true,
+    "backupMaxAgeMinutes": 30
+  },
+  "limitations": [
+    "Two paired local scans on exact captured dataset; fresh host full rehearsal remains required.",
+    "No global PostgreSQL settings changed, no production data mutated."
+  ],
+  "rejectedExperiments": [
+    {
+      "report": "outputs/operations/first-capture-private-cfe9/history_parallel_b552bfd9e041355fe1d026b8/report.json",
+      "reason": "Grouped-row query without parallel planning settings was13percent slower."
+    },
+    {
+      "report": "outputs/operations/first-capture-private-cfe9/history_parallel_e23bc8e33bce79e80cb2a7a7/report.json",
+      "reason": "Parallelizing original independent table aggregates was slower:79to80seconds versus46seconds."
+    }
+  ]
+}

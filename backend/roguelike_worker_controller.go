@@ -142,7 +142,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 			return
 		}
 		initiativeManeuverActionID, _ := request.Payload["initiative_maneuver_action_id"].(string)
-		result, catalog, err = initializeRoguelikeWorker(c.Request.Context(), rc.db, client, run, seed, initiativeManeuverActionID)
+		result, catalog, err = prepareRoguelikeInitialization(c.Request.Context(), rc.db, client, run, seed, initiativeManeuverActionID)
 	} else {
 		if len(run.CombatEnvelope) == 0 {
 			fail("trusted_combat_missing", "серверный бой не инициализирован")
@@ -183,6 +183,11 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		}
 		if locked.Revision != request.ExpectedRevision || character.RuntimeRevision != expectedCharacterRevision {
 			return roguelikeError(http.StatusConflict, "run_revision_conflict", "состояние забега изменилось в другой вкладке")
+		}
+		if request.Type == "initialize_combat" {
+			if err := validateRoguelikeInitializationProof(tx, result); err != nil {
+				return err
+			}
 		}
 		if isRest {
 			// Preparation may materialize a declared item/feature pool that was

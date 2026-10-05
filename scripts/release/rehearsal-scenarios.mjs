@@ -45,7 +45,7 @@ export async function authorizeDockerRehearsal({names,owner}){
     if((await dockerCommand(['exec',names.postgres,'psql','-X','-qAt','-U','rehearsal','-d','rehearsal','-c','SELECT current_database();'])).trim()!=='rehearsal')throw Error('Clone database identity differs');
   };
   await assertOwned();
-  const program=`let raw='';for await(const c of process.stdin)raw+=c;const r=JSON.parse(raw);const response=await fetch('http://backend:8080/api'+r.route,{method:r.method,headers:r.headers,body:r.body===undefined?undefined:JSON.stringify(r.body),signal:AbortSignal.timeout(60000)});const data=await response.json();process.stdout.write(JSON.stringify({status:response.status,data}));`;
+  const program=`process.stdin.setEncoding('utf8');let raw='';for await(const c of process.stdin)raw+=c;const r=JSON.parse(raw);const response=await fetch('http://backend:8080/api'+r.route,{method:r.method,headers:r.headers,body:r.body===undefined?undefined:JSON.stringify(r.body),signal:AbortSignal.timeout(60000)});const data=await response.json();process.stdout.write(JSON.stringify({status:response.status,data}));`;
   const request=async(route,body,bearer,method=body?'POST':'GET')=>{
     await assertOwned();
     const result=JSON.parse(await dockerCommand(['exec','-i',names.rulesWorker,'node','--input-type=module','-e',program],{input:JSON.stringify({route,body,method,headers:{'content-type':'application/json',...(bearer?{authorization:`Bearer ${bearer}`}:{})}})}));

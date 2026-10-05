@@ -185,12 +185,17 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 	if roguelikePartySize(run) > 1 {
 		input["characters"] = run.Characters
 	}
+	needs := []roguelikeWorkerNeed{}
 	for round := 0; round < 16; round++ {
 		result, err := client.call(ctx, "/initialize", map[string]any{"input": input})
 		if err != nil {
 			return nil, nil, err
 		}
 		if result.Status != "needs_content" {
+			result.initializationDependencies = append([]roguelikeWorkerNeed(nil), needs...)
+			if result.CatalogSelection != nil {
+				result.initializationDependencies = append(result.initializationDependencies, result.CatalogSelection.Reads...)
+			}
 			if performanceFrom(ctx) != nil {
 				encoded, _ := json.Marshal(catalog)
 				performanceAdd(ctx, "catalog_final_bytes", float64(len(encoded)))
@@ -201,6 +206,7 @@ func initializeRoguelikeWorker(ctx context.Context, tx *gorm.DB, client roguelik
 			}
 			return result, frozen, err
 		}
+		needs = append(needs, result.Needs...)
 		performanceAdd(ctx, "catalog_needs_rounds", 1)
 		previous, _ := json.Marshal(catalog)
 		if err = catalog.fulfillWave(tx, result.Needs); err != nil {

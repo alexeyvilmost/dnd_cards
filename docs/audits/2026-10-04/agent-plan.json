@@ -25,7 +25,7 @@
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "Manual build/publication/deploy gates enabled. CI11/all3 publication passed; third rehearsal failed at historical-replay before cutover. Original4549/302ledger/active unchanged and healthy; auto/selective/reconcile/writers OFF."
+    "production_enablement_status": "CI12 and three exact529 images passed. Fourth manual adoption failed on historical-replay before cutover. UTF8 correction and initialization authority passed local checks; new exact CI/images and full fresh30minute rehearsal pending. Original4549/302ledger remains healthy; auto/selective/reconcile/writers OFF."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -971,7 +971,7 @@
         4,
         8
       ],
-      "status": "supported_matrix_ci_verified_historical_fresh_open",
+      "status": "supported_matrix_ci12_verified_historical_fresh278_open",
       "steps": [
         "Сформировать расширенный manifest всех актуальных offline suites и отдельный ручной перечень historical certification suites. Общие replay/authorization/migration contracts не переносить в legacy только из-за старого имени или включения в прежний coverage pipeline.",
         "Добавить сценарии melee/ranged/caster, разные уровни и multiclass, reactions/saving throws/damage/effects/death/movement, геометрию крупных существ и area delivery, party, camp/shop/loot/journey, короткий/долгий отдых и подготовку. Новые механики проверять второй сущностью на том же примитиве.",
@@ -1030,41 +1030,33 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "supported_matrix_ci12_verified_historical_fresh278_open",
         "demonstrated": [
-          "222 Solo corpus cases cover 17 durable fields; actual API has 220 positive cases and 2 explicit rejection cases with separate positive phase coverage. 15 canonical pending variants, immutable replay, crash, Linux race, Urvin owned journeys and dedicated migration routes passed CI9.",
-          "Authentic102/103+119preimages recovered from unchanged authorizedcapture; exactpublicGit122preimage, source-bound guards, unchangedmigrator through123, allownedcleanup0/sourceunchanged. docs/audits/2026-10-04/execution/TEST-05-genuine-preimages.json"
+          "Exact529 CI12 extended/supported upgrade matrix passed. Authentic ordinary historical chain completed through277; ordinary144 guards and generated bridge passed separately."
         ],
         "limitations": [
-          "Authentic pre102 data is now recovered; complete historicalfresh chain remains incomplete at124 requiredpublicentities16→15. The originalv4certification run is still not replayed; explicit historical hydration is not an empty catalog bootstrap."
+          "Fresh install stops naturally at278:611of1656preconditions differ; found archive is not a complete pre278 snapshot."
         ],
         "nextAcceptance": [
-          "Complete provenance-bound historical source seeding through current on an owned DB, then unchanged repeat and full ledger/data/manual-status hashes. Preserve original guards, revoked certifications and failed receipts."
+          "Obtain authentic pre278 source snapshot; do not hydrate target before-fields from final values or copy certificates."
         ],
-        "evidence": [
-          "docs/audits/2026-10-04/execution/TEST-05.md",
-          "docs/audits/2026-10-04/execution/TEST-05-pending-matrix.md",
-          "docs/audits/2026-10-04/execution/TEST-05-solo-durable.md",
-          "docs/audits/2026-10-04/execution/TEST-05-upgrade-matrix.md",
-          "docs/audits/2026-10-04/execution/TEST-05-urvin.md",
-          "docs/audits/2026-10-04/execution/TEST-05-shards.md",
-          "docs/audits/2026-10-04/execution/REL-05-observed-migrations.md"
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
+      },
+      "previous_status": "supported_matrix_ci_verified_historical_fresh_open",
+      "latest_execution_result": {
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "supported_matrix_ci12_verified_historical_fresh278_open",
+        "demonstrated": [
+          "Exact529 CI12 extended/supported upgrade matrix passed. Authentic ordinary historical chain completed through277; ordinary144 guards and generated bridge passed separately."
         ],
-        "acceptanceStates": [
-          "partially_met",
-          "supported_by_code_local_and_ci",
-          "supported_by_code_local_and_ci",
-          "supported_by_code_local_and_ci",
-          "supported_by_code_local_and_ci"
+        "limitations": [
+          "Fresh install stops naturally at278:611of1656preconditions differ; found archive is not a complete pre278 snapshot."
         ],
-        "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "latestObserved": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-          "firstHealthyDeployment": false,
-          "freshHistoricalBoundary": "ordinary143 passed;all67primary-before-sources closed;schedule101/118/121 live guards and144-current not yet executed"
-        }
+        "nextAcceptance": [
+          "Obtain authentic pre278 source snapshot; do not hydrate target before-fields from final values or copy certificates."
+        ],
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
       }
     },
     {
@@ -1273,7 +1265,7 @@
         3,
         6
       ],
-      "status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
+      "status": "initialization_authority_locally_verified_new_ci_and_latency_pending",
       "steps": [
         "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
         "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
@@ -1323,35 +1315,33 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "initialization_authority_locally_verified_new_ci_and_latency_pending",
         "demonstrated": [
-          "Canonical intent prepares outside locks and validates fresh ownership/content/revision before atomic write; lost-response/reload/retry gates passed. Latest current-cfe9 counterbalanced browser measurement: 30 paired samples each line/archer, batch+mirrors ON in both arms and cache OFF, restored pre-init data, 128 exact retries with zero additional worker dispatch and unchanged source/RNG fingerprints; cleanup stopped.",
-          "A quiet current-default OFF/OFF versus desired combined ON/ON comparison passed all128 correctness checks, but initiative medians regressed164.9→209.4 ms and247.4→263.8 ms; latency acceptance was rejected. Exact report: docs/audits/2026-10-04/execution/PERF-02-default-profile.json.",
-          "Default OFF/OFF parallel canonical root preparation passed25 focused tests,128 actual samples and4 complete fixed-input artifact comparisons. Latency remains mixed:155.8→163.1 ms and242.2→229.2 ms; general latency acceptance is not met. Private patch is not integrated. See PERF-02-parallel-profile.json.",
-          "Third private coherent defaultOFF/OFF paired30×2actor profile:34targeted/TSC,128browser+retry,4fullinput/seed parityPASS; archer7→6worker calls andwire−14.7%, latency intervals span no gain. Patchunapplied/flagsunchanged. docs/audits/2026-10-04/execution/PERF-02-mastery-profile.json"
+          "Initialization commit authority integrated: real PostgreSQL60race/adjacent checks passed on root; actual canonical worker5equivalence checks passed privately."
         ],
         "limitations": [
-          "Current initiative median line165.5→198.5 ms (+19.9%) and archer238.1→257.7 ms (+8.2%); worker calls6→12/7→14, dependency waves5→10/6→12. Correctness passed, latency did not. Equipment intent and initiative options remain OFF, so the default path still retains old UI preparation. Older uncontrolled 30+30 profile stays historical.",
-          "Earlier ON→ON savings do not prove a gain over the current default. The current-versus-desired benchmark used one shared candidate worker in both arms, not the exact deployed images."
+          "New exact-source Linux CI pending. No latency acceptance; rejected optional preparation cache remainsOFF."
         ],
         "nextAcceptance": [
-          "Keep initiative/cache OFF and the mixed parallel patch private. Inspect remaining canonical needs waves and repeated card transmission before a further bounded implementation; compare both current-default actors with complete fixed-input equality."
+          "Run final-source full CI and measured canonical UI/API latency profiles."
         ],
-        "evidence": [
-          "docs/audits/2026-10-04/execution/PERF-02.md",
-          "docs/audits/2026-10-04/execution/PERF-02-browser-proof.json",
-          "docs/audits/2026-10-04/execution/PERF-02-initiative-browser.md",
-          "outputs/testing/perf02-combined/measurement-1791183280228/report.json",
-          "outputs/testing/perf02-combined/measurement-1791183280228/summary.json"
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
+      },
+      "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
+      "latest_execution_result": {
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "initialization_authority_locally_verified_new_ci_and_latency_pending",
+        "demonstrated": [
+          "Initialization commit authority integrated: real PostgreSQL60race/adjacent checks passed on root; actual canonical worker5equivalence checks passed privately."
         ],
-        "acceptanceStates": [
-          "supported_by_code_local_and_ci",
-          "supported_by_code_local_and_ci",
-          "supported_by_code_local_and_ci",
-          "partially_met"
+        "limitations": [
+          "New exact-source Linux CI pending. No latency acceptance; rejected optional preparation cache remainsOFF."
         ],
-        "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "nextAcceptance": [
+          "Run final-source full CI and measured canonical UI/API latency profiles."
+        ],
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
       }
     },
     {
@@ -2049,7 +2039,7 @@
         2,
         4
       ],
-      "status": "images_published_first_adoption_failed_before_cutover",
+      "status": "fourth_adoption_refused_utf8_locally_fixed_new_exact_ci_pending",
       "steps": [
         "Зафиксировать различие release SHA, component source SHA, immutable image digest, input fingerprint, worker executable artifact hash и schema/protocol compatibility. Проверить актуальные файлы реализации health/build identity перед изменением.",
         "Создать versioned manifest schema и validator. Старые single-SHA releases читать через явный адаптер; неизвестная версия, некорректный digest или несовместимый protocol должны отклоняться до mutation.",
@@ -2100,38 +2090,33 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "fourth_adoption_refused_utf8_locally_fixed_new_exact_ci_pending",
         "demonstrated": [
-          "Immutable mixed manifest, baked source/input/image identity and per-component launch state; local exact 014f image adoption/rollback and readers tested. cfe9 images actually published after CI9.",
-          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json.",
-          "Exact bf79 full CI10 and all3 immutable publications passed. Secondactual adoption37287164307 failed before capture on root0755; exact root changed to0700, protected bytes unchanged, original actual host observation and edges passed. Both failed outcomes preserved; no healthy firstadoption. Record: docs/audits/2026-10-04/execution/CI-10-second-publication.json",
-          "Bounded reviewed chain2 integrated;78Windows focused PASS plus16Linux zero-skip PASS, independent review,45actual readonlyGH queries and actual host canonical prior-packets/phase checks PASS. No fresh capture/deployment yet. docs/audits/2026-10-04/execution/REL-06-reviewed-chain.json"
+          "Exact529 CI12 and all three OCI publication passed; four real failed attempts reviewed and chained without cutover."
         ],
         "limitations": [
-          "Current publication is not a healthy application deployment. Saved active projection will become usable only after actual successful protected-state adoption.",
-          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+          "First successful adoption absent; source correction needs new CI and publication."
         ],
         "nextAcceptance": [
-          "Accept exact current candidate health/identity, schema and retained-history proofs; record succeeded active state and rollback-compatible image set."
+          "Exact new CI/images and fresh full rehearsal within30minutes, then independent actual host identity verification."
         ],
-        "evidence": [
-          "docs/audits/2026-10-04/execution/REL-03.md",
-          "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.md",
-          "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.md"
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
+      },
+      "previous_status": "images_published_first_adoption_failed_before_cutover",
+      "latest_execution_result": {
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "fourth_adoption_refused_utf8_locally_fixed_new_exact_ci_pending",
+        "demonstrated": [
+          "Exact529 CI12 and all three OCI publication passed; four real failed attempts reviewed and chained without cutover."
         ],
-        "acceptanceStates": [
-          "supported_by_code_local_and_ci",
-          "local_proof_only",
-          "local_proof_only",
-          "supported_by_code_local_and_ci"
+        "limitations": [
+          "First successful adoption absent; source correction needs new CI and publication."
         ],
-        "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "latestObserved": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-          "firstHealthyDeployment": false
-        }
+        "nextAcceptance": [
+          "Exact new CI/images and fresh full rehearsal within30minutes, then independent actual host identity verification."
+        ],
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
       }
     },
     {
@@ -2248,7 +2233,7 @@
         2,
         4
       ],
-      "status": "first_rehearsal_stopped_selective_auto_private",
+      "status": "first_adoption_open_future_packet_reviewed_not_integrated",
       "steps": [
         "Создать новый manifest-based runner с legacy adapter: validate candidate, compare deployed manifest, pull digests, verify identities/protocol/schema, определить изменившиеся сервисы и необходимые миграции.",
         "Сохранить lock, immutable release directories, exact identities, health/readiness, retained frontend assets и старые executable artifacts. Не называть symlink switch атомарной заменой всего HTTP-трафика: Compose обновляет сервисы последовательно.",
@@ -2296,41 +2281,33 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "first_adoption_open_future_packet_reviewed_not_integrated",
         "demonstrated": [
-          "Hosted SSH handoff, fresh captured backup, typed CJS/source-cert inventory, 7 migration scenarios, per-component health and journal rollback implemented. Local exact images passed full collector + adapter rollback.",
-          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json.",
-          "Exact bf79 full CI10 and all3 immutable publications passed. Secondactual adoption37287164307 failed before capture on root0755; exact root changed to0700, protected bytes unchanged, original actual host observation and edges passed. Both failed outcomes preserved; no healthy firstadoption. Record: docs/audits/2026-10-04/execution/CI-10-second-publication.json",
-          "Bounded reviewed chain2 integrated;78Windows focused PASS plus16Linux zero-skip PASS, independent review,45actual readonlyGH queries and actual host canonical prior-packets/phase checks PASS. No fresh capture/deployment yet. docs/audits/2026-10-04/execution/REL-06-reviewed-chain.json"
+          "Frozen future136path packet root closure475pins and18critical files reviewed conditionally; current host policy remainsOFF."
         ],
         "limitations": [
-          "First real deploy 37273035754 was operator-stopped after snapshot expiry, before cutover. The 123-path rebased selective/auto/writer package and separate retained-launch compatibility fixes are private and unapplied. Local contracts and OCI foundations do not prove production selective delivery or automatic convergence.",
-          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+          "Packet predates root UTF8/authority corrections and requires rebase after first healthy adoption; focused tests do not replace final-source CI."
         ],
         "nextAcceptance": [
-          "Finish first verified adoption; rebase private follow-on preserving cfe9 reporter/catalog/TTL fixes, validate and deploy tooling. Obtain actual immutable full anchor, execute genuine frontend-only cutover+rollback with unchanged backend/worker IDs; enable/test requested automatic main reconciliation."
+          "First healthy baseline; rebasefollow-on; genuine writer compatibility, UI-only selective images, owned failure rollback and actual auto-convergence gates."
         ],
-        "evidence": [
-          "docs/audits/2026-10-04/execution/REL-05.md",
-          "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.md",
-          "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.md",
-          "docs/audits/2026-10-04/execution/REL-SSH-handoff.md",
-          "outputs/testing/selective-writer-combined-0125/receipt.json",
-          "outputs/testing/combined-writer-readiness-review/report.json"
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
+      },
+      "previous_status": "first_rehearsal_stopped_selective_auto_private",
+      "latest_execution_result": {
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "first_adoption_open_future_packet_reviewed_not_integrated",
+        "demonstrated": [
+          "Frozen future136path packet root closure475pins and18critical files reviewed conditionally; current host policy remainsOFF."
         ],
-        "acceptanceStates": [
-          "partially_met",
-          "local_proof_only",
-          "local_proof_only",
-          "partially_met"
+        "limitations": [
+          "Packet predates root UTF8/authority corrections and requires rebase after first healthy adoption; focused tests do not replace final-source CI."
         ],
-        "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "latestObserved": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-          "firstHealthyDeployment": false
-        }
+        "nextAcceptance": [
+          "First healthy baseline; rebasefollow-on; genuine writer compatibility, UI-only selective images, owned failure rollback and actual auto-convergence gates."
+        ],
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
       }
     },
     {
@@ -2354,7 +2331,7 @@
         1,
         3
       ],
-      "status": "owned_restore_verified_host_rehearsal_incomplete",
+      "status": "full_local_137_replay_verified_host_acceptance_pending",
       "steps": [
         "Инвентаризировать backup categories: PostgreSQL snapshot, referenced executable artifacts, release manifest, media manifest и необходимая конфигурация. Текущий pg_dump не содержит /artifacts; не считать его доказательством полного восстановления боя.",
         "Создать backup manifest с хэшами/размерами/временем и проверкой ссылок DB snapshot на artifacts. Секреты не помещать в обычный manifest, логи или Git; отдельно описать защищённый recovery канал конфигурации.",
@@ -2400,83 +2377,35 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "full_local_137_replay_verified_host_acceptance_pending",
         "demonstrated": [
-          "Native and OCI full restore, pending/duplicate/media reference preservation, hash inventory and typed historical source proof passed in owned local trials. First host capture and clone restoration completed, but the expired rehearsal was operator-stopped during schema proof; successful host release acceptance remains pending.",
-          "Complete inventory/history acceleration and explicit manual recovery of the exact pre-cutover failed first attempt are integrated with185 combined Node and18 actual synthetic Docker checks. No successful new host release yet. Record: docs/audits/2026-10-04/execution/REL-06-thin-recovery.json.",
-          "Exact bf79 full CI10 and all3 immutable publications passed. Secondactual adoption37287164307 failed before capture on root0755; exact root changed to0700, protected bytes unchanged, original actual host observation and edges passed. Both failed outcomes preserved; no healthy firstadoption. Record: docs/audits/2026-10-04/execution/CI-10-second-publication.json",
-          "Bounded reviewed chain2 integrated;78Windows focused PASS plus16Linux zero-skip PASS, independent review,45actual readonlyGH queries and actual host canonical prior-packets/phase checks PASS. No fresh capture/deployment yet. docs/audits/2026-10-04/execution/REL-06-reviewed-chain.json"
+          "All136fourth-capture groups match original source. Published exactOCI corrected stdin consumer replay137combats/2210commands passed130.932s; no history rewritten.",
+          "Complete row-hash query with two workers matched all36468rows on protected snapshot and fell from47to51seconds to29to32seconds;22actualPG17contracts passed. No snapshot/history gates skipped."
         ],
         "limitations": [
-          "Production-sized complete restore time/RTO, off-host durability and remote media object availability not yet established. Read-only scan ~490 s and metadata ~0.505 s are phases, not total recovery. No scheduled retention/GC or RPO guarantee.",
-          "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
+          "Fourth rehearsal completed after30minute freshness; old capture localdiagnosis only. Alternative complete history grouping13%slower and rejected."
         ],
         "nextAcceptance": [
-          "Record actual first host recovery duration and immutable backup date; verify required external object access/durability before claiming broader recovery guarantee. Never renew age by rewriting a proof."
+          "Measured complete inventory acceleration; new fresh full successful host rehearsal; independent verification, external backup/RPO/RTO remain explicit."
         ],
-        "evidence": [
-          "docs/audits/2026-10-04/execution/REL-06.md",
-          "docs/audits/2026-10-04/execution/REL-06-native-media.json",
-          "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.md",
-          "docs/audits/2026-10-04/execution/REL-05-first-adoption-timing.json"
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
+      },
+      "previous_status": "owned_restore_verified_host_rehearsal_incomplete",
+      "latest_execution_result": {
+        "sourceBaseCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+        "status": "full_local_137_replay_verified_host_acceptance_pending",
+        "demonstrated": [
+          "All136fourth-capture groups match original source. Published exactOCI corrected stdin consumer replay137combats/2210commands passed130.932s; no history rewritten.",
+          "Complete row-hash query with two workers matched all36468rows on protected snapshot and fell from47to51seconds to29to32seconds;22actualPG17contracts passed. No snapshot/history gates skipped."
         ],
-        "acceptanceStates": [
-          "local_proof_only",
-          "partially_met",
-          "supported_by_code_local_and_ci",
-          "supported_by_code_local_and_ci"
+        "limitations": [
+          "Fourth rehearsal completed after30minute freshness; old capture localdiagnosis only. Alternative complete history grouping13%slower and rejected."
         ],
-        "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "latestObserved": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-          "firstHealthyDeployment": false,
-          "completedMainChecks": [
-            {
-              "id": "snapshot",
-              "status": "passed"
-            },
-            {
-              "id": "migrations",
-              "status": "passed"
-            },
-            {
-              "id": "full-candidate-health",
-              "status": "passed"
-            },
-            {
-              "id": "image-contract",
-              "status": "passed"
-            },
-            {
-              "id": "historical-inventory",
-              "status": "passed"
-            }
-          ],
-          "failureStage": "historical-replay",
-          "localHistory": {
-            "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
-            "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
-            "recordTextBytes": 73529052,
-            "records": 2344,
-            "combats": 136,
-            "passed": 112,
-            "failed": 24,
-            "reason": "Combat replay diverged",
-            "artifactFamilies": 3,
-            "replayModuleSameAsOriginalLive": true,
-            "cleanup": "stopped",
-            "productionFailureCauseProven": false
-          },
-          "localCorrection": "docs/audits/2026-10-04/execution/REL-06-go-wire-recovery.json",
-          "originalSnapshotReplay": {
-            "passed": 136,
-            "records": 2344,
-            "commands": 2209
-          },
-          "latestProductionCaptureReplay": false
-        }
+        "nextAcceptance": [
+          "Measured complete inventory acceleration; new fresh full successful host rehearsal; independent verification, external backup/RPO/RTO remain explicit."
+        ],
+        "record": "docs/audits/2026-10-04/execution/CI-12-utf8-recovery.json"
       }
     },
     {
@@ -3469,329 +3398,201 @@
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
     "schemaVersion": 1,
-    "kind": "exact-ci11-publication-and-third-historical-replay-refusal",
-    "recordedAt": "2026-10-05T11:04:00.660Z",
-    "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+    "kind": "exact-ci12-and-fourth-replay-refusal-local-correction",
+    "recordedAt": "2026-10-05T20:49:15.559Z",
+    "sourceCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
     "ci": {
-      "id": 37291814837,
+      "id": 37303320369,
       "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837",
-      "verified": {
-        "id": 37291814837,
-        "workflow": ".github/workflows/ci.yml",
-        "repository": "alexeyvilmost/dnd_cards",
-        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-        "event": "push"
-      },
-      "createdAt": "2026-10-05T09:42:27Z",
-      "updatedAt": "2026-10-05T09:58:38Z",
-      "recordedRunIntervalMs": 971000,
-      "counts": {
-        "node": 715,
-        "vitest": 6462,
-        "go": 753,
-        "workerAndDatabase": 20,
-        "browserFlows": 12,
-        "uiFixtures": 48,
-        "battle3d": 8,
-        "nativeCursorChecks": 18
-      },
-      "aggregateHash": "sha256:2e1ee7250862aa9968fc0ef58f5f19142113af2533c23db4e88e782c7209e308",
-      "sourceSnapshot": {
-        "sha256": "409bc2ec62555b04084b377326b12d0006320483867fde758bfe0cf3741d5444",
-        "files": 4420
-      },
-      "aggregateWallMs": 888210,
-      "maxShardDurationMs": 873592,
-      "recordedWorkflowIntervalMs": 971000,
-      "globalCoverageComplete": true,
-      "cleanup": "stopped"
-    },
-    "publication": {
-      "id": 37293818656,
-      "attempt": 1,
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37303320369",
       "status": "completed",
       "conclusion": "success",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37293818656",
-      "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0"
+      "aggregateHash": "sha256:286ce3d9fd19b74102cedf1ae90444878eb773d4ff0c4e92fbd6e73530d6b515",
+      "durationMs": 564328,
+      "sourceSnapshot": {
+        "sha256": "ba885f36bbfc808e3965a35d244c3de64b52751413332be371f14ac57c6ca357",
+        "files": 4424
+      },
+      "counts": {
+        "node": 718,
+        "vitest": 6462,
+        "go": 753,
+        "workerAndDatabase": 25,
+        "nativeCursorChecks": 19,
+        "browserFlows": 12,
+        "uiFixtures": 48,
+        "battle3d": 8
+      }
     },
-    "manifest": {
-      "releaseId": "candidate-0593be8e7bcf-b3cc4ceb1c84",
-      "hash": "sha256:bafc6a164313928a311054907b928b0c4ac20ce3d1c5c2e9509cb78c8be48acf",
-      "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+    "publication": {
+      "id": 37305012178,
+      "attempt": 1,
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37305012178",
+      "status": "completed",
+      "conclusion": "success",
+      "sourceCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98"
+    },
+    "candidate": {
+      "hash": "sha256:26a88c0a57b661d4bf0a059689804a4e2262872653fa504c934e41df8c402e6d",
+      "releaseId": "candidate-529ee164ccd1-0fbb0a9bc7ac",
       "components": {
         "backend": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "sourceCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
           "inputFingerprint": "sha256:d3998ef62f39ee4bf849a0af89631115a49f5d618c78593bc1038fd21b3d93ae",
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:8202bf3120da1c596b84c731b6861d6da917e4c4fce538e6f4868f619acae7bd"
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:bc561a44fdd420a57695dfca1a61634caf2bd8438c6b97601eec3cc5cccffc98"
         },
         "frontend": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "sourceCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
           "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c94268e88302b58f3b407a3e9d8740d27114f445a73f570b73d5f4012d2e421b"
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:b38ab9bfe4986a794bdbcd99435c393b85476a08e63dacf6d23e63313507b1b2"
         },
         "rulesWorker": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "inputFingerprint": "sha256:0ae0f6963a8cfa291f4623a366135be995917e6caaef1fedfcb7f2df06ccfb01",
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:d8b79c27f5c9a4cf18e68d8ce5e8cd8635c33c6e1dccbe901d1444c06fcaee2d"
+          "sourceCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+          "inputFingerprint": "sha256:57ccc9ba57f732aa91538ee3bfbaa9bc002a243b426399d0803e47cd1f9fa701",
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:4f82e4792fc9eed4aa99597379800bf0cd4f726bac4f6737efa194f3905fdaec"
         }
       }
     },
-    "deployment": {
-      "id": 37294402253,
+    "failedDeployment": {
+      "id": 37362805287,
       "attempt": 1,
-      "status": "completed",
-      "conclusion": "failure",
-      "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37294402253",
-      "jobId": 111712223552,
-      "jobCompletedAt": "2026-10-05T10:38:31Z",
-      "productionSuccess": false,
-      "refusalStage": "historical-replay",
-      "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
-      "originalActiveHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
-      "originalLiveComponentsUnchangedAndHealthy": true,
-      "observedMigrationLedgerCount": 302,
-      "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
-      "rehearsalHash": "sha256:24dc8710d3d66b70a5e9804f5c6cdb4e0f1e62b81775c0fc431565dadd2fcee7",
-      "rehearsalStartedAt": "2026-10-05T10:18:52.477Z",
-      "rehearsalCompletedAt": "2026-10-05T10:38:28.941Z",
-      "capture": {
-        "createdAt": "2026-10-05T10:08:08.180Z",
-        "files": [
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37362805287",
+      "sourceCommit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+      "failureStage": "historical-replay",
+      "auditHash": "sha256:b147c8ed9a8b652775710e229b4092d05e970a94bc13c22bd998002bdece6eca",
+      "rehearsalHash": "sha256:bba6a72e48e1cd5efec325c431866a9419718d463a4301558b5f9fcdfb6d9e7c",
+      "cutover": false,
+      "cleanup": {
+        "ownedResources": 0,
+        "controllerProcesses": 0,
+        "activeUnchanged": true,
+        "edge": [
           {
-            "path": "database.dump",
-            "bytes": 958580611,
-            "sha256": "sha256:160556323a3e17e4d777ed6af3325d63f525c894fa940d8f1d757a19ad058992"
+            "path": "/",
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "status": 200
+          },
+          {
+            "path": "/build-info.json",
+            "status": 200
           }
         ]
       },
-      "completedMainChecks": [
-        {
-          "id": "snapshot",
-          "status": "passed"
-        },
-        {
-          "id": "migrations",
-          "status": "passed"
-        },
-        {
-          "id": "full-candidate-health",
-          "status": "passed"
-        },
-        {
-          "id": "image-contract",
-          "status": "passed"
-        },
-        {
-          "id": "historical-inventory",
-          "status": "passed"
-        }
-      ],
-      "additiveMigrationScenarios": [
-        {
-          "id": "atomic-ddl-ledger",
-          "status": "passed"
-        },
-        {
-          "id": "crash-before-ledger",
-          "status": "passed"
-        },
-        {
-          "id": "repeat-after-commit",
-          "status": "passed"
-        },
-        {
-          "id": "same-connection-lock",
-          "status": "passed"
-        },
-        {
-          "id": "unknown-migration-rejected",
-          "status": "passed"
-        },
-        {
-          "id": "schema-proof",
-          "status": "passed"
-        },
-        {
-          "id": "old-readers-after-expansion",
-          "status": "passed"
-        }
-      ],
-      "migrationCleanup": {
-        "status": "trials-cleared",
-        "remaining": 0
-      },
-      "cleanup": {
-        "remainingOwnedResources": 0,
-        "resources": {
-          "bagofholding.rehearsal:container": 0,
-          "bagofholding.rehearsal:network": 0,
-          "bagofholding.rehearsal:volume": 0,
-          "bagofholding.legacy-inspection:container": 0,
-          "bagofholding.legacy-inspection:network": 0,
-          "bagofholding.legacy-inspection:volume": 0
-        },
-        "dockerAuthRemoved": true,
-        "deploymentJournalCreated": false,
-        "deployLockPresent": false,
-        "activeManifestPresent": false,
-        "readyPresent": false,
-        "operationPresent": false
-      },
-      "rehearsalCleanup": {
-        "status": "stopped",
-        "errors": [],
-        "resourceCount": 26
-      },
-      "edge": [
-        {
-          "path": "/",
-          "status": 200
-        },
-        {
-          "path": "/api/health",
-          "status": 200
-        },
-        {
-          "path": "/build-info.json",
-          "status": 200
-        }
-      ],
-      "automaticTtlRejectionClaimed": false
+      "capture": {
+        "createdAt": "2026-10-05T19:33:38.308Z",
+        "localDiagnosisOnly": true,
+        "newAttemptNeedsFreshCapture": true,
+        "maxAgeMinutes": 30
+      }
     },
-    "localHistoryDiagnosis": {
-      "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
-      "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
-      "recordTextBytes": 73529052,
-      "records": 2344,
-      "combats": 136,
-      "passed": 112,
-      "failed": 24,
-      "reason": "Combat replay diverged",
-      "artifactFamilies": 3,
-      "replayModuleSameAsOriginalLive": true,
-      "cleanup": "stopped",
-      "productionFailureCauseProven": false
+    "recovery": {
+      "id": "37362805287-1",
+      "proofHash": "sha256:a4d1ae8cae643de94c02afac55b64a1c511dd6e2f404edd821952b53785d9020",
+      "attempts": [
+        37273035754,
+        37287164307,
+        37294402253,
+        37362805287
+      ],
+      "olderProofsUnchanged": true
     },
-    "manualReleaseGatesEnabled": true,
-    "autoSelectiveReconcileEnabled": false,
-    "firstLiveWritersEnabled": false,
-    "paidProviderRequestsThisRecord": 0,
-    "remaining": [
-      "Diagnose and correct replay inputs without rewriting archived records or executables.",
-      "Verify bounded complete restore/history/replay within unchanged freshness policy on next exact source.",
-      "Review explicit recovery of all three failed attempts; normal successful-baseline discovery unchanged.",
-      "Commit reviewed local correction, exact full CI, immutable publication, fresh capture and all host gates.",
-      "Only after real healthy adoption: writer compatibility, selective, rollback, automatic/reconcile acceptance."
-    ],
-    "all29TasksComplete": false,
-    "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-    "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
-    "latestLocalCorrection": {
-      "schemaVersion": 1,
-      "kind": "reviewed-go-json-map-replay-and-three-attempt-recovery",
-      "recordedAt": "2026-10-05T11:28:22.608Z",
-      "baseCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-      "status": "locally-verified-awaiting-new-exact-ci-and-fresh-host-rehearsal",
-      "sourcePaths": 13,
-      "proofPath": "infra/first-adoption-recoveries/37294402253-1.json",
-      "proofHash": "sha256:d03d78e7c611065537080c69cff13c2b7c61ce61a6b0641d6026d40cc6f86c34",
-      "reviewedFailedAttempts": 3,
-      "contract": {
-        "sourceEncoding": "go-json-map-v1",
-        "defaultSourceEncoding": "direct-worker",
-        "historicalRecordSchemaChanged": false,
-        "outputNormalized": false,
-        "arraysReordered": false,
-        "scope": "every step envelope and intent crosses backend JSONMap wire ordering; no artifact-specific branches, no candidate hash search"
+    "localCorrections": {
+      "status": "integrated-local-checks-passed-exact-new-ci-pending",
+      "utf8": {
+        "actualEmbeddedConsumers": 4,
+        "redFailed": 4,
+        "greenPassed": 4,
+        "forcedSplit": true,
+        "reportHash": "sha256:a7536d06733425f269e522504c232757c3e68a6d5c3637cf7f69e549524d3c34"
       },
-      "originalSnapshotReplay": {
-        "passed": 136,
-        "records": 2344,
-        "commands": 2209,
-        "usedArtifacts": 18,
-        "reportHash": "sha256:6103047c2702642202d203d4c6fc4a6916b523df52075081fc42b1f6ef5ead87"
+      "streamReplay": {
+        "report": "outputs/operations/first-capture-private-cfe9/utf8_replay_f7eb142a71a992fca57875e0/report.json",
+        "reportHash": "sha256:ad1c641b405dfcb1cda7f84ea29208f293fc798475502c51f36db6b8b831944c",
+        "combats": 137,
+        "commands": 2210,
+        "seconds": 130.932,
+        "artifactsUsed": 19,
+        "historyRewritten": false
       },
-      "originalSnapshot": {
-        "deploymentRunId": 37273035754,
-        "createdAt": "2026-10-05T06:35:01.822Z",
-        "sha256": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
-        "scope": "original snapshot; not the later failed rehearsal snapshot"
+      "go": {
+        "report": "outputs/testing/root-initialization-1791232783759/report.json",
+        "reportHash": "sha256:449020a57347dc3691375f9e711c1aa77a7c9c9054dfde6d8b2092ce0174837e",
+        "passed": 60,
+        "skipped": 0,
+        "actualPostgresql": true
       },
-      "originalSnapshotOnly": true,
-      "latestProductionCaptureReplay": false,
-      "historicalBytesRewritten": false,
-      "localIntegration": {
-        "receiptHash": "sha256:8669888c27f67ece0b017478b10f1c9a512257bc46ff172f368933acdd220017",
-        "checks": [
-          {
-            "id": "actual-Go-HTTP-worker-replay-and-selection",
-            "tests": 33,
-            "passed": 33,
-            "skipped": 0,
-            "status": "passed"
-          },
-          {
-            "id": "Linux-complete-three-refusal-protocol",
-            "tests": 27,
-            "passed": 27,
-            "skipped": 0,
-            "status": "passed",
-            "network": "none",
-            "repositoryReadOnly": true
-          },
-          {
-            "id": "diff",
-            "status": "passed"
-          },
-          {
-            "id": "database-dumps",
-            "status": "passed"
-          },
-          {
-            "id": "known-credentials",
-            "status": "passed"
-          }
+      "linux": {
+        "report": "outputs/testing/utf8_linux_924117459b8c0aab9edbddce/report.json",
+        "reportHash": "sha256:f4c926b9fc9d8601a8a8ef6ba12dddfb3d9cb9582423ded0b5c8c80df82a31d9",
+        "passed": 26,
+        "skipped": 0
+      },
+      "windowsNode": {
+        "passed": 22,
+        "skipped": 0
+      },
+      "actualWorkerEquivalence": {
+        "report": "outputs/testing/perf02-initialization-529/actual-worker-authority-1791230266027/report.json",
+        "passed": 5,
+        "skipped": 0,
+        "copiedOptionalTest": false
+      },
+      "performanceAcceptance": false,
+      "parallelHistory": {
+        "record": "docs/audits/2026-10-04/execution/REL-06-parallel-history.json",
+        "recordHash": "sha256:a405427a31adb080cce5095d661046c2317cad6dbe898e99d4f28caaaa0e1550",
+        "localMeasured": true,
+        "oldSeconds": [
+          50.8082556,
+          46.6363456
         ],
-        "sourceUnchanged": {
-          "unchanged": true,
-          "files": 4424,
-          "sha256": "e00c85caf840995e4d06d8d3a997a6fb1ee9d62d92dee9bd141213ea1c62d0b2"
-        },
-        "cleanup": {
-          "status": "stopped",
-          "remainingOwnedResources": 0
-        }
+        "newSeconds": [
+          32.1417401,
+          28.6805021
+        ],
+        "nativeChecks": 22,
+        "newExactCiPending": true
       },
-      "privatePriorNativeCursor": {
-        "checks": 19,
-        "unchangedAppliedSource": true,
-        "cleanup": "stopped",
-        "latencyMeasured": false
+      "finalLinux": {
+        "report": "outputs/testing/utf8_linux_fbdc28599dc00f7131555323/report.json",
+        "hash": "sha256:3905da8a4bc8e3e0c72c1a3dfaafb3f0645cd9f08a79fbaf36a75e4842103649",
+        "passed": 26,
+        "skipped": 0
       },
-      "preservedDiagnosticRefusal": {
-        "path": "full-136-report.json",
-        "sha256": "sha256:d8c0a734e9e3f05dbe0d272bafcd029ec60482a204aa6ae6230713672c744380",
-        "reason": "diagnostic count assumed after-baseline for every group; group51 before-baseline corrected only in v2 wrapper; preserved first source"
-      },
-      "productionChanges": 0,
-      "paidProviderRequests": 0,
-      "firstHealthyDeployment": false,
-      "freshnessPolicyMinutes": 30,
-      "transportBytesLimit": 134217728,
-      "replayTimeoutMs": 300000,
-      "firstLiveWriterPolicy": "all-off",
-      "autoSelectiveReconcile": "off",
-      "remaining": [
-        "New reviewed commit and exact full CI.",
-        "All three immutable images and explicit recovery of all three failed attempts.",
-        "Fresh protected capture; all restore, history, replay, pending and duplicate-command gates under unchanged freshness.",
-        "Independently verify successful adoption before writer/selective/automatic release acceptance."
-      ],
-      "all29TasksComplete": false
+      "finalNode": {
+        "passed": 48,
+        "skipped": 0
+      }
     },
-    "latestLocalCorrectionRecord": "docs/audits/2026-10-04/execution/REL-06-go-wire-recovery.json"
+    "historicalFresh": {
+      "lastCompletedMigration": 277,
+      "refusingMigration": 278,
+      "conditions": 1656,
+      "passingConditions": 1045,
+      "refusingConditions": 611,
+      "archiveCompleteChangedFields": 114,
+      "earliestHostBackupsAfterMigration": true,
+      "originalPreimagesNotForged": true,
+      "status": "authentic-pre278-inputs-required"
+    },
+    "policy": {
+      "writers": false,
+      "automatic": false,
+      "selective": false,
+      "reconcile": false
+    },
+    "nextSteps": [
+      "Measure exact complete reference inventory acceleration; preserve all hashes, snapshot visibility and every negative gate.",
+      "Run required final-source local checks, review staged changes and publish exact committed source through a new complete CI.",
+      "Use trusted four-attempt proof and fresh full capture for the next manual adoption; do not reuse expired captures.",
+      "Independently verify actual successful first adoption, then rebase and validate follow-on writer formats, selective release, owned rollback and automatic convergence.",
+      "Continue PERF-02 measured latency acceptance and authentic historical fresh installation; do not treat correctness or supported upgrades as those acceptances."
+    ],
+    "productionApplicationMutations": 0,
+    "paidProviderRequests": 0
   },
   "execution_history": [
     {
@@ -3870,6 +3671,332 @@
       "next": "Commit and verify the integrated thin/manual recovery with exact full CI, then new initial publication and fresh full legacy adoption. Selective/writer opt-in require a genuine successful predecessor.",
       "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
       "record": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "exact-ci11-publication-and-third-historical-replay-refusal",
+      "recordedAt": "2026-10-05T11:04:00.660Z",
+      "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "ci": {
+        "id": 37291814837,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837",
+        "verified": {
+          "id": 37291814837,
+          "workflow": ".github/workflows/ci.yml",
+          "repository": "alexeyvilmost/dnd_cards",
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "event": "push"
+        },
+        "createdAt": "2026-10-05T09:42:27Z",
+        "updatedAt": "2026-10-05T09:58:38Z",
+        "recordedRunIntervalMs": 971000,
+        "counts": {
+          "node": 715,
+          "vitest": 6462,
+          "go": 753,
+          "workerAndDatabase": 20,
+          "browserFlows": 12,
+          "uiFixtures": 48,
+          "battle3d": 8,
+          "nativeCursorChecks": 18
+        },
+        "aggregateHash": "sha256:2e1ee7250862aa9968fc0ef58f5f19142113af2533c23db4e88e782c7209e308",
+        "sourceSnapshot": {
+          "sha256": "409bc2ec62555b04084b377326b12d0006320483867fde758bfe0cf3741d5444",
+          "files": 4420
+        },
+        "aggregateWallMs": 888210,
+        "maxShardDurationMs": 873592,
+        "recordedWorkflowIntervalMs": 971000,
+        "globalCoverageComplete": true,
+        "cleanup": "stopped"
+      },
+      "publication": {
+        "id": 37293818656,
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37293818656",
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0"
+      },
+      "manifest": {
+        "releaseId": "candidate-0593be8e7bcf-b3cc4ceb1c84",
+        "hash": "sha256:bafc6a164313928a311054907b928b0c4ac20ce3d1c5c2e9509cb78c8be48acf",
+        "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+        "components": {
+          "backend": {
+            "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+            "inputFingerprint": "sha256:d3998ef62f39ee4bf849a0af89631115a49f5d618c78593bc1038fd21b3d93ae",
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:8202bf3120da1c596b84c731b6861d6da917e4c4fce538e6f4868f619acae7bd"
+          },
+          "frontend": {
+            "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+            "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c94268e88302b58f3b407a3e9d8740d27114f445a73f570b73d5f4012d2e421b"
+          },
+          "rulesWorker": {
+            "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+            "inputFingerprint": "sha256:0ae0f6963a8cfa291f4623a366135be995917e6caaef1fedfcb7f2df06ccfb01",
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:d8b79c27f5c9a4cf18e68d8ce5e8cd8635c33c6e1dccbe901d1444c06fcaee2d"
+          }
+        }
+      },
+      "deployment": {
+        "id": 37294402253,
+        "attempt": 1,
+        "status": "completed",
+        "conclusion": "failure",
+        "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37294402253",
+        "jobId": 111712223552,
+        "jobCompletedAt": "2026-10-05T10:38:31Z",
+        "productionSuccess": false,
+        "refusalStage": "historical-replay",
+        "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+        "originalActiveHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+        "originalLiveComponentsUnchangedAndHealthy": true,
+        "observedMigrationLedgerCount": 302,
+        "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
+        "rehearsalHash": "sha256:24dc8710d3d66b70a5e9804f5c6cdb4e0f1e62b81775c0fc431565dadd2fcee7",
+        "rehearsalStartedAt": "2026-10-05T10:18:52.477Z",
+        "rehearsalCompletedAt": "2026-10-05T10:38:28.941Z",
+        "capture": {
+          "createdAt": "2026-10-05T10:08:08.180Z",
+          "files": [
+            {
+              "path": "database.dump",
+              "bytes": 958580611,
+              "sha256": "sha256:160556323a3e17e4d777ed6af3325d63f525c894fa940d8f1d757a19ad058992"
+            }
+          ]
+        },
+        "completedMainChecks": [
+          {
+            "id": "snapshot",
+            "status": "passed"
+          },
+          {
+            "id": "migrations",
+            "status": "passed"
+          },
+          {
+            "id": "full-candidate-health",
+            "status": "passed"
+          },
+          {
+            "id": "image-contract",
+            "status": "passed"
+          },
+          {
+            "id": "historical-inventory",
+            "status": "passed"
+          }
+        ],
+        "additiveMigrationScenarios": [
+          {
+            "id": "atomic-ddl-ledger",
+            "status": "passed"
+          },
+          {
+            "id": "crash-before-ledger",
+            "status": "passed"
+          },
+          {
+            "id": "repeat-after-commit",
+            "status": "passed"
+          },
+          {
+            "id": "same-connection-lock",
+            "status": "passed"
+          },
+          {
+            "id": "unknown-migration-rejected",
+            "status": "passed"
+          },
+          {
+            "id": "schema-proof",
+            "status": "passed"
+          },
+          {
+            "id": "old-readers-after-expansion",
+            "status": "passed"
+          }
+        ],
+        "migrationCleanup": {
+          "status": "trials-cleared",
+          "remaining": 0
+        },
+        "cleanup": {
+          "remainingOwnedResources": 0,
+          "resources": {
+            "bagofholding.rehearsal:container": 0,
+            "bagofholding.rehearsal:network": 0,
+            "bagofholding.rehearsal:volume": 0,
+            "bagofholding.legacy-inspection:container": 0,
+            "bagofholding.legacy-inspection:network": 0,
+            "bagofholding.legacy-inspection:volume": 0
+          },
+          "dockerAuthRemoved": true,
+          "deploymentJournalCreated": false,
+          "deployLockPresent": false,
+          "activeManifestPresent": false,
+          "readyPresent": false,
+          "operationPresent": false
+        },
+        "rehearsalCleanup": {
+          "status": "stopped",
+          "errors": [],
+          "resourceCount": 26
+        },
+        "edge": [
+          {
+            "path": "/",
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "status": 200
+          },
+          {
+            "path": "/build-info.json",
+            "status": 200
+          }
+        ],
+        "automaticTtlRejectionClaimed": false
+      },
+      "localHistoryDiagnosis": {
+        "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
+        "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+        "recordTextBytes": 73529052,
+        "records": 2344,
+        "combats": 136,
+        "passed": 112,
+        "failed": 24,
+        "reason": "Combat replay diverged",
+        "artifactFamilies": 3,
+        "replayModuleSameAsOriginalLive": true,
+        "cleanup": "stopped",
+        "productionFailureCauseProven": false
+      },
+      "manualReleaseGatesEnabled": true,
+      "autoSelectiveReconcileEnabled": false,
+      "firstLiveWritersEnabled": false,
+      "paidProviderRequestsThisRecord": 0,
+      "remaining": [
+        "Diagnose and correct replay inputs without rewriting archived records or executables.",
+        "Verify bounded complete restore/history/replay within unchanged freshness policy on next exact source.",
+        "Review explicit recovery of all three failed attempts; normal successful-baseline discovery unchanged.",
+        "Commit reviewed local correction, exact full CI, immutable publication, fresh capture and all host gates.",
+        "Only after real healthy adoption: writer compatibility, selective, rollback, automatic/reconcile acceptance."
+      ],
+      "all29TasksComplete": false,
+      "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+      "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
+      "latestLocalCorrection": {
+        "schemaVersion": 1,
+        "kind": "reviewed-go-json-map-replay-and-three-attempt-recovery",
+        "recordedAt": "2026-10-05T11:28:22.608Z",
+        "baseCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "status": "locally-verified-awaiting-new-exact-ci-and-fresh-host-rehearsal",
+        "sourcePaths": 13,
+        "proofPath": "infra/first-adoption-recoveries/37294402253-1.json",
+        "proofHash": "sha256:d03d78e7c611065537080c69cff13c2b7c61ce61a6b0641d6026d40cc6f86c34",
+        "reviewedFailedAttempts": 3,
+        "contract": {
+          "sourceEncoding": "go-json-map-v1",
+          "defaultSourceEncoding": "direct-worker",
+          "historicalRecordSchemaChanged": false,
+          "outputNormalized": false,
+          "arraysReordered": false,
+          "scope": "every step envelope and intent crosses backend JSONMap wire ordering; no artifact-specific branches, no candidate hash search"
+        },
+        "originalSnapshotReplay": {
+          "passed": 136,
+          "records": 2344,
+          "commands": 2209,
+          "usedArtifacts": 18,
+          "reportHash": "sha256:6103047c2702642202d203d4c6fc4a6916b523df52075081fc42b1f6ef5ead87"
+        },
+        "originalSnapshot": {
+          "deploymentRunId": 37273035754,
+          "createdAt": "2026-10-05T06:35:01.822Z",
+          "sha256": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+          "scope": "original snapshot; not the later failed rehearsal snapshot"
+        },
+        "originalSnapshotOnly": true,
+        "latestProductionCaptureReplay": false,
+        "historicalBytesRewritten": false,
+        "localIntegration": {
+          "receiptHash": "sha256:8669888c27f67ece0b017478b10f1c9a512257bc46ff172f368933acdd220017",
+          "checks": [
+            {
+              "id": "actual-Go-HTTP-worker-replay-and-selection",
+              "tests": 33,
+              "passed": 33,
+              "skipped": 0,
+              "status": "passed"
+            },
+            {
+              "id": "Linux-complete-three-refusal-protocol",
+              "tests": 27,
+              "passed": 27,
+              "skipped": 0,
+              "status": "passed",
+              "network": "none",
+              "repositoryReadOnly": true
+            },
+            {
+              "id": "diff",
+              "status": "passed"
+            },
+            {
+              "id": "database-dumps",
+              "status": "passed"
+            },
+            {
+              "id": "known-credentials",
+              "status": "passed"
+            }
+          ],
+          "sourceUnchanged": {
+            "unchanged": true,
+            "files": 4424,
+            "sha256": "e00c85caf840995e4d06d8d3a997a6fb1ee9d62d92dee9bd141213ea1c62d0b2"
+          },
+          "cleanup": {
+            "status": "stopped",
+            "remainingOwnedResources": 0
+          }
+        },
+        "privatePriorNativeCursor": {
+          "checks": 19,
+          "unchangedAppliedSource": true,
+          "cleanup": "stopped",
+          "latencyMeasured": false
+        },
+        "preservedDiagnosticRefusal": {
+          "path": "full-136-report.json",
+          "sha256": "sha256:d8c0a734e9e3f05dbe0d272bafcd029ec60482a204aa6ae6230713672c744380",
+          "reason": "diagnostic count assumed after-baseline for every group; group51 before-baseline corrected only in v2 wrapper; preserved first source"
+        },
+        "productionChanges": 0,
+        "paidProviderRequests": 0,
+        "firstHealthyDeployment": false,
+        "freshnessPolicyMinutes": 30,
+        "transportBytesLimit": 134217728,
+        "replayTimeoutMs": 300000,
+        "firstLiveWriterPolicy": "all-off",
+        "autoSelectiveReconcile": "off",
+        "remaining": [
+          "New reviewed commit and exact full CI.",
+          "All three immutable images and explicit recovery of all three failed attempts.",
+          "Fresh protected capture; all restore, history, replay, pending and duplicate-command gates under unchanged freshness.",
+          "Independently verify successful adoption before writer/selective/automatic release acceptance."
+        ],
+        "all29TasksComplete": false
+      },
+      "latestLocalCorrectionRecord": "docs/audits/2026-10-04/execution/REL-06-go-wire-recovery.json"
     }
   ],
   "updated_at": "2026-10-05T09:34:57.913Z"

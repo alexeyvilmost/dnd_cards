@@ -229,24 +229,26 @@ type roguelikeWorkerNeed struct {
 	EffectType string `json:"effectType"`
 }
 type roguelikeWorkerResult struct {
-	CatalogSelection    *roguelikeCatalogSelection      `json:"catalogSelection"`
-	InitiativeOptions   []JSONMap                       `json:"initiativeOptions"`
-	PreparedCommand     *CharacterRuntimeCommandRequest `json:"preparedCommand"`
-	Public              JSONMap                         `json:"public"`
-	ArtifactHash        string                          `json:"artifactHash"`
-	ElapsedSeconds      int                             `json:"elapsedSeconds"`
-	GoldSpent           int                             `json:"goldSpent"`
-	Events              []JSONMap                       `json:"events"`
-	Status              string                          `json:"status"`
-	Needs               []roguelikeWorkerNeed           `json:"needs"`
-	Envelope            JSONMap                         `json:"envelope"`
-	CombatOpeningState  JSONMap                         `json:"combatOpeningState"`
-	Patch               JSONMap                         `json:"patch"`
-	PreviousPatch       JSONMap                         `json:"previousPatch"`
-	Patches             map[string]JSONMap              `json:"patches"`
-	ContentManifestHash string                          `json:"contentManifestHash"`
-	RandomValues        []float64                       `json:"randomValues"`
-	Trace               JSONMap                         `json:"trace"`
+	initializationDependencies []roguelikeWorkerNeed
+	initializationProof        *roguelikeInitializationProof
+	CatalogSelection           *roguelikeCatalogSelection      `json:"catalogSelection"`
+	InitiativeOptions          []JSONMap                       `json:"initiativeOptions"`
+	PreparedCommand            *CharacterRuntimeCommandRequest `json:"preparedCommand"`
+	Public                     JSONMap                         `json:"public"`
+	ArtifactHash               string                          `json:"artifactHash"`
+	ElapsedSeconds             int                             `json:"elapsedSeconds"`
+	GoldSpent                  int                             `json:"goldSpent"`
+	Events                     []JSONMap                       `json:"events"`
+	Status                     string                          `json:"status"`
+	Needs                      []roguelikeWorkerNeed           `json:"needs"`
+	Envelope                   JSONMap                         `json:"envelope"`
+	CombatOpeningState         JSONMap                         `json:"combatOpeningState"`
+	Patch                      JSONMap                         `json:"patch"`
+	PreviousPatch              JSONMap                         `json:"previousPatch"`
+	Patches                    map[string]JSONMap              `json:"patches"`
+	ContentManifestHash        string                          `json:"contentManifestHash"`
+	RandomValues               []float64                       `json:"randomValues"`
+	Trace                      JSONMap                         `json:"trace"`
 }
 
 func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, body any) (*roguelikeWorkerResult, error) {
