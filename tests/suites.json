@@ -47,6 +47,7 @@
         "scripts/testing/runtime.test.mjs",
         "scripts/testing/go-test-list.test.mjs",
         "scripts/testing/node-failure-diagnostics.test.mjs",
+        "scripts/testing/browser-failure-diagnostics.test.mjs",
         "scripts/testing/source-snapshot.test.mjs",
         "scripts/testing/ci-policy.test.mjs",
         "scripts/testing/shards.test.mjs",

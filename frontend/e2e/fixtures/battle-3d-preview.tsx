@@ -133,7 +133,7 @@ function Preview() {
       <output data-testid="inspected">{inspected ?? '—'}</output>
       <output data-testid="fixture-health">{state.world.actors[targetId].runtime.hp.current}</output>
       <output data-testid="roster-count">{Object.keys(state.tokens).length}</output>
-      <output hidden data-testid="fixture-geometry">{JSON.stringify({...boardDimensions(state),emptyCell,
+      <output hidden data-testid="fixture-geometry">{JSON.stringify({...boardDimensions(state),emptyCell,hero:state.tokens['hero-0'].position,
         goblin:state.tokens[targetId].position})}</output>
     </div>
     <section className="combat-map-wrap" aria-label="Проверочное поле боя">

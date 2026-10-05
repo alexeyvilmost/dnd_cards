@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       # Each lane owns PG, worker and UI outputs. Bound memory/CPU concurrency.
-      max-parallel: 2
+      max-parallel: 4
       matrix:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     runs-on: ubuntu-24.04

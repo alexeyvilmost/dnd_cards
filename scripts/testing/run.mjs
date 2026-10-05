@@ -53,7 +53,7 @@ export async function runSuite(argv) {
     const step = {id, status:'running', started_at:new Date().toISOString()}, at=Date.now();
     report.checks.push(step); await save(); console.log(`Checking ${id}...`);
     try {step.result = await action(); step.status='passed';}
-    catch (error) {step.status='failed'; step.reason=error.message; if(error.nodeDiagnostics)step.diagnostics=error.nodeDiagnostics; throw error;}
+    catch (error) {step.status='failed'; step.reason=error.message; if(error.nodeDiagnostics||error.browserDiagnostics)step.diagnostics=error.nodeDiagnostics??error.browserDiagnostics; throw error;}
     finally {step.duration_ms=Date.now()-at; await save();}
   }
   const invoke = (id, executable, argv, settings={}) => execute(executable,argv,{env:environment,log:path.join(directory,`${id}.log`),...settings});

@@ -64,7 +64,7 @@ test('documentation selection permits a single unit lane without fabricating a s
 test('CI schedules the same bounded lanes and publishes a release receipt only after aggregation',()=>{
   const yaml=createRequire(new URL('../../frontend/package.json',import.meta.url))('js-yaml');
   const workflow=yaml.load(readFileSync(new URL('../../.github/workflows/ci.yml',import.meta.url),'utf8'));
-  assert.equal(workflow.jobs.contracts.strategy['max-parallel'],2);
+  assert.equal(workflow.jobs.contracts.strategy['max-parallel'],4);
   assert.equal(workflow.jobs.contracts.strategy['fail-fast'],false);
   assert.match(workflow.jobs.contracts.strategy.matrix.shard,/needs\.plan\.outputs\.shards/);
   const runner=workflow.jobs.contracts.steps.find(step=>step.name==='Run the shared suite runner');

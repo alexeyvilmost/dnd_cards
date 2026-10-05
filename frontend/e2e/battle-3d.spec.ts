@@ -23,7 +23,7 @@ async function enable3d(page:Page) {
 async function projection(page:Page) {
   await scene(page).scrollIntoViewIfNeeded();
   await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
-  const geometry=JSON.parse((await page.getByTestId('fixture-geometry').textContent())!) as {width:number;height:number;emptyCell:{x:number;y:number};goblin:{x:number;y:number}};
+  const geometry=JSON.parse((await page.getByTestId('fixture-geometry').textContent())!) as {width:number;height:number;emptyCell:{x:number;y:number};goblin:{x:number;y:number};hero:{x:number;y:number}};
   expect(geometry.emptyCell,'Fixture must declare a genuinely unoccupied walkable cell').toBeTruthy();
   const box=(await scene(page).locator('canvas').boundingBox())!;
   const camera=new PerspectiveCamera(42,box.width/box.height,.1,250);
@@ -159,17 +159,31 @@ test('a moving coin crosses visible intermediate positions', async ({page}) => {
   const errors=errorsFrom(page);
   await page.goto(fixture);
   await enable3d(page);
-  await page.getByRole('button',{name:'Переместить монетку',exact:true}).click();
-  const transforms=await page.evaluate(async()=>{
+  const before=await projection(page);
+  // Observe before dispatch: awaiting click can already consume several real
+  // animation frames on software WebGL. Timer polling afterwards loses them.
+  await page.evaluate(()=>{
     const label=document.querySelector<HTMLElement>('.battle-scene-3d__label[data-actor-id="hero-0"]')!;
-    const samples:string[]=[];
-    for(let index=0;index<14;index++){
-      samples.push(label.style.transform);
-      await new Promise(resolve=>setTimeout(resolve,70));
-    }
-    return samples;
+    const samples=[label.style.transform];
+    const observer=new MutationObserver(()=>samples.push(label.style.transform));
+    observer.observe(label,{attributes:true,attributeFilter:['style']});
+    (window as typeof window & {stopMovementObservation?:()=>string[]}).stopMovementObservation=()=>{observer.disconnect();return samples;};
+  });
+  await page.getByRole('button',{name:'Переместить монетку',exact:true}).click();
+  const after=await projection(page);
+  expect(after.geometry.hero).not.toEqual(before.geometry.hero);
+  const endpoint=after.project(after.geometry.hero.x+.5,after.geometry.hero.y+.5,.58);
+  const label=scene(page).locator('.battle-scene-3d__label[data-actor-id="hero-0"]');
+  await expect.poll(async()=>{
+    const box=await label.boundingBox();
+    return box ? Math.hypot(box.x+box.width/2-endpoint.x,box.y+box.height-endpoint.y) : Infinity;
+  }).toBeLessThan(1);
+  const transforms=await page.evaluate(()=>{
+    const target=window as typeof window & {stopMovementObservation?:()=>string[]};
+    const samples=target.stopMovementObservation!();delete target.stopMovementObservation;return samples;
   });
   expect(new Set(transforms).size).toBeGreaterThan(2);
+  expect(transforms.at(-1)).not.toBe(transforms[0]);
   expect(errors).toEqual([]);
 });
 

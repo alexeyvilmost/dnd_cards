@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "status": "locally_verified_pending_exact_ubuntu_ci",
+  "previousCi": {
+    "runId": 37257301349,
+    "commit": "3ece3d897b08f7778c6abc4a54094322354a337f",
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37257301349",
+    "publication": false,
+    "deployment": false
+  },
+  "completedCiChecks": {
+    "node": {
+      "passed": 663,
+      "skipped": 0
+    },
+    "vitest": {
+      "files": 730,
+      "passed": 6462,
+      "skipped": 0
+    },
+    "go": {
+      "passed": 753,
+      "race": true
+    },
+    "workerAndDatabaseNode": {
+      "passed": 20,
+      "skipped": 0
+    },
+    "primaryBrowser": {
+      "passed": 12,
+      "skipped": 0
+    },
+    "additionalProductionBrowser": {
+      "passed": 48,
+      "skipped": 0
+    },
+    "extendedBeforeBattle3d": "all passed, including observed legacy baseline, supported upgrades, crash recovery, 220 accepted durable continuations and image egress isolation"
+  },
+  "failedCiCheck": {
+    "id": "browser-ui-fixtures-battle3d",
+    "rawFailureLocationUnavailable": true,
+    "originalAggregatePreserved": true
+  },
+  "localReproduction": {
+    "sourceCommit": "3ece3d897b08f7778c6abc4a54094322354a337f",
+    "platform": "Ubuntu24 Docker",
+    "browser": "Google Chrome154.0.8037.97",
+    "ciRunnerCatalog": {
+      "image": "ubuntu24/20260927.320",
+      "browser": "Google Chrome154.0.8037.57",
+      "source": "https://github.com/actions/runner-images/blob/ubuntu24/20260927.320/images/ubuntu/Ubuntu2404-Readme.md",
+      "runtimeVersionNotPrintedByOriginalJob": true
+    },
+    "failed": 1,
+    "passed": 7,
+    "reason": "Post-click 70ms polling observed only two distinct coin positions on software WebGL",
+    "receipt": {
+      "path": "outputs/ci/battle3d-linux/first-proof/report.json",
+      "sha256": "sha256:c929a6506b8f7ccc517d5cabce610dd8a6688f444c0e7a7073655782715d9a90"
+    }
+  },
+  "repair": {
+    "productionCodeChanged": false,
+    "testOnly": true,
+    "observerArmedBeforeClick": true,
+    "intermediatePositionsRequirementPreserved": true,
+    "exactDeclaredDestinationCheckAdded": true,
+    "timeLimitsIncreased": false,
+    "retriesAdded": false
+  },
+  "verification": {
+    "linux": {
+      "passed": 8,
+      "skipped": 0,
+      "retries": 0,
+      "receipt": {
+        "path": "outputs/ci/battle3d-linux/full-green-proof/report.json",
+        "sha256": "sha256:5a47cc3c63770c0767aa8bbcd974ca8087bb639e2f660ae94a07529b8764ed6f"
+      }
+    },
+    "windows": {
+      "passed": 8,
+      "skipped": 0,
+      "retries": 0,
+      "receipt": {
+        "path": "outputs/ci/battle3d-linux/windows-green-proof/report.json",
+        "sha256": "sha256:c57e82e851845a5c6b03b4f48a477291373322de90b809feec3b34f6910bc00d"
+      },
+      "browser": "Google Chrome154.0.8037.93"
+    },
+    "diagnosticsAndSuitePolicy": {
+      "passed": 46,
+      "skipped": 0
+    },
+    "linuxDiagnosticRealChildProcess": {
+      "passed": 4,
+      "skipped": 0
+    },
+    "independentPriorCleanLinuxVitest": {
+      "commit": "3ece3d897b08f7778c6abc4a54094322354a337f",
+      "files": 730,
+      "passed": 6462,
+      "skipped": 0
+    },
+    "repairReceipt": {
+      "path": "outputs/ci/battle3d-linux/repair-proof.json",
+      "sha256": "sha256:63416f7af592ab6f5802ddddd954a6565419b1302d2232819d572e7e0c042bdd"
+    }
+  },
+  "ciScheduling": {
+    "independentHostedLanes": 4,
+    "maxParallelBefore": 2,
+    "maxParallelAfter": 4,
+    "sameRequiredTests": true
+  },
+  "safeDiagnostics": {
+    "fields": [
+      "selected source file",
+      "line",
+      "column",
+      "fixed failure status"
+    ],
+    "rawErrorsTitlesValuesAttachmentsIncluded": false
+  },
+  "nextGate": "Exact new commit full Ubuntu CI, race and successful aggregate before publication",
+  "verifiedSourceFiles": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "sha256:39a4e556773e65010f2886711ed51492007cef99b3286609aad29d1d20b5e46a"
+    },
+    {
+      "path": "frontend/e2e/battle-3d.spec.ts",
+      "sha256": "sha256:d58f33f1de9c911279cf5367205b42038dba5b318ac5f46f9b422dd1a930eb0c"
+    },
+    {
+      "path": "frontend/e2e/fixtures/battle-3d-preview.tsx",
+      "sha256": "sha256:aea02c2af58234801951cc84791f091be5372ba31b7366967af4afd467ab34e2"
+    },
+    {
+      "path": "scripts/testing/browser-failure-diagnostics.mjs",
+      "sha256": "sha256:af30c8bd7bff833b626f423773175dc18f505184bfcd275ec905fd190299f052"
+    },
+    {
+      "path": "scripts/testing/browser-failure-diagnostics.test.mjs",
+      "sha256": "sha256:f1124c859e4de159a028c0b2d528b855b1a7784aef1612170cf6c7d6af627618"
+    },
+    {
+      "path": "scripts/testing/browser-fixtures.mjs",
+      "sha256": "sha256:477ec68ef25bca6c998720f6edd85ec87590e54af99959b5c401065205fc27db"
+    },
+    {
+      "path": "scripts/testing/run.mjs",
+      "sha256": "sha256:7a8175c7c87249d5c76ba95ee7ff5f93c7177f041aa21ca3059e735f4d90152f"
+    },
+    {
+      "path": "scripts/testing/shards.test.mjs",
+      "sha256": "sha256:b98f3babef98b0bb2f9bd3e8d816e6f6d81dad3f3cceb04bc07ed6ac8c2f6056"
+    },
+    {
+      "path": "tests/suites.json",
+      "sha256": "sha256:c4b56a853179ec6487922b86ced48d16ab46618c408d664cb6aa72be689d2221"
+    }
+  ]
+}
