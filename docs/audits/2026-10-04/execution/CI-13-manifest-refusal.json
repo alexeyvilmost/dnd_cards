@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-ci13-and-pre-build-source-manifest-refusal",
+  "recordedAt": "2026-10-05T21:44:39.459Z",
+  "sourceCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
+  "ci": {
+    "id": 37374888145,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37374888145",
+    "status": "completed",
+    "conclusion": "success",
+    "aggregateHash": "sha256:5f6e356a6c7574a48c14c18269abe14faa29b990d00ebedec00f3351520fbecc",
+    "durationMs": 869799,
+    "maxShardDurationMs": 866521,
+    "sourceSnapshot": {
+      "sha256": "72fc0385d2ea3b7c2be16b364495a7f5faa9b13e9b6046a287b04e3de3b3bf64",
+      "files": 4428
+    },
+    "globalCoverageComplete": true,
+    "counts": {
+      "node": 722,
+      "vitest": 6462,
+      "goPackageCases": 754,
+      "workerAndDatabase": 25,
+      "cursorChecks": 22,
+      "browserFlows": 12,
+      "uiFixtures": 48,
+      "battle3d": 8
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "publication": {
+    "id": 37377337224,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37377337224",
+    "status": "completed",
+    "conclusion": "failure",
+    "stage": "prepare/source-content-manifest",
+    "errorCategory": "Source catalog manifest/config drift",
+    "componentBuildJobs": "skipped",
+    "imagePublicationJobs": "skipped",
+    "candidateUploaded": false,
+    "hostJobStarted": false
+  },
+  "repair": {
+    "status": "locally-verified-new-exact-ci-required",
+    "producer": "scripts/release/source-content-manifest.mjs write .",
+    "manifestFiles": 434,
+    "oldManifestHash": "sha256:b038f735f9162dbb10074c33d48dd865a1dd2833e84876eba7938804ee6424d8",
+    "newManifestHash": "sha256:792705aca1d66e2ed086a649ea5783b953bfb7c6130e1861bc79c3b205a79121",
+    "changedSourceRows": [
+      {
+        "path": "backend/roguelike_initialization_preparation.go",
+        "added": true
+      },
+      {
+        "path": "backend/roguelike_party_worker.go",
+        "added": false
+      },
+      {
+        "path": "backend/roguelike_worker_catalog.go",
+        "added": false
+      },
+      {
+        "path": "backend/roguelike_worker_client.go",
+        "added": false
+      },
+      {
+        "path": "backend/roguelike_worker_controller.go",
+        "added": false
+      }
+    ],
+    "allOtherBuildConfigFieldsPreserved": true,
+    "ciGuard": "Existing source-hygiene now checks canonical current source manifest before builds in CI mode.",
+    "local": {
+      "node": 56,
+      "skipped": 0,
+      "failed": 0,
+      "files": [
+        "scripts/release/source-content-manifest.test.mjs",
+        "scripts/release/ci-release.test.mjs",
+        "scripts/testing/runtime.test.mjs",
+        "scripts/testing/shards.test.mjs",
+        "scripts/testing/suites.test.mjs"
+      ]
+    },
+    "applicationCodeChanged": false
+  },
+  "futurePrivate": {
+    "base": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
+    "principalPaths": 127,
+    "combinedPaths": 137,
+    "windowsNode": 137,
+    "windowsDeclaredLinuxSkips": 4,
+    "actualLinuxNode": 141,
+    "actualLinuxSkips": 0,
+    "freeze": "outputs/testing/future-release-64cb14ee/FREEZE.json",
+    "sharedSourceApplied": false,
+    "rebaseRequiredAfterThisRepair": true
+  },
+  "recovery": {
+    "id": "37362805287-1",
+    "reviewedFailedDeployments": 4,
+    "newFailedDeployment": false
+  },
+  "historicalFresh": {
+    "lastCompletedMigration": 277,
+    "refusingMigration": 278,
+    "conditions": 1656,
+    "passingConditions": 1045,
+    "refusingConditions": 611,
+    "status": "authentic-pre278-inputs-required"
+  },
+  "policy": {
+    "writers": false,
+    "automatic": false,
+    "selective": false,
+    "reconcile": false
+  },
+  "productionApplicationMutations": 0,
+  "paidProviderRequests": 0,
+  "nextSteps": [
+    "Commit locally verified manifest and early CI guard; require exact-source CI14.",
+    "Publish all3new exact images; four-attempt recovery remains unchanged because failed publication never reached a host.",
+    "Fresh capture/full rehearsal within30minutes, then independent first healthy adoption verification.",
+    "Rebase the private next-stage packet, regenerate its final source manifest and validate actual writer/selective/rollback/automatic acceptance."
+  ]
+}

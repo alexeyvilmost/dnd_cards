@@ -70,7 +70,12 @@ export async function runSuite(argv) {
       await invoke('diff-staged', 'git',['diff','--cached','--check']);
       await invoke('database-dumps',process.execPath,['scripts/security/check-no-database-dumps.mjs']);
       await invoke('known-credentials',process.execPath,['scripts/security/check-no-known-credentials.mjs']);
-      if(args.mode==='ci')report.ci_source=assertCleanCICheckout();
+      if(args.mode==='ci'){
+        report.ci_source=assertCleanCICheckout();
+        // A passing CI report must also bind the current shipped catalog
+        // sources. Catch a stale conservative Go/data manifest before builds.
+        await invoke('source-content-manifest',process.execPath,['scripts/release/source-content-manifest.mjs','check',repositoryRoot]);
+      }
       sourceSnapshot=captureSourceSnapshot();
       if(sourceSnapshot.head!==plan.candidate.sha)throw Error('HEAD changed after suite planning; restart the run');
       await writeFile(path.join(directory,'source-snapshot.json'),JSON.stringify(sourceSnapshot,null,2));
