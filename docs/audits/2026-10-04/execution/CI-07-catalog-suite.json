@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-05T05:44:15.428Z",
+  "ci": {
+    "runId": 37267450874,
+    "commit": "6c0a2a7c540a27fd9cf61743f6b49a7c42e5909f",
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37267450874",
+    "publication": false,
+    "deployment": false
+  },
+  "lanes": [
+    {
+      "lane": "unit",
+      "status": "failed",
+      "receipt": {
+        "path": "outputs/ci/37267450874/all/local-suite-unit/report.json",
+        "sha256": "sha256:a614b91326e8b6c9dbf02809e4960437aaf223efc26fa2979c661b526b2df028"
+      },
+      "cleanup": {
+        "status": "not-required",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 1364
+        },
+        {
+          "id": "node-contracts",
+          "status": "passed",
+          "durationMs": 40687
+        },
+        {
+          "id": "vitest",
+          "status": "failed",
+          "durationMs": 499540,
+          "diagnostics": {
+            "schemaVersion": 1,
+            "kind": "safe-vitest-source-locations",
+            "failures": [
+              {
+                "file": "frontend/src/character/sheetCombatCertifiedCatalog.test.ts",
+                "status": "failed",
+                "failedAssertions": 0
+              }
+            ],
+            "rawOutputIncluded": false
+          }
+        }
+      ]
+    },
+    {
+      "lane": "backend",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37267450874/all/local-suite-backend/report.json",
+        "sha256": "sha256:49af222655bfa2db2fa8fec8ff84ce1a780f6738766f91600302a4b2f1f6a143"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2089
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 129597
+        },
+        {
+          "id": "worker-and-database-node",
+          "status": "passed",
+          "durationMs": 3261
+        },
+        {
+          "id": "backend-compile",
+          "status": "passed",
+          "durationMs": 14318
+        },
+        {
+          "id": "go-backend",
+          "status": "passed",
+          "durationMs": 146097
+        },
+        {
+          "id": "go-animationpresentation",
+          "status": "passed",
+          "durationMs": 1562
+        },
+        {
+          "id": "go-audiopresentation",
+          "status": "passed",
+          "durationMs": 1528
+        },
+        {
+          "id": "go-charactertemplates",
+          "status": "passed",
+          "durationMs": 55
+        },
+        {
+          "id": "go-itemsource",
+          "status": "passed",
+          "durationMs": 1844
+        },
+        {
+          "id": "go-itemsource-cmd-audit",
+          "status": "passed",
+          "durationMs": 104
+        },
+        {
+          "id": "go-migrations",
+          "status": "passed",
+          "durationMs": 32227
+        },
+        {
+          "id": "go-passivepresentation",
+          "status": "passed",
+          "durationMs": 56
+        },
+        {
+          "id": "go-roguelikecontent",
+          "status": "passed",
+          "durationMs": 1425
+        },
+        {
+          "id": "go-weapondata",
+          "status": "passed",
+          "durationMs": 1426
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 488
+        }
+      ]
+    },
+    {
+      "lane": "flows",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37267450874/all/local-suite-flows/report.json",
+        "sha256": "sha256:1abe1706e0b1e5dde4f9c33cf0672637dc2fbbac8cefd6e1abad26203041e78f"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 1226
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 89265
+        },
+        {
+          "id": "local-api-spine",
+          "status": "passed",
+          "durationMs": 556
+        },
+        {
+          "id": "local-browser-flows",
+          "status": "passed",
+          "durationMs": 46769
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 315
+        }
+      ]
+    },
+    {
+      "lane": "extended",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37267450874/all/local-suite-extended/report.json",
+        "sha256": "sha256:759787704f738c34bf7215a03c7f2000ae0658b0f4d34ec5c5bdbd0d403a2446"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2726
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 131179
+        },
+        {
+          "id": "process-crash-recovery",
+          "status": "passed",
+          "durationMs": 11521
+        },
+        {
+          "id": "supported-upgrade-baselines",
+          "status": "passed",
+          "durationMs": 40376
+        },
+        {
+          "id": "observed-legacy-baseline",
+          "status": "passed",
+          "durationMs": 4239
+        },
+        {
+          "id": "candidate-rehearsal-api",
+          "status": "passed",
+          "durationMs": 1640
+        },
+        {
+          "id": "catalog-equivalence",
+          "status": "passed",
+          "durationMs": 48378
+        },
+        {
+          "id": "preparation-cache-equivalence",
+          "status": "passed",
+          "durationMs": 13529
+        },
+        {
+          "id": "worker-wire-mirror-equivalence",
+          "status": "passed",
+          "durationMs": 27765
+        },
+        {
+          "id": "equipment-authority-flow",
+          "status": "passed",
+          "durationMs": 1307
+        },
+        {
+          "id": "initiative-options-flow",
+          "status": "passed",
+          "durationMs": 2497
+        },
+        {
+          "id": "library-review-pages",
+          "status": "passed",
+          "durationMs": 510
+        },
+        {
+          "id": "equipment-runtime-browser",
+          "status": "passed",
+          "durationMs": 13540
+        },
+        {
+          "id": "pwa-offline-shell",
+          "status": "passed",
+          "durationMs": 1222
+        },
+        {
+          "id": "urvin-owned-journey",
+          "status": "passed",
+          "durationMs": 42289
+        },
+        {
+          "id": "solo-durable-continuations",
+          "status": "passed",
+          "durationMs": 118596
+        },
+        {
+          "id": "image-egress-isolation",
+          "status": "passed",
+          "durationMs": 3507
+        },
+        {
+          "id": "browser-ui-fixtures-production",
+          "status": "passed",
+          "durationMs": 178714
+        },
+        {
+          "id": "browser-ui-fixtures-battle3d",
+          "status": "passed",
+          "durationMs": 195491
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 474
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "nodePassed": 679,
+    "requiredGoPassed": 753,
+    "workerAndDatabaseNodePassed": 20,
+    "primaryBrowserPassed": 12,
+    "productionUiPassed": 48,
+    "battle3dPassed": 8,
+    "vitestPassed": null
+  },
+  "remainingFailure": {
+    "file": "frontend/src/character/sheetCombatCertifiedCatalog.test.ts",
+    "failedAssertions": 0,
+    "actualCiRawVitestOutputAvailable": false,
+    "cause": "unknown",
+    "unchangedTestHookBudgetMs": 30000,
+    "unchangedTestAssertionBudgetMs": 30000
+  },
+  "localInvestigation": {
+    "originalSourceCommit": "6c0a2a7c540a27fd9cf61743f6b49a7c42e5909f",
+    "targetedOriginal": {
+      "path": "outputs/testing/ci7-catalog-repro/receipt.json",
+      "sha256": "sha256:455888194678160cbd9fb00540cceb047404b82b49996d8a022af883617f1d19"
+    },
+    "pairedOriginalDirectory": "outputs/testing/ci7-catalog-repro/paired-2cpu",
+    "pairedPassed": 19,
+    "productionOrCatalogSourcesChanged": false,
+    "deadlineChanged": false,
+    "sourceFinding": "Setup performs three full450-root compilations. This is a timing risk, not a proven explanation of the actual CI7 failure."
+  },
+  "diagnosticsFollowup": {
+    "scope": "Fixed hook/test/worker/import failure categories and selected same-source coordinates from suite errors. No raw messages, names, data or arbitrary codes published.",
+    "windows": {
+      "path": "outputs/ci/ci8-vitest-diagnostics-windows.log",
+      "sha256": "sha256:d19cc4b356fc58320fe2be79e4cde54738f27162407cd31d4bfefb2936a95130"
+    },
+    "linux": {
+      "path": "outputs/ci/vitest-safe-review-1791178918641/report.json",
+      "sha256": "sha256:b8d29d03db8926c37212065d6acaec39d3935d4a1def95734eb792288e0949d4"
+    },
+    "passedPerPlatform": 6,
+    "source": [
+      {
+        "path": "scripts/testing/vitest-failure-diagnostics.mjs",
+        "sha256": "sha256:960ff2c4adbb3f65facb977e7ccb4bc5bd46f388922b07e1a08e2c8e18c45770"
+      },
+      {
+        "path": "scripts/testing/vitest-failure-diagnostics.test.mjs",
+        "sha256": "sha256:f1372592e2981077ea9001c8d3b8d86c9a679603db2bc7ccfbc00fa1e82b481c"
+      }
+    ],
+    "independentPrivacyReview": "passed"
+  },
+  "nextGate": "New full exact-source CI with improved diagnostics; publication/deployment remain blocked until aggregate PASS."
+}

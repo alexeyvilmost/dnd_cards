@@ -31,6 +31,17 @@ test('missing or malformed Vitest diagnostic data cannot provide a success recei
   assert.deepEqual(safeVitestFailureDiagnostics({testResults: [{...suite(), status: 'passed', assertionResults: [{status: 'passed', failureMessages: ['private']}]}]}, settings).failures, []);
 });
 
+test('suite errors preserve only fixed failure categories and selected coordinates', () => {
+  const value = {...suite(), assertionResults: [], message: 'Hook timed out in 30000ms. PRIVATE fixture\n ❯ src/example.test.ts:44:3\n at /private/.env:1:2'};
+  assert.deepEqual(safeVitestFailureDiagnostics({testResults: [value]}, settings).failures,
+    [{file, status: 'failed', failedAssertions: 0, failureKinds: ['hook-timeout'], errorLocations: [{file, line: 44, column: 3}]}]);
+  for (const [message, kind] of [['Test timed out in 30000ms. PRIVATE','test-timeout'], ['Worker exited unexpectedly PRIVATE','worker-exit'], ['Cannot find module PRIVATE','import-resolution']]) {
+    const result = safeVitestFailureDiagnostics({testResults: [{...value, message}]}, settings);
+    assert.deepEqual(result.failures[0].failureKinds, [kind]);
+    assert.ok(!JSON.stringify(result).includes('PRIVATE'));
+  }
+});
+
 test('an actual failed Vitest child report yields a selected source without private values', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'dnd-vitest-diagnostics-'));
   const root = fileURLToPath(new URL('../../', import.meta.url));
@@ -52,6 +63,28 @@ test('an actual failed Vitest child report yields a selected source without priv
     const target = path.resolve(directory);
     assert.equal(path.dirname(target), path.resolve(tmpdir()));
     assert.ok(path.basename(target).startsWith('dnd-vitest-diagnostics-'));
+    rmSync(target, {recursive: true, force: true});
+  }
+});
+
+test('an actual beforeAll timeout is classified without publishing the hook error', () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'dnd-vitest-hook-'));
+  const root = fileURLToPath(new URL('../../', import.meta.url));
+  const testFile = path.join(directory, file), resultFile = path.join(directory, 'result.json');
+  try {
+    mkdirSync(path.dirname(testFile), {recursive: true});
+    writeFileSync(testFile, "beforeAll(()=>new Promise(()=>{}),20); test('PRIVATE title',()=>{expect(true).toBe(true);});\n");
+    const config = path.join(directory, 'vitest.config.mjs');
+    writeFileSync(config, 'export default '+JSON.stringify({test: {include: [testFile.replaceAll('\\', '/')], environment: 'node', globals: true, maxWorkers: 1, fileParallelism: false}})+';\n');
+    const child = spawnSync(process.execPath, [path.join(root, 'frontend/node_modules/vitest/vitest.mjs'), 'run', '--config', config, '--reporter=json', `--outputFile=${resultFile}`], {cwd: path.join(root, 'frontend'), encoding: 'utf8', timeout: 30000});
+    assert.equal(child.status, 1);
+    const result = safeVitestFailureDiagnostics(JSON.parse(readFileSync(resultFile, 'utf8')), {root: directory, files: [file]});
+    assert.deepEqual(result.failures[0].failureKinds, ['hook-timeout']);
+    assert.ok(!JSON.stringify(result).includes('PRIVATE'));
+  } finally {
+    const target = path.resolve(directory);
+    assert.equal(path.dirname(target), path.resolve(tmpdir()));
+    assert.ok(path.basename(target).startsWith('dnd-vitest-hook-'));
     rmSync(target, {recursive: true, force: true});
   }
 });

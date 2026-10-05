@@ -24,19 +24,27 @@ export function safeVitestFailureDiagnostics(report, {files, root}) {
     const assertions = suite.assertionResults.filter(assertion => statuses.has(assertion?.status));
     if (suite.status !== 'failed' && !assertions.length) continue;
     const locations = [];
-    for (const assertion of assertions) {
-      for (const message of Array.isArray(assertion.failureMessages) ? assertion.failureMessages : []) {
-        if (typeof message !== 'string') continue;
-        const plain = message.replace(/\x1b\[[0-9;]*m/g, '');
-        for (const line of plain.split(/\r?\n/)) {
-          const match = /(?:^\s*❯\s+|^\s*at\s+(?:.*?\()?)(.*?):(\d+):(\d+)\)?\s*$/.exec(line);
-          if (!match || normalize(match[1]) !== file) continue;
-          const sourceLine = Number(match[2]), column = Number(match[3]);
-          if (positive(sourceLine) && positive(column)) locations.push({file, line: sourceLine, column});
-        }
+    const messages = [suite.message, ...assertions.flatMap(assertion => Array.isArray(assertion.failureMessages) ? assertion.failureMessages : [])];
+    for (const message of messages) {
+      if (typeof message !== 'string') continue;
+      const plain = message.replace(/\x1b\[[0-9;]*m/g, '');
+      for (const line of plain.split(/\r?\n/)) {
+        const match = /(?:^\s*❯\s+|^\s*at\s+(?:.*?\()?)(.*?):(\d+):(\d+)\)?\s*$/.exec(line);
+        if (!match || normalize(match[1]) !== file) continue;
+        const sourceLine = Number(match[2]), column = Number(match[3]);
+        if (positive(sourceLine) && positive(column)) locations.push({file, line: sourceLine, column});
       }
     }
     const row = {file, status: 'failed', failedAssertions: assertions.filter(assertion => assertion.status === 'failed').length};
+    // Fixed categories distinguish setup/worker failures without publishing the
+    // error text, fixture names, assertion values or an arbitrary error code.
+    const categories = [
+      ['hook-timeout', /\bHook timed out in \d+ms\b/],
+      ['test-timeout', /\bTest timed out in \d+ms\b/],
+      ['worker-exit', /\bWorker exited unexpectedly\b/],
+      ['import-resolution', /\b(?:Failed to resolve import|Cannot find module|Failed to load url)\b/],
+    ].filter(([, pattern]) => messages.some(message => typeof message === 'string' && pattern.test(message))).map(([category]) => category);
+    if (categories.length) row.failureKinds = categories;
     if (locations.length) row.errorLocations = [...new Map(locations.map(location => [JSON.stringify(location), location])).values()].slice(0, 100);
     failures.push(row);
     if (failures.length === 100) break;

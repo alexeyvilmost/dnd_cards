@@ -492,8 +492,8 @@
     "Core5 passed on f951e207/4400 inputs. Extended2 unit, flows and extended lanes passed; backend failed only dedicated observed-baseline routing. Historical aggregate remains unchanged; repair checks and exact-commit Linux CI pending.",
     "First adoption keeps new receipt/catalog/image-job writers OFF. Prepared production environment enables catalog batching and wire mirrors; running old application is unchanged until verified cutover."
   ],
-  "updated_at": "2026-10-05T05:10:24.375Z",
-  "work_status": "sixth_exact_ci_passed_unit_backend_flows_camera_wait_failed",
+  "updated_at": "2026-10-05T05:44:15.428Z",
+  "work_status": "seventh_ci_backend_flows_extended_passed_catalog_suite_failure_unknown",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "source_snapshot": {
@@ -548,16 +548,16 @@
     "fullLocalExtendedAggregate": false
   },
   "git": {
-    "commit": "1fced1fceb25bb19187084447c73afc6f322ba30",
+    "commit": "6c0a2a7c540a27fd9cf61743f6b49a7c42e5909f",
     "pushed": true
   },
   "exact_commit_ci": {
-    "runId": 37264490549,
-    "commit": "1fced1fceb25bb19187084447c73afc6f322ba30",
+    "runId": 37267450874,
+    "commit": "6c0a2a7c540a27fd9cf61743f6b49a7c42e5909f",
     "status": "failed",
-    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37264490549",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37267450874",
     "publication": false,
     "deployment": false,
-    "report": "docs/audits/2026-10-04/execution/CI-06-camera-projection.json"
+    "report": "docs/audits/2026-10-04/execution/CI-07-catalog-suite.json"
   }
 }
