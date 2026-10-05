@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-05T03:58:26.588Z",
+  "status": "investigating_actual_ci_failures",
+  "ci": {
+    "runId": 37260045226,
+    "commit": "931e1ff12d241194dce80836bbf860769aa7abfc",
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37260045226",
+    "publication": false,
+    "deployment": false
+  },
+  "lanes": [
+    {
+      "lane": "unit",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37260045226/local-suite-unit/report.json",
+        "sha256": "sha256:8f191a00060520f31bd4ad0d38af72d38839221be2c098a9462923d400feafd2"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 1123
+        },
+        {
+          "id": "node-contracts",
+          "status": "passed",
+          "durationMs": 50592
+        },
+        {
+          "id": "vitest",
+          "status": "passed",
+          "durationMs": 423471
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 381
+        }
+      ],
+      "cleanup": {
+        "status": "not-required",
+        "errors": []
+      }
+    },
+    {
+      "lane": "backend",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37260045226/local-suite-backend/report.json",
+        "sha256": "sha256:34bfbdb1845358a57430b9f857eeb58d2b79b57742e86c5a099d4a8fa3e1b4d5"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2191
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 136723
+        },
+        {
+          "id": "worker-and-database-node",
+          "status": "passed",
+          "durationMs": 3359
+        },
+        {
+          "id": "backend-compile",
+          "status": "passed",
+          "durationMs": 14642
+        },
+        {
+          "id": "go-backend",
+          "status": "passed",
+          "durationMs": 152068
+        },
+        {
+          "id": "go-animationpresentation",
+          "status": "passed",
+          "durationMs": 1611
+        },
+        {
+          "id": "go-audiopresentation",
+          "status": "passed",
+          "durationMs": 1570
+        },
+        {
+          "id": "go-charactertemplates",
+          "status": "passed",
+          "durationMs": 60
+        },
+        {
+          "id": "go-itemsource",
+          "status": "passed",
+          "durationMs": 1915
+        },
+        {
+          "id": "go-itemsource-cmd-audit",
+          "status": "passed",
+          "durationMs": 110
+        },
+        {
+          "id": "go-migrations",
+          "status": "passed",
+          "durationMs": 34998
+        },
+        {
+          "id": "go-passivepresentation",
+          "status": "passed",
+          "durationMs": 60
+        },
+        {
+          "id": "go-roguelikecontent",
+          "status": "passed",
+          "durationMs": 1427
+        },
+        {
+          "id": "go-weapondata",
+          "status": "passed",
+          "durationMs": 1434
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 460
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "lane": "flows",
+      "status": "passed",
+      "receipt": {
+        "path": "outputs/ci/37260045226/local-suite-flows/report.json",
+        "sha256": "sha256:d3d6bf4dc9c9dba059668950679d35526d74fa23f65aa9523bb0f29823f2cd3d"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2916
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 134809
+        },
+        {
+          "id": "local-api-spine",
+          "status": "passed",
+          "durationMs": 969
+        },
+        {
+          "id": "local-browser-flows",
+          "status": "passed",
+          "durationMs": 52753
+        },
+        {
+          "id": "source-stability",
+          "status": "passed",
+          "durationMs": 480
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    {
+      "lane": "extended",
+      "status": "failed",
+      "receipt": {
+        "path": "outputs/ci/37260045226/local-suite-extended/report.json",
+        "sha256": "sha256:ec3b028cb06a487938c45ff223a8af66ac9f52e10394a13b0fbebac2eb7e8704"
+      },
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed",
+          "durationMs": 2441
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed",
+          "durationMs": 131209
+        },
+        {
+          "id": "process-crash-recovery",
+          "status": "passed",
+          "durationMs": 11609
+        },
+        {
+          "id": "supported-upgrade-baselines",
+          "status": "passed",
+          "durationMs": 40593
+        },
+        {
+          "id": "observed-legacy-baseline",
+          "status": "passed",
+          "durationMs": 4215
+        },
+        {
+          "id": "candidate-rehearsal-api",
+          "status": "passed",
+          "durationMs": 1678
+        },
+        {
+          "id": "catalog-equivalence",
+          "status": "passed",
+          "durationMs": 48178
+        },
+        {
+          "id": "preparation-cache-equivalence",
+          "status": "passed",
+          "durationMs": 13286
+        },
+        {
+          "id": "worker-wire-mirror-equivalence",
+          "status": "passed",
+          "durationMs": 32978
+        },
+        {
+          "id": "equipment-authority-flow",
+          "status": "passed",
+          "durationMs": 1291
+        },
+        {
+          "id": "initiative-options-flow",
+          "status": "passed",
+          "durationMs": 2541
+        },
+        {
+          "id": "library-review-pages",
+          "status": "passed",
+          "durationMs": 523
+        },
+        {
+          "id": "equipment-runtime-browser",
+          "status": "passed",
+          "durationMs": 6424
+        },
+        {
+          "id": "pwa-offline-shell",
+          "status": "passed",
+          "durationMs": 1152
+        },
+        {
+          "id": "urvin-owned-journey",
+          "status": "passed",
+          "durationMs": 43857
+        },
+        {
+          "id": "solo-durable-continuations",
+          "status": "passed",
+          "durationMs": 118441
+        },
+        {
+          "id": "image-egress-isolation",
+          "status": "passed",
+          "durationMs": 3465
+        },
+        {
+          "id": "browser-ui-fixtures-production",
+          "status": "passed",
+          "durationMs": 179618
+        },
+        {
+          "id": "browser-ui-fixtures-battle3d",
+          "status": "failed",
+          "durationMs": 142446,
+          "diagnostics": {
+            "schemaVersion": 1,
+            "kind": "safe-browser-source-locations",
+            "failures": [
+              {
+                "file": "frontend/e2e/battle-3d.spec.ts",
+                "line": 51,
+                "column": 1,
+                "status": "failed"
+              },
+              {
+                "file": "frontend/e2e/battle-3d.spec.ts",
+                "line": 76,
+                "column": 1,
+                "status": "failed"
+              },
+              {
+                "file": "frontend/e2e/battle-3d.spec.ts",
+                "line": 190,
+                "column": 1,
+                "status": "failed"
+              }
+            ],
+            "rawOutputIncluded": false
+          }
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    }
+  ],
+  "counts": {
+    "node": 667,
+    "vitest": 6462,
+    "go": 753,
+    "workerAndDatabaseNode": 20,
+    "primaryBrowser": 12,
+    "additionalProductionBrowser": 48
+  },
+  "remainingFailure": "Three battle3d tests declared at lines51,76,190; actual assertion callsites not retained in this run. Movement observer test passed.",
+  "diagnosticRepair": {
+    "selectedAssertionSourceLocationsOnly": true,
+    "windowsContractsPassed": 47,
+    "linuxRealChildTestsPassed": 5,
+    "rawTextPublished": false
+  },
+  "nextGate": "Reproduce actual failures, locally verify repair, then require a successful full exact-commit CI aggregate."
+}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -40,19 +40,36 @@ test('browser diagnostics cannot turn missing or malformed results into pass evi
   assert.deepEqual(safeBrowserFailureDiagnostics({suites: [{specs: [data]}]}, settings).failures, []);
 });
 
+test('assertion locations retain only valid coordinates within the failing selected source', () => {
+  const data = spec('battle-3d.spec.ts');
+  const location = {file: `/work/project/${file}`, line: 64, column: 9};
+  data.tests[0].results[0].errors = [
+    {location, message: 'private assertion'}, {location},
+    {location: {...location, file: '/work/project/.env'}},
+    {location: {...location, file: 'other.spec.ts'}},
+    {location: {...location, line: 'private'}},
+    {location: {...location, column: -1}}, null,
+  ];
+  assert.deepEqual(safeBrowserFailureDiagnostics({suites: [{specs: [data]}]}, settings).failures,
+    [{file, line: 17, column: 1, status: 'failed', errorLocations: [{file, line: 64, column: 9}]}]);
+});
+
 test('an actual failing Playwright process produces safe locations without exposing assertion text', () => {
   const directory = mkdtempSync(path.join(tmpdir(), 'dnd-browser-diagnostics-'));
   const root = fileURLToPath(new URL('../../', import.meta.url));
   const packageEntry = path.join(root, 'frontend/node_modules/@playwright/test/index.js').replaceAll('\\', '/');
   const resultFile = path.join(directory, 'result.json');
   try {
-    writeFileSync(path.join(directory, 'playwright.config.mjs'), `export default ${JSON.stringify({testDir: directory, workers: 1, retries: 0, reporter: [['json', {outputFile: resultFile}]]})};`);
-    writeFileSync(path.join(directory, 'example.spec.ts'), `import {test,expect} from ${JSON.stringify(packageEntry)};\ntest('private test name',()=>{expect('private assertion value').toBe('different value');});\n`);
+    const testDirectory = path.join(directory, 'frontend/e2e');
+    mkdirSync(testDirectory, {recursive: true});
+    writeFileSync(path.join(directory, 'playwright.config.mjs'), `export default ${JSON.stringify({testDir: testDirectory, workers: 1, retries: 0, reporter: [['json', {outputFile: resultFile}]]})};`);
+    writeFileSync(path.join(testDirectory, 'example.spec.ts'), `import {test,expect} from ${JSON.stringify(packageEntry)};\ntest('private test name',()=>{expect('private assertion value').toBe('different value');});\n`);
     const result = spawnSync(process.execPath, [path.join(root, 'frontend/node_modules/@playwright/test/cli.js'), 'test', '--config', path.join(directory, 'playwright.config.mjs')], {cwd: directory, encoding: 'utf8', timeout: 30000});
     assert.equal(result.status, 1);
     const actualReport = JSON.parse(readFileSync(resultFile, 'utf8'));
-    const diagnostics = safeBrowserFailureDiagnostics(actualReport, {root, files: ['frontend/e2e/example.spec.ts'], testDirectory: 'frontend/e2e'});
-    assert.deepEqual(diagnostics.failures, [{file: 'frontend/e2e/example.spec.ts', line: 2, column: 5, status: 'failed'}]);
+    const diagnostics = safeBrowserFailureDiagnostics(actualReport, {root: directory, files: ['frontend/e2e/example.spec.ts'], testDirectory: 'frontend/e2e'});
+    assert.deepEqual(diagnostics.failures, [{file: 'frontend/e2e/example.spec.ts', line: 2, column: 5, status: 'failed',
+      errorLocations: [{file: 'frontend/e2e/example.spec.ts', line: 2, column: 65}]}]);
     assert.ok(!JSON.stringify(diagnostics).includes('private'));
   } finally {
     // mkdtemp returns a new absolute directory beneath the fixed task prefix.

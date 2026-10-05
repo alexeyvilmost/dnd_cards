@@ -29,6 +29,14 @@ export function safeBrowserFailureDiagnostics(report, {files, root, testDirector
           if (!result || typeof result !== 'object') throw Error('Invalid browser diagnostic result');
           if (!file || !positive(spec.line) || !positive(spec.column) || !failureStatuses.has(result.status)) continue;
           const row = {file, line: spec.line, column: spec.column, status: result.status};
+          // Playwright supplies the assertion callsite separately from the test
+          // declaration. Keep only locations in this same selected source file.
+          const locations = (Array.isArray(result.errors) ? result.errors : [])
+            .map(error => error?.location)
+            .filter(location => location && normalize(location.file) === file
+              && positive(location.line) && positive(location.column))
+            .map(location => ({file, line: location.line, column: location.column}));
+          if (locations.length) row.errorLocations = [...new Map(locations.map(location => [JSON.stringify(location), location])).values()];
           if (!failures.some(previous => JSON.stringify(previous) === JSON.stringify(row))) failures.push(row);
         }
       }
