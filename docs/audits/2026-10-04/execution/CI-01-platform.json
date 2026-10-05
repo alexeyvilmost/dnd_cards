@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "status": "locally_verified_pending_exact_ubuntu_ci",
+  "firstCommit": "ded378c6da5a6a8b998c31515cfefb8d2d7c8863",
+  "firstCi": {
+    "runId": 37254785060,
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37254785060",
+    "publication": false,
+    "deployment": false
+  },
+  "localChecks": {
+    "windowsNativePostgres": {
+      "path": "outputs/testing/native-pg-socket-proof.json",
+      "sha256": "sha256:22a0c35d37f8fd0460a2ebbcd53d60793aba111150b8ebc3cd863d730388536b",
+      "status": "passed"
+    },
+    "controlledLinuxPostgres": {
+      "path": "outputs/testing/pg-socket-permission-pgsocket_34e7f7d118af09d2f03c4524.json",
+      "sha256": "sha256:bef828b01a7d42a40903857e30b236788bff5e3dbf2e1fb7f109b6d534bfda7a",
+      "status": "passed",
+      "scope": "Alpine17.11 controlled nonroot socket permissions and SCRAM, not Ubuntu CI"
+    },
+    "diagnosticAndSelectionTests": {
+      "passed": 19,
+      "skipped": 0
+    },
+    "actualFourDatabaseTestFiles": {
+      "platform": "win32",
+      "passed": 7,
+      "skipped": 0
+    },
+    "linuxExactPriorSourceNodeTests": {
+      "passed": 650,
+      "failed": 4,
+      "scope": "Four owned DB tests lacked initdb in minimal Debian diagnostic container; not a passing full suite"
+    }
+  },
+  "sourceFiles": [
+    {
+      "path": "scripts/testing/postgres.mjs",
+      "sha256": "sha256:aacb3186c04e1b9bdc697269546702f41aee15c97771112d82e3f7011d048b07"
+    },
+    {
+      "path": "scripts/testing/run.mjs",
+      "sha256": "sha256:8409e8ee6f39053a117ecf09cd31658c2f9bef4b065a08349820804ebf2c19a1"
+    },
+    {
+      "path": "scripts/testing/node-failure-diagnostics.mjs",
+      "sha256": "sha256:8bdf769cb58a5537db63da90558a8ed426acfd015919a3052e2dd652f31a5cc1"
+    },
+    {
+      "path": "scripts/testing/node-failure-diagnostics.test.mjs",
+      "sha256": "sha256:4029b523d7ad5b652f7e45bbf509fca72bc4220dc53559f51c47a153b5731882"
+    },
+    {
+      "path": "tests/suites.json",
+      "sha256": "sha256:a447c9a85d9208f188c29f1d91f9aedd7e8990df2d0f1adb3fc010c2ff122c9b"
+    }
+  ],
+  "nextGate": "Exact committed complete Ubuntu CI with Linux race, successful aggregate and cleanup before release publication"
+}

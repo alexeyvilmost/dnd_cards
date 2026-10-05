@@ -1,5 +1,5 @@
 import {randomBytes} from 'node:crypto';
-import {mkdir, writeFile, rm, readFile} from 'node:fs/promises';
+import {mkdir, writeFile, appendFile, rm, readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {assertTestDsn, assertRealOwnedPath} from './guards.mjs';
 import {cleanEnvironment, execute, resolveTool, writeRegistry} from './runtime.mjs';
@@ -17,6 +17,9 @@ export async function startNativePostgres(registry, {pgBin, signal} = {}) {
   try {
     await execute(initdb, ['-D', data, '-U', 'test_runner', '--auth-host=scram-sha-256', '--auth-local=scram-sha-256', '--encoding=UTF8', '--no-locale', `--pwfile=${passwordFile}`], {log: path.join(registry.directory, 'initdb.log'), signal});
   } finally { await rm(passwordFile, {force: true}); }
+  // Clients use the owned loopback port. Distribution defaults may put Unix
+  // sockets in a system directory that an unprivileged CI user cannot write.
+  await appendFile(path.join(data, 'postgresql.conf'), "\nunix_socket_directories = ''\n");
   const env = cleanEnvironment({PGPASSWORD: secret});
   await execute(pgctl, ['-D', data, '-l', path.join(registry.directory, 'postgres.log'), '-o', `-h 127.0.0.1 -p ${registry.ports.database}`, '-w', '-t', '30', 'start'], {env, quiet: true, signal});
   const args = ['-X', '-v', 'ON_ERROR_STOP=1', '-h', '127.0.0.1', '-p', String(registry.ports.database), '-U', 'test_runner'];

@@ -14,6 +14,7 @@ import {captureSourceSnapshot, verifySourceSnapshot, assertCleanCICheckout} from
 import {execute, repositoryRoot, cleanEnvironment, resolveTool} from './runtime.mjs';
 import {shardPlan,assignShard,assertShardCoverage} from './shards.mjs';
 import {suiteWorkload} from './workload.mjs';
+import {safeNodeFailureDiagnostics} from './node-failure-diagnostics.mjs';
 
 export function suiteOptions(args) {
   const result = {suite:'core', mode:'local', candidate:'HEAD'};
@@ -52,10 +53,14 @@ export async function runSuite(argv) {
     const step = {id, status:'running', started_at:new Date().toISOString()}, at=Date.now();
     report.checks.push(step); await save(); console.log(`Checking ${id}...`);
     try {step.result = await action(); step.status='passed';}
-    catch (error) {step.status='failed'; step.reason=error.message; throw error;}
+    catch (error) {step.status='failed'; step.reason=error.message; if(error.nodeDiagnostics)step.diagnostics=error.nodeDiagnostics; throw error;}
     finally {step.duration_ms=Date.now()-at; await save();}
   }
   const invoke = (id, executable, argv, settings={}) => execute(executable,argv,{env:environment,log:path.join(directory,`${id}.log`),...settings});
+  const invokeNodeTests = async (id, files, settings={}) => {
+    try {return verifyNodeResult(await invoke(id,process.execPath,['--test','--test-reporter=tap',...files],{timeout:900_000,...settings}));}
+    catch(error){error.nodeDiagnostics=safeNodeFailureDiagnostics(error.output,{files,root:repositoryRoot});throw error;}
+  };
   try {
     report.status='running';
     await check('source-hygiene', async () => {
@@ -94,7 +99,7 @@ export async function runSuite(argv) {
     const needsStack=scripts.length>0||browserGroups.length>0||gates.length>0||fixtureFiles.length>0||nodeFiles.some(file=>file.startsWith('frontend/worker/')||file.endsWith('.integration.test.mjs'));
     // Run infrastructure tests before paying the cost of a production build.
     const preflight=nodeFiles.filter(file=>!file.startsWith('frontend/worker/')&&!file.endsWith('.integration.test.mjs'));
-    if (preflight.length) {await check('node-contracts',async()=>verifyNodeResult(await invoke('node-contracts',process.execPath,['--test','--test-reporter=tap',...preflight],{timeout:900_000})));done(preflight.map(file=>`node:${file}`));}
+    if (preflight.length) {await check('node-contracts',()=>invokeNodeTests('node-contracts',preflight));done(preflight.map(file=>`node:${file}`));}
     if (needsStack||goGroups.length) {
       await check('isolated-stack',async()=>{
         stack=await startTestStack({dbOnly:!needsStack,profile:'integration',isolatedBuild:Boolean(args.shard),reuseBuild:args['reuse-ui-build']===true,go:args.go,pgBin:args['pg-bin'],equipmentIntent:args.suite==='extended',initiativeOptions:args.suite==='extended',workerMirrors:args.suite==='extended',catalogBatch:args.suite==='extended',preparationCache:args.suite==='extended',performance:args.suite==='extended'});
@@ -121,7 +126,7 @@ export async function runSuite(argv) {
     const remainingNode=nodeFiles.filter(file=>!preflight.includes(file));
     if (remainingNode.length) await check('worker-and-database-node',async()=>{
       if (!needsStack&&remainingNode.some(file=>file.startsWith('frontend/worker/'))) await invoke('worker-build',process.execPath,['frontend/worker/build.mjs']);
-      return verifyNodeResult(await invoke('worker-and-database-node',process.execPath,['--test','--test-reporter=tap',...remainingNode],{env:stack?.env??environment,timeout:900_000}));
+      return invokeNodeTests('worker-and-database-node',remainingNode,{env:stack?.env??environment});
     });
     done(remainingNode.map(file=>`node:${file}`));
     if (goGroups.length) {
