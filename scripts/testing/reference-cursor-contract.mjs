@@ -58,6 +58,9 @@ export async function checkReferenceCursorTransport(directory){
   const name=`legacy_inspect_${owner}_repeat`,tag=`bagofholding.legacy-inspection=${name}`;
   await withLegacyReadSnapshot({command,config,dsn,name,label:tag},(snapshot,progress)=>withDockerReadSession({command,config,dsn,name,label:tag,snapshot,progress},async db=>{
    check((await db.query("SELECT rolsuper::text FROM pg_roles WHERE rolname=current_user;"))==='false','actual-reader-is-not-superuser');
+   let attachedOutput;await db.rows("SELECT repeat('Ж😀',65536);",line=>{if(attachedOutput!==undefined)throw Error('Synthetic attached stream duplicated output');attachedOutput=line;});
+   const streamState=JSON.parse(await command(['container','inspect',name+'_stream']))[0];
+   check(attachedOutput==='Ж😀'.repeat(65536)&&streamState.HostConfig.LogConfig.Type==='none'&&streamState.LogPath===''&&streamState.Config.Labels?.['bagofholding.legacy-inspection']===name,'attached-utf8-stream-preserves-complete-output-without-persisted-container-log');
    const before=await cursorInventory(db);await sql(`UPDATE unknown_json SET payload=jsonb_build_object('artifactHash','${artifact('b')}');`);const after=await cursorInventory(db);
    check(evidenceHash(domain(before))===evidenceHash(domain(after)),'concurrent-committed-write-invisible-in-one-exported-snapshot');
   }));

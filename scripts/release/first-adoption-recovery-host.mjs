@@ -8,6 +8,7 @@ import {evidenceHash} from './validate-manifest.mjs';
 import {loadControlRecovery,assertRecoveredInitialHistory,reviewedRecoveryAttempts} from './first-adoption-recovery.mjs';
 import {deploymentStateFile,validateLegacyBaseline,legacyRuntimeFingerprint,legacyServices} from './legacy-baseline.mjs';
 import {validateHostPacket} from './ssh-host-release.mjs';
+import {validateReviewedReplayRefusal} from './reviewed-replay-refusal.mjs';
 
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 function read(file,max=32*1024*1024) {
@@ -47,17 +48,19 @@ export async function observeRecoveredFirstHost({proof,request,config,underLock=
       validateHostPacket(old,oldDirectory);
       const candidate=JSON.parse(old.files['candidate.json'].text),ref=candidate.provenance?.firstAdoptionRecovery??null;
       if(previous.sourceCommit!==row.controlCommit||!same(ref,row.recoveryReference))throw Error('Prior transferred recovery authority changed');
-      const scripts=['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs',...(row.stage==='rehearsal-start-refusal'?['prepare-host-release.mjs','candidate-rehearsal.mjs']:['first-adoption-recovery-host.mjs'])];
+      const scripts=['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs',...(row.stage==='rehearsal-start-refusal'?['prepare-host-release.mjs','candidate-rehearsal.mjs']:['first-adoption-recovery-host.mjs',...(row.stage==='rehearsal-historical-replay-refusal'?['prepare-host-release.mjs','candidate-rehearsal.mjs']:[])])];
       const phases=scripts.map((_,i)=>`phase-${String(i+1).padStart(2,'0')}.json`);
       if(!same(readdirSync(oldDirectory).filter(name=>name.startsWith('phase-')).sort(),phases))throw Error('Prior attempt phase prefix differs');
       for(const [i,file]of phases.entries())if(!same(read(path.join(oldDirectory,file),4096),{script:scripts[i],status:'started'}))throw Error('Prior attempt phase record differs');
     }
-    if(['docker-auth','deployment-operation.json','phase-06.json','ready'].some(name=>existsSync(path.join(oldDirectory,name))))throw Error('Prior attempt reached an unreviewed stage');
+    if(['docker-auth','deployment-operation.json',row.stage==='rehearsal-historical-replay-refusal'?'phase-07.json':'phase-06.json','ready'].some(name=>existsSync(path.join(oldDirectory,name))))throw Error('Prior attempt reached an unreviewed stage');
     if(row.stage==='pre-capture-recovery-refusal'){
       // Preparation writes outside the attempt. Absence of its local output is
       // insufficient: independently refuse the deterministic protected capture.
       if(['rehearsal','phase-05.json'].some(name=>existsSync(path.join(oldDirectory,name)))
         ||existsSync(path.join(root,'backups',`capture-${row.runId}-${row.runAttempt}`)))throw Error('Pre-capture refusal has later-stage evidence');
+    }else if(row.stage==='rehearsal-historical-replay-refusal'){
+      validateReviewedReplayRefusal({candidate:JSON.parse(old.files['candidate.json'].text),input:read(path.join(oldDirectory,'rehearsal','input.json')),report:read(path.join(oldDirectory,'rehearsal','rehearsal.json')),row,proof});
     }else{
       const rehearsal=read(path.join(oldDirectory,'rehearsal','rehearsal.json'));
       if(rehearsal.status!=='failed'||rehearsal.failureStage!=='start'||rehearsal.activeHash!==proof.activeHash||rehearsal.cleanup?.status!=='stopped'||!Array.isArray(rehearsal.cleanup.errors)||rehearsal.cleanup.errors.length||!Number.isFinite(Date.parse(rehearsal.completedAt))||Date.parse(rehearsal.completedAt)>Date.parse(row.observedAt))throw Error('Prior rehearsal refusal or cleanup differs');

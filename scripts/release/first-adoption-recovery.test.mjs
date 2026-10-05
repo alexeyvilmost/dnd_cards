@@ -123,3 +123,14 @@ test('trusted recovery file cycles are bounded before recursively following repe
  assert.throws(()=>loadControlRecovery({id:a.id,controlRoot:f.root,controlCommit,repository}),/cyclic or exceeds/);
  const tooLong=chainProof();tooLong.failedDeployments=Array.from({length:9},(_,i)=>({...tooLong.failedDeployments[1],runId:100+i}));assert.throws(()=>validateFirstAdoptionRecovery(tooLong),/Bounded/);
 });
+
+test('third reviewed historical replay refusal preserves the exact trusted chain and requires its report hash',async t=>{
+ const f=controlFixture(t),chain=chainProof();f.save(chain);
+ const row={runId:37294402253,runAttempt:1,controlCommit:'e'.repeat(40),conclusion:'failure',mode:'adopt',stage:'rehearsal-historical-replay-refusal',observedAt:'2026-10-05T10:44:53.100Z',auditHash:'sha256:'+'4'.repeat(64),rehearsalHash:'sha256:'+'5'.repeat(64),recoveryReference:{id:chain.id,proofHash:evidenceHash(chain),controlCommit:'e'.repeat(40)}};
+ const third={...chain,id:row.runId+'-1',observedAt:row.observedAt,auditHash:row.auditHash,failedDeployments:[...chain.failedDeployments,row]};f.save(third);
+ assert.equal(loadControlRecovery({id:third.id,controlRoot:f.root,controlCommit:'f'.repeat(40),repository}).proof.failedDeployments.length,3);
+ for(const mutate of [p=>delete p.failedDeployments[2].rehearsalHash,p=>p.failedDeployments[2].stage='rehearsal-start-refusal',p=>p.failedDeployments[2].stage='duplicate-command',p=>p.failedDeployments[2].rehearsalHash='invalid',p=>p.failedDeployments[1].rehearsalHash=row.rehearsalHash]){const bad=structuredClone(third);mutate(bad);assert.throws(()=>validateFirstAdoptionRecovery(bad));}
+ const rows=third.failedDeployments.map(item=>run(item.runId,{head_sha:item.controlCommit})),later=Date.parse('2026-10-05T11:00:00.000Z');
+ assert.equal((await assertRecoveredInitialHistory(metadata(rows),{proof:third,now:later})).reviewedFailedDeployments.length,3);
+ await assert.rejects(assertRecoveredInitialHistory(metadata(rows),{proof:chain,now:later}),/unreviewed/);await assert.rejects(selectLatestDeployedRun(metadata(rows),{repository,now:later}),/recovery is required/);
+});

@@ -1,0 +1,13 @@
+# CI11, публикация и отказ воспроизведения истории
+
+Коммит `0593be8e7bcfbac124335c794ddd81ccdd237ae0` прошёл [полный CI11](https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837): 715 Node, 6462 Vitest, 753 Go/race, 20 DB/worker, 12 основных браузерных сценариев, 48 UI, 8 battle3D и 18 native cursor checks. Обязательные проверки не пропущены; покрытие и cleanup полные. Интервал набора — 888210 мс (14 мин 48 с), весь измеренный workflow — 971000 мс (16 мин 11 с). [Три immutable образа опубликованы](https://github.com/alexeyvilmost/dnd_cards/actions/runs/37293818656).
+
+[Третья попытка выкатки](https://github.com/alexeyvilmost/dnd_cards/actions/runs/37294402253) завершилась отказом на historical-replay до cutover. Полный серверный отчёт подтвердил все семь additive migration scenarios на восстановленной копии, включая rollback/repeat/lock/schema tampering и старые readers. Пять основных gates прошли: snapshot, migrations, full-candidate-health, image-contract и historical-inventory. Воспроизведение истории, pending-decision и duplicate-command не имеют общей успешной квитанции этой репетиции.
+
+Cleanup удалил 26 тестовых ресурсов, ошибок нет. Независимый read-only осмотр подтверждает отсутствие controller, owned containers/networks/volumes, Docker auth, deployment journal и lock. Рабочие компоненты сохранили исходные IDs/images/configurations; active hash `sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9` и 302 ledger rows прежние. Сайт обслуживает `4549fb3c`; главная страница, health и build-info ответили HTTP200. Рабочая БД не расширялась.
+
+Capture создан 2026-10-05T10:08:08.180Z; dump958580611 байт. Исходная дата сохранена. Репетиция закончилась 2026-10-05T10:38:28.941Z, уже за пределом 30 минут. Причиной отказа записан historical-replay; автоматический TTL-отказ не заявляется. Повтор с этим снимком не допускается.
+
+На защищённой локальной копии первого capture, с проверенными оригинальными CJS, полный replay136боёв/2344записей дал112PASS и24расхождения afterHash в трёх версиях движка. RNG и пользовательские поля не публикуются. Это отдельная диагностика старого снимка: точная причина отказа третьей репетиции пока не доказана. Сумма record text73,529,052байт меньше общего предела128MiB; исправление только объёма памяти не закрывает реальные расхождения. Старые records и CJS не переписывались, owned PostgreSQL удалён.
+
+Auto/selective/reconcile и новые writers остаются OFF. Один ранее успешный платный Images POST не повторялся; приложение ещё не приняло новый канал генерации. Следующий шаг — проверить сохранённые входы и каноничный replay, затем новый source/CI/publication/fresh rehearsal с явной цепочкой всех отказов. [Машинная запись](CI-11-third-rehearsal.json).

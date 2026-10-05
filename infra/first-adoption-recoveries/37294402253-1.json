@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "kind": "manual-first-adoption-recovery",
+  "status": "reviewed-pre-cutover-refusal",
+  "id": "37294402253-1",
+  "repository": "alexeyvilmost/dnd_cards",
+  "observedAt": "2026-10-05T10:44:53.100Z",
+  "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
+  "activeHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+  "claimedReleaseCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+  "components": {
+    "backend": {
+      "containerId": "28a77fa3542229eba3842970b20257cb51d66b38a498c25bee5d6a45b23b640c",
+      "imageId": "sha256:0e3d9aa04af8df8217caa876caf47efbe25ecfbebad48e615cf184d5e5bfa69c",
+      "health": "healthy"
+    },
+    "frontend": {
+      "containerId": "fd5cd680b3a62669397c890a566baaddb3402511a5375f5eb044a5536efabaef",
+      "imageId": "sha256:df7cc6a309bc7970c751c4414ba7e4b11196ab3c58d6a437ac92fc95dbee0c60",
+      "health": "healthy"
+    },
+    "rulesWorker": {
+      "containerId": "16c01bdaada97d63ab4e05c3c9eaa4620a744e704082cec7ace08d52b5232720",
+      "imageId": "sha256:e9d6e8127731a188dab871e95410d88de56cde25e7c61383d305375385989080",
+      "health": "healthy"
+    }
+  },
+  "cleanup": {
+    "remainingOwnedResources": 0,
+    "validatorStopped": true,
+    "dockerAuthRemoved": true,
+    "deploymentJournalCreated": false,
+    "deployLockPresent": false,
+    "operatorApplicationMutations": 0
+  },
+  "failedDeployments": [
+    {
+      "runId": 37273035754,
+      "runAttempt": 1,
+      "controlCommit": "cfe9e54d6645c684c0e97e5c6570ea1244c78278",
+      "conclusion": "failure",
+      "mode": "adopt",
+      "stage": "rehearsal-start-refusal",
+      "observedAt": "2026-10-05T07:58:31.330Z",
+      "auditHash": "sha256:de9d691a136380853a83532fc12f896509142ace8a8364789b7c9c39cf09e56e",
+      "recoveryReference": null
+    },
+    {
+      "runId": 37287164307,
+      "runAttempt": 1,
+      "controlCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+      "conclusion": "failure",
+      "mode": "adopt",
+      "stage": "pre-capture-recovery-refusal",
+      "observedAt": "2026-10-05T09:15:44.561Z",
+      "auditHash": "sha256:e3dced365e1627da322c63ef7c33380818d02ce48a4a87e90ab0b5171537376b",
+      "recoveryReference": {
+        "id": "37273035754-1",
+        "proofHash": "sha256:50c8ae6ad7c1cf718bd3d02aefc5495f921403c08f8857badd9af8a4c26b7db5",
+        "controlCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2"
+      }
+    },
+    {
+      "runId": 37294402253,
+      "runAttempt": 1,
+      "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "conclusion": "failure",
+      "mode": "adopt",
+      "stage": "rehearsal-historical-replay-refusal",
+      "observedAt": "2026-10-05T10:44:53.100Z",
+      "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
+      "rehearsalHash": "sha256:24dc8710d3d66b70a5e9804f5c6cdb4e0f1e62b81775c0fc431565dadd2fcee7",
+      "recoveryReference": {
+        "id": "37287164307-1",
+        "proofHash": "sha256:70de9114593cc1a553930416986a4bea38807c112763b65b4724b1f55801b957",
+        "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0"
+      }
+    }
+  ]
+}

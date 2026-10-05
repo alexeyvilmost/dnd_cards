@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-ci11-publication-and-third-historical-replay-refusal",
+  "recordedAt": "2026-10-05T11:04:00.660Z",
+  "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+  "ci": {
+    "id": 37291814837,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837",
+    "verified": {
+      "id": 37291814837,
+      "workflow": ".github/workflows/ci.yml",
+      "repository": "alexeyvilmost/dnd_cards",
+      "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "event": "push"
+    },
+    "createdAt": "2026-10-05T09:42:27Z",
+    "updatedAt": "2026-10-05T09:58:38Z",
+    "recordedRunIntervalMs": 971000,
+    "counts": {
+      "node": 715,
+      "vitest": 6462,
+      "go": 753,
+      "workerAndDatabase": 20,
+      "browserFlows": 12,
+      "uiFixtures": 48,
+      "battle3d": 8,
+      "nativeCursorChecks": 18
+    },
+    "aggregateHash": "sha256:2e1ee7250862aa9968fc0ef58f5f19142113af2533c23db4e88e782c7209e308",
+    "sourceSnapshot": {
+      "sha256": "409bc2ec62555b04084b377326b12d0006320483867fde758bfe0cf3741d5444",
+      "files": 4420
+    },
+    "aggregateWallMs": 888210,
+    "maxShardDurationMs": 873592,
+    "recordedWorkflowIntervalMs": 971000,
+    "globalCoverageComplete": true,
+    "cleanup": "stopped"
+  },
+  "publication": {
+    "id": 37293818656,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37293818656",
+    "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0"
+  },
+  "manifest": {
+    "releaseId": "candidate-0593be8e7bcf-b3cc4ceb1c84",
+    "hash": "sha256:bafc6a164313928a311054907b928b0c4ac20ce3d1c5c2e9509cb78c8be48acf",
+    "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+    "components": {
+      "backend": {
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "inputFingerprint": "sha256:d3998ef62f39ee4bf849a0af89631115a49f5d618c78593bc1038fd21b3d93ae",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:8202bf3120da1c596b84c731b6861d6da917e4c4fce538e6f4868f619acae7bd"
+      },
+      "frontend": {
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c94268e88302b58f3b407a3e9d8740d27114f445a73f570b73d5f4012d2e421b"
+      },
+      "rulesWorker": {
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "inputFingerprint": "sha256:0ae0f6963a8cfa291f4623a366135be995917e6caaef1fedfcb7f2df06ccfb01",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:d8b79c27f5c9a4cf18e68d8ce5e8cd8635c33c6e1dccbe901d1444c06fcaee2d"
+      }
+    }
+  },
+  "deployment": {
+    "id": 37294402253,
+    "attempt": 1,
+    "status": "completed",
+    "conclusion": "failure",
+    "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37294402253",
+    "jobId": 111712223552,
+    "jobCompletedAt": "2026-10-05T10:38:31Z",
+    "productionSuccess": false,
+    "refusalStage": "historical-replay",
+    "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+    "originalActiveHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+    "originalLiveComponentsUnchangedAndHealthy": true,
+    "observedMigrationLedgerCount": 302,
+    "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
+    "rehearsalHash": "sha256:24dc8710d3d66b70a5e9804f5c6cdb4e0f1e62b81775c0fc431565dadd2fcee7",
+    "rehearsalStartedAt": "2026-10-05T10:18:52.477Z",
+    "rehearsalCompletedAt": "2026-10-05T10:38:28.941Z",
+    "capture": {
+      "createdAt": "2026-10-05T10:08:08.180Z",
+      "files": [
+        {
+          "path": "database.dump",
+          "bytes": 958580611,
+          "sha256": "sha256:160556323a3e17e4d777ed6af3325d63f525c894fa940d8f1d757a19ad058992"
+        }
+      ]
+    },
+    "completedMainChecks": [
+      {
+        "id": "snapshot",
+        "status": "passed"
+      },
+      {
+        "id": "migrations",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "status": "passed"
+      },
+      {
+        "id": "image-contract",
+        "status": "passed"
+      },
+      {
+        "id": "historical-inventory",
+        "status": "passed"
+      }
+    ],
+    "additiveMigrationScenarios": [
+      {
+        "id": "atomic-ddl-ledger",
+        "status": "passed"
+      },
+      {
+        "id": "crash-before-ledger",
+        "status": "passed"
+      },
+      {
+        "id": "repeat-after-commit",
+        "status": "passed"
+      },
+      {
+        "id": "same-connection-lock",
+        "status": "passed"
+      },
+      {
+        "id": "unknown-migration-rejected",
+        "status": "passed"
+      },
+      {
+        "id": "schema-proof",
+        "status": "passed"
+      },
+      {
+        "id": "old-readers-after-expansion",
+        "status": "passed"
+      }
+    ],
+    "migrationCleanup": {
+      "status": "trials-cleared",
+      "remaining": 0
+    },
+    "cleanup": {
+      "remainingOwnedResources": 0,
+      "resources": {
+        "bagofholding.rehearsal:container": 0,
+        "bagofholding.rehearsal:network": 0,
+        "bagofholding.rehearsal:volume": 0,
+        "bagofholding.legacy-inspection:container": 0,
+        "bagofholding.legacy-inspection:network": 0,
+        "bagofholding.legacy-inspection:volume": 0
+      },
+      "dockerAuthRemoved": true,
+      "deploymentJournalCreated": false,
+      "deployLockPresent": false,
+      "activeManifestPresent": false,
+      "readyPresent": false,
+      "operationPresent": false
+    },
+    "rehearsalCleanup": {
+      "status": "stopped",
+      "errors": [],
+      "resourceCount": 26
+    },
+    "edge": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "path": "/build-info.json",
+        "status": 200
+      }
+    ],
+    "automaticTtlRejectionClaimed": false
+  },
+  "localHistoryDiagnosis": {
+    "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
+    "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+    "recordTextBytes": 73529052,
+    "records": 2344,
+    "combats": 136,
+    "passed": 112,
+    "failed": 24,
+    "reason": "Combat replay diverged",
+    "artifactFamilies": 3,
+    "replayModuleSameAsOriginalLive": true,
+    "cleanup": "stopped",
+    "productionFailureCauseProven": false
+  },
+  "manualReleaseGatesEnabled": true,
+  "autoSelectiveReconcileEnabled": false,
+  "firstLiveWritersEnabled": false,
+  "paidProviderRequestsThisRecord": 0,
+  "remaining": [
+    "Diagnose and correct replay inputs without rewriting archived records or executables.",
+    "Verify bounded complete restore/history/replay within unchanged freshness policy on next exact source.",
+    "Review explicit recovery of all three failed attempts; normal successful-baseline discovery unchanged.",
+    "Commit reviewed local correction, exact full CI, immutable publication, fresh capture and all host gates.",
+    "Only after real healthy adoption: writer compatibility, selective, rollback, automatic/reconcile acceptance."
+  ],
+  "all29TasksComplete": false
+}

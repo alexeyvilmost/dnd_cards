@@ -25,7 +25,7 @@
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "Manual build/publication/deploy gates enabled. CI10/all3 publication passed; second host attempt failed before capture and rootpermissions corrected. No healthy adoption; auto/selective/reconcile remainOFF."
+    "production_enablement_status": "Manual build/publication/deploy gates enabled. CI11/all3 publication passed; third rehearsal failed at historical-replay before cutover. Original4549/302ledger/active unchanged and healthy; auto/selective/reconcile/writers OFF."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -617,7 +617,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -733,7 +733,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -836,7 +836,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -941,7 +941,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1058,7 +1058,13 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestObserved": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+          "firstHealthyDeployment": false,
+          "freshHistoricalBoundary": "ordinary143 passed;all67primary-before-sources closed;schedule101/118/121 live guards and144-current not yet executed"
+        }
       }
     },
     {
@@ -1145,7 +1151,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1240,7 +1246,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1345,7 +1351,7 @@
           "partially_met"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1446,7 +1452,7 @@
           "local_proof_only"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1554,7 +1560,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1644,7 +1650,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1741,7 +1747,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1832,7 +1838,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -1916,7 +1922,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2013,7 +2019,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2120,7 +2126,12 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestObserved": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+          "firstHealthyDeployment": false
+        }
       }
     },
     {
@@ -2210,7 +2221,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2314,7 +2325,12 @@
           "partially_met"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestObserved": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+          "firstHealthyDeployment": false
+        }
       }
     },
     {
@@ -2411,7 +2427,56 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestObserved": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+          "firstHealthyDeployment": false,
+          "completedMainChecks": [
+            {
+              "id": "snapshot",
+              "status": "passed"
+            },
+            {
+              "id": "migrations",
+              "status": "passed"
+            },
+            {
+              "id": "full-candidate-health",
+              "status": "passed"
+            },
+            {
+              "id": "image-contract",
+              "status": "passed"
+            },
+            {
+              "id": "historical-inventory",
+              "status": "passed"
+            }
+          ],
+          "failureStage": "historical-replay",
+          "localHistory": {
+            "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
+            "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+            "recordTextBytes": 73529052,
+            "records": 2344,
+            "combats": 136,
+            "passed": 112,
+            "failed": 24,
+            "reason": "Combat replay diverged",
+            "artifactFamilies": 3,
+            "replayModuleSameAsOriginalLive": true,
+            "cleanup": "stopped",
+            "productionFailureCauseProven": false
+          },
+          "localCorrection": "docs/audits/2026-10-04/execution/REL-06-go-wire-recovery.json",
+          "originalSnapshotReplay": {
+            "passed": 136,
+            "records": 2344,
+            "commands": 2209
+          },
+          "latestProductionCaptureReplay": false
+        }
       }
     },
     {
@@ -2499,7 +2564,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2598,7 +2663,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2696,7 +2761,7 @@
           "measured_rejection"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2798,7 +2863,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2872,7 +2937,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -2953,7 +3018,12 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestObserved": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+          "firstHealthyDeployment": false
+        }
       }
     },
     {
@@ -3037,7 +3107,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -3117,7 +3187,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -3196,7 +3266,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     },
     {
@@ -3278,7 +3348,7 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-09-first-publication.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       }
     }
   ],
@@ -3398,81 +3468,330 @@
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
-    "recordedAt": "2026-10-05T09:23:46.930Z",
-    "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+    "schemaVersion": 1,
+    "kind": "exact-ci11-publication-and-third-historical-replay-refusal",
+    "recordedAt": "2026-10-05T11:04:00.660Z",
+    "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
     "ci": {
-      "id": 37284665492,
-      "status": "completed",
-      "conclusion": "success",
-      "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
-      "workflow": ".github/workflows/ci.yml",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37284665492",
-      "startedAt": "2026-10-05T08:36:17Z",
-      "completedAt": "2026-10-05T08:51:43Z",
-      "aggregate": "outputs/operations/first-publish-bf79b52c3c5b/verification/report.json",
-      "aggregateHash": "sha256:c7815272f3ed1acf6925bd21cf7ab67c4f0c5983337a0e57ad2a7e9752f74a00",
+      "id": 37291814837,
+      "attempt": 1,
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837",
+      "verified": {
+        "id": 37291814837,
+        "workflow": ".github/workflows/ci.yml",
+        "repository": "alexeyvilmost/dnd_cards",
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "event": "push"
+      },
+      "createdAt": "2026-10-05T09:42:27Z",
+      "updatedAt": "2026-10-05T09:58:38Z",
+      "recordedRunIntervalMs": 971000,
       "counts": {
-        "node": 709,
+        "node": 715,
         "vitest": 6462,
         "go": 753,
         "workerAndDatabase": 20,
-        "realBrowserFlows": 12,
-        "browserUiFixtures": 48,
+        "browserFlows": 12,
+        "uiFixtures": 48,
         "battle3d": 8,
-        "nativeCursor": 18
+        "nativeCursorChecks": 18
       },
-      "aggregateWallMs": 845329,
-      "workflowWallMs": 926000,
-      "cleanup": "stopped",
-      "timingScope": "aggregateWallMs is the aggregated suite runner interval; workflowWallMs is actual GitHub workflow start-to-completion including setup/artifacts.",
-      "attempt": 1
+      "aggregateHash": "sha256:2e1ee7250862aa9968fc0ef58f5f19142113af2533c23db4e88e782c7209e308",
+      "sourceSnapshot": {
+        "sha256": "409bc2ec62555b04084b377326b12d0006320483867fde758bfe0cf3741d5444",
+        "files": 4420
+      },
+      "aggregateWallMs": 888210,
+      "maxShardDurationMs": 873592,
+      "recordedWorkflowIntervalMs": 971000,
+      "globalCoverageComplete": true,
+      "cleanup": "stopped"
     },
     "publication": {
-      "id": 37286552233,
+      "id": 37293818656,
+      "attempt": 1,
       "status": "completed",
       "conclusion": "success",
-      "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
-      "workflow": ".github/workflows/release.yml",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37286552233",
-      "attempt": 1
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37293818656",
+      "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0"
+    },
+    "manifest": {
+      "releaseId": "candidate-0593be8e7bcf-b3cc4ceb1c84",
+      "hash": "sha256:bafc6a164313928a311054907b928b0c4ac20ce3d1c5c2e9509cb78c8be48acf",
+      "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+      "components": {
+        "backend": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "inputFingerprint": "sha256:d3998ef62f39ee4bf849a0af89631115a49f5d618c78593bc1038fd21b3d93ae",
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:8202bf3120da1c596b84c731b6861d6da917e4c4fce538e6f4868f619acae7bd"
+        },
+        "frontend": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c94268e88302b58f3b407a3e9d8740d27114f445a73f570b73d5f4012d2e421b"
+        },
+        "rulesWorker": {
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "inputFingerprint": "sha256:0ae0f6963a8cfa291f4623a366135be995917e6caaef1fedfcb7f2df06ccfb01",
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:d8b79c27f5c9a4cf18e68d8ce5e8cd8635c33c6e1dccbe901d1444c06fcaee2d"
+        }
+      }
     },
     "deployment": {
-      "id": 37287164307,
+      "id": 37294402253,
       "attempt": 1,
       "status": "completed",
       "conclusion": "failure",
-      "controlCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37287164307",
-      "jobId": 111688849917,
-      "jobConclusion": "failure",
-      "jobCompletedAt": "2026-10-05T09:01:45Z",
-      "sourceCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
-      "outcome": "refused-before-capture-root-mode-0755",
+      "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37294402253",
+      "jobId": 111712223552,
+      "jobCompletedAt": "2026-10-05T10:38:31Z",
       "productionSuccess": false,
-      "audit": "outputs/operations/second-pre-capture-audit-2026-10-05T09-15-44.561Z/report.json",
-      "auditHash": "sha256:e3dced365e1627da322c63ef7c33380818d02ce48a4a87e90ab0b5171537376b",
+      "refusalStage": "historical-replay",
       "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
-      "originalLiveHealthy": true,
-      "remainingOwnedResources": 0,
-      "dockerAuthRemoved": true,
-      "journalCreated": false,
-      "captureCreated": false
+      "originalActiveHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+      "originalLiveComponentsUnchangedAndHealthy": true,
+      "observedMigrationLedgerCount": 302,
+      "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
+      "rehearsalHash": "sha256:24dc8710d3d66b70a5e9804f5c6cdb4e0f1e62b81775c0fc431565dadd2fcee7",
+      "rehearsalStartedAt": "2026-10-05T10:18:52.477Z",
+      "rehearsalCompletedAt": "2026-10-05T10:38:28.941Z",
+      "capture": {
+        "createdAt": "2026-10-05T10:08:08.180Z",
+        "files": [
+          {
+            "path": "database.dump",
+            "bytes": 958580611,
+            "sha256": "sha256:160556323a3e17e4d777ed6af3325d63f525c894fa940d8f1d757a19ad058992"
+          }
+        ]
+      },
+      "completedMainChecks": [
+        {
+          "id": "snapshot",
+          "status": "passed"
+        },
+        {
+          "id": "migrations",
+          "status": "passed"
+        },
+        {
+          "id": "full-candidate-health",
+          "status": "passed"
+        },
+        {
+          "id": "image-contract",
+          "status": "passed"
+        },
+        {
+          "id": "historical-inventory",
+          "status": "passed"
+        }
+      ],
+      "additiveMigrationScenarios": [
+        {
+          "id": "atomic-ddl-ledger",
+          "status": "passed"
+        },
+        {
+          "id": "crash-before-ledger",
+          "status": "passed"
+        },
+        {
+          "id": "repeat-after-commit",
+          "status": "passed"
+        },
+        {
+          "id": "same-connection-lock",
+          "status": "passed"
+        },
+        {
+          "id": "unknown-migration-rejected",
+          "status": "passed"
+        },
+        {
+          "id": "schema-proof",
+          "status": "passed"
+        },
+        {
+          "id": "old-readers-after-expansion",
+          "status": "passed"
+        }
+      ],
+      "migrationCleanup": {
+        "status": "trials-cleared",
+        "remaining": 0
+      },
+      "cleanup": {
+        "remainingOwnedResources": 0,
+        "resources": {
+          "bagofholding.rehearsal:container": 0,
+          "bagofholding.rehearsal:network": 0,
+          "bagofholding.rehearsal:volume": 0,
+          "bagofholding.legacy-inspection:container": 0,
+          "bagofholding.legacy-inspection:network": 0,
+          "bagofholding.legacy-inspection:volume": 0
+        },
+        "dockerAuthRemoved": true,
+        "deploymentJournalCreated": false,
+        "deployLockPresent": false,
+        "activeManifestPresent": false,
+        "readyPresent": false,
+        "operationPresent": false
+      },
+      "rehearsalCleanup": {
+        "status": "stopped",
+        "errors": [],
+        "resourceCount": 26
+      },
+      "edge": [
+        {
+          "path": "/",
+          "status": 200
+        },
+        {
+          "path": "/api/health",
+          "status": 200
+        },
+        {
+          "path": "/build-info.json",
+          "status": 200
+        }
+      ],
+      "automaticTtlRejectionClaimed": false
     },
-    "manualVariables": {
-      "RELEASE_BUILD_ENABLED": true,
-      "RELEASE_PUBLICATION_ENABLED": true,
-      "PRODUCTION_DEPLOY_ENABLED": true
+    "localHistoryDiagnosis": {
+      "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
+      "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+      "recordTextBytes": 73529052,
+      "records": 2344,
+      "combats": 136,
+      "passed": 112,
+      "failed": 24,
+      "reason": "Combat replay diverged",
+      "artifactFamilies": 3,
+      "replayModuleSameAsOriginalLive": true,
+      "cleanup": "stopped",
+      "productionFailureCauseProven": false
     },
-    "automationEnabled": false,
+    "manualReleaseGatesEnabled": true,
+    "autoSelectiveReconcileEnabled": false,
     "firstLiveWritersEnabled": false,
-    "privateStatusMatrix": {
-      "file": "outputs/testing/recommendations-status-matrix/status-matrix.json",
-      "sha256": "sha256:e191aef9eaa2351dab02c61d4bbc2228b5f35c8a4356dc54f476c6e42131d583",
-      "recordedAt": "2026-10-05T07:03:09.765Z"
-    },
-    "next": "Complete bounded reviewed chain of the two actual pre-cutover failures, locally verify and commit; exact full CI/publication then fresh first adoption. Genuine healthy predecessor remains required for writer/selective/auto followups.",
+    "paidProviderRequestsThisRecord": 0,
+    "remaining": [
+      "Diagnose and correct replay inputs without rewriting archived records or executables.",
+      "Verify bounded complete restore/history/replay within unchanged freshness policy on next exact source.",
+      "Review explicit recovery of all three failed attempts; normal successful-baseline discovery unchanged.",
+      "Commit reviewed local correction, exact full CI, immutable publication, fresh capture and all host gates.",
+      "Only after real healthy adoption: writer compatibility, selective, rollback, automatic/reconcile acceptance."
+    ],
+    "all29TasksComplete": false,
+    "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
     "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
-    "record": "docs/audits/2026-10-04/execution/CI-10-second-publication.json"
+    "latestLocalCorrection": {
+      "schemaVersion": 1,
+      "kind": "reviewed-go-json-map-replay-and-three-attempt-recovery",
+      "recordedAt": "2026-10-05T11:28:22.608Z",
+      "baseCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "status": "locally-verified-awaiting-new-exact-ci-and-fresh-host-rehearsal",
+      "sourcePaths": 13,
+      "proofPath": "infra/first-adoption-recoveries/37294402253-1.json",
+      "proofHash": "sha256:d03d78e7c611065537080c69cff13c2b7c61ce61a6b0641d6026d40cc6f86c34",
+      "reviewedFailedAttempts": 3,
+      "contract": {
+        "sourceEncoding": "go-json-map-v1",
+        "defaultSourceEncoding": "direct-worker",
+        "historicalRecordSchemaChanged": false,
+        "outputNormalized": false,
+        "arraysReordered": false,
+        "scope": "every step envelope and intent crosses backend JSONMap wire ordering; no artifact-specific branches, no candidate hash search"
+      },
+      "originalSnapshotReplay": {
+        "passed": 136,
+        "records": 2344,
+        "commands": 2209,
+        "usedArtifacts": 18,
+        "reportHash": "sha256:6103047c2702642202d203d4c6fc4a6916b523df52075081fc42b1f6ef5ead87"
+      },
+      "originalSnapshot": {
+        "deploymentRunId": 37273035754,
+        "createdAt": "2026-10-05T06:35:01.822Z",
+        "sha256": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+        "scope": "original snapshot; not the later failed rehearsal snapshot"
+      },
+      "originalSnapshotOnly": true,
+      "latestProductionCaptureReplay": false,
+      "historicalBytesRewritten": false,
+      "localIntegration": {
+        "receiptHash": "sha256:8669888c27f67ece0b017478b10f1c9a512257bc46ff172f368933acdd220017",
+        "checks": [
+          {
+            "id": "actual-Go-HTTP-worker-replay-and-selection",
+            "tests": 33,
+            "passed": 33,
+            "skipped": 0,
+            "status": "passed"
+          },
+          {
+            "id": "Linux-complete-three-refusal-protocol",
+            "tests": 27,
+            "passed": 27,
+            "skipped": 0,
+            "status": "passed",
+            "network": "none",
+            "repositoryReadOnly": true
+          },
+          {
+            "id": "diff",
+            "status": "passed"
+          },
+          {
+            "id": "database-dumps",
+            "status": "passed"
+          },
+          {
+            "id": "known-credentials",
+            "status": "passed"
+          }
+        ],
+        "sourceUnchanged": {
+          "unchanged": true,
+          "files": 4424,
+          "sha256": "e00c85caf840995e4d06d8d3a997a6fb1ee9d62d92dee9bd141213ea1c62d0b2"
+        },
+        "cleanup": {
+          "status": "stopped",
+          "remainingOwnedResources": 0
+        }
+      },
+      "privatePriorNativeCursor": {
+        "checks": 19,
+        "unchangedAppliedSource": true,
+        "cleanup": "stopped",
+        "latencyMeasured": false
+      },
+      "preservedDiagnosticRefusal": {
+        "path": "full-136-report.json",
+        "sha256": "sha256:d8c0a734e9e3f05dbe0d272bafcd029ec60482a204aa6ae6230713672c744380",
+        "reason": "diagnostic count assumed after-baseline for every group; group51 before-baseline corrected only in v2 wrapper; preserved first source"
+      },
+      "productionChanges": 0,
+      "paidProviderRequests": 0,
+      "firstHealthyDeployment": false,
+      "freshnessPolicyMinutes": 30,
+      "transportBytesLimit": 134217728,
+      "replayTimeoutMs": 300000,
+      "firstLiveWriterPolicy": "all-off",
+      "autoSelectiveReconcile": "off",
+      "remaining": [
+        "New reviewed commit and exact full CI.",
+        "All three immutable images and explicit recovery of all three failed attempts.",
+        "Fresh protected capture; all restore, history, replay, pending and duplicate-command gates under unchanged freshness.",
+        "Independently verify successful adoption before writer/selective/automatic release acceptance."
+      ],
+      "all29TasksComplete": false
+    },
+    "latestLocalCorrectionRecord": "docs/audits/2026-10-04/execution/REL-06-go-wire-recovery.json"
   },
   "execution_history": [
     {

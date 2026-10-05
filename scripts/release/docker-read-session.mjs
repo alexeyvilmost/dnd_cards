@@ -38,7 +38,7 @@ export async function withDockerReadSession({command,cleanupCommand=command,conf
  };
  try{
   await progress(true);
-  child=spawnProcess('docker',['run','--name',client,'--label',label,'-i','--read-only','--network',config.databaseNetwork,'-e','DATABASE_URL','-e','PGCONNECT_TIMEOUT=10','--entrypoint','sh',config.postgresImage,'-ec','exec psql "$DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1 -v VERBOSITY=sqlstate'],{
+  child=spawnProcess('docker',['run','--log-driver','none','--name',client,'--label',label,'-i','--read-only','--network',config.databaseNetwork,'-e','DATABASE_URL','-e','PGCONNECT_TIMEOUT=10','--entrypoint','sh',config.postgresImage,'-ec','exec psql "$DATABASE_URL" -X -qAt -v ON_ERROR_STOP=1 -v VERBOSITY=sqlstate'],{
    env:{...Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.toUpperCase().startsWith('PG'))),DATABASE_URL:dsn},windowsHide:true,stdio:['pipe','pipe','pipe']});
   child.stdin.on('error',()=>{});child.stderr.resume();
   const decoder=new TextDecoder('utf-8',{fatal:true});

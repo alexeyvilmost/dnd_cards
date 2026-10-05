@@ -177,6 +177,7 @@
       "files": [
         "frontend/worker/server.test.mjs",
         "frontend/worker/replay.test.mjs",
+        "frontend/worker/replay-source-encoding.test.mjs",
         "frontend/worker/historical-replay.test.mjs",
         "scripts/performance/fresh-worker.test.mjs",
         "scripts/performance/retained-artifacts.test.mjs",

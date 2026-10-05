@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed-go-json-map-replay-and-three-attempt-recovery",
+  "recordedAt": "2026-10-05T11:28:22.608Z",
+  "baseCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+  "status": "locally-verified-awaiting-new-exact-ci-and-fresh-host-rehearsal",
+  "sourcePaths": 13,
+  "proofPath": "infra/first-adoption-recoveries/37294402253-1.json",
+  "proofHash": "sha256:d03d78e7c611065537080c69cff13c2b7c61ce61a6b0641d6026d40cc6f86c34",
+  "reviewedFailedAttempts": 3,
+  "contract": {
+    "sourceEncoding": "go-json-map-v1",
+    "defaultSourceEncoding": "direct-worker",
+    "historicalRecordSchemaChanged": false,
+    "outputNormalized": false,
+    "arraysReordered": false,
+    "scope": "every step envelope and intent crosses backend JSONMap wire ordering; no artifact-specific branches, no candidate hash search"
+  },
+  "originalSnapshotReplay": {
+    "passed": 136,
+    "records": 2344,
+    "commands": 2209,
+    "usedArtifacts": 18,
+    "reportHash": "sha256:6103047c2702642202d203d4c6fc4a6916b523df52075081fc42b1f6ef5ead87"
+  },
+  "originalSnapshot": {
+    "deploymentRunId": 37273035754,
+    "createdAt": "2026-10-05T06:35:01.822Z",
+    "sha256": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+    "scope": "original snapshot; not the later failed rehearsal snapshot"
+  },
+  "originalSnapshotOnly": true,
+  "latestProductionCaptureReplay": false,
+  "historicalBytesRewritten": false,
+  "localIntegration": {
+    "receiptHash": "sha256:8669888c27f67ece0b017478b10f1c9a512257bc46ff172f368933acdd220017",
+    "checks": [
+      {
+        "id": "actual-Go-HTTP-worker-replay-and-selection",
+        "tests": 33,
+        "passed": 33,
+        "skipped": 0,
+        "status": "passed"
+      },
+      {
+        "id": "Linux-complete-three-refusal-protocol",
+        "tests": 27,
+        "passed": 27,
+        "skipped": 0,
+        "status": "passed",
+        "network": "none",
+        "repositoryReadOnly": true
+      },
+      {
+        "id": "diff",
+        "status": "passed"
+      },
+      {
+        "id": "database-dumps",
+        "status": "passed"
+      },
+      {
+        "id": "known-credentials",
+        "status": "passed"
+      }
+    ],
+    "sourceUnchanged": {
+      "unchanged": true,
+      "files": 4424,
+      "sha256": "e00c85caf840995e4d06d8d3a997a6fb1ee9d62d92dee9bd141213ea1c62d0b2"
+    },
+    "cleanup": {
+      "status": "stopped",
+      "remainingOwnedResources": 0
+    }
+  },
+  "privatePriorNativeCursor": {
+    "checks": 19,
+    "unchangedAppliedSource": true,
+    "cleanup": "stopped",
+    "latencyMeasured": false
+  },
+  "preservedDiagnosticRefusal": {
+    "path": "full-136-report.json",
+    "sha256": "sha256:d8c0a734e9e3f05dbe0d272bafcd029ec60482a204aa6ae6230713672c744380",
+    "reason": "diagnostic count assumed after-baseline for every group; group51 before-baseline corrected only in v2 wrapper; preserved first source"
+  },
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "firstHealthyDeployment": false,
+  "freshnessPolicyMinutes": 30,
+  "transportBytesLimit": 134217728,
+  "replayTimeoutMs": 300000,
+  "firstLiveWriterPolicy": "all-off",
+  "autoSelectiveReconcile": "off",
+  "remaining": [
+    "New reviewed commit and exact full CI.",
+    "All three immutable images and explicit recovery of all three failed attempts.",
+    "Fresh protected capture; all restore, history, replay, pending and duplicate-command gates under unchanged freshness.",
+    "Independently verify successful adoption before writer/selective/automatic release acceptance."
+  ],
+  "all29TasksComplete": false
+}

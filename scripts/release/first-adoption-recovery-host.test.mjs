@@ -6,7 +6,9 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {observeRecoveredFirstHost} from './first-adoption-recovery-host.mjs';
 import {legacyRuntimeFingerprint} from './legacy-baseline.mjs';
-import {evidenceHash} from './validate-manifest.mjs';
+import {evidenceHash,compositionFingerprint} from './validate-manifest.mjs';
+import {rehearsalInput} from './candidate-rehearsal.mjs';
+import {migrationScenarios} from './migration-transition.mjs';
 import {reviewedRecoveryAttempts} from './first-adoption-recovery.mjs';
 const hash=c=>'sha256:'+c.repeat(64),commit='a'.repeat(40);
 function fixture(t) {
@@ -85,7 +87,7 @@ function chainFixture(t){
  const oldPacket=packet(proof.failedDeployments[0]),newPacket=packet(row);
  f.save(path.join(f.old,'transfer.json'),oldPacket);f.save(path.join(second,'transfer.json'),newPacket);
  for(const [directory,scripts] of [[f.old,['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs','prepare-host-release.mjs','candidate-rehearsal.mjs']],[second,['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs','first-adoption-recovery-host.mjs']]])scripts.forEach((script,i)=>f.save(path.join(directory,`phase-${String(i+1).padStart(2,'0')}.json`),{script,status:'started'}));
- return {...f,proof,second,newPacket,digest,invoke:(extra={})=>f.invoke({proof,...extra})};
+ return {...f,proof,second,newPacket,digest,packet,invoke:(extra={})=>f.invoke({proof,...extra})};
 }
 test('Linux schema2 validates real transferred packets and exact typed phase prefixes without inventing a rehearsal', {skip:process.platform!=='linux'},async t=>{
  const f=chainFixture(t),before=readFileSync(path.join(f.second,'transfer.json')),seen=[];
@@ -109,4 +111,44 @@ test('Linux pre-capture chain rejects later phases/capture, altered packet autho
  await assert.rejects(f.invoke(),/authority changed/);f.save(path.join(f.second,'transfer.json'),f.newPacket);
  const oldRehearsal=path.join(f.old,'rehearsal','rehearsal.json'),saved=readFileSync(oldRehearsal);f.save(oldRehearsal,{status:'failed',failureStage:'start',activeHash:f.proof.activeHash,completedAt:'2026-10-05T07:00:00Z',cleanup:{status:'incomplete',errors:[]}});await assert.rejects(f.invoke(),/cleanup differs/);writeFileSync(oldRehearsal,saved);await f.invoke();
  const wrong=structuredClone(f.proof);wrong.failedDeployments[0].stage='pre-capture-recovery-refusal';await assert.rejects(f.invoke({proof:wrong}));
+});
+
+function replayFailureFixture(t){
+ const f=chainFixture(t),third=path.join(f.request.attemptRoot,'deploy-7-1');mkdirSync(third,{mode:0o700});mkdirSync(path.join(third,'rehearsal'),{mode:0o700});
+ const row={runId:7,runAttempt:1,controlCommit:'c'.repeat(40),conclusion:'failure',mode:'adopt',stage:'rehearsal-historical-replay-refusal',observedAt:'2026-10-05T10:30:00.000Z',auditHash:hash('3'),rehearsalHash:hash('4'),recoveryReference:{id:f.proof.id,proofHash:evidenceHash(f.proof),controlCommit:'c'.repeat(40)}};
+ const packet=f.packet(row),candidate=JSON.parse(packet.files['candidate.json'].text),manifest=candidate.manifest;
+ const baseline=f.active.migrationIds.map(id=>({id,kind:'observed-id-only',observationHash:f.active.observationHash}));
+ manifest.migrationSet=[...baseline,...['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs'].map(id=>({id,checksum:hash('e')}))];
+ const core={status:'passed',compositionFingerprint:compositionFingerprint(manifest)};manifest.validationEvidence[0]={...manifest.validationEvidence[0],inputFingerprint:core.compositionFingerprint,reportHash:evidenceHash(core)};
+ candidate.status='candidate-only';candidate.deployable=false;candidate.reports={core};candidate.provenance.manifestHash=evidenceHash(manifest);
+ for(const [file,value]of Object.entries({'candidate.json':candidate,'manifest.json':manifest,'core-report.json':core})){const text=JSON.stringify(value);packet.files[file]={text,sha256:f.digest(text)};}
+ const backup={migrations:f.active.migrationIds,releaseManifestHash:evidenceHash(f.active),schemaFingerprint:f.active.schemaFingerprint,referencedArtifactHashes:[f.active.rulesArtifactHash],files:[{category:'rules-artifact',sha256:f.active.rulesArtifactHash}]};
+ const input=rehearsalInput(candidate,f.active,backup);
+ const cases={
+  'atomic-ddl-ledger':{historyHash:hash('1'),schemaProofHash:hash('2'),versions:manifest.migrationSet.map(entry=>entry.id).sort()},
+  'crash-before-ledger':{transactionRolledBack:true,restartPassed:true,committedBaselineHash:hash('3')},
+  'repeat-after-commit':{reapplied:0,schemaProofHash:hash('2'),historyHash:hash('1')},
+  'same-connection-lock':{startupLockShared:true,ddlAndLedgerSessionVerified:true},'unknown-migration-rejected':{rejected:true,committedStateHash:hash('4')},
+  'schema-proof':{tamperedTriggerRejected:true,noSilentRepair:true},'old-readers-after-expansion':{checked:true,writerFlagsOff:true,pendingHash:hash('5'),acceptedHash:hash('6'),invariantHash:hash('7')},
+ };
+ const migration={schemaVersion:1,kind:'additive-migration-rehearsal',execution:'docker',status:'passed',candidateHash:input.candidateHash,candidateSourceCommit:manifest.components.backend.sourceCommit,candidateInputFingerprint:manifest.components.backend.inputFingerprint,baseline:f.active.migrationIds.map(id=>({id})),target:manifest.migrationSet,baselineObservationHash:f.active.observationHash,compositionFingerprint:input.compositionFingerprint,backwardCompatible:true,rollbackWriters:'off',scenarios:[...migrationScenarios],checks:migrationScenarios.map(id=>({id,status:'passed',...cases[id]})),cleanup:{status:'trials-cleared',remaining:0}};
+ const report={schemaVersion:1,kind:'candidate-rehearsal',execution:'docker',status:'failed',failure:'candidate-rehearsal-failed',failureStage:'historical-replay',activeHash:input.activeHash,candidateHash:input.candidateHash,backupHash:input.backupHash,compositionFingerprint:input.compositionFingerprint,releaseId:manifest.releaseId,startedAt:'2026-10-05T10:00:00.000Z',completedAt:'2026-10-05T10:20:00.000Z',cleanup:{status:'stopped',errors:[],resourceCount:26},checks:[
+  {id:'snapshot',status:'passed',backupHash:input.backupHash,schemaFingerprint:backup.schemaFingerprint},{id:'migrations',status:'passed',versions:manifest.migrationSet.map(entry=>entry.id).sort()},
+  {id:'full-candidate-health',status:'passed'},{id:'image-contract',status:'passed'},{id:'historical-inventory',status:'passed',complete:true,artifactHashes:input.historicalArtifactHashes}],
+  additiveMigrations:{report:migration,approval:{schemaVersion:1,mode:'additive-298-300',baseline:migration.baseline,target:migration.target,baselineObservationHash:f.active.observationHash,compositionFingerprint:input.compositionFingerprint,reportHash:evidenceHash(migration)}}};
+ row.rehearsalHash=evidenceHash(report);
+ const proof={...f.proof,id:'7-1',observedAt:row.observedAt,auditHash:row.auditHash,failedDeployments:[...f.proof.failedDeployments,row]};
+ f.save(path.join(third,'transfer.json'),packet);f.save(path.join(third,'rehearsal','input.json'),input);f.save(path.join(third,'rehearsal','rehearsal.json'),report);
+ ['ci-release.mjs','deployment-handoff.mjs','automatic-release.mjs','first-adoption-recovery-host.mjs','prepare-host-release.mjs','candidate-rehearsal.mjs'].forEach((script,i)=>f.save(path.join(third,`phase-${String(i+1).padStart(2,'0')}.json`),{script,status:'started'}));
+ return {...f,third,row,proof,report,input,invoke:extra=>f.invoke({proof,...extra})};
+}
+test('Linux third refusal binds exact six started phases, complete failed replay receipt and earlier attempts', {skip:process.platform!=='linux'},async t=>{
+ const f=replayFailureFixture(t),reportFile=path.join(f.third,'rehearsal','rehearsal.json'),original=readFileSync(reportFile),seen=[];
+ await f.invoke({assertValidatorAbsent:directory=>seen.push(directory)});assert.deepEqual(seen,[f.old,f.second,f.third]);assert.deepEqual(readFileSync(reportFile),original);
+ for(const name of ['phase-07.json','ready','deployment-operation.json','docker-auth']){const file=path.join(f.third,name);f.save(file,{});await assert.rejects(f.invoke());rmSync(file);}
+ const phase=path.join(f.third,'phase-06.json');rmSync(phase);await assert.rejects(f.invoke(),/phase prefix/);f.save(phase,{script:'candidate-rehearsal.mjs',status:'passed'});await assert.rejects(f.invoke(),/phase record/);f.save(phase,{script:'candidate-rehearsal.mjs',status:'started'});
+ for(const mutate of [r=>r.failureStage='pending-decision',r=>r.cleanup.errors.push('private-canary'),r=>r.checks.pop(),r=>r.additiveMigrations.report.checks[3].ddlAndLedgerSessionVerified=false]){
+  const changed=structuredClone(f.report);mutate(changed);changed.additiveMigrations.approval.reportHash=evidenceHash(changed.additiveMigrations.report);const forged=structuredClone(f.proof);forged.failedDeployments[2].rehearsalHash=evidenceHash(changed);f.save(reportFile,changed);await assert.rejects(f.invoke({proof:forged}));
+ }writeFileSync(reportFile,original);await f.invoke();
+ const changed=structuredClone(f.report);changed.completedAt='2026-10-05T10:21:00.000Z';f.save(reportFile,changed);await assert.rejects(f.invoke(),/refusal differs/);
 });

@@ -1,4 +1,5 @@
 import {test} from 'node:test';
+import {validateReviewedReplayRefusal} from './reviewed-replay-refusal.mjs';
 import assert from 'node:assert/strict';
 import {rehearsalInput,collectRehearsal,rehearsalStages} from './candidate-rehearsal.mjs';
 import {assembleDeploymentBundle} from './assemble-bundle.mjs';
@@ -114,4 +115,16 @@ test('failure diagnostics keep the private cause in memory and persist only fixe
  await assert.rejects(collectRehearsal(input,{execution:'simulation',start:async()=>{throw cause;},cleanup:async()=>({status:'stopped',errors:[]})},{onReport:async report=>{saved=report;}}),error=>error.cause===cause);
  assert.equal(saved.failureStage,'start');assert.deepEqual(saved.migrationFailure,{stage:'unavailable',completedScenarios:['atomic-ddl-ledger'],cleanup:'incomplete'});
  assert.ok(!JSON.stringify(saved).includes(secret));
+});
+
+test('reviewed replay refusal binds the full failed report and all seven additive cases without claiming replay passed',()=>{
+ const f=fixture({additive:true});f.receipt.status='failed';f.receipt.failure='candidate-rehearsal-failed';f.receipt.failureStage='historical-replay';f.receipt.checks=f.receipt.checks.slice(0,5);f.receipt.cleanup.resourceCount=26;f.receipt.startedAt='2026-10-05T10:00:00.000Z';f.receipt.completedAt='2026-10-05T10:01:00.000Z';
+ const row={observedAt:'2026-10-05T10:02:00.000Z',rehearsalHash:evidenceHash(f.receipt)},proof={activeHash:f.input.activeHash};
+ const args={candidate:f.candidate,input:f.input,report:f.receipt,row,proof};
+ assert.equal(validateReviewedReplayRefusal(args).status,'verified-historical-replay-refusal');assert.equal(f.receipt.status,'failed');
+ for(const mutate of [r=>r.status='passed',r=>r.execution='simulation',r=>r.failureStage='pending-decision',r=>r.checks.pop(),r=>r.checks[1].status='failed',r=>r.cleanup.errors.push('private-canary'),r=>r.cleanup.status='failed',r=>r.completedAt='2026-10-05T10:03:00.000Z',r=>r.additiveMigrations.report.checks[1].transactionRolledBack=false,r=>r.additiveMigrations.report.checks.pop(),r=>r.checks[1].versions.push('unknown')]){
+  const bad=structuredClone(args);mutate(bad.report);if(bad.report.additiveMigrations)bad.report.additiveMigrations.approval.reportHash=evidenceHash(bad.report.additiveMigrations.report);bad.row.rehearsalHash=evidenceHash(bad.report);assert.throws(()=>validateReviewedReplayRefusal(bad));
+ }
+ const wrongHash=structuredClone(args);wrongHash.report.runId='substituted';assert.throws(()=>validateReviewedReplayRefusal(wrongHash));
+ const wrongInput=structuredClone(args);wrongInput.input.backup.schemaFingerprint=hash('f');assert.throws(()=>validateReviewedReplayRefusal(wrongInput));
 });

@@ -20,13 +20,14 @@ export function validateFirstAdoptionRecovery(proof) {
     if(!Array.isArray(proof.failedDeployments)||proof.failedDeployments.length<2||proof.failedDeployments.length>8)throw Error('Bounded reviewed failure chain required');
     const seen=new Set();let previous;
     for(const row of proof.failedDeployments){
-      if(!exact(row,['runId','runAttempt','controlCommit','conclusion','mode','stage','observedAt','auditHash','recoveryReference'])
+      if(!exact(row,['runId','runAttempt','controlCommit','conclusion','mode','stage','observedAt','auditHash','recoveryReference',...(row.stage==='rehearsal-historical-replay-refusal'?['rehearsalHash']:[])])
         ||!positive(row.runId)||row.runAttempt!==1||!sha.test(row.controlCommit??'')||row.conclusion!=='failure'||row.mode!=='adopt'
         ||!date(row.observedAt)||Date.parse(row.observedAt)>Date.parse(proof.observedAt)||!hash.test(row.auditHash??'')||seen.has(row.runId))throw Error('Exact reviewed chain attempt required');
       if(!previous){if(row.stage!=='rehearsal-start-refusal'||row.recoveryReference!==null)throw Error('Original rehearsal refusal must anchor the chain');}
       else{
         const ref=validateRecoveryReference(row.recoveryReference);
-        if(row.stage!=='pre-capture-recovery-refusal'||Date.parse(row.observedAt)<=Date.parse(previous.observedAt)
+        if(!['pre-capture-recovery-refusal','rehearsal-historical-replay-refusal'].includes(row.stage)
+          ||row.stage==='rehearsal-historical-replay-refusal'&&!hash.test(row.rehearsalHash??'')||Date.parse(row.observedAt)<=Date.parse(previous.observedAt)
           ||ref.id!==`${previous.runId}-${previous.runAttempt}`||ref.controlCommit!==row.controlCommit)throw Error('Reviewed recovery refusal must bind its previous proof');
       }
       seen.add(row.runId);previous=row;
