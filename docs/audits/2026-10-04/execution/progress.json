@@ -492,8 +492,8 @@
     "Core5 passed on f951e207/4400 inputs. Extended2 unit, flows and extended lanes passed; backend failed only dedicated observed-baseline routing. Historical aggregate remains unchanged; repair checks and exact-commit Linux CI pending.",
     "First adoption keeps new receipt/catalog/image-job writers OFF. Prepared production environment enables catalog batching and wire mirrors; running old application is unchanged until verified cutover."
   ],
-  "updated_at": "2026-10-05T02:28:21.383Z",
-  "work_status": "first_exact_ci_failed_platform_repair_verified_repeat_pending",
+  "updated_at": "2026-10-05T02:55:19.446Z",
+  "work_status": "second_exact_ci_failed_portable_test_inputs_repaired_repeat_pending",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "source_snapshot": {
@@ -548,15 +548,21 @@
     "fullLocalExtendedAggregate": false
   },
   "git": {
-    "commit": "ded378c6da5a6a8b998c31515cfefb8d2d7c8863",
+    "commit": "15ac26ba1c986ccd2d3f36eedbc0ba4c0f36f0e9",
     "pushed": true
   },
   "exact_commit_ci": {
-    "runId": 37254785060,
+    "runId": 37255566013,
     "status": "failed",
-    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37254785060",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37255566013",
+    "nodeTests": {
+      "passed": 659,
+      "skipped": 0
+    },
+    "frontendBuild": "failed_missing_ignored_fixture_imports",
+    "vitest": "failed_opaque_original_report",
     "publication": false,
     "deployment": false,
-    "repair": "docs/audits/2026-10-04/execution/CI-01-platform.json"
+    "repair": "docs/audits/2026-10-04/execution/CI-02-portable-fixtures.json"
   }
 }

@@ -1,6 +1,6 @@
 import {describe,expect,it,vi} from 'vitest';
 import related from '../../../scripts/content/data/item-completion-high-related-20260929.json';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import completion from '../../../scripts/content/data/item-completion-high-20260929.json';
 import {bindSelfItemCost} from './cost';
 import {executeAction} from './execute';

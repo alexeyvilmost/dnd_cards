@@ -1,6 +1,6 @@
 import {describe,expect,it,vi} from 'vitest';
 import completion from '../../../scripts/content/data/item-completion-high-20260929.json';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import {availableRollInfluences} from './rollInfluence';
 import {influencedSheetRoll} from '../character/influencedSheetRoll';
 import {FIGHTER_CTX_EQUIPPED,equippedFighterState} from '../mvp/fixtures';

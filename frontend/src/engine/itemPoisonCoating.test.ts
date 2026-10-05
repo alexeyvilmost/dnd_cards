@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import completion from '../../../scripts/content/data/item-completion-high-20260929.json';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import {bindSelfItemCost} from './cost';
 import {executeAction} from './execute';
 import {equippedFighterState,FIGHTER_CTX_EQUIPPED,freshFighterState} from '../mvp/fixtures';

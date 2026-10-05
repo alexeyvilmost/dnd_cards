@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Minimal item mechanics test inputs, not certification or a production catalog",
+  "projection": "exact selected runtime fields of checked-in preimage followed by declared patch",
+  "sources": [
+    {
+      "path": "backend/migrations/data/item-completion-279/items.json",
+      "sha256": "sha256:5ca094bf8ce05a0b1ceb5b904ffb10ea48fdb462326606d49aaf61e7edbf95d8"
+    },
+    {
+      "path": "backend/migrations/data/catalog-audit-20260929/spells.json",
+      "sha256": "sha256:4bb1192d1cbfb578741c993661ccab959ec0048eff68e093d919e4e4dba4b281"
+    }
+  ],
+  "selections": {
+    "cards": [
+      {
+        "id": "36e46fed-6ae8-451a-ac8c-f776ee5943d4",
+        "card_number": "CARD-0714"
+      },
+      {
+        "id": "e58dc828-755d-4489-848d-bec20f08bd67",
+        "card_number": "CARD-0790"
+      },
+      {
+        "id": "ce496a7b-b8f6-4c63-a06c-4e99b11d9fed",
+        "card_number": "CARD-0799"
+      },
+      {
+        "id": "a51c997c-506b-4982-aeb0-ee7f5b0725b1",
+        "card_number": "CARD-0820"
+      },
+      {
+        "id": "cfda7870-47cc-43d4-b81c-90cc9c1e16d9",
+        "card_number": "CARD-0822"
+      },
+      {
+        "id": "3e3dadcb-0324-4065-a52f-7e174147b1f9",
+        "card_number": "CARD-0829"
+      },
+      {
+        "id": "6ac20375-82b7-4860-bcee-58f9005f162d",
+        "card_number": "CARD-0832"
+      },
+      {
+        "id": "881a176f-e6c3-4626-8648-9231ba50a9e6",
+        "card_number": "CARD-0856"
+      },
+      {
+        "id": "2f0a5233-2d29-497b-941b-bd0c8e8c3fc0",
+        "card_number": "CARD-0869"
+      },
+      {
+        "id": "60ac8fc8-6575-4017-a810-709d8d61870c",
+        "card_number": "CARD-0889"
+      },
+      {
+        "id": "b552a969-508a-47d8-bb66-d4cfbb1fce3b",
+        "card_number": "CARD-0918"
+      },
+      {
+        "id": "9b658411-8e79-4d89-8c6d-8c3493b470da",
+        "card_number": "CARD-0922"
+      },
+      {
+        "id": "b12e383a-6802-42ac-aabe-365c05229395",
+        "card_number": "CARD-0937"
+      }
+    ],
+    "spells": [
+      {
+        "id": "6da6b18d-7609-4fcd-8078-8f979c4ffdeb",
+        "card_number": "fireball"
+      }
+    ]
+  },
+  "fields": {
+    "cards": [
+      "id",
+      "card_number",
+      "name",
+      "type",
+      "slot",
+      "range",
+      "weight",
+      "effects",
+      "mastery",
+      "contents",
+      "mechanics",
+      "attunement",
+      "bonus_type",
+      "properties",
+      "bonus_value",
+      "damage_type",
+      "weapon_type",
+      "defense_type",
+      "enchant_bonus",
+      "related_cards",
+      "related_actions",
+      "related_effects",
+      "battle_profile",
+      "container_mode",
+      "requires_attunement",
+      "elemental_damage_type",
+      "elemental_damage_value"
+    ],
+    "spells": [
+      "id",
+      "card_number",
+      "name",
+      "level",
+      "range",
+      "duration",
+      "casting_time",
+      "classes",
+      "school",
+      "concentration",
+      "mechanics"
+    ]
+  },
+  "projections": {
+    "cards": "sha256:d58c538964fee7407f58c70c371daca591ac7630c07d9a8f24f5c276d7257215",
+    "spells": "sha256:0bec118c27756d3db2fa0a21ce004ab7183839a9ac131e70db1d983de62b2633"
+  },
+  "supportStatusIncluded": false,
+  "historicalCertificatesChanged": false
+}

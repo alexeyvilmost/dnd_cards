@@ -1,5 +1,5 @@
 import {describe,expect,it} from 'vitest';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import related from '../../../scripts/content/data/item-completion-high-related-20260929.json';
 import {createWorld,type ActorState,type RuleActionDefinition} from '../rules-core/domain';
 import {executeCombatAction,resolvePlayerReaction} from './engine';

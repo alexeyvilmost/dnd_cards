@@ -1,0 +1,97 @@
+[
+  {
+    "id": "6da6b18d-7609-4fcd-8078-8f979c4ffdeb",
+    "card_number": "fireball",
+    "name": "Огненный шар",
+    "level": 3,
+    "range": "150 футов",
+    "duration": "Мгновенная",
+    "casting_time": "Действие",
+    "classes": [
+      "волшебник",
+      "чародей"
+    ],
+    "school": "evocation",
+    "concentration": false,
+    "mechanics": {
+      "effects": [
+        {
+          "dc": "8 + prof + spellcasting",
+          "who": "target",
+          "ability": "dex",
+          "on_fail": [
+            {
+              "dice": "8d6",
+              "kind": "damage",
+              "type": "fire",
+              "scaling": {
+                "per": "spell_slot_above",
+                "dice": "1d6"
+              },
+              "on_success": "half"
+            }
+          ],
+          "on_success": [
+            {
+              "dice": "8d6",
+              "kind": "damage",
+              "type": "fire",
+              "scaling": {
+                "per": "spell_slot_above",
+                "dice": "1d6"
+              },
+              "on_success": "half"
+            }
+          ],
+          "resolution": "save"
+        },
+        {
+          "who": "target",
+          "result": [
+            {
+              "kind": "narrative",
+              "description": "Область — Сфера радиусом 20 футов с центром в точке в пределах 150 футов. Горючие объекты, которые никто не несёт и не носит, воспламеняются."
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "area": {
+          "kind": "sphere",
+          "radius_ft": 20
+        },
+        "shape": "area",
+        "domain": "actor",
+        "range_ft": 150,
+        "max_targets": 8,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "self",
+          "ally",
+          "enemy",
+          "neutral"
+        ],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "level": 3,
+            "amount": 1,
+            "resource": "spell_slot"
+          }
+        ],
+        "mode": "active"
+      },
+      "spell_class_list_ids": [
+        "CLASS-sorcerer",
+        "CLASS-wizard"
+      ]
+    }
+  }
+]

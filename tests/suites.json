@@ -54,7 +54,9 @@
         "scripts/image-egress/sota-config.test.mjs",
         "scripts/release/historical-source-certification.test.mjs",
         "scripts/release/write-build-identity.test.mjs",
-        "scripts/release/source-content-manifest.test.mjs"
+        "scripts/release/source-content-manifest.test.mjs",
+        "scripts/testing/frontend-import-portability.test.mjs",
+        "scripts/testing/item-catalog-fixture.test.mjs"
       ],
       "contract": "Dependency selection, local target isolation, credentials and test-count contracts",
       "network": "local-fixtures-only",

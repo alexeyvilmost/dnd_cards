@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import related from '../../../scripts/content/data/item-completion-high-related-20260929.json';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import {projectRuleAction} from '../canon/ruleActionProjection';
 import type {Action} from '../types';
 import {createWorld,type ActorState,type GameCommand} from './domain';

@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "status": "locally_verified_pending_exact_ubuntu_ci",
+  "previousCommit": "15ac26ba1c986ccd2d3f36eedbc0ba4c0f36f0e9",
+  "previousCi": {
+    "runId": 37255566013,
+    "status": "failed",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37255566013",
+    "nodeTests": {
+      "passed": 659,
+      "skipped": 0
+    },
+    "frontendBuild": "failed_missing_ignored_fixture_imports",
+    "vitest": "failed_opaque_original_report",
+    "publication": false,
+    "deployment": false
+  },
+  "repair": {
+    "testFiles": 15,
+    "cards": 13,
+    "spells": 1,
+    "assertionsUnchanged": true,
+    "source": "Tracked migration preimage plus declared patch; exact selected runtime fields only",
+    "privateExportsCommitted": false
+  },
+  "verification": {
+    "candidateCodeTree": "ae849cc2bab256e786fcfa7f7244bf5045b6bc4e",
+    "localWindowsVitest": {
+      "files": 15,
+      "passed": 36,
+      "skipped": 0
+    },
+    "localNodePortabilityAndSelection": {
+      "passed": 18,
+      "skipped": 0
+    },
+    "cleanLinux": {
+      "network": "none",
+      "source": "complete candidate Git tree archive with no ignored outputs",
+      "typescriptSource": "passed",
+      "typescriptConfig": "passed",
+      "portabilityAndProjection": {
+        "passed": 4,
+        "skipped": 0
+      },
+      "vitest": {
+        "files": 15,
+        "passed": 36,
+        "skipped": 0
+      },
+      "log": {
+        "path": "outputs/ci/portable-fixtures-linux-2.log",
+        "sha256": "sha256:669ae586c8bcec011b9024e6871257fc3689de1983a785f487a723ec4515f1be"
+      }
+    },
+    "earlierReadOnlyHarnessAttempt": "TypeScript and four Node tests passed; Vitest startup failed because its temporary cache was read-only. Kept original failed log, repeated in a fresh disposable writable container."
+  },
+  "nextGate": "Complete exact-commit Ubuntu CI with Linux race, real browser flows and successful aggregate before publication"
+}

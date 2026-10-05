@@ -8,7 +8,7 @@ import {migrateWorldState} from './worldMigration';
 import {buildSheetWorldInput,initialSheetWorldInputDraft,sheetWorldInputFormContext} from '../character/sheetWorldInputForm';
 import type {SheetCanonicalRuntime} from '../character/sheetCanonicalWorld';
 import related from '../../../scripts/content/data/item-completion-high-related-20260929.json';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import {projectRuleAction} from '../canon/ruleActionProjection';
 import type {Action} from '../types';
 const ruleset={systemId:'dnd5e-2024' as const,releaseId:'tools',contentHash:'tools',errataVersion:'2024'};

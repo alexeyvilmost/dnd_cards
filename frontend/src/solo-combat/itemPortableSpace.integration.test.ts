@@ -3,7 +3,7 @@ import {createWorld,type ActorState} from '../rules-core/domain';
 import {projectRuleAction} from '../canon/ruleActionProjection';
 import type {Action} from '../types';
 import related from '../../../scripts/content/data/item-completion-high-related-20260929.json';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import {executeCombatAction} from './engine';
 import {gridDistanceFt} from './tacticalGrid';
 import type {SoloCombatState} from './types';

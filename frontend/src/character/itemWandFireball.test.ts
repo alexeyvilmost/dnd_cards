@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import items from '../../../scripts/content/data/item-completion-high-20260929.json';
-import spells from '../../../outputs/catalog-completion-20260929/spells.json';
+import spells from '../testing/fixtures/item-catalog.spells.json';
 import {applySpellCastingOverride,declaredSpellCastingOverride,projectRuleAction} from '../canon/ruleActionProjection';
 import {executeAction} from '../engine/execute';
 import type {Card,Spell} from '../types';

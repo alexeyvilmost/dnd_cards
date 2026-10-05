@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import items from '../../../scripts/content/data/item-completion-high-20260929.json';
-import cards from '../../../outputs/catalog-completion-20260929/cards.json';
+import cards from '../testing/fixtures/item-catalog.cards.json';
 import {projectRuleAction} from '../canon/ruleActionProjection';
 import {bindSelfItemCost} from '../engine/cost';
 import type {Action} from '../types';

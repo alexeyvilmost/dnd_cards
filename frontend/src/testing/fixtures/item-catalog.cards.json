@@ -1,0 +1,952 @@
+[
+  {
+    "id": "36e46fed-6ae8-451a-ac8c-f776ee5943d4",
+    "card_number": "CARD-0714",
+    "name": "Алхимический огонь",
+    "type": null,
+    "slot": null,
+    "range": "20",
+    "weight": 1,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "effects": [
+        {
+          "dc": "8 + dex + prof_bonus",
+          "ability": "dex",
+          "on_fail": [
+            {
+              "dice": "1d4",
+              "kind": "damage",
+              "type": "fire"
+            },
+            {
+              "kind": "triggered_effect",
+              "event": "turn_start",
+              "effects": [
+                {
+                  "result": [
+                    {
+                      "dice": "1d4",
+                      "kind": "damage",
+                      "type": "fire"
+                    }
+                  ],
+                  "resolution": "auto"
+                }
+              ],
+              "duration": {
+                "type": "manual"
+              },
+              "description": "Горение: 1к4 огня в начале хода; снимите эффект после тушения действием."
+            }
+          ],
+          "on_success": [],
+          "resolution": "save"
+        }
+      ],
+      "targeting": {
+        "shape": "single",
+        "domain": "actor",
+        "range_ft": 20,
+        "max_targets": 1,
+        "min_targets": 1,
+        "actor_targets": true,
+        "allowed_relations": [
+          "enemy",
+          "neutral"
+        ],
+        "requires_line_of_sight": true,
+        "requires_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "amount": 1,
+            "resource": "self_item"
+          }
+        ],
+        "mode": "active",
+        "while": "carried"
+      },
+      "attack_replacement": {
+        "replacement_key": "item-completion:714:throw",
+        "replaces_attacks": 1,
+        "total_attacks": "actor",
+        "once_per_attack_action": false
+      }
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"equipment\",\"thrown\",\"single_use\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": "[]",
+    "related_actions": "[]",
+    "related_effects": "[]",
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "e58dc828-755d-4489-848d-bec20f08bd67",
+    "card_number": "CARD-0790",
+    "name": "Калтропы",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": 2,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "effects": [
+        {
+          "result": [
+            {
+              "kind": "world_zone",
+              "duration": {
+                "type": "permanent"
+              },
+              "geometry": {
+                "shape": "cube",
+                "size_ft": 5
+              },
+              "tactical": {
+                "save": {
+                  "dc": 15,
+                  "ability": "dex"
+                },
+                "triggers": [
+                  "enter"
+                ],
+                "on_failure": [
+                  {
+                    "dice": "1",
+                    "kind": "damage",
+                    "type": "piercing"
+                  },
+                  {
+                    "kind": "grant_effect",
+                    "value": "EFFECT-item-caltrops-speed"
+                  }
+                ],
+                "on_success": []
+              },
+              "zone_type": "caltrops",
+              "description": "Зона 5×5 фт; спасбросок Ловкости Сл 15 или 1 колющего урона и Скорость 0 до начала следующего хода."
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "area": {
+          "kind": "cube",
+          "size_ft": 5
+        },
+        "shape": "area",
+        "domain": "world",
+        "range_ft": 5,
+        "max_targets": 0,
+        "min_targets": 0,
+        "actor_targets": false,
+        "allowed_relations": [],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "resource": "self_item",
+            "amount": 1
+          }
+        ],
+        "mode": "active",
+        "while": "carried"
+      }
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"equipment\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "ce496a7b-b8f6-4c63-a06c-4e99b11d9fed",
+    "card_number": "CARD-0799",
+    "name": "Металлические шарики",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": 2,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "effects": [
+        {
+          "result": [
+            {
+              "kind": "world_zone",
+              "duration": {
+                "type": "permanent"
+              },
+              "geometry": {
+                "shape": "cube",
+                "size_ft": 10
+              },
+              "tactical": {
+                "save": {
+                  "dc": 10,
+                  "ability": "dex"
+                },
+                "triggers": [
+                  "enter"
+                ],
+                "on_failure": [
+                  {
+                    "op": "apply",
+                    "kind": "condition",
+                    "value": "prone"
+                  }
+                ],
+                "on_success": []
+              },
+              "zone_type": "ball_bearings",
+              "description": "Зона 10×10 фт; спасбросок Ловкости Сл 10 или состояние Опрокинутый."
+            }
+          ],
+          "resolution": "auto"
+        }
+      ],
+      "targeting": {
+        "area": {
+          "kind": "cube",
+          "size_ft": 10
+        },
+        "shape": "area",
+        "domain": "world",
+        "range_ft": 5,
+        "max_targets": 0,
+        "min_targets": 0,
+        "actor_targets": false,
+        "allowed_relations": [],
+        "requires_line_of_sight": true
+      },
+      "activation": {
+        "cost": [
+          {
+            "resource": "action"
+          },
+          {
+            "resource": "self_item"
+          }
+        ],
+        "mode": "active",
+        "while": "carried"
+      }
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"equipment\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "a51c997c-506b-4982-aeb0-ee7f5b0725b1",
+    "card_number": "CARD-0820",
+    "name": "Трутница",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": 1,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "activation": {
+        "mode": "passive",
+        "while": "carried"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-820-ignite-easy"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-820-ignite-slow"
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"equipment\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "cfda7870-47cc-43d4-b81c-90cc9c1e16d9",
+    "card_number": "CARD-0822",
+    "name": "Увеличительное стекло",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "requires_item_source": "cfda7870-47cc-43d4-b81c-90cc9c1e16d9",
+      "activation": {
+        "mode": "triggered",
+        "while": "carried",
+        "cost": []
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "roll_influence",
+              "operation": "advantage",
+              "timing": "before_roll",
+              "eligible_rolls": [
+                "check"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"equipment\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "3e3dadcb-0324-4065-a52f-7e174147b1f9",
+    "card_number": "CARD-0829",
+    "name": "Цепь",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": 10,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "activation": {
+        "mode": "passive",
+        "while": "carried"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-829-bind"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-829-anchor"
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"equipment\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "6ac20375-82b7-4860-bcee-58f9005f162d",
+    "card_number": "CARD-0832",
+    "name": "Яд, простой",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "requires_item_source": "6ac20375-82b7-4860-bcee-58f9005f162d",
+      "activation": {
+        "mode": "active",
+        "while": "carried",
+        "cost": [
+          {
+            "resource": "bonus_action"
+          },
+          {
+            "resource": "self_item",
+            "amount": 1
+          }
+        ]
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "who": "self",
+          "result": [
+            {
+              "kind": "choice",
+              "id": "poisoned-weapon",
+              "count": 1,
+              "context": "in_play",
+              "prompt": "Выберите оружие для покрытия ядом",
+              "options": {
+                "source": "equipped_weapon",
+                "filter": [
+                  "battleaxe",
+                  "club",
+                  "dagger",
+                  "flail",
+                  "glaive",
+                  "greataxe",
+                  "greatclub",
+                  "greatsword",
+                  "halberd",
+                  "handaxe",
+                  "javelin",
+                  "lance",
+                  "light_hammer",
+                  "longsword",
+                  "mace",
+                  "maul",
+                  "morningstar",
+                  "pike",
+                  "quarterstaff",
+                  "rapier",
+                  "scimitar",
+                  "shortsword",
+                  "sickle",
+                  "spear",
+                  "trident",
+                  "war_pick",
+                  "warhammer",
+                  "whip"
+                ]
+              },
+              "grant": {
+                "kind": "damage_rider",
+                "trigger": "hit_by_attack_roll",
+                "dice": "1d4",
+                "type": "poison",
+                "filter": {
+                  "attackKind": "weapon"
+                },
+                "value_into": "bound_weapon_id",
+                "target_save": {
+                  "ability": "con",
+                  "dc": 10
+                },
+                "requires_damage_dealt": true,
+                "consume": "next",
+                "duration": {
+                  "type": "minutes",
+                  "amount": 1
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"consumable\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "881a176f-e6c3-4626-8648-9231ba50a9e6",
+    "card_number": "CARD-0856",
+    "name": "Переносная дыра",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": 0.5,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "activation": {
+        "mode": "passive",
+        "while": "carried"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-856-open"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-856-close"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-856-enter"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-856-exit"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-856-store"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-856-retrieve"
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": null,
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "2f0a5233-2d29-497b-941b-bd0c8e8c3fc0",
+    "card_number": "CARD-0869",
+    "name": "Ключ странника",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "activation": {
+        "mode": "passive",
+        "while": "carried"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-869-bind-door"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-869-open-bound-door"
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": "[\"single_use\"]",
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "60ac8fc8-6575-4017-a810-709d8d61870c",
+    "card_number": "CARD-0889",
+    "name": "Глефа Алентар +3",
+    "type": "weapon",
+    "slot": "two_hands",
+    "range": "10",
+    "weight": 6,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "weapon_profile": {
+        "ammo": null,
+        "heavy": {
+          "consequence": "attack_disadvantage",
+          "ability_by_mode": {
+            "melee": "str",
+            "ranged": "dex"
+          },
+          "minimum_ability_score": 13
+        },
+        "attunement": {
+          "required": false
+        },
+        "properties": [
+          "heavy",
+          "reach",
+          "two_handed"
+        ],
+        "enchantment": {
+          "attack_bonus": 0,
+          "damage_bonus": 0,
+          "extra_damage_lines": []
+        },
+        "weapon_type": "glaive",
+        "attack_modes": [
+          {
+            "kind": "melee",
+            "reach_ft": 10
+          }
+        ],
+        "damage_lines": [
+          {
+            "dice": "1d10",
+            "type": "slashing"
+          }
+        ],
+        "attack_ability": "str",
+        "mastery_effect_id": "651f4b6a-74c1-4ecf-a787-d98580bc9495",
+        "default_attack_mode": "melee",
+        "proficiency_category": "martial"
+      },
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "resource",
+              "op": "grant",
+              "id": "item_completion_889_teleport",
+              "amount": 3,
+              "recharge": "short_rest"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-889-hit-teleport"
+            }
+          ]
+        }
+      ],
+      "magical": true
+    },
+    "attunement": null,
+    "bonus_type": "damage",
+    "properties": "[\"two-handed\",\"reach\",\"heavy\"]",
+    "bonus_value": "1d10",
+    "damage_type": "slashing",
+    "weapon_type": "glaive",
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "b552a969-508a-47d8-bb66-d4cfbb1fce3b",
+    "card_number": "CARD-0918",
+    "name": "Жертва: Шрам",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "activation": {
+        "mode": "passive",
+        "while": "carried"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-918-accept-scar"
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": null,
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "9b658411-8e79-4d89-8c6d-8c3493b470da",
+    "card_number": "CARD-0922",
+    "name": "Слуховой рог",
+    "type": null,
+    "slot": null,
+    "range": null,
+    "weight": null,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "activation": {
+        "mode": "passive",
+        "while": "equipped"
+      },
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-922-raise"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-922-lower"
+            }
+          ]
+        }
+      ]
+    },
+    "attunement": null,
+    "bonus_type": null,
+    "properties": null,
+    "bonus_value": null,
+    "damage_type": null,
+    "weapon_type": null,
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": false,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  },
+  {
+    "id": "b12e383a-6802-42ac-aabe-365c05229395",
+    "card_number": "CARD-0937",
+    "name": "Кадуцей",
+    "type": "weapon",
+    "slot": "versatile",
+    "range": null,
+    "weight": 4,
+    "effects": null,
+    "mastery": null,
+    "contents": null,
+    "mechanics": {
+      "effects": [
+        {
+          "resolution": "auto",
+          "result": [
+            {
+              "kind": "modifier",
+              "op": "add",
+              "value": 10,
+              "applies_to": {
+                "roll": "max_hp"
+              }
+            },
+            {
+              "kind": "modifier",
+              "op": "multiply",
+              "value": 2,
+              "applies_to": {
+                "roll": "healing"
+              }
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-937-bless-six"
+            },
+            {
+              "kind": "grant_action",
+              "value": "ACT-item-completion-high-937-break-resurrect"
+            }
+          ]
+        }
+      ],
+      "activation": {
+        "mode": "passive",
+        "while": "attuned"
+      },
+      "weapon_profile": {
+        "ammo": null,
+        "attunement": {
+          "required": true
+        },
+        "properties": [
+          "versatile"
+        ],
+        "enchantment": {
+          "attack_bonus": 0,
+          "damage_bonus": 0,
+          "extra_damage_lines": []
+        },
+        "weapon_type": "quarterstaff",
+        "attack_modes": [
+          {
+            "kind": "melee",
+            "reach_ft": 5
+          }
+        ],
+        "damage_lines": [
+          {
+            "dice": "1d6",
+            "type": "bludgeoning"
+          }
+        ],
+        "attack_ability": "str",
+        "versatile_grip": {
+          "dice": "1d8",
+          "type": "bludgeoning"
+        },
+        "mastery_effect_id": "1464fb09-59c1-4bc5-8143-92abae8657b1",
+        "default_attack_mode": "melee",
+        "proficiency_category": "simple"
+      }
+    },
+    "attunement": null,
+    "bonus_type": "damage",
+    "properties": "[\"versatile\"]",
+    "bonus_value": "1d6 (1d8)",
+    "damage_type": "bludgeoning",
+    "weapon_type": "quarterstaff",
+    "defense_type": null,
+    "enchant_bonus": null,
+    "related_cards": null,
+    "related_actions": null,
+    "related_effects": null,
+    "battle_profile": null,
+    "container_mode": null,
+    "requires_attunement": true,
+    "elemental_damage_type": null,
+    "elemental_damage_value": null
+  }
+]
