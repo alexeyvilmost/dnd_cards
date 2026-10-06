@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {backupFile, checksum, verifyBackup, verifyDeploymentBackup} from './backup-manifest.mjs';
+import {backupFile, checksum, verifyBackup, verifyDeploymentBackup, deploymentBackupMaximumAgeMs, captureMaximumStartAgeMs} from './backup-manifest.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
 const hash = c => `sha256:${c.repeat(64)}`;
 async function fixture(t) {
@@ -52,8 +52,8 @@ async function deploymentFixture(t) {
   return {...f, release, capturedAt: Date.parse(f.manifest.createdAt)};
 }
 
-test('default age rejects crossing thirty minutes while real captured bytes are being verified', async t => {
-  const f = await deploymentFixture(t), maximumAge = 30 * 60_000;
+test('default age rejects crossing sixty minutes while real captured bytes are being verified', async t => {
+  const f = await deploymentFixture(t), maximumAge = deploymentBackupMaximumAgeMs;
   const original = readFileSync(path.join(f.directory, 'backup.json'));
   let clock = f.capturedAt + maximumAge - 1;
   t.mock.method(Date, 'now', () => clock);
@@ -67,8 +67,8 @@ test('default age rejects crossing thirty minutes while real captured bytes are 
   assert.deepEqual(readFileSync(path.join(f.directory, 'backup.json')), original);
 });
 
-test('default current age and explicit deterministic timestamps retain the exact thirty-minute boundary', async t => {
-  const f = await deploymentFixture(t), boundary = f.capturedAt + 30 * 60_000;
+test('default cutover age and explicit deterministic timestamps retain the exact sixty-minute boundary', async t => {
+  const f = await deploymentFixture(t), boundary = f.capturedAt + deploymentBackupMaximumAgeMs;
   t.mock.method(Date, 'now', () => boundary);
   assert.equal((await verifyDeploymentBackup(f.directory, f.release)).status, 'verified');
   // Explicit now remains an authoritative test clock, including equality at
@@ -76,4 +76,17 @@ test('default current age and explicit deterministic timestamps retain the exact
   t.mock.method(Date, 'now', () => { throw Error('Explicit timestamp unexpectedly consulted the clock'); });
   assert.equal((await verifyDeploymentBackup(f.directory, f.release, {now: boundary})).status, 'verified');
   await assert.rejects(verifyDeploymentBackup(f.directory, f.release, {now: boundary + 1}), /Fresh backup/);
+});
+
+test('a fresh thirty-one-minute full rehearsal uses original bytes; explicit shorter policy still refuses it',async t=>{
+  const f=await deploymentFixture(t), original=readFileSync(path.join(f.directory,'backup.json')),now=f.capturedAt+31*60_000;
+  assert.equal(deploymentBackupMaximumAgeMs,60*60_000);assert.equal(captureMaximumStartAgeMs,30*60_000);
+  assert.equal((await verifyDeploymentBackup(f.directory,f.release,{now})).status,'verified');
+  assert.equal((await verifyDeploymentBackup(f.directory,f.release,{now:f.capturedAt+captureMaximumStartAgeMs,maximumAgeMs:captureMaximumStartAgeMs})).status,'verified');
+  await assert.rejects(verifyDeploymentBackup(f.directory,f.release,{now:f.capturedAt+captureMaximumStartAgeMs+1,maximumAgeMs:captureMaximumStartAgeMs}),/Fresh backup/);
+  await assert.rejects(verifyDeploymentBackup(f.directory,f.release,{now,maximumAgeMs:captureMaximumStartAgeMs}),/Fresh backup/);
+  await assert.rejects(verifyDeploymentBackup(f.directory,f.release,{now:f.capturedAt-1}),/Fresh backup/);
+  for(const maximumAgeMs of [0,-1,Infinity,NaN,60*60_000+1,1.5])await assert.rejects(verifyDeploymentBackup(f.directory,f.release,{now,maximumAgeMs}),/Bounded/);
+  for(const now of [NaN,Infinity,1.5])await assert.rejects(verifyDeploymentBackup(f.directory,f.release,{now}),/Bounded/);
+  assert.deepEqual(readFileSync(path.join(f.directory,'backup.json')),original);
 });

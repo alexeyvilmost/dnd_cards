@@ -8,7 +8,7 @@ import {validateActive} from './deploy-state.mjs';
 import {databaseMigrationSet,migrationBaselineMatches,migrationScenarios} from './migration-transition.mjs';
 import {isLegacyBaseline,baselineDocument,baselineArtifact} from './legacy-baseline.mjs';
 import {migrationRehearsalRequest,validateMigrationRehearsal} from './migration-rehearsal.mjs';
-import {verifyDeploymentBackup,verifyBackup,backupFile,checksum} from './backup-manifest.mjs';
+import {verifyDeploymentBackup,verifyBackup,backupFile,checksum,captureMaximumStartAgeMs} from './backup-manifest.mjs';
 import {verifyCandidateProvenance} from './deployment-handoff.mjs';
 import {writerPublication} from './writer-browser-consumption.mjs';
 export const rehearsalStages=candidateRehearsalStages;
@@ -85,6 +85,18 @@ export function validateRehearsal(input,report) {
   assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:checks['image-contract'].images,identities:checks['image-contract'].identities,rehearsalReceipt:report},checks['writer-compatibility']);
   return checks;
 }
+export async function persistRehearsalResult({output,backupDirectory,input,report,capture}) {
+  // Retain the actual nine-check result even when a later freshness gate
+  // refuses the release. A passing rehearsal alone never authorizes cutover.
+  await writeFile(path.join(output,'rehearsal.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx',mode:0o600});
+  if(report.status==='passed'&&capture){
+    const restore={schemaVersion:1,status:'passed',scope:'accepted-deployment-recovery',backupHash:input.backupHash,schemaFingerprint:input.backup.schemaFingerprint,
+      rehearsalHash:evidenceHash(report),checks:['snapshot','artifacts','migrations','pending-decision','duplicate-command','media-references'].map(id=>({id,status:'passed'})),
+      limitations:['media reference recovery; remote object bytes are outside this snapshot','Docker copy only; no live database mutations'],cleanup:report.cleanup};
+    await writeFile(path.join(backupDirectory,'restore-report.json'),JSON.stringify(restore,null,2)+'\n',{flag:'wx',mode:0o600});
+    await verifyDeploymentBackup(backupDirectory,baselineDocument(input.active));
+  }
+}
 export async function main(args) {
   if(![4,5].includes(args.length)||args[0]!=='run')throw Error('Usage: candidate-rehearsal.mjs run CANDIDATE_DIRECTORY CONFIG_JSON NEW_OUTPUT_DIRECTORY [FRESH_VERIFIED_RELEASE_RUN]');
   const [,candidateDirectory,configFile,outputDirectory,freshRunFile]=args;
@@ -106,7 +118,7 @@ export async function main(args) {
     capture=await read(backupFile(backupDirectory,'capture.json'));
     if(capture.schemaVersion!==1||capture.kind!=='candidate-capture'||capture.status!=='captured'||capture.activeHash!==evidenceHash(active)
       ||capture.releaseManifestHash!==evidenceHash(baselineDocument(active))||!Number.isFinite(Date.parse(capture.createdAt))||Date.parse(capture.createdAt)>Date.now()
-      ||Date.now()-Date.parse(capture.createdAt)>30*60000||!Array.isArray(capture.files)||new Set(capture.files.map(row=>row.path)).size!==capture.files.length)throw Error('Fresh matching captured generation required');
+      ||Date.now()-Date.parse(capture.createdAt)>captureMaximumStartAgeMs||!Array.isArray(capture.files)||new Set(capture.files.map(row=>row.path)).size!==capture.files.length)throw Error('Fresh matching captured generation required');
     for(const file of capture.files){const bytes=await readFile(backupFile(backupDirectory,file.path));if(bytes.length!==file.bytes||await checksum(backupFile(backupDirectory,file.path))!==file.sha256)throw Error('Captured file changed');}
     const releases=capture.files.filter(row=>row.category==='release-manifest');if(releases.length!==1||evidenceHash(await read(backupFile(backupDirectory,releases[0].path)))!==evidenceHash(baselineDocument(active)))throw Error('Captured release differs');
   }
@@ -118,16 +130,7 @@ export async function main(args) {
     const input=rehearsalInput(candidate,active,backup);
     if(verifiedReleaseRun)input.verifiedReleaseRun=verifiedReleaseRun;
     await writeFile(path.join(output,'input.json'),JSON.stringify(input,null,2)+'\n',{flag:'wx',mode:0o600});
-    await collectRehearsal(input,adapter,{onReport:async report=>{
-      if(report.status==='passed'&&capture){
-        const restore={schemaVersion:1,status:'passed',scope:'accepted-deployment-recovery',backupHash:input.backupHash,schemaFingerprint:backup.schemaFingerprint,
-          rehearsalHash:evidenceHash(report),checks:['snapshot','artifacts','migrations','pending-decision','duplicate-command','media-references'].map(id=>({id,status:'passed'})),
-          limitations:['media reference recovery; remote object bytes are outside this snapshot','Docker copy only; no live database mutations'],cleanup:report.cleanup};
-        await writeFile(path.join(backupDirectory,'restore-report.json'),JSON.stringify(restore,null,2)+'\n',{flag:'wx',mode:0o600});
-        await verifyDeploymentBackup(backupDirectory,baselineDocument(active));
-      }
-      await writeFile(path.join(output,'rehearsal.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx',mode:0o600});
-    }});
+    await collectRehearsal(input,adapter,{onReport:report=>persistRehearsalResult({output,backupDirectory,input,report,capture})});
     await writeFile(path.join(output,'verified-backup.json'),JSON.stringify({backupDirectory})+'\n',{flag:'wx',mode:0o600});
   }finally{await adapter.cleanup();}
   process.stdout.write('Candidate Docker rehearsal passed; immutable receipt saved.\n');

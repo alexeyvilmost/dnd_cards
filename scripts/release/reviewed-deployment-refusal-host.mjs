@@ -3,13 +3,14 @@
 import assert from 'node:assert/strict';import {readFileSync,lstatSync,realpathSync,existsSync,readdirSync}from'node:fs';
 import path from'node:path';import {fileURLToPath}from'node:url';import {createHash}from'node:crypto';
 import {evidenceHash}from'./validate-manifest.mjs';import {validateHostPacket}from'./ssh-host-release.mjs';import {observeUIHost,localDockerRead}from'./ui-host-observation.mjs';
-import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,reviewedRefusalPhaseScripts}from'./reviewed-deployment-refusal.mjs';
+import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,reviewedRefusalPhaseScripts,isCompletedRestoreRefusal}from'./reviewed-deployment-refusal.mjs';
+import {observeCompletedRestoreRefusal}from'./completed-restore-refusal.mjs';
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 function bytes(file){assert.equal(realpathSync(file),path.resolve(file));const s=lstatSync(file);assert.ok(s.isFile()&&!s.isSymbolicLink()&&s.size<=32*1024*1024);if(process.platform!=='win32')assert.equal(s.mode&0o077,0);return readFileSync(file);}
 const read=f=>JSON.parse(bytes(f));
 export function assertReviewedRefusalObservation(proof,observed){
  validateReviewedDeploymentRefusal(proof);
- for(const key of ['hostConfigHash','transferHash','rehearsalHash','phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash'])assert.equal(evidenceHash(observed[key]),evidenceHash(proof[key]),'Reviewed refusal host state changed: '+key);
+ for(const key of ['hostConfigHash','transferHash',isCompletedRestoreRefusal(proof)?'expiry':'rehearsalHash','phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash'])assert.equal(evidenceHash(observed[key]),evidenceHash(proof[key]),'Reviewed refusal host state changed: '+key);
  assert.equal(observed.activeHash,proof.baseline.activeHash);assert.equal(observed.cleanupComplete,true);return {status:'verified-reviewed-pre-cutover-refusal',failedRunId:proof.failed.id,baselineRunId:proof.baseline.id,proofHash:evidenceHash(proof),applicationMutations:0};
 }
 function assertValidatorAbsent(directory){
@@ -33,10 +34,15 @@ export async function assertHostReviewedDeploymentRefusal({directory,underLock=f
   const oldCandidate=JSON.parse(previous.files['candidate.json'].text);assert.equal(evidenceHash(oldCandidate.manifest),proof.candidateManifestHash);assert.equal(oldCandidate.manifest.releaseId,proof.failedReleaseId);
   const scripts=reviewedRefusalPhaseScripts(proof);assert.deepEqual(readdirSync(old).filter(n=>n.startsWith('phase-')).sort(),proof.phaseHashes.map(r=>r.file));for(const[i,row]of proof.phaseHashes.entries())assert.deepEqual(read(path.join(old,row.file)),{script:scripts[i],status:'started'});
   for(const name of ['ready','deployed-release','deployment-operation.json','docker-auth'])assert.equal(existsSync(path.join(old,name)),false);assert.equal(existsSync(path.join(config.root,'operations',proof.failedReleaseId+'.json')),false);
-  const rehearsal=read(path.join(old,'rehearsal','rehearsal.json'));assert.equal(rehearsal.status,'failed');assert.equal(rehearsal.failureStage,'writer-compatibility');assert.equal(rehearsal.runId,proof.rehearsalRunId);assert.equal(rehearsal.activeHash,proof.baseline.activeHash);assert.equal(rehearsal.completedAt,proof.rehearsalCompletedAt);assert.equal(rehearsal.cleanup.status,'stopped');assert.deepEqual(rehearsal.cleanup.errors,[]);assert.equal(rehearsal.checks.length,8);assert.ok(rehearsal.checks.every(c=>c.status==='passed'));
+  let rehearsalEvidence;
+  if(isCompletedRestoreRefusal(proof))rehearsalEvidence={expiry:await observeCompletedRestoreRefusal({proof,old,root:config.root,active,candidate:oldCandidate})};
+  else{
+   const rehearsal=read(path.join(old,'rehearsal','rehearsal.json'));assert.equal(rehearsal.status,'failed');assert.equal(rehearsal.failureStage,'writer-compatibility');assert.equal(rehearsal.runId,proof.rehearsalRunId);assert.equal(rehearsal.activeHash,proof.baseline.activeHash);assert.equal(rehearsal.completedAt,proof.rehearsalCompletedAt);assert.equal(rehearsal.cleanup.status,'stopped');assert.deepEqual(rehearsal.cleanup.errors,[]);assert.equal(rehearsal.checks.length,8);assert.ok(rehearsal.checks.every(c=>c.status==='passed'));
+   rehearsalEvidence={rehearsalHash:hash(bytes(path.join(old,'rehearsal','rehearsal.json')))};
+  }
   assertValidatorAbsent(old);for(const label of ['bagofholding.rehearsal','bagofholding.legacy-inspection'])for(const kind of ['container','network','volume'])assert.equal(command([kind,'ls',...(kind==='container'?['-a']:[]),'--filter','label='+label,'--format',kind==='volume'?'{{.Name}}':'{{.ID}}']).trim(),'');
   const operations=readdirSync(path.join(config.root,'operations')).sort().map(file=>({file,sha256:hash(bytes(path.join(config.root,'operations',file)))}));
-  const observed={activeHash:evidenceHash(active),hostConfigHash:hash(bytes(request.hostConfig)),transferHash:hash(bytes(path.join(old,'transfer.json'))),rehearsalHash:hash(bytes(path.join(old,'rehearsal','rehearsal.json'))),phaseHashes:proof.phaseHashes.map(row=>({file:row.file,sha256:hash(bytes(path.join(old,row.file)))})),retained:proof.retained.map(row=>({file:row.file,sha256:hash(bytes(path.join(config.root,'releases',active.manifest.releaseId,row.file)))})),operations,services:actual.services,protectedRuntime:actual.protectedRuntime,databaseBindingHash:actual.databaseBindingHash,routingSecurityHash:actual.routingSecurityHash,cleanupComplete:true};
+  const observed={activeHash:evidenceHash(active),hostConfigHash:hash(bytes(request.hostConfig)),transferHash:hash(bytes(path.join(old,'transfer.json'))),...rehearsalEvidence,phaseHashes:proof.phaseHashes.map(row=>({file:row.file,sha256:hash(bytes(path.join(old,row.file)))})),retained:proof.retained.map(row=>({file:row.file,sha256:hash(bytes(path.join(config.root,'releases',active.manifest.releaseId,row.file)))})),operations,services:actual.services,protectedRuntime:actual.protectedRuntime,databaseBindingHash:actual.databaseBindingHash,routingSecurityHash:actual.routingSecurityHash,cleanupComplete:true};
   results.push(assertReviewedRefusalObservation(proof,observed));
   // The failed workflow remains failed. A rerun or different terminal outcome
   // invalidates this source-controlled exception, even on the same host.

@@ -5066,7 +5066,7 @@
       ]
     }
   ],
-  "updated_at": "2026-10-06T05:14:20.832Z",
+  "updated_at": "2026-10-06T06:47:50.847Z",
   "backup_storage_scope": {
     "schemaVersion": 1,
     "recordedAt": "2026-10-05T23:59:21.251Z",
@@ -5176,16 +5176,17 @@
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
   "execution_followon_current": {
-    "status": "host-pre-cutover-refused-local-storage-repair-verified-exact-ci-pending",
-    "evidence": "docs/audits/2026-10-04/execution/CI-23-storage-recovery.json",
-    "source": "5b44b07bc4e64ff89ab7c901025cd041ba44e582",
-    "ci": 37412624808,
+    "status": "ci24-passed-host-pre-cutover-refused-local-freshness-repair-verified",
+    "evidence": "docs/audits/2026-10-04/execution/CI-24-backup-expiry-recovery.json",
+    "source": "98b77eac4458b7407a724abbb11785c1636b82c9",
+    "ci": 37417859455,
     "productionChanged": false,
     "next": [
-      "Commit verified repair and run a new exact extended CI",
-      "Publish genuine images and writer/browser proof from that exact source",
-      "Capture a fresh production backup and complete all nine host rehearsal gates with reserve",
-      "Apply and independently verify live writer policy; then exercise genuine frontend-only delivery and rollback/automation"
+      "Commit the locally verified freshness/diagnostic repair and run a new exact extended CI",
+      "Publish genuine images and cross-image writer/browser proof from that source",
+      "Check storage headroom; capture a new production backup and complete all nine host gates within the bounded budget",
+      "Apply and independently verify live writers; then accept genuine frontend-only delivery, rollback and automation",
+      "Integrate the separately prepared per-wave catalog deduplication and verify its exact committed source"
     ]
   },
   "latest_paired_batch_measurement": {
@@ -5194,8 +5195,15 @@
     "enabled": false
   },
   "latest_storage_recovery": {
-    "status": "host-pre-cutover-refused-local-storage-repair-verified-exact-ci-pending",
-    "evidence": "docs/audits/2026-10-04/execution/CI-23-storage-recovery.json",
+    "status": "production-sized-restore-certificate-passed-nine-stage-receipt-missing",
+    "evidence": "docs/audits/2026-10-04/execution/CI-24-backup-expiry-recovery.json",
+    "productionUnchanged": true,
+    "nextExactCiRequired": true,
+    "backupStorage": "same-server-owner-approved"
+  },
+  "latest_freshness_recovery": {
+    "status": "local-verified-new-exact-ci-required",
+    "evidence": "docs/audits/2026-10-04/execution/CI-24-backup-expiry-recovery.json",
     "productionUnchanged": true,
     "nextExactCiRequired": true,
     "backupStorage": "same-server-owner-approved"

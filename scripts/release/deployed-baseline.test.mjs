@@ -40,14 +40,21 @@ function fixture(runs = [run(9), run(8)]) {
   };
   return {runs, jobs, artifacts, get, requested, select: () => selectLatestDeployedRun(get, {repository, now})};
 }
-function reviewedFixture(t){
+function reviewedFixture(t,{completedRestore=false}={}){
  const f=fixture([run(9,{event:'workflow_dispatch',conclusion:'failure'}),run(8)]);f.jobs.set(9,[job(9,'failure')]);
- const proof=JSON.parse(readFileSync(new URL('../../infra/reviewed-deployment-refusals/37405297914-1.json',import.meta.url),'utf8'));Object.assign(proof,{repository,observedAt:at(9,120000),rehearsalCompletedAt:at(9,59000)});Object.assign(proof.failed,{id:9,controlCommit:control,completedAt:at(9,60000)});Object.assign(proof.baseline,{id:8,controlCommit:control});
+ const name=completedRestore?'37420370284':'37405297914';
+ const proof=JSON.parse(readFileSync(new URL('../../infra/reviewed-deployment-refusals/'+name+'-1.json',import.meta.url),'utf8'));Object.assign(proof,{repository,observedAt:at(9,120000)});if(completedRestore){proof.expiry.capturedAt=at(9,-31*60000);proof.expiry.restoreReportWrittenAt=at(9,59000);}else proof.rehearsalCompletedAt=at(9,59000);Object.assign(proof.failed,{id:9,controlCommit:control,completedAt:at(9,60000)});Object.assign(proof.baseline,{id:8,controlCommit:control});
  const root=mkdtempSync(path.join(tmpdir(),'baseline-reviewed-'));t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('baseline-reviewed-'));rmSync(root,{recursive:true,force:true});});const directory=path.join(root,'infra','reviewed-deployment-refusals');mkdirSync(directory,{recursive:true});const file=path.join(directory,'9-1.json');writeFileSync(file,JSON.stringify(proof));
  return {...f,proof,file,select:()=>selectLatestDeployedRun(f.get,{repository,now,controlRoot:root})};
 }
 test('individually reviewed rehearsal refusal retains genuine predecessor and never becomes a successful baseline',async t=>{
  const f=reviewedFixture(t),selected=await f.select();assert.equal(selected.id,8);assert.deepEqual(selected.reviewedRefusals,[f.proof]);assert.ok(!f.requested.some(r=>r.startsWith('actions/runs/9/artifacts')));
+});
+
+test('an audited expired completed restore selects only the genuine healthy predecessor',async t=>{
+ const f=reviewedFixture(t,{completedRestore:true}),selected=await f.select();assert.equal(selected.id,8);assert.deepEqual(selected.reviewedRefusals,[f.proof]);
+ assert.ok(!f.requested.some(r=>r.startsWith('actions/runs/9/artifacts')));
+ f.proof.expiry.rehearsalReceiptAbsent=false;writeFileSync(f.file,JSON.stringify(f.proof));await assert.rejects(f.select());
 });
 test('reviewed refusal cannot conceal a newer unreviewed failure or select a different healthy baseline',async t=>{
  const f=reviewedFixture(t);f.runs.unshift(run(10,{conclusion:'failure'}));f.jobs.set(10,[job(10,'failure')]);await assert.rejects(f.select(),/recovery/);

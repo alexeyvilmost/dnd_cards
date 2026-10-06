@@ -4,6 +4,10 @@ import path from 'node:path';
 import {evidenceHash} from './validate-manifest.mjs';
 import {verifyBackupSourceReleases} from './source-release-references.mjs';
 const hashPattern = /^sha256:[a-f0-9]{64}$/;
+// The production-sized full restore/history/writer rehearsal exceeded thirty
+// minutes. This is a bounded cutover budget; it never changes capture dates.
+export const deploymentBackupMaximumAgeMs = 60 * 60_000;
+export const captureMaximumStartAgeMs = 30 * 60_000;
 export async function checksum(file) {
   const hash = createHash('sha256'); for await (const data of createReadStream(file)) hash.update(data); return `sha256:${hash.digest('hex')}`;
 }
@@ -31,7 +35,9 @@ export async function verifyBackup(directory) {
   await verifyBackupSourceReleases(directory,manifest.sourceReleaseReferences??[],manifest.sourceReleases??[],manifest.files);
   return manifest;
 }
-export async function verifyDeploymentBackup(directory, releaseManifest, {now, maximumAgeMs = 30 * 60_000} = {}) {
+export async function verifyDeploymentBackup(directory, releaseManifest, {now, maximumAgeMs = deploymentBackupMaximumAgeMs} = {}) {
+  if (!Number.isSafeInteger(maximumAgeMs) || maximumAgeMs <= 0 || maximumAgeMs > deploymentBackupMaximumAgeMs
+    || now !== undefined && !Number.isSafeInteger(now)) throw Error('Bounded backup verification clock and age required');
   const manifest = await verifyBackup(directory);
   // Hashing captured files takes time; an implicit clock must describe the
   // verified bytes now, not the instant before their verification began.
@@ -54,7 +60,7 @@ function verifyOriginalRestoreProof(directory, releaseManifest, manifest) {
 }
 
 // This verifies old bytes, never calls dump/restore and never claims a current
-// snapshot. The full deployment verifier above keeps its 30-minute rule.
+// snapshot. The full deployment verifier above enforces the cutover age bound.
 export async function verifyRecoverabilityBaseline(directory, originalManifest, {restoreReportHash, now=Date.now()}={}) {
   const manifest=await verifyBackup(directory);
   const originalReport=JSON.parse(readFileSync(backupFile(directory,'restore-report.json'),'utf8'));

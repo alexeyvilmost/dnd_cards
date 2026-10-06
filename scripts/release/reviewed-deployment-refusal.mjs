@@ -7,6 +7,19 @@ import {evidenceHash}from'./validate-manifest.mjs';
 const positive=n=>Number.isSafeInteger(n)&&n>0,sha=/^[a-f0-9]{40}$/,hash=/^sha256:[a-f0-9]{64}$/;
 const date=s=>typeof s==='string'&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString()===s;
 const fields=['schemaVersion','kind','status','observedAt','repository','failed','baseline','candidateManifestHash','failedReleaseId','hostConfigHash','transferHash','rehearsalHash','rehearsalRunId','rehearsalCompletedAt','phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash','cleanup','readOnly','sqlQueries','serviceReplacements','providerRequests'];
+export const completedRestoreRefusalKind='reviewed-followon-completed-restore-refusal-audit';
+export function isCompletedRestoreRefusal(proof){return proof?.kind===completedRestoreRefusalKind;}
+const expiryFields=['captureHash','backupFileHash','inputHash','restoreReportHash','restoreRehearsalHash','collectorCodeHash','backupCodeHash','capturedAt','restoreReportWrittenAt','maximumAgeMs','ownedResourcesStopped','rehearsalReceiptAbsent','verifiedBackupReceiptAbsent','legacyFreshnessRefused'];
+function validateExpiry(proof){
+ const e=proof.expiry;assert.deepEqual(Object.keys(e??{}).sort(),[...expiryFields].sort());
+ for(const key of expiryFields.filter(k=>k.endsWith('Hash')))assert.match(e[key],hash);
+ assert.ok(date(e.capturedAt)&&date(e.restoreReportWrittenAt));assert.equal(e.maximumAgeMs,30*60_000);
+ assert.ok(Date.parse(e.restoreReportWrittenAt)-Date.parse(e.capturedAt)>e.maximumAgeMs);
+ assert.ok(Date.parse(e.restoreReportWrittenAt)<=Date.parse(proof.failed.completedAt));
+ assert.equal(e.ownedResourcesStopped,19);
+ for(const key of ['rehearsalReceiptAbsent','verifiedBackupReceiptAbsent','legacyFreshnessRefused'])assert.equal(e[key],true);
+ assert.equal(proof.phaseHashes.length,6);
+}
 export function reviewedRefusalPhaseScripts(proof){
  const scripts=['release-publication.mjs','deployment-handoff.mjs','automatic-release.mjs','prepare-host-release.mjs','candidate-rehearsal.mjs'];
  assert.ok([5,6].includes(proof.phaseHashes?.length),'Reviewed refusal must stop at candidate rehearsal');
@@ -14,13 +27,15 @@ export function reviewedRefusalPhaseScripts(proof){
  return scripts;
 }
 export function validateReviewedDeploymentRefusal(proof){
- assert.deepEqual(Object.keys(proof??{}).sort(),[...fields].sort());assert.equal(proof.schemaVersion,1);assert.equal(proof.kind,'reviewed-followon-pre-cutover-refusal-audit');assert.equal(proof.status,'passed');
+ const completed=isCompletedRestoreRefusal(proof),expectedFields=completed?[...fields.filter(f=>!['rehearsalHash','rehearsalRunId','rehearsalCompletedAt'].includes(f)),'expiry']:fields;
+ assert.deepEqual(Object.keys(proof??{}).sort(),[...expectedFields].sort());assert.equal(proof.schemaVersion,1);assert.equal(proof.kind,completed?completedRestoreRefusalKind:'reviewed-followon-pre-cutover-refusal-audit');assert.equal(proof.status,'passed');
  assert.match(proof.repository,/^[\w.-]+\/[\w.-]+$/);assert.ok(date(proof.observedAt));
  assert.deepEqual(Object.keys(proof.failed).sort(),['id','attempt','controlCommit','completedAt'].sort());assert.ok(positive(proof.failed.id));assert.equal(proof.failed.attempt,1);assert.match(proof.failed.controlCommit,sha);assert.ok(Number.isFinite(Date.parse(proof.failed.completedAt)));assert.ok(Date.parse(proof.failed.completedAt)<=Date.parse(proof.observedAt));
  assert.deepEqual(Object.keys(proof.baseline).sort(),['id','attempt','controlCommit','releaseId','manifestHash','activeHash'].sort());assert.ok(positive(proof.baseline.id)&&proof.baseline.id!==proof.failed.id);assert.equal(proof.baseline.attempt,1);assert.match(proof.baseline.controlCommit,sha);assert.match(proof.baseline.releaseId,/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/);
  for(const key of ['manifestHash','activeHash'])assert.match(proof.baseline[key],hash);
- for(const key of ['candidateManifestHash','hostConfigHash','transferHash','rehearsalHash','databaseBindingHash','routingSecurityHash'])assert.match(proof[key],hash);
- assert.match(proof.failedReleaseId,/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/);assert.notEqual(proof.failedReleaseId,proof.baseline.releaseId);assert.match(proof.rehearsalRunId,/^[a-f0-9-]{36}$/);assert.ok(date(proof.rehearsalCompletedAt)&&Date.parse(proof.rehearsalCompletedAt)<=Date.parse(proof.failed.completedAt));
+ for(const key of ['candidateManifestHash','hostConfigHash','transferHash',...(completed?[]:['rehearsalHash']),'databaseBindingHash','routingSecurityHash'])assert.match(proof[key],hash);
+ assert.match(proof.failedReleaseId,/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/);assert.notEqual(proof.failedReleaseId,proof.baseline.releaseId);
+ if(completed)validateExpiry(proof);else{assert.match(proof.rehearsalRunId,/^[a-f0-9-]{36}$/);assert.ok(date(proof.rehearsalCompletedAt)&&Date.parse(proof.rehearsalCompletedAt)<=Date.parse(proof.failed.completedAt));}
  assert.deepEqual(proof.phaseHashes.map(r=>r.file),reviewedRefusalPhaseScripts(proof).map((_,i)=>'phase-'+String(i+1).padStart(2,'0')+'.json'));
  assert.deepEqual(proof.retained.map(r=>r.file),['state.json','compose.env','compose.prod.yml','Caddyfile','compose.runtime.json']);
  for(const rows of [proof.phaseHashes,proof.retained,proof.operations]){assert.ok(Array.isArray(rows)&&new Set(rows.map(r=>r.file)).size===rows.length);for(const r of rows){assert.deepEqual(Object.keys(r).sort(),['file','sha256']);assert.match(r.file,/^[A-Za-z0-9_.-]+$/);assert.match(r.sha256,hash);}}

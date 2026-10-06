@@ -1,0 +1,413 @@
+{
+  "schemaVersion": 1,
+  "status": "ci24-passed-host-pre-cutover-refused-local-freshness-repair-verified",
+  "recordedAt": "2026-10-06T06:47:50.847Z",
+  "sourceBaseCommit": "98b77eac4458b7407a724abbb11785c1636b82c9",
+  "ci24": {
+    "schemaVersion": 1,
+    "status": "passed",
+    "sourceCommit": "98b77eac4458b7407a724abbb11785c1636b82c9",
+    "ciRun": 37417859455,
+    "attempt": 1,
+    "observedAt": "2026-10-06T05:35:50.104Z",
+    "durationMs": 880271,
+    "reportHash": "sha256:68b3af9b67ac7dacd0b2511cff9cfbd3c9ec3410a1228e89d0c8052305a25dc2",
+    "sourceSnapshot": {
+      "sha256": "dacbcc666f44811830b49ad44981647bbf48a770998e00cee945c51f34d3bb87",
+      "files": 4533
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "aggregation": {
+      "schema_version": 1,
+      "plan_sha256": "446f7ba31283e25393c2141c5ba7198ded505f9ee151d0d55aa2fcc9c22346b8",
+      "workload": 914,
+      "global_coverage_complete": true,
+      "max_shard_duration_ms": 866266,
+      "shards": [
+        {
+          "name": "backend",
+          "report_sha256": "c98c7936d1e4acd28ed0914726ce7a7e006d77b1c8625c5668650d8fb64cfd8b",
+          "run_id": "test_bd30e7dc7fee7fa973d83688",
+          "checks": 15,
+          "duration_ms": 228811
+        },
+        {
+          "name": "extended",
+          "report_sha256": "5dc9e906775ec6c7033978e4b51cec359731697d891054105d408f2a4789b903",
+          "run_id": "test_f4d005c2049cfe1592b9f689",
+          "checks": 21,
+          "duration_ms": 866266
+        },
+        {
+          "name": "flows",
+          "report_sha256": "23757c048b6967696998ab5267b21b857bdf9c78eb945844508da5a613946d61",
+          "run_id": "test_fbb3548ac2496fb8bc8e88ae",
+          "checks": 5,
+          "duration_ms": 207425
+        },
+        {
+          "name": "unit",
+          "report_sha256": "304b6481e5b050e2025039bb1e6070d1f6faba660baec5c756d6b8a759544ae3",
+          "run_id": null,
+          "checks": 4,
+          "duration_ms": 568894
+        }
+      ]
+    },
+    "checks": [
+      {
+        "id": "source-hygiene",
+        "status": "passed"
+      },
+      {
+        "id": "isolated-stack",
+        "status": "passed"
+      },
+      {
+        "id": "worker-and-database-node",
+        "status": "passed",
+        "tests": 25,
+        "passed": 25,
+        "skipped": 0
+      },
+      {
+        "id": "backend-compile",
+        "status": "passed"
+      },
+      {
+        "id": "go-backend",
+        "status": "passed",
+        "required": 407
+      },
+      {
+        "id": "go-animationpresentation",
+        "status": "passed",
+        "required": 4
+      },
+      {
+        "id": "go-audiopresentation",
+        "status": "passed",
+        "required": 3
+      },
+      {
+        "id": "go-charactertemplates",
+        "status": "passed"
+      },
+      {
+        "id": "go-itemsource",
+        "status": "passed",
+        "required": 5
+      },
+      {
+        "id": "go-itemsource-cmd-audit",
+        "status": "passed"
+      },
+      {
+        "id": "go-migrations",
+        "status": "passed",
+        "required": 333
+      },
+      {
+        "id": "go-passivepresentation",
+        "status": "passed"
+      },
+      {
+        "id": "go-roguelikecontent",
+        "status": "passed",
+        "required": 1
+      },
+      {
+        "id": "go-weapondata",
+        "status": "passed",
+        "required": 1
+      },
+      {
+        "id": "source-stability",
+        "status": "passed"
+      },
+      {
+        "id": "reference-cursor-transport",
+        "status": "passed"
+      },
+      {
+        "id": "process-crash-recovery",
+        "status": "passed"
+      },
+      {
+        "id": "supported-upgrade-baselines",
+        "status": "passed"
+      },
+      {
+        "id": "observed-legacy-baseline",
+        "status": "passed",
+        "tests": 1
+      },
+      {
+        "id": "candidate-rehearsal-api",
+        "status": "passed"
+      },
+      {
+        "id": "catalog-equivalence",
+        "status": "passed",
+        "required": 4
+      },
+      {
+        "id": "preparation-cache-equivalence",
+        "status": "passed",
+        "required": 9
+      },
+      {
+        "id": "worker-wire-mirror-equivalence",
+        "status": "passed"
+      },
+      {
+        "id": "equipment-authority-flow",
+        "status": "passed"
+      },
+      {
+        "id": "initiative-options-flow",
+        "status": "passed"
+      },
+      {
+        "id": "library-review-pages",
+        "status": "passed"
+      },
+      {
+        "id": "equipment-runtime-browser",
+        "status": "passed"
+      },
+      {
+        "id": "pwa-offline-shell",
+        "status": "passed"
+      },
+      {
+        "id": "urvin-owned-journey",
+        "status": "passed"
+      },
+      {
+        "id": "solo-durable-continuations",
+        "status": "passed",
+        "required": {
+          "required": 1,
+          "passed": 1
+        }
+      },
+      {
+        "id": "image-egress-isolation",
+        "status": "passed",
+        "required": {
+          "required": 1,
+          "passed": 1
+        }
+      },
+      {
+        "id": "browser-ui-fixtures-production",
+        "status": "passed",
+        "tests": 48,
+        "passed": 48,
+        "skipped": 0
+      },
+      {
+        "id": "browser-ui-fixtures-battle3d",
+        "status": "passed",
+        "tests": 8,
+        "passed": 8,
+        "skipped": 0
+      },
+      {
+        "id": "local-api-spine",
+        "status": "passed"
+      },
+      {
+        "id": "local-browser-flows",
+        "status": "passed",
+        "tests": 12,
+        "passed": 12,
+        "skipped": 0
+      },
+      {
+        "id": "node-contracts",
+        "status": "passed",
+        "tests": 963,
+        "passed": 963,
+        "skipped": 0
+      },
+      {
+        "id": "vitest",
+        "status": "passed",
+        "tests": 6462,
+        "passed": 6462,
+        "skipped": 0
+      }
+    ],
+    "sourceUnchanged": true,
+    "productionMutations": 0
+  },
+  "publication": {
+    "id": 37419497128,
+    "attempt": 1,
+    "status": "success",
+    "sourceCommit": "98b77eac4458b7407a724abbb11785c1636b82c9"
+  },
+  "actualHost": {
+    "failed": {
+      "id": 37420370284,
+      "attempt": 1,
+      "controlCommit": "98b77eac4458b7407a724abbb11785c1636b82c9",
+      "completedAt": "2026-10-06T06:21:14Z"
+    },
+    "baseline": {
+      "id": 37389067128,
+      "attempt": 1,
+      "controlCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "releaseId": "candidate-93265633db10-deb958c1c9a7",
+      "manifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+      "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24"
+    },
+    "restoreCertificate": "passed",
+    "restoreCertificateElapsedMs": 1858350,
+    "originalNineStageReceipt": "absent-not-reconstructed",
+    "acceptedReleaseBundle": false,
+    "readyProduced": false,
+    "applicationReplacements": 0,
+    "cleanup": {
+      "remainingOwnedResources": 0,
+      "validatorStopped": true,
+      "dockerAuthRemoved": true,
+      "deploymentJournalCreated": false,
+      "deployLockPresent": false,
+      "operatorApplicationMutations": 0
+    },
+    "publicReviewedEvidence": "infra/reviewed-deployment-refusals/37420370284-1.json",
+    "diagnosticLimit": "Original exception text and nine-check report are absent. Original callback code and passed restore certificate establish execution order; fresh read-only verification reproduces expiration. No replacement receipt is invented."
+  },
+  "localRepair": {
+    "committed": false,
+    "cutoverMaximumAgeMs": 3600000,
+    "captureStartMaximumAgeMs": 1800000,
+    "originalCaptureDatesPreserved": true,
+    "reportWrittenBeforeFreshnessGate": true,
+    "lateRefusalIssuesVerifiedBackup": false,
+    "validation": {
+      "recordHash": "sha256:f258c2851702cdd73fc2e89c24307bcfe7571fd7057d3d7174d22be393428d51",
+      "checks": [
+        {
+          "id": "release-contracts-windows",
+          "exitCode": 0,
+          "logHash": "sha256:366ad298271a192e007f68ce61aedce269dc2dc0d2eddabc3c47d90460b5a32a",
+          "counts": {
+            "tests": 496,
+            "pass": 488,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 8,
+            "todo": 0
+          }
+        },
+        {
+          "id": "changed-host-reader-linux",
+          "exitCode": 0,
+          "logHash": "sha256:77ade28a99a7f27ff67449e70641e1911a5d347c38f547c94acb98dc99a347f0",
+          "counts": {
+            "tests": 58,
+            "pass": 58,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          }
+        },
+        {
+          "id": "check-no-known-credentials",
+          "exitCode": 0,
+          "logHash": "sha256:03a616ecd7c6e7a76b4b5e5d0c39c3039ced7457665bec01bffe89277525bf62"
+        },
+        {
+          "id": "check-no-database-dumps",
+          "exitCode": 0,
+          "logHash": "sha256:a76d76f37c218d6e5b7f392d1f3451da5e2e1e1eff63c30196c1e7d925e327cf"
+        },
+        {
+          "id": "source-content-manifest",
+          "exitCode": 0,
+          "logHash": "sha256:21f0cb3434fb5746746d23f66b71dd4d90dd9ec676845b2f666118b26d48f63a"
+        },
+        {
+          "id": "diff-whitespace",
+          "exitCode": 0,
+          "logHash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "laterBoundaryAssertions": {
+        "tests": 7,
+        "pass": 7,
+        "skipped": 0,
+        "logHash": "sha256:5d2b9a8132edadfe2f7c761c237cbc0271f9783a58b0b05e276589a7aef609f3"
+      }
+    },
+    "hostReadOnlyReader": {
+      "status": "verified-current-completed-restore-reader",
+      "observedAt": "2026-10-06T06:47:04.636Z",
+      "failedRunId": 37420370284,
+      "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24",
+      "expiry": {
+        "captureHash": "sha256:adc81a2db1b0833cba03d4c84025ca4754fba2bd613bc57d3b43d77ca76a8751",
+        "backupFileHash": "sha256:f23c97e24bc205dd63d437d5a852c6c514da997e7063a36bbde634f1e2a340fc",
+        "inputHash": "sha256:0bf62b9b68c03c7d378a4fae79d49143201a8413f6646f8dd7c31144691993a8",
+        "restoreReportHash": "sha256:4084243fcb1bf4a9c70f3d11dbf26dd3cf933727cf1c1e418eb65a99b06f1e47",
+        "restoreRehearsalHash": "sha256:b36e976141c599fd634481875360f454dab2655a06423b2decad6c760cc7c500",
+        "collectorCodeHash": "sha256:1711df2206f1142b41a96af4b17ff6730e60f403baaec58b09347dcb2cd70f46",
+        "backupCodeHash": "sha256:d164af83db2e3b8c15aaffb559040e3f4507366e0c9bd635a40f2635eaabe5ba",
+        "capturedAt": "2026-10-06T05:50:11.170Z",
+        "restoreReportWrittenAt": "2026-10-06T06:21:09.520Z",
+        "maximumAgeMs": 1800000,
+        "ownedResourcesStopped": 19,
+        "rehearsalReceiptAbsent": true,
+        "verifiedBackupReceiptAbsent": true,
+        "legacyFreshnessRefused": true
+      },
+      "serverFileWrites": 0,
+      "sqlQueries": 0,
+      "providerRequests": 0,
+      "sourceModuleHashes": {
+        "backup-manifest.mjs": "sha256:b158efbafb9534304035b49d84c38252dea5266401a4698fb9bad57482625a10",
+        "reviewed-deployment-refusal.mjs": "sha256:0fc2f5f9fd27bfe311fd32b36d78f5b77618491c592cab055c53e2a1ac94d1f4",
+        "completed-restore-refusal.mjs": "sha256:e66fc8b76a81bbe7505ab6e4d574c7301f08ec899b23d9b502ba4f4084d3d482"
+      }
+    }
+  },
+  "storage": {
+    "observedAt": "2026-10-06T06:36:06.784Z",
+    "capacityBytes": 50884108288,
+    "availableBytes": 8701681664,
+    "databaseOnApplicationServer": false,
+    "backupsRetainedOnSameServer": true,
+    "sourceArchivesRelocated": 10,
+    "bytesFreed": 3038341120,
+    "databaseBackupsRemoved": 0,
+    "unpackedControlsRemoved": 0,
+    "attemptEvidenceRemoved": 0,
+    "globalDockerPrune": false
+  },
+  "production": {
+    "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "changed": false,
+    "compactReceipts": false,
+    "frozenCatalogs": false,
+    "imageJobs": false,
+    "selective": false,
+    "automatic": false,
+    "reconcile": false,
+    "paidRequests": 0
+  },
+  "nextAcceptance": [
+    "Commit the locally verified freshness/diagnostic repair and run a new exact extended CI",
+    "Publish genuine images and cross-image writer/browser proof from that source",
+    "Check storage headroom; capture a new production backup and complete all nine host gates within the bounded budget",
+    "Apply and independently verify live writers; then accept genuine frontend-only delivery, rollback and automation",
+    "Integrate the separately prepared per-wave catalog deduplication and verify its exact committed source"
+  ]
+}
