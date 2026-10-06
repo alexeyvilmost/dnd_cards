@@ -350,7 +350,7 @@ function CharacterEquipmentPanel({
                 key={slot}
                 type="button"
                 className={`sheet-slot-tile${card ? ' filled' : ''}`}
-                aria-label={card ? `${label}: ${card.name}` : id ? label : `${label}: свободно`}
+                aria-label={card ? `${label}: ${card.name}` : `${label}: ${id ? 'занято' : 'свободно'}`}
                 onClick={() => { if (card) openEquipped(slot, card); }}
                 {...hoverHandlers(card)}
               >
