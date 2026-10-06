@@ -26,6 +26,7 @@ import { combatRollInfluences } from '../solo-combat/engine';
 import { maximumActorLongJumpFt } from '../solo-combat/jump';
 import { persistedRollPresentation } from '../solo-combat/persistedRollPresentation';
 import { availableCombatSpellLevels } from '../solo-combat/spellCastChoices';
+import {laboratoryCharacter} from '../solo-combat/laboratorySession';
 
 import { useCombatAudio } from '../audio/useCombatAudio';
 import { usePassivePreferences } from '../character/passivePreferences';
@@ -116,11 +117,11 @@ function initiativeLabel(entry: SoloCombatState['initiative'][number]): string {
 }
 
 
-export default function SoloCombatPage() {
+export default function SoloCombatPage({laboratory = false}: {laboratory?: boolean}) {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const roguelikeRunId = searchParams.get('roguelike');
+  const roguelikeRunId = laboratory ? null : searchParams.get('roguelike');
   const choiceDialog = useChoiceDialog();
   const [character, setCharacter] = useState<ForgeCharacter | null>(null);
   const [participantCharacters, setParticipantCharacters] = useState<Record<string, ForgeCharacter>>({});
@@ -165,7 +166,7 @@ export default function SoloCombatPage() {
   const [combatPassiveEnabled, setCombatPassive] = usePassivePreferences();
   const siteSettings = useSiteSettings();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sceneConstructorOpen, setSceneConstructorOpen] = useState(false);
+  const [sceneConstructorOpen, setSceneConstructorOpen] = useState(laboratory);
   const [sheetActorId, setSheetActorId] = useState<string | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -177,9 +178,9 @@ export default function SoloCombatPage() {
   const initialRequestedRef = useRef(querySelection(searchParams));
   const initialAlliesRef = useRef(queryAllies(searchParams, id));
 
-  const {persist, apply, resetStaleCombat} = useSoloCombatPersistence({id, roguelikeRunId, characterRef, participantCharactersRef, setCharacter, setParticipantCharacters, setState, setBusy, setError, navigate});
+  const {persist, apply, resetStaleCombat} = useSoloCombatPersistence({id, laboratory, roguelikeRunId, characterRef, participantCharactersRef, setCharacter, setParticipantCharacters, setState, setBusy, setError, navigate});
 
-  useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, requestChoice: choiceDialog.request, initialRequestedRef, initialAlliesRef, characterRef, trustedRunRef, participantCharactersRef, setCharacter, setParticipantCharacters, setOpeningState, setState, setBusy, setStaleRulesSnapshot, setError});
+  useSoloCombatBootstrap({id, laboratory, roguelikeRunId, navigate, persist, requestChoice: choiceDialog.request, initialRequestedRef, initialAlliesRef, characterRef, trustedRunRef, participantCharactersRef, setCharacter, setParticipantCharacters, setOpeningState, setState, setBusy, setStaleRulesSnapshot, setError});
 
   const acceptCombatRun = useCallback((accepted: RoguelikeRun) => {
     if (!accepted.combat_state || !accepted.character) throw new Error('Сервер не вернул состояние боя');
@@ -347,11 +348,12 @@ export default function SoloCombatPage() {
 
   const addSceneCharacter = async (characterId: string) => {
     if (!state || !character) throw new Error('Сцена ещё не загружена');
-    const [row, basicResponse] = await Promise.all([
+    const [sourceRow, basicResponse] = await Promise.all([
       charactersV3Api.get(characterId),
       actionsApi.getActions({ type: 'basic', limit: 100 }),
     ]);
-    if (row.user_id !== character.user_id) throw new Error('Можно добавить только своего персонажа');
+    if (sourceRow.user_id !== character.user_id) throw new Error('Можно добавить только своего персонажа');
+    const row = laboratory && id ? laboratoryCharacter(sourceRow, id) : sourceRow;
     const participant = await loadSheetCombatParticipant({
       character: row,
       basicActions: basicResponse.actions,
@@ -375,6 +377,7 @@ export default function SoloCombatPage() {
   };
 
   const finish = async () => {
+    if(laboratory) {navigate('/combat-lab'); return;}
     const currentCharacter = characterRef.current;
     if (!currentCharacter || !state || !id) return;
     setBusy(true);
@@ -480,9 +483,9 @@ export default function SoloCombatPage() {
       {rewardRun && <CombatRewardDialog run={rewardRun} onClose={() => navigate(`/roguelike/${rewardRun.id}`)} />}
       <CombatRollDialogs {...{state, busy, error, presentation, heldDecision, influenceOfferVisible, offeredHeldInfluences, combatPassiveEnabled, applyIntent}} />
       {settingsOpen && <SheetSettingsDialog initialPage="combat" onClose={() => setSettingsOpen(false)} />}
-      <MonsterTurnController state={state} disabled={presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
+      <MonsterTurnController state={state} disabled={(laboratory && sceneConstructorOpen) || presentation.blocked || Boolean(trustedRunRef.current) || busy || Boolean(pendingTurnStart) || Boolean(state.pendingAlertSwapActorIds?.length) || Boolean(state.pendingInterception) || Boolean(pendingD20Interrupt)} onTransition={apply} onError={setError} />
       <header className="combat-topbar">
-        <div className="combat-topbar__navigation"><Link to={roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {roguelikeRunId ? 'Забег' : 'Лист'}</Link>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
+        <div className="combat-topbar__navigation"><Link to={laboratory ? '/combat-lab' : roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`}><ArrowLeft size={18} /> {laboratory ? 'Тестовый бой' : roguelikeRunId ? 'Забег' : 'Лист'}</Link>{!roguelikeRunId && <button type="button" onClick={() => setSceneConstructorOpen(true)}><SlidersHorizontal size={16} /> Сцена</button>}</div>
         <div className="initiative-ribbon initiative-ribbon--tokens-only" aria-label="Порядок инициативы">
           {displayState.initiative.map((entry) => {
             const participant = displayState.world.actors[entry.actorId];
@@ -627,6 +630,7 @@ export default function SoloCombatPage() {
         <CombatActorInspector state={displayState} actorId={inspectedActorId} onClose={() => setInspectedActorId(null)} />
       )}
       {sceneConstructorOpen && <CombatSceneConstructor
+        laboratory={laboratory}
         state={state}
         busy={busy}
         onApply={apply}
@@ -703,7 +707,7 @@ export default function SoloCombatPage() {
       {!rewardRun && !presentation.blocked && shouldShowSoloCombatOutcome(state) && !(roguelikeRunId && state.outcome === 'victory' && !rewardTransitionFailed) && <div className="combat-outcome"><section><p>БОЙ ЗАВЕРШЁН</p><h1>{state.outcome === 'victory' ? 'Победа' : 'Поражение'}</h1><p>{state.outcome === 'victory' ? rewardTransitionFailed ? 'Не удалось открыть награды. Можно повторить попытку.' : 'Все противники уничтожены.' : controlledCharacterIds(state).some(actorId => {
         const actor = state.world.actors[actorId];
         return actor?.runtime.deathSaves?.dead || (actor?.runtime.deathSaves?.failures ?? 0) >= 3 || actor?.lifecycle?.status === 'dead';
-      }) ? 'Один из участников погиб. Забег завершён поражением.' : 'Никто из участников не может продолжать бой.'}</p><button type="button" disabled={busy} onClick={finish}>{roguelikeRunId ? state.outcome === 'victory' ? 'Повторить получение наград' : 'Повторить с контрольной точки' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
+      }) ? roguelikeRunId ? 'Один из участников погиб. Забег завершён поражением.' : 'Один из участников погиб.' : 'Никто из участников не может продолжать бой.'}</p><button type="button" disabled={busy} onClick={finish}>{laboratory ? 'К тестовым сценам' : roguelikeRunId ? state.outcome === 'victory' ? 'Повторить получение наград' : 'Повторить с контрольной точки' : 'Завершить и вернуться в лист'}</button><button type="button" onClick={() => navigate(laboratory ? '/combat-lab' : roguelikeRunId ? `/roguelike/${roguelikeRunId}` : `/characters-v3/${id}`)}><RotateCcw size={16} /> {laboratory ? 'Сохранить сцену и выйти' : roguelikeRunId ? 'Вернуться в забег' : 'Оставить запись боя'}</button></section></div>}
     </main>
   );
 }

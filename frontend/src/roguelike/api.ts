@@ -7,6 +7,7 @@ import type { Action, PassiveEffect } from '../types';
 import {playCommandSound,playCommittedEvents} from '../audio/commandSounds';
 import type {RollInfluence} from '../engine/rollInfluence';
 import type {RollLog} from '../mvp/contracts';
+import {notifyRunUpdated} from './navigation';
 
 export interface JourneyAura extends PassiveEffect {key:string;mechanics:NonNullable<PassiveEffect['mechanics']>}
 export interface JourneyRoom {id:string;name:string;description:string;icon:string}
@@ -148,7 +149,11 @@ export const roguelikeApi = {
     const { data } = await apiClient.get<{ run: RoguelikeRun }>(`/api/roguelike/runs/${id}`);
     return data.run;
   },
-  create: async (sourceCharacterId: string | string[], options?:{mode:string;aura_id?:string}): Promise<RoguelikeRun> => {
+  remove: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/roguelike/runs/${id}`);
+    notifyRunUpdated();
+  },
+  create: async (sourceCharacterId: string | string[], options?:{mode?:string;aura_id?:string;templates?:Array<{template_id:string;name:string}>}): Promise<RoguelikeRun> => {
     const { data } = await apiClient.post<{ run: RoguelikeRun }>('/api/roguelike/runs', {
       ...(Array.isArray(sourceCharacterId)?{source_character_ids:sourceCharacterId}:{source_character_id: sourceCharacterId}),
       ...options,

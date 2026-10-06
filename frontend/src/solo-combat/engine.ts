@@ -4315,6 +4315,7 @@ export function canUseConditionAction(state: SoloCombatState, actorId: string, a
   const action = actor && conditionGrantedActions(actor.runtime).find(candidate => candidate.id === actionId);
   const cost = action ? Math.floor(effectiveCombatActorSpeedFt(state, actorId) * action.movementFraction) : Infinity;
   return Boolean(actor && action && actorHasConsciousVitality(actor)
+    && !deniedCapabilities(actor.runtime, actor.passives ?? []).has('movement')
     && state.outcome === 'active' && activeActorId(state) === actorId
     && !state.world.pendingResolution && !state.pendingD20Interrupt && !state.pendingInterception
     && !state.pendingAdditionalMovement && !state.pendingTriggeredAction && !state.pendingTurnStartGrappleDamage
@@ -5695,7 +5696,7 @@ function finishMonsterTurn(state: SoloCombatState, actorId: string, rng: Rng): S
   const hide = monsterBonusActions(state, actorId, 'hide')[0];
   const alreadyHidden = state.world.actors[actorId].runtime.activeEffects.some(effect =>
     Array.isArray((effect.mechanics as Record<string, unknown>).hidden_end_triggers));
-  if (hide && !alreadyHidden && !combatHideIssue(state, actorId)) {
+  if (hide && !alreadyHidden && !deniedCapabilities(state.world.actors[actorId].runtime, state.world.actors[actorId].passives ?? []).has('bonus_action') && !combatHideIssue(state, actorId)) {
     state = executeCombatAction({state, actorId, actionId: hide.id, targetIds: [], rng});
     if (monsterMovementPaused(state) || state.outcome !== 'active') return state;
   }
@@ -5720,6 +5721,11 @@ export function runMonsterTurn(state: SoloCombatState, rng: Rng = Math.random): 
   const monster = state.world.actors[monsterId];
   if (!monster || monster.kind !== 'monster') return state;
   if (!actorHasConsciousVitality(monster)) return advanceTurn(state, rng);
+  // A living incapacitated actor still owns a turn and its end-of-turn saves,
+  // but cannot execute the planner's action or pay a denied bonus action.
+  if (deniedCapabilities(monster.runtime, monster.passives ?? []).has('action')) {
+    return advanceTurn(state, rng);
+  }
   // A persisted monster turn can resume after a player reaction without the
   // original controller stack frame that would have advanced initiative. The
   // action payment is the durable proof that the planner already committed its

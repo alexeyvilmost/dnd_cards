@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 const (
@@ -106,8 +107,9 @@ type CharacterV3 struct {
 	// НЕ входит в Update/PatchRuntime DTO — сохраняется как есть при load-then-save.
 	CurrentEncounterID *uuid.UUID `json:"current_encounter_id" gorm:"type:uuid"`
 
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	// AccessMode is response-only authorization metadata. The browser must not
 	// infer write permission from owner names or UUIDs.
@@ -122,6 +124,7 @@ type CharacterV3 struct {
 // Large rule/runtime JSON belongs to the detail endpoint and must never be
 // serialized just to render a name, portrait and three summary lines.
 type CharacterV3Preview struct {
+	RoguelikeRunID     *uuid.UUID `json:"roguelike_run_id,omitempty" gorm:"-"`
 	ID                 uuid.UUID  `json:"id"`
 	Name               string     `json:"name"`
 	AvatarURL          string     `json:"avatar_url"`

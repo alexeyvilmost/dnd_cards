@@ -1,7 +1,7 @@
 // Unit-only fabricated observations: these never authorize OCI or deployment.
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {validateManifest,writerPolicy,validateWriterTransition,compositionFingerprint,evidenceHash,assertReleaseReady,writerCompatibilityOutcomes} from './validate-manifest.mjs';
+import {validateManifest,writerPolicy,validateWriterTransition,lifecycleWriterExpansion,lifecycleMigrationIdentity,compositionFingerprint,evidenceHash,assertReleaseReady,writerCompatibilityOutcomes} from './validate-manifest.mjs';
 import {planDeployment} from './deploy-state.mjs';
 import {attachUnitRehearsal} from './unit-rehearsal-fixture.mjs';
 import {unitWriterTrace} from './unit-writer-trace-fixture.mjs';
@@ -29,6 +29,24 @@ test('enabled policy rejects legacy adoption, schema changes and missing exact a
 });
 test('new policy cannot reuse a historical eight-stage OFF receipt',()=>{
  const f=pair();f.bundle.rehearsalReceipt.checks.pop();refresh(f.candidate,f.bundle);assert.throws(()=>assertReleaseReady(f.candidate,f.bundle),/rehearsal/);
+});
+test('only the exact lifecycle expansion can retain enabled writers, never approves deployment without fresh proofs',()=>{
+ const f=pair(on,on),candidate=structuredClone(f.candidate),previous=f.active.manifest;
+ candidate.migrationSet.push({...lifecycleMigrationIdentity});
+ assert.equal(lifecycleWriterExpansion(candidate,previous),true);
+ assert.deepEqual(validateWriterTransition(candidate,previous),on);
+ assert.throws(()=>planDeployment(candidate,f.bundle,f.active),/evidence|rehearsal|fingerprint/i);
+ for(const mutate of [
+  m=>{m.migrationSet.at(-1).checksum=hash('f');},
+  m=>{m.migrationSet.at(-1).id='302_unreviewed';},
+  m=>{m.migrationSet.push({id:'302_unreviewed',checksum:hash('f')});},
+  m=>{m.migrationSet[0].checksum=hash('f');},
+  m=>{m.writerPolicy.imageJobs=false;},
+  m=>{m.supportedWorldSchemaVersions=[6];},
+ ]){const bad=structuredClone(candidate);mutate(bad);assert.throws(()=>validateWriterTransition(bad,previous));}
+ const offPrior={...previous,writerPolicy:off};assert.equal(lifecycleWriterExpansion(candidate,offPrior),false);
+ const changedBoth=structuredClone(previous);changedBoth.migrationSet.push({...lifecycleMigrationIdentity});
+ assert.equal(lifecycleWriterExpansion(candidate,changedBoth),false);
 });
 test('new policy binds complete actual candidate and previous image/launch observations',()=>{
  const f=pair();assertReleaseReady(f.candidate,f.bundle);

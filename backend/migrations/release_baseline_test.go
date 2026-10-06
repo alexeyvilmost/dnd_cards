@@ -49,11 +49,14 @@ func TestSupportedObservedLegacyBaseline(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(first.Applied) != 3 || !first.RollbackReadersSafe {
+	if len(first.Applied) != len(additiveRegistry()) || !first.RollbackReadersSafe {
 		t.Fatal("incomplete expansion or old reader unsafe")
 	}
 	assertHistory()
-	expected := append(append([]string{}, input.Versions...), "298_compact_command_receipts", "299_frozen_combat_catalogs", "300_image_jobs")
+	expected := append([]string{}, input.Versions...)
+	for _, row := range AdditiveMigrationIdentities() {
+		expected = append(expected, row.ID)
+	}
 	sort.Strings(expected)
 	if !reflect.DeepEqual(first.ObservedVersions, expected) {
 		t.Fatal("retired IDs lost or unexpected migration added")

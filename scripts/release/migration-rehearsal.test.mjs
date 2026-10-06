@@ -5,7 +5,7 @@ import {evidenceHash} from './validate-manifest.mjs';
 import {migrationScenarios,retiredObservedMigrationIds,assertExecutableMigrationRegistry} from './migration-transition.mjs';
 const hash=c=>`sha256:${c.repeat(64)}`;
 function fixture(fault,{retired=false}={}){
-  const baseline=[{id:'001',checksum:hash('1')}],added=['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs'].map(id=>({id,checksum:hash('2')}));
+  const baseline=[{id:'001',checksum:hash('1')}],added=['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle'].map(id=>({id,checksum:hash('2')}));
   if(retired)baseline.push(...retiredObservedMigrationIds.map(id=>({id,kind:'observed-id-only',observationHash:hash('8')})));
   const manifest={schemaVersion:1,releaseId:'candidate',releaseCommit:'a'.repeat(40),previousReleaseId:'old',createdAt:'2026-10-04T10:00:00Z',
     components:Object.fromEntries(['backend','frontend','rulesWorker'].map(key=>[key,{sourceCommit:'a'.repeat(40),inputFingerprint:hash('3'),imageDigest:`example.test/${key.toLowerCase()}@${hash('4')}`} ])),

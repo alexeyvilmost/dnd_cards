@@ -17,7 +17,7 @@ vi.mock('../api/client',()=>({classesApi:{getClass:vi.fn(async(id:string)=>({nam
 vi.mock('../api/entityTags',()=>({merchantSettingsApi:{get:vi.fn(async()=>({can_manage:false}))}}));
 vi.mock('../components/RunPartyCamp',()=>({default:()=>null}));
 vi.mock('../components/MerchantSettingsDialog',()=>({default:()=>null}));
-vi.mock('../roguelike/api',()=>({roguelikeApi:{modes:vi.fn(async()=>({id:'urvin',auras:[]})),create:vi.fn(async()=>({id:'new-run'})),listSelection:vi.fn(async()=>({unavailable_source_character_ids:['hero-6'],runs:[
+vi.mock('../roguelike/api',()=>({roguelikeApi:{remove:vi.fn(async()=>undefined),modes:vi.fn(async()=>({id:'urvin',auras:[]})),create:vi.fn(async()=>({id:'new-run'})),listSelection:vi.fn(async()=>({unavailable_source_character_ids:['hero-6'],runs:[
   {id:'party-run',source_character_id:'hero-7',characters:fixtures.characters.slice(0,3),experience:150,encounters_won:2,attempt:1,status:'active',phase:'camp'},
   {id:'solo-run',character:fixtures.characters[3],experience:0,encounters_won:0,attempt:2,status:'defeat',phase:'ended'},
  ]}))}}));
@@ -45,9 +45,8 @@ it('creates a group entirely from presets through one naming dialog',async()=>{
  expect(launch).toBeDefined();expect(launch!.disabled).toBe(false);
  expect(dialog.querySelectorAll('input')).toHaveLength(2);
  await act(async()=>launch!.click());
- expect(characterTemplatesApi.copy).toHaveBeenCalledWith('preset','Мечник');
- expect(characterTemplatesApi.copy).toHaveBeenCalledWith('archer','Лучник');
- expect(roguelikeApi.create).toHaveBeenCalledWith(['copy-preset','copy-archer']);
+ expect(characterTemplatesApi.copy).not.toHaveBeenCalled();
+ expect(roguelikeApi.create).toHaveBeenCalledWith([],{templates:[{template_id:'preset',name:'Мечник'},{template_id:'archer',name:'Лучник'}]});
 });
 it('keeps the six-member limit and submits selected personal characters',async()=>{
  const boxes=[...container.querySelectorAll<HTMLInputElement>('.run-party-selection input')];expect(boxes).toHaveLength(9);
@@ -67,11 +66,21 @@ it('keeps source characters available for additional runs and combines presets w
  await act(async()=>container.querySelector<HTMLButtonElement>('.run-start-footer button')!.click());
  const dialog=container.querySelector('[role="dialog"]')!;expect(dialog.textContent).toContain('Также в группе: Герой 0');
  await act(async()=>dialog.querySelector<HTMLButtonElement>('.roguelike-primary')!.click());
- expect(roguelikeApi.create).toHaveBeenCalledWith(['hero-0','copy-preset']);
+ expect(characterTemplatesApi.copy).not.toHaveBeenCalled();
+ expect(roguelikeApi.create).toHaveBeenCalledWith(['hero-0'],{templates:[{template_id:'preset',name:'Мечник'}]});
 });
 it('puts selection instructions in the shared hover preview rather than the page text',async()=>{
  expect(container.textContent).not.toContain('Выберите от 1 до 6');
  const help=container.querySelector('[aria-label="Как собрать группу"]')!;
  await act(async()=>help.dispatchEvent(new MouseEvent('mouseover',{bubbles:true})));
  expect(document.querySelector('[role="tooltip"]')?.textContent).toContain('Можно сочетать пресеты и своих персонажей');
+});
+
+it('deletes a run after explicit confirmation and removes only that run from the collection',async()=>{
+ const entry=container.querySelector('.roguelike-run-entry')!;
+ await act(async()=>entry.querySelector<HTMLButtonElement>('button')!.click());
+ expect(entry.textContent).toContain('Удалить');
+ const confirm=[...entry.querySelectorAll('button')].find(button=>button.textContent==='Удалить забег')!;
+ await act(async()=>confirm.click());expect(roguelikeApi.remove).toHaveBeenCalledExactlyOnceWith('party-run');
+ expect(container.querySelector('[href="/roguelike/party-run"]')).toBeNull();expect(container.querySelector('[href="/roguelike/solo-run"]')).not.toBeNull();
 });

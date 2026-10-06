@@ -51,6 +51,8 @@
         "scripts/release/rehearsal-scenarios.test.mjs",
         "scripts/release/stdin-utf8.test.mjs",
         "scripts/release/migration-rehearsal.test.mjs",
+        "scripts/release/history-fingerprint.test.mjs",
+        "scripts/content/repair-laughter-targeting-20261007.test.mjs",
         "scripts/security/check-no-known-credentials.test.mjs",
         "scripts/database/storage-report.test.mjs",
         "scripts/testing/suites.test.mjs",
@@ -205,7 +207,12 @@
         "frontend/src/api/legacyImageAttempts.test.ts",
         "frontend/src/components/ImageJobsPanel.test.tsx",
         "frontend/src/components/sheet-actions/SheetActionList.test.tsx",
-        "frontend/src/api/runtimeCards.test.ts"
+        "frontend/src/api/runtimeCards.test.ts",
+        "frontend/src/character/containerCapacity.test.ts",
+        "frontend/src/pages/CharactersForgeList.test.tsx",
+        "frontend/src/pages/HomePage.test.tsx",
+        "frontend/src/pages/PaperSheetEntry.test.tsx",
+        "frontend/src/pages/RoguelikePage.test.tsx"
       ],
       "contract": "Catalog pages, paper autosave, safe image errors and no paid POST retries",
       "network": "mock-transport",
@@ -265,6 +272,7 @@
       "package": ".",
       "prefixes": [
         "TestCharacterTemplate",
+        "TestCharacterLifecycle",
         "TestRuntimeEquipmentCommand",
         "TestCharacterRuntimeCommand",
         "TestCanonicalTransport",

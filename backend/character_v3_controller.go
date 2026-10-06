@@ -448,6 +448,27 @@ func (cc *CharacterV3Controller) GetCharactersV3(c *gin.Context) {
 		for index := range previews {
 			previews[index].AccessMode = characterV3AccessOwner
 		}
+		runIndices := map[uuid.UUID]int{}
+		for index, preview := range previews {
+			if preview.CharacterType == "dungeon_crawl" {
+				runIndices[preview.ID] = index
+			}
+		}
+		if len(runIndices) > 0 {
+			var runs []RoguelikeRun
+			if err := cc.db.Select("id", "character_id", "source_character_id", "party").Where("user_id = ?", userID).Find(&runs).Error; err != nil {
+				c.JSON(500, gin.H{"error": "ошибка получения забегов персонажей"})
+				return
+			}
+			for _, run := range runs {
+				for _, member := range roguelikePartyMembers(&run) {
+					if index, ok := runIndices[member.CharacterID]; ok {
+						id := run.ID
+						previews[index].RoguelikeRunID = &id
+					}
+				}
+			}
+		}
 		c.JSON(http.StatusOK, previews)
 		return
 	}
@@ -695,7 +716,7 @@ func (cc *CharacterV3Controller) UpdateCharacterV3(c *gin.Context) {
 	c.JSON(http.StatusOK, full)
 }
 
-// DeleteCharacterV3 удаляет персонажа V3.
+// DeleteCharacterV3 hides the owned sheet while retaining historical references.
 func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 	userID, ok := requireCharacterV3UserID(c)
 	if !ok {
@@ -708,13 +729,31 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 		return
 	}
 
-	if _, allowed := cc.loadCharacterV3ForAccess(c, characterID, userID, characterV3Write); !allowed {
+	character, allowed := cc.loadCharacterV3ForAccess(c, characterID, userID, characterV3Write)
+	if !allowed {
 		return
 	}
 	txErr := cc.db.Transaction(func(tx *gorm.DB) error {
+		if character.CharacterType == "dungeon_crawl" {
+			removed, err := deleteCharacterRun(tx, characterID, character.UserID)
+			if err != nil || removed {
+				return err
+			}
+		}
+		var encounter *Encounter
+		if character.CurrentEncounterID != nil {
+			var row Encounter
+			err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).First(&row, "id = ?", *character.CurrentEncounterID).Error
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			if err == nil {
+				encounter = &row
+			}
+		}
 		var locked CharacterV3
 		if err := characterV3OwnerScope(tx.Clauses(clause.Locking{Strength: "UPDATE"}), c, userID).
-			Select("id", "user_id", "current_encounter_id").
+			Select("id", "user_id", "current_encounter_id", "character_type").
 			Where("id = ?", characterID).
 			First(&locked).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -722,15 +761,12 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 			}
 			return err
 		}
-		if locked.CurrentEncounterID != nil {
+		if (locked.CurrentEncounterID == nil) != (character.CurrentEncounterID == nil) ||
+			(locked.CurrentEncounterID != nil && *locked.CurrentEncounterID != *character.CurrentEncounterID) {
 			return errCharacterV3InEncounter
 		}
-		if locked.CharacterType == "dungeon_crawl" {
-			return &characterRuntimeCommandError{
-				Status: http.StatusConflict, Code: "roguelike_delete_forbidden",
-				Message:     "персонаж забега удаляется вместе с жизненным циклом забега",
-				CharacterID: locked.ID.String(),
-			}
+		if err := removeDeletedCharacterFromEncounter(tx, encounter, characterID); err != nil {
+			return err
 		}
 		result := characterV3OwnerScope(tx, c, userID).Where("id = ?", characterID).Delete(&CharacterV3{})
 		if result.Error != nil {
@@ -742,7 +778,7 @@ func (cc *CharacterV3Controller) DeleteCharacterV3(c *gin.Context) {
 		return nil
 	})
 	if errors.Is(txErr, errCharacterV3InEncounter) {
-		c.JSON(http.StatusConflict, gin.H{"error": "сначала уберите персонажа из текущего боя"})
+		c.JSON(http.StatusConflict, gin.H{"error": "состояние боя изменилось; повторите удаление персонажа"})
 		return
 	}
 	if errors.Is(txErr, errCharacterV3OwnerChanged) {

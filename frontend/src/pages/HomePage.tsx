@@ -1,4 +1,4 @@
-import { ArrowUpRight, BookOpen, Dices, ScrollText, Users } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Dices, Users } from 'lucide-react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
 import './HomePage.css';
@@ -35,21 +35,17 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <Link to="/paper-sheet" className="home-tile home-tile-paper">
-        <img className="home-tile-art" src="/images/home/paper.jpg" alt="" />
-        <div className="home-tile-shade" /><span className="home-tile-arrow"><ArrowUpRight /></span>
-        <div className="home-tile-content"><span className="home-tile-kicker"><ScrollText size={17} /> ПЕРО, БУМАГА И ВООБРАЖЕНИЕ</span>
-          <h2>Бумажные листы<br />персонажей</h2><p>Привычный лист. Ваш почерк приключения.</p>
-          <span className="home-tile-footnote">Заполняйте · Сохраняйте · Печатайте</span>
-        </div>
-      </Link>
-      <Link to="/characters-forge" className="home-tile home-tile-interactive">
+      <section className="home-tile home-tile-interactive" aria-labelledby="home-characters-title">
         <img className="home-tile-art" src="/images/home/interactive.jpg" alt="" loading="lazy" />
         <div className="home-tile-shade" /><span className="home-tile-arrow"><ArrowUpRight /></span>
         <div className="home-tile-content"><span className="home-tile-kicker"><Users size={17} /> ГЕРОЙ В ДЕТАЛЯХ</span>
-          <h2>Интерактивные листы<br />персонажей</h2><p>Создание героя, способности и снаряжение.<br />Правила помогают — вы решаете.</p>
+          <h2 id="home-characters-title"><Link to="/characters-forge">Персонажи <ArrowUpRight /></Link></h2><p>Интерактивные и бумажные листы,<br />герои забегов и готовые шаблоны.</p>
+          <div className="home-catalog-links">
+            <Link to="/characters-forge">Стандартные</Link><Link to="/characters-forge?tab=paper">Бумажные</Link>
+            <Link to="/characters-forge?tab=runs">Забеги</Link><Link to="/characters-forge?tab=templates">Шаблоны</Link>
+          </div>
         </div>
-      </Link>
+      </section>
       <Link to="/roguelike" className="home-tile home-tile-runs">
         <img className="home-tile-art" src="/images/home/runs.jpg" alt="" loading="lazy" />
         <div className="home-tile-shade" /><span className="home-tile-arrow"><ArrowUpRight /></span>

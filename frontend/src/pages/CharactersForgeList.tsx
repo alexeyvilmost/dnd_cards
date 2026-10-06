@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { withoutLegacyRunSuffix } from '../character/familiarLabels';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, User, Users } from 'lucide-react';
 import { characterV3ErrorMessage, charactersV3Api } from '../character/api';
 import { racesApi, classesApi } from '../api/client';
@@ -12,9 +12,13 @@ import {
 import type { Race, CharacterClass } from '../types';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import CharacterTemplateLibrary from '../components/CharacterTemplateLibrary';
+import PaperSheetEntry from './PaperSheetEntry';
+import {useAuth} from '../contexts/AuthContext';
+import './CharactersRoster.css';
 import './CharacterForge.css';
 
 const CharactersForgeList = () => {
+  const {isAuthenticated} = useAuth();
   const [chars, setChars] = useState<ForgeCharacterPreview[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [classes, setClasses] = useState<CharacterClass[]>([]);
@@ -22,9 +26,15 @@ const CharactersForgeList = () => {
   const [error, setError] = useState<string | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
+  const [params, setParams] = useSearchParams();
+  const tabs = [['standard', 'Стандартные'], ['runs', 'Забеги'], ['paper', 'Бумажные'], ['all', 'Все'], ['templates', 'Шаблоны']] as const;
+  const tab = tabs.some(([key]) => key === params.get('tab')) ? params.get('tab')! : 'standard';
+  const selectTab = (key: string) => {setConfirmId(null); setError(null); setParams(key === 'standard' ? {} : {tab: key});};
+  const visible = chars.filter(c => tab === 'all' || (tab === 'runs' ? c.character_type === 'dungeon_crawl' : c.character_type !== 'dungeon_crawl'));
+  const showCharacters = tab !== 'paper' && tab !== 'templates';
 
   useEffect(() => {
+    if (!isAuthenticated) {setLoading(false); return;}
     (async () => {
       try {
         const [list, rr, cc] = await Promise.all([
@@ -42,7 +52,7 @@ const CharactersForgeList = () => {
         setLoading(false);
       }
     })();
-  }, []);
+  }, [isAuthenticated]);
 
   const raceName = useMemo(() => new Map(races.map((r) => [r.id, r.name])), [races]);
   const className = useMemo(() => new Map(classes.map((c) => [c.id, c.name])), [classes]);
@@ -59,7 +69,7 @@ const CharactersForgeList = () => {
     setBusy(true);
     try {
       await charactersV3Api.remove(id);
-      setChars((prev) => prev.filter((c) => c.id !== id));
+      setChars(await charactersV3Api.listPreviews());
       setConfirmId(null);
     } catch (e) {
       console.error(e);
@@ -77,21 +87,27 @@ const CharactersForgeList = () => {
           <span>ВАША КОЛЛЕКЦИЯ ГЕРОЕВ</span>
           <h1 id="characters-roster-heading">Персонажи</h1>
           <p>Создайте нового героя или продолжите приключение с теми, кто уже в пути.</p>
-          <div className="characters-roster-actions"><Link to="/character-forge" className="forge-btn"><Plus size={17} />Создать персонажа</Link><button type="button" className="forge-btn ghost" onClick={() => setShowTemplates(v => !v)} aria-expanded={showTemplates}>Создать из шаблона</button></div>
+          <div className="characters-roster-actions"><Link to="/character-forge" className="forge-btn"><Plus size={17} />Создать персонажа</Link><button type="button" className="forge-btn ghost" onClick={() => selectTab('templates')}>Создать из шаблона</button><Link to="/combat-lab" className="forge-btn ghost">Тестовый бой</Link></div>
         </section>
-        {showTemplates && <CharacterTemplateLibrary />}
-        {loading && <p className="forge-note">Загрузка…</p>}
-        {error && <p className="issues">{error}</p>}
-        {!loading && !error && chars.length === 0 && (
+        <div className="characters-roster-tabs" role="tablist" aria-label="Категории персонажей">
+          {tabs.map(([key, label], index) => <button key={key} id={`roster-tab-${key}`} type="button" role="tab" aria-selected={tab === key} aria-controls="roster-panel"
+            tabIndex={tab === key ? 0 : -1} className={key === 'templates' ? 'roster-template-tab' : undefined} onClick={() => selectTab(key)}
+            onKeyDown={event => {const next = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index + tabs.length - 1) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : null; if(next === null)return; event.preventDefault(); selectTab(tabs[next][0]); document.getElementById(`roster-tab-${tabs[next][0]}`)?.focus();}}>{label}</button>)}
+        </div>
+        <section id="roster-panel" role="tabpanel" aria-labelledby={`roster-tab-${tab}`}>
+        {tab === 'templates' && <CharacterTemplateLibrary />}
+        {showCharacters && loading && <p className="forge-note" role="status">Загрузка…</p>}
+        {showCharacters && error && <p className="issues" role="alert">{error}</p>}
+        {showCharacters && !loading && !error && visible.length === 0 && (
           <div className="forge-success">
-            <p className="forge-note">Пока нет персонажей.</p>
-            <Link to="/character-forge" className="forge-btn">Создать первого</Link>
+            <p className="forge-note">{tab === 'runs' ? 'Персонажей забегов пока нет.' : 'Пока нет персонажей.'}</p>
+            <Link to={tab === 'runs' ? '/roguelike' : '/character-forge'} className="forge-btn">{tab === 'runs' ? 'Начать забег' : 'Создать первого'}</Link>
           </div>
         )}
-        <div className="forge-grid characters-roster-grid">
-          {chars.map((c) => (
+        {showCharacters && <div className="forge-grid characters-roster-grid">
+          {visible.map((c) => (
             <div key={c.id} className="entity-card forge-char-card">
-              <Link to={`/characters-v3/${c.id}`} className="forge-char-card-link">
+              <Link to={`/characters-v3/${c.id}${c.roguelike_run_id ? `?roguelike=${c.roguelike_run_id}` : ''}`} className="forge-char-card-link">
                 <span className="forge-char-token" aria-hidden>
                   {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.name || '?').slice(0, 1)}
                 </span>
@@ -106,8 +122,9 @@ const CharactersForgeList = () => {
               </Link>
               {!isCharacterReadOnly(c) && (confirmId === c.id ? (
                 <span className="forge-char-card-actions">
+                  {c.roguelike_run_id && <p className="forge-note">Забег и все его игровые листы будут удалены. Исходные персонажи сохранятся.</p>}
                   <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => remove(c.id)}>
-                    Удалить?
+                    {c.roguelike_run_id ? 'Удалить персонажа и забег' : 'Удалить?'}
                   </button>
                   <button type="button" className="forge-btn ghost sheet-roll-btn" disabled={busy} onClick={() => setConfirmId(null)}>
                     Отмена
@@ -125,12 +142,14 @@ const CharactersForgeList = () => {
               ))}
             </div>
           ))}
-        </div>
-        {chars.length > 0 && (
+        </div>}
+        {(tab === 'paper' || tab === 'all') && <PaperSheetEntry embedded />}
+        {showCharacters && visible.length > 0 && (
           <div style={{ textAlign: 'center', marginTop: 24 }}>
             <Link to="/character-forge" className="forge-btn ghost">Новый персонаж</Link>
           </div>
         )}
+        </section>
       </div>
     </div>
   );

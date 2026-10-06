@@ -103,4 +103,17 @@ describe('legacy combat persistence route ownership',()=>{
     await act(async()=>{stale.apply(state(['a']));await stale.persist(state(['a']));await stale.resetStaleCombat();});
     expect(api.patchRuntime).not.toHaveBeenCalled();expect(api.postRuntimeCommand).not.toHaveBeenCalled();expect(setBusy).not.toHaveBeenCalled();expect(setError).not.toHaveBeenCalled();
   });
+
+  it('persists a laboratory party only in the browser, never through character runtime commands',async()=>{
+    options.laboratory=true;await render();const next=state(['a','ally']);const original=options.characterRef.current;
+    await act(async()=>commands.persist(next));
+    expect(api.patchRuntime).not.toHaveBeenCalled();expect(api.postRuntimeCommand).not.toHaveBeenCalled();
+    const saved=JSON.parse(localStorage.getItem('bagofholding:combat-lab:a')!);
+    expect(saved.characters.a.inventory_items).toEqual([{card_id:'declared-item',qty:2}]);
+    expect(saved.characters.ally.current_hp).toBe(9);expect(saved.characters.a.turn_state).not.toHaveProperty('solo_combat_v1');
+    expect(saved.turnState.solo_combat_v1.rng).toEqual({seed:'unchanged',counter:13});
+    expect(original?.turn_state).toEqual({preserved:'unrelated'});
+    await act(async()=>commands.resetStaleCombat());expect(localStorage.getItem('bagofholding:combat-lab:a')).toBeNull();
+    expect(navigate).toHaveBeenCalledExactlyOnceWith('/combat-lab',{replace:true});expect(api.patchRuntime).not.toHaveBeenCalled();
+  });
 });

@@ -2,8 +2,11 @@
 // No cached baseline, skipped table, sampled row, or new digest protocol.
 const id=value=>{if(!/^[a-z_][a-z0-9_]*$/.test(value))throw Error('Unsupported catalog identifier');return `"${value}"`;};
 export function oldColumns(table,baselineIds){
- return table==='roguelike_runs'&&!baselineIds.includes('299_frozen_combat_catalogs')?['combat_catalog_ref']:
- ['roguelike_command_receipts','character_runtime_commands'].includes(table)&&!baselineIds.includes('298_compact_command_receipts')?['response_version','response_payload','response_sha256','response_length']:[];
+ const added=[];
+ if(table==='roguelike_runs'&&!baselineIds.includes('299_frozen_combat_catalogs'))added.push('combat_catalog_ref');
+ if(['roguelike_command_receipts','character_runtime_commands'].includes(table)&&!baselineIds.includes('298_compact_command_receipts'))added.push('response_version','response_payload','response_sha256','response_length');
+ if(['characters_v3','roguelike_runs'].includes(table)&&!baselineIds.includes('301_character_lifecycle'))added.push('deleted_at');
+ return added;
 }
 export function historyQuery(tables,baselineIds,{project=false,parallel=false}={}){
  const branches=tables.map(({name,columns})=>{

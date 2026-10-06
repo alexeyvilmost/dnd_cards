@@ -16,6 +16,7 @@ import {
   refreshSoloCombatParticipants
 } from '../solo-combat/engine';
 import { readSoloCombatState } from '../solo-combat/persistence';
+import {laboratoryCharacter} from '../solo-combat/laboratorySession';
 import { isIncompatibleCombatRulesError } from '../solo-combat/rulesUpgrade';
 import {
   controlledCharacterIds,
@@ -29,6 +30,7 @@ function combatBootstrapError(reason: unknown): string {
   return reason instanceof Error ? reason.message : 'Не удалось начать бой';
 }
 interface SoloCombatBootstrapOptions {
+  laboratory?: boolean;
   id: string | undefined;
   roguelikeRunId: string | null;
   navigate: import('react-router-dom').NavigateFunction;
@@ -49,7 +51,7 @@ interface SoloCombatBootstrapOptions {
 }
 
 /** Loads one route session using the existing canonical builders and saved artifacts. */
-export function useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, requestChoice, initialRequestedRef, initialAlliesRef, characterRef, trustedRunRef, participantCharactersRef, setCharacter, setParticipantCharacters, setOpeningState, setState, setBusy, setStaleRulesSnapshot, setError}: SoloCombatBootstrapOptions) {
+export function useSoloCombatBootstrap({id, laboratory = false, roguelikeRunId, navigate, persist, requestChoice, initialRequestedRef, initialAlliesRef, characterRef, trustedRunRef, participantCharactersRef, setCharacter, setParticipantCharacters, setOpeningState, setState, setBusy, setStaleRulesSnapshot, setError}: SoloCombatBootstrapOptions) {
   useEffect(() => {
     if (!id) return;
     let active = true;
@@ -58,10 +60,11 @@ export function useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, r
     characterRef.current = null; trustedRunRef.current = null; participantCharactersRef.current = {};
     (async () => {
       try {
-        const [loadedCharacter, loadedRun] = await Promise.all([
+        const [sourceCharacter, loadedRun] = await Promise.all([
           charactersV3Api.get(id),
           roguelikeRunId ? roguelikeApi.get(roguelikeRunId) : Promise.resolve(null),
         ]);
+        const loadedCharacter = laboratory ? laboratoryCharacter(sourceCharacter, id) : sourceCharacter;
         if (loadedRun && loadedRun.character_id !== id) {
           throw new Error('Этот лист не участвует в активной встрече забега');
         }
@@ -130,7 +133,7 @@ export function useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, r
           if (!restored) throw new Error('Сохранённый бой не найден. Запустите проверку из листа персонажа.');
           const allyIds = controlledCharacterIds(restored).filter((actorId) => actorId !== loadedCharacter.id);
           const [allyRows, basicResponse] = await Promise.all([
-            Promise.all(allyIds.map((allyId) => charactersV3Api.get(allyId))),
+            Promise.all(allyIds.map(async allyId => {const row = await charactersV3Api.get(allyId); return laboratory ? laboratoryCharacter(row,id) : row;})),
             actionsApi.getActions({ type: 'basic', limit: 100 }),
           ]);
           if (!active) return;
@@ -154,7 +157,7 @@ export function useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, r
         const [monsters, allyCharacters] = await Promise.all([
           pinnedCatalog ? Promise.resolve(pinnedCatalog.monsters)
             : Promise.all(requested.map(({ id: monsterId }) => monstersApi.get(monsterId))),
-          Promise.all((loadedRun ? [] : initialAlliesRef.current).map((allyId) => charactersV3Api.get(allyId))),
+          Promise.all((loadedRun ? [] : initialAlliesRef.current).map(async allyId => {const row = await charactersV3Api.get(allyId); return laboratory ? laboratoryCharacter(row,id) : row;})),
         ]);
         if (allyCharacters.some((ally) => ally.user_id !== loadedCharacter.user_id)) {
           throw new Error('Союзник должен принадлежать тому же пользователю');
@@ -194,7 +197,7 @@ export function useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, r
         initialRequestedRef.current = [];
         initialAlliesRef.current = [];
         navigate(
-          `/characters-v3/${id}/combat${roguelikeRunId ? `?roguelike=${encodeURIComponent(roguelikeRunId)}` : ''}`,
+          laboratory ? `/combat-lab/${id}` : `/characters-v3/${id}/combat${roguelikeRunId ? `?roguelike=${encodeURIComponent(roguelikeRunId)}` : ''}`,
           { replace: true },
         );
       } catch (reason) {
@@ -205,6 +208,6 @@ export function useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, r
       }
     })();
     return () => { active = false; };
-  }, [id, navigate, persist, roguelikeRunId, requestChoice]);
+  }, [id, laboratory, navigate, persist, roguelikeRunId, requestChoice]);
 
 }

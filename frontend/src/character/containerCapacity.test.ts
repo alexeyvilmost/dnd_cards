@@ -16,7 +16,7 @@ describe('source-owned container capacities', () => {
     expect(moveToContainer(restored, 'paper', id, 1, cards)).toBe(restored);
     expect(containerTransferIssue(state, cards, id, 'stone', 1)).toContain('не предназначен');
   });
-  it.each([[6, 0.2], [30, 1]])('checks %slb/%sft³ without replacing unknown measurements with zero', (weight, volume) => {
+  it.each([[6, 0.2], [30, 1]])('checks %slb/%sft³ and counts unspecified external volume as zero', (weight, volume) => {
     const container = { id: 'bag', type: 'container', name: 'Bag', mechanics: { storage_profile: { max_weight_lb: weight, max_volume_cubic_ft: volume } } } as unknown as Card;
     const item = { id: 'item', name: 'Item', weight, mechanics: { physical_profile: { volume_cubic_ft: volume } } } as unknown as Card;
     const cards = new Map([['bag', container], ['item', item]]);
@@ -24,7 +24,17 @@ describe('source-owned container capacities', () => {
     expect(containerTransferIssue(state, cards, 'bag', 'item', 1)).toBeNull();
     expect(containerTransferIssue(state, cards, 'bag', 'item', 2)).toContain('вес');
     const unknown = new Map(cards); unknown.set('item', { ...item, mechanics: null });
-    expect(containerTransferIssue(state, unknown, 'bag', 'item', 1)).toContain('не задан внешний объём');
+    expect(containerTransferIssue(state, unknown, 'bag', 'item', 1)).toBeNull();
     const original = JSON.stringify(state); moveToContainer(state, 'item', 'bag', 2, cards); expect(JSON.stringify(state)).toBe(original);
+  });
+  it.each(['keepsake', 'letter'])('can store %s without either measurement, including after reload', id => {
+    const cards = new Map([
+      ['bag', {id: 'bag', type: 'container', mechanics: {storage_profile: {max_weight_lb: 1, max_volume_cubic_ft: 1}}} as unknown as Card],
+      [id, {id, name: id, weight: null} as unknown as Card],
+    ]);
+    const state = {...equippedFighterState(), inventory: [{cardId: 'bag', qty: 1}, {cardId: id, qty: 2}]};
+    const next = moveToContainer(state, id, 'bag', 1, cards);
+    expect(next).not.toBe(state);
+    expect(containerTransferIssue(JSON.parse(JSON.stringify(next)), cards, 'bag', id, 1)).toBeNull();
   });
 });

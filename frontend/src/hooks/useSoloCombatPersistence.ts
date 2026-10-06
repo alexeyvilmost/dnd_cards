@@ -9,8 +9,10 @@ import { finalizeCombatOutcome } from '../solo-combat/engine';
 import { clearIncompatibleCombatSnapshot } from '../solo-combat/rulesUpgrade';
 import { writeDedicatedCombatTurnState } from '../solo-combat/turnState';
 import { controlledCharacterIds, type SoloCombatState } from '../solo-combat/types';
+import {clearLaboratorySession, saveLaboratorySession} from '../solo-combat/laboratorySession';
 
 interface SoloCombatPersistenceOptions {
+  laboratory?: boolean;
   id: string | undefined;
   roguelikeRunId: string | null;
   characterRef: MutableRefObject<ForgeCharacter | null>;
@@ -24,8 +26,8 @@ interface SoloCombatPersistenceOptions {
 }
 
 /** Owns legacy local saves; canonical serialization, revisions and command IDs stay unchanged. */
-export function useSoloCombatPersistence({id, roguelikeRunId, characterRef, participantCharactersRef, setCharacter, setParticipantCharacters, setState, setBusy, setError, navigate}: SoloCombatPersistenceOptions) {
-  const sessionKey = `${id ?? ''}:${roguelikeRunId ?? ''}`;
+export function useSoloCombatPersistence({id, laboratory = false, roguelikeRunId, characterRef, participantCharactersRef, setCharacter, setParticipantCharacters, setState, setBusy, setError, navigate}: SoloCombatPersistenceOptions) {
+  const sessionKey = `${id ?? ''}:${roguelikeRunId ?? ''}:${laboratory}`;
   const sessionRef = useRef({key: sessionKey, active: true});
   if (sessionRef.current.key !== sessionKey) sessionRef.current = {key: sessionKey, active: true};
   const session = sessionRef.current;
@@ -39,6 +41,12 @@ export function useSoloCombatPersistence({id, roguelikeRunId, characterRef, part
     next = finalizeCombatOutcome(next);
     const currentCharacter = characterRef.current;
     if (!currentCharacter || !id) throw new Error('Лист персонажа не загружен');
+    if (laboratory) {
+      const rows = saveLaboratorySession(id, next, participantCharactersRef.current);
+      participantCharactersRef.current = rows; characterRef.current = rows[id];
+      setParticipantCharacters(rows); setCharacter(rows[id]); setState(next); setBusy(false);
+      return;
+    }
     setBusy(true);
     const actor = next.world.actors[id];
     const participantIds = controlledCharacterIds(next).sort();
@@ -157,9 +165,10 @@ export function useSoloCombatPersistence({id, roguelikeRunId, characterRef, part
     } finally {
       if (ownsSession()) setBusy(false);
     }
-	}, [id, roguelikeRunId, ownsSession]);
+	}, [id, laboratory, roguelikeRunId, ownsSession]);
 
   const resetStaleCombat = useCallback(async () => {
+    if(laboratory && id) {clearLaboratorySession(id); navigate('/combat-lab', {replace:true}); return;}
     if (!ownsSession()) return;
     const current = characterRef.current;
     if (!current || !id) return;
@@ -178,7 +187,7 @@ export function useSoloCombatPersistence({id, roguelikeRunId, characterRef, part
       setError(reason instanceof Error ? reason.message : 'Не удалось сбросить устаревший бой');
       setBusy(false);
     }
-	}, [id, navigate, roguelikeRunId, ownsSession]);
+	}, [id, laboratory, navigate, roguelikeRunId, ownsSession]);
 
   const apply = useCallback((next: SoloCombatState) => {
     if (!ownsSession()) return;

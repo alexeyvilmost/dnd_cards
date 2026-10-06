@@ -12,6 +12,7 @@ import {
 import { effectiveActorSize } from '../solo-combat/tacticalGrid';
 import { isPlayerControlledCombatActor, type SoloCombatState } from '../solo-combat/types';
 import { actorOwnsMountedCombatant } from '../rules-core/generalFeatReactionRuntime';
+import {BATTLE_MAPS, installBattleMap} from '../solo-combat/battleMaps';
 
 export default function CombatSceneConstructor({
   state,
@@ -20,6 +21,7 @@ export default function CombatSceneConstructor({
   onAddCharacter,
   onAddMonster,
   onClose,
+  laboratory = false,
 }: {
   state: SoloCombatState;
   busy: boolean;
@@ -27,6 +29,7 @@ export default function CombatSceneConstructor({
   onAddCharacter: (characterId: string) => Promise<void>;
   onAddMonster: (monsterId: string) => Promise<void>;
   onClose: () => void;
+  laboratory?: boolean;
 }) {
   const [totals, setTotals] = useState<Record<string, number>>({});
   const [addKind, setAddKind] = useState<'character' | 'monster'>('monster');
@@ -36,6 +39,10 @@ export default function CombatSceneConstructor({
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const sceneLocked = busy || adding || Boolean(state.world.pendingResolution || state.pendingD20Interrupt
+    || state.pendingTriggeredAction || state.pendingDeathSave || state.pendingInterception
+    || state.pendingTurnStartGrappleDamage || state.pendingAlertSwapActorIds?.length
+    || state.playerMovement || state.pendingAdditionalMovement || state.pendingMovementStep);
   useEffect(() => {
     setTotals(Object.fromEntries(state.initiative.map((entry) => [entry.actorId, entry.total])));
   }, [state.initiative]);
@@ -64,7 +71,7 @@ export default function CombatSceneConstructor({
     : candidates[0]?.id ?? '';
 
   const addParticipant = async () => {
-    if (!selectedCandidateId || busy || adding) return;
+    if (!selectedCandidateId || sceneLocked) return;
     setAdding(true);
     setAddError(null);
     try {
@@ -84,11 +91,18 @@ export default function CombatSceneConstructor({
       <button type="button" onClick={onClose} aria-label="Закрыть"><X /></button>
     </header>
     <p className="combat-scene-constructor__hint">Добавляйте участников, меняйте порядок хода и восстанавливайте ресурсы без пересоздания сцены.</p>
+    {laboratory && <section className="combat-scene-constructor__add">
+      <label>Карта сцены<select aria-label="Карта сцены" disabled={sceneLocked} value={state.battleMap?.id ?? ''}
+        onChange={event => {try {const index = BATTLE_MAPS.findIndex(map => map.id === event.target.value); const next=installBattleMap(state,index); onApply({...next,boardRevision:state.boardRevision+1}); setAddError(null);} catch(reason) {setAddError(reason instanceof Error ? reason.message : 'Не удалось сменить карту');}}}>
+        <option value="" disabled>Без карты</option>{BATTLE_MAPS.map(map => <option key={map.id} value={map.id}>{map.name}</option>)}
+      </select></label>
+      <p className="combat-scene-constructor__hint">Участники будут расставлены на новой карте. Инициатива, эффекты и ресурсы сохранятся.</p>
+    </section>}
     <section className="combat-scene-constructor__add" aria-label="Добавить участника">
       <h3>Добавить участника</h3>
       <div>
         <label>Тип
-          <select value={addKind} disabled={busy || adding} onChange={(event) => {
+          <select aria-label="Тип участника" value={addKind} disabled={sceneLocked} onChange={(event) => {
             setAddKind(event.target.value as 'character' | 'monster');
             setSelectedId('');
             setAddError(null);
@@ -99,8 +113,9 @@ export default function CombatSceneConstructor({
         </label>
         <label>Участник
           <select
+            aria-label="Участник"
             value={selectedCandidateId}
-            disabled={busy || adding || loadingOptions || !candidates.length}
+            disabled={sceneLocked || loadingOptions || !candidates.length}
             onChange={(event) => setSelectedId(event.target.value)}
           >
             {candidates.length ? candidates.map((candidate) => (
@@ -110,7 +125,7 @@ export default function CombatSceneConstructor({
         </label>
         <button
           type="button"
-          disabled={busy || adding || loadingOptions || !selectedCandidateId}
+          disabled={sceneLocked || loadingOptions || !selectedCandidateId}
           onClick={() => { void addParticipant(); }}
         >
           <Plus size={16} /> {adding ? 'Добавляем…' : 'Добавить в сцену'}
@@ -149,7 +164,7 @@ export default function CombatSceneConstructor({
           {mountCandidates.length > 0 && <label>Скакун
             <select
               aria-label={`Скакун: ${actor.name}`}
-              disabled={busy}
+              disabled={sceneLocked}
               value={state.mountByRiderId?.[actor.id] ?? ''}
               onChange={(event) => onApply(setSoloCombatMount(
                 state, actor.id, event.target.value || null,
@@ -161,10 +176,10 @@ export default function CombatSceneConstructor({
               ))}
             </select>
           </label>}
-          <button type="button" disabled={busy} onClick={() => onApply(refreshSoloCombatResources(state, entry.actorId))}><RefreshCcw size={15} /> Ресурсы</button>
+          <button type="button" disabled={sceneLocked} onClick={() => onApply(refreshSoloCombatResources(state, entry.actorId))}><RefreshCcw size={15} /> Ресурсы</button>
         </article>;
       })}
     </div>
-    <footer><button type="button" disabled={busy} onClick={() => onApply(setSoloCombatInitiativeTotals(state, totals))}><Save size={16} /> Применить инициативу</button></footer>
+    <footer><button type="button" disabled={sceneLocked} onClick={() => onApply(setSoloCombatInitiativeTotals(state, totals))}><Save size={16} /> Применить инициативу</button></footer>
   </aside>;
 }

@@ -510,12 +510,27 @@ func (rc *RoguelikeController) Create(c *gin.Context) {
 		return
 	}
 	var request CreateRoguelikeRunRequest
-	if err := c.ShouldBindJSON(&request); err != nil || (request.SourceCharacterID == uuid.Nil && len(request.SourceCharacterIDs) == 0) {
+	if err := c.ShouldBindJSON(&request); err != nil || (request.SourceCharacterID == uuid.Nil && len(request.SourceCharacterIDs) == 0 && len(request.Templates) == 0) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "выберите персонажа для забега", "code": "source_required"})
 		return
 	}
 	var created *RoguelikeRun
 	err := rc.db.Transaction(func(tx *gorm.DB) error {
+		if len(request.Templates) > 0 {
+			ids := request.SourceCharacterIDs
+			if request.SourceCharacterID != uuid.Nil {
+				if len(ids) > 0 {
+					return roguelikeError(400, "ambiguous_party", "Передайте один способ выбора персонажей")
+				}
+				ids = []uuid.UUID{request.SourceCharacterID}
+			}
+			var err error
+			created, err = createRoguelikePartyWithTemplates(tx, userID, ids, request.Templates)
+			if err == nil {
+				err = configureRoguelikeMode(tx, created, request)
+			}
+			return err
+		}
 		if len(request.SourceCharacterIDs) > 0 {
 			if request.SourceCharacterID != uuid.Nil {
 				return roguelikeError(400, "ambiguous_party", "Передайте один способ выбора персонажей")

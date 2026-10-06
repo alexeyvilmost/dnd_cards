@@ -106,7 +106,7 @@ export type ForgeCharacterPreview = Pick<
   | 'current_hp'
   | 'current_encounter_id'
   | 'access_mode'
->;
+> & {roguelike_run_id?: string};
 
 export function isCharacterReadOnly(
   character: Pick<ForgeCharacter, 'access_mode'>,
