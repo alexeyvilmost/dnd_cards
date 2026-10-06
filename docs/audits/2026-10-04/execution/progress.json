@@ -2707,7 +2707,7 @@
     "nativeHashIntegrated": false,
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
-  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
+  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-20-writer-policy-repair.json",
   "latest_paired_batch_measurement": {
     "status": "paired-local-measurement-passed-not-enabled",
     "evidence": "docs/audits/2026-10-04/execution/CI-17-browser-boundary.json",
@@ -2779,5 +2779,11 @@
     },
     "reportHash": "sha256:f62fed5bd90b94a90f8ac4cae2705bed1dcb80e460dd4dbf723d687d50130152",
     "decision": "Keep batch OFF. Group one median +0.93%, p95 +2.76%; group six median -1.15%, p95 +23.91%. Larger local UI series still does not establish a stable gain; earlier API gain is a narrower result."
+  },
+  "latest_writer_policy_repair": {
+    "status": "local-repair-verified-new-exact-ci-required",
+    "evidence": "docs/audits/2026-10-04/execution/CI-20-writer-policy-repair.json",
+    "productionUnchanged": true,
+    "nextExactCiRequired": true
   }
 }

@@ -135,7 +135,9 @@ export async function compactCommandIO(adapter,accounts,binding,{rollInfluences}
  const verified=new Set();
  return {
   execution:'docker',assertOwned:()=>adapter.assertOwned(),
-  start:(role,policy)=>{assert.equal(policy.imageJobs,false);assert.equal(policy.frozenCatalogs,false);return adapter.start({role,compactReceipts:policy.compactReceipts,releaseId:binding[role].identities.backend.releaseId});},
+  // Compact operations run with image jobs OFF, but the probe must restore the
+  // complete candidate policy before its final authoritative observation.
+  start:(role,policy)=>{assert.equal(policy.frozenCatalogs,false);return adapter.start({role,compactReceipts:policy.compactReceipts,imageJobs:policy.imageJobs,frozenCatalogs:policy.frozenCatalogs,releaseId:binding[role].identities.backend.releaseId});},
   stop:()=>adapter.stopApplications(),observe:()=>adapter.observe(),workerCalls:()=>adapter.workerCalls(),
   fixtures:async()=>{await login();return [await battle(),await equipment()];},
   request:async f=>{

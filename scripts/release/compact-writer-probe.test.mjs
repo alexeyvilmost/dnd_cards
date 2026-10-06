@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {gzipSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
 import {probeCompactReceipts} from './compact-writer-probe.mjs';
+import {compactCommandIO} from './compact-command-fixtures.mjs';
 import {validateWriterTrace,writerTraceBinding} from './writer-traces.mjs';
 import {writerEnvironment} from './writer-environment.mjs';
 import {pair,off} from './writer-policy-unit-fixture.mjs';
@@ -41,6 +42,21 @@ test('compact driver executes both raw codecs, restarts, rollback, v1 writes, si
 });
 test('probe restores requested OFF policy even though disposable format production deliberately enabled v2',async()=>{
   const f=simulation();f.binding.writerPolicy=off;await probeCompactReceipts(f.binding,f.io);assert.deepEqual(f.policy(),off);
+});
+for(const failed of [false,true])test(`canonical compact command adapter restores combined candidate policy after ${failed?'a refused command':'all receipt checks'}`,async()=>{
+ const f=simulation();f.binding.writerPolicy={compactReceipts:true,imageJobs:true,frozenCatalogs:false};
+ const launches=[],originalStart=f.io.start;
+ const canonical=await compactCommandIO({start:async options=>{launches.push(structuredClone(options));return originalStart(options.role,{compactReceipts:options.compactReceipts,imageJobs:options.imageJobs,frozenCatalogs:options.frozenCatalogs});}}, {}, f.binding,{rollInfluences:[{id:'unit-placeholder'}]});
+ f.io.start=canonical.start;
+ if(failed){f.io.request=async()=>({status:409,body:{code:'revision_conflict'}});await assert.rejects(probeCompactReceipts(f.binding,f.io),/stage=initial-write/);}
+ else await probeCompactReceipts(f.binding,f.io);
+ assert.deepEqual(f.policy(),f.binding.writerPolicy);
+ assert.ok(launches.slice(0,-1).every(row=>row.imageJobs===false&&row.frozenCatalogs===false));
+ assert.deepEqual(launches.at(-1),{role:'candidate',compactReceipts:true,imageJobs:true,frozenCatalogs:false,releaseId:f.binding.candidate.identities.backend.releaseId});
+});
+test('canonical compact adapter still refuses frozen catalogs before starting applications',async()=>{
+ let starts=0;const f=simulation(),io=await compactCommandIO({start:async()=>{starts++;}}, {}, f.binding,{rollInfluences:[{id:'unit-placeholder'}]});
+ assert.throws(()=>io.start('candidate',{compactReceipts:true,imageJobs:true,frozenCatalogs:true}));assert.equal(starts,0);
 });
 for(const [name,fault] of [
   ['accepted retry differs',(io,state)=>{const real=io.request;let n=0;io.request=async f=>{const r=await real(f);if(++n===2)r.body.forged=true;return r;};}],
