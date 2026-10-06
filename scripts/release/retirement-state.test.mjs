@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,rmSync,readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
-import {databaseStateFromRetirementInspection,stateWithDatabase,migrationTransition,databaseMigrationSet} from './migration-transition.mjs';
+import {databaseStateFromRetirementInspection,stateWithDatabase,migrationTransition,databaseMigrationSet,requiresOldReaders} from './migration-transition.mjs';
 import {validateActive,createDeploymentStore} from './deploy-state.mjs';
 import {validatePublicActive} from './active-projection.mjs';
 import {assertRetirementInspectionResult,retirementMigrationId} from './retirement-state.mjs';
@@ -50,4 +50,11 @@ test('nested persisted private fields and an additive disguise fail before proje
 test('later normal gameplay may make old readers unsafe without falsifying the retained structural observation',()=>{
  const f=ready();f.inspection.result.rollbackReadersSafe=false;assert.equal(assertRetirementInspectionResult(f.database,f.inspection).rollbackReadersSafe,false);
  const bad=structuredClone(f.inspection);bad.result.schemaProofHash=h('a');assert.throws(()=>assertRetirementInspectionResult(f.database,bad));
+});
+test('installed retirement does not classify the complete ordinary application registry as an old-format reader',()=>{
+ const f=ready();assert.equal(requiresOldReaders(f.retired),false);
+ const complete=structuredClone(f.retired);complete.manifest.migrationSet=databaseMigrationSet(complete);assert.equal(requiresOldReaders(complete),false);
+ for(const omitted of ['298_compact_command_receipts','300_image_jobs']){
+  const old=structuredClone(f.retired);old.manifest.migrationSet=old.manifest.migrationSet.filter(row=>row.id!==omitted);assert.equal(requiresOldReaders(old),true);
+ }
 });

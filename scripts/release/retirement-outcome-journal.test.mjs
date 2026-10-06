@@ -23,6 +23,11 @@ test('receipt recording is serialized, retains application instances and complet
  const before=readFileSync(path.join(f.root,'active.json'));f.execution.result.applied=[];
  assert.equal((await recordRetirementExecutionOutcome(f.args())).repeated,true);assert.deepEqual(readFileSync(path.join(f.root,'active.json')),before);assert.equal(f.observations.length,2);
 });
+test('a complete ordinary application can finish retirement observation after current-format writes appear',async t=>{
+ const f=fixture(t),observe=f.observe;f.execution.result.inspection.rollbackReadersSafe=false;
+ f.observe=async state=>{const result=await observe(state);result.database.oldReadersSafe=false;return result;};
+ const result=await recordRetirementExecutionOutcome(f.args());assert.equal(result.status,'succeeded');assert.equal(f.store.active().database.migrationSet.length,f.active.database.migrationSet.length+1);
+});
 test('failed live verification keeps a pending receipt, blocking ordinary deployment and requiring read-only reconciliation',async t=>{
  const f=fixture(t),observe=f.observe;f.observe=async()=>{throw Error('unavailable');};await assert.rejects(recordRetirementExecutionOutcome(f.args()));
  assert.equal(f.store.operation(f.request.releaseId).status,'recovery_required');assert.deepEqual(f.store.active(),f.active);

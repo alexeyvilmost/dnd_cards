@@ -7,7 +7,7 @@ import {databaseStateFromRetirementExecution,stateWithDatabase,databaseMigration
 
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const kind='character-retirement-observation-301';
-function validateOperation(operation){
+export function validateRetirementOutcomeJournal(operation){
   if(operation?.schemaVersion!==1||operation.kind!==kind||!['retirement_observed','recovery_required','succeeded'].includes(operation.status)
     ||!same(Object.keys(operation).sort(),['schemaVersion','kind','releaseId','status','previous','desired','transitionHash','createdAt','updatedAt'].sort()))throw Error('Exact retirement observation journal required');
   validateActive(operation.previous);validateActive(operation.desired);
@@ -23,7 +23,7 @@ function validateOperation(operation){
   return operation;
 }
 async function finish({store,operation,observe}){
-  validateOperation(operation);
+  validateRetirementOutcomeJournal(operation);
   const active=store.active();
   if(operation.status==='succeeded'&&!same(active,operation.desired))throw Error('Completed retirement observation is stale relative to the active release');
   if(!same(active,operation.previous)&&!same(active,operation.desired))throw Error('Retirement observation is stale relative to the active release');
@@ -45,7 +45,7 @@ export async function recordRetirementExecutionOutcome({store,executorManifest,a
   try{
     const active=store.active(),existing=store.operation(request.releaseId);
     if(existing){
-      validateOperation(existing);
+      validateRetirementOutcomeJournal(existing);
       const database=databaseStateFromRetirementExecution({active:existing.previous,executorManifest,approvalHash,request},receipt);
       if(!same(database,existing.desired.database))throw Error('Another retirement outcome cannot replace the journal');
       return await finish({store,operation:existing,observe});
@@ -53,7 +53,7 @@ export async function recordRetirementExecutionOutcome({store,executorManifest,a
     if(store.pending().length)throw Error('Another operation requires reconciliation');
     const database=databaseStateFromRetirementExecution({active,executorManifest,approvalHash,request},receipt);
     const now=new Date().toISOString(),desired=stateWithDatabase(active,database),operation={schemaVersion:1,kind,releaseId:request.releaseId,status:'retirement_observed',previous:active,desired,transitionHash:evidenceHash({previous:active,desired}),createdAt:now,updatedAt:now};
-    validateOperation(operation);store.writeOperation(operation);
+    validateRetirementOutcomeJournal(operation);store.writeOperation(operation);
     return await finish({store,operation,observe});
   }finally{unlock();}
 }

@@ -81,4 +81,15 @@ export function databaseStateFromRetirementExecution(args,receipt){
   const observed=retirementInspectionFromExecution(args.request,receipt);
   return databaseStateFromRetirementInspection({...args,request:observed.request},observed.inspection);
 }
-export function requiresOldReaders(active){return isLegacyBaseline(active)?Boolean(active.database):!equal(databaseMigrationSet(active),active.manifest.migrationSet);}
+export function requiresOldReaders(active){
+  if(isLegacyBaseline(active))return Boolean(active.database);
+  if(active.database?.status==='verified-character-retirement'){
+    const database=validateRetirementDatabaseState(active);
+    // Retirement is not an unconsumed additive expansion. An application that
+    // already declares all ordinary migrations may use their current formats;
+    // the separate retirement observation still retains its full 301 identity.
+    const declared=active.manifest.migrationSet.filter(row=>row.id!==characterRetirementMigrationId);
+    return !equal(database.baselineMigrationSet,declared);
+  }
+  return !equal(databaseMigrationSet(active),active.manifest.migrationSet);
+}

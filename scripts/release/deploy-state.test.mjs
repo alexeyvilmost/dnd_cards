@@ -84,6 +84,12 @@ test('ordinary release after retirement preserves recorded database state and re
  assert.equal(result.status,'succeeded');assert.equal(result.plan.migrationMode,'no-schema-change');assert.deepEqual(s.store.active().database,before);assert(!s.calls.includes('migrate'));
  assert.equal((await deploy(s)).repeated,true);assert.deepEqual(s.store.active().database,before);
 });
+test('ordinary release after retirement can retain current-format gameplay and pending image jobs',async t=>{
+ const s=retiredScenario(t),before=structuredClone(s.active.database);
+ const live=s.getLive();live.database.oldReadersSafe=false;s.setLive(live);
+ const result=await deploy(s);assert.equal(result.status,'succeeded');assert.deepEqual(s.store.active().database,before);assert(!s.calls.includes('migrate'));
+ assert.equal((await deploy(s)).repeated,true);assert.deepEqual(s.store.active().database,before);
+});
 test('application rollback and lost acknowledgement after retirement preserve the exact observed database state',async t=>{
  const s=retiredScenario(t,['backend','frontend']),before=structuredClone(s.active.database),replace=s.adapter.replace;
  s.adapter.replace=async(...args)=>{await replace(...args);if(args[0]==='frontend'&&args[1].manifest.releaseId==='next')throw Error('candidate health failure');};

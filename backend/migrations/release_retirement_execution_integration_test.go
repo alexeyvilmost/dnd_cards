@@ -110,7 +110,7 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 			if name == "different-additive-proof" {
 				request.ExpectedAdditiveSchemaProofHash = "sha256:" + strings.Repeat("d", 64)
 			}
-			const snapshot = `SELECT jsonb_build_object('ledger',(SELECT jsonb_agg(to_jsonb(t) ORDER BY version) FROM schema_migrations t),'inventories',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM inventories t),'items',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM inventory_items t),'v3',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM characters_v3 t))::text`
+			const snapshot = `SELECT jsonb_build_object('ledger',(SELECT jsonb_agg(to_jsonb(t) ORDER BY version) FROM schema_migrations t),'inventories',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM inventories t),'items',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM inventory_items t),'v3',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM characters_v3 t),'runCommands',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM roguelike_command_receipts t),'characterCommands',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM character_runtime_commands t))::text`
 			var before, after string
 			if err := db.QueryRow(snapshot).Scan(&before); err != nil {
 				t.Fatal(err)
@@ -157,6 +157,26 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 			third, err := m.RunReleaseRetirement(context.Background(), request)
 			if err != nil || len(third.Applied) != 0 || !reflect.DeepEqual(first.Inspection, third.Inspection) {
 				t.Fatal("gameplay broke read-only repeat", err)
+			}
+			// Layout-only fixtures for the old-reader predicate, not codec replay
+			// evidence. Both command stores can require the current reader after
+			// retirement without changing its accepted structural proof.
+			for _, table := range []string{"roguelike_command_receipts", "character_runtime_commands"} {
+				if _, err = db.Exec("INSERT INTO " + table + "(id,response,response_version,response_payload,response_sha256,response_length) VALUES(2,'{}',2,'x',repeat('a',64),1)"); err != nil {
+					t.Fatal(err)
+				}
+				if err = db.QueryRow(snapshot).Scan(&before); err != nil {
+					t.Fatal(err)
+				}
+				expected := first.Inspection
+				expected.RollbackReadersSafe = false
+				current, err := m.RunReleaseRetirement(context.Background(), request)
+				if err != nil || len(current.Applied) != 0 || !reflect.DeepEqual(current.Inspection, expected) || !reflect.DeepEqual(current.Request, first.Request) {
+					t.Fatal("current-reader requirement changed the accepted retirement proof", err)
+				}
+				if err = db.QueryRow(snapshot).Scan(&after); err != nil || after != before {
+					t.Fatal("read-only reconciliation changed current-format fixtures")
+				}
 			}
 			changed := request
 			changed.Retirement.BackupHash = "sha256:" + strings.Repeat("d", 64)
