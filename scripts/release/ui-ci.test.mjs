@@ -3,8 +3,11 @@ import {loadPublishedUIPlanning} from './ui-ci.mjs';import {prepareDispatchedBui
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';import {assembleCandidateManifest} from './ci-release.mjs';
 import {createUIProofProjection} from './ui-proof-projection.mjs';import {runtimeCompatibilityHash} from './ui-release-policy.mjs';import {safeExecutionEnvironment} from './ui-execution-profile.mjs';
 import {evidenceHash} from './validate-manifest.mjs';import {fixture,recordsFor,publishedFor} from './ui-planning-unit-fixture.mjs';import {uiFixture} from './ui-release-unit-fixture.mjs';
-async function setup(t){
- const f=fixture(t),first=f.plan(f.candidate),manifest=assembleCandidateManifest(first,recordsFor(first),publishedFor(first)).manifest,repository='fixture/project';
+import {catalogTests} from '../testing/suites.mjs';import {suiteWorkload} from '../testing/workload.mjs';
+async function setup(t,{suiteManifest={groups:[],legacy_manual:[]},files={}}={}){
+ const f=fixture(t);mkdirSync(path.join(f.repo,'tests'));writeFileSync(path.join(f.repo,'tests/suites.json'),JSON.stringify(suiteManifest));
+ for(const [file,text] of Object.entries(files)){mkdirSync(path.dirname(path.join(f.repo,file)),{recursive:true});writeFileSync(path.join(f.repo,file),text);}
+ const first=f.plan(f.commit()),manifest=assembleCandidateManifest(first,recordsFor(first),publishedFor(first)).manifest,repository='fixture/project';
  const raw={id:71,run_attempt:2,path:'.github/workflows/deploy.yml',head_sha:'c'.repeat(40),head_branch:'main',event:'workflow_run',status:'completed',conclusion:'success',repository:{full_name:repository},head_repository:{full_name:repository}};
  const job={id:711,run_id:71,run_attempt:2,head_sha:raw.head_sha,name:'deploy',status:'completed',conclusion:'success',started_at:'2026-01-01T00:00:00Z',completed_at:'2026-01-01T00:10:00Z'};
  const artifact={id:712,name:'deployed-release',expired:false,size_in_bytes:2048,created_at:'2026-01-01T00:09:00Z',expires_at:'2099-01-01T00:00:00Z',workflow_run:{id:71,head_sha:raw.head_sha}};
@@ -23,6 +26,20 @@ test('downloaded planning binds exact latest deployed attempt, source, profile a
  const f=await setup(t);mkdirSync(path.join(f.repo,'frontend/src/components'));writeFileSync(path.join(f.repo,'frontend/src/components/Button.tsx'),'export const Button=()=>null;');writeFileSync(path.join(f.repo,'frontend/src/components/Button.test.tsx'),'// canonical adjacent corpus');f.commit();
  const planning=await loadPublishedUIPlanning(f.options());assert.equal(planning.eligibility.kind,'frontend-only');assert.deepEqual(planning.executionProfile,f.projection.executionProfile);assert.equal(planning.input.baselineBinding.artifactId,712);assert.equal(planning.input.baselineBinding.runAttempt,2);
  f.raw.run_attempt++;f.job.run_attempt++;await assert.rejects(loadPublishedUIPlanning(f.options()),/changed while downloading/);
+});
+
+test('planning and mandatory workload share TS/TSX inventory and exclude explicit manual tests',async t=>{
+ const manifest={groups:[],legacy_manual:[{id:'manual-diagnostic',patterns:['frontend/src/components/Old.test.tsx'],reason:'Explicit manual-only diagnostic',runner:'vitest'}]};
+ const f=await setup(t,{suiteManifest:manifest,files:{'frontend/src/components/Calculation.test.ts':'// current TS test','frontend/src/components/Old.test.tsx':'// explicitly manual diagnostic'}}),directory=path.join(f.repo,'frontend/src/components');
+ for(const [file,text] of Object.entries({'Button.tsx':'export const Button=()=>null;','Button.test.tsx':'// current presentation test'}))writeFileSync(path.join(directory,file),text);f.commit();
+ const planning=await loadPublishedUIPlanning(f.options());assert.equal(planning.eligibility.kind,'frontend-only');
+ assert.deepEqual(planning.input.testCatalog,['frontend/src/components/Button.test.tsx','frontend/src/components/Calculation.test.ts']);
+ const workload=suiteWorkload({selection:uiFixture().selectionGroups,catalog:catalogTests(manifest,f.repo),manifest,suite:'core',frontendPlanning:planning});
+ assert.deepEqual(workload.vitestFiles,['frontend/src/components/Button.test.tsx']);
+ const incomplete={...planning.input,testCatalog:['frontend/src/components/Button.test.tsx']};
+ // A mismatched catalog remains a refusal; do not widen eligibility silently.
+ const {classifyReleaseVerification}=await import('./ui-release-policy.mjs');
+ assert.throws(()=>suiteWorkload({selection:uiFixture().selectionGroups,catalog:catalogTests(manifest,f.repo),manifest,suite:'core',frontendPlanning:{input:incomplete,eligibility:classifyReleaseVerification(incomplete)}}),/mandatory catalog/);
 });
 test('missing anchor requires full path but provided malformed or substituted evidence is rejected',async t=>{
  const f=await setup(t),file=path.join(f.baselineDirectory,'frontend-proof-anchor.json');rmSync(file);

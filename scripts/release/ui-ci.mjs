@@ -6,6 +6,7 @@ import {execFileSync} from 'node:child_process';import path from 'node:path';imp
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';import {verifyBaseline} from './ci-release.mjs';
 import {prepareFrontendVerification} from './ui-release-planning.mjs';import {assertUIProofProjection} from './ui-proof-projection.mjs';
 import {components,inventory,ignorePolicy} from './measure-local.mjs';import {evidenceHash} from './validate-manifest.mjs';
+import {catalogTests} from '../testing/suites.mjs';
 const read=file=>JSON.parse(readFileSync(file,'utf8'));
 const save=(file,value)=>{mkdirSync(path.dirname(file),{recursive:true});writeFileSync(file,JSON.stringify(value,null,2)+'\n',{flag:'wx'});};
 export function githubReader(repository,token){
@@ -30,7 +31,8 @@ export async function loadPublishedUIPlanning({get,repository,run,baselineDirect
   // Exact current Docker input inventory is a conservative superset of the
   // actual compiler graph. It may widen, never narrow, worker impact checks.
   const workerInputs={sourceCommit:candidate,artifactHash:manifest.rulesArtifactHash,paths:rows.map(row=>path.posix.join(worker.context==='.'?'':worker.context,row.path)).sort()};
-  const testCatalog=execFileSync('git',['ls-files','frontend/src/*.test.tsx','frontend/src/**/*.test.tsx'],{cwd:repo,encoding:'utf8'}).trim().split(/\r?\n/).filter(Boolean);
+  const suiteManifest=read(path.join(repo,'tests/suites.json'));
+  const testCatalog=catalogTests(suiteManifest,repo).filter(row=>row.runner==='vitest'&&row.tier!=='legacy-manual').map(row=>row.file);
   const planning=prepareFrontendVerification({repo,candidate,repository,config,baseline,baselineFile:path.join(baselineDirectory,'manifest.json'),
     fullAnchor:projection.originalAnchor,previousDomain:projection.domain,candidateDomain:projection.domain,workerInputs,testCatalog});
   return {...planning,executionProfile:projection.executionProfile};

@@ -25,7 +25,7 @@
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "f05 application deployed by025 control after exact CI26, publication15 and all nine host gates; independent health/migrations/writers ON/ON/OFF accepted. Frontend selective enabled, actual selective and automatic/reconcile acceptance pending."
+    "production_enablement_status": "fed0195f application/control deployed after exact CI28, publication16 and all nine host gates; independent health, 305 migrations and writer ON/ON/OFF verified. Actual frontend selective CI29 refused at catalog comparison; local shared-catalog fix passed36. Automatic delivery remains OFF."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -3541,61 +3541,197 @@
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
     "schemaVersion": 1,
-    "kind": "exact-ci26-publication15-full-host-delivery",
+    "kind": "exact-ci28-publication16-full-host-delivery",
     "status": "deployed-and-independently-verified",
-    "recordedAt": "2026-10-06T16:25:07.580Z",
-    "applicationSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
-    "deploymentControlCommit": "02541c07a08ac5559e93401393cc5ba4cf936edf",
-    "releaseId": "candidate-f05abed68215-847b49a2fabc",
+    "recordedAt": "2026-10-06T18:19:58.741Z",
+    "applicationSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
+    "deploymentControlCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
+    "releaseId": "candidate-fed0195f3f05-1a608a4b3dd4",
     "ci": {
-      "id": 37438145505,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37438145505",
-      "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+      "id": 37499864791,
       "status": "passed",
-      "durationMs": 747027,
-      "reportHash": "sha256:864643f02386ddcccfb846c169a7d287f3c17f2fbc22fba83b391bf67cfcf66a",
-      "sourceSnapshot": {
-        "sha256": "3a142b2b531d5cb470369e02d303621a0547192b81a8c9171dd5d463deec8c5d",
-        "files": 4538
-      },
+      "reportHash": "sha256:7b659f3d1ef21402f488f74d66d027c11c54b79c326c532965c5cf5e599c90c7",
       "counts": [
         {
+          "id": "source-hygiene",
+          "status": "passed"
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed"
+        },
+        {
           "id": "worker-and-database-node",
+          "status": "passed",
           "tests": 25,
           "passed": 25,
           "skipped": 0
         },
         {
+          "id": "backend-compile",
+          "status": "passed"
+        },
+        {
+          "id": "go-backend",
+          "status": "passed",
+          "required": 409
+        },
+        {
+          "id": "go-animationpresentation",
+          "status": "passed",
+          "required": 4
+        },
+        {
+          "id": "go-audiopresentation",
+          "status": "passed",
+          "required": 3
+        },
+        {
+          "id": "go-charactertemplates",
+          "status": "passed"
+        },
+        {
+          "id": "go-itemsource",
+          "status": "passed",
+          "required": 5
+        },
+        {
+          "id": "go-itemsource-cmd-audit",
+          "status": "passed"
+        },
+        {
+          "id": "go-migrations",
+          "status": "passed",
+          "required": 333
+        },
+        {
+          "id": "go-passivepresentation",
+          "status": "passed"
+        },
+        {
+          "id": "go-roguelikecontent",
+          "status": "passed",
+          "required": 1
+        },
+        {
+          "id": "go-weapondata",
+          "status": "passed",
+          "required": 1
+        },
+        {
+          "id": "source-stability",
+          "status": "passed"
+        },
+        {
+          "id": "reference-cursor-transport",
+          "status": "passed"
+        },
+        {
+          "id": "process-crash-recovery",
+          "status": "passed"
+        },
+        {
+          "id": "supported-upgrade-baselines",
+          "status": "passed"
+        },
+        {
           "id": "observed-legacy-baseline",
+          "status": "passed",
           "tests": 1
         },
         {
+          "id": "candidate-rehearsal-api",
+          "status": "passed"
+        },
+        {
+          "id": "catalog-equivalence",
+          "status": "passed",
+          "required": 4
+        },
+        {
+          "id": "preparation-cache-equivalence",
+          "status": "passed",
+          "required": 9
+        },
+        {
+          "id": "worker-wire-mirror-equivalence",
+          "status": "passed"
+        },
+        {
+          "id": "equipment-authority-flow",
+          "status": "passed"
+        },
+        {
+          "id": "initiative-options-flow",
+          "status": "passed"
+        },
+        {
+          "id": "library-review-pages",
+          "status": "passed"
+        },
+        {
+          "id": "equipment-runtime-browser",
+          "status": "passed"
+        },
+        {
+          "id": "pwa-offline-shell",
+          "status": "passed"
+        },
+        {
+          "id": "urvin-owned-journey",
+          "status": "passed"
+        },
+        {
+          "id": "solo-durable-continuations",
+          "status": "passed",
+          "required": {
+            "required": 1,
+            "passed": 1
+          }
+        },
+        {
+          "id": "image-egress-isolation",
+          "status": "passed",
+          "required": {
+            "required": 1,
+            "passed": 1
+          }
+        },
+        {
           "id": "browser-ui-fixtures-production",
+          "status": "passed",
           "tests": 48,
           "passed": 48,
           "skipped": 0
         },
         {
           "id": "browser-ui-fixtures-battle3d",
+          "status": "passed",
           "tests": 8,
           "passed": 8,
           "skipped": 0
         },
         {
+          "id": "local-api-spine",
+          "status": "passed"
+        },
+        {
           "id": "local-browser-flows",
+          "status": "passed",
           "tests": 12,
           "passed": 12,
           "skipped": 0
         },
         {
           "id": "node-contracts",
-          "tests": 980,
-          "passed": 980,
+          "status": "passed",
+          "tests": 1000,
+          "passed": 1000,
           "skipped": 0
         },
         {
           "id": "vitest",
+          "status": "passed",
           "tests": 6462,
           "passed": 6462,
           "skipped": 0
@@ -3607,181 +3743,150 @@
       }
     },
     "publication": {
-      "id": 37440361187,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37440361187",
+      "id": 37501858656,
       "status": "success",
-      "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
-      "components": {
-        "backend": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:18df7b7d8b25e59c2dcaeb5bea7d9a893543958b5abce0096fcfd7a14c0243e4",
-          "releaseId": "candidate-f05abed68215-847b49a2fabc",
-          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
-        },
-        "frontend": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:576def7922b9fff7643a5f42fe01814204afdf9b8247de3097aaed11363fd70a",
-          "releaseId": "candidate-f05abed68215-847b49a2fabc",
-          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
-        },
-        "rulesWorker": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:44854500e2afb3a1c3721410cf59f7b121b949efbd37c2f6f1a20a9085d52a2f",
-          "releaseId": "candidate-f05abed68215-847b49a2fabc",
-          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
-        }
-      }
+      "manifestHash": "sha256:e8bef3e5e5710aeaccc616f7a1acc91816e4e21a1cea30d0ee766276b916ce45"
     },
     "deployment": {
-      "id": 37486931185,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37486931185",
-      "status": "completed",
-      "conclusion": "success"
+      "id": 37503339667,
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37503339667",
+      "status": "success",
+      "completedAt": "2026-10-06T18:04:58Z"
     },
-    "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
-    "independentVerification": {
-      "sha256": "sha256:d9fd57af746d4a5c69b7158925fd1342a053f16b8de4feb0b3378308d06ac0a0",
-      "verifiedAt": "2026-10-06T16:09:56.574Z",
-      "healthyComponents": [
-        "backend",
-        "frontend",
-        "rulesWorker"
-      ],
-      "edgeRoutes": [
-        {
-          "path": "/",
-          "status": 200
-        },
-        {
-          "path": "/api/health",
-          "status": 200
-        },
-        {
-          "path": "/build-info.json",
-          "status": 200
-        }
-      ],
-      "migrationCount": 305
-    },
-    "previousProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
-    "previousProductionVersionRecord": "/opt/bagofholding/backups/version-before-f05-2026-10-06T14-42-38.944Z.json",
     "backup": {
       "schemaVersion": 1,
       "status": "fresh-backup-captured",
-      "observedAt": "2026-10-06T15:30:49.201Z",
-      "createdAt": "2026-10-06T15:27:20.030Z",
-      "backupDirectory": "/opt/bagofholding/backups/capture-37486931185-1",
+      "observedAt": "2026-10-06T17:30:04.214Z",
+      "createdAt": "2026-10-06T17:26:32.383Z",
+      "backupDirectory": "/opt/bagofholding/backups/capture-37503339667-1",
       "databaseDump": {
-        "path": "/opt/bagofholding/backups/capture-37486931185-1/database.dump",
+        "path": "/opt/bagofholding/backups/capture-37503339667-1/database.dump",
         "bytes": 974883784,
-        "sha256": "sha256:2172ab61600cd1ef70194b7d46a590fbf3346a129b0ac901a94063941e791931"
+        "sha256": "sha256:aab2b138e896e8b8685e1f794412d36b0d276f64f6dfbebdd479ed23afe5ed9f",
+        "independentlyRehashed": true
       },
       "files": 44,
-      "totalBytes": 1045942501,
-      "previousSourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
-      "previousReleaseId": "candidate-93265633db10-deb958c1c9a7",
-      "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24",
-      "releaseManifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
-      "targetSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
-      "deploymentRunId": 37486931185,
+      "totalBytes": 1045942787,
+      "previousSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+      "previousReleaseId": "candidate-f05abed68215-847b49a2fabc",
+      "activeHash": "sha256:b8387c2110a71401264a75971cb24f51f10154feb6f1218de76c9f975a37d017",
+      "releaseManifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
+      "targetSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
+      "deploymentRunId": 37503339667,
       "liveDatabaseRestored": false
     },
-    "rehearsal": {
-      "checksPassed": 9,
-      "anchor": {
-        "kind": "full-proof-anchor",
-        "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
-        "bundleHash": "sha256:b6f14294293326bd10fcff71c26fdce0b9e2f457b9da9150f0a19ff2c472ebbd",
-        "rehearsalHash": "sha256:11af3552b69351f0baed3c8d3da679fb25e533fc4bf7987f9d331d818eb22e02",
-        "backupHash": "sha256:1aff688740c9b2559e56fd37ee47a3710f90cceaa1c43ff859ea72f07c71441a",
-        "restoreReportHash": "sha256:cb5a872a180b3a0c61018bf02e26d2e6d8e5ad2547d70f0b22c7b445b6d53470",
-        "filesystemHash": "sha256:82e5463f3b57b8784730e67a9ca97330295ed04fb805bfdc2917689bb6c0e747",
-        "runtimeCompatibilityHash": "sha256:c3a42c8ab656d65279292b56ff84f6b645c52493d06cf11a26c53f2559a9ccf9",
-        "completedAt": "2026-10-06T16:01:20.644Z",
-        "backupCreatedAt": "2026-10-06T15:27:20.030Z"
-      },
-      "ownedCleanup": "stopped",
-      "productionDatabaseRestored": false
-    },
-    "writerPolicy": {
-      "compactReceipts": true,
-      "imageJobs": true,
-      "frozenCatalogs": false
-    },
-    "frontendSelective": {
-      "enabled": true,
-      "enabledAt": "2026-10-06T16:21:54.734Z",
-      "repositoryVariableVerifiedAt": "2026-10-06T16:23:02.682Z",
-      "anchorHash": "sha256:38209e9f00c3f036c6dc60ff597377dced8e4e8ce6cced0fa4a7ac090dc51794",
-      "originalObservedAt": "2026-10-06T16:06:36.895Z",
-      "hostConfigHash": "sha256:a6c48b4d8f22bf3242674c0854f2454c3c6b9c3e466a2d54c9e2954696aaead7",
-      "actualSelectiveDeploymentAccepted": false,
-      "serviceReplacementsDuringEnablement": 0,
-      "automatic": false
-    },
-    "automation": {
-      "release": false,
-      "deploy": false,
-      "reconcile": false,
-      "actualAcceptancePending": true
-    },
-    "runtime": {
-      "host": {
-        "logicalCpus": 2,
-        "totalMemoryBytes": 4106096640,
-        "availableMemoryBytes": 3347161088,
-        "diskTotalBytes": 50884108288,
-        "diskAvailableBytes": 7804448768
-      },
-      "components": {
-        "backend": {
-          "nanoCpus": 0,
-          "memoryLimitBytes": 0,
-          "pidsLimit": null,
-          "environment": {
-            "RULES_WORKER_MIRRORS_ENABLED": "1",
-            "DB_FROZEN_CATALOGS": "0",
-            "RULES_WORKER_MAX_INFLIGHT": "4",
-            "IMAGE_JOBS_ENABLED": "1",
-            "DB_COMPACT_RECEIPTS": "1",
-            "RULES_CATALOG_BATCH_ENABLED": "1"
-          }
+    "previousSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+    "hostRehearsal": {
+      "status": "passed",
+      "runId": "e05abe6f-f01e-4bb7-9c72-a2d6d45601bb",
+      "startedAt": "2026-10-06T17:35:35.231Z",
+      "completedAt": "2026-10-06T17:59:56.582Z",
+      "checks": [
+        {
+          "id": "snapshot",
+          "status": "passed"
         },
-        "frontend": {
-          "nanoCpus": 0,
-          "memoryLimitBytes": 0,
-          "pidsLimit": null,
-          "environment": {}
+        {
+          "id": "migrations",
+          "status": "passed"
         },
-        "rulesWorker": {
-          "nanoCpus": 0,
-          "memoryLimitBytes": 0,
-          "pidsLimit": null,
-          "environment": {
-            "RULES_WORKER_MAX_CACHED_ARTIFACTS": "4"
-          }
+        {
+          "id": "full-candidate-health",
+          "status": "passed"
+        },
+        {
+          "id": "image-contract",
+          "status": "passed"
+        },
+        {
+          "id": "historical-inventory",
+          "status": "passed"
+        },
+        {
+          "id": "historical-replay",
+          "status": "passed"
+        },
+        {
+          "id": "pending-decision",
+          "status": "passed"
+        },
+        {
+          "id": "duplicate-command",
+          "status": "passed"
+        },
+        {
+          "id": "writer-compatibility",
+          "status": "passed"
         }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "resourceCount": 19
+      }
+    },
+    "components": {
+      "backend": {
+        "healthy": true,
+        "containerId": "7c1b04ad360c6ed225d5407df1c93993d066fb9aaa5ad1e944a93aa241e038e9",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:f54436cef8fff76bc88400fec3fcc0ef909cdf0a781d69196ee4d0678ba5ca36",
+        "releaseCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68"
       },
-      "measurement": "Read-only live limits and capacity; no production latency improvement inferred."
+      "frontend": {
+        "healthy": true,
+        "containerId": "25b64ff828c78951a7bbc3c44b5c8b5465efb47961f66bb582fa2f8c17901394",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:4cf396390578ff131cd50d785bb3c6f9b5da9305751c26fedd23e8035b688fc6",
+        "releaseCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68"
+      },
+      "rulesWorker": {
+        "healthy": true,
+        "containerId": "879ed82b9a6c976c1797506138367ccd5265310674fa81dd5fdbf362b51fb36f",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:912c9224898cd9048e8946f50a689531a98e28e80d15a97e86316065a8078436",
+        "releaseCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68"
+      }
     },
-    "storageCleanup": {
-      "freedBytes": 4490361267,
-      "receiptFiles": [
-        "derived-dump-cleanup-2026-10-06T15-14-50.545Z.json",
-        "derived-expired-dump-cleanup-2026-10-06T15-45-21.972Z.json",
-        "unpacked-control-archive-cleanup-2026-10-06T15-54-58.169Z.json"
-      ]
-    },
-    "paidProviderRequestsThisAcceptance": 0,
+    "edge": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "path": "/build-info.json",
+        "status": 200
+      }
+    ],
+    "migrations": 305,
     "productionDatabaseRestored": false,
     "persistentDeployIdentityRetained": true,
-    "backupStorage": "primary-host-per-owner-decision",
-    "overallOriginalPlanComplete": false,
-    "remaining": [
-      "Genuine frontend-only deployment with unchanged backend/worker image and container identities; owned full rollback and automatic/reconcile acceptance.",
-      "Integrate and verify local legacy-character data retirement with current retained-history rollback boundary; no current V3/shared inventory deletion.",
-      "Integrate separately measured performance changes and repeat paired canonical API/UI acceptance on exact source; current flags alone do not prove speedup.",
-      "Historical fresh-through-278 requires authentic pre278 inputs; supported migration upgrade proof does not close this different boundary.",
-      "Verify the intended live application image-generation/storage/history flow without an unbounded paid retry."
+    "all29Complete": false,
+    "nextRelease": {
+      "sourceCommit": "d45b1dc75c7d488e91d4ea9a53eb34d25c5655d5",
+      "ciRun": 37509917167,
+      "status": "planning-refused-before-tests-and-deployment",
+      "reason": "UI planning used TSX-only Git inventory while mandatory Vitest catalog includes TS and excludes explicit manual diagnostics",
+      "localFix": {
+        "files": [
+          "scripts/release/ui-ci.mjs",
+          "scripts/release/ui-ci.test.mjs"
+        ],
+        "testsPassed": 36,
+        "failed": 0,
+        "skipped": 0,
+        "reportHash": "sha256:5bd8eb48951c8365365897af7072fd4dc1cb7f3181e1cb293ed47eb2455e20dd",
+        "integrated": true,
+        "newExactCIRequired": true
+      }
+    },
+    "remainingAcceptance": [
+      "Actual selective frontend release preserving backend/worker containers and identities",
+      "Actual selective rollback without restoring production data",
+      "Enable and accept automatic latest-main release/reconciliation",
+      "Actual user image-generation/storage flow",
+      "Remaining original task criteria in agent-plan.json remain unchanged"
     ]
   },
   "execution_history": [
@@ -5627,5 +5732,252 @@
     "evidence": "docs/audits/2026-10-04/execution/REL-05-planner-integration.json",
     "integrated": true,
     "productionChanged": false
-  }
+  },
+  "execution_current_history": [
+    {
+      "schemaVersion": 1,
+      "kind": "exact-ci26-publication15-full-host-delivery",
+      "status": "deployed-and-independently-verified",
+      "recordedAt": "2026-10-06T16:25:07.580Z",
+      "applicationSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+      "deploymentControlCommit": "02541c07a08ac5559e93401393cc5ba4cf936edf",
+      "releaseId": "candidate-f05abed68215-847b49a2fabc",
+      "ci": {
+        "id": 37438145505,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37438145505",
+        "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+        "status": "passed",
+        "durationMs": 747027,
+        "reportHash": "sha256:864643f02386ddcccfb846c169a7d287f3c17f2fbc22fba83b391bf67cfcf66a",
+        "sourceSnapshot": {
+          "sha256": "3a142b2b531d5cb470369e02d303621a0547192b81a8c9171dd5d463deec8c5d",
+          "files": 4538
+        },
+        "counts": [
+          {
+            "id": "worker-and-database-node",
+            "tests": 25,
+            "passed": 25,
+            "skipped": 0
+          },
+          {
+            "id": "observed-legacy-baseline",
+            "tests": 1
+          },
+          {
+            "id": "browser-ui-fixtures-production",
+            "tests": 48,
+            "passed": 48,
+            "skipped": 0
+          },
+          {
+            "id": "browser-ui-fixtures-battle3d",
+            "tests": 8,
+            "passed": 8,
+            "skipped": 0
+          },
+          {
+            "id": "local-browser-flows",
+            "tests": 12,
+            "passed": 12,
+            "skipped": 0
+          },
+          {
+            "id": "node-contracts",
+            "tests": 980,
+            "passed": 980,
+            "skipped": 0
+          },
+          {
+            "id": "vitest",
+            "tests": 6462,
+            "passed": 6462,
+            "skipped": 0
+          }
+        ],
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      "publication": {
+        "id": 37440361187,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37440361187",
+        "status": "success",
+        "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+        "components": {
+          "backend": {
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:18df7b7d8b25e59c2dcaeb5bea7d9a893543958b5abce0096fcfd7a14c0243e4",
+            "releaseId": "candidate-f05abed68215-847b49a2fabc",
+            "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
+          },
+          "frontend": {
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:576def7922b9fff7643a5f42fe01814204afdf9b8247de3097aaed11363fd70a",
+            "releaseId": "candidate-f05abed68215-847b49a2fabc",
+            "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
+          },
+          "rulesWorker": {
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:44854500e2afb3a1c3721410cf59f7b121b949efbd37c2f6f1a20a9085d52a2f",
+            "releaseId": "candidate-f05abed68215-847b49a2fabc",
+            "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
+          }
+        }
+      },
+      "deployment": {
+        "id": 37486931185,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37486931185",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
+      "independentVerification": {
+        "sha256": "sha256:d9fd57af746d4a5c69b7158925fd1342a053f16b8de4feb0b3378308d06ac0a0",
+        "verifiedAt": "2026-10-06T16:09:56.574Z",
+        "healthyComponents": [
+          "backend",
+          "frontend",
+          "rulesWorker"
+        ],
+        "edgeRoutes": [
+          {
+            "path": "/",
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "status": 200
+          },
+          {
+            "path": "/build-info.json",
+            "status": 200
+          }
+        ],
+        "migrationCount": 305
+      },
+      "previousProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "previousProductionVersionRecord": "/opt/bagofholding/backups/version-before-f05-2026-10-06T14-42-38.944Z.json",
+      "backup": {
+        "schemaVersion": 1,
+        "status": "fresh-backup-captured",
+        "observedAt": "2026-10-06T15:30:49.201Z",
+        "createdAt": "2026-10-06T15:27:20.030Z",
+        "backupDirectory": "/opt/bagofholding/backups/capture-37486931185-1",
+        "databaseDump": {
+          "path": "/opt/bagofholding/backups/capture-37486931185-1/database.dump",
+          "bytes": 974883784,
+          "sha256": "sha256:2172ab61600cd1ef70194b7d46a590fbf3346a129b0ac901a94063941e791931"
+        },
+        "files": 44,
+        "totalBytes": 1045942501,
+        "previousSourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "previousReleaseId": "candidate-93265633db10-deb958c1c9a7",
+        "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24",
+        "releaseManifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+        "targetSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+        "deploymentRunId": 37486931185,
+        "liveDatabaseRestored": false
+      },
+      "rehearsal": {
+        "checksPassed": 9,
+        "anchor": {
+          "kind": "full-proof-anchor",
+          "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
+          "bundleHash": "sha256:b6f14294293326bd10fcff71c26fdce0b9e2f457b9da9150f0a19ff2c472ebbd",
+          "rehearsalHash": "sha256:11af3552b69351f0baed3c8d3da679fb25e533fc4bf7987f9d331d818eb22e02",
+          "backupHash": "sha256:1aff688740c9b2559e56fd37ee47a3710f90cceaa1c43ff859ea72f07c71441a",
+          "restoreReportHash": "sha256:cb5a872a180b3a0c61018bf02e26d2e6d8e5ad2547d70f0b22c7b445b6d53470",
+          "filesystemHash": "sha256:82e5463f3b57b8784730e67a9ca97330295ed04fb805bfdc2917689bb6c0e747",
+          "runtimeCompatibilityHash": "sha256:c3a42c8ab656d65279292b56ff84f6b645c52493d06cf11a26c53f2559a9ccf9",
+          "completedAt": "2026-10-06T16:01:20.644Z",
+          "backupCreatedAt": "2026-10-06T15:27:20.030Z"
+        },
+        "ownedCleanup": "stopped",
+        "productionDatabaseRestored": false
+      },
+      "writerPolicy": {
+        "compactReceipts": true,
+        "imageJobs": true,
+        "frozenCatalogs": false
+      },
+      "frontendSelective": {
+        "enabled": true,
+        "enabledAt": "2026-10-06T16:21:54.734Z",
+        "repositoryVariableVerifiedAt": "2026-10-06T16:23:02.682Z",
+        "anchorHash": "sha256:38209e9f00c3f036c6dc60ff597377dced8e4e8ce6cced0fa4a7ac090dc51794",
+        "originalObservedAt": "2026-10-06T16:06:36.895Z",
+        "hostConfigHash": "sha256:a6c48b4d8f22bf3242674c0854f2454c3c6b9c3e466a2d54c9e2954696aaead7",
+        "actualSelectiveDeploymentAccepted": false,
+        "serviceReplacementsDuringEnablement": 0,
+        "automatic": false
+      },
+      "automation": {
+        "release": false,
+        "deploy": false,
+        "reconcile": false,
+        "actualAcceptancePending": true
+      },
+      "runtime": {
+        "host": {
+          "logicalCpus": 2,
+          "totalMemoryBytes": 4106096640,
+          "availableMemoryBytes": 3347161088,
+          "diskTotalBytes": 50884108288,
+          "diskAvailableBytes": 7804448768
+        },
+        "components": {
+          "backend": {
+            "nanoCpus": 0,
+            "memoryLimitBytes": 0,
+            "pidsLimit": null,
+            "environment": {
+              "RULES_WORKER_MIRRORS_ENABLED": "1",
+              "DB_FROZEN_CATALOGS": "0",
+              "RULES_WORKER_MAX_INFLIGHT": "4",
+              "IMAGE_JOBS_ENABLED": "1",
+              "DB_COMPACT_RECEIPTS": "1",
+              "RULES_CATALOG_BATCH_ENABLED": "1"
+            }
+          },
+          "frontend": {
+            "nanoCpus": 0,
+            "memoryLimitBytes": 0,
+            "pidsLimit": null,
+            "environment": {}
+          },
+          "rulesWorker": {
+            "nanoCpus": 0,
+            "memoryLimitBytes": 0,
+            "pidsLimit": null,
+            "environment": {
+              "RULES_WORKER_MAX_CACHED_ARTIFACTS": "4"
+            }
+          }
+        },
+        "measurement": "Read-only live limits and capacity; no production latency improvement inferred."
+      },
+      "storageCleanup": {
+        "freedBytes": 4490361267,
+        "receiptFiles": [
+          "derived-dump-cleanup-2026-10-06T15-14-50.545Z.json",
+          "derived-expired-dump-cleanup-2026-10-06T15-45-21.972Z.json",
+          "unpacked-control-archive-cleanup-2026-10-06T15-54-58.169Z.json"
+        ]
+      },
+      "paidProviderRequestsThisAcceptance": 0,
+      "productionDatabaseRestored": false,
+      "persistentDeployIdentityRetained": true,
+      "backupStorage": "primary-host-per-owner-decision",
+      "overallOriginalPlanComplete": false,
+      "remaining": [
+        "Genuine frontend-only deployment with unchanged backend/worker image and container identities; owned full rollback and automatic/reconcile acceptance.",
+        "Integrate and verify local legacy-character data retirement with current retained-history rollback boundary; no current V3/shared inventory deletion.",
+        "Integrate separately measured performance changes and repeat paired canonical API/UI acceptance on exact source; current flags alone do not prove speedup.",
+        "Historical fresh-through-278 requires authentic pre278 inputs; supported migration upgrade proof does not close this different boundary.",
+        "Verify the intended live application image-generation/storage/history flow without an unbounded paid retry."
+      ]
+    }
+  ]
 }
