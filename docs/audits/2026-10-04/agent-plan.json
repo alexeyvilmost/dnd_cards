@@ -5176,12 +5176,16 @@
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
   "execution_followon_current": {
-    "status": "ci16-passed-publication8-refused-before-images-repaired-locally",
-    "evidence": "docs/audits/2026-10-04/execution/CI-16-publication-handoff.json",
-    "source": "8633d6f30a748539105edfd6157df7931cc27be7",
-    "ci": 37392948924,
-    "publication": 37394405646,
+    "status": "ci17-browser-boundary-refused-corrected-and-delayed-locally-verified",
+    "evidence": "docs/audits/2026-10-04/execution/CI-17-browser-boundary.json",
+    "source": "7d580ae01228e3c1643022517af2f8f6bff0eafb",
+    "ci": 37394798624,
     "productionChanged": false,
-    "next": "Commit only reviewed CLI repair and factual records, run fresh exact-source extended CI, then publish and deploy through unchanged gates. No failed receipt is relabeled successful."
+    "next": "Commit verified browser synchronization and factual records; obtain a new exact-source extended CI before publishing the full tooling/writer candidate."
+  },
+  "latest_paired_batch_measurement": {
+    "status": "paired-local-measurement-passed-not-enabled",
+    "evidence": "docs/audits/2026-10-04/execution/CI-17-browser-boundary.json",
+    "enabled": false
   }
 }

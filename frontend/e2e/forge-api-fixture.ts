@@ -229,8 +229,12 @@ async function installPresentationAssetFixture(page: Page): Promise<void> {
  */
 export async function installForgeApiFixture(
   page: Page,
-  options: { admin?: boolean } = {},
+  options: { admin?: boolean; runtimePatchResponseDelayMs?: number } = {},
 ): Promise<ForgeApiFixture> {
+  const runtimePatchResponseDelayMs = options.runtimePatchResponseDelayMs ?? 0;
+  if (!Number.isInteger(runtimePatchResponseDelayMs) || runtimePatchResponseDelayMs < 0 || runtimePatchResponseDelayMs > 2_000) {
+    throw new Error('Invalid isolated runtime response delay');
+  }
   const createdCharacters: JsonRecord[] = [];
   const charactersById = new Map<string, JsonRecord>();
   const runtimeCommandRequests: JsonRecord[] = [];
@@ -410,6 +414,11 @@ export async function installForgeApiFixture(
           runtime_revision: Number(current.runtime_revision ?? 0) + 1,
         };
         charactersById.set(id, updated);
+        // Model a committed write whose response is still in flight. This
+        // delay belongs only to the isolated browser fixture, never the API.
+        if (runtimePatchResponseDelayMs) {
+          await new Promise((resolve) => setTimeout(resolve, runtimePatchResponseDelayMs));
+        }
         await json(route, 200, updated);
         return;
       }

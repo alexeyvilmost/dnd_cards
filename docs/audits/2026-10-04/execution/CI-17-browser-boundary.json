@@ -1,0 +1,235 @@
+{
+  "schemaVersion": 1,
+  "status": "ci17-browser-boundary-refused-corrected-and-delayed-locally-verified",
+  "recordedAt": "2026-10-06T00:53:02.835Z",
+  "source": "7d580ae01228e3c1643022517af2f8f6bff0eafb",
+  "ci": {
+    "id": 37394798624,
+    "attempt": 1,
+    "status": "failure",
+    "passedShards": [
+      "backend",
+      "unit",
+      "flows"
+    ],
+    "failedShard": "extended",
+    "failedArtifactHash": "sha256:e8f5f2d97f8b66efc6437911341fe94901c7f5629faa1a43d71d63807f027d49",
+    "diagnostics": {
+      "schemaVersion": 1,
+      "kind": "safe-browser-source-locations",
+      "failures": [
+        {
+          "file": "frontend/e2e/forge-real-interaction.spec.ts",
+          "line": 103,
+          "column": 1,
+          "status": "failed",
+          "errorLocations": [
+            {
+              "file": "frontend/e2e/forge-real-interaction.spec.ts",
+              "line": 262,
+              "column": 90
+            }
+          ]
+        }
+      ],
+      "rawOutputIncluded": false
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "cause": "The fixture records the received movement PATCH before its response reaches React. A one-time scan could see all real action buttons still disabled.",
+  "repair": {
+    "paths": [
+      "frontend/e2e/forge-real-interaction.spec.ts",
+      "frontend/e2e/forge-api-fixture.ts"
+    ],
+    "behavior": "Poll actual canonical action visibility and enabled state, then preserve the original attack, damage, resource and ammunition assertions. Add bounded isolated fixture response latency so the pending interval remains exercised.",
+    "normal": {
+      "reportHash": "sha256:10ab710d39eac6d7f7fe1a84a25e6920c8cca5bf372a9a53bf8e48905fdecbf3",
+      "status": "passed",
+      "source": {
+        "head": "7d580ae01228e3c1643022517af2f8f6bff0eafb",
+        "sha256": "ed1d6d39150d3c437074bad0a5c027713ed401074541afa6eebe15d773d540be",
+        "files": 4526,
+        "unchanged": true
+      },
+      "startedAt": "2026-10-06T00:47:56.289Z",
+      "scope": "Actual production build UI fixture, desktop and mobile complete Forge/sheet/combat/ammunition journey; rendering readiness after an accepted movement request",
+      "productionMutations": 0,
+      "paidProviderRequests": 0,
+      "runId": "test_555bca60aeb24b8c7a529234",
+      "browser": {
+        "tests": 2,
+        "passed": 2,
+        "skipped": 0,
+        "projects": [
+          "desktop-chromium",
+          "mobile-chromium"
+        ]
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "completedAt": "2026-10-06T00:49:51.037Z"
+    },
+    "delayed": {
+      "responseDelayMs": 500,
+      "reportHash": "sha256:6a9f4f2d68d7bb44233e07eebbc1089f5d780564b6f0f2d148660de981a1828f",
+      "status": "passed",
+      "source": {
+        "head": "7d580ae01228e3c1643022517af2f8f6bff0eafb",
+        "sha256": "1e7b5ecd917a8f724694ffe0ae5e9ab05b97dd5a000dc88f565423ec5ff28858",
+        "files": 4526,
+        "unchanged": true
+      },
+      "startedAt": "2026-10-06T00:50:49.196Z",
+      "scope": "Actual production build UI fixture, desktop and mobile complete Forge/sheet/combat/ammunition journey; rendering readiness with a committed movement and an actual delayed 500ms fixture response",
+      "productionMutations": 0,
+      "paidProviderRequests": 0,
+      "runId": "test_57a26fcf058295268346a942",
+      "browser": {
+        "tests": 2,
+        "passed": 2,
+        "skipped": 0,
+        "projects": [
+          "desktop-chromium",
+          "mobile-chromium"
+        ]
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "completedAt": "2026-10-06T00:52:41.562Z"
+    },
+    "affectedLint": "passed",
+    "credentialAndDumpScans": "passed",
+    "nextExactCi": "pending",
+    "diffCheck": "passed"
+  },
+  "pairedBatchExperiment": {
+    "status": "paired-local-measurement-passed-not-enabled",
+    "reviewedAt": "2026-10-06T00:48:35.306Z",
+    "source": {
+      "commit": "7d580ae01228e3c1643022517af2f8f6bff0eafb",
+      "sha256": "1d72acd08676f20bbbc14a5204d5749c990d8e13935b814744b9d1460a674cc8",
+      "files": 4526
+    },
+    "runId": "test_22134c733a57e6b48628d0f1",
+    "reportHash": "sha256:8b9bc66bbb33907abf3e0799bfb990d71835350bae13ce88c4e8a70f12c91842",
+    "acceptedRuns": 344,
+    "timedRuns": 320,
+    "comparisons": [
+      {
+        "preset": "line",
+        "partySize": 1,
+        "samplesPerRole": 40,
+        "median": {
+          "baselineMs": 108.77400000000489,
+          "batchMs": 107.03179999999702,
+          "changePercent": -1.601669516619586
+        },
+        "p95": {
+          "baselineMs": 133.12870000000112,
+          "batchMs": 130.1646000000037,
+          "changePercent": -2.2264921087619682
+        },
+        "sqlCount": {
+          "baseline": 45,
+          "batch": 31
+        },
+        "canonicalExactRetryAndReload": true
+      },
+      {
+        "preset": "archer",
+        "partySize": 1,
+        "samplesPerRole": 40,
+        "median": {
+          "baselineMs": 120.51609999999346,
+          "batchMs": 119.83280000000377,
+          "changePercent": -0.5669781879680147
+        },
+        "p95": {
+          "baselineMs": 156.5442999999941,
+          "batchMs": 154.07429999999295,
+          "changePercent": -1.5778281291629614
+        },
+        "sqlCount": {
+          "baseline": 63,
+          "batch": 34
+        },
+        "canonicalExactRetryAndReload": true
+      },
+      {
+        "preset": "line",
+        "partySize": 2,
+        "samplesPerRole": 40,
+        "median": {
+          "baselineMs": 179.8852000000188,
+          "batchMs": 161.67389999999432,
+          "changePercent": -10.123845652684372
+        },
+        "p95": {
+          "baselineMs": 229.328600000008,
+          "batchMs": 229.75,
+          "changePercent": 0.1837537925893029
+        },
+        "sqlCount": {
+          "baseline": 75,
+          "batch": 36
+        },
+        "canonicalExactRetryAndReload": true
+      },
+      {
+        "preset": "line",
+        "partySize": 6,
+        "samplesPerRole": 40,
+        "median": {
+          "baselineMs": 393.5726999999897,
+          "batchMs": 372.93390000000363,
+          "changePercent": -5.243961280847631
+        },
+        "p95": {
+          "baselineMs": 864.4049999999988,
+          "batchMs": 646.0767000000051,
+          "changePercent": -25.257639648080943
+        },
+        "sqlCount": {
+          "baseline": 183,
+          "batch": 44
+        },
+        "canonicalExactRetryAndReload": true
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "sourceUnchanged": {
+      "unchanged": true,
+      "files": 4526,
+      "sha256": "1d72acd08676f20bbbc14a5204d5749c990d8e13935b814744b9d1460a674cc8"
+    },
+    "scope": "Owned public integration fixture, two actual API processes with batch flag OFF/ON, one database and one unmodified canonical worker, raw compression-preserving loopback relay, sequential interleaving and tracing enabled.",
+    "limitations": [
+      "Separate fresh source characters/runs per sample; source UUIDs and RNG are not paired identical worlds",
+      "No ordinary UI click-to-ready or production latency claim",
+      "One series with 40 measurements per role; two-member p95 changed by +0.18%",
+      "No source code or production flags changed; optional batch remains OFF"
+    ],
+    "next": "Use this narrower evidence with representative ordinary browser/API paired acceptance before choosing a default policy; do not combine with mirrors, cache or native SHA."
+  },
+  "production": {
+    "source": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "deployment": 37389067128,
+    "writers": "OFF/OFF/OFF",
+    "automatic": false,
+    "selective": false,
+    "applicationChanges": 0,
+    "paidRequests": 0
+  },
+  "next": "Commit verified browser synchronization and factual records; obtain a new exact-source extended CI before publishing the full tooling/writer candidate."
+}

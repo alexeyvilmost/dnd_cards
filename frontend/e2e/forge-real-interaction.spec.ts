@@ -102,7 +102,7 @@ async function completeSectionIfPresent(page: Page, label: string): Promise<void
 
 test('required real-interaction spine: empty Forge reaches sheet and dedicated combat', async ({ page }) => {
   test.setTimeout(120_000);
-  const fixture = await installForgeApiFixture(page);
+  const fixture = await installForgeApiFixture(page, {runtimePatchResponseDelayMs: 500});
   fixture.seedMonster(BROWSER_MONSTER);
   const race = rowByCardNumber(fixture, 'races', REAL_INTERACTION_ROOT.race);
   const lineage = rowByCardNumber(fixture, 'races', REAL_INTERACTION_ROOT.lineage);
@@ -249,17 +249,22 @@ test('required real-interaction spine: empty Forge reaches sheet and dedicated c
 
   let executableWeaponAction: CatalogRow | undefined;
   let executableWeaponButton: Locator | undefined;
-  for (const actionId of splitWeaponActions.melee) {
-    const wrapper = page.locator(`[data-action-id="${actionId}"]:visible`).first();
-    if (!await wrapper.isVisible()) continue;
-    const candidate = wrapper.getByRole('button').first();
-    if (!await candidate.isEnabled()) continue;
-    executableWeaponAction = (fixture.getCatalogRows('actions') as CatalogRow[])
-      .find((action) => action.id === actionId);
-    executableWeaponButton = candidate;
-    break;
-  }
-  expect(executableWeaponAction, 'a hydrated equipped weapon attack must be executable').toBeTruthy();
+  // The fixture records a received PATCH before the browser has applied its
+  // response. Wait for the real UI to leave its pending state before selecting
+  // the attack; a single scan can otherwise observe every button disabled.
+  await expect.poll(async () => {
+    for (const actionId of splitWeaponActions.melee) {
+      const wrapper = page.locator(`[data-action-id="${actionId}"]:visible`).first();
+      if (!await wrapper.isVisible()) continue;
+      const candidate = wrapper.getByRole('button').first();
+      if (!await candidate.isEnabled()) continue;
+      executableWeaponAction = (fixture.getCatalogRows('actions') as CatalogRow[])
+        .find((action) => action.id === actionId);
+      executableWeaponButton = candidate;
+      return Boolean(executableWeaponAction);
+    }
+    return false;
+  }, {message: 'a hydrated equipped weapon attack must be executable'}).toBe(true);
   const writesBeforeAttack = fixture.runtimePatchRequests.length;
   await executableWeaponButton!.click();
   await page.locator(`.tactical-cell[data-actor-id^="${BROWSER_MONSTER.id}:"]`).click();
