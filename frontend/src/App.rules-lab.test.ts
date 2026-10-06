@@ -11,7 +11,19 @@ import {
 } from './canon/microMvpL1ReleaseIdentity';
 import App from './App';
 
-const mocks = vi.hoisted(() => ({ loadConditions: vi.fn(), useAuth: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  loadConditions: vi.fn(),
+  useAuth: vi.fn(),
+  holdBoundaryImport: false,
+  releaseBoundaryImport: undefined as (() => void) | undefined,
+}));
+
+vi.mock('./components/RulesAuthorityBoundary', async (importOriginal) => {
+  if (mocks.holdBoundaryImport) {
+    await new Promise<void>((resolve) => { mocks.releaseBoundaryImport = resolve; });
+  }
+  return importOriginal();
+});
 
 vi.mock('./api/conditionsApi', () => ({
   loadConditions: mocks.loadConditions,
@@ -46,6 +58,8 @@ describe('/rules-lab route', () => {
     vi.useRealTimers();
     mocks.loadConditions.mockReset();
     mocks.useAuth.mockReset();
+    mocks.holdBoundaryImport = false;
+    mocks.releaseBoundaryImport = undefined;
     document.body.replaceChildren();
   });
 
@@ -76,6 +90,7 @@ describe('/rules-lab route', () => {
   });
 
   it('keeps ordinary routes non-interactive until condition authority is selected', async () => {
+    mocks.holdBoundaryImport = true;
     let finish!: () => void;
     mocks.loadConditions.mockReturnValue(new Promise((resolve) => {
       finish = () => resolve({ mode: 'database_release', count: 15, setHash: 'test' });
@@ -94,7 +109,13 @@ describe('/rules-lab route', () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
-    expect(mocks.loadConditions).toHaveBeenCalledTimes(1);
+    // Hold the actual lazy module: a timer tick alone cannot prove that the
+    // authority component has mounted or started its API request.
+    await vi.waitFor(() => { expect(mocks.releaseBoundaryImport).toBeTypeOf('function'); });
+    expect(mocks.loadConditions).not.toHaveBeenCalled();
+    expect(container.querySelector('[data-testid="forge-route-marker"]')).toBeNull();
+    await act(async () => { mocks.releaseBoundaryImport!(); });
+    await vi.waitFor(() => { expect(mocks.loadConditions).toHaveBeenCalledTimes(1); });
     expect(mocks.loadConditions).toHaveBeenCalledWith({
       timeoutMs: 15_000,
       expectedRelease: {

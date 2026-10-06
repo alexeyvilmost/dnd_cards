@@ -2707,7 +2707,7 @@
     "nativeHashIntegrated": false,
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
-  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-20-writer-policy-repair.json",
+  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-21-authority-readiness.json",
   "latest_paired_batch_measurement": {
     "status": "paired-local-measurement-passed-not-enabled",
     "evidence": "docs/audits/2026-10-04/execution/CI-17-browser-boundary.json",
@@ -2785,5 +2785,16 @@
     "evidence": "docs/audits/2026-10-04/execution/CI-20-writer-policy-repair.json",
     "productionUnchanged": true,
     "nextExactCiRequired": true
+  },
+  "latest_authority_readiness_repair": {
+    "status": "local-authority-readiness-repair-verified-new-exact-ci-required",
+    "evidence": "docs/audits/2026-10-04/execution/CI-21-authority-readiness.json",
+    "productionUnchanged": true
+  },
+  "latest_wave_dedup_measurement": {
+    "status": "promising-private-only",
+    "evidence": "docs/audits/2026-10-04/execution/CI-21-authority-readiness.json",
+    "integrated": false,
+    "productionEnabled": false
   }
 }
