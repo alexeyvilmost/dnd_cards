@@ -12,6 +12,10 @@ import (
 func releaseFixture(t *testing.T) (*sql.DB, ReleaseMigrationRequest) {
 	t.Helper()
 	db := openIsolatedPostgresSchema(t, "CANONICAL_RUNTIME_TEST_DSN")
+	return releaseFixtureOn(t, db)
+}
+func releaseFixtureOn(t *testing.T, db *sql.DB) (*sql.DB, ReleaseMigrationRequest) {
+	t.Helper()
 	_, err := db.Exec(`CREATE TABLE schema_migrations(version varchar(255) PRIMARY KEY,description text,executed_at timestamptz DEFAULT NOW());
 	CREATE TABLE roguelike_command_receipts(id integer PRIMARY KEY,response jsonb NOT NULL);
 	CREATE TABLE character_runtime_commands(id integer PRIMARY KEY,response jsonb NOT NULL);

@@ -14,8 +14,8 @@ import (
 
 const retirement301Version = "301_retire_legacy_characters"
 
-// This is the single reviewed SQL source. It is metadata only in this binary:
-// neither startup nor the additive executor registers or executes it.
+// This is the single reviewed SQL source. Only the separate explicit retirement
+// command can execute it; startup and the additive executor never register it.
 //
 //go:embed data/retire-legacy-characters-301.sql
 var retirement301Source []byte

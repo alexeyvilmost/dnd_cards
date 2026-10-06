@@ -18,7 +18,7 @@ import (
 // Runs before .env, HTTP, image jobs or application constructors. The DSN stays
 // in the one-off container environment; the request contains no credentials.
 func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer) (bool, error) {
-	if len(args) == 0 || (args[0] != "--migrate-release" && args[0] != "--inspect-release-migrations" && args[0] != "--inspect-character-retirement") {
+	if len(args) == 0 || (args[0] != "--migrate-release" && args[0] != "--inspect-release-migrations" && args[0] != "--inspect-character-retirement" && args[0] != "--execute-character-retirement") {
 		return false, nil
 	}
 	if len(args) != 1 {
@@ -34,9 +34,12 @@ func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer
 	decoder.DisallowUnknownFields()
 	var request migrations.ReleaseMigrationRequest
 	var retirement migrations.ReleaseRetirementInspectionRequest
+	var execution migrations.ReleaseRetirementExecutionRequest
 	var decoded any = &request
 	if args[0] == "--inspect-character-retirement" {
 		decoded = &retirement
+	} else if args[0] == "--execute-character-retirement" {
+		decoded = &execution
 	}
 	if decoder.Decode(decoded) != nil {
 		return true, errors.New("invalid release migration request")
@@ -48,6 +51,8 @@ func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer
 	releaseID, sourceCommit, fingerprint := request.ReleaseID, request.CandidateSourceCommit, request.CandidateInputFingerprint
 	if args[0] == "--inspect-character-retirement" {
 		releaseID, sourceCommit, fingerprint = retirement.ReleaseID, retirement.CandidateSourceCommit, retirement.CandidateInputFingerprint
+	} else if args[0] == "--execute-character-retirement" {
+		releaseID, sourceCommit, fingerprint = execution.ReleaseID, execution.CandidateSourceCommit, execution.CandidateInputFingerprint
 	}
 	if !releaseIDPattern.MatchString(releaseID) || deployedSourceCommit() == "unavailable" || sourceCommit != componentSourceCommit || fingerprint != componentInputFingerprint {
 		return true, errors.New("migration executor must match verified baked candidate identity")
@@ -67,6 +72,8 @@ func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer
 	var result any
 	if args[0] == "--inspect-character-retirement" {
 		result, err = migrations.NewMigrator(db).InspectReleaseRetirement(ctx, retirement)
+	} else if args[0] == "--execute-character-retirement" {
+		result, err = migrations.NewMigrator(db).RunReleaseRetirement(ctx, execution)
 	} else if args[0] == "--inspect-release-migrations" {
 		result, err = migrations.NewMigrator(db).InspectReleaseAdditive(ctx, request)
 	} else {
