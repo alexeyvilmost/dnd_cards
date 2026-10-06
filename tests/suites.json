@@ -46,6 +46,7 @@
         "scripts/release/ssh-transport.test.mjs",
         "scripts/release/active-projection.test.mjs",
         "scripts/release/docker-rehearsal.test.mjs",
+        "scripts/release/owned-database-restore.test.mjs",
         "scripts/release/rehearsal-scenarios.test.mjs",
         "scripts/release/stdin-utf8.test.mjs",
         "scripts/release/migration-rehearsal.test.mjs",

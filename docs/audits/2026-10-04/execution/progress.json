@@ -929,7 +929,7 @@
     "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim.",
     "CI10/all3publication passed; second actual manual deploy refused beforecapture root0755. Exact root0700 repair verified, originallive4549 healthy/noapplicationmutations. Both old failures remain actual; reviewed-chain source/fullCI/newfreshadoption pending."
   ],
-  "updated_at": "2026-10-06T02:13:36.728Z",
+  "updated_at": "2026-10-06T05:14:20.832Z",
   "work_status": "reviewed_replay_fix_local_pass_pending_new_exact_ci_and_fresh_adoption",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
@@ -2707,7 +2707,7 @@
     "nativeHashIntegrated": false,
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
-  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-22-reviewed-followon-recovery.json",
+  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-23-storage-recovery.json",
   "latest_paired_batch_measurement": {
     "status": "paired-local-measurement-passed-not-enabled",
     "evidence": "docs/audits/2026-10-04/execution/CI-17-browser-boundary.json",
@@ -2802,5 +2802,12 @@
     "evidence": "docs/audits/2026-10-04/execution/CI-22-reviewed-followon-recovery.json",
     "productionUnchanged": true,
     "nextExactCiRequired": true
+  },
+  "latest_storage_recovery": {
+    "status": "host-pre-cutover-refused-local-storage-repair-verified-exact-ci-pending",
+    "evidence": "docs/audits/2026-10-04/execution/CI-23-storage-recovery.json",
+    "productionUnchanged": true,
+    "nextExactCiRequired": true,
+    "backupStorage": "same-server-owner-approved"
   }
 }

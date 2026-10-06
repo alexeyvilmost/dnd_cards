@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "status": "host-pre-cutover-refused-local-storage-repair-verified-exact-ci-pending",
+  "recordedAt": "2026-10-06T05:17:26.466Z",
+  "sourceBaseCommit": "5b44b07bc4e64ff89ab7c901025cd041ba44e582",
+  "ci23": {
+    "runId": 37412624808,
+    "attempt": 1,
+    "status": "passed",
+    "durationMs": 696479,
+    "reportHash": "sha256:1b8cb720da3bb6d221f8f0c85f2d039f615b2fe4584a27ef29b65dcee7b0cbb2",
+    "sourceSnapshot": {
+      "sha256": "121a9dffa45e6f7b33bdf55d9e33d2d6b02f750dc183b0128871336df45fcf8d",
+      "files": 4530
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "publication": {
+    "id": 37413900952,
+    "attempt": 1,
+    "status": "success",
+    "sourceCommit": "5b44b07bc4e64ff89ab7c901025cd041ba44e582"
+  },
+  "actualHost": {
+    "failed": {
+      "id": 37414694346,
+      "attempt": 1,
+      "controlCommit": "5b44b07bc4e64ff89ab7c901025cd041ba44e582",
+      "completedAt": "2026-10-06T05:05:01Z"
+    },
+    "baseline": {
+      "id": 37389067128,
+      "attempt": 1,
+      "controlCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "releaseId": "candidate-93265633db10-deb958c1c9a7",
+      "manifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+      "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24"
+    },
+    "rehearsalChecksPassed": 8,
+    "failureStage": "writer-compatibility",
+    "readyProduced": false,
+    "applicationReplacements": 0,
+    "cleanup": {
+      "remainingOwnedResources": 0,
+      "validatorStopped": true,
+      "dockerAuthRemoved": true,
+      "deploymentJournalCreated": false,
+      "deployLockPresent": false,
+      "operatorApplicationMutations": 0
+    },
+    "publicReviewedEvidence": "infra/reviewed-deployment-refusals/37414694346-1.json",
+    "diskAvailableBytesAfterCleanup": 8390942720,
+    "observedAt": "2026-10-06T05:06:32.826Z",
+    "diagnosticLimit": "Original collector persists fixed failure stage only; second native restore was observed running and then stopped. Timeout/WAL amplification are an inference, not the original error receipt."
+  },
+  "ownedLocalFullA": {
+    "schemaVersion": 1,
+    "status": "owned-full-a-succeeded",
+    "localOnly": true,
+    "deployable": false,
+    "productionMutations": 0,
+    "runId": "test_04a27c75acb67341b556cb9b",
+    "source": "5b44b07bc4e64ff89ab7c901025cd041ba44e582",
+    "publication": 37413900952,
+    "releaseId": "candidate-5b44b07bc4e6-2ac4ad0e5aba",
+    "manifestHash": "sha256:c981793336b9ccbbdb9343e6e4de33b477d0da3649649032ee8fb918bc50ab93",
+    "operationHash": "sha256:fbbbc89fec79c22dd5c60765cfd5ffbd5a8839dbc8de2d061a6c1a4fa2a3db3d",
+    "checks": [
+      {
+        "id": "snapshot",
+        "status": "passed"
+      },
+      {
+        "id": "migrations",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "status": "passed"
+      },
+      {
+        "id": "image-contract",
+        "status": "passed"
+      },
+      {
+        "id": "historical-inventory",
+        "status": "passed"
+      },
+      {
+        "id": "historical-replay",
+        "status": "passed"
+      },
+      {
+        "id": "pending-decision",
+        "status": "passed"
+      },
+      {
+        "id": "duplicate-command",
+        "status": "passed"
+      },
+      {
+        "id": "writer-compatibility",
+        "status": "passed"
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": [],
+      "resourceCount": 19
+    },
+    "backupCreatedAt": "2026-10-06T04:51:02.634Z",
+    "restoreReportHash": "sha256:3e1a091141f57542eb27cf2d24960d643f5c102ae46ec5451e2965944c293b8a",
+    "anchorHash": "sha256:c8578b374c7901930fddf80b9a466759e3c57990f3039a5576e70aea9240199f",
+    "originalRehearsalCompletedAt": "2026-10-06T04:56:08.944Z",
+    "observedAt": "2026-10-06T04:56:43.846Z",
+    "scope": "Actual canonical full rollout and protected anchor on a public synthetic owned stand; no production data, GitHub deployment receipt or public baseline advance"
+  },
+  "localRepair": {
+    "windowsReleaseContracts": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "scope": "Windows release contracts with explicit Linux-only skips",
+      "exitCode": 0,
+      "counts": {
+        "tests": 489,
+        "pass": 482,
+        "fail": 0,
+        "skipped": 7,
+        "cancelled": 0,
+        "todo": 0
+      },
+      "files": 77,
+      "milliseconds": 30481,
+      "logHash": "sha256:34af3e85bf83891009647c6afcaa6828da245c803a0231efc2e3a0f7790a8584",
+      "observedAt": "2026-10-06T05:13:15.479Z"
+    },
+    "nativePostgres": {
+      "schemaVersion": 1,
+      "writerHistoryAdapterRestored": true,
+      "temporaryArchiveRemoved": true,
+      "verifiedHostArchiveRetained": true,
+      "status": "passed",
+      "scope": "Actual PostgreSQL 17 restore of two synthetic entities; no production data or production timing claim",
+      "sourceBytes": 56506035,
+      "dumpBytes": 19713800,
+      "milliseconds": 1359.482341,
+      "rows": 32768,
+      "sourceRetained": true,
+      "rowsSequencesConstraintsEqual": true,
+      "walSettings": "minimal:0:off",
+      "productionMutations": 0,
+      "providerRequests": 0,
+      "cleanup": "stopped-owned-resources-absent",
+      "observedAt": "2026-10-06T05:17:05.377Z"
+    },
+    "linuxFocused": {
+      "tests": 15,
+      "passed": 15,
+      "skipped": 0
+    },
+    "changes": [
+      "Single-transaction archive restore on the owned PostgreSQL with minimal WAL; production PostgreSQL settings unchanged",
+      "Measured source size and 1 GiB reserve before the second copy; free-space monitoring cancels only owned target pg_restore",
+      "Remove only byte-verified temporary duplicate dump from owned container; host archive and original captured data retained",
+      "Support exact reviewed five- and six-phase pre-cutover refusals; fresh workflow/host checks remain mandatory"
+    ],
+    "limitations": [
+      "32,768 synthetic rows validate preservation and restore path; not a production-sized timing proof",
+      "Broad tests in the minimal controller failed because git and a writable test workspace are absent; these results are not accepted as a suite PASS",
+      "Local full A is an owned synthetic deployment, not a production receipt or a public baseline"
+    ],
+    "diskReserveBytes": 1073741824
+  },
+  "production": {
+    "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "writers": "OFF",
+    "selective": false,
+    "automatic": false,
+    "reconcile": false,
+    "paidProviderRequests": 0
+  },
+  "nextAcceptance": [
+    "Commit verified repair and run a new exact extended CI",
+    "Publish genuine images and writer/browser proof from that exact source",
+    "Capture a fresh production backup and complete all nine host rehearsal gates with reserve",
+    "Apply and independently verify live writer policy; then exercise genuine frontend-only delivery and rollback/automation"
+  ]
+}

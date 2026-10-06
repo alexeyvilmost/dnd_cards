@@ -14,6 +14,7 @@ import {createWriterHistoryDocker} from './writer-history-docker.mjs';
 import {normalizeMediaReferences} from './reference-values.mjs';
 import {createCanonicalPendingScenario,acceptedReceiptReplay,authorizeDockerRehearsal} from './rehearsal-scenarios.mjs';
 import {dockerCommand} from './rehearsal-command.mjs';
+import {availableRestoreBytes,disposablePostgresOptions,restoreDiskReserve,restoreOwnedDatabase} from './owned-database-restore.mjs';
 export {dockerCommand} from './rehearsal-command.mjs';
 import {databaseMigrationSet,migrationBaselineMatches} from './migration-transition.mjs';
 import {isLegacyBaseline,baselineDocument,baselineArtifact} from './legacy-baseline.mjs';
@@ -48,16 +49,16 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
     await resource('volume',names.pgVolume,['volume','create','--label',label,names.pgVolume]);
     const spaceName=`${run}_storage_probe`;
     const space=await resource('container',spaceName,['run','--name',spaceName,'--label',label,'--network','none','--read-only','--mount',`type=volume,source=${names.pgVolume},target=/data`,'--entrypoint','df',postgresImage,'-Pk','/data']);
-    const available=Number(space.trim().split(/\r?\n/).at(-1).trim().split(/\s+/)[3])*1024;
+    const available=availableRestoreBytes(space);
     const dumpBytes=files.filter(row=>row.category==='database').reduce((sum,row)=>sum+row.bytes,0);
-    if(!Number.isSafeInteger(available)||available<Math.max(1024**3,dumpBytes*4))throw Error('Insufficient disposable Docker storage for database restore');
+    if(available<dumpBytes*4+restoreDiskReserve)throw Error('Insufficient disposable Docker storage for database restore');
     await resource('container',names.postgres,['run','-d','--name',names.postgres,'--label',label,'--network',names.network,'--network-alias','postgres',
-      '--env-file',pgEnv,'--mount',`type=volume,source=${names.pgVolume},target=/var/lib/postgresql/data`,postgresImage]);
+      '--env-file',pgEnv,'--mount',`type=volume,source=${names.pgVolume},target=/var/lib/postgresql/data`,postgresImage,...disposablePostgresOptions]);
     // The image's temporary initialization server accepts Unix sockets before
     // it shuts down. Only TCP readiness proves the final server is available.
     await wait(async()=>{await command(['exec',names.postgres,'pg_isready','-h','127.0.0.1','-U','rehearsal','-d','rehearsal']);return true;});
     const dumps=files.filter(row=>row.category==='database');if(dumps.length!==1)throw Error('Exactly one captured dump required');
-    await command(['exec','-i',names.postgres,'pg_restore','--exit-on-error','--no-owner','--no-privileges','-U','rehearsal','-d','rehearsal'],{inputFile:backupFile(backupDirectory,dumps[0].path),timeout:300000});
+    await restoreOwnedDatabase({command,names,owner:run,database:'rehearsal',inputFile:backupFile(backupDirectory,dumps[0].path),dumpBytes:dumps[0].bytes});
     pgReady=true;
     const inventoryURL=new URL('postgres://postgres:5432/rehearsal?sslmode=disable');inventoryURL.username='rehearsal';inventoryURL.password=secrets.database;
     inventory=await readDockerInventory({command,cleanupCommand:executeDocker,postgresImage,databaseNetwork:names.network,dsn:inventoryURL.href});

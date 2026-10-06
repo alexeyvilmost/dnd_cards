@@ -24,12 +24,17 @@ for(const changedOwnership of [false,true])test(`restore failure cleans every ow
     }
     if(args[0]==='exec'){
       if(args.includes('pg_isready'))return '';
+      if(args.includes('psql'))return 'minimal:0:off';
+      if(args.includes('df'))return 'Filesystem 1024-blocks Used Available Capacity Mounted on\nunit 9999999 1 9999998 1% /data';
       assert.ok(args.includes('pg_restore'));throw Error('Injected restore interruption');
     }
     if(args[1]==='ls')return [...resources].filter(([,row])=>row.kind===args[0]).map(([name])=>name).join('\n');
     if(args[1]==='inspect'){
       const name=args[2],row=resources.get(name);assert.ok(row);
-      return JSON.stringify([{Internal:true,Labels:{'bagofholding.rehearsal':changedOwnership&&name===pg?'foreign':row.owner}}]);
+      // Ownership changes only during cleanup; restore failure itself is the
+      // injected pg_restore interruption for both cases.
+      const owner=changedOwnership&&name===pg&&calls.some(c=>c.args.includes('pg_restore'))?'foreign':row.owner;
+      return JSON.stringify([{Internal:true,Labels:{'bagofholding.rehearsal':owner},Config:{Labels:{'bagofholding.rehearsal':owner}},State:{Running:true},NetworkSettings:{Networks:{[run+'_net']:{}},Ports:{}},Mounts:[{Type:'volume',Name:run+'_pgdata',Destination:'/var/lib/postgresql/data'}]}]);
     }
     if(args[1]==='rm'){assert.ok(resources.delete(args.at(-1)));return '';}
     throw Error('Unexpected simulated Docker command');

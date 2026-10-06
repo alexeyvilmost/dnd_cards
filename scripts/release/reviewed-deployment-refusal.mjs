@@ -7,6 +7,12 @@ import {evidenceHash}from'./validate-manifest.mjs';
 const positive=n=>Number.isSafeInteger(n)&&n>0,sha=/^[a-f0-9]{40}$/,hash=/^sha256:[a-f0-9]{64}$/;
 const date=s=>typeof s==='string'&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString()===s;
 const fields=['schemaVersion','kind','status','observedAt','repository','failed','baseline','candidateManifestHash','failedReleaseId','hostConfigHash','transferHash','rehearsalHash','rehearsalRunId','rehearsalCompletedAt','phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash','cleanup','readOnly','sqlQueries','serviceReplacements','providerRequests'];
+export function reviewedRefusalPhaseScripts(proof){
+ const scripts=['release-publication.mjs','deployment-handoff.mjs','automatic-release.mjs','prepare-host-release.mjs','candidate-rehearsal.mjs'];
+ assert.ok([5,6].includes(proof.phaseHashes?.length),'Reviewed refusal must stop at candidate rehearsal');
+ if(proof.phaseHashes.length===6)scripts.splice(3,0,'reviewed-deployment-refusal-host.mjs');
+ return scripts;
+}
 export function validateReviewedDeploymentRefusal(proof){
  assert.deepEqual(Object.keys(proof??{}).sort(),[...fields].sort());assert.equal(proof.schemaVersion,1);assert.equal(proof.kind,'reviewed-followon-pre-cutover-refusal-audit');assert.equal(proof.status,'passed');
  assert.match(proof.repository,/^[\w.-]+\/[\w.-]+$/);assert.ok(date(proof.observedAt));
@@ -15,7 +21,7 @@ export function validateReviewedDeploymentRefusal(proof){
  for(const key of ['manifestHash','activeHash'])assert.match(proof.baseline[key],hash);
  for(const key of ['candidateManifestHash','hostConfigHash','transferHash','rehearsalHash','databaseBindingHash','routingSecurityHash'])assert.match(proof[key],hash);
  assert.match(proof.failedReleaseId,/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/);assert.notEqual(proof.failedReleaseId,proof.baseline.releaseId);assert.match(proof.rehearsalRunId,/^[a-f0-9-]{36}$/);assert.ok(date(proof.rehearsalCompletedAt)&&Date.parse(proof.rehearsalCompletedAt)<=Date.parse(proof.failed.completedAt));
- assert.deepEqual(proof.phaseHashes.map(r=>r.file),Array.from({length:5},(_,i)=>'phase-'+String(i+1).padStart(2,'0')+'.json'));
+ assert.deepEqual(proof.phaseHashes.map(r=>r.file),reviewedRefusalPhaseScripts(proof).map((_,i)=>'phase-'+String(i+1).padStart(2,'0')+'.json'));
  assert.deepEqual(proof.retained.map(r=>r.file),['state.json','compose.env','compose.prod.yml','Caddyfile','compose.runtime.json']);
  for(const rows of [proof.phaseHashes,proof.retained,proof.operations]){assert.ok(Array.isArray(rows)&&new Set(rows.map(r=>r.file)).size===rows.length);for(const r of rows){assert.deepEqual(Object.keys(r).sort(),['file','sha256']);assert.match(r.file,/^[A-Za-z0-9_.-]+$/);assert.match(r.sha256,hash);}}
  assert.deepEqual(Object.keys(proof.services).sort(),['backend','frontend','rulesWorker']);for(const row of Object.values(proof.services)){assert.equal(row.healthy,true);assert.match(row.containerId,/^[a-f0-9]{64}$/);assert.match(row.imageDigest,/^[^\s@]+@sha256:[a-f0-9]{64}$/);assert.equal(row.identity?.provenance,'baked');assert.match(row.identity.sourceCommit,sha);}

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {chmod,lstat} from 'node:fs/promises';
 import path from 'node:path';
 import {checksum} from './backup-manifest.mjs';
+import {restoreOwnedDatabase} from './owned-database-restore.mjs';
 
 // A narrow capability supplied only by createDockerRehearsal. It never accepts
 // a live DSN, arbitrary database name, caller-produced dump or external report.
@@ -27,13 +28,19 @@ export function createWriterHistoryDocker({command,resource,names,owner,label,di
   await command(['exec',names.postgres,'pg_dump','--format=custom','--no-owner','--no-privileges','-U','rehearsal','-d',database,'--file',temporary],{timeout:300000});
   await command(['cp',names.postgres+':'+temporary,file]);await chmod(file,0o600);
   const stat=await lstat(file);assert.ok(stat.isFile()&&!stat.isSymbolicLink()&&stat.size>0);
-  const value={path:file,sha256:await checksum(file),bytes:stat.size,createdAt:new Date().toISOString(),sourceDatabase:database};snapshots.set(value,JSON.stringify(value));return value;
+  const value={path:file,sha256:await checksum(file),bytes:stat.size,createdAt:new Date().toISOString(),sourceDatabase:database};
+  const inside=(await command(['exec',names.postgres,'sha256sum',temporary])).trim().split(/\s+/)[0];assert.equal('sha256:'+inside,value.sha256);
+  // The verified host archive is retained. Only this duplicate temporary file
+  // in our owned disposable container is removed before the second DB grows.
+  await assertOwned();await assertApplicationsStopped();await command(['exec',names.postgres,'rm','--',temporary]);
+  snapshots.set(value,JSON.stringify(value));return value;
  }
  async function restoreDatabase(snapshot){
   assert.equal(snapshots.get(snapshot),JSON.stringify(snapshot));await assertOwned();await assertApplicationsStopped();assert.equal(await checksum(snapshot.path),snapshot.sha256);
   const next='writer_restore_'+(++sequence);assert.match(next,/^writer_restore_[1-9][0-9]*$/);
+  const size=(await query('SELECT pg_database_size(current_database());')).trim();assert.match(size,/^[1-9][0-9]*$/);const sourceBytes=Number(size);
   await command(['exec',names.postgres,'createdb','--template=template0','-U','rehearsal',next]);
-  await command(['exec','-i',names.postgres,'pg_restore','--exit-on-error','--no-owner','--no-privileges','-U','rehearsal','-d',next],{inputFile:snapshot.path,timeout:300000});
+  await restoreOwnedDatabase({command,names,owner,database:next,inputFile:snapshot.path,dumpBytes:snapshot.bytes,sourceBytes});
   const result={sourceDatabase:database,restoredDatabase:next,dumpHash:snapshot.sha256,sourceRetained:true,markerVerified:true};
   database=next;await assertOwned();restores.set(result,JSON.stringify(result));return result;
  }
