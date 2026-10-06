@@ -220,3 +220,47 @@ test('bounded history exhaustion never returns an early success as a guessed lat
   }, {repository, now}), /pagination limit/);
   assert.equal(pages, 100);
 });
+
+test('independent reads are bounded at four and settle before returning on success or failure', async () => {
+  for (const rejected of [false, true]) {
+    const f = fixture(Array.from({length: 8}, (_, i) => run(9 - i)));
+    let active = 0, maximum = 0, reads = 0;
+    const get = async route => {
+      if (route.startsWith('actions/workflows/')) return f.get(route);
+      active++; maximum = Math.max(maximum, active); reads++;
+      try {
+        await new Promise(resolve => setTimeout(resolve, route === 'actions/runs/9' ? 1 : 3));
+        if (rejected && route === 'actions/runs/9') throw Error('Owned read failure');
+        return await f.get(route);
+      } finally { active--; }
+    };
+    if (rejected) await assert.rejects(selectLatestDeployedRun(get, {repository, now}), /Owned read failure/);
+    else assert.equal((await selectLatestDeployedRun(get, {repository, now})).id, 9);
+    assert.equal(active, 0);
+    assert.equal(maximum, 4);
+    assert.ok(reads >= 7, 'all independent rows in the failed batch were observed');
+    if (rejected) assert.ok(!f.requested.some(route => route.includes('/artifacts')));
+  }
+});
+
+
+test('null and undefined rejections settle the owned batch and cannot select a baseline', async () => {
+  for (const reason of [null, undefined]) {
+    const f = fixture([run(9), run(8), run(7), run(6)]);
+    let active = 0;
+    const get = async route => {
+      if (route.startsWith('actions/workflows/')) return f.get(route);
+      active++;
+      try {
+        await new Promise(resolve => setTimeout(resolve, 2));
+        if (route === 'actions/runs/9') throw reason;
+        return await f.get(route);
+      } finally { active--; }
+    };
+    const [result] = await Promise.allSettled([selectLatestDeployedRun(get, {repository, now})]);
+    assert.equal(result.status, 'rejected');assert.equal(result.reason, reason);
+    assert.equal(active, 0);
+    assert.ok(!f.requested.some(route => route.includes('/artifacts')));
+    for (const id of [8, 7, 6]) assert.ok(f.requested.some(route => route.startsWith('actions/runs/' + id + '/jobs')));
+  }
+});

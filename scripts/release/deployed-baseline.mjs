@@ -65,7 +65,9 @@ export async function selectLatestDeployedRun(get, {repository, now = Date.now()
   // Filtered workflow searches return at most 1,000 rows. At that boundary
   // completeness cannot be assumed even if a capped total_count is reported.
   for await (const runs of pages(get, route, 'workflow_runs', 100, 999)) {
-    for (const listed of runs) {
+    // Four independent run rows; keep every dependent freshness check sequential.
+    for (let offset = 0; offset < runs.length; offset += 4) {
+      const outcomes = await Promise.allSettled(runs.slice(offset, offset + 4).map(async listed => {
       const identity = runIdentity(listed, repository);
       const fresh = runIdentity(await get(`actions/runs/${identity.id}`), repository);
       if (!sameRun(identity, fresh)) throw Error('Deployment workflow changed during discovery');
@@ -79,7 +81,7 @@ export async function selectLatestDeployedRun(get, {repository, now = Date.now()
       }
       if (job.conclusion === 'skipped') {
         if (!sameRun(identity, runIdentity(await get(`actions/runs/${identity.id}`), repository))) throw Error('Deployment workflow changed during discovery');
-        continue;
+        return {kind:'skipped'};
       }
       if (!['success', 'failure', 'cancelled', 'timed_out', 'neutral', 'action_required', 'stale'].includes(job.conclusion)) throw Error('Deploy job has an unknown or ambiguous terminal result');
       const started = timestamp(job.started_at), completed = timestamp(job.completed_at);
@@ -88,11 +90,18 @@ export async function selectLatestDeployedRun(get, {repository, now = Date.now()
       // reconciled. Unknown failures, reruns and changed metadata still block.
       if(job.conclusion!=='success'||identity.conclusion!=='success'){
         const proof=loadReviewedDeploymentRefusal({id:identity.id,attempt:identity.runAttempt,repository,controlRoot});
-        if(proof){assertReviewedRefusalRun(proof,{identity,job,now});if(!sameRun(identity,runIdentity(await get(`actions/runs/${identity.id}`),repository)))throw Error('Reviewed refused deployment changed during discovery');refused.push({proof,completed});continue;}
+        if(proof){assertReviewedRefusalRun(proof,{identity,job,now});if(!sameRun(identity,runIdentity(await get(`actions/runs/${identity.id}`),repository)))throw Error('Reviewed refused deployment changed during discovery');return {kind:'reviewed',proof,completed};}
       }
-      if (!latest || completed > latest.completed) {
-        latest = {identity, job, started, completed}; tied = false;
-      } else if (completed === latest.completed) tied = true;
+      return {kind:'deployment',identity,job,started,completed};
+      }));
+      const failure = outcomes.find(outcome => outcome.status === 'rejected');
+      if (failure) throw failure.reason;
+      for (const {value} of outcomes) {
+        if (value.kind === 'skipped') continue;
+        if (value.kind === 'reviewed') {refused.push({proof:value.proof,completed:value.completed});continue;}
+        if (!latest || value.completed > latest.completed) {latest=value;tied=false;}
+        else if (value.completed === latest.completed) tied=true;
+      }
     }
   }
   if (!latest){if(refused.length)throw Error('Reviewed refusal has no genuine successful baseline');return null;}

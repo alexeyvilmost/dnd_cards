@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "status": "integrated-local-checks-passed-exact-new-ci-pending",
+  "recordedAt": "2026-10-06T16:56:01.995Z",
+  "sourceParent": "e333fc421b4241001f970f955e5a0aa532ccd706",
+  "scope": [
+    "Complete actual deployment-history discovery with bounded independent reads; every freshness/failure/pagination check retained.",
+    "Verified generated source-checksum updates follow their actual original source changes; unrelated infrastructure, unbound provenance, writer policy and toolchain changes retain full selection."
+  ],
+  "inputs": [
+    {
+      "path": "scripts/release/ci-release.mjs",
+      "beforeHash": "sha256:2f696564bdb7440464f6459da55ec1c07943d670890c14014e70129059fad48a",
+      "afterHash": "sha256:c1b993d0335a07fa8a1e47a315a2741a6dbb70ed0dfbe0917ee6274c743d063a"
+    },
+    {
+      "path": "scripts/release/ci-release.test.mjs",
+      "beforeHash": "sha256:aee835c835229ff129e18dd0df55a4b06e7434dafbd5780be612df8aedfa7833",
+      "afterHash": "sha256:7d4e9130def9d2a406f03e9615dfdd4f7e7b0c2189891e1c5ae2030691b398e7"
+    },
+    {
+      "path": "scripts/release/deployed-baseline.mjs",
+      "beforeHash": "sha256:2a7f016b2b1d339fafe224a2ab8f4fbd6e584bab9a6068df4b422d3bfa1b1045",
+      "afterHash": "sha256:dd8079854629521dc10752af4f7994448726b301c1855255837d078e33601dc3"
+    },
+    {
+      "path": "scripts/release/deployed-baseline.test.mjs",
+      "beforeHash": "sha256:ca96538340bd6cac7c70c5f74887ebc90e9be42f7f434bbc97cd69adbf257a97",
+      "afterHash": "sha256:e2af7f6dd05fb4194119c8eba6785a0aba74633583e5b022086d48e6a140b212"
+    },
+    {
+      "path": "scripts/release/generated-source-provenance.mjs",
+      "beforeHash": null,
+      "afterHash": "sha256:1711f23302af1febd7ef0a49b3fae964de18e5ca6cef71a610e979bbecb596f8"
+    },
+    {
+      "path": "scripts/release/generated-source-provenance.test.mjs",
+      "beforeHash": null,
+      "afterHash": "sha256:23376c522abbe4640dcc0b9fab7b2e4826b64e1bd179a70cc0f5246ecb8f9b1e"
+    }
+  ],
+  "local": {
+    "requiredNodeChecks": 128,
+    "failed": 0,
+    "skipped": 0,
+    "selectedTests": [
+      "scripts/release/deployed-baseline.test.mjs",
+      "scripts/release/generated-source-provenance.test.mjs",
+      "scripts/release/ci-release.test.mjs",
+      "scripts/release/plan-components.test.mjs",
+      "scripts/release/source-content-manifest.test.mjs",
+      "scripts/release/ui-release-planning.test.mjs",
+      "scripts/release/ui-release-dispatch.test.mjs",
+      "scripts/release/ui-ci.test.mjs",
+      "scripts/release/ui-release-policy.test.mjs",
+      "scripts/release/writer-selective.test.mjs",
+      "scripts/release/validate-manifest.test.mjs"
+    ],
+    "source": {
+      "head": "e333fc421b4241001f970f955e5a0aa532ccd706",
+      "files": 4541,
+      "sha256": "f9f856722101ce9deb792eb5a61ea953c77de0a1c6ace9e06739d35f939f8e5a"
+    },
+    "sourceUnchanged": true,
+    "reportHash": "sha256:92e3f582d5f17a286d7fbf78fe95276ed82533e6cd3e3d901945665ba451e796",
+    "sourceCatalogUnchanged": true
+  },
+  "metadataExperiment": {
+    "record": "outputs/operations/baseline-discovery-comparison-current-20261006/report.json",
+    "hash": "sha256:27c1cae5b4bd211865c554e29ce8b5ab26808b4e5028a0e6e7f7b2a437a663d7",
+    "serialMs": 66454.27579999999,
+    "parallelMs": 22228.5291,
+    "requestsPerRole": 158,
+    "baselineRun": 37486931185,
+    "maximumConcurrentReads": 4,
+    "samplesPerRole": 1
+  },
+  "previousExactCI": {
+    "sourceCommit": "e333fc421b4241001f970f955e5a0aa532ccd706",
+    "id": 37496663630,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37496663630",
+    "status": "passed",
+    "reportHash": "sha256:99a2043022896f533f75478cbba6112ff027326aa10d259872b0e851532ca03f",
+    "durationMs": 722972,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "counts": [
+      {
+        "id": "worker-and-database-node",
+        "tests": 25,
+        "passed": 25,
+        "skipped": 0
+      },
+      {
+        "id": "go-backend",
+        "required": 409
+      },
+      {
+        "id": "go-animationpresentation",
+        "required": 4
+      },
+      {
+        "id": "go-audiopresentation",
+        "required": 3
+      },
+      {
+        "id": "go-itemsource",
+        "required": 5
+      },
+      {
+        "id": "go-migrations",
+        "required": 333
+      },
+      {
+        "id": "go-roguelikecontent",
+        "required": 1
+      },
+      {
+        "id": "go-weapondata",
+        "required": 1
+      },
+      {
+        "id": "observed-legacy-baseline",
+        "tests": 1
+      },
+      {
+        "id": "catalog-equivalence",
+        "required": 4
+      },
+      {
+        "id": "preparation-cache-equivalence",
+        "required": 9
+      },
+      {
+        "id": "browser-ui-fixtures-production",
+        "tests": 48,
+        "passed": 48,
+        "skipped": 0
+      },
+      {
+        "id": "browser-ui-fixtures-battle3d",
+        "tests": 8,
+        "passed": 8,
+        "skipped": 0
+      },
+      {
+        "id": "local-browser-flows",
+        "tests": 12,
+        "passed": 12,
+        "skipped": 0
+      },
+      {
+        "id": "node-contracts",
+        "tests": 980,
+        "passed": 980,
+        "skipped": 0
+      },
+      {
+        "id": "vitest",
+        "tests": 6462,
+        "passed": 6462,
+        "skipped": 0
+      }
+    ]
+  },
+  "production": {
+    "applicationSource": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+    "controlSource": "02541c07a08ac5559e93401393cc5ba4cf936edf",
+    "deploymentRun": 37486931185,
+    "writerPolicy": {
+      "compactReceipts": true,
+      "imageJobs": true,
+      "frozenCatalogs": false
+    },
+    "frontendSelectiveEnabled": true,
+    "actualSelectiveAcceptance": false,
+    "automatic": false,
+    "newPlannerDeployed": false
+  },
+  "productionWrites": 0,
+  "paidProviderRequests": 0,
+  "overall29GoalComplete": false,
+  "limitations": [
+    "One actual metadata comparison per role; no p95 or overall rollout-time SLA inferred.",
+    "Source checksum reuse is proved through real temporary Git repositories and mocked OCI identities; actual hosted image reuse remains separate acceptance.",
+    "128 selected contracts check the new control code; earlier CI27 verifies e333 application source only and cannot verify this later control change."
+  ],
+  "nextSteps": [
+    {
+      "id": "commit-and-ci",
+      "steps": [
+        "Commit only reviewed release planner files and public progress reports.",
+        "Push the exact reviewed commit to main; uniquely bind and accept its required extended CI, mandatory nonzero/no-skip groups and stopped cleanup."
+      ]
+    },
+    {
+      "id": "full-baseline",
+      "steps": [
+        "Use the last independently verified deployment37486931185, applicationf05/control025, as baseline.",
+        "Publish genuine immutable components and exact-source writer/browser evidence; retain any actual conservative full selection, including the newly recorded control refusal.",
+        "Notify owner before a new production cutover, capture fresh protected backup and preserve the previous source/image identities.",
+        "Run all required host restore/history/ninth-stage proofs; do not restore a diagnostic DB over live data. Independently verify manifest, live source/digests/launch identities and migration ledger."
+      ]
+    },
+    {
+      "id": "selective-and-automatic",
+      "steps": [
+        "Apply only the already prepared genuine UI accessibility change after the actual full baseline exists.",
+        "Run bound core plus affected UI/E2E checks; publish only selected frontend, retaining exact backend/worker digests.",
+        "Verify actual backend/worker container IDs and launch identities unchanged; rehearse full rollback on an owned clone with existing durable decisions/receipts/jobs.",
+        "Complete the explicitly gated hosted main automatic/reconcile acceptance; do not treat a flag or a skipped workflow as deployment."
+      ]
+    }
+  ]
+}

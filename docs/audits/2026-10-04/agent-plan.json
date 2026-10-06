@@ -5388,7 +5388,7 @@
       ]
     }
   ],
-  "updated_at": "2026-10-06T16:32:47.371Z",
+  "updated_at": "2026-10-06T16:56:01.995Z",
   "backup_storage_scope": {
     "schemaVersion": 1,
     "recordedAt": "2026-10-05T23:59:21.251Z",
@@ -5498,16 +5498,38 @@
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
   "execution_followon_current": {
-    "status": "full-delivery-accepted-next-local-performance-integration-verified",
-    "deployedEvidence": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
-    "nextLocalEvidence": "docs/audits/2026-10-04/execution/PERF-02-wave-integration.json",
+    "status": "integrated-local-checks-passed-exact-new-ci-pending",
+    "productionEvidence": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+    "latestAcceptedSource": "e333fc421b4241001f970f955e5a0aa532ccd706",
+    "latestAcceptedCI": 37496663630,
+    "nextLocalEvidence": "docs/audits/2026-10-04/execution/REL-05-planner-integration.json",
     "productionChangedByThisIntegration": false,
     "next": [
-      "Commit only this checked scope with current public delivery reports; accept exact extended CI.",
-      "Publish the full candidate because backend/source provenance and the recorded control refusal differ from the actual application baseline; do not label that composition frontend-only.",
-      "Before any new production cutover notify owner, obtain fresh protected capture and all nine gates; never restore a diagnostic dump over live rows.",
-      "Evaluate non-batch deduplicated configuration with an exact-source paired canonical latency comparison before changing live performance flags.",
-      "After that full source becomes actual baseline, verify the already prepared UI-only change, unchanged backend/worker containers, owned rollback and automatic/reconcile delivery."
+      {
+        "id": "commit-and-ci",
+        "steps": [
+          "Commit only reviewed release planner files and public progress reports.",
+          "Push the exact reviewed commit to main; uniquely bind and accept its required extended CI, mandatory nonzero/no-skip groups and stopped cleanup."
+        ]
+      },
+      {
+        "id": "full-baseline",
+        "steps": [
+          "Use the last independently verified deployment37486931185, applicationf05/control025, as baseline.",
+          "Publish genuine immutable components and exact-source writer/browser evidence; retain any actual conservative full selection, including the newly recorded control refusal.",
+          "Notify owner before a new production cutover, capture fresh protected backup and preserve the previous source/image identities.",
+          "Run all required host restore/history/ninth-stage proofs; do not restore a diagnostic DB over live data. Independently verify manifest, live source/digests/launch identities and migration ledger."
+        ]
+      },
+      {
+        "id": "selective-and-automatic",
+        "steps": [
+          "Apply only the already prepared genuine UI accessibility change after the actual full baseline exists.",
+          "Run bound core plus affected UI/E2E checks; publish only selected frontend, retaining exact backend/worker digests.",
+          "Verify actual backend/worker container IDs and launch identities unchanged; rehearse full rollback on an owned clone with existing durable decisions/receipts/jobs.",
+          "Complete the explicitly gated hosted main automatic/reconcile acceptance; do not treat a flag or a skipped workflow as deployment."
+        ]
+      }
     ]
   },
   "latest_paired_batch_measurement": {
@@ -5599,5 +5621,11 @@
     "integrated": true,
     "productionEnabled": false,
     "productionSpeedupClaimed": false
+  },
+  "latest_release_planner_integration": {
+    "status": "integrated-local-checks-passed-exact-new-ci-pending",
+    "evidence": "docs/audits/2026-10-04/execution/REL-05-planner-integration.json",
+    "integrated": true,
+    "productionChanged": false
   }
 }

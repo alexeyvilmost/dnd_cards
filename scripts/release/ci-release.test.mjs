@@ -232,6 +232,32 @@ test('UI-only release reuses old backend/worker digests while shared runtime sel
   assert.equal(changed.matrix.find(row => row.name === 'worker').operation, 'build');
 });
 
+test('backend source plus generated catalog checksums reuses exact frontend and worker images', t => {
+  const f = fixture(t), configFile = path.join(f.repo, 'infra/release-build-config.json');
+  const writeConfig = () => writeFileSync(configFile, JSON.stringify({...config(), contentManifestHash:evidenceHash(sourceContentManifest(f.repo))}));
+  writeConfig(); const base = f.commit(), first = f.plan(base);
+  const old = assembleCandidateManifest(first, recordsFor(first), publishedFor(first)).manifest;
+  const baselineFile = path.join(f.directory, 'manifest.json'); writeFileSync(baselineFile, JSON.stringify(old));
+  const extra = {baseline:old, baselineFile, baselineReceipt:{schemaVersion:1,status:'succeeded',releaseId:old.releaseId,releaseCommit:base,controlCommit:base,manifestHash:evidenceHash(old)},baselineRun:{controlCommit:base}};
+  writeFileSync(path.join(f.repo,'backend/main.go'),'package main\nfunc main(){println("changed")}\n');
+  writeConfig(); const candidate = f.commit(), changed = f.plan(candidate,extra); validateBuildPlan(changed);
+  assert.equal(changed.matrix.find(row=>row.name==='backend').operation,'build');
+  assert.equal(changed.verificationEvidence.requiredTier,'extended');
+  assert.notEqual(changed.config.contentManifestHash,old.contentManifestHash);
+  assert.deepEqual(changed.selection.components,{frontend:false,backend:true,worker:false,infrastructure:false});
+  for (const name of ['frontend','worker']) {
+    const row = changed.matrix.find(row=>row.name===name);
+    assert.equal(row.operation,'reuse'); assert.equal(row.sourceCommit,base);
+    assert.equal(row.imageDigest,old.components[row.component].imageDigest);
+    assert.equal(row.inputFingerprint,old.components[row.component].inputFingerprint);
+  }
+  const actualConfig = JSON.parse(readFileSync(configFile,'utf8'));
+  actualConfig.platform='unsupported';writeFileSync(configFile,JSON.stringify(actualConfig));
+  // A non-derived configuration edit keeps the conservative component boundary.
+  f.commit(); const conservative=f.plan(f.git(['rev-parse','HEAD']),extra);
+  assert.ok(conservative.matrix.every(row=>row.operation==='build'));
+});
+
 test('baseline receipts, component identity and immutable archive checks fail closed', async t => {
   const f = fixture(t), plan = f.plan(f.candidate), records = recordsFor(plan), manifest = assembleCandidateManifest(plan, records, publishedFor(plan)).manifest;
   assert.throws(() => verifyBaseline(manifest, {status: 'failed'}, {sourceCommit: f.candidate}));

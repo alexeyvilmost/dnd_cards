@@ -13,6 +13,7 @@ import {selectLatestDeployedRun} from './deployed-baseline.mjs';
 import {assertReviewedRefusalBaseline}from'./reviewed-deployment-refusal.mjs';
 import {loadControlRecovery,recoveryFields} from './first-adoption-recovery.mjs';
 import {assertSourceContentManifest} from './source-content-manifest.mjs';
+import {selectGeneratedSourceProvenance} from './generated-source-provenance.mjs';
 import {verifyFrontendCIReport} from './ui-release-planning.mjs';
 
 const exactSHA = /^[a-f0-9]{40}$/;
@@ -113,7 +114,7 @@ export function prepareBuildPlan({repo, candidate, repository, controlCommit, re
   if(!exactSHA.test(controlCommit??'')||!Number.isSafeInteger(releaseRunId)||releaseRunId<1)throw Error('Exact release control commit and workflow run identity required');
   if (!exactSHA.test(candidate) || git(repo, ['rev-parse', 'HEAD']) !== candidate
     || git(repo, ['status', '--porcelain', '--untracked-files=all'])) throw Error('Build source must be an exact clean checked-out commit');
-  assertSourceContentManifest(repo,config);
+  const contentManifest = assertSourceContentManifest(repo,config);
   git(repo, ['merge-base', '--is-ancestor', candidate, 'refs/remotes/origin/main']);
   if (verification.sourceCommit !== candidate || verification.repository !== repository) throw Error('Verification source mismatch');
   if (baseline) {
@@ -121,7 +122,9 @@ export function prepareBuildPlan({repo, candidate, repository, controlCommit, re
     if (!baselineFile || evidenceHash(read(baselineFile)) !== evidenceHash(baseline)) throw Error('Baseline file mismatch');
   }
   validateWriterTransition({...config,writerPolicy:writerPolicy(config),previousReleaseId:baseline?.releaseId??null,apiProtocolVersion:1,workerProtocolVersion:1,supportedWorldSchemaVersions:[5]},baseline);
-  const selection = baseline ? createPlan({repo, mode: 'deploy', candidate, deployedManifest: baselineFile}) : createPlan({repo, mode: 'ci', candidate, full: true});
+  const conservativeSelection = baseline ? createPlan({repo, mode: 'deploy', candidate, deployedManifest: baselineFile}) : createPlan({repo, mode: 'ci', candidate, full: true});
+  const selection = selectGeneratedSourceProvenance({repo, selection: conservativeSelection, config, contentManifest, previousManifest: baseline,
+    readBaselineFile: file => git(repo, ['show', `${baseline.releaseCommit}:${file}`])});
   const matrix = calculateBuildMatrix({repo,candidate,repository,config,selection,baseline});
   const baselineIdentity = baseline ? {releaseId: baseline.releaseId, manifestHash: evidenceHash(baseline)} : null;
   const requiredTier=requiredBuildVerificationTier({selection,matrix,config,previousManifest:baseline});
