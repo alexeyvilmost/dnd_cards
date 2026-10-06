@@ -714,6 +714,12 @@
   },
   "extended_gates": [
     {
+      "id": "character-retirement-transaction",
+      "script": "scripts/performance/check-character-retirement.mjs",
+      "export": "checkCharacterRetirement",
+      "contract": "Separate owned native PostgreSQL: all 22 retirement 301 transaction, dependency, ownership, UTC, history-preservation and exact-retry cases must pass without skip. No production DSN or genuine source/backup/image acceptance claim. Read-only inspection Go tests remain required in all-local-packages."
+    },
+    {
       "id": "reference-cursor-transport",
       "script": "scripts/performance/check-reference-cursor.mjs",
       "export": "checkReferenceCursor",

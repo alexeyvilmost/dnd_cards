@@ -37,25 +37,27 @@ type RetirementRequest struct {
 	Preimages                map[string]RetirementPreimage `json:"preimages"`
 }
 type ReleaseRetirementInspectionRequest struct {
-	SchemaVersion             int                 `json:"schemaVersion"`
-	Kind                      string              `json:"kind"`
-	ReleaseID                 string              `json:"releaseId"`
-	ExpectedCurrent           []MigrationIdentity `json:"expectedCurrent"`
-	SQLSourceHash             string              `json:"sqlSourceHash"`
-	ReceiptHash               string              `json:"receiptHash"`
-	Retirement                RetirementRequest   `json:"retirement"`
-	CandidateSourceCommit     string              `json:"candidateSourceCommit"`
-	CandidateInputFingerprint string              `json:"candidateInputFingerprint"`
+	SchemaVersion                   int                 `json:"schemaVersion"`
+	Kind                            string              `json:"kind"`
+	ReleaseID                       string              `json:"releaseId"`
+	ExpectedCurrent                 []MigrationIdentity `json:"expectedCurrent"`
+	SQLSourceHash                   string              `json:"sqlSourceHash"`
+	ExpectedAdditiveSchemaProofHash string              `json:"expectedAdditiveSchemaProofHash"`
+	ReceiptHash                     string              `json:"receiptHash"`
+	Retirement                      RetirementRequest   `json:"retirement"`
+	CandidateSourceCommit           string              `json:"candidateSourceCommit"`
+	CandidateInputFingerprint       string              `json:"candidateInputFingerprint"`
 }
 type ReleaseRetirementInspectionResult struct {
-	SchemaVersion    int      `json:"schemaVersion"`
-	Status           string   `json:"status"`
-	ReleaseID        string   `json:"releaseId"`
-	ObservedVersions []string `json:"observedVersions"`
-	SQLSourceHash    string   `json:"sqlSourceHash"`
-	ReceiptHash      string   `json:"receiptHash"`
-	SchemaProofHash  string   `json:"schemaProofHash"`
-	Applied          []string `json:"applied"`
+	SchemaVersion       int      `json:"schemaVersion"`
+	Status              string   `json:"status"`
+	ReleaseID           string   `json:"releaseId"`
+	ObservedVersions    []string `json:"observedVersions"`
+	SQLSourceHash       string   `json:"sqlSourceHash"`
+	ReceiptHash         string   `json:"receiptHash"`
+	SchemaProofHash     string   `json:"schemaProofHash"`
+	Applied             []string `json:"applied"`
+	RollbackReadersSafe bool     `json:"rollbackReadersSafe"`
 }
 type retirementReceipt struct {
 	Kind                    string            `json:"kind"`
@@ -93,7 +95,7 @@ func decodeRetirementReceipt(raw []byte) (retirementReceipt, error) {
 // here bind that accepted request and do not assert their external existence.
 func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request ReleaseRetirementInspectionRequest) (result ReleaseRetirementInspectionResult, runErr error) {
 	if request.SchemaVersion != 1 || request.Kind != "inspect-character-retirement-301" || request.ReleaseID == "" ||
-		request.SQLSourceHash != RetirementMigrationIdentity().Checksum || !validIdentityHash(request.ReceiptHash) || !validRetirementRequest(request.Retirement) {
+		request.SQLSourceHash != RetirementMigrationIdentity().Checksum || !validIdentityHash(request.ExpectedAdditiveSchemaProofHash) || !validIdentityHash(request.ReceiptHash) || !validRetirementRequest(request.Retirement) {
 		return result, errors.New("invalid retirement inspection request")
 	}
 	identities, err := identityMap(request.ExpectedCurrent)
@@ -148,6 +150,18 @@ func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request Release
 	if err != nil || !reflect.DeepEqual(receipt.Request, request.Retirement) {
 		return result, errors.New("retirement receipt belongs to another request")
 	}
+	additive, err := captureAdditiveSchema(ctx, tx)
+	if err != nil {
+		return result, errors.New("retained additive schema observation failed")
+	}
+	additiveProof, err := json.Marshal(additive)
+	if err != nil || hashBytes(additiveProof) != request.ExpectedAdditiveSchemaProofHash {
+		return result, errors.New("retained additive schema differs from accepted proof")
+	}
+	readersSafe, err := oldReadersSafe(ctx, tx)
+	if err != nil {
+		return result, errors.New("retained old-reader observation failed")
+	}
 	// These are current structural facts. The retained row hashes in the receipt
 	// describe the atomic transition; normal V3 play may change rows afterwards.
 	var structure bool
@@ -162,11 +176,12 @@ func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request Release
 		return result, errors.New("retirement schema observation failed")
 	}
 	proof := struct {
-		SQLSourceHash string          `json:"sqlSourceHash"`
-		ReceiptHash   string          `json:"receiptHash"`
-		Versions      []string        `json:"versions"`
-		Structure     json.RawMessage `json:"structure"`
-	}{request.SQLSourceHash, request.ReceiptHash, observed, schema}
+		SQLSourceHash           string          `json:"sqlSourceHash"`
+		ReceiptHash             string          `json:"receiptHash"`
+		Versions                []string        `json:"versions"`
+		Structure               json.RawMessage `json:"structure"`
+		AdditiveSchemaProofHash string          `json:"additiveSchemaProofHash"`
+	}{request.SQLSourceHash, request.ReceiptHash, observed, schema, request.ExpectedAdditiveSchemaProofHash}
 	encoded, err := json.Marshal(proof)
 	if err != nil {
 		return result, errors.New("retirement proof encoding failed")
@@ -174,7 +189,7 @@ func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request Release
 	if err = tx.Commit(); err != nil {
 		return result, errors.New("retirement inspection outcome unknown")
 	}
-	return ReleaseRetirementInspectionResult{1, "verified", request.ReleaseID, observed, request.SQLSourceHash, request.ReceiptHash, hashBytes(encoded), []string{}}, nil
+	return ReleaseRetirementInspectionResult{1, "verified", request.ReleaseID, observed, request.SQLSourceHash, request.ReceiptHash, hashBytes(encoded), []string{}, readersSafe}, nil
 }
 
 // Used by metadata consumers to distinguish support from executable startup

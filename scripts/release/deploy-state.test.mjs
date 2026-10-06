@@ -9,6 +9,8 @@ import {databaseMigrationSet, migrationScenarios} from './migration-transition.m
 import {releaseApplicationState, assertExpansionWritersOff} from './docker-deployment.mjs';
 import {attachUnitRehearsal} from './unit-rehearsal-fixture.mjs';
 import {isLegacyBaseline,baselineDocument} from './legacy-baseline.mjs';
+import {databaseStateFromRetirementInspection} from './migration-transition.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
 const hash = char => `sha256:${char.repeat(64)}`;
 function scenario(t, changed = ['frontend']) {
   const directory = mkdtempSync(path.join(tmpdir(), 'deploy-state-'));
@@ -70,6 +72,27 @@ function refreshEvidence(s){
     for(const row of s.candidate.validationEvidence)row.reportHash=evidenceHash(s.bundle.reports[row.gate]);
   }
 }
+function retiredScenario(t,changed=['frontend']){
+ const s=scenario(t,changed),unit=retirementStateUnitFixture();
+ s.active.manifest.migrationSet=structuredClone(unit.active.manifest.migrationSet);
+ s.active.database=databaseStateFromRetirementInspection(unit,unit.inspection);
+ s.candidate.migrationSet=structuredClone(s.active.database.migrationSet);refreshEvidence(s);
+ s.store.writeActive(s.active);s.setLive(s.observation(s.active));return s;
+}
+test('ordinary release after retirement preserves recorded database state and repeats without a migration',async t=>{
+ const s=retiredScenario(t),before=structuredClone(s.active.database),result=await deploy(s);
+ assert.equal(result.status,'succeeded');assert.equal(result.plan.migrationMode,'no-schema-change');assert.deepEqual(s.store.active().database,before);assert(!s.calls.includes('migrate'));
+ assert.equal((await deploy(s)).repeated,true);assert.deepEqual(s.store.active().database,before);
+});
+test('application rollback and lost acknowledgement after retirement preserve the exact observed database state',async t=>{
+ const s=retiredScenario(t,['backend','frontend']),before=structuredClone(s.active.database),replace=s.adapter.replace;
+ s.adapter.replace=async(...args)=>{await replace(...args);if(args[0]==='frontend'&&args[1].manifest.releaseId==='next')throw Error('candidate health failure');};
+ await assert.rejects(deploy(s),/previous compatible/);assert.equal(s.store.operation('next').status,'rolled_back');assert.deepEqual(s.store.active().database,before);assert(!s.calls.includes('migrate'));
+ const r=retiredScenario(t),original=r.adapter.replace;
+ r.adapter.replace=async(...args)=>{await original(...args);throw Object.assign(Error('lost acknowledgement'),{uncertainOutcome:true});};
+ await assert.rejects(deploy(r),/unknown/);assert.equal(r.store.operation('next').status,'recovery_required');const calls=[...r.calls];
+ assert.equal((await recover({...r,releaseId:'next'})).status,'succeeded');assert.deepEqual(r.calls,calls);assert.deepEqual(r.store.active().database,r.active.database);
+});
 function additiveScenario(t){
   const s=scenario(t,['backend','frontend']);
   s.candidate.migrationSet.push(...['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs'].map(id=>({id,checksum:hash('e')})));

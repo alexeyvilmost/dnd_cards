@@ -55,11 +55,12 @@ func TestRetirementReceiptRejectsUnknownAndMalformedData(t *testing.T) {
 	}
 }
 func TestReleaseRetirementInspectionReadOnlyAndRejectsDrift(t *testing.T) {
-	for _, name := range []string{"valid-and-repeat", "v3-and-personal-gameplay-after-retirement", "missing-receipt", "different-request", "receipt-changed", "wrong-sql", "unknown-migration", "legacy-table-returned", "legacy-column-returned", "legacy-inventory-returned", "missing-v3", "ledger-rule", "ledger-rls"} {
+	for _, name := range []string{"valid-and-repeat", "v3-and-personal-gameplay-after-retirement", "missing-receipt", "different-request", "receipt-changed", "wrong-sql", "unknown-migration", "legacy-table-returned", "legacy-column-returned", "legacy-inventory-returned", "missing-v3", "ledger-rule", "ledger-rls", "retained-additive-schema-drift", "wrong-retained-additive-proof"} {
 		t.Run(name, func(t *testing.T) {
 			db, ordinary := releaseFixture(t)
 			m := NewMigrator(db)
-			if _, err := m.RunReleaseAdditive(context.Background(), ordinary); err != nil {
+			expansion, err := m.RunReleaseAdditive(context.Background(), ordinary)
+			if err != nil {
 				t.Fatal(err)
 			}
 			if _, err := db.Exec(`CREATE TABLE characters_v3(id int PRIMARY KEY,payload jsonb); INSERT INTO characters_v3 VALUES(1,'{"keep":"v3"}');
@@ -73,6 +74,7 @@ func TestReleaseRetirementInspectionReadOnlyAndRejectsDrift(t *testing.T) {
 				t.Fatal(err)
 			}
 			request := ReleaseRetirementInspectionRequest{SchemaVersion: 1, Kind: "inspect-character-retirement-301", ReleaseID: "owned-retirement-inspection", ExpectedCurrent: append(ordinary.Target, RetirementMigrationIdentity()), SQLSourceHash: RetirementMigrationIdentity().Checksum, ReceiptHash: hashBytes(raw), Retirement: retirement}
+			request.ExpectedAdditiveSchemaProofHash = expansion.SchemaProofHash
 			success := name == "valid-and-repeat" || name == "v3-and-personal-gameplay-after-retirement"
 			var mutation string
 			switch name {
@@ -100,6 +102,10 @@ func TestReleaseRetirementInspectionReadOnlyAndRejectsDrift(t *testing.T) {
 				mutation = `CREATE RULE ledger_read AS ON DELETE TO schema_migrations DO INSTEAD NOTHING`
 			case "ledger-rls":
 				mutation = `ALTER TABLE schema_migrations ENABLE ROW LEVEL SECURITY`
+			case "retained-additive-schema-drift":
+				mutation = `ALTER TABLE roguelike_command_receipts ALTER COLUMN response_version DROP NOT NULL`
+			case "wrong-retained-additive-proof":
+				request.ExpectedAdditiveSchemaProofHash = "sha256:" + strings.Repeat("d", 64)
 			}
 			if mutation != "" {
 				if _, err := db.Exec(mutation); err != nil {

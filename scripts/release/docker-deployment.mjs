@@ -15,6 +15,7 @@ import {readDockerInventory,readDockerSchemaLedgerProof} from './read-snapshot.m
 import {verifyBackupSourceReleases} from './source-release-references.mjs';
 import {bindDeploymentDatabase,databaseURLFromEnvironment,databaseIdentityHash} from './database-binding.mjs';
 import {isLegacyBaseline,validateLegacyBaseline,baselineDocument,componentImage,legacyRuntimeFingerprint,deploymentStateFile} from './legacy-baseline.mjs';
+import {assertRetirementInspectionResult} from './retirement-state.mjs';
 const service = {backend: 'backend', frontend: 'frontend', rulesWorker: 'rules-worker'};
 const read = file => JSON.parse(readFileSync(file, 'utf8'));
 export async function assertLiveReferenceCoverage({inventory,plan,backup,backupDirectory,artifactDirectory}){
@@ -145,10 +146,12 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     if (network.length !== 1 || network[0].Labels?.['com.docker.compose.project'] !== config.project || network[0].Labels?.['com.docker.compose.network'] !== 'edge') throw Error('Reviewed database network differs from active Compose project');
   }
   function migrationCommand(database, inspectOnly) {
+    const retirement=database.status==='verified-character-retirement';
+    if(retirement&&!inspectOnly)throw Error('Installed retirement can only be inspected by ordinary deployments');
     validateDatabaseNetwork();assertLiveDatabase();
     return JSON.parse(command(['run', '--rm', '-i', '--read-only', '--network', databaseNetwork, '-e', 'DATABASE_URL',
       '-e', `RELEASE_ID=${database.request.releaseId}`, '-e', `RELEASE_COMMIT=${database.request.candidateSourceCommit}`,
-      database.executorImageDigest, inspectOnly ? '--inspect-release-migrations' : '--migrate-release'], {input: JSON.stringify(database.request),env:{DATABASE_URL:binding}}));
+      database.executorImageDigest, retirement?'--inspect-character-retirement':inspectOnly ? '--inspect-release-migrations' : '--migrate-release'], {input: JSON.stringify(database.request),env:{DATABASE_URL:binding}}));
   }
   async function assertDatabase(expected, database) {
     assertLiveDatabase();
@@ -157,6 +160,7 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     if ((isLegacyBaseline(baseline)?evidenceHash(historical.map(row=>row.id))!==evidenceHash(expected.map(row=>row.id)):evidenceHash(historical)!==evidenceHash(expected)) && !database) throw Error('Observed additive database state required');
     if (database) {
       const receipt = migrationCommand(database, true);
+      if(database.status==='verified-character-retirement')assertRetirementInspectionResult(database,receipt);
       if (receipt.status !== 'verified' || receipt.build?.provenance !== 'baked'
         || receipt.build.sourceCommit !== database.request.candidateSourceCommit || receipt.build.inputFingerprint !== database.request.candidateInputFingerprint
         || receipt.result?.schemaProofHash !== database.schemaProofHash || evidenceHash(receipt.result.observedVersions) !== evidenceHash(expected.map(row => row.id).sort())) throw Error('Expanded database proof differs from recorded schema');

@@ -1,5 +1,6 @@
 import {evidenceHash,compositionFingerprint,validateMigrationSet,assertObservedMigrationBinding} from './validate-manifest.mjs';
 import {isLegacyBaseline,validateLegacyBaseline,legacyMigrationBaseline} from './legacy-baseline.mjs';
+import {validateRetirementDatabaseState,retirementDatabaseStateFromInspection} from './retirement-state.mjs';
 const equal=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const hash=value=>typeof value==='string'&&/^sha256:[a-f0-9]{64}$/.test(value);
 const image=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$/.test(value);
@@ -28,6 +29,8 @@ export function assertLegacyMigrationBinding(active,target){if(isLegacyBaseline(
 export function migrationBaselineMatches(active,target){assertLegacyMigrationBinding(active,target);return isLegacyBaseline(active)&&!active.database?equal(active.migrationIds,[...target.map(row=>row.id)].sort()):equal(databaseMigrationSet(active),target);}
 export function validateDatabaseState(active) {
   const data=active.database;if(!data)return;
+  if(data.status==='verified-character-retirement'){if(isLegacyBaseline(active))throw Error('Retirement requires an adopted manifest baseline');return validateRetirementDatabaseState(active);}
+  if(data.migrationSet?.some(row=>row.id===characterRetirementMigrationId))throw Error('Installed retirement requires its separate recorded observation format');
   if(data.schemaVersion!==1||data.status!=='verified-additive'||!validSet(data.migrationSet)||!hash(data.schemaProofHash)||!hash(data.approvalHash)||!image(data.executorImageDigest)
     ||![1,2].includes(data.request?.schemaVersion)||!equal(data.request.target,data.migrationSet)
     ||!/^([a-f0-9]{40})$/.test(data.request.candidateSourceCommit)||!hash(data.request.candidateInputFingerprint))throw Error('Invalid persisted observed database state');
@@ -44,6 +47,7 @@ export function validateDatabaseState(active) {
 export function migrationTransition(candidate,bundle,active) {
   const baseline=databaseMigrationSet(active),target=candidate.migrationSet;
   if(migrationBaselineMatches(active,target))return {mode:'no-schema-change',baseline,target};
+  if(active.database?.status==='verified-character-retirement')throw Error('Ordinary releases must retain the complete installed retirement migration set');
   const legacy=isLegacyBaseline(active)&&!active.database;
   const matches=(a,b)=>legacy?a.id===b.id:equal(a,b);
   for(const row of baseline)if(!target.some(item=>matches(item,row)))throw Error('Migration change removes or edits an applied migration');
@@ -71,4 +75,5 @@ export function databaseStateFromResult(plan,receipt) {
     approvalHash:transition.approvalHash,request:transition.request,executorImageDigest:plan.desired.manifest.components.backend.imageDigest};
 }
 export function stateWithDatabase(active,database){const state={...active,database};validateDatabaseState(state);return state;}
+export function databaseStateFromRetirementInspection(args,receipt){validateDatabaseState(args.active);if(isLegacyBaseline(args.active))throw Error('Retirement requires an adopted manifest baseline');return retirementDatabaseStateFromInspection(args,receipt);}
 export function requiresOldReaders(active){return isLegacyBaseline(active)?Boolean(active.database):!equal(databaseMigrationSet(active),active.manifest.migrationSet);}

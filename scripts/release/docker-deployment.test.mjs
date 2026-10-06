@@ -9,6 +9,8 @@ import {checksum} from './backup-manifest.mjs';
 import {databaseIdentityHash} from './database-binding.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
 import {legacyRuntimeFingerprint} from './legacy-baseline.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+import {databaseStateFromRetirementInspection} from './migration-transition.mjs';
 const h=x=>`sha256:${x.repeat(64)}`;
 const dsn='postgresql://user:password@db/source?sslmode=require';
 async function fixture(t){
@@ -61,6 +63,19 @@ test('database probes inherit only the inspected live DSN, never mutable app env
   await f.adapter.assertDatabase([]);
   const query=f.calls.find(row=>row.args[0]==='run');
   assert.deepEqual(query.options.env,{DATABASE_URL:dsn});assert.ok(!query.args.includes('--env-file'));assert.ok(query.args.includes('DATABASE_URL'));assert.ok(!query.args.includes(dsn));
+});
+
+test('installed retirement uses the exact read-only inspector and captured DB binding instead of additive execution',async t=>{
+ const f=await fixture(t),unit=retirementStateUnitFixture(),database=databaseStateFromRetirementInspection(unit,unit.inspection);
+ let receipt=structuredClone(unit.inspection);const calls=[];
+ const command=(args,options)=>{calls.push({args,options});if(args[0]==='run'&&args.includes('--inspect-character-retirement'))return JSON.stringify(receipt);return f.command(args,options);};
+ const adapter=await createDockerDeploymentAdapter(f.config,{command});
+ const observed=await adapter.assertDatabase(database.migrationSet,database);assert.equal(observed.schemaProofHash,database.schemaProofHash);assert.equal(observed.oldReadersSafe,true);
+ const run=calls.find(row=>row.args.includes('--inspect-character-retirement'));
+ assert(run.args.includes('--read-only'));assert(run.args.includes(database.executorImageDigest));assert(!run.args.includes('--migrate-release'));assert(!run.args.includes('--inspect-release-migrations'));assert(!run.args.includes(dsn));assert.deepEqual(run.options.env,{DATABASE_URL:dsn});assert.deepEqual(JSON.parse(run.options.input),database.request);
+ for(const change of [r=>{r.result.receiptHash=h('a');},r=>{r.result.sqlSourceHash=h('a');},r=>{r.result.applied=['301_retire_legacy_characters'];},r=>{r.build.sourceCommit='c'.repeat(40);},r=>{r.result.schemaProofHash=h('a');}]){receipt=structuredClone(unit.inspection);change(receipt);await assert.rejects(adapter.assertDatabase(database.migrationSet,database));}
+ receipt=structuredClone(unit.inspection);receipt.result.rollbackReadersSafe=false;assert.equal((await adapter.assertDatabase(database.migrationSet,database)).oldReadersSafe,false);
+ assert(calls.filter(row=>row.args[0]==='run').every(row=>row.args.includes('--inspect-character-retirement')));
 });
 
 test('legacy rollback uses observed image ID and protected resolved config; mutable tag/env and substituted config cannot redirect it',async t=>{

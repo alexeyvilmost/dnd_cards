@@ -31,6 +31,9 @@ export function validatePublicActive(active){
   for(const key of serviceOrder)exact(active.instances[key],['releaseId','releaseCommit']);
   if(active.database!==undefined){
     const d=active.database,r=d.request;
+    // validateActive already applies the exact retirement state/request field
+    // schema, including nested preimages; no private extras are projected away.
+    if(d.status==='verified-character-retirement')return active;
     exact(d,['schemaVersion','status','migrationSet','schemaProofHash','approvalHash','request','executorImageDigest']);
     const common=['schemaVersion','releaseId','target','candidateSourceCommit','candidateInputFingerprint'];
     exact(r,[...common,...(r?.schemaVersion===2?['kind','baselineObservationHash','expectedCurrentIds']:['expectedCurrent'])]);
