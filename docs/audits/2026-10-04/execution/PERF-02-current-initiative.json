@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "status": "measured-with-explicit-tradeoffs",
+  "recordedAt": "2026-10-06T21:40:34.088Z",
+  "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+  "sourceSnapshot": "9cb5b8af5c1038cd91cdb126f0a20df8c0c7b209d26bf2522da0577d33f4d0ca",
+  "scope": "Sequential native Windows backend and CJS built from source C, current batch/mirror/compact flags, one V3 character and one training enemy. Not production latency or Linux OCI equivalence.",
+  "quantiles": "Nearest-rank; 30 observations per arm, one excluded warmup each.",
+  "sourceRecord": {
+    "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "sourceSnapshot": "9cb5b8af5c1038cd91cdb126f0a20df8c0c7b209d26bf2522da0577d33f4d0ca",
+    "registryPath": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_3c9178ce569aebd1f0e645e0\\registry.json",
+    "sourceDirectory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_3c9178ce569aebd1f0e645e0",
+    "sourceRun": "test_3c9178ce569aebd1f0e645e0",
+    "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+    "uiBuild": {
+      "reused": false,
+      "isolatedBuild": true,
+      "reactProfile": false,
+      "directory": "C:\\Projects\\dnd_cards\\outputs\\testing\\runs\\test_3c9178ce569aebd1f0e645e0\\ui-dist",
+      "indexHash": "964c82b9f1dc4779a9df05cef58b3ce554a8ec008339cedc3534a5f46fb0e58f",
+      "manifestHash": "563e63a9d8d8f02baba4657e4d961a3f0d2e8fc21cd734b84eda6704bfd4cf14",
+      "files": 631,
+      "bytes": 169173570
+    },
+    "productionRequests": 0,
+    "providerRequests": 0
+  },
+  "arms": [
+    {
+      "name": "baseline",
+      "runId": "test_acae79767afaf3826e92ebff",
+      "reportHash": "sha256:1413ff019faed9b324b0130e496b23dea90f132c7ecdc41562603ecb67b145d6",
+      "sourceRun": "test_3c9178ce569aebd1f0e645e0",
+      "binaryHash": "sha256:0303c173017afa2cc22eea4349021d12640d1ffd3f083b902642e7fca71aa6bf",
+      "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+      "uiManifestHash": "563e63a9d8d8f02baba4657e4d961a3f0d2e8fc21cd734b84eda6704bfd4cf14",
+      "startedAt": "2026-10-06T21:27:20.185Z",
+      "configuration": {
+        "catalogBatch": true,
+        "workerMirrors": true,
+        "compactReceipts": true,
+        "preparationCache": false,
+        "equipmentIntent": false,
+        "initiativeOptions": false,
+        "catalogPrefetch": false
+      },
+      "initiativeMs": {
+        "samples": 30,
+        "p50": 228.7000000178814,
+        "p95": 2327.9000000059605,
+        "min": 165.69999998807907,
+        "max": 2442.300000011921
+      },
+      "battleMs": {
+        "samples": 30,
+        "p50": 636.4000000059605,
+        "p95": 2722.5999999940395,
+        "min": 260.09999999403954,
+        "max": 3220.699999988079
+      },
+      "browserBuilderCalls": 30,
+      "optionsPreparation": null,
+      "allAcceptedCommandsExactlyRetried": true,
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      }
+    },
+    {
+      "name": "options",
+      "runId": "test_b83a0a524ee11a1483d31223",
+      "reportHash": "sha256:e894a6aca2e5d481d3d39e81383f73bfeb6efc79817da57d560079a46553e8bc",
+      "sourceRun": "test_3c9178ce569aebd1f0e645e0",
+      "binaryHash": "sha256:0303c173017afa2cc22eea4349021d12640d1ffd3f083b902642e7fca71aa6bf",
+      "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+      "uiManifestHash": "563e63a9d8d8f02baba4657e4d961a3f0d2e8fc21cd734b84eda6704bfd4cf14",
+      "startedAt": "2026-10-06T21:29:23.143Z",
+      "configuration": {
+        "catalogBatch": true,
+        "workerMirrors": true,
+        "compactReceipts": true,
+        "preparationCache": false,
+        "equipmentIntent": false,
+        "initiativeOptions": true,
+        "catalogPrefetch": false
+      },
+      "initiativeMs": {
+        "samples": 30,
+        "p50": 254.40000000596046,
+        "p95": 374.69999998807907,
+        "min": 205.80000001192093,
+        "max": 405.40000000596046
+      },
+      "battleMs": {
+        "samples": 30,
+        "p50": 644.1999999880791,
+        "p95": 903.9000000059605,
+        "min": 297.5,
+        "max": 1187.5
+      },
+      "browserBuilderCalls": 0,
+      "optionsPreparation": {
+        "durationMs": {
+          "samples": 30,
+          "p50": 66.671,
+          "p95": 85.406,
+          "min": 57.317,
+          "max": 146.372
+        },
+        "sqlCount": {
+          "samples": 30,
+          "p50": 15,
+          "p95": 15,
+          "min": 15,
+          "max": 15
+        },
+        "workerCalls": {
+          "samples": 30,
+          "p50": 6,
+          "p95": 6,
+          "min": 6,
+          "max": 6
+        }
+      },
+      "allAcceptedCommandsExactlyRetried": true,
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      }
+    },
+    {
+      "name": "options_prefetch",
+      "runId": "test_9a935644ba774f358d03c328",
+      "reportHash": "sha256:0db2a26b9d5476e77e075541d693ad17cad22060e96fcca61da025f433534c2e",
+      "sourceRun": "test_3c9178ce569aebd1f0e645e0",
+      "binaryHash": "sha256:0303c173017afa2cc22eea4349021d12640d1ffd3f083b902642e7fca71aa6bf",
+      "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+      "uiManifestHash": "563e63a9d8d8f02baba4657e4d961a3f0d2e8fc21cd734b84eda6704bfd4cf14",
+      "startedAt": "2026-10-06T21:33:25.098Z",
+      "configuration": {
+        "catalogBatch": true,
+        "workerMirrors": true,
+        "compactReceipts": true,
+        "preparationCache": false,
+        "equipmentIntent": false,
+        "initiativeOptions": true,
+        "catalogPrefetch": true
+      },
+      "initiativeMs": {
+        "samples": 30,
+        "p50": 276.5,
+        "p95": 364.2000000178814,
+        "min": 246.30000001192093,
+        "max": 772
+      },
+      "battleMs": {
+        "samples": 30,
+        "p50": 385.19999998807907,
+        "p95": 901.2999999821186,
+        "min": 362.40000000596046,
+        "max": 1164.300000011921
+      },
+      "browserBuilderCalls": 0,
+      "optionsPreparation": {
+        "durationMs": {
+          "samples": 30,
+          "p50": 114.589,
+          "p95": 137.716,
+          "min": 103.318,
+          "max": 142.009
+        },
+        "sqlCount": {
+          "samples": 30,
+          "p50": 34,
+          "p95": 34,
+          "min": 34,
+          "max": 34
+        },
+        "workerCalls": {
+          "samples": 30,
+          "p50": 6,
+          "p95": 6,
+          "min": 6,
+          "max": 6
+        }
+      },
+      "allAcceptedCommandsExactlyRetried": true,
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      }
+    }
+  ],
+  "comparison": {
+    "optionsAgainstBaseline": {
+      "initiativeMedianChangePercent": 11.237428940126648,
+      "battleMedianChangePercent": 1.2256442460788053,
+      "battleP95ChangePercent": -66.80011753441786
+    }
+  },
+  "configurationNote": "The first driver passed unused RULES_PREFETCH_ENABLED=0. The real RULES_CATALOG_PREFETCH_ENABLED was absent from its clean child environment, so prefetch was disabled. The third driver explicitly enabled the correct flag.",
+  "decision": {
+    "prefetch": "Keep OFF: read-only options SQL increased and preparation median worsened; lower full-battle median in the final chronological arm is not attributed solely to prefetch.",
+    "initiativeOptions": "Duplicate browser preparation eliminated, large tail improvement observed, full-battle median approximately equal. Default activation needs explicit configuration/rollback acceptance; optional abilities and larger parties are not measured by this fixture.",
+    "preparationCache": "OFF; not measured or enabled by this experiment."
+  },
+  "productionMutations": 0,
+  "providerRequests": 0,
+  "measuredSamples": 90,
+  "totalSamplesIncludingWarmup": 93
+}

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "status": "locally-verified-frontend-offer-preview",
+  "recordedAt": "2026-10-06T22:00:36.353Z",
+  "baseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+  "frontendSourceHashes": {
+    "frontend/src/hooks/useSoloCombatBootstrap.ts": "a83640abfdea28c04d9ce0550f2afd78a13e76703022b208b033297b301a17dc",
+    "frontend/src/hooks/useSoloCombatBootstrap.test.tsx": "883c17569b114e4cc7d9093b027da627ea1cf9782bfa4afdaf48c441bb1861eb"
+  },
+  "frontendDiffHash": "02041765b9e81121a21ba469110eac333f269c2c9095bfc17f990c2cc5d099f1",
+  "uiManifestHash": "7aa1b3887e15a4faa74da520e6bffe400c0de5cbd32fc9af3fad1467443f8d15",
+  "backendBinaryHash": "sha256:0303c173017afa2cc22eea4349021d12640d1ffd3f083b902642e7fca71aa6bf",
+  "localArtifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+  "scope": "Native Windows source-C backend/worker and patched frontend; owned synthetic local PostgreSQL and real Chrome. Not production latency or production feature activation.",
+  "localChecks": {
+    "hookTests": {
+      "passed": 7,
+      "failed": 0
+    },
+    "typecheck": "passed",
+    "nodeTypecheck": "passed",
+    "affectedLint": "passed",
+    "productionUIBuild": "passed",
+    "browserCases": [
+      {
+        "variant": "alpha",
+        "resource": "initiative_alpha",
+        "faces": 4,
+        "partySize": 1,
+        "display": "row",
+        "resourceBefore": 2,
+        "resourceAfter": 1,
+        "canonicalPreview": true,
+        "offerReadOnly": true,
+        "unownedRejected": true,
+        "exactRetry": true,
+        "reloadStable": true,
+        "partyRowsInvariant": true,
+        "sourceUnchanged": true,
+        "browserBuilderCalls": 0,
+        "initializeCommands": 1
+      },
+      {
+        "variant": "beta",
+        "resource": "initiative_beta",
+        "faces": 6,
+        "partySize": 1,
+        "display": "icon",
+        "resourceBefore": 2,
+        "resourceAfter": 1,
+        "canonicalPreview": true,
+        "offerReadOnly": true,
+        "unownedRejected": true,
+        "exactRetry": true,
+        "reloadStable": true,
+        "partyRowsInvariant": true,
+        "sourceUnchanged": true,
+        "browserBuilderCalls": 0,
+        "initializeCommands": 1
+      },
+      {
+        "variant": "alpha",
+        "resource": "initiative_alpha",
+        "faces": 4,
+        "partySize": 2,
+        "display": "icon",
+        "resourceBefore": 2,
+        "resourceAfter": 1,
+        "canonicalPreview": true,
+        "offerReadOnly": true,
+        "unownedRejected": true,
+        "exactRetry": true,
+        "reloadStable": true,
+        "partyRowsInvariant": true,
+        "sourceUnchanged": true,
+        "browserBuilderCalls": 0,
+        "initializeCommands": 1
+      },
+      {
+        "variant": "beta",
+        "resource": "initiative_beta",
+        "faces": 6,
+        "partySize": 6,
+        "display": "row",
+        "resourceBefore": 2,
+        "resourceAfter": 1,
+        "canonicalPreview": true,
+        "offerReadOnly": true,
+        "unownedRejected": true,
+        "exactRetry": true,
+        "reloadStable": true,
+        "partyRowsInvariant": true,
+        "sourceUnchanged": true,
+        "browserBuilderCalls": 0,
+        "initializeCommands": 1
+      }
+    ]
+  },
+  "pageErrors": 0,
+  "cleanup": {
+    "status": "stopped",
+    "errors": [],
+    "ownedChildrenExited": true
+  },
+  "productionMutations": 0,
+  "productionFlagChanged": false,
+  "all29Complete": false,
+  "evidence": {
+    "privateReport": "outputs/testing/runs/test_26e17dd86301253a5a7b108f/initiative-choice-browser.json",
+    "privateReportHash": "c3fd40bae9e110478dade8fdca5fcc8759e9658ace351cb558f8077bfee43245",
+    "driver": "outputs/testing/initiative-choice-browser-20261007.mjs",
+    "driverHash": "4d2c055e20ac4e6309e3449e58a421147cea77ca9d9241def79c7f7cdcb6c29d",
+    "build": "outputs/testing/current-initiative-choice-typed-20261007/source.json",
+    "unit": "outputs/testing/current-initiative-choice-typed-20261007/vitest.json"
+  },
+  "limitations": [
+    "Canonical renderer still performs its existing background action fetch; this fix retains the offered snapshot for display, not a claim of zero catalog requests.",
+    "Production initiative-options flag remains OFF. Activation and rollback against actual runtime configuration remain pending.",
+    "This is a four-case correctness acceptance, not a latency sample or an assertion that every possible party/action is covered."
+  ],
+  "nextSteps": [
+    "Integrate only the verified frontend hook/test and current reports; existing classifier selects frontend alone.",
+    "Let the existing main automation run exact-source CI, immutable frontend publication, mixed composition proof and typed frontend-only delivery. Do not dispatch a duplicate release.",
+    "Independently verify the deployed frontend identity and unchanged backend/worker image and container identities before accepting selective delivery.",
+    "Bind initiative-options activation/rollback to the actual verified runtime configuration; retain prefetch OFF according to the separate 90-sample measurement."
+  ]
+}

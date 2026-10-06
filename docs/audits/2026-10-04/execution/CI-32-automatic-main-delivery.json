@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "status": "full-automatic-main-production-delivered-selective-open",
+  "recordedAt": "2026-10-06T21:34:40.483Z",
+  "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+  "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+  "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+  "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
+  "ci": {
+    "runId": 37525609296,
+    "event": "push",
+    "status": "passed",
+    "reportHash": "sha256:3eeb2917c9e2f1b43e4ddd95e7f4298607040c0995cbacab95e5fc960e5cee59",
+    "durationMs": 861645,
+    "globalCoverageComplete": true,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "publication": {
+    "runId": 37527905823,
+    "event": "workflow_run",
+    "status": "success"
+  },
+  "deployment": {
+    "runId": 37528869764,
+    "event": "workflow_run",
+    "status": "success",
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37528869764"
+  },
+  "automaticConvergence": {
+    "schemaVersion": 1,
+    "status": "actual-automatic-chain-converged",
+    "observedAt": "2026-10-06T21:25:56.039Z",
+    "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "actualDeployRun": 37528869764,
+    "actualCoordinatorRun": 37533666035,
+    "actualCoordinatorAttempt": 1,
+    "actualCoordinatorEvent": "workflow_run",
+    "reportStatus": "converged",
+    "additionalDispatches": 0,
+    "hostOperations": 0,
+    "liveDatabaseRestored": false
+  },
+  "backup": {
+    "schemaVersion": 1,
+    "status": "fresh-backup-captured",
+    "observedAt": "2026-10-06T20:51:05.126Z",
+    "createdAt": "2026-10-06T20:47:40.435Z",
+    "backupDirectory": "/opt/bagofholding/backups/capture-37528869764-1",
+    "databaseDump": {
+      "path": "/opt/bagofholding/backups/capture-37528869764-1/database.dump",
+      "bytes": 974883784,
+      "sha256": "sha256:d155153cae543b7ffb94b4344b6468263516c628343f604ad9a9ea965f561982",
+      "independentlyRehashed": true
+    },
+    "files": 44,
+    "totalBytes": 1045942787,
+    "previousSourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+    "previousReleaseId": "candidate-f383c905e062-8a315ebc6db8",
+    "activeHash": "sha256:3b14a09f390ebc0262f8652f7507ba4b589ec7b22bb2b4e8d1ae13c16d724fc7",
+    "releaseManifestHash": "sha256:d04d0a99228028f146e71911d0a7a70e8125432214c1e4849a220542fb4b90d9",
+    "targetSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "deploymentRunId": 37528869764,
+    "liveDatabaseRestored": false
+  },
+  "hostRehearsal": {
+    "status": "passed",
+    "runId": "522f6a9d-bb65-44c7-b7f5-2fb1211482e8",
+    "startedAt": "2026-10-06T20:56:18.230Z",
+    "completedAt": "2026-10-06T21:19:34.493Z",
+    "checks": [
+      {
+        "id": "snapshot",
+        "status": "passed"
+      },
+      {
+        "id": "migrations",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "status": "passed"
+      },
+      {
+        "id": "image-contract",
+        "status": "passed"
+      },
+      {
+        "id": "historical-inventory",
+        "status": "passed"
+      },
+      {
+        "id": "historical-replay",
+        "status": "passed"
+      },
+      {
+        "id": "pending-decision",
+        "status": "passed"
+      },
+      {
+        "id": "duplicate-command",
+        "status": "passed"
+      },
+      {
+        "id": "writer-compatibility",
+        "status": "passed"
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": [],
+      "resourceCount": 19
+    }
+  },
+  "independentVerification": {
+    "verifiedAt": "2026-10-06T21:24:59.401Z",
+    "edge": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "path": "/build-info.json",
+        "status": 200
+      }
+    ],
+    "migrationCount": 305,
+    "components": {
+      "backend": {
+        "healthy": true,
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+        "releaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d"
+      },
+      "frontend": {
+        "healthy": true,
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:1ab2a5e29cee27f97cefa66d5e60c8be35f88e69dd2b83478112e41aa7ef7ae3",
+        "releaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d"
+      },
+      "rulesWorker": {
+        "healthy": true,
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+        "releaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d"
+      }
+    },
+    "workerArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+    "writerPolicy": {
+      "compactReceipts": true,
+      "imageJobs": true,
+      "frozenCatalogs": false
+    }
+  },
+  "realStorage": {
+    "status": "passed",
+    "evidence": "outputs/testing/real-image-storage-20261007/summary.json",
+    "providerEndToEndAcceptance": false,
+    "uiGenerationAcceptance": false
+  },
+  "productionDatabaseRestored": false,
+  "persistentDeployIdentityRetained": true,
+  "all29Complete": false,
+  "remainingAcceptance": [
+    "Genuine frontend-only production delivery with unchanged backend/worker",
+    "Authentic historical pre278 input for complete fresh migration chain",
+    "PERF-02 default initialization/equipment path decision from matched measurements",
+    "Completed image generation in the actual UI/provider/storage/entity flow"
+  ],
+  "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+}

@@ -84,7 +84,12 @@ export function useSoloCombatBootstrap({id, roguelikeRunId, navigate, persist, r
               : participantInitiativeOptions(await loadSheetCombatParticipant({character: loadedCharacter, cards: new Map()}));
             if (!active) return;
             if (options.length) {
-              const selection = await measureClientPhase('initiative_player_choice', () => requestChoice([checkManeuverChoice(options, 'Инициатива')], 'Инициатива'));
+              const choice = checkManeuverChoice(options, 'Инициатива');
+              const offeredActions = new Map(options.map(action => [action.id, action]));
+              choice.items = choice.items?.map(item => ({
+                ...item, previewAction: offeredActions.get(item.id),
+              }));
+              const selection = await measureClientPhase('initiative_player_choice', () => requestChoice([choice], 'Инициатива'));
               if (!active) return;
               if (!selection) { navigate(`/roguelike/${loadedRun.id}`); return; }
               const selectedId = selection.check_maneuver?.[0];

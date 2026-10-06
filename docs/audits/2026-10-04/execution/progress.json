@@ -205,11 +205,10 @@
     {
       "id": "PERF-02",
       "title": "Короткая транзакция экипировки и единая подготовка начала боя",
-      "status": "initialization_authority_ci15_verified_default_latency_open",
+      "status": "current_source_browser_measured_default_activation_pending",
       "evidence": "docs/audits/2026-10-04/execution/PERF-02.md",
       "remaining_gates": [
-        "PERF-HOST",
-        "Batch remains OFF after 160 measured actual UI runs; stable overall initialization improvement is unproven"
+        "Verified runtime activation and rollback of the read-only initiative-options path; production flag currently OFF."
       ],
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
@@ -236,8 +235,26 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
       "latest_execution_result": {
+        "record": "docs/audits/2026-10-04/execution/PERF-02-initiative-choice-20261007.json",
+        "status": "locally-verified-frontend-offer-preview",
+        "demonstrated": [
+          "Current-source 90 measured browser runs recorded separately; duplicate participant builder30->0 with the documented median/tail tradeoff.",
+          "Real local browser confirmed two data-defined action/cost variants, canonical row/icon preview, 1/2/6-member parties, unchanged read-only offers, rejected foreign action and exactly-once cost/retry/reload across all party rows."
+        ],
+        "limitations": [
+          "Production initiative-options flag remains OFF; local correctness is not production activation or universal latency improvement. Existing action background GET remains."
+        ],
+        "nextAcceptance": [
+          "Bind default options configuration/rollback to actual verified runtime; retain prefetch OFF."
+        ],
+        "sourceBaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d"
+      },
+      "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_ui_measurement": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
+      "historical_latest_execution_result": {
         "demonstrated": [
           "Seven private canonical CPU/real HTTP experiments, exact retry/reload, source stability and owned cleanup measured.",
           "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance."
@@ -246,13 +263,15 @@
           "No general production initialization latency gain demonstrated. Batch/mirrors/cache/native SHA are not enabled on that basis."
         ],
         "nextAcceptance": [
-          "Optimize the ordinary full canonical UI/API scenario with paired meaningful acceptance."
+          "Default options configuration/rollback and optional action/party acceptance."
         ],
         "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
-      "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_ui_measurement": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json"
+      "current_choice_verification": "docs/audits/2026-10-04/execution/PERF-02-initiative-choice-20261007.json",
+      "historical_remaining_gates": [
+        "PERF-HOST",
+        "Batch remains OFF after 160 measured actual UI runs; stable overall initialization improvement is unproven"
+      ]
     },
     {
       "id": "PERF-03",
@@ -445,7 +464,7 @@
     {
       "id": "REL-03",
       "title": "Manifest релиза и достоверная идентификация компонентов",
-      "status": "full_followon_production_verified_selective_auto_pending",
+      "status": "full_automatic_production_verified_selective_production_open",
       "evidence": "docs/audits/2026-10-04/execution/REL-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
@@ -460,7 +479,7 @@
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
       "previous_status": "first_healthy_adoption_verified_followon_delivery_pending",
       "latest_execution_result": {
         "demonstrated": [
@@ -474,10 +493,7 @@
           "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
         "nextAcceptance": [
-          "Verify the final integrated full follow-on source locally and in exact-source CI.",
-          "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
-          "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
-          "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
+          "Genuine frontend-only production delivery with unchanged backend/worker."
         ],
         "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
@@ -491,7 +507,7 @@
     {
       "id": "REL-04",
       "title": "CI-сборка проверенных образов и подготовка доставки через реестр",
-      "status": "ci_build_and_publication_verified",
+      "status": "full_automatic_production_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
@@ -508,7 +524,7 @@
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "Actual GitHub publication 37272499962 succeeded at exact cfe9 after complete CI9. Digest/source/test binding, protected hosted publication and negative registry contracts implemented."
@@ -523,7 +539,7 @@
     {
       "id": "REL-05",
       "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
-      "status": "full_followon_verified_selective_enabled_acceptance_pending",
+      "status": "full_automatic_production_verified_selective_production_open",
       "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
@@ -540,7 +556,7 @@
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
@@ -553,10 +569,7 @@
           "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
         "nextAcceptance": [
-          "Verify the final integrated full follow-on source locally and in exact-source CI.",
-          "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
-          "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
-          "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
+          "Genuine frontend-only production delivery with unchanged backend/worker."
         ],
         "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
@@ -569,7 +582,7 @@
     {
       "id": "REL-06",
       "title": "Проверяемый backup/restore для БД, правил и релизов",
-      "status": "full_host_ninth_gate_restore_delivery_verified",
+      "status": "full_automatic_production_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-06.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -579,7 +592,7 @@
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
       "previous_status": "full_host_restore_and_healthy_adoption_verified",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
@@ -591,12 +604,7 @@
           "Future writer/selective/automatic/reconcile acceptance is still pending.",
           "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
-        "nextAcceptance": [
-          "Verify the final integrated full follow-on source locally and in exact-source CI.",
-          "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
-          "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
-          "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
-        ],
+        "nextAcceptance": [],
         "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
       "historical_acceptance_scope": "Принят native dump/restore с историческими artifacts и точным повтором команд. Production/offsite/RTO и exact-container drill остаются отдельными доказательствами.",
@@ -932,7 +940,7 @@
     "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim.",
     "CI10/all3publication passed; second actual manual deploy refused beforecapture root0755. Exact root0700 repair verified, originallive4549 healthy/noapplicationmutations. Both old failures remain actual; reviewed-chain source/fullCI/newfreshadoption pending."
   ],
-  "updated_at": "2026-10-06T20:18:01.730Z",
+  "updated_at": "2026-10-06T22:00:36.353Z",
   "work_status": "reviewed_replay_fix_local_pass_pending_new_exact_ci_and_fresh_adoption",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
@@ -2604,248 +2612,19 @@
   ],
   "execution_current": {
     "schemaVersion": 1,
-    "kind": "exact-ci26-publication15-full-host-delivery",
-    "status": "deployed-and-independently-verified",
-    "recordedAt": "2026-10-06T16:25:07.580Z",
-    "applicationSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
-    "deploymentControlCommit": "02541c07a08ac5559e93401393cc5ba4cf936edf",
-    "releaseId": "candidate-f05abed68215-847b49a2fabc",
-    "ci": {
-      "id": 37438145505,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37438145505",
-      "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
-      "status": "passed",
-      "durationMs": 747027,
-      "reportHash": "sha256:864643f02386ddcccfb846c169a7d287f3c17f2fbc22fba83b391bf67cfcf66a",
-      "sourceSnapshot": {
-        "sha256": "3a142b2b531d5cb470369e02d303621a0547192b81a8c9171dd5d463deec8c5d",
-        "files": 4538
-      },
-      "counts": [
-        {
-          "id": "worker-and-database-node",
-          "tests": 25,
-          "passed": 25,
-          "skipped": 0
-        },
-        {
-          "id": "observed-legacy-baseline",
-          "tests": 1
-        },
-        {
-          "id": "browser-ui-fixtures-production",
-          "tests": 48,
-          "passed": 48,
-          "skipped": 0
-        },
-        {
-          "id": "browser-ui-fixtures-battle3d",
-          "tests": 8,
-          "passed": 8,
-          "skipped": 0
-        },
-        {
-          "id": "local-browser-flows",
-          "tests": 12,
-          "passed": 12,
-          "skipped": 0
-        },
-        {
-          "id": "node-contracts",
-          "tests": 980,
-          "passed": 980,
-          "skipped": 0
-        },
-        {
-          "id": "vitest",
-          "tests": 6462,
-          "passed": 6462,
-          "skipped": 0
-        }
-      ],
-      "cleanup": {
-        "status": "stopped",
-        "errors": []
-      }
-    },
-    "publication": {
-      "id": 37440361187,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37440361187",
-      "status": "success",
-      "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
-      "components": {
-        "backend": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:18df7b7d8b25e59c2dcaeb5bea7d9a893543958b5abce0096fcfd7a14c0243e4",
-          "releaseId": "candidate-f05abed68215-847b49a2fabc",
-          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
-        },
-        "frontend": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:576def7922b9fff7643a5f42fe01814204afdf9b8247de3097aaed11363fd70a",
-          "releaseId": "candidate-f05abed68215-847b49a2fabc",
-          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
-        },
-        "rulesWorker": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:44854500e2afb3a1c3721410cf59f7b121b949efbd37c2f6f1a20a9085d52a2f",
-          "releaseId": "candidate-f05abed68215-847b49a2fabc",
-          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
-        }
-      }
-    },
-    "deployment": {
-      "id": 37486931185,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37486931185",
-      "status": "completed",
-      "conclusion": "success"
-    },
-    "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
-    "independentVerification": {
-      "sha256": "sha256:d9fd57af746d4a5c69b7158925fd1342a053f16b8de4feb0b3378308d06ac0a0",
-      "verifiedAt": "2026-10-06T16:09:56.574Z",
-      "healthyComponents": [
-        "backend",
-        "frontend",
-        "rulesWorker"
-      ],
-      "edgeRoutes": [
-        {
-          "path": "/",
-          "status": 200
-        },
-        {
-          "path": "/api/health",
-          "status": 200
-        },
-        {
-          "path": "/build-info.json",
-          "status": 200
-        }
-      ],
-      "migrationCount": 305
-    },
-    "previousProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
-    "previousProductionVersionRecord": "/opt/bagofholding/backups/version-before-f05-2026-10-06T14-42-38.944Z.json",
-    "backup": {
-      "schemaVersion": 1,
-      "status": "fresh-backup-captured",
-      "observedAt": "2026-10-06T15:30:49.201Z",
-      "createdAt": "2026-10-06T15:27:20.030Z",
-      "backupDirectory": "/opt/bagofholding/backups/capture-37486931185-1",
-      "databaseDump": {
-        "path": "/opt/bagofholding/backups/capture-37486931185-1/database.dump",
-        "bytes": 974883784,
-        "sha256": "sha256:2172ab61600cd1ef70194b7d46a590fbf3346a129b0ac901a94063941e791931"
-      },
-      "files": 44,
-      "totalBytes": 1045942501,
-      "previousSourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
-      "previousReleaseId": "candidate-93265633db10-deb958c1c9a7",
-      "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24",
-      "releaseManifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
-      "targetSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
-      "deploymentRunId": 37486931185,
-      "liveDatabaseRestored": false
-    },
-    "rehearsal": {
-      "checksPassed": 9,
-      "anchor": {
-        "kind": "full-proof-anchor",
-        "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
-        "bundleHash": "sha256:b6f14294293326bd10fcff71c26fdce0b9e2f457b9da9150f0a19ff2c472ebbd",
-        "rehearsalHash": "sha256:11af3552b69351f0baed3c8d3da679fb25e533fc4bf7987f9d331d818eb22e02",
-        "backupHash": "sha256:1aff688740c9b2559e56fd37ee47a3710f90cceaa1c43ff859ea72f07c71441a",
-        "restoreReportHash": "sha256:cb5a872a180b3a0c61018bf02e26d2e6d8e5ad2547d70f0b22c7b445b6d53470",
-        "filesystemHash": "sha256:82e5463f3b57b8784730e67a9ca97330295ed04fb805bfdc2917689bb6c0e747",
-        "runtimeCompatibilityHash": "sha256:c3a42c8ab656d65279292b56ff84f6b645c52493d06cf11a26c53f2559a9ccf9",
-        "completedAt": "2026-10-06T16:01:20.644Z",
-        "backupCreatedAt": "2026-10-06T15:27:20.030Z"
-      },
-      "ownedCleanup": "stopped",
-      "productionDatabaseRestored": false
-    },
-    "writerPolicy": {
-      "compactReceipts": true,
-      "imageJobs": true,
-      "frozenCatalogs": false
-    },
-    "frontendSelective": {
-      "enabled": true,
-      "enabledAt": "2026-10-06T16:21:54.734Z",
-      "repositoryVariableVerifiedAt": "2026-10-06T16:23:02.682Z",
-      "anchorHash": "sha256:38209e9f00c3f036c6dc60ff597377dced8e4e8ce6cced0fa4a7ac090dc51794",
-      "originalObservedAt": "2026-10-06T16:06:36.895Z",
-      "hostConfigHash": "sha256:a6c48b4d8f22bf3242674c0854f2454c3c6b9c3e466a2d54c9e2954696aaead7",
-      "actualSelectiveDeploymentAccepted": false,
-      "serviceReplacementsDuringEnablement": 0,
-      "automatic": false
-    },
-    "automation": {
-      "release": false,
-      "deploy": false,
-      "reconcile": false,
-      "actualAcceptancePending": true
-    },
-    "runtime": {
-      "host": {
-        "logicalCpus": 2,
-        "totalMemoryBytes": 4106096640,
-        "availableMemoryBytes": 3347161088,
-        "diskTotalBytes": 50884108288,
-        "diskAvailableBytes": 7804448768
-      },
-      "components": {
-        "backend": {
-          "nanoCpus": 0,
-          "memoryLimitBytes": 0,
-          "pidsLimit": null,
-          "environment": {
-            "RULES_WORKER_MIRRORS_ENABLED": "1",
-            "DB_FROZEN_CATALOGS": "0",
-            "RULES_WORKER_MAX_INFLIGHT": "4",
-            "IMAGE_JOBS_ENABLED": "1",
-            "DB_COMPACT_RECEIPTS": "1",
-            "RULES_CATALOG_BATCH_ENABLED": "1"
-          }
-        },
-        "frontend": {
-          "nanoCpus": 0,
-          "memoryLimitBytes": 0,
-          "pidsLimit": null,
-          "environment": {}
-        },
-        "rulesWorker": {
-          "nanoCpus": 0,
-          "memoryLimitBytes": 0,
-          "pidsLimit": null,
-          "environment": {
-            "RULES_WORKER_MAX_CACHED_ARTIFACTS": "4"
-          }
-        }
-      },
-      "measurement": "Read-only live limits and capacity; no production latency improvement inferred."
-    },
-    "storageCleanup": {
-      "freedBytes": 4490361267,
-      "receiptFiles": [
-        "derived-dump-cleanup-2026-10-06T15-14-50.545Z.json",
-        "derived-expired-dump-cleanup-2026-10-06T15-45-21.972Z.json",
-        "unpacked-control-archive-cleanup-2026-10-06T15-54-58.169Z.json"
-      ]
-    },
-    "paidProviderRequestsThisAcceptance": 0,
+    "status": "full-automatic-main-production-delivered-selective-open",
+    "recordedAt": "2026-10-06T21:34:40.483Z",
+    "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+    "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
+    "actualCIRun": 37525609296,
+    "actualPublicationRun": 37527905823,
+    "actualDeploymentRun": 37528869764,
+    "actualCoordinatorRun": 37533666035,
     "productionDatabaseRestored": false,
-    "persistentDeployIdentityRetained": true,
-    "backupStorage": "primary-host-per-owner-decision",
-    "overallOriginalPlanComplete": false,
-    "remaining": [
-      "Genuine frontend-only deployment with unchanged backend/worker image and container identities; owned full rollback and automatic/reconcile acceptance.",
-      "Integrate and verify local legacy-character data retirement with current retained-history rollback boundary; no current V3/shared inventory deletion.",
-      "Integrate separately measured performance changes and repeat paired canonical API/UI acceptance on exact source; current flags alone do not prove speedup.",
-      "Historical fresh-through-278 requires authentic pre278 inputs; supported migration upgrade proof does not close this different boundary.",
-      "Verify the intended live application image-generation/storage/history flow without an unbounded paid retry."
-    ]
+    "all29Complete": false,
+    "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
   },
   "backup_storage_scope": {
     "schemaVersion": 1,
@@ -2996,71 +2775,10 @@
     "enabled": false
   },
   "latest_paired_ui_measurement": {
-    "source": {
-      "commit": "49770e6f09562ea13a96cceb2e55a9a7229b80ab",
-      "files": 4526,
-      "sha256": "d143f8c99808ce08b723526ac700c6ae04981f900f3f7b59c041887b79ee87e8"
-    },
-    "scope": "Actual local production UI: real camp button click through server start_encounter/initialize_combat to painted initiative rows; same stack, alternating batch-only roles, public owned integration data, no response mocking",
-    "accepted": 176,
-    "timed": 160,
-    "samplesPerRole": 40,
-    "warmupsPerRole": 4,
-    "measurements": {
-      "ui_camp_to_initiative_party_1_baseline": {
-        "count": 40,
-        "median_ms": 256.90000000596046,
-        "p95_ms": 282.79999999701977,
-        "p95_preliminary": true,
-        "min_ms": 230,
-        "max_ms": 288.70000000298023,
-        "phase_means": {}
-      },
-      "ui_camp_to_initiative_party_1_batch": {
-        "count": 40,
-        "median_ms": 259.30000001192093,
-        "p95_ms": 290.59999999403954,
-        "p95_preliminary": true,
-        "min_ms": 235.90000000596046,
-        "max_ms": 292.6000000089407,
-        "phase_means": {}
-      },
-      "ui_camp_to_initiative_party_6_baseline": {
-        "count": 40,
-        "median_ms": 574.7999999970198,
-        "p95_ms": 728.7000000029802,
-        "p95_preliminary": true,
-        "min_ms": 537.6000000089407,
-        "max_ms": 812.5,
-        "phase_means": {}
-      },
-      "ui_camp_to_initiative_party_6_batch": {
-        "count": 40,
-        "median_ms": 568.2000000029802,
-        "p95_ms": 902.9000000059605,
-        "p95_preliminary": true,
-        "min_ms": 526.8000000119209,
-        "max_ms": 951.4000000059605,
-        "phase_means": {}
-      }
-    },
-    "limitations": [
-      "Headless desktop browser on local machine; no production or mobile latency guarantee",
-      "Distinct fresh run, characters and RNG per sample",
-      "p95 based on 40 timed samples per role and party size; local experiment only"
-    ],
-    "cleanup": {
-      "status": "stopped",
-      "errors": []
-    },
-    "browserCleanup": "stopped",
-    "sourceUnchanged": {
-      "unchanged": true,
-      "files": 4526,
-      "sha256": "d143f8c99808ce08b723526ac700c6ae04981f900f3f7b59c041887b79ee87e8"
-    },
-    "reportHash": "sha256:f62fed5bd90b94a90f8ac4cae2705bed1dcb80e460dd4dbf723d687d50130152",
-    "decision": "Keep batch OFF. Group one median +0.93%, p95 +2.76%; group six median -1.15%, p95 +23.91%. Larger local UI series still does not establish a stable gain; earlier API gain is a narrower result."
+    "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
+    "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "measuredSamples": 90,
+    "productionChanged": false
   },
   "latest_writer_policy_repair": {
     "status": "local-repair-verified-new-exact-ci-required",
@@ -3172,371 +2890,19 @@
   },
   "latest_production_delivery": {
     "schemaVersion": 1,
-    "status": "production-delivered-independently-verified",
-    "recordedAt": "2026-10-06T19:52:18.805Z",
-    "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-    "controlCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-    "releaseId": "candidate-f383c905e062-8a315ebc6db8",
-    "manifestHash": "sha256:d04d0a99228028f146e71911d0a7a70e8125432214c1e4849a220542fb4b90d9",
-    "deploymentRun": 37515741656,
-    "deploymentUrl": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37515741656",
-    "completedAt": "2026-10-06T19:41:49Z",
-    "ci": {
-      "run": 37510545749,
-      "reportHash": "sha256:7e8623b6fcad025a893c4272ec6bf57b6a1c5aff2f6eb63d5014daa82186f8f5",
-      "status": "passed",
-      "checks": [
-        {
-          "id": "source-hygiene",
-          "status": "passed"
-        },
-        {
-          "id": "isolated-stack",
-          "status": "passed"
-        },
-        {
-          "id": "worker-and-database-node",
-          "status": "passed",
-          "tests": 25,
-          "passed": 25,
-          "skipped": 0
-        },
-        {
-          "id": "backend-compile",
-          "status": "passed"
-        },
-        {
-          "id": "go-backend",
-          "status": "passed",
-          "required": 409
-        },
-        {
-          "id": "go-animationpresentation",
-          "status": "passed",
-          "required": 4
-        },
-        {
-          "id": "go-audiopresentation",
-          "status": "passed",
-          "required": 3
-        },
-        {
-          "id": "go-charactertemplates",
-          "status": "passed"
-        },
-        {
-          "id": "go-itemsource",
-          "status": "passed",
-          "required": 5
-        },
-        {
-          "id": "go-itemsource-cmd-audit",
-          "status": "passed"
-        },
-        {
-          "id": "go-migrations",
-          "status": "passed",
-          "required": 333
-        },
-        {
-          "id": "go-passivepresentation",
-          "status": "passed"
-        },
-        {
-          "id": "go-roguelikecontent",
-          "status": "passed",
-          "required": 1
-        },
-        {
-          "id": "go-weapondata",
-          "status": "passed",
-          "required": 1
-        },
-        {
-          "id": "source-stability",
-          "status": "passed"
-        },
-        {
-          "id": "reference-cursor-transport",
-          "status": "passed"
-        },
-        {
-          "id": "process-crash-recovery",
-          "status": "passed"
-        },
-        {
-          "id": "supported-upgrade-baselines",
-          "status": "passed"
-        },
-        {
-          "id": "observed-legacy-baseline",
-          "status": "passed",
-          "tests": 1
-        },
-        {
-          "id": "candidate-rehearsal-api",
-          "status": "passed"
-        },
-        {
-          "id": "catalog-equivalence",
-          "status": "passed",
-          "required": 4
-        },
-        {
-          "id": "preparation-cache-equivalence",
-          "status": "passed",
-          "required": 9
-        },
-        {
-          "id": "worker-wire-mirror-equivalence",
-          "status": "passed"
-        },
-        {
-          "id": "equipment-authority-flow",
-          "status": "passed"
-        },
-        {
-          "id": "initiative-options-flow",
-          "status": "passed"
-        },
-        {
-          "id": "library-review-pages",
-          "status": "passed"
-        },
-        {
-          "id": "equipment-runtime-browser",
-          "status": "passed"
-        },
-        {
-          "id": "pwa-offline-shell",
-          "status": "passed"
-        },
-        {
-          "id": "urvin-owned-journey",
-          "status": "passed"
-        },
-        {
-          "id": "solo-durable-continuations",
-          "status": "passed",
-          "required": {
-            "required": 1,
-            "passed": 1
-          }
-        },
-        {
-          "id": "image-egress-isolation",
-          "status": "passed",
-          "required": {
-            "required": 1,
-            "passed": 1
-          }
-        },
-        {
-          "id": "browser-ui-fixtures-production",
-          "status": "passed",
-          "tests": 48,
-          "passed": 48,
-          "skipped": 0
-        },
-        {
-          "id": "browser-ui-fixtures-battle3d",
-          "status": "passed",
-          "tests": 8,
-          "passed": 8,
-          "skipped": 0
-        },
-        {
-          "id": "local-api-spine",
-          "status": "passed"
-        },
-        {
-          "id": "local-browser-flows",
-          "status": "passed",
-          "tests": 12,
-          "passed": 12,
-          "skipped": 0
-        },
-        {
-          "id": "node-contracts",
-          "status": "passed",
-          "tests": 1001,
-          "passed": 1001,
-          "skipped": 0
-        },
-        {
-          "id": "vitest",
-          "status": "passed",
-          "tests": 6465,
-          "passed": 6465,
-          "skipped": 0
-        }
-      ],
-      "cleanup": {
-        "status": "stopped",
-        "errors": []
-      }
-    },
-    "publication": {
-      "run": 37512888829,
-      "publishedManifestHash": "sha256:ed56fe62fa4544f873689ac67e9859c62080a984c6fface3e2fd20290755af5c"
-    },
-    "backup": {
-      "schemaVersion": 1,
-      "status": "fresh-backup-captured",
-      "observedAt": "2026-10-06T19:07:13.110Z",
-      "createdAt": "2026-10-06T19:04:18.508Z",
-      "backupDirectory": "/opt/bagofholding/backups/capture-37515741656-1",
-      "databaseDump": {
-        "path": "/opt/bagofholding/backups/capture-37515741656-1/database.dump",
-        "bytes": 974883784,
-        "sha256": "sha256:6fee7e148d80f9b3d6e0da8f09c9c1beeb5e994e7633ec44a0c95d2a444334a8",
-        "independentlyRehashed": true
-      },
-      "files": 44,
-      "totalBytes": 1045942787,
-      "previousSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
-      "previousReleaseId": "candidate-fed0195f3f05-1a608a4b3dd4",
-      "activeHash": "sha256:c5d002e5f094ac3e32bc4159a4f15306e76b0b85f60f3338ac1a288c8fad1f18",
-      "releaseManifestHash": "sha256:65fb9d748015caea05ccba37f03facbc1092bcf0c75d3c039de533dfe5cdbc6f",
-      "targetSourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-      "deploymentRunId": 37515741656,
-      "liveDatabaseRestored": false
-    },
-    "previousSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
-    "hostRehearsal": {
-      "status": "passed",
-      "runId": "56015f6c-6d1a-496e-ab4c-36d74caf53d0",
-      "startedAt": "2026-10-06T19:13:08.537Z",
-      "completedAt": "2026-10-06T19:36:49.992Z",
-      "checks": [
-        {
-          "id": "snapshot",
-          "status": "passed"
-        },
-        {
-          "id": "migrations",
-          "status": "passed"
-        },
-        {
-          "id": "full-candidate-health",
-          "status": "passed"
-        },
-        {
-          "id": "image-contract",
-          "status": "passed"
-        },
-        {
-          "id": "historical-inventory",
-          "status": "passed"
-        },
-        {
-          "id": "historical-replay",
-          "status": "passed"
-        },
-        {
-          "id": "pending-decision",
-          "status": "passed"
-        },
-        {
-          "id": "duplicate-command",
-          "status": "passed"
-        },
-        {
-          "id": "writer-compatibility",
-          "status": "passed"
-        }
-      ],
-      "cleanup": {
-        "status": "stopped",
-        "errors": [],
-        "resourceCount": 19
-      }
-    },
-    "services": {
-      "backend": {
-        "healthy": true,
-        "containerId": "9eec450344a79e69cc67adc3b66ef573d194bc83b5b59b771b6a3b2b58754b28",
-        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:c879133542a65a48bbe8d3492f6d5e04ea056a3520be8f2cdf9a594df8cb2bf9",
-        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
-      },
-      "frontend": {
-        "healthy": true,
-        "containerId": "b0e756568c761ec4cfb15ccd4cebd55243c305b0c25fcec49a1eee7f4debe618",
-        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c9574bd200b3071ce961029fa4d5c664b2ce70e2c225b5f4e3af8ab881279e9f",
-        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
-      },
-      "rulesWorker": {
-        "healthy": true,
-        "containerId": "042f6c5a7f822d2105aa9b01b0101be58ae05ae56f6431f05677ddbaed0794b0",
-        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:f6d7bd3ff4feded0d9e9dbc1d16f44ba6e8a1647bffd30477899dd0d1344af00",
-        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
-      }
-    },
-    "edge": [
-      {
-        "path": "/",
-        "status": 200
-      },
-      {
-        "path": "/api/health",
-        "status": 200,
-        "identity": {
-          "identitySchemaVersion": 1,
-          "component": "backend",
-          "provenance": "baked",
-          "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "source_commit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "inputFingerprint": "sha256:70c68bf463ba3f03fee3ba3a2db56fa0da468b53751651e7cbd9c4b4f8733671",
-          "releaseId": "candidate-f383c905e062-8a315ebc6db8",
-          "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "apiProtocolVersion": 1,
-          "readerCapabilities": [
-            "receipt-v1",
-            "receipt-v2",
-            "image-job-v1"
-          ],
-          "goRuntime": "go1.25.14"
-        }
-      },
-      {
-        "path": "/build-info.json",
-        "status": 200,
-        "identity": {
-          "identitySchemaVersion": 1,
-          "component": "frontend",
-          "provenance": "baked",
-          "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "source_commit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "inputFingerprint": "sha256:a08e98dbaeb75b9e7d2689d0a4821c6c6690d3b2a38e60de538d3cdcf5971c6f",
-          "releaseId": "candidate-f383c905e062-8a315ebc6db8",
-          "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "apiProtocolVersion": 1,
-          "readerCapabilities": [
-            "image-job-v1"
-          ]
-        }
-      }
-    ],
-    "migrationCount": 305,
-    "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
-    "writerPolicy": {
-      "compactReceipts": true,
-      "imageJobs": true,
-      "frozenCatalogs": false
-    },
-    "selective": false,
-    "liveDatabaseRestored": false,
-    "persistentDeployIdentityRetained": true,
-    "paidRequestsDuringAcceptance": 0,
+    "status": "full-automatic-main-production-delivered-selective-open",
+    "recordedAt": "2026-10-06T21:34:40.483Z",
+    "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+    "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
+    "actualCIRun": 37525609296,
+    "actualPublicationRun": 37527905823,
+    "actualDeploymentRun": 37528869764,
+    "actualCoordinatorRun": 37533666035,
+    "productionDatabaseRestored": false,
     "all29Complete": false,
-    "remaining": [
-      "Actual selective frontend delivery and rollback acceptance",
-      "Automatic main release and reconciliation acceptance",
-      "Authentic historical fresh278 baseline",
-      "Ordinary-item authoritative-path latency",
-      "Real image generation UI to provider, storage and entity acceptance"
-    ],
-    "record": "docs/audits/2026-10-04/execution/CI-31-selective-publication-refusal.json"
+    "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
   },
   "latest_selective_publication": {
     "runId": 37523259999,
@@ -3628,5 +2994,21 @@
     "automaticPolicyPrepared": true,
     "repositoryAutomaticVariables": "still OFF at recording; explicit enablement follows clean policy commit and verification of healthy full adoption",
     "actualAutomaticDeliveryAcceptance": "pending"
+  },
+  "latest_automatic_delivery": {
+    "schemaVersion": 1,
+    "status": "full-automatic-main-production-delivered-selective-open",
+    "recordedAt": "2026-10-06T21:34:40.483Z",
+    "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+    "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
+    "actualCIRun": 37525609296,
+    "actualPublicationRun": 37527905823,
+    "actualDeploymentRun": 37528869764,
+    "actualCoordinatorRun": 37533666035,
+    "productionDatabaseRestored": false,
+    "all29Complete": false,
+    "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
   }
 }

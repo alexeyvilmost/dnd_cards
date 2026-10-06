@@ -25,7 +25,7 @@
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "f383c905 deployed and independently verified after exact full CI30, publication17 and nine host gates. CI31 frontend-only passed; publication18 failed during owned startup without a deployed candidate. Automatic main policy prepared after verified adoption; repository enablement and actual automatic delivery pending."
+    "production_enablement_status": "Verified full automatic CI32 -> publication19 -> TimeWeb delivery37528869764 and coordinator37533666035. Exact main fdca59c3 is deployed, independently healthy; genuine frontend-only production acceptance remains separate."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -1274,7 +1274,7 @@
         3,
         6
       ],
-      "status": "initialization_authority_ci15_verified_default_latency_open",
+      "status": "current_source_browser_measured_default_activation_pending",
       "steps": [
         "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
         "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
@@ -1326,18 +1326,36 @@
       "execution_result": {
         "demonstrated": [
           "Seven private canonical CPU/real HTTP experiments, exact retry/reload, source stability and owned cleanup measured.",
-          "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance."
+          "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance.",
+          "Current source-C sequential native 30x3 browser comparison: duplicate participant builder30->0; observed full-battle p95 improved with approximately equal median; explicit options-delay and prefetch SQL regressions recorded.",
+          "Real local browser confirmed two data-defined action/cost variants, canonical row/icon preview, 1/2/6-member parties, unchanged read-only offers, rejected foreign action and exactly-once cost/retry/reload across all party rows."
         ],
         "limitations": [
-          "No general production initialization latency gain demonstrated. Batch/mirrors/cache/native SHA are not enabled on that basis."
+          "Production initiative-options flag remains OFF; local correctness is not production activation or universal latency improvement. Existing action background GET remains."
         ],
         "nextAcceptance": [
-          "Optimize the ordinary full canonical UI/API scenario with paired meaningful acceptance."
+          "Bind default options configuration/rollback to actual verified runtime; retain prefetch OFF."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+        "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json"
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "latest_execution_result": {
+        "record": "docs/audits/2026-10-04/execution/PERF-02-initiative-choice-20261007.json",
+        "status": "locally-verified-frontend-offer-preview",
+        "demonstrated": [
+          "Current-source 90 measured browser runs recorded separately; duplicate participant builder30->0 with the documented median/tail tradeoff.",
+          "Real local browser confirmed two data-defined action/cost variants, canonical row/icon preview, 1/2/6-member parties, unchanged read-only offers, rejected foreign action and exactly-once cost/retry/reload across all party rows."
+        ],
+        "limitations": [
+          "Production initiative-options flag remains OFF; local correctness is not production activation or universal latency improvement. Existing action background GET remains."
+        ],
+        "nextAcceptance": [
+          "Bind default options configuration/rollback to actual verified runtime; retain prefetch OFF."
+        ],
+        "sourceBaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d"
+      },
+      "current_verification": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
+      "historical_latest_execution_result": {
         "sourceBaseCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
         "status": "initialization_authority_locally_verified_new_ci_and_latency_pending",
         "demonstrated": [
@@ -1348,11 +1366,11 @@
           "New exact-source Linux CI pending. No latency acceptance; rejected optional preparation cache remainsOFF."
         ],
         "nextAcceptance": [
-          "Run final-source full CI and measured canonical UI/API latency profiles."
+          "Default options configuration/rollback and optional action/party acceptance."
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+      "current_choice_verification": "docs/audits/2026-10-04/execution/PERF-02-initiative-choice-20261007.json"
     },
     {
       "id": "PERF-03",
@@ -2069,7 +2087,7 @@
         2,
         4
       ],
-      "status": "full_followon_production_verified_selective_auto_pending",
+      "status": "full_automatic_production_verified_selective_production_open",
       "steps": [
         "Зафиксировать различие release SHA, component source SHA, immutable image digest, input fingerprint, worker executable artifact hash и schema/protocol compatibility. Проверить актуальные файлы реализации health/build identity перед изменением.",
         "Создать versioned manifest schema и validator. Старые single-SHA releases читать через явный адаптер; неизвестная версия, некорректный digest или несовместимый protocol должны отклоняться до mutation.",
@@ -2120,10 +2138,10 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "record": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
-        "productionAcceptance": "verified-for-documented-scope",
+        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+        "productionAcceptance": "verified-for-full-automatic-delivery",
         "nextAcceptance": [
-          "Genuine frontend-only deployment with unchanged backend/worker image and container identities; owned full rollback and automatic/reconcile acceptance."
+          "Genuine frontend-only production delivery with unchanged backend/worker images and container identities; retain local rollback proof separately."
         ],
         "limitations": [],
         "latestSelectiveEvidence": {
@@ -2145,11 +2163,11 @@
           "Publication refused before component build/upload or host; stale manifest now regenerated locally, requires new exact CI/publication."
         ],
         "nextAcceptance": [
-          "Exact new CI/images and fresh full rehearsal within30minutes, then independent actual host identity verification."
+          "Genuine frontend-only production delivery with unchanged backend/worker."
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
@@ -2200,7 +2218,7 @@
         2,
         3
       ],
-      "status": "ci_build_and_publication_verified",
+      "status": "full_automatic_production_verified",
       "steps": [
         "Подготовить workflow_dispatch pipeline с exact candidate SHA и immutable inputs; проверять принадлежность разрешённой ветке и успешные обязательные проверки именно этого SHA. Не читать движущийся main повторно посреди выпуска.",
         "Включить REL-01 planner, parallel component build matrix и отдельные external cache scopes. Не собирать неизменившийся компонент, если его digest из доверенного manifest доступен и inputs действительно не менялись.",
@@ -2263,10 +2281,11 @@
           "supported_by_code_local_and_ci",
           "supported_by_code_local_and_ci"
         ],
-        "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "productionAcceptance": "verified-for-full-automatic-delivery",
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
     },
     {
       "id": "REL-05",
@@ -2292,7 +2311,7 @@
         2,
         4
       ],
-      "status": "full_followon_verified_selective_enabled_acceptance_pending",
+      "status": "full_automatic_production_verified_selective_production_open",
       "steps": [
         "Создать новый manifest-based runner с legacy adapter: validate candidate, compare deployed manifest, pull digests, verify identities/protocol/schema, определить изменившиеся сервисы и необходимые миграции.",
         "Сохранить lock, immutable release directories, exact identities, health/readiness, retained frontend assets и старые executable artifacts. Не называть symlink switch атомарной заменой всего HTTP-трафика: Compose обновляет сервисы последовательно.",
@@ -2340,10 +2359,10 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "record": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
-        "productionAcceptance": "verified-for-documented-scope",
+        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+        "productionAcceptance": "verified-for-full-automatic-delivery",
         "nextAcceptance": [
-          "Genuine frontend-only deployment with unchanged backend/worker image and container identities; owned full rollback and automatic/reconcile acceptance."
+          "Genuine frontend-only production delivery with unchanged backend/worker images and container identities; retain local rollback proof separately."
         ],
         "limitations": [],
         "latestSelectiveEvidence": {
@@ -2366,11 +2385,11 @@
           "First healthy predecessor absent; current manifest/guard repair requires new rebase. Actual future writer/selective/rollback/auto receipts remain mandatory."
         ],
         "nextAcceptance": [
-          "First healthy baseline; rebasefollow-on; genuine writer compatibility, UI-only selective images, owned failure rollback and actual auto-convergence gates."
+          "Genuine frontend-only production delivery with unchanged backend/worker."
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
@@ -2419,7 +2438,7 @@
         1,
         3
       ],
-      "status": "full_host_ninth_gate_restore_delivery_verified",
+      "status": "full_automatic_production_verified",
       "steps": [
         "Инвентаризировать backup categories: PostgreSQL snapshot, referenced executable artifacts, release manifest, media manifest и необходимая конфигурация. Текущий pg_dump не содержит /artifacts; не считать его доказательством полного восстановления боя.",
         "Создать backup manifest с хэшами/размерами/временем и проверкой ссылок DB snapshot на artifacts. Секреты не помещать в обычный manifest, логи или Git; отдельно описать защищённый recovery канал конфигурации.",
@@ -2465,8 +2484,8 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "record": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
-        "productionAcceptance": "verified-for-documented-scope",
+        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+        "productionAcceptance": "verified-for-full-automatic-delivery",
         "nextAcceptance": [],
         "limitations": [
           "Off-host backups remain deferred by owner. No production DB restore performed."
@@ -2484,12 +2503,10 @@
         "limitations": [
           "Fourth rehearsal completed after30minute freshness; old capture localdiagnosis only. Alternative complete history grouping13%slower and rejected."
         ],
-        "nextAcceptance": [
-          "Measured complete inventory acceleration; new fresh full successful host rehearsal; independent verification, external backup/RPO/RTO remain explicit."
-        ],
+        "nextAcceptance": [],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
       "owner_scope_override": {
         "schemaVersion": 1,
         "recordedAt": "2026-10-05T23:59:21.251Z",
@@ -3553,309 +3570,19 @@
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
     "schemaVersion": 1,
-    "kind": "verified-production-and-selective-followon",
-    "status": "full-production-delivered-selective-publication-refused",
-    "recordedAt": "2026-10-06T20:18:01.730Z",
-    "applicationSourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-    "deploymentControlCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-    "releaseId": "candidate-f383c905e062-8a315ebc6db8",
-    "deployment": {
-      "runId": 37515741656,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37515741656",
-      "status": "succeeded"
-    },
-    "backup": {
-      "schemaVersion": 1,
-      "status": "fresh-backup-captured",
-      "observedAt": "2026-10-06T19:07:13.110Z",
-      "createdAt": "2026-10-06T19:04:18.508Z",
-      "backupDirectory": "/opt/bagofholding/backups/capture-37515741656-1",
-      "databaseDump": {
-        "path": "/opt/bagofholding/backups/capture-37515741656-1/database.dump",
-        "bytes": 974883784,
-        "sha256": "sha256:6fee7e148d80f9b3d6e0da8f09c9c1beeb5e994e7633ec44a0c95d2a444334a8",
-        "independentlyRehashed": true
-      },
-      "files": 44,
-      "totalBytes": 1045942787,
-      "previousSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
-      "previousReleaseId": "candidate-fed0195f3f05-1a608a4b3dd4",
-      "activeHash": "sha256:c5d002e5f094ac3e32bc4159a4f15306e76b0b85f60f3338ac1a288c8fad1f18",
-      "releaseManifestHash": "sha256:65fb9d748015caea05ccba37f03facbc1092bcf0c75d3c039de533dfe5cdbc6f",
-      "targetSourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-      "deploymentRunId": 37515741656,
-      "liveDatabaseRestored": false
-    },
-    "previousSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
-    "hostRehearsal": {
-      "status": "passed",
-      "runId": "56015f6c-6d1a-496e-ab4c-36d74caf53d0",
-      "startedAt": "2026-10-06T19:13:08.537Z",
-      "completedAt": "2026-10-06T19:36:49.992Z",
-      "checks": [
-        {
-          "id": "snapshot",
-          "status": "passed"
-        },
-        {
-          "id": "migrations",
-          "status": "passed"
-        },
-        {
-          "id": "full-candidate-health",
-          "status": "passed"
-        },
-        {
-          "id": "image-contract",
-          "status": "passed"
-        },
-        {
-          "id": "historical-inventory",
-          "status": "passed"
-        },
-        {
-          "id": "historical-replay",
-          "status": "passed"
-        },
-        {
-          "id": "pending-decision",
-          "status": "passed"
-        },
-        {
-          "id": "duplicate-command",
-          "status": "passed"
-        },
-        {
-          "id": "writer-compatibility",
-          "status": "passed"
-        }
-      ],
-      "cleanup": {
-        "status": "stopped",
-        "errors": [],
-        "resourceCount": 19
-      }
-    },
-    "components": {
-      "backend": {
-        "healthy": true,
-        "containerId": "9eec450344a79e69cc67adc3b66ef573d194bc83b5b59b771b6a3b2b58754b28",
-        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:c879133542a65a48bbe8d3492f6d5e04ea056a3520be8f2cdf9a594df8cb2bf9",
-        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
-      },
-      "frontend": {
-        "healthy": true,
-        "containerId": "b0e756568c761ec4cfb15ccd4cebd55243c305b0c25fcec49a1eee7f4debe618",
-        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c9574bd200b3071ce961029fa4d5c664b2ce70e2c225b5f4e3af8ab881279e9f",
-        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
-      },
-      "rulesWorker": {
-        "healthy": true,
-        "containerId": "042f6c5a7f822d2105aa9b01b0101be58ae05ae56f6431f05677ddbaed0794b0",
-        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:f6d7bd3ff4feded0d9e9dbc1d16f44ba6e8a1647bffd30477899dd0d1344af00",
-        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
-      }
-    },
-    "edge": [
-      {
-        "path": "/",
-        "status": 200
-      },
-      {
-        "path": "/api/health",
-        "status": 200,
-        "identity": {
-          "identitySchemaVersion": 1,
-          "component": "backend",
-          "provenance": "baked",
-          "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "source_commit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "inputFingerprint": "sha256:70c68bf463ba3f03fee3ba3a2db56fa0da468b53751651e7cbd9c4b4f8733671",
-          "releaseId": "candidate-f383c905e062-8a315ebc6db8",
-          "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "apiProtocolVersion": 1,
-          "readerCapabilities": [
-            "receipt-v1",
-            "receipt-v2",
-            "image-job-v1"
-          ],
-          "goRuntime": "go1.25.14"
-        }
-      },
-      {
-        "path": "/build-info.json",
-        "status": 200,
-        "identity": {
-          "identitySchemaVersion": 1,
-          "component": "frontend",
-          "provenance": "baked",
-          "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "source_commit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "inputFingerprint": "sha256:a08e98dbaeb75b9e7d2689d0a4821c6c6690d3b2a38e60de538d3cdcf5971c6f",
-          "releaseId": "candidate-f383c905e062-8a315ebc6db8",
-          "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
-          "apiProtocolVersion": 1,
-          "readerCapabilities": [
-            "image-job-v1"
-          ]
-        }
-      }
-    ],
-    "migrations": 305,
+    "status": "full-automatic-main-production-delivered-selective-open",
+    "recordedAt": "2026-10-06T21:34:40.483Z",
+    "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+    "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
+    "actualCIRun": 37525609296,
+    "actualPublicationRun": 37527905823,
+    "actualDeploymentRun": 37528869764,
+    "actualCoordinatorRun": 37533666035,
     "productionDatabaseRestored": false,
-    "persistentDeployIdentityRetained": true,
     "all29Complete": false,
-    "frontendOnlyCI": {
-      "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
-      "runId": 37522307188,
-      "suite": "core",
-      "reportHash": "sha256:d702ed25e662f85bc98479b9db0e5b09a244a083bab705e5fb27173aeac816ef",
-      "mandatorySkips": 0,
-      "cleanup": {
-        "status": "stopped",
-        "errors": []
-      },
-      "globalCoverageComplete": true,
-      "checks": [
-        {
-          "id": "source-hygiene",
-          "status": "passed"
-        },
-        {
-          "id": "isolated-stack",
-          "status": "passed"
-        },
-        {
-          "id": "worker-and-database-node",
-          "status": "passed",
-          "tests": 2,
-          "passed": 2,
-          "skipped": 0
-        },
-        {
-          "id": "backend-compile",
-          "status": "passed"
-        },
-        {
-          "id": "go-backend",
-          "status": "passed",
-          "required": 15
-        },
-        {
-          "id": "source-stability",
-          "status": "passed"
-        },
-        {
-          "id": "local-api-spine",
-          "status": "passed"
-        },
-        {
-          "id": "local-browser-flows",
-          "status": "passed",
-          "tests": 12,
-          "passed": 12,
-          "skipped": 0
-        },
-        {
-          "id": "node-contracts",
-          "status": "passed",
-          "tests": 563,
-          "passed": 563,
-          "skipped": 0
-        },
-        {
-          "id": "vitest",
-          "status": "passed",
-          "tests": 566,
-          "passed": 566,
-          "skipped": 0
-        }
-      ]
-    },
-    "failedPublication": {
-      "runId": 37523259999,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37523259999",
-      "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
-      "status": "failed",
-      "stage": "owned hosted mixed OCI startup",
-      "completedChecks": 0,
-      "cleanup": "stopped without errors",
-      "candidatePublished": false,
-      "productionDeploymentDispatched": false,
-      "rootCause": "not established; original log contains no underlying startup cause"
-    },
-    "localDiagnostic": {
-      "status": "passed",
-      "scope": "locally reassembled diagnostic manifest from exact actual build plan and actual published component images; original publication timestamps unavailable; no CI or deployment authority",
-      "checks": [
-        {
-          "id": "image-contract",
-          "status": "passed"
-        },
-        {
-          "id": "api-routing",
-          "status": "passed"
-        },
-        {
-          "id": "character",
-          "status": "passed"
-        },
-        {
-          "id": "equipment",
-          "status": "passed"
-        },
-        {
-          "id": "combat-pending",
-          "status": "passed"
-        },
-        {
-          "id": "reload",
-          "status": "passed"
-        },
-        {
-          "id": "exact-retry",
-          "status": "passed"
-        },
-        {
-          "id": "paper",
-          "status": "passed"
-        },
-        {
-          "id": "json-export",
-          "status": "passed"
-        },
-        {
-          "id": "pdf-export",
-          "status": "passed"
-        },
-        {
-          "id": "frontend-rollback",
-          "status": "passed"
-        },
-        {
-          "id": "old-chunk-fetch",
-          "status": "passed"
-        }
-      ],
-      "cleanup": {
-        "status": "stopped",
-        "errors": [],
-        "retainedImages": true
-      },
-      "controllerCleanup": {
-        "status": "stopped",
-        "errors": []
-      },
-      "productionMutations": 0
-    },
-    "remainingAcceptance": [
-      "Actual selective frontend delivery and rollback acceptance",
-      "Automatic main release and reconciliation acceptance",
-      "Authentic historical fresh278 baseline",
-      "Ordinary-item authoritative-path latency",
-      "Real image generation UI to provider, storage and entity acceptance"
-    ],
-    "record": "docs/audits/2026-10-04/execution/CI-31-selective-publication-refusal.json"
+    "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
   },
   "execution_history": [
     {
@@ -5461,7 +5188,7 @@
       ]
     }
   ],
-  "updated_at": "2026-10-06T16:56:01.995Z",
+  "updated_at": "2026-10-06T22:00:36.353Z",
   "backup_storage_scope": {
     "schemaVersion": 1,
     "recordedAt": "2026-10-05T23:59:21.251Z",
@@ -6297,5 +6024,11 @@
         "Remaining original task criteria in agent-plan.json remain unchanged"
       ]
     }
-  ]
+  ],
+  "latest_paired_ui_measurement": {
+    "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
+    "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "measuredSamples": 90,
+    "productionChanged": false
+  }
 }

@@ -5,6 +5,7 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import type {ForgeCharacter} from '../character/types';
 import type {RoguelikeRun} from '../roguelike/api';
 import type {SoloCombatState} from '../solo-combat/types';
+import type {Action} from '../types';
 import {useSoloCombatBootstrap} from './useSoloCombatBootstrap';
 
 const mocks=vi.hoisted(()=>({character:vi.fn(),run:vi.fn(),command:vi.fn(),initiative:vi.fn(),participant:vi.fn(),refresh:vi.fn()}));
@@ -76,4 +77,25 @@ describe('combat route bootstrap ownership',()=>{
     expect(setError).toHaveBeenLastCalledWith('Этот лист не участвует в активной встрече забега');
     expect(mocks.command).not.toHaveBeenCalled();expect(mocks.participant).not.toHaveBeenCalled();expect(persist).not.toHaveBeenCalled();
   });
+
+  it.each([{id:'alpha',resource:'initiative_alpha',faces:4},{id:'beta',resource:'initiative_beta',faces:6}])(
+    'retains the offered $resource action for canonical preview and submits only its ID',async({id,resource,faces})=>{
+      const action:Action={id,name:`Offered ${id}`,description:`Offer snapshot ${id}`,card_number:`offered-${id}`,
+        rarity:'common',resource:'free_action',action_type:'item_property',created_at:'2026-10-07',updated_at:'2026-10-07',mechanics:{
+        activation:{mode:'triggered',cost:[{resource}],trigger:{events:['initiative_roll']}},
+        effects:[{resolution:'auto',result:[{kind:'modifier',op:'bonus_die',faces,sign:1}]}],
+      }};
+      mocks.run.mockResolvedValueOnce({...run('a'),combat_state:undefined,trusted_combat_available:true});
+      mocks.initiative.mockResolvedValueOnce({enabled:true,run_revision:5,character_id:'a',runtime_revision:3,options:[action]});
+      requestChoice.mockResolvedValueOnce({check_maneuver:[id]});mocks.command.mockResolvedValueOnce(run('a'));
+      await render('a');
+      expect(requestChoice).toHaveBeenCalledOnce();
+      const choice=requestChoice.mock.calls[0][0][0];
+      expect(choice.items.find((item:{id:string})=>item.id===id)?.previewAction).toBe(action);
+      expect(choice.items.find((item:{id:string})=>item.id==='none')?.previewAction).toBeUndefined();
+      expect(mocks.command).toHaveBeenCalledExactlyOnceWith('run-a',5,'initialize_combat',{initiative_maneuver_action_id:id});
+      expect(mocks.participant).not.toHaveBeenCalled();expect(persist).not.toHaveBeenCalled();
+      expect(setState).toHaveBeenLastCalledWith(state('a'));
+    },
+  );
 });
