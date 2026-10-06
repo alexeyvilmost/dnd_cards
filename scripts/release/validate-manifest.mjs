@@ -5,6 +5,9 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {assertOCIMediaDisabled} from './write-build-identity.mjs';
+import {assertWriterTraces} from './writer-traces.mjs';
+import {assertRetainedWriterHistory} from './writer-retained-history.mjs';
+import {validateWriterPreviewProfiles} from './writer-runtime-profile.mjs';
 
 export const manifestSchema = JSON.parse(readFileSync(new URL('../../infra/release-manifest.schema.json', import.meta.url), 'utf8'));
 const keys = ['frontend', 'backend', 'rulesWorker'];
@@ -52,6 +55,29 @@ export function checkSchema(value, schema = manifestSchema, location = 'manifest
   return value;
 }
 
+// Absence is a logical OFF policy, never a mutation of old manifest bytes.
+export function writerPolicy(manifest) {
+  if (!Object.hasOwn(manifest, 'writerPolicy')) return {compactReceipts:false,imageJobs:false,frozenCatalogs:false};
+  checkSchema(manifest.writerPolicy, manifestSchema.$defs.writerPolicy, 'writerPolicy');
+  return {...manifest.writerPolicy};
+}
+// A missing configuration remains OFF. Preserve the explicit lineage contract
+// once introduced, while historical absent/absent manifests keep their bytes.
+export function writerPolicyFields(previous,config) {
+  return previous && Object.hasOwn(previous,'writerPolicy') || Object.hasOwn(config,'writerPolicy')
+    ? {writerPolicy:writerPolicy(config)} : {};
+}
+export function validateWriterTransition(candidate, previous) {
+  const policy=writerPolicy(candidate);
+  if(previous)writerPolicy(previous);
+  if(previous && Object.hasOwn(previous,'writerPolicy') && !Object.hasOwn(candidate,'writerPolicy')) throw Error('Writer policy cannot disappear from a manifest release line');
+  if(policy.compactReceipts || policy.imageJobs) {
+    if(!previous || candidate.previousReleaseId!==previous.releaseId) throw Error('Enabled writers require a verified manifest predecessor; legacy adoption is forbidden');
+    for(const key of ['apiProtocolVersion','workerProtocolVersion','supportedWorldSchemaVersions','migrationSet']) if(json(candidate[key])!==json(previous[key])) throw Error('Enabled writer policy requires the same schema and migration identities');
+    for(const id of ['298_compact_command_receipts','300_image_jobs']) if(!candidate.migrationSet.some(row=>row.id===id && hashPattern.test(row.checksum))) throw Error('Enabled writers require exact additive migration 298/300 checksums');
+  }
+  return policy;
+}
 export function validateManifest(manifest) {
   checkSchema(manifest);
   if (manifest.previousReleaseId === manifest.releaseId) throw Error('Release cannot be its own predecessor');
@@ -111,10 +137,20 @@ export function compositionFingerprint(manifest) {
   const {components, rulesArtifactHash, contentManifestHash, apiProtocolVersion, workerProtocolVersion,
     supportedWorldSchemaVersions, workerRuntime, capabilities, migrationSet} = manifest;
   return evidenceHash({components, rulesArtifactHash, contentManifestHash, apiProtocolVersion, workerProtocolVersion,
-    supportedWorldSchemaVersions, workerRuntime, capabilities, migrationSet});
+    supportedWorldSchemaVersions, workerRuntime, capabilities, migrationSet, ...(Object.hasOwn(manifest, 'writerPolicy') ? {writerPolicy: manifest.writerPolicy} : {})});
 }
 
 export const candidateRehearsalStages = ['snapshot','migrations','full-candidate-health','image-contract','historical-inventory','historical-replay','pending-decision','duplicate-command'];
+export function rehearsalStages(manifest) {
+  return [...candidateRehearsalStages, ...(Object.hasOwn(manifest,'writerPolicy') ? ['writer-compatibility'] : [])];
+}
+export function assertWriterRehearsalBoundary(manifest,checks){
+  if(!Object.hasOwn(manifest,'writerPolicy'))return;
+  if(json(checks['full-candidate-health']?.historyWriterPolicy)!==json({compactReceipts:false,imageJobs:false,frozenCatalogs:false}))throw Error('Captured-history applications must start with all writers OFF');
+  const check=checks['writer-compatibility'],cleanup=check?.formatFixtureCleanup;
+  if(check?.formatScope!=='separate-public-owned-fixture'||cleanup?.status!=='stopped'
+    ||!Number.isSafeInteger(cleanup.executions)||cleanup.executions!==1+(check.outcomes??[]).filter(row=>row.id!=='frontend-pending-job-reload').length)throw Error('Separate writer fixture cleanup is incomplete');
+}
 export function assertCandidateRehearsal(manifest, bundle) {
   const receipt=bundle?.rehearsalReceipt, reports=bundle?.reports;
   if(receipt?.schemaVersion!==1||receipt.kind!=='candidate-rehearsal'||receipt.execution!=='docker'||receipt.status!=='passed'
@@ -122,7 +158,7 @@ export function assertCandidateRehearsal(manifest, bundle) {
     ||receipt.releaseId!==manifest.releaseId||receipt.compositionFingerprint!==compositionFingerprint(manifest)
     ||!['candidateHash','activeHash','backupHash'].every(key=>hashPattern.test(receipt[key]))
     ||receipt.cleanup?.status!=='stopped'||receipt.cleanup.errors?.length||!Number.isFinite(Date.parse(receipt.completedAt))
-    ||!Array.isArray(receipt.checks)||json(receipt.checks.map(row=>row.id))!==json(candidateRehearsalStages)||receipt.checks.some(row=>row.status!=='passed'))throw Error('Complete isolated Docker candidate rehearsal with verified cleanup required');
+    ||!Array.isArray(receipt.checks)||json(receipt.checks.map(row=>row.id))!==json(rehearsalStages(manifest))||receipt.checks.some(row=>row.status!=='passed'))throw Error('Complete isolated Docker candidate rehearsal with verified cleanup required');
   const checks=Object.fromEntries(receipt.checks.map(row=>[row.id,row])),health=checks['full-candidate-health'],image=checks['image-contract'];
   if(checks.snapshot.backupHash!==receipt.backupHash||!hashPattern.test(checks.snapshot.schemaFingerprint)
     ||json(checks.migrations.versions)!==json(manifest.migrationSet.map(row=>row.id).sort())
@@ -137,7 +173,70 @@ export function assertCandidateRehearsal(manifest, bundle) {
   if(receipt.additiveMigrations){
     if(json(receipt.additiveMigrations.report)!==json(reports.additiveMigrations)||json(receipt.additiveMigrations.approval)!==json(bundle.migrationApproval))throw Error('Additive report differs from actual candidate rehearsal');
   }else if(reports.additiveMigrations||bundle.migrationApproval)throw Error('Additive approval has no candidate rehearsal binding');
+  assertWriterCompatibility(manifest,bundle,checks['writer-compatibility']);
+  assertWriterRehearsalBoundary(manifest,checks);
   return checks;
+}
+
+// This consumes actual image/rehearsal observations. It cannot infer persisted
+// reader support from runtime flags or the migration ledger. Docker producers
+// must supply the additional stage before any explicit policy becomes ready.
+export const writerCompatibilityOutcomes = ['compact-receipt-cross-image-retry','image-job-cross-image-retry','frontend-pending-job-reload','expanded-data-dump-restore','enabled-off-enabled-rollback'];
+export function requiredWriterOutcomes(manifest,previous,previousIdentities) {
+  const current=writerPolicy(manifest),prior=previous?writerPolicy(previous):writerPolicy({});
+  const backend=previousIdentities?.backend?.readerCapabilities??[],frontend=previousIdentities?.frontend?.readerCapabilities??[];
+  const receipts=current.compactReceipts||prior.compactReceipts||backend.includes('receipt-v2');
+  const jobs=current.imageJobs||prior.imageJobs||backend.includes('image-job-v1')||frontend.includes('image-job-v1');
+  return writerCompatibilityOutcomes.filter((_,index)=>index===0?receipts:index<3?jobs:receipts||jobs);
+}
+function observedReaders(manifest,images,identities,instances) {
+  const result={};
+  for(const key of keys) {
+    const component=manifest.components[key], identity=identities?.[key], launch=instances?.[key];
+    if(images?.[key]!==component.imageDigest || identity?.identitySchemaVersion!==1 || identity.provenance!=='baked' || identity.component!==key
+      ||identity.sourceCommit!==component.sourceCommit ||identity.inputFingerprint!==component.inputFingerprint ||identity.apiProtocolVersion!==manifest.apiProtocolVersion
+      ||!launch || !/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(launch.releaseId??'') || !/^[a-f0-9]{40}$/.test(launch.releaseCommit??'')
+      ||identity.releaseId!==launch.releaseId || identity.releaseCommit!==launch.releaseCommit
+      ||identity.source_commit!==undefined && identity.source_commit!==identity.sourceCommit) throw Error('Writer compatibility requires exact baked image and launch identities');
+    const readers=identity.readerCapabilities===undefined?[]:identity.readerCapabilities;
+    if(!Array.isArray(readers)||new Set(readers).size!==readers.length||readers.some(value=>typeof value!=='string'||!/^[a-z][a-z0-9-]{0,63}$/.test(value)))throw Error('Invalid source-owned reader capabilities');
+    result[key]=readers;
+  }
+  return result;
+}
+export function writerCompatibilityRequirements(manifest,bundle,check) {
+  const previous=bundle.previousManifest,policy=validateWriterTransition(manifest,previous);
+  if(!Object.hasOwn(manifest,'writerPolicy'))return [];
+  if(check?.status!=='passed'||check.compositionFingerprint!==compositionFingerprint(manifest)||json(check.writerPolicy)!==json(policy)
+    ||json(check.candidate?.images)!==json(bundle.images)||json(check.candidate?.identities)!==json(bundle.identities))throw Error('Exact writer compatibility rehearsal is required');
+  const launches=Object.fromEntries(keys.map(key=>[key,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]));
+  const candidateReaders=observedReaders(manifest,bundle.images,bundle.identities,launches);
+  let previousReaders=null;
+  if(previous) {
+    const state=check.previous?.state;
+    if(state?.schemaVersion!==1||state.status!=='active'||json(state.manifest)!==json(previous)||evidenceHash(state)!==bundle.rehearsalReceipt.activeHash)throw Error('Writer rehearsal predecessor differs from the verified active state');
+    previousReaders=observedReaders(previous,check.previous.images,check.previous.identities,state.instances);
+    for(const key of keys)for(const reader of previousReaders[key])if(!candidateReaders[key].includes(reader))throw Error('Persisted reader capabilities cannot be removed, including when writers are OFF');
+  } else if(check.previous!==null)throw Error('Unexpected writer compatibility predecessor');
+  validateWriterPreviewProfiles({candidate:check.candidate,previous:check.previous,writerPolicy:policy,executionProfile:check.executionProfile});
+  const required={backend:[],frontend:[]};
+  const prior=previous?writerPolicy(previous):writerPolicy({});
+  // OFF is not evidence that persisted data disappeared. Conservatively retain
+  // the proof obligation of the predecessor's source-owned readers; those
+  // declarations are themselves monotonic above, so ON -> OFF -> OFF is safe.
+  const receipts=policy.compactReceipts||prior.compactReceipts||previousReaders?.backend.includes('receipt-v2');
+  const jobs=policy.imageJobs||prior.imageJobs||previousReaders?.backend.includes('image-job-v1')||previousReaders?.frontend.includes('image-job-v1');
+  if(receipts)required.backend.push('receipt-v1','receipt-v2');
+  if(jobs){required.backend.push('image-job-v1');required.frontend.push('image-job-v1');}
+  for(const [key,readers] of Object.entries(required))for(const reader of readers)if(!candidateReaders[key].includes(reader)||!previousReaders?.[key].includes(reader))throw Error('Candidate and rollback image readers must support persisted writer formats');
+  return requiredWriterOutcomes(manifest,previous,check.previous?.identities);
+}
+export function assertWriterCompatibility(manifest,bundle,check) {
+  const expected=writerCompatibilityRequirements(manifest,bundle,check);
+  if(!Object.hasOwn(manifest,'writerPolicy'))return;
+  if(expected.length)assertRetainedWriterHistory(check.retainedHistory,bundle.rehearsalReceipt.backupHash);
+  if(!Array.isArray(check.outcomes)||json(check.outcomes.map(row=>row.id))!==json(expected)||check.outcomes.some(row=>row.status!=='passed'||!hashPattern.test(row.traceHash)))throw Error('Actual cross-image read/retry, restore and rollback outcomes required');
+  assertWriterTraces(manifest,check,bundle.rehearsalReceipt,expected);
 }
 
 export function assertReleaseReady(manifest, bundle = {}) {

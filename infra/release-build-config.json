@@ -11,6 +11,7 @@
   "buildkitImage": "moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
   "frontendApiUrl": "",
   "frontendMediaVariants": false,
+  "writerPolicy": {"compactReceipts": true, "imageJobs": true, "frozenCatalogs": false},
   "contentManifestHash": "sha256:792705aca1d66e2ed086a649ea5783b953bfb7c6130e1861bc79c3b205a79121",
   "migrationSet": [
     {

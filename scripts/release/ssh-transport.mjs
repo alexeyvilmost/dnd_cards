@@ -8,6 +8,7 @@ import path from 'node:path';
 import {verifyCandidateProvenance} from './deployment-handoff.mjs';
 import {evidenceHash,validateManifest} from './validate-manifest.mjs';
 import {unpackControlArchive} from './ssh-archive.mjs';
+import {assertUIProofProjection} from './ui-proof-projection.mjs';
 import {validateActiveProjection} from './active-projection.mjs';
 
 export const transferFiles=['candidate.json','manifest.json','core-report.json','verified-release-run.json'];
@@ -76,13 +77,28 @@ export function attemptDirectory(request){validateSSHRequest(request);return `${
 export function validatePublicReceipt(result,request){
   validateSSHRequest(request);validateManifest(result?.manifest);
   const exact=(value,keys)=>value&&evidenceHash(Object.keys(value).sort())===evidenceHash([...keys].sort());
-  if(!exact(result,['status','sourceCommit','controlCommit','manifest','deployment','activeProjection'])
-    ||!exact(result.deployment,['schemaVersion','status','releaseId','releaseCommit','controlCommit','manifestHash']))throw Error('Unexpected public deployment receipt fields');
+  const ui=result.deployment?.kind==='frontend-only';
+  if(!exact(result,['status','sourceCommit','controlCommit','manifest','deployment','activeProjection',...(result.frontendProof!==undefined?['frontendProof']:[])])
+    ||!exact(result.deployment,['schemaVersion','status','releaseId','releaseCommit','controlCommit','manifestHash',...(ui?['kind','operationHash','originalFullAnchorHash','completedAt']:[])]))throw Error('Unexpected public deployment receipt fields');
   if(result.status!=='succeeded'||result.controlCommit!==request.controlCommit||result.sourceCommit!==request.sourceCommit
     ||result.manifest.releaseCommit!==request.sourceCommit||result.deployment?.schemaVersion!==1||result.deployment.status!=='succeeded'
     ||result.deployment.releaseId!==result.manifest.releaseId||result.deployment.manifestHash!==evidenceHash(result.manifest)
     ||result.deployment.controlCommit!==request.controlCommit||result.deployment.releaseCommit!==request.sourceCommit)throw Error('Host returned an invalid deployment receipt');
   validateActiveProjection(result.activeProjection,{request,manifest:result.manifest});
+  if(result.frontendProof!==undefined){
+    const proof=result.frontendProof;
+    if(proof?.status==='published'){
+      if(!exact(proof,['projection','status']))throw Error('Invalid published frontend proof');
+      assertUIProofProjection(proof.projection,{manifest:result.manifest,run:{id:Number(request.runId),runAttempt:Number(request.attempt),controlCommit:request.controlCommit}});
+    }else if(proof?.status!=='unavailable'||proof.reason!=='anchor_publication_failed'||!exact(proof,['reason','status']))throw Error('Invalid unavailable frontend proof');
+  }
+  if(ui){
+    const d=result.deployment,p=result.frontendProof;
+    if(p?.status!=='published'||!/^sha256:[a-f0-9]{64}$/.test(d.operationHash??'')||!/^sha256:[a-f0-9]{64}$/.test(d.originalFullAnchorHash??'')
+      ||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(d.completedAt??'')||!Number.isFinite(Date.parse(d.completedAt))||new Date(d.completedAt).toISOString()!==d.completedAt
+      ||d.operationHash!==result.activeProjection.operationHash||d.originalFullAnchorHash!==p.projection.anchorHash
+      ||evidenceHash(result.activeProjection.active.uiProofAnchor)!==evidenceHash(p.projection.originalAnchor))throw Error('Frontend deployment receipt projection mismatch');
+  }
   return result;
 }
 export async function deployOverSSH({controlDirectory,candidateDirectory,outputDirectory,request,endpoint,privateKey,knownHosts,token,run=execute}){
@@ -108,6 +124,8 @@ export async function deployOverSSH({controlDirectory,candidateDirectory,outputD
     await writeFile(path.join(outputDirectory,'manifest.json'),JSON.stringify(result.manifest,null,2)+'\n',{flag:'wx'});
     await writeFile(path.join(outputDirectory,'deployment.json'),JSON.stringify(result.deployment,null,2)+'\n',{flag:'wx'});
     await writeFile(path.join(outputDirectory,'active-projection.json'),JSON.stringify(result.activeProjection,null,2)+'\n',{flag:'wx'});
+    if(result.frontendProof?.status==='published')await writeFile(path.join(outputDirectory,'frontend-proof-anchor.json'),JSON.stringify(result.frontendProof.projection,null,2)+'\n',{flag:'wx'});
+    if(result.frontendProof)await writeFile(path.join(outputDirectory,'frontend-proof-status.json'),JSON.stringify({status:result.frontendProof.status,...(result.frontendProof.status==='unavailable'?{reason:result.frontendProof.reason}:{anchorHash:result.frontendProof.projection.anchorHash})},null,2)+'\n',{flag:'wx'});
     return {status:'succeeded',attemptDirectory:remote,sourceCommit:request.sourceCommit,controlCommit:request.controlCommit};
   }catch(error){throw Error(`SSH deployment did not produce a verified receipt. Do not repeat apply blindly; inspect ${remote} and the existing deployment journal. ${error.message}`);}
   finally{if(path.dirname(path.resolve(local))!==path.resolve(tmpdir())||!path.basename(local).startsWith('bagofholding-ssh-'))throw Error('Invalid temporary cleanup target');await rm(local,{recursive:true,force:true});}

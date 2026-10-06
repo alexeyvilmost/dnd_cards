@@ -18,9 +18,9 @@ services:
       TRUSTED_PROXY_CIDRS: 172.20.0.0/24
       # Expansion rollout must keep old readers compatible until a separately
       # reviewed writer-enable release changes this explicit policy.
-      DB_COMPACT_RECEIPTS: "0"
+      DB_COMPACT_RECEIPTS: ${DB_COMPACT_RECEIPTS:?validated writer policy required}
       DB_FROZEN_CATALOGS: "0"
-      IMAGE_JOBS_ENABLED: "0"
+      IMAGE_JOBS_ENABLED: ${IMAGE_JOBS_ENABLED:?validated writer policy required}
     restart: unless-stopped
     read_only: true
     tmpfs:

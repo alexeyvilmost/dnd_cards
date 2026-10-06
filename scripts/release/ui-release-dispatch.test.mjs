@@ -1,0 +1,16 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {uiFixture,h} from './ui-release-unit-fixture.mjs';import {dispatchVerifiedRelease,verifyFrontendHandoff} from './ui-release-dispatch.mjs';
+import {classifyReleaseVerification} from './ui-release-policy.mjs';import {componentInputFingerprint,evidenceHash} from './validate-manifest.mjs';
+test('docs-only exact inputs terminate before publication/preparation/deploy and do not advance baseline',async()=>{
+  const f=uiFixture(),i=f.planning.input;i.selection.changed_files=['docs/change.md'];i.matrix[0].sourceFingerprint=h('2');i.matrix[0].inputFingerprint=componentInputFingerprint(i.matrix[0]);i.candidateManifest.components.frontend.inputFingerprint=i.matrix[0].inputFingerprint;f.planning.eligibility=classifyReleaseVerification(i);
+  let writes=0;const result=await dispatchVerifiedRelease({...f,freshPlanning:async()=>f.planning,prepareFull:()=>{writes++;},prepareFrontend:()=>{writes++;}});assert.equal(result.kind,'no-deployment-needed');assert.equal(writes,0);assert.equal(result.advanceBaseline,false);assert.equal(result.deploy,false);assert.equal(result.createCandidate,false);
+});
+test('UI publication callback requires fresh identical baseline and bound core workload; unsafe scope selects full only',async()=>{
+  const f=uiFixture();let published=0;const options={...f,freshPlanning:async()=>structuredClone(f.planning),prepareFrontend:async()=>{published++;return {kind:'prepared-ui'};}};assert.equal((await dispatchVerifiedRelease(options)).kind,'prepared-ui');assert.equal(published,1);
+  options.freshPlanning=async()=>{const p=structuredClone(f.planning);p.input.baselineBinding.runAttempt++;p.eligibility=classifyReleaseVerification(p.input);return p;};await assert.rejects(dispatchVerifiedRelease(options),/new frontend verification/);assert.equal(published,1);
+  options.freshPlanning=async()=>{const p=structuredClone(f.planning);p.input.selection.changed_files.push('backend/main.go');p.eligibility=classifyReleaseVerification(p.input);return p;};let full=0;options.prepareFull=async()=>{full++;return {kind:'canonical-full-preparation'};};assert.equal((await dispatchVerifiedRelease(options)).kind,'canonical-full-preparation');assert.equal(full,1);assert.equal(published,1);
+});
+test('typed handoff binds actual trusted release run and exact candidate application; no generic skip flag',()=>{
+  const f=uiFixture(),candidate={manifest:structuredClone(f.manifest),provenance:{schemaVersion:1,releaseRunId:80,controlCommit:'c'.repeat(40),sourceCommit:f.manifest.releaseCommit,planHash:h('a'),manifestHash:evidenceHash(f.manifest)}},run={id:80,workflow:'.github/workflows/release.yml',controlCommit:'c'.repeat(40)};
+  assert.equal(verifyFrontendHandoff({candidate,manifest:f.manifest,bundle:f.bundle,run,context:f}).kind,'frontend-selective-handoff');assert.throws(()=>verifyFrontendHandoff({candidate,manifest:f.manifest,bundle:f.bundle,run:{...run,id:81},context:f}),/provenance/);
+  candidate.manifest.contentManifestHash=h('f');candidate.provenance.manifestHash=evidenceHash(candidate.manifest);assert.throws(()=>verifyFrontendHandoff({candidate,manifest:f.manifest,bundle:f.bundle,run,context:f}),/composition/);
+});

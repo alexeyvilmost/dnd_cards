@@ -1,0 +1,73 @@
+name: Reconcile latest main after successful deployment
+run-name: Reconcile deployed ${{ github.event.workflow_run.id }}/${{ github.event.workflow_run.run_attempt }}
+
+on:
+  workflow_run:
+    workflows: ['Deploy validated immutable composition']
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+
+# This workflow never runs a host operation. Serialize its short claim/dispatch
+# section; do not cancel an unknown POST. Main pushes still cancel obsolete CI.
+concurrency:
+  group: automatic-main-reconciliation
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: github.ref == 'refs/heads/main' && github.event.workflow_run.conclusion == 'success' && vars.AUTO_RECONCILE_MAIN_ENABLED == 'true' && vars.RELEASE_BUILD_ENABLED == 'true' && vars.AUTO_RELEASE_MAIN_ENABLED == 'true' && vars.RELEASE_PUBLICATION_ENABLED == 'true' && vars.PRODUCTION_DEPLOY_ENABLED == 'true' && vars.AUTO_DEPLOY_MAIN_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      RELEASE_BUILD_ENABLED: ${{ vars.RELEASE_BUILD_ENABLED }}
+      AUTO_RELEASE_MAIN_ENABLED: ${{ vars.AUTO_RELEASE_MAIN_ENABLED }}
+      RELEASE_PUBLICATION_ENABLED: ${{ vars.RELEASE_PUBLICATION_ENABLED }}
+      PRODUCTION_DEPLOY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+      AUTO_DEPLOY_MAIN_ENABLED: ${{ vars.AUTO_DEPLOY_MAIN_ENABLED }}
+      AUTO_RECONCILE_MAIN_ENABLED: ${{ vars.AUTO_RECONCILE_MAIN_ENABLED }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24.19.0'
+      - id: latest
+        run: node scripts/release/convergence-cli.mjs discover latest-deployment.json >> "$GITHUB_OUTPUT"
+      - if: steps.latest.outputs.artifact_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ steps.latest.outputs.artifact_id }}
+          run-id: ${{ steps.latest.outputs.run_id }}
+          path: current-baseline
+          merge-multiple: true
+          github-token: ${{ github.token }}
+      - id: plan
+        run: node scripts/release/convergence-cli.mjs plan infra/deployment-policy.json latest-deployment.json current-baseline reconciliation.json >> "$GITHUB_OUTPUT"
+      - if: steps.plan.outputs.status == 'planned'
+        name: Publish immutable attempt claim before a single dispatch
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.plan.outputs.claim_name }}
+          path: reconciliation.json
+          if-no-files-found: error
+          retention-days: 90
+      - if: steps.plan.outputs.status == 'planned'
+        run: node scripts/release/convergence-cli.mjs dispatch infra/deployment-policy.json reconciliation.json reconciliation-dispatch.json
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: reconciliation-result
+          path: |
+            reconciliation.json
+            reconciliation-dispatch.json
+          if-no-files-found: ignore
+          retention-days: 90

@@ -3,7 +3,10 @@ import {execFileSync} from 'node:child_process';
 import {readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, lstatSync} from 'node:fs';
 import path from 'node:path';
 import {evidenceHash} from './validate-manifest.mjs';
+import {assertRuntimeWriterPolicy,assertExpansionWritersOff} from './writer-environment.mjs';
+export {assertExpansionWritersOff} from './writer-environment.mjs';
 import {deploymentEnvironment, assertServiceIdentities} from './deploy-state.mjs';
+import {readRetainedRuntime} from './retained-runtime.mjs';
 import {databaseMigrationSet,databaseStateFromResult,assertExecutableMigrationRegistry} from './migration-transition.mjs';
 import {inspectIdentity} from './ci-images.mjs';
 import {backupFile,checksum, verifyDeploymentBackup} from './backup-manifest.mjs';
@@ -28,12 +31,7 @@ export function releaseApplicationState(state) {
   const {database, ...application} = state;
   return application;
 }
-export function assertExpansionWritersOff(environment) {
-  const values = Object.fromEntries((environment ?? []).map(value => {const i=value.indexOf('=');return [value.slice(0,i),value.slice(i+1)];}));
-  for (const name of ['DB_COMPACT_RECEIPTS','DB_FROZEN_CATALOGS','IMAGE_JOBS_ENABLED']) {
-    if (values[name] === '1') throw Error('Expansion writers must be disabled in the actual running backend before migration or rollback');
-  }
-}
+
 function command(args, {input,env={}} = {}) {
   try {return execFileSync('docker', args, {input, env:{...Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.toUpperCase().startsWith('PG'))),...env}, encoding: 'utf8', stdio: [input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'], maxBuffer: 8 * 1024 * 1024, timeout: 310_000}).trim();}
   catch(error) {const code=error.code==='ENOBUFS'?'ENOBUFS':/canceling statement due to statement timeout/.test(String(error.stderr??''))?'PG_STATEMENT_TIMEOUT':'docker-step-failed';throw Object.assign(Error('Docker deployment step failed; private host logs require separate inspection'), {code});}
@@ -82,12 +80,22 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     const candidates=[...permitted.values()].filter(value=>isLegacyBaseline(value)?value.components.backend.imageId===container.Image:componentImage(value,'backend')===container.Config?.Image);
     for(const candidate of candidates){
       const image=JSON.parse(command(['image','inspect',componentImage(candidate,'backend')]))[0];
-      try{dsn=bindDeploymentDatabase(candidate,container,image);break;}catch{ /* Try another permitted launch of the same immutable image. */ }
+      try{const value=bindDeploymentDatabase(candidate,container,image);assertRuntimeWriterPolicy(container.Config.Env,candidate);dsn=value;break;}catch{ /* Try another permitted launch of the same immutable image. */ }
     }
     if(!dsn||databaseIdentityHash(dsn)!==source.databaseIdentityHash||(binding&&binding!==dsn))throw Error('Running backend database differs from captured source');
-    assertExpansionWritersOff(container.Config.Env);binding=dsn;return dsn;
+    binding=dsn;return dsn;
   }
   const releaseDir = state => isLegacyBaseline(state)?config.legacyBaselineDirectory:path.join(config.root, 'releases', state.manifest.releaseId);
+  const retained=new Map(),created=new Set();
+  function retainedLaunch(state){
+    if(isLegacyBaseline(state))return null;
+    const directory=Object.hasOwn(state,'uiProofAnchor')?path.join(config.root,'frontend-releases',state.manifest.releaseId):releaseDir(state),key=evidenceHash(releaseApplicationState(state));
+    if(created.has(directory))return null;
+    if(retained.has(key)){retained.get(key).assertUnchanged();return retained.get(key);}
+    if(!existsSync(path.join(directory,'compose.runtime.json'))){if(Object.hasOwn(state,'uiProofAnchor'))throw Error('Retained frontend predecessor launch is missing');return null;}
+    const value=readRetainedRuntime(config,state,{command,expectedEnvironment:deploymentEnvironment(state)});
+    retained.set(key,value);return value;
+  }
   function ensureRelease(state) {
     if(isLegacyBaseline(state)){
       validateLegacyBaseline(state);deploymentStateFile({...config,root:config.root});
@@ -96,7 +104,8 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
       if(evidenceHash(read(file))!==state.rollbackConfigurationHash)throw Error('Observed rollback configuration changed');
       return config.legacyBaselineDirectory;
     }
-    const directory = releaseDir(state); mkdirSync(directory, {recursive: true});
+    const previous=retainedLaunch(state);if(previous)return previous.directory;
+    const directory = releaseDir(state); mkdirSync(directory, {recursive: true});created.add(directory);
     if (lstatSync(directory).isSymbolicLink()) throw Error('Release directory cannot be a symlink');
     const environment = {...deploymentEnvironment(state), APP_ENV_FILE: config.appEnvFile, WORKER_ENV_FILE: config.workerEnvFile,
       RULES_ARTIFACTS_DIRECTORY: config.artifactDirectory, FRONTEND_ASSETS_DIRECTORY: config.assetDirectory};
@@ -112,10 +121,13 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
   function compose(state, args) {
     const directory = ensureRelease(state);
     if(isLegacyBaseline(state))return command(['compose','--project-name',config.project,'-f',path.join(directory,'rollback.compose.json'),...args]);
+    const previous=retainedLaunch(state);
+    if(previous)return command(['compose','--project-name',config.project,'-f',previous.runtimeFile,...args]);
     return command(['compose', '--project-name', config.project, '--env-file', config.deployEnvFile, '--env-file', path.join(directory, 'compose.env'), '-f', path.join(directory, 'compose.prod.yml'), ...args]);
   }
   function effectiveComposition(state){
-    const document=JSON.parse(compose(state,['config','--format','json']));
+    const previous=retainedLaunch(state);
+    const document=previous?previous.document():JSON.parse(compose(state,['config','--format','json']));
     const environment=document.services?.backend?.environment;
     if(!environment||typeof environment!=='object'||Array.isArray(environment))throw Error('Resolved backend environment required');
     // Compose config's JSON presentation already escapes literal dollars for
@@ -123,7 +135,7 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     // itself unchanged for `up` (a second escape would change credentials).
     const values=Object.entries(environment).map(([key,value])=>key+'='+String(value).replaceAll('$$','$'));
     if(databaseURLFromEnvironment(values)!==assertLiveDatabase())throw Error('Effective Compose backend database differs from captured source');
-    assertExpansionWritersOff(values);
+    assertRuntimeWriterPolicy(values,state);
     if(document.services.backend.image!==componentImage(state,'backend'))throw Error('Resolved backend image differs from release');
     return document;
   }
@@ -162,11 +174,11 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     }
     return {schemaStatus: 'verified', migrationSet: expected};
   }
-  function assertLiveWritersOff(state) {
+  function assertLiveWriterPolicy(state) {
     assertLiveDatabase(state);
     const id=compose(state,['ps','-q','backend']);
     if(!/^[a-f0-9]{64}$/.test(id))throw Error('Exactly one backend required for expansion writer policy');
-    assertExpansionWritersOff(JSON.parse(command(['inspect',id]))[0].Config.Env);
+    assertRuntimeWriterPolicy(JSON.parse(command(['inspect',id]))[0].Config.Env,state);
   }
   async function retainAssets(state, extraction) {
     const id = command(['create', '--network', 'none', '--entrypoint', '/bin/true', componentImage(state,'frontend')]);
@@ -191,7 +203,7 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
       for(const [key,value] of Object.entries({RELEASE_ID:desired.instances.backend.releaseId,RELEASE_COMMIT:desired.instances.backend.releaseCommit})){
         if(!values.includes(key+'='+value))throw Error('Recovery runtime launch differs from candidate');
       }
-      assertExpansionWritersOff(values);binding=dsn;backendReplacementStarted=true;
+      assertRuntimeWriterPolicy(values,desired);binding=dsn;backendReplacementStarted=true;
     },
     assertDatabase,
     async assertHistoricalInventory(plan) {
@@ -201,13 +213,13 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     },
     backup: active => verifyDeploymentBackup(config.backupDirectory, baselineDocument(active)),
     async observe(state) {
-      assertLiveWritersOff(state);effectiveComposition(state);
+      retainedLaunch(state)?.assertLive();assertLiveWriterPolicy(state);effectiveComposition(state);
       const database = await assertDatabase(databaseMigrationSet(state), state.database), services = {};
       for (const [key, name] of Object.entries(service)) {
         const id = compose(state, ['ps', '-q', name]);
         if (!/^[a-f0-9]{64}$/.test(id)) throw Error('Expected exactly one live component container');
         const info = JSON.parse(command(['inspect', id]))[0], expected = componentImage(state,key);
-        if (key === 'backend') assertExpansionWritersOff(info.Config.Env);
+        if (key === 'backend') assertRuntimeWriterPolicy(info.Config.Env,state);
         const image = JSON.parse(command(['image', 'inspect', expected]))[0];
         if(isLegacyBaseline(state)){if(info.Image!==expected||image.Id!==expected)throw Error('Legacy running image ID differs');}
         else if (info.Config.Image !== expected || info.Image !== image.Id || !image.RepoDigests.includes(expected)) throw Error('Running container differs from manifest digest');
@@ -220,7 +232,7 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
       return {database, services};
     },
     async prepare(plan) {
-      permit(plan.previous);permit(plan.desired);assertLiveDatabase();effectiveComposition(plan.previous);effectiveComposition(plan.desired);
+      permit(plan.previous);permit(plan.desired);retainedLaunch(plan.previous)?.assertLive();assertLiveDatabase();effectiveComposition(plan.previous);effectiveComposition(plan.desired);
       const {desired, previous} = plan, directory = ensureRelease(desired), services = {};
       const isolated = {...desired, instances: Object.fromEntries(Object.keys(service).map(key => [key, {releaseId: desired.manifest.releaseId, releaseCommit: desired.manifest.releaseCommit}]))};
       for (const key of Object.keys(service)) {
@@ -251,7 +263,7 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     },
     async migrate(plan) {
       if (config.migrationMode !== 'additive-298-300' || plan.migrationMode !== 'additive-298-300') throw Error('Additive migration policy required');
-      permit(plan.previous);permit(plan.desired);assertLiveWritersOff(plan.previous);effectiveComposition(plan.previous);effectiveComposition(plan.desired);
+      permit(plan.previous);permit(plan.desired);assertLiveWriterPolicy(plan.previous);assertExpansionWritersOff(JSON.parse(command(['inspect',compose(plan.previous,['ps','-q','backend'])]))[0].Config.Env);effectiveComposition(plan.previous);effectiveComposition(plan.desired);
       const database = {request: plan.migration.request, executorImageDigest: plan.desired.manifest.components.backend.imageDigest};
       // Reconcile a previously committed transaction before considering a retry.
       try {const observed = migrationCommand(database, true); databaseStateFromResult(plan, observed); return observed;}

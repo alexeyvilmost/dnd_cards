@@ -28,9 +28,11 @@
     "workerRuntime": {"type": "object", "additionalProperties": false, "required": ["name", "version"], "properties": {"name": {"const": "node"}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}}},
     "capabilities": {"type": "array", "uniqueItems": true, "minItems": 2, "items": {"enum": ["pinned-artifact-routing", "pending-decision-pass-through"]}},
     "migrationSet": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/migrationIdentity"}},
+    "writerPolicy": {"$ref": "#/$defs/writerPolicy"},
     "validationEvidence": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["gate", "status", "reportHash", "inputFingerprint", "completedAt"], "properties": {"gate": {"enum": ["core", "image-contract", "pinned-artifacts"]}, "status": {"const": "passed"}, "reportHash": {"$ref": "#/$defs/hash"}, "inputFingerprint": {"$ref": "#/$defs/hash"}, "completedAt": {"$ref": "#/$defs/timestamp"}}}}
   },
   "$defs": {
+    "writerPolicy": {"type":"object","additionalProperties":false,"required":["compactReceipts","imageJobs","frozenCatalogs"],"properties":{"compactReceipts":{"type":"boolean"},"imageJobs":{"type":"boolean"},"frozenCatalogs":{"const":false}}},
     "migrationIdentity": {"type": "object", "anyOf": [
       {"type":"object","additionalProperties":false,"required":["id","checksum"],"properties":{"id":{"$ref":"#/$defs/id"},"checksum":{"$ref":"#/$defs/hash"}}},
       {"type":"object","additionalProperties":false,"required":["id","kind","observationHash"],"properties":{"id":{"$ref":"#/$defs/id"},"kind":{"const":"observed-id-only"},"observationHash":{"$ref":"#/$defs/hash"}}}

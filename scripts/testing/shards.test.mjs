@@ -75,3 +75,7 @@ test('CI schedules the same bounded lanes and publishes a release receipt only a
   assert.ok(aggregate.steps.some(step=>step.run?.includes('scripts/testing/aggregate-shards.mjs')));
   assert.equal(aggregate.steps.at(-1).with.name,'local-suite-results');
 });
+
+test('selective baseline/attempt and proof inputs must match across every shard',()=>{
+ for(const key of ['frontend_verification','frontend_planning']){const {plan,reports}=fixture();for(const report of reports)report[key]={attempt:2,hash:'same'};aggregateShardReports(reports,plan);reports[1][key]={attempt:3,hash:'changed'};assert.throws(()=>aggregateShardReports(reports,plan),/differs/);}
+});

@@ -14,6 +14,7 @@ import {captureSourceSnapshot, verifySourceSnapshot, assertCleanCICheckout} from
 import {execute, repositoryRoot, cleanEnvironment, resolveTool} from './runtime.mjs';
 import {shardPlan,assignShard,assertShardCoverage} from './shards.mjs';
 import {suiteWorkload} from './workload.mjs';
+import {assertFrontendEligibility} from '../release/ui-release-policy.mjs';
 import {safeNodeFailureDiagnostics} from './node-failure-diagnostics.mjs';
 import {safeVitestFailureDiagnostics} from './vitest-failure-diagnostics.mjs';
 import {supplementVitestFailureDiagnostics} from './vitest-suite-error-reporter.mjs';
@@ -23,7 +24,7 @@ export function suiteOptions(args) {
   for (let i=0; i<args.length; i++) {
     const flag = args[i];
     if (['--full','--plan-only','--reuse-ui-build','--race'].includes(flag)) result[flag.slice(2)] = true;
-    else if (['--suite','--base','--candidate','--mode','--select','--output','--go','--pg-bin','--shard'].includes(flag) && args[i+1] && !args[i+1].startsWith('--')) result[flag.slice(2)] = args[++i];
+    else if (['--suite','--base','--candidate','--mode','--select','--output','--go','--pg-bin','--shard','--frontend-planning'].includes(flag) && args[i+1] && !args[i+1].startsWith('--')) result[flag.slice(2)] = args[++i];
     else throw Error(`Unknown or incomplete argument: ${flag}`);
   }
   if (!['local','ci'].includes(result.mode)) throw Error('Test runner supports local or ci planning only');
@@ -33,10 +34,21 @@ export function suiteOptions(args) {
   return result;
 }
 
-export async function runSuite(argv) {
+export async function runSuite(argv,{frontendPlanning}={}) {
   const args = suiteOptions(argv), started = Date.now();
+  if(args['frontend-planning']){
+    if(frontendPlanning)throw Error('Only one frontend planning input is permitted');
+    const value=JSON.parse(readFileSync(args['frontend-planning'],'utf8'));
+    if(value?.eligibility?.kind==='frontend-only')frontendPlanning=value;
+    else if(!['full','no-deployment-needed'].includes(value?.eligibility?.kind))throw Error('Invalid frontend planning disposition');
+  }
   const {manifest, hash: manifestHash} = readSuites();
-  const plan = createPlan({repo:repositoryRoot, mode:args.mode, base:args.base, candidate:args.candidate, full:args.full});
+  let plan = createPlan({repo:repositoryRoot, mode:args.mode, base:args.base, candidate:args.candidate, full:args.full});
+  if(frontendPlanning){
+    const proof=assertFrontendEligibility(frontendPlanning.eligibility,frontendPlanning.input);
+    if(args.mode!=='ci'||args.suite!=='core'||proof.binding.candidate!==plan.candidate.sha)throw Error('Selective verification requires exact CI core');
+    plan={...frontendPlanning.input.selection,mode:'ci'};
+  }
   const selection = selectGroups(manifest, plan, {suite:args.suite, select:args.select});
   const catalog = catalogTests(manifest);
   const directory = path.resolve(repositoryRoot, args.output ?? `outputs/testing/suites/${Date.now()}-${randomUUID()}`);
@@ -44,6 +56,7 @@ export async function runSuite(argv) {
   const report = {schema_version:1, status:'planned', suite:args.suite, started_at:new Date(started).toISOString(),
     candidate:plan.candidate, manifest_sha256:manifestHash, component_plan:plan, selection, checks:[],
     versions:{node:process.version}, go_race:args.race===true, fixture:null, limitations:[], directory};
+  if(frontendPlanning){report.frontend_planning=structuredClone(frontendPlanning);report.frontend_verification=structuredClone(frontendPlanning.eligibility);}
   const save = async () => {report.duration_ms = Date.now()-started; await writeFile(path.join(directory,'report.json'), JSON.stringify(report,null,2));};
   await writeFile(path.join(directory,'test-catalog.json'), JSON.stringify(catalog,null,2));
   await save();
@@ -90,7 +103,7 @@ export async function runSuite(argv) {
       report.lockfiles=Object.fromEntries(['frontend/package-lock.json','backend/go.sum'].map(file=>[file,hash(readFileSync(path.join(repositoryRoot,file)))]));
       return {status:'passed'};
     });
-    let {nodeFiles,vitestFiles,goGroups,scripts,browserGroups,gates,fixtureFiles}=suiteWorkload({selection,catalog,manifest,suite:args.suite,select:args.select});
+    let {nodeFiles,vitestFiles,goGroups,scripts,browserGroups,gates,fixtureFiles}=suiteWorkload({selection,catalog,manifest,suite:args.suite,select:args.select,frontendPlanning});
     let owns=()=>true;
     const completed=[];
     if(args.shard){

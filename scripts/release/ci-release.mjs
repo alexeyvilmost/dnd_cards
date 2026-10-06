@@ -7,11 +7,12 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {components, inventory, ignorePolicy, copyInputs, checkEmbeddedInputs, validateImagePins} from './measure-local.mjs';
 import {createPlan, classifyPath} from './plan-components.mjs';
-import {componentInputFingerprint, evidenceHash, compositionFingerprint, validateManifest,validateMigrationSet} from './validate-manifest.mjs';
+import {componentInputFingerprint, evidenceHash, compositionFingerprint, validateManifest,validateMigrationSet,writerPolicy,writerPolicyFields,validateWriterTransition} from './validate-manifest.mjs';
 import {assertOCIMediaDisabled} from './write-build-identity.mjs';
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';
 import {loadControlRecovery,recoveryFields} from './first-adoption-recovery.mjs';
 import {assertSourceContentManifest} from './source-content-manifest.mjs';
+import {verifyFrontendCIReport} from './ui-release-planning.mjs';
 
 const exactSHA = /^[a-f0-9]{40}$/;
 const hashPattern = /^sha256:[a-f0-9]{64}$/;
@@ -24,12 +25,13 @@ const read = file => JSON.parse(readFileSync(file, 'utf8'));
 const git = (repo, args) => execFileSync('git', args, {cwd: repo, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe']}).trim();
 export function validateBuildConfig(config) {
   if (config.schemaVersion !== 1 || config.enabled !== true) throw Error('Release builds disabled; reviewed build configuration required');
-  const fields = ['schemaVersion', 'enabled', 'platform', 'baseImages', 'buildkitImage', 'frontendApiUrl', 'contentManifestHash', 'migrationSet', 'frontendMediaVariants'];
+  const fields = ['schemaVersion', 'enabled', 'platform', 'baseImages', 'buildkitImage', 'frontendApiUrl', 'contentManifestHash', 'migrationSet', 'frontendMediaVariants', 'writerPolicy'];
   if (Object.keys(config).some(key => !fields.includes(key)) || config.frontendMediaVariants !== undefined && config.frontendMediaVariants !== false) throw Error('Unknown release configuration or unsupported enabled media bundle; schema v1 supports originals only');
   validateImagePins(config.baseImages);
   if (!digestRef.test(config.buildkitImage) || config.platform !== 'linux/amd64'
     || typeof config.frontendApiUrl !== 'string' || /[\r\n\0]/.test(config.frontendApiUrl)
     || !hashPattern.test(config.contentManifestHash) || !Array.isArray(config.migrationSet)) throw Error('Incomplete immutable release build configuration');
+  writerPolicy(config);
   validateMigrationSet(config.migrationSet);
   return config;
 }
@@ -40,7 +42,9 @@ export function verifyRun(run, {repository, candidate, kind}) {
     || run.path !== workflow || run.head_branch !== 'main' || !(kind === 'verification' ? ['push', 'workflow_dispatch'] : ['push', 'workflow_dispatch', 'workflow_run']).includes(run.event)
     || run.repository?.full_name !== repository || run.head_repository?.full_name !== repository
     || !exactSHA.test(run.head_sha) || kind==='release'&&candidate || kind!=='release'&&candidate&&run.head_sha!==candidate) throw Error('Untrusted or unsuccessful workflow run; release control SHA is not candidate SHA');
-  return {id: run.id, workflow, repository, ...(kind==='verification'?{sourceCommit:run.head_sha}:{controlCommit:run.head_sha}), event: run.event};
+    if(kind==='release'&&(!Number.isSafeInteger(run.run_attempt)||run.run_attempt<1))throw Error('Exact successful release attempt required');
+    return {id: run.id, workflow, repository, ...(kind==='verification'?{sourceCommit:run.head_sha}:{controlCommit:run.head_sha}), event: run.event,
+      ...(kind==='release'?{runAttempt:run.run_attempt,conclusion:run.conclusion}:{})};
 }
 export function requiredVerificationTier(plan) {
   if(plan?.schema_version!==1||!exactSHA.test(plan.baseline?.sha??'')||plan.full_fallback!==false||!Array.isArray(plan.changed_files)
@@ -74,24 +78,8 @@ export function verifyBaseline(manifest, receipt, run) {
   return manifest;
 }
 
-export function prepareBuildPlan({repo, candidate, repository, controlCommit, releaseRunId, config, verification, suiteReport, baseline, baselineReceipt, baselineRun, baselineFile, firstAdoptionRecovery, environment = process.env}) {
-  validateBuildConfig(config);
-  if(firstAdoptionRecovery) {
-    loadControlRecovery({id:firstAdoptionRecovery.id,reference:firstAdoptionRecovery,controlRoot:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),controlCommit,repository});
-    if(baseline||baselineRun||baselineReceipt||candidate!==controlCommit)throw Error('Recovery cannot reuse a deployment baseline');
-  }
-  assertOCIMediaDisabled(environment);
-  if(!exactSHA.test(controlCommit??'')||!Number.isSafeInteger(releaseRunId)||releaseRunId<1)throw Error('Exact release control commit and workflow run identity required');
-  if (!exactSHA.test(candidate) || git(repo, ['rev-parse', 'HEAD']) !== candidate
-    || git(repo, ['status', '--porcelain', '--untracked-files=all'])) throw Error('Build source must be an exact clean checked-out commit');
-  assertSourceContentManifest(repo,config);
-  git(repo, ['merge-base', '--is-ancestor', candidate, 'refs/remotes/origin/main']);
-  if (verification.sourceCommit !== candidate || verification.repository !== repository) throw Error('Verification source mismatch');
-  if (baseline) {
-    verifyBaseline(baseline, baselineReceipt, baselineRun);
-    if (!baselineFile || evidenceHash(read(baselineFile)) !== evidenceHash(baseline)) throw Error('Baseline file mismatch');
-  }
-  const selection = baseline ? createPlan({repo, mode: 'deploy', candidate, deployedManifest: baselineFile}) : createPlan({repo, mode: 'ci', candidate, full: true});
+// Shared input inventory: CI eligibility and actual build planning must use identical bytes/pins.
+export function calculateBuildMatrix({repo,candidate,repository,config,selection,baseline}) {
   const matrix = [];
   for (const [name, spec] of Object.entries(components)) {
     const root = path.resolve(repo, spec.context);
@@ -110,14 +98,49 @@ export function prepareBuildPlan({repo, candidate, repository, controlCommit, re
       imageDigest: reuse ? old.imageDigest : null, imageRepository: `ghcr.io/${repository.toLowerCase()}/${name}`,
       baseImages, buildArguments, platform: config.platform});
   }
+  return matrix;
+}
+
+export function prepareBuildPlan({repo, candidate, repository, controlCommit, releaseRunId, config, verification, suiteReport, baseline, baselineReceipt, baselineRun, baselineFile, frontendVerification, firstAdoptionRecovery, environment = process.env}) {
+  validateBuildConfig(config);
+  if(firstAdoptionRecovery) {
+    loadControlRecovery({id:firstAdoptionRecovery.id,reference:firstAdoptionRecovery,controlRoot:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),controlCommit,repository});
+    if(baseline||baselineRun||baselineReceipt||baselineFile||frontendVerification||candidate!==controlCommit)throw Error('Recovery cannot reuse a deployment baseline or frontend verification');
+  }
+  assertOCIMediaDisabled(environment);
+  if(!exactSHA.test(controlCommit??'')||!Number.isSafeInteger(releaseRunId)||releaseRunId<1)throw Error('Exact release control commit and workflow run identity required');
+  if (!exactSHA.test(candidate) || git(repo, ['rev-parse', 'HEAD']) !== candidate
+    || git(repo, ['status', '--porcelain', '--untracked-files=all'])) throw Error('Build source must be an exact clean checked-out commit');
+  assertSourceContentManifest(repo,config);
+  git(repo, ['merge-base', '--is-ancestor', candidate, 'refs/remotes/origin/main']);
+  if (verification.sourceCommit !== candidate || verification.repository !== repository) throw Error('Verification source mismatch');
+  if (baseline) {
+    verifyBaseline(baseline, baselineReceipt, baselineRun);
+    if (!baselineFile || evidenceHash(read(baselineFile)) !== evidenceHash(baseline)) throw Error('Baseline file mismatch');
+  }
+  validateWriterTransition({...config,writerPolicy:writerPolicy(config),previousReleaseId:baseline?.releaseId??null,apiProtocolVersion:1,workerProtocolVersion:1,supportedWorldSchemaVersions:[5]},baseline);
+  const selection = baseline ? createPlan({repo, mode: 'deploy', candidate, deployedManifest: baselineFile}) : createPlan({repo, mode: 'ci', candidate, full: true});
+  const matrix = calculateBuildMatrix({repo,candidate,repository,config,selection,baseline});
   const baselineIdentity = baseline ? {releaseId: baseline.releaseId, manifestHash: evidenceHash(baseline)} : null;
   const requiredTier=requiredBuildVerificationTier({selection,matrix,config,previousManifest:baseline});
   const evidence=verifySuiteReport(suiteReport,candidate,{requiredTier});
+  const optional={...(frontendVerification?{frontendVerification}:{}),...recoveryFields(firstAdoptionRecovery)};
+  if(frontendVerification)validateFrontendBuildVerification({candidate,selection,matrix,config,previousManifest:baseline,frontendVerification,verificationEvidence:evidence});
   return {schemaVersion: 1, status: 'build-planned', candidate, controlCommit, releaseRunId, repository, config, matrix, selection, verification,
-    verificationEvidence: evidence, previousManifest: baseline ?? null, baselineIdentity,...recoveryFields(firstAdoptionRecovery),
-    planHash: evidenceHash({candidate, controlCommit, releaseRunId, selection, matrix, config, verification: evidence, baselineIdentity,...recoveryFields(firstAdoptionRecovery)})};
+    verificationEvidence: evidence, previousManifest: baseline ?? null, baselineIdentity,...optional,
+    planHash: evidenceHash({candidate, controlCommit, releaseRunId, selection, matrix, config, verification: evidence, baselineIdentity,...optional})};
 }
-function requiredBuildVerificationTier(plan){
+function validateFrontendBuildVerification(plan){
+  const {planning,ciReport,workloadPlan}=plan.frontendVerification;
+  verifyFrontendCIReport(ciReport,{...planning,workloadPlan});
+  if(planning.input.candidateManifest.releaseCommit!==plan.candidate||evidenceHash(planning.input.selection)!==evidenceHash(plan.selection)
+    ||evidenceHash(planning.input.matrix)!==evidenceHash(plan.matrix)||evidenceHash(planning.input.previousManifest)!==evidenceHash(plan.previousManifest)
+    ||evidenceHash(writerPolicyFields(plan.previousManifest,plan.config))!==evidenceHash(writerPolicyFields(null,planning.input.candidateManifest))
+    ||evidenceHash(ciReport)!==plan.verificationEvidence.reportHash)throw Error('Selective build verification differs from exact build inputs');
+}
+export function requiredBuildVerificationTier(plan){
+  if(plan.previousManifest && Object.hasOwn(writerPolicyFields(plan.previousManifest,plan.config),'writerPolicy')!==Object.hasOwn(plan.previousManifest,'writerPolicy'))return 'extended';
+  if(plan.previousManifest && evidenceHash(writerPolicy(plan.config))!==evidenceHash(writerPolicy(plan.previousManifest)))return 'extended';
   if(!plan.previousManifest||evidenceHash(plan.previousManifest.migrationSet)!==evidenceHash(plan.config.migrationSet)
     ||plan.matrix.some(row=>['backend','worker'].includes(row.name)&&row.operation==='build'))return 'extended';
   return requiredVerificationTier(plan.selection);
@@ -143,14 +166,16 @@ export function validateBuildPlan(plan) {
     ||!exactSHA.test(plan.controlCommit??'')||!Number.isSafeInteger(plan.releaseRunId)||plan.releaseRunId<1
     || !/^[\w.-]+\/[\w.-]+$/.test(plan.repository) || plan.matrix?.length !== 3
     || new Set(plan.matrix.map(row => row.name)).size !== 3) throw Error('Invalid immutable build plan');
-  if (plan.planHash !== evidenceHash({candidate: plan.candidate, controlCommit:plan.controlCommit, releaseRunId:plan.releaseRunId, selection:plan.selection, matrix: plan.matrix, config: plan.config, verification: plan.verificationEvidence, baselineIdentity: plan.baselineIdentity,...recoveryFields(plan.firstAdoptionRecovery)})) throw Error('Build plan hash mismatch');
-  if(plan.verificationEvidence?.requiredTier!==requiredBuildVerificationTier(plan)
-    ||plan.verificationEvidence.requiredTier==='extended'&&plan.verificationEvidence.suite!=='extended')throw Error('Build verification tier does not satisfy critical path policy');
+  if (plan.planHash !== evidenceHash({candidate: plan.candidate, controlCommit:plan.controlCommit, releaseRunId:plan.releaseRunId, selection:plan.selection, matrix: plan.matrix, config: plan.config, verification: plan.verificationEvidence, baselineIdentity: plan.baselineIdentity,...(plan.frontendVerification?{frontendVerification:plan.frontendVerification}:{}),...recoveryFields(plan.firstAdoptionRecovery)})) throw Error('Build plan hash mismatch');
   if(plan.firstAdoptionRecovery) {
     loadControlRecovery({id:plan.firstAdoptionRecovery.id,reference:plan.firstAdoptionRecovery,controlRoot:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),controlCommit:plan.controlCommit,repository:plan.repository});
-    if(plan.candidate!==plan.controlCommit||plan.previousManifest||plan.baselineIdentity||plan.matrix.some(row=>row.operation!=='build')||plan.verificationEvidence?.suite!=='extended')throw Error('Recovery requires an initial full extended build');
+    if(plan.candidate!==plan.controlCommit||plan.previousManifest||plan.baselineIdentity||plan.frontendVerification||plan.matrix.some(row=>row.operation!=='build')||plan.verificationEvidence?.suite!=='extended')throw Error('Recovery requires an initial full extended build');
   }
+  if(plan.frontendVerification)validateFrontendBuildVerification(plan);
+  if(plan.verificationEvidence?.requiredTier!==requiredBuildVerificationTier(plan)
+    ||plan.verificationEvidence.requiredTier==='extended'&&plan.verificationEvidence.suite!=='extended')throw Error('Build verification tier does not satisfy critical path policy');
   if (plan.previousManifest) validateManifest(plan.previousManifest);
+  validateWriterTransition({...plan.config,writerPolicy:writerPolicy(plan.config),previousReleaseId:plan.previousManifest?.releaseId??null,apiProtocolVersion:1,workerProtocolVersion:1,supportedWorldSchemaVersions:[5]},plan.previousManifest);
   const baselineIdentity = plan.previousManifest ? {releaseId: plan.previousManifest.releaseId, manifestHash: evidenceHash(plan.previousManifest)} : null;
   if (evidenceHash(plan.baselineIdentity) !== evidenceHash(baselineIdentity)
     || plan.verification?.sourceCommit !== plan.candidate || plan.verification.repository !== plan.repository
@@ -188,7 +213,7 @@ export function assembleCandidateManifest(plan, records, published) {
     rulesArtifactHash: worker.artifactHash, contentManifestHash: plan.config.contentManifestHash,
     apiProtocolVersion: 1, workerProtocolVersion: worker.workerProtocolVersion, workerRuntime: worker.workerRuntime,
     supportedWorldSchemaVersions: worker.supportedWorldSchemaVersions, capabilities: worker.capabilities,
-    migrationSet: plan.config.migrationSet, validationEvidence: [{gate: 'core', status: 'passed',
+    ...writerPolicyFields(plan.previousManifest,plan.config), migrationSet: plan.config.migrationSet, validationEvidence: [{gate: 'core', status: 'passed',
       reportHash: evidenceHash(plan.verificationEvidence), inputFingerprint: `sha256:${'0'.repeat(64)}`, completedAt: new Date().toISOString()}]};
   validateManifest(manifest);
   const fingerprint = compositionFingerprint(manifest);
@@ -197,7 +222,7 @@ export function assembleCandidateManifest(plan, records, published) {
   manifest.validationEvidence[0].reportHash = evidenceHash(coreReport);
   manifest.validationEvidence[0].inputFingerprint = fingerprint;
   const provenance={schemaVersion:1,releaseRunId:plan.releaseRunId,controlCommit:plan.controlCommit,sourceCommit:plan.candidate,planHash:plan.planHash,manifestHash:evidenceHash(manifest),...recoveryFields(plan.firstAdoptionRecovery)};
-  return {status: 'candidate-only', deployable: false, manifest, provenance, reports: {core: coreReport},
+  return {status: 'candidate-only', deployable: false, manifest, provenance, buildPlan:plan, reports: {core: coreReport},...(plan.frontendVerification?{frontendVerification:plan.frontendVerification}:{}),
     missingGates: ['full-candidate-health', 'image-contract', 'complete-historical-inventory', 'pinned-artifacts']};
 }
 

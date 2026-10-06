@@ -50,7 +50,7 @@ import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import CharacterSheetFirstColumn, { CHARACTER_SENSE_LABELS } from '../components/CharacterSheetFirstColumn';
 import ActiveEffectCard from '../components/ActiveEffectCard';
 import { groupActiveEffectsForDisplay } from '../engine/effects';
-import './CharacterSheetV2.css';
+import './CharacterSheet.css';
 
 const fmtMod = (n: number) => (n >= 0 ? `+${n}` : String(n));
 // D3: локализация особых чувств и небазовых режимов перемещения.
@@ -77,7 +77,7 @@ const originLabel = (kind: string) => {
   }
 };
 
-interface Props {
+interface CharacterSheetProps {
   character: ForgeCharacter;
   assembled: AssembledCharacter;
   ruleState: CharacterRuleState;
@@ -107,13 +107,13 @@ interface Props {
   rollingInitiative?: boolean;
 }
 
-const CharacterSheetV2 = ({
+const CharacterSheet = ({
   character, assembled, ruleState, effectiveSenses, draft, sheetCtx, runtimeState, passives, equipCards,
   acBreakdown, maxHpBreakdown, initBreakdown, speedBreakdown,
   lineageName, inPlayChoices, onUpdated, onEvents, onPersistedEvents,
   pendingAtomicRetry, onPendingAtomicRetryChange, readOnly, encounterApply,
   combatActive, sheetActionDisabledReason, onRollInitiative, rollingInitiative,
-}: Props) => {
+}: CharacterSheetProps) => {
   const learnedActions = useGrantedActions({ assembled, characterLevel: character.level,
     resolvedChoices: draft.resolvedChoices, activeEffects: runtimeState?.activeEffects });
   const abilityActions = [
@@ -560,4 +560,4 @@ const CharacterSheetV2 = ({
   );
 };
 
-export default CharacterSheetV2;
+export default CharacterSheet;

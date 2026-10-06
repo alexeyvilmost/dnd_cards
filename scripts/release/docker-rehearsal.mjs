@@ -6,6 +6,11 @@ import {backupFile,checksum} from './backup-manifest.mjs';
 import {readDockerInventory} from './read-snapshot.mjs';
 import {assertServiceIdentities} from './deploy-state.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
+import {writerEnvironment,assertRuntimeWriterPolicy} from './writer-environment.mjs';
+import {writerHealthIdentity,historyWriterPolicy} from './writer-health-identity.mjs';
+import {collectHostWriterStage} from './writer-host-stage.mjs';
+import {probeRetainedWriterHistory} from './writer-retained-history.mjs';
+import {createWriterHistoryDocker} from './writer-history-docker.mjs';
 import {normalizeMediaReferences} from './reference-values.mjs';
 import {createCanonicalPendingScenario,acceptedReceiptReplay,authorizeDockerRehearsal} from './rehearsal-scenarios.mjs';
 import {dockerCommand} from './rehearsal-command.mjs';
@@ -22,7 +27,7 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
   const run=`rehearsal_${randomBytes(12).toString('hex')}`,label=`bagofholding.rehearsal=${run}`;
   const names={postgres:`${run}_db`,rulesWorker:`${run}_worker`,backend:`${run}_api`,frontend:`${run}_ui`,network:`${run}_net`,volume:`${run}_artifacts`,pgVolume:`${run}_pgdata`};
   const secrets={database:randomBytes(32).toString('hex'),worker:randomBytes(32).toString('hex'),jwt:randomBytes(32).toString('hex')};
-  const secretFiles=[],resources=[],identities={},images={};let inventory,pending,receipt,pgReady=false,artifactsReady=false,aborted=false,generation=0,cleanupPromise;
+  const secretFiles=[],resources=[],identities={},images={};let executionRunId;let inventory,pending,receipt,pgReady=false,artifactsReady=false,aborted=false,generation=0,cleanupPromise;
   const interrupt=()=>{aborted=true;};
   const command=(args,options)=>{if(aborted)throw Error('Rehearsal interrupted');return executeDocker(args,options);};
   const query=sql=>command(['exec','-i',names.postgres,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','rehearsal','-d','rehearsal'],{input:sql});
@@ -76,18 +81,33 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
     await command(['run','-i','--name',copyName,'--label',label,'--network','none','--read-only','--user','0','--mount',`type=bind,source=${backupDirectory},target=/input,readonly`,'--mount',`type=volume,source=${names.volume},target=/artifacts`,'--entrypoint','node',image('rulesWorker'),'--input-type=module','-e',copyProgram],{input:JSON.stringify(artifactFiles)});
     artifactsReady=true;
     }
-    const common=legacy?{SOURCE_COMMIT:manifest.claimedReleaseCommit}:{RELEASE_ID:input.manifest.releaseId,RELEASE_COMMIT:input.manifest.releaseCommit};
-    const workerEnv=await envFile(`worker-${generation}`,{...common,PORT:'8090',RULES_WORKER_TOKEN:secrets.worker,RULES_ARTIFACTS_DIR:'/artifacts',RULES_ARTIFACT_FILE:'/app/artifact.cjs'});
+    const common=key=>{const launch=manifest===original.previousManifest?original.active.instances[key]:{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit};return legacy?{SOURCE_COMMIT:manifest.claimedReleaseCommit}:{RELEASE_ID:launch.releaseId,RELEASE_COMMIT:launch.releaseCommit};};
+    const workerEnv=await envFile(`worker-${generation}`,{...common('rulesWorker'),PORT:'8090',RULES_WORKER_TOKEN:secrets.worker,RULES_ARTIFACTS_DIR:'/artifacts',RULES_ARTIFACT_FILE:'/app/artifact.cjs'});
     await resource('container',names.rulesWorker,['run','-d','--name',names.rulesWorker,'--label',label,'--network',names.network,'--network-alias','rules-worker','--read-only','--env-file',workerEnv,'--mount',`type=volume,source=${names.volume},target=/artifacts`,image('rulesWorker')]);
     await wait(()=>request('http://127.0.0.1:8090/health'));
     const databaseUrl=new URL('postgres://postgres:5432/rehearsal?sslmode=disable');databaseUrl.username='rehearsal';databaseUrl.password=secrets.database;
-    const backendEnv=await envFile(`backend-${generation}`,{...common,PORT:'8080',DATABASE_URL:databaseUrl.href,JWT_SECRET:secrets.jwt,
-      RULES_WORKER_URL:'http://rules-worker:8090',RULES_WORKER_TOKEN:secrets.worker,DB_COMPACT_RECEIPTS:'0',DB_FROZEN_CATALOGS:'0',IMAGE_JOBS_ENABLED:'0',OPENAI_API_KEY:'',OPENAI_BASE_URL:'http://127.0.0.1:1/v1',CONTENT_ADMIN_USER_IDS:''});
+    const backendEnv=await envFile(`backend-${generation}`,{...common('backend'),PORT:'8080',DATABASE_URL:databaseUrl.href,JWT_SECRET:secrets.jwt,
+      // User jobs copied in a full backup must never be dispatched by rehearsal.
+      // Exact deployment ON policy is exercised only in the separate public
+      // format fixture. This full-history profile remains explicitly OFF.
+      RULES_WORKER_URL:'http://rules-worker:8090',RULES_WORKER_TOKEN:secrets.worker,...writerEnvironment({writerPolicy:historyWriterPolicy}),OPENAI_API_KEY:'',OPENAI_BASE_URL:'http://127.0.0.1:1/v1',CONTENT_ADMIN_USER_IDS:''});
     await resource('container',names.backend,['run','-d','--name',names.backend,'--label',label,'--network',names.network,'--network-alias','backend','--read-only','--tmpfs','/tmp:rw,nosuid,nodev,size=64m','--env-file',backendEnv,image('backend')]);
     await wait(()=>request('http://backend:8080/api/health'));
-    const uiEnv=await envFile(`frontend-${generation}`,{...common,PORT:'3000'});
+    const uiEnv=await envFile(`frontend-${generation}`,{...common('frontend'),PORT:'3000'});
     await resource('container',names.frontend,['run','-d','--name',names.frontend,'--label',label,'--network',names.network,'--network-alias','frontend','--env-file',uiEnv,image('frontend')]);
     await wait(()=>request('http://frontend:3000/build-info.json'));
+  }
+  async function observeApplications(input,manifest=input.manifest) {
+    const observedImages={},observedIdentities={},services={};let environment;
+    for(const [key,url]of Object.entries({rulesWorker:'http://127.0.0.1:8090/health',backend:'http://backend:8080/api/health',frontend:'http://frontend:3000/build-info.json'})){
+      const actual=JSON.parse(await command(['inspect',names[key]]))[0],expected=manifest.components[key].imageDigest;
+      const inspected=JSON.parse(await command(['image','inspect',expected]))[0];
+      if(actual.Config.Labels?.['bagofholding.rehearsal']!==run||actual.Config.Image!==expected||actual.Image!==inspected.Id||!inspected.RepoDigests?.includes(expected)||actual.State.Running!==true||Object.values(actual.NetworkSettings.Ports??{}).some(value=>value?.length))throw Error('Writer probe image ownership differs');
+      const identity=writerHealthIdentity(await request(url),key);observedImages[key]=expected;observedIdentities[key]=identity;services[key]={healthy:true,imageDigest:expected,identity};if(key==='backend')environment=actual.Config.Env;
+    }
+    const state=manifest===input.previousManifest?input.active:{schemaVersion:1,status:'active',manifest,instances:Object.fromEntries(Object.keys(services).map(key=>[key,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]))};
+    assertServiceIdentities(state,services);assertRuntimeWriterPolicy(environment,{manifest:{writerPolicy:historyWriterPolicy}});
+    return {images:observedImages,identities:observedIdentities,environment};
   }
   async function stopApplications(){
     for(const name of [names.frontend,names.backend,names.rulesWorker]){
@@ -125,14 +145,15 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
         files:[...capture.files,{path:'media-references.json',category:'media-manifest',sha256:await checksum(mediaFile),bytes:bytes.length}]};
       await writeFile(path.join(backupDirectory,'backup.json'),JSON.stringify(backup,null,2)+'\n',{flag:'wx',mode:0o600});return backup;
     },
-    async start(input){
+    async start(input,runId){
+      executionRunId=runId;
       await startDatabase(input.backup.files);
       const oldCounts=await queryJSON("SELECT json_build_object('pending',(SELECT count(*) FROM roguelike_runs WHERE combat_envelope#>'{state,pendingD20Interrupt}'->>'operation'='roll_influence'),'artifacts',(SELECT coalesce(json_agg(DISTINCT record->>'artifactHash'),'[]'::json) FROM roguelike_combat_events));");
       const previous=input.legacyBaseline??input.previousManifest;
-      if(!oldCounts.pending||!oldCounts.artifacts.includes(baselineArtifact(input.active))){
+      const needsPriorScenario=!oldCounts.pending||!oldCounts.artifacts.includes(baselineArtifact(input.active));
+      if(needsPriorScenario){
         await startApplications(input,previous);
-        pending=await canonicalScenario('Rehearsal prior application');
-        pending.origin='owned-clone-canonical-api-before-candidate';
+        if(needsPriorScenario){pending=await canonicalScenario('Rehearsal prior application');pending.origin='owned-clone-canonical-api-before-candidate';}
         await stopApplications();
       }
       let additiveMigrations;
@@ -159,7 +180,7 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
       if(id==='full-candidate-health'||id==='image-contract'){
         const services={};
         for(const [key,url] of Object.entries({rulesWorker:'http://127.0.0.1:8090/health',backend:'http://backend:8080/api/health',frontend:'http://frontend:3000/build-info.json'})){
-          identities[key]=await request(url);const actual=JSON.parse(await command(['inspect',names[key]]))[0],expected=input.manifest.components[key].imageDigest;
+          identities[key]=writerHealthIdentity(await request(url),key);const actual=JSON.parse(await command(['inspect',names[key]]))[0],expected=input.manifest.components[key].imageDigest;
           const inspected=JSON.parse(await command(['image','inspect',expected]))[0];
           if(actual.Config.Image!==expected||actual.Image!==inspected.Id||!inspected.RepoDigests?.includes(expected)||actual.State.Running!==true||Object.keys(actual.NetworkSettings.Ports??{}).some(port=>actual.NetworkSettings.Ports[port]?.length))throw Error('Candidate running image differs or publishes a port');
           images[key]=expected;services[key]={healthy:true,imageDigest:expected,identity:identities[key]};
@@ -169,7 +190,7 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
           const current=await canonicalScenario('Rehearsal current application');
           const actual=await query(`SELECT combat_envelope->>'artifactHash' FROM roguelike_runs WHERE id='${uuid(current.id)}';`);
           if(actual.trim()!==input.manifest.rulesArtifactHash)throw Error('New canonical encounter pinned the wrong executable');
-          return {status:'passed',components:Object.keys(services).sort(),publishedPorts:0,canonicalCurrentArtifact:true,currentArtifactHash:actual.trim()};
+          return {status:'passed',components:Object.keys(services).sort(),publishedPorts:0,canonicalCurrentArtifact:true,currentArtifactHash:actual.trim(),historyWriterPolicy};
         }
         return {status:'passed',images:{...images},identities:{...identities}};
       }
@@ -190,6 +211,17 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
         if(!equal(await authenticated('/commands',continuation),continued)||!equal(after,await invariant()))throw Error('Restored pending continuation is not idempotent');
         return {status:'passed',checked:true,acceptedHash:accepted.acceptedHash,continuedHash:evidenceHash(continued),invariantHash:evidenceHash(after)};
       }
+      if(id==='writer-compatibility')return collectHostWriterStage(input,{
+        directory,postgresImage,runId:executionRunId,
+        retainedHistory:async()=>{
+          await stopApplications();let result,failure;
+          try{
+            const adapter=createWriterHistoryDocker({command,resource,names,owner:run,label,directory,image:input.manifest.components.rulesWorker.imageDigest,execution:executeDocker===dockerCommand?'docker':'simulation'});
+            result=await probeRetainedWriterHistory(input,adapter,{backupDirectory});
+          }catch(error){failure=error;}finally{try{await startApplications(input);await observeApplications(input);}catch(error){failure??=error;}}
+          if(failure)throw failure;return result;
+        },
+      });
       throw Error('Unknown rehearsal stage');
     },
     cleanup(){return cleanupPromise??=(async()=>{

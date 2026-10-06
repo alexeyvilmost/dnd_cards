@@ -4,8 +4,13 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {assertReleaseReady,evidenceHash} from './validate-manifest.mjs';
 import {rehearsalInput,validateRehearsal} from './candidate-rehearsal.mjs';
+import {writerPublication} from './writer-browser-consumption.mjs';
 export function assembleDeploymentBundle(candidate,input,receipt) {
   const expected=rehearsalInput(candidate,input.active,input.backup);
+  if(Object.hasOwn(candidate.manifest,'writerPolicy')){
+    writerPublication(candidate,input.verifiedReleaseRun);
+    expected.verifiedReleaseRun=input.verifiedReleaseRun;
+  }
   if(evidenceHash(input)!==evidenceHash(expected))throw Error('Rehearsal input differs from candidate or predecessor');
   const checks=validateRehearsal(input,receipt),manifest=structuredClone(candidate.manifest);
   const reportBase={status:'passed',compositionFingerprint:input.compositionFingerprint,rehearsalHash:evidenceHash(receipt),completedAt:receipt.completedAt};

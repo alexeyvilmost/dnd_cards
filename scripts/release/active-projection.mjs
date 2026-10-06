@@ -5,6 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createDeploymentStore,validateActive,serviceOrder} from './deploy-state.mjs';
 import {validateManifest,evidenceHash,validateMigrationSet} from './validate-manifest.mjs';
+import {assertFullAnchorBinding} from './ui-release-policy.mjs';
 
 const sha=/^[a-f0-9]{40}$/,hash=/^sha256:[a-f0-9]{64}$/,release=/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/;
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
@@ -21,8 +22,11 @@ function context(request){
 // Reject unknown fields rather than silently project away a private value. The
 // retained active hash therefore identifies the exact persisted active document.
 export function validatePublicActive(active){
-  exact(active,['schemaVersion','status','manifest','instances',...(active?.database!==undefined?['database']:[])]);
+  exact(active,['schemaVersion','status','manifest','instances',...(active?.database!==undefined?['database']:[]),...(active?.uiProofAnchor!==undefined?['uiProofAnchor']:[])]);
   validateActive(active);
+  // Only the canonical compact binding is public. The protected domain/profile
+  // remains private; authority comes from the exact succeeded journal below.
+  if(active.uiProofAnchor!==undefined)assertFullAnchorBinding(active.uiProofAnchor,active.uiProofAnchor.runtimeCompatibilityHash);
   exact(active.instances,serviceOrder);
   for(const key of serviceOrder)exact(active.instances[key],['releaseId','releaseCommit']);
   if(active.database!==undefined){

@@ -21,10 +21,17 @@ on:
       legacy_suite:
         description: 'ID from tests/suites.json (only for legacy-manual)'
         type: string
+      reconcile_request:
+        description: 'Trusted bounded automatic full-verification request; leave empty for ordinary CI'
+        type: string
+        required: false
 
 jobs:
   plan:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
     outputs:
       suite: ${{ steps.policy.outputs.suite }}
       shards: ${{ steps.policy.outputs.shards }}
@@ -35,12 +42,46 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Validate an optional trusted reconciliation request before selecting workload
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_BUILD_ENABLED: ${{ vars.RELEASE_BUILD_ENABLED }}
+          AUTO_RELEASE_MAIN_ENABLED: ${{ vars.AUTO_RELEASE_MAIN_ENABLED }}
+          RELEASE_PUBLICATION_ENABLED: ${{ vars.RELEASE_PUBLICATION_ENABLED }}
+          PRODUCTION_DEPLOY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+          AUTO_DEPLOY_MAIN_ENABLED: ${{ vars.AUTO_DEPLOY_MAIN_ENABLED }}
+          AUTO_RECONCILE_MAIN_ENABLED: ${{ vars.AUTO_RECONCILE_MAIN_ENABLED }}
+        run: node scripts/release/convergence-cli.mjs ci-guard infra/deployment-policy.json outputs/testing/reconcile-validation.json
+      - id: deployed
+        name: Discover actual last deployment with read-only metadata
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FRONTEND_SELECTIVE_ENABLED: ${{ vars.FRONTEND_SELECTIVE_ENABLED }}
+        run: node scripts/release/ui-ci.mjs discover outputs/testing/deployed-run.json >> "$GITHUB_OUTPUT"
+      - if: steps.deployed.outputs.artifact_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ steps.deployed.outputs.artifact_id }}
+          run-id: ${{ steps.deployed.outputs.run_id }}
+          path: outputs/testing/deployed
+          merge-multiple: true
+          github-token: ${{ github.token }}
+      - name: Bind safe original full anchor to the current candidate
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release/ui-ci.mjs plan . infra/release-build-config.json outputs/testing/deployed-run.json outputs/testing/deployed outputs/testing/frontend-planning.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontend-verification-planning
+          path: outputs/testing/frontend-planning.json
+          if-no-files-found: error
       - id: policy
         name: Select the exact mandatory workload
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
           REQUESTED_SUITE: ${{ inputs.suite || 'core' }}
           LEGACY_SUITE: ${{ inputs.legacy_suite || '' }}
+          FRONTEND_PLANNING_FILE: outputs/testing/frontend-planning.json
         run: node scripts/testing/ci-policy.mjs >> "$GITHUB_OUTPUT"
   contracts:
     needs: plan
@@ -52,6 +93,9 @@ jobs:
         shard: ${{ fromJSON(needs.plan.outputs.shards) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -68,6 +112,10 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: frontend-verification-planning
+          path: outputs/testing
       - name: PostgreSQL 17 binaries for the owned native cluster
         # Official PGDG repository. The runner creates its own random cluster,
         # role, database and marker; no shared service database is passed in.
@@ -88,7 +136,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           TEST_PG_BIN: /usr/lib/postgresql/17/bin
         run: |
-          args=(--mode ci --candidate HEAD --suite "$REQUESTED_SUITE" --output outputs/testing/ci)
+          args=(--mode ci --candidate HEAD --suite "$REQUESTED_SUITE" --output outputs/testing/ci --frontend-planning outputs/testing/frontend-planning.json)
           if [ -n "$BASE_SHA" ]; then args+=(--base "$BASE_SHA"); fi
           if [ -n "$LEGACY_SUITE" ]; then args+=(--select "$LEGACY_SUITE"); fi
           if [ "$REQUESTED_SUITE" = extended ]; then args+=(--race); fi

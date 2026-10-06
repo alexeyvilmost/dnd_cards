@@ -49,6 +49,7 @@ jobs:
       buildkit_image: ${{ steps.plan.outputs.buildkit_image }}
       candidate: ${{ steps.request.outputs.candidate }}
       publish: ${{ steps.request.outputs.publish }}
+      no_deployment: ${{ steps.plan.outputs.no_deployment }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4, verified 2026-10-04
         with:
@@ -66,7 +67,8 @@ jobs:
           AUTO_RELEASE_MAIN_ENABLED: ${{ vars.AUTO_RELEASE_MAIN_ENABLED }}
           RELEASE_PUBLICATION_ENABLED: ${{ vars.RELEASE_PUBLICATION_ENABLED }}
         run: node control/scripts/release/automatic-release.mjs "$GITHUB_EVENT_PATH" artifacts/request.json >> "$GITHUB_OUTPUT"
-      - name: Verify trusted workflow identities before reading artifacts
+      - id: baseline
+        name: Verify trusted workflow identities before reading artifacts
         env:
           GITHUB_TOKEN: ${{ github.token }}
           CANDIDATE: ${{ steps.request.outputs.candidate }}
@@ -76,6 +78,7 @@ jobs:
           node control/scripts/release/ci-release.mjs verify-run "$CI_RUN" "$GITHUB_REPOSITORY" "$CANDIDATE" verification artifacts/verified-run.json
           if [ -n "$BASELINE_RUN" ]; then
             node control/scripts/release/ci-release.mjs verify-run "$BASELINE_RUN" "$GITHUB_REPOSITORY" - deployment artifacts/verified-baseline-run.json
+            node -e 'const r=require("./artifacts/verified-baseline-run.json"); if(!Number.isSafeInteger(r.artifactId)||r.artifactId<1) throw Error("Exact deployed artifact required"); console.log("artifact_id="+r.artifactId)' >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
@@ -86,8 +89,9 @@ jobs:
       - if: steps.request.outputs.baseline_run_id != ''
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: deployed-release
+          artifact-ids: ${{ steps.baseline.outputs.artifact_id }}
           path: artifacts/baseline
+          merge-multiple: true
           run-id: ${{ steps.request.outputs.baseline_run_id }}
           github-token: ${{ github.token }}
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -100,8 +104,10 @@ jobs:
         name: Bind source, successful reports, fingerprints and last deployed manifest
         env:
           CANDIDATE: ${{ steps.request.outputs.candidate }}
+          GITHUB_TOKEN: ${{ github.token }}
+          FRONTEND_SELECTIVE_ENABLED: ${{ vars.FRONTEND_SELECTIVE_ENABLED }}
         run: |
-          node control/scripts/release/ci-release.mjs plan source "$CANDIDATE" "$GITHUB_REPOSITORY" control/infra/release-build-config.json artifacts/verified-run.json artifacts/verification/report.json artifacts/baseline artifacts/build-plan.json artifacts/request.json >> "$GITHUB_OUTPUT"
+          node control/scripts/release/ui-release-plan.mjs source "$CANDIDATE" "$GITHUB_REPOSITORY" control/infra/release-build-config.json artifacts/verified-run.json artifacts/verification/report.json artifacts/baseline artifacts/build-plan.json artifacts/request.json >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: immutable-build-plan
@@ -111,6 +117,7 @@ jobs:
 
   components:
     needs: prepare
+    if: needs.prepare.outputs.no_deployment != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     permissions:
@@ -179,7 +186,7 @@ jobs:
 
   publish:
     needs: [prepare, components]
-    if: needs.prepare.outputs.publish == 'true' && vars.RELEASE_PUBLICATION_ENABLED == 'true'
+    if: needs.prepare.outputs.no_deployment != 'true' && needs.prepare.outputs.publish == 'true' && vars.RELEASE_PUBLICATION_ENABLED == 'true'
     environment: release-publication
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -221,6 +228,64 @@ jobs:
         env:
           RELEASE_PUBLICATION_ENABLED: ${{ vars.RELEASE_PUBLICATION_ENABLED }}
         run: node control/scripts/release/ci-images.mjs publish artifacts/build-plan.json artifacts/components artifacts/candidate
+      - id: mixed
+        name: Select the bound mixed-image verification path
+        run: node -e 'const p=require("./artifacts/build-plan.json"); console.log("required="+Boolean(p.frontendVerification))' >> "$GITHUB_OUTPUT"
+      - id: writer
+        if: steps.mixed.outputs.required != 'true'
+        name: Resolve the actual predecessor for explicit writer format verification
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node control/scripts/release/writer-fixture-cli.mjs discover artifacts/candidate/candidate.json artifacts/writer-discovery.json >> "$GITHUB_OUTPUT"
+      - if: steps.writer.outputs.required == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ steps.writer.outputs.baseline_artifact_id }}
+          run-id: ${{ steps.writer.outputs.baseline_run_id }}
+          github-token: ${{ github.token }}
+          path: artifacts/writer-previous
+          merge-multiple: true
+      - if: steps.writer.outputs.required == 'true'
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ steps.writer.outputs.source_commit }}
+          path: writer-source
+          fetch-depth: 1
+          persist-credentials: false
+      - if: steps.writer.outputs.required == 'true'
+        name: Install exact verified source browser dependencies without lifecycle scripts
+        working-directory: writer-source/frontend
+        run: npm ci --ignore-scripts
+      - if: steps.writer.outputs.required == 'true'
+        name: Install only the lockfile-pinned bundled Chromium runtime
+        working-directory: writer-source/frontend
+        run: node node_modules/playwright/cli.js install --with-deps chromium
+      - if: steps.writer.outputs.required == 'true'
+        name: PostgreSQL 17 binaries for the separate public format fixture
+        run: |
+          if [ ! -x /usr/lib/postgresql/17/bin/initdb ]; then
+            sudo install -d /usr/share/postgresql-common/pgdg
+            sudo curl --fail --silent --show-error https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+            echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main' | sudo tee /etc/apt/sources.list.d/dnd-test-pgdg.list
+            sudo apt-get update
+            sudo apt-get install --yes postgresql-17
+          fi
+          echo '/usr/lib/postgresql/17/bin' >> "$GITHUB_PATH"
+      - if: steps.writer.outputs.required == 'true'
+        name: Attach exact-image writer browser proof only after actual fixture cleanup
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TEST_PG_BIN: /usr/lib/postgresql/17/bin
+        run: node control/scripts/release/writer-fixture-cli.mjs produce artifacts/candidate/candidate.json artifacts/writer-discovery.json artifacts/writer-previous writer-source artifacts/writer-fixture
+      - if: steps.mixed.outputs.required == 'true'
+        name: Install trusted browser control dependencies
+        working-directory: control/frontend
+        run: npm ci --ignore-scripts
+      - if: steps.mixed.outputs.required == 'true'
+        name: Verify exact frontend and reused service images on an owned hosted fixture
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node control/scripts/release/ui-mixed-oci.mjs artifacts/candidate artifacts/build-plan.json artifacts/frontend-mixed
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-candidate

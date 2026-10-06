@@ -16,6 +16,7 @@ const yaml = createRequire(new URL('../../frontend/package.json', import.meta.ur
 const sha = char => `sha256:${char.repeat(64)}`;
 const repository = 'fixture/project';
 import {loadControlRecovery} from './first-adoption-recovery.mjs';
+import {prepareDispatchedBuild} from './ui-release-plan.mjs';
 function config() {return {schemaVersion: 1, enabled: true, platform: 'linux/amd64', frontendApiUrl: '', contentManifestHash: sha('a'), migrationSet: [],
   buildkitImage: `moby/buildkit@${sha('b')}`, baseImages: Object.fromEntries(['GO_IMAGE', 'ALPINE_IMAGE', 'NODE_IMAGE', 'NGINX_IMAGE'].map((key, i) => [key, `example.test/base/${key.toLowerCase()}@${sha(String(i + 1))}`]))};}
 function report(candidate) {return {schema_version: 1, status: 'passed', suite: 'extended',ci_source:{clean_checkout:true}, source_snapshot:{sha256:'a'.repeat(64),files:4},candidate: {sha: candidate}, component_plan: {mode: 'ci', candidate: {sha: candidate}},
@@ -67,6 +68,53 @@ test('reviewed first recovery changes optional provenance and plan hash only, fo
   assert.equal(assembleCandidateManifest(ordinary,recordsFor(ordinary),publishedFor(ordinary)).provenance.firstAdoptionRecovery,undefined);
 });
 
+function recoveredPlanning(t) {
+  const f=fixture(t),repository='alexeyvilmost/dnd_cards',controlRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..');
+  const {proof,reference}=loadControlRecovery({id:'37273035754-1',controlRoot,controlCommit:f.candidate,repository});
+  const ordinary=f.plan(f.candidate,{repository,verification:{id:10,sourceCommit:f.candidate,repository}});
+  const options={repo:f.repo,candidate:f.candidate,repository,controlCommit:f.candidate,releaseRunId:42,config:ordinary.config,
+    verification:ordinary.verification,suiteReport:report(f.candidate),baselineDirectory:path.join(f.directory,'baseline'),firstAdoptionRecovery:reference};
+  const calls=[],failed={id:proof.failedDeployment.runId,run_attempt:1,head_sha:proof.failedDeployment.controlCommit,path:'.github/workflows/deploy.yml',event:'workflow_dispatch',head_branch:'main',repository:{full_name:repository},head_repository:{full_name:repository},status:'completed',conclusion:'failure'};
+  const get=async route=>{
+    calls.push(route);
+    if(route==='commits/main')return {sha:f.candidate};
+    if(route==='actions/workflows/deploy.yml/runs?per_page=100&page=1')return {total_count:1,workflow_runs:[failed]};
+    if(route===`actions/runs/${failed.id}`)return failed;
+    if(route===`actions/runs/${failed.id}/jobs?filter=latest&per_page=100&page=1`)return {total_count:1,jobs:[{id:failed.id+1,name:'deploy',run_id:failed.id,run_attempt:1,head_sha:failed.head_sha,status:'completed',conclusion:'failure',completed_at:proof.observedAt}]};
+    throw Error('Unexpected recovery planning route');
+  };
+  return {f,options,ordinary,reference,failed,calls,get};
+}
+test('selective dispatcher carries explicit reviewed recovery through an initial full build and publication',async t=>{
+  const {options,ordinary,reference,calls,get}=recoveredPlanning(t),plan=await prepareDispatchedBuild(options,{get});
+  validateBuildPlan(plan);assert.equal(plan.status,'build-planned');assert.equal(plan.frontendVerification,undefined);assert.equal(plan.previousManifest,null);
+  assert.ok(plan.matrix.every(row=>row.operation==='build'));assert.equal(plan.verificationEvidence.requiredTier,'extended');assert.deepEqual(plan.firstAdoptionRecovery,reference);
+  assert.notEqual(plan.planHash,ordinary.planHash);assert.equal(calls[0],'commits/main');assert.ok(calls.some(route=>route.includes('filter=latest')));
+  const candidate=assembleCandidateManifest(plan,recordsFor(plan),publishedFor(plan));
+  assert.deepEqual(candidate.provenance.firstAdoptionRecovery,reference);assert.deepEqual(candidate.buildPlan.firstAdoptionRecovery,reference);
+  assert.equal(Object.hasOwn(candidate.manifest,'writerPolicy'),false);
+  verifyCandidateProvenance(candidate,{id:42,workflow:'.github/workflows/release.yml',controlCommit:options.controlCommit});
+  assert.throws(()=>verifyCandidateProvenance({...candidate,frontendVerification:{}},{id:42,workflow:'.github/workflows/release.yml',controlCommit:options.controlCommit}),/Recovered first adoption/);
+});
+test('recovery never becomes selective/no-op and refuses fresh metadata or baseline drift before building',async t=>{
+  const {options,get,failed}=recoveredPlanning(t);
+  for(const mutation of [{frontendVerification:{}},{baseline:{}},{baselineRun:{id:1}},{candidate:'e'.repeat(40)}])
+    await assert.rejects(prepareDispatchedBuild({...options,...mutation},{get}),/Recovery cannot/);
+  await assert.rejects(prepareDispatchedBuild({...options,suiteReport:{...options.suiteReport,suite:'core'}},{get}),/extended/);
+  await assert.rejects(prepareDispatchedBuild(options,{get:route=>route==='commits/main'?Promise.resolve({sha:'e'.repeat(40)}):get(route)}),/superseded/);
+  await assert.rejects(prepareDispatchedBuild(options,{get:route=>route===`actions/runs/${failed.id}`?Promise.resolve({...failed,run_attempt:2}):get(route)}),/rerun/);
+  const extra={...failed,id:failed.id+30,conclusion:'success'};
+  await assert.rejects(prepareDispatchedBuild(options,{get:route=>route.startsWith('actions/workflows/deploy.yml/runs')?Promise.resolve({total_count:2,workflow_runs:[failed,extra]}):route===`actions/runs/${extra.id}`?Promise.resolve(extra):route.startsWith(`actions/runs/${extra.id}/jobs`)?Promise.resolve({total_count:1,jobs:[{id:extra.id+1,name:'deploy',run_id:extra.id,run_attempt:1,head_sha:extra.head_sha,status:'completed',conclusion:'success'}]}):get(route)}),/successful or unreviewed/);
+  mkdirSync(options.baselineDirectory);writeFileSync(path.join(options.baselineDirectory,'manifest.json'),'{}');
+  await assert.rejects(prepareDispatchedBuild(options,{get}),/Recovery cannot/);
+});
+test('rehashed recovery plus a selective proof is rejected by full-plan validation',async t=>{
+  const {options,get}=recoveredPlanning(t),plan=await prepareDispatchedBuild(options,{get});
+  plan.frontendVerification={};
+  plan.planHash=evidenceHash({candidate:plan.candidate,controlCommit:plan.controlCommit,releaseRunId:plan.releaseRunId,selection:plan.selection,matrix:plan.matrix,config:plan.config,verification:plan.verificationEvidence,baselineIdentity:plan.baselineIdentity,frontendVerification:plan.frontendVerification,firstAdoptionRecovery:plan.firstAdoptionRecovery});
+  assert.throws(()=>validateBuildPlan(plan),/initial full extended/);
+});
+
 test('only a successful exact-main workflow and real API/browser report authorize builds', () => {
   const candidate = 'a'.repeat(40), run = trustedRun(candidate);
   verifyRun(run, {repository, candidate, kind: 'verification'}); verifySuiteReport(report(candidate), candidate);
@@ -97,9 +145,11 @@ test('critical paths and missing baseline require extended verification; known U
 test('release control SHA may differ from older exact source but candidate provenance must bind the successful run',t=>{
   const f=fixture(t),control='d'.repeat(40),plan=f.plan(f.candidate,{controlCommit:control});
   const candidate=assembleCandidateManifest(plan,recordsFor(plan),publishedFor(plan));
-  const release={...trustedRun(control),id:42,path:'.github/workflows/release.yml',event:'workflow_run'};
+  const release={...trustedRun(control),id:42,run_attempt:2,path:'.github/workflows/release.yml',event:'workflow_run'};
   const run=verifyRun(release,{repository,kind:'release'});
   assert.equal(run.controlCommit,control);assert.equal(run.sourceCommit,undefined);
+  assert.equal(run.runAttempt,2);assert.equal(run.conclusion,'success');
+  for(const run_attempt of [undefined,0,-1,'2',1.5])assert.throws(()=>verifyRun({...release,run_attempt},{repository,kind:'release'}),/attempt/);
   assert.equal(verifyCandidateProvenance(candidate,run).sourceCommit,f.candidate);
   assert.throws(()=>verifyRun(release,{repository,candidate:f.candidate,kind:'release'}),/control SHA/);
   for(const mutate of [c=>{c.provenance.releaseRunId++;},c=>{c.provenance.controlCommit=f.candidate;},c=>{c.manifest.releaseCommit=control;},c=>{c.provenance.planHash='invalid';}]){
@@ -213,4 +263,39 @@ test('workflow syntax pins actions and isolates publication from forks, builds a
   for (const job of Object.values(workflow.jobs)) for (const step of job.steps) if (step.uses) assert.match(step.uses, /^[\w/-]+@[a-f0-9]{40}$/);
   assert.equal(workflow.jobs.components.steps.find(step => step.uses?.startsWith('docker/build-push-action')).with.push, false);
   assert.ok(!JSON.stringify(workflow).includes('ssh'));
+  const planning=workflow.jobs.prepare.steps.find(step=>step.run?.includes('ui-release-plan.mjs'));
+  assert.match(planning.run,/artifacts\/build-plan\.json artifacts\/request\.json/);
+  assert.equal(workflow.on.workflow_dispatch.inputs.first_adoption_recovery.required,false);
+});
+
+test('absent producer policy preserves legacy composition and never reads writer flags from environment',t=>{
+  const f=fixture(t),plan=f.plan(f.candidate,{environment:{DB_COMPACT_RECEIPTS:'1',IMAGE_JOBS_ENABLED:'1'}});
+  assert.equal(Object.hasOwn(plan.config,'writerPolicy'),false);
+  const candidate=assembleCandidateManifest(plan,recordsFor(plan),publishedFor(plan));
+  assert.equal(Object.hasOwn(candidate.manifest,'writerPolicy'),false);
+  const off={compactReceipts:false,imageJobs:false,frozenCatalogs:false};
+  const explicit=f.plan(f.candidate,{config:{...plan.config,writerPolicy:off}});
+  assert.deepEqual(assembleCandidateManifest(explicit,recordsFor(explicit),publishedFor(explicit)).manifest.writerPolicy,off);
+  assert.throws(()=>validateBuildConfig({...plan.config,writerPolicy:{compactReceipts:true,imageJobs:true,frozenCatalogs:true}}));
+  assert.throws(()=>validateBuildConfig({...plan.config,writerPolicy:{compactReceipts:'true',imageJobs:false,frozenCatalogs:false}}));
+});
+
+test('same-source manual policy plan changes composition and requires extended while reusing image inputs',t=>{
+  // Does not model a commit of infra/release-build-config.json: canonical path
+  // classification still selects every component for that release-tooling edit.
+  const f=fixture(t),seed=f.plan(f.candidate),off={compactReceipts:false,imageJobs:false,frozenCatalogs:false},on={...off,compactReceipts:true,imageJobs:true};
+  const configuration={...seed.config,writerPolicy:off,migrationSet:['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs'].map(id=>({id,checksum:sha('c')}))};
+  const initial=f.plan(f.candidate,{config:configuration}),old=assembleCandidateManifest(initial,recordsFor(initial),publishedFor(initial)).manifest;
+  const baselineFile=path.join(f.directory,'writer-baseline.json');writeFileSync(baselineFile,JSON.stringify(old));
+  const predecessor={baseline:old,baselineFile,baselineReceipt:{schemaVersion:1,status:'succeeded',releaseId:old.releaseId,releaseCommit:old.releaseCommit,controlCommit:f.candidate,manifestHash:evidenceHash(old)},baselineRun:{controlCommit:f.candidate}};
+  const disabled=f.plan(f.candidate,{...predecessor,config:configuration});
+  const enabled=f.plan(f.candidate,{...predecessor,config:{...configuration,writerPolicy:on}});
+  assert.deepEqual(enabled.matrix,disabled.matrix);assert.ok(enabled.matrix.every(row=>row.operation==='reuse'));
+  assert.notEqual(enabled.planHash,disabled.planHash);assert.equal(enabled.verificationEvidence.requiredTier,'extended');
+  const onCandidate=assembleCandidateManifest(enabled,recordsFor(enabled),publishedFor(enabled));
+  const offCandidate=assembleCandidateManifest(disabled,recordsFor(disabled),publishedFor(disabled));
+  assert.deepEqual(onCandidate.manifest.writerPolicy,on);assert.notEqual(onCandidate.manifest.validationEvidence[0].inputFingerprint,offCandidate.manifest.validationEvidence[0].inputFingerprint);
+  const core={...report(f.candidate),suite:'core'};assert.throws(()=>f.plan(f.candidate,{...predecessor,config:{...configuration,writerPolicy:on},suiteReport:core}),/extended/);
+  const forged=structuredClone(disabled);forged.config.writerPolicy=on;assert.throws(()=>validateBuildPlan(forged),/hash mismatch/);
+  assert.throws(()=>f.plan(f.candidate,{config:{...configuration,writerPolicy:on}}),/legacy adoption/);
 });

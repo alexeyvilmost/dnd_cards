@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {readFileSync} from 'node:fs';
 import {createPlan} from '../release/plan-components.mjs';
 import {requiredVerificationTier} from '../release/ci-release.mjs';
 import {readSuites, selectGroups, catalogTests} from './suites.mjs';
 import {suiteWorkload} from './workload.mjs';
 import {shardPlan} from './shards.mjs';
+import {assertFrontendEligibility} from '../release/ui-release-policy.mjs';
 
-export function selectCISuite(plan,{eventName,requestedSuite='core'}={}) {
+export function selectCISuite(plan,{eventName,requestedSuite='core',frontendPlanning}={}) {
   if (eventName === 'workflow_dispatch') {
     if (!['core','extended','legacy-manual'].includes(requestedSuite)) throw Error('Unknown manually requested suite');
     return requestedSuite;
@@ -16,14 +18,23 @@ export function selectCISuite(plan,{eventName,requestedSuite='core'}={}) {
   // Push CI must verify accumulated changes since the last deployment as well
   // as the latest push. That deployment baseline is intentionally unavailable
   // to ordinary CI, so main always produces a releasable extended receipt.
-  if(eventName==='push')return 'extended';
+  if(eventName==='push'){
+    if(frontendPlanning){
+      assertFrontendEligibility(frontendPlanning.eligibility,frontendPlanning.input);
+      if(plan.candidate?.sha!==frontendPlanning.eligibility.binding.candidate)throw Error('CI candidate differs from deployed-baseline planning');
+      return 'core';
+    }
+    return 'extended';
+  }
   return requiredVerificationTier(plan);
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const plan=createPlan({mode:'ci',candidate:'HEAD',base:process.env.BASE_SHA});
-  const suite=selectCISuite(plan,{eventName:process.env.GITHUB_EVENT_NAME,requestedSuite:process.env.REQUESTED_SUITE});
+  const downloaded=process.env.FRONTEND_PLANNING_FILE?JSON.parse(readFileSync(process.env.FRONTEND_PLANNING_FILE,'utf8')):null;
+  const frontendPlanning=downloaded?.eligibility?.kind==='frontend-only'?downloaded:undefined;
+  const suite=selectCISuite(plan,{eventName:process.env.GITHUB_EVENT_NAME,requestedSuite:process.env.REQUESTED_SUITE,frontendPlanning});
   const {manifest}=readSuites();
-  const selection=selectGroups(manifest,plan,{suite,select:process.env.LEGACY_SUITE});
-  const names=suite==='legacy-manual'?['legacy']:shardPlan(suiteWorkload({selection,catalog:catalogTests(manifest),manifest,suite})).names;
+  const selection=selectGroups(manifest,frontendPlanning?{...frontendPlanning.input.selection,mode:'ci'}:plan,{suite,select:process.env.LEGACY_SUITE});
+  const names=suite==='legacy-manual'?['legacy']:shardPlan(suiteWorkload({selection,catalog:catalogTests(manifest),manifest,suite,frontendPlanning})).names;
   process.stdout.write(`suite=${suite}\nshards=${JSON.stringify(names)}\n`);
 }

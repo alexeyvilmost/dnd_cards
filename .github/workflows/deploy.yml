@@ -36,6 +36,7 @@ jobs:
     outputs:
       source_sha: ${{ steps.candidate.outputs.source_sha }}
       deployment_mode: ${{ steps.identity.outputs.deployment_mode }}
+      candidate_available: ${{ steps.freshness.outputs.candidate_available }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -57,28 +58,60 @@ jobs:
         run: |
           node control/scripts/release/deployment-handoff.mjs policy control/infra/deployment-policy.json
           echo "deployment_mode=$(node control/scripts/release/deployment-handoff.mjs mode)" >> "$GITHUB_OUTPUT"
-          node control/scripts/release/ci-release.mjs verify-run "$RELEASE_RUN" "$GITHUB_REPOSITORY" - release verified-release-run.json
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+          node control/scripts/release/release-publication.mjs "$RELEASE_RUN" "$GITHUB_REPOSITORY" verified-release-run.json >> "$GITHUB_OUTPUT"
+      - if: steps.identity.outputs.candidate_available == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: release-candidate
+          artifact-ids: ${{ steps.identity.outputs.artifact_id }}
           path: candidate
+          merge-multiple: true
           run-id: ${{ inputs.release_run_id || github.event.workflow_run.id }}
           github-token: ${{ github.token }}
       - id: candidate
+        if: steps.identity.outputs.candidate_available == 'true'
         name: Verify application source separately from the release workflow commit
         run: |
           source_sha=$(node control/scripts/release/deployment-handoff.mjs candidate candidate verified-release-run.json)
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
           cp verified-release-run.json candidate/verified-release-run.json
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - id: latest
+        if: steps.identity.outputs.candidate_available == 'true'
+        name: Re-read latest actual deployment before scheduling the host job
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node control/scripts/release/convergence-cli.mjs discover latest-deployment.json >> "$GITHUB_OUTPUT"
+      - if: steps.identity.outputs.candidate_available == 'true' && steps.latest.outputs.artifact_id != ''
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ steps.latest.outputs.artifact_id }}
+          run-id: ${{ steps.latest.outputs.run_id }}
+          path: current-baseline
+          merge-multiple: true
+          github-token: ${{ github.token }}
+      - id: freshness
+        if: steps.identity.outputs.candidate_available == 'true'
+        name: Skip superseded automatic candidates without attempting a cutover
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node control/scripts/release/convergence-cli.mjs preflight candidate verified-release-run.json latest-deployment.json current-baseline preflight.json >> "$GITHUB_OUTPUT"
+      - if: steps.freshness.outputs.candidate_available == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: validated-deployment-input
           path: candidate/
           if-no-files-found: error
           retention-days: 7
+      - if: always() && steps.identity.outputs.candidate_available == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: deployment-preflight
+          path: preflight.json
+          if-no-files-found: ignore
+          retention-days: 90
 
   deploy:
     needs: prepare
+    if: needs.prepare.outputs.candidate_available == 'true'
     environment: production
     # Public repository: no production-capable self-hosted Actions runner.
     # Dedicated SSH credentials belong to the main-only production environment.
@@ -122,4 +155,11 @@ jobs:
           name: deployed-release
           path: deployed-release/
           if-no-files-found: error
+          retention-days: 90
+      - name: Publish optional safe frontend proof projection separately
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: frontend-proof-anchor
+          path: deployed-release/frontend-proof-anchor.json
+          if-no-files-found: ignore
           retention-days: 90

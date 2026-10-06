@@ -1,8 +1,9 @@
 import {mkdirSync, existsSync, readFileSync, writeFileSync, renameSync, unlinkSync, rmdirSync, lstatSync, realpathSync, readdirSync, openSync, closeSync, fsyncSync} from 'node:fs';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
-import {assertReleaseReady, validateManifest, evidenceHash, retentionReferences} from './validate-manifest.mjs';
+import {assertReleaseReady, validateManifest, evidenceHash, retentionReferences, writerPolicy} from './validate-manifest.mjs';
 import {databaseMigrationSet,validateDatabaseState,migrationTransition,databaseStateFromResult,stateWithDatabase,requiresOldReaders} from './migration-transition.mjs';
+import {writerEnvironment} from './writer-environment.mjs';
 import {isLegacyBaseline,validateLegacyBaseline,baselineDocument,baselineArtifact} from './legacy-baseline.mjs';
 
 export const serviceOrder = ['rulesWorker', 'backend', 'frontend'];
@@ -29,7 +30,8 @@ export function planDeployment(candidate, bundle, active) {
     if (candidate.releaseId === active.manifest.releaseId) throw Error('Release ID already active');
   }
   const migration = migrationTransition(candidate, bundle, active);
-  const changed = legacy?[...serviceOrder]:serviceOrder.filter(key => !same(candidate.components[key], active.manifest.components[key]));
+  const changed = legacy?[...serviceOrder]:serviceOrder.filter(key => !same(candidate.components[key], active.manifest.components[key])
+    || key==='backend' && !same(writerPolicy(candidate),writerPolicy(active.manifest)));
   const instances = Object.fromEntries(serviceOrder.map(key => [key, changed.includes(key)
     ? {releaseId: candidate.releaseId, releaseCommit: candidate.releaseCommit} : {...active.instances[key]}]));
   const desired = {schemaVersion: 1, status: 'active', manifest: candidate, instances,
@@ -44,7 +46,7 @@ export function deploymentEnvironment(active) {
   // Compose 2.40 evaluates required expressions inside nested defaults even
   // when the component variable is present. Supply the composition fallback;
   // each component's explicit launch identity below still takes precedence.
-  const env = {RELEASE_ID: active.manifest.releaseId, RELEASE_COMMIT: active.manifest.releaseCommit};
+  const env = {...writerEnvironment(active.manifest), RELEASE_ID: active.manifest.releaseId, RELEASE_COMMIT: active.manifest.releaseCommit};
   for (const [key, prefix] of [['backend', 'BACKEND'], ['frontend', 'FRONTEND'], ['rulesWorker', 'RULES_WORKER']]) {
     env[`${prefix}_IMAGE`] = active.manifest.components[key].imageDigest;
     env[`${prefix}_RELEASE_ID`] = active.instances[key].releaseId;

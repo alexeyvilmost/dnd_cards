@@ -14,7 +14,7 @@ const {manifest,hash}=readSuites(),catalog=catalogTests(manifest),first=reports[
 assert.equal(first.manifest_sha256,hash,'Suite manifest differs from this checkout');
 const selection=selectGroups(manifest,first.component_plan,{suite:first.suite});
 assert.deepEqual(selection,first.selection);
-const report=aggregateShardReports(reports,shardPlan(suiteWorkload({selection,catalog,manifest,suite:first.suite})));
+const report=aggregateShardReports(reports,shardPlan(suiteWorkload({selection,catalog,manifest,suite:first.suite,frontendPlanning:first.frontend_planning})));
 const current=captureSourceSnapshot();
 for(const file of files){
   const saved=JSON.parse(await readFile(path.join(path.dirname(file),'source-snapshot.json'),'utf8'));

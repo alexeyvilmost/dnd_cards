@@ -3,14 +3,19 @@ import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {randomUUID} from 'node:crypto';
-import {validateManifest,evidenceHash,compositionFingerprint,candidateRehearsalStages} from './validate-manifest.mjs';
+import {validateManifest,evidenceHash,compositionFingerprint,candidateRehearsalStages,rehearsalStages as stagesForManifest,assertWriterCompatibility,validateWriterTransition,assertWriterRehearsalBoundary} from './validate-manifest.mjs';
 import {validateActive} from './deploy-state.mjs';
 import {databaseMigrationSet,migrationBaselineMatches,migrationScenarios} from './migration-transition.mjs';
 import {isLegacyBaseline,baselineDocument,baselineArtifact} from './legacy-baseline.mjs';
 import {migrationRehearsalRequest,validateMigrationRehearsal} from './migration-rehearsal.mjs';
 import {verifyDeploymentBackup,verifyBackup,backupFile,checksum} from './backup-manifest.mjs';
+import {verifyCandidateProvenance} from './deployment-handoff.mjs';
+import {writerPublication} from './writer-browser-consumption.mjs';
 export const rehearsalStages=candidateRehearsalStages;
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
+function assertInputWriterPublication(input,check){
+  if(check?.traces?.some(trace=>trace.outcomeId==='frontend-pending-job-reload')&&!same(check.writerPublication,writerPublication(input.publishedCandidate,input.verifiedReleaseRun)))throw Error('Writer browser publication differs from verified candidate input');
+}
 export function rehearsalInput(candidate,active,backup) {
   validateManifest(candidate?.manifest);validateActive(active);
   const manifest=candidate.manifest,core=candidate.reports?.core;
@@ -20,13 +25,15 @@ export function rehearsalInput(candidate,active,backup) {
   const evidence=manifest.validationEvidence.find(row=>row.gate==='core');
   if(core?.status!=='passed'||core.compositionFingerprint!==compositionFingerprint(manifest)||evidence?.reportHash!==evidenceHash(core))throw Error('Exact candidate core report required');
   if(manifest.previousReleaseId!==(isLegacyBaseline(active)?null:active.manifest.releaseId)||backup.releaseManifestHash!==evidenceHash(baselineDocument(active)))throw Error('Candidate, active release and backup predecessor differ');
+  validateWriterTransition(manifest,isLegacyBaseline(active)?null:active.manifest);
   const baseline=databaseMigrationSet(active);
   if(!migrationBaselineMatches(active,manifest.migrationSet))migrationRehearsalRequest({active,manifest});
   if(!same([...backup.migrations].sort(),baseline.map(row=>row.id).sort()))throw Error('Backup migration ledger differs from observed active database');
   const historicalArtifactHashes=[...new Set([...backup.referencedArtifactHashes,baselineArtifact(active)])].sort();
   for(const hash of historicalArtifactHashes)if(!backup.files.some(row=>row.category==='rules-artifact'&&row.sha256===hash))throw Error('Historical executable missing from verified backup');
   return {schemaVersion:1,manifest,previousManifest:isLegacyBaseline(active)?null:active.manifest,...(isLegacyBaseline(active)?{legacyBaseline:baselineDocument(active)}:{}),active,backup,historicalArtifactHashes,
-    candidateHash:evidenceHash(candidate),activeHash:evidenceHash(active),backupHash:evidenceHash(backup),compositionFingerprint:compositionFingerprint(manifest)};
+    candidateHash:evidenceHash(candidate),activeHash:evidenceHash(active),backupHash:evidenceHash(backup),compositionFingerprint:compositionFingerprint(manifest),
+    ...(Object.hasOwn(manifest,'writerPolicy')?{publishedCandidate:candidate}:{})};
 }
 export async function collectRehearsal(input,adapter,{runId=randomUUID(),onReport=async()=>{}}={}) {
   const report={schemaVersion:1,kind:input.localOnly===true?'local-candidate-rehearsal':'candidate-rehearsal',...(input.localOnly===true?{deployable:false,ciProvenance:null}:{}),execution:adapter.execution,status:'running',runId,
@@ -39,7 +46,11 @@ export async function collectRehearsal(input,adapter,{runId=randomUUID(),onRepor
       validateMigrationRehearsal(input,started?.additiveMigrations);
       report.additiveMigrations=started.additiveMigrations;
     }else if(started?.additiveMigrations)throw Error('Unexpected additive migration receipt');
-    for(const id of rehearsalStages){stage=id;const result=await adapter.check(id,input);if(!result||result.status!=='passed')throw Error(`Candidate rehearsal stage failed: ${id}`);report.checks.push({id,...result});}
+    for(const id of stagesForManifest(input.manifest)){stage=id;const result=await adapter.check(id,input);if(!result||result.status!=='passed')throw Error(`Candidate rehearsal stage failed: ${id}`);report.checks.push({id,...result});}
+    const image=report.checks.find(row=>row.id==='image-contract');
+    assertInputWriterPublication(input,report.checks.find(row=>row.id==='writer-compatibility'));
+    assertWriterRehearsalBoundary(input.manifest,Object.fromEntries(report.checks.map(row=>[row.id,row])));
+    assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:image?.images,identities:image?.identities,rehearsalReceipt:report},report.checks.find(row=>row.id==='writer-compatibility'));
   } catch(error){failure=error;report.failure='candidate-rehearsal-failed';report.failureStage=stage;
     // Only our fixed scenario IDs enter persisted diagnostics. The original
     // exception stays in memory and may contain private process details.
@@ -60,7 +71,7 @@ export function validateRehearsal(input,report) {
     ||report.candidateHash!==input.candidateHash||report.activeHash!==input.activeHash||report.backupHash!==input.backupHash
     ||report.compositionFingerprint!==input.compositionFingerprint||report.releaseId!==input.manifest.releaseId
     ||report.cleanup?.status!=='stopped'||report.cleanup.errors?.length||!Number.isFinite(Date.parse(report.completedAt))
-    ||!Array.isArray(report.checks)||!same(report.checks.map(row=>row.id),rehearsalStages)||report.checks.some(row=>row.status!=='passed'))throw Error('Complete exact-candidate Docker rehearsal required');
+    ||!Array.isArray(report.checks)||!same(report.checks.map(row=>row.id),stagesForManifest(input.manifest))||report.checks.some(row=>row.status!=='passed'))throw Error('Complete exact-candidate Docker rehearsal required');
   const checks=Object.fromEntries(report.checks.map(row=>[row.id,row]));
   if(checks.snapshot.backupHash!==input.backupHash||checks.snapshot.schemaFingerprint!==input.backup.schemaFingerprint
     ||!same(checks.migrations.versions,input.manifest.migrationSet.map(row=>row.id).sort())
@@ -69,13 +80,22 @@ export function validateRehearsal(input,report) {
     ||checks['pending-decision'].checked!==true||checks['duplicate-command'].checked!==true)throw Error('Rehearsal omits snapshot, history or durable command proof');
   if(!migrationBaselineMatches(input.active,input.manifest.migrationSet))validateMigrationRehearsal(input,report.additiveMigrations);
   else if(report.additiveMigrations)throw Error('Unexpected additive migration receipt');
+  assertInputWriterPublication(input,checks['writer-compatibility']);
+  assertWriterRehearsalBoundary(input.manifest,checks);
+  assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:checks['image-contract'].images,identities:checks['image-contract'].identities,rehearsalReceipt:report},checks['writer-compatibility']);
   return checks;
 }
 export async function main(args) {
-  if(args.length!==4||args[0]!=='run')throw Error('Usage: candidate-rehearsal.mjs run CANDIDATE_DIRECTORY CONFIG_JSON NEW_OUTPUT_DIRECTORY');
-  const [,candidateDirectory,configFile,outputDirectory]=args;
+  if(![4,5].includes(args.length)||args[0]!=='run')throw Error('Usage: candidate-rehearsal.mjs run CANDIDATE_DIRECTORY CONFIG_JSON NEW_OUTPUT_DIRECTORY [FRESH_VERIFIED_RELEASE_RUN]');
+  const [,candidateDirectory,configFile,outputDirectory,freshRunFile]=args;
   const read=async file=>JSON.parse(await readFile(file,'utf8'));
-  const candidate=await read(path.join(candidateDirectory,'candidate.json')),config=await read(configFile);
+  const candidate=await read(path.join(candidateDirectory,'candidate.json'));
+  let verifiedReleaseRun;
+  if(Object.hasOwn(candidate.manifest,'writerPolicy')){
+    if(!freshRunFile||!path.isAbsolute(freshRunFile))throw Error('Writer rehearsal requires independently refreshed release metadata');
+    verifiedReleaseRun=await read(freshRunFile);writerPublication(candidate,verifiedReleaseRun);
+  }
+  const config=await read(configFile);
   if(config.schemaVersion!==1||Object.keys(config).some(key=>!['schemaVersion','postgresImage','activeStateFile','backupDirectory','captureDirectory'].includes(key))
     ||!path.isAbsolute(config.activeStateFile??'')||Boolean(config.backupDirectory)===Boolean(config.captureDirectory)||!path.isAbsolute(config.backupDirectory??config.captureDirectory??'')
     ||!/^([a-z0-9][a-z0-9._:/-]*)@sha256:[a-f0-9]{64}$/.test(config.postgresImage??''))throw Error('Reviewed rehearsal host config required');
@@ -96,6 +116,7 @@ export async function main(args) {
   try{
     if(capture)backup=await adapter.prepareCapture(capture,active);
     const input=rehearsalInput(candidate,active,backup);
+    if(verifiedReleaseRun)input.verifiedReleaseRun=verifiedReleaseRun;
     await writeFile(path.join(output,'input.json'),JSON.stringify(input,null,2)+'\n',{flag:'wx',mode:0o600});
     await collectRehearsal(input,adapter,{onReport:async report=>{
       if(report.status==='passed'&&capture){

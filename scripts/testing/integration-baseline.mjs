@@ -16,6 +16,12 @@ export function publicFixtureRow(row) {
 export async function restoreIntegrationBaseline(database, registry) {
   assertTestDsn(database.dsn, registry);
   if ((await database.query('SELECT run_id FROM test_run_ownership;')).trim() !== registry.runId) throw new Error('Integration target is not runner-owned');
+  return seedIntegrationCatalog(database);
+}
+// Shared fixture content, not an authority or a production migration runner.
+// Callers must establish an owned disposable database before invoking this.
+// The native wrapper above and Docker rehearsal guard retain their own checks.
+export async function seedIntegrationCatalog(database) {
   const root = path.join(repositoryRoot, 'scripts/testing/fixtures');
   const manifest = JSON.parse(await readFile(path.join(root, 'schema-manifest.json'), 'utf8'));
   const schema = (await readFile(path.join(root, 'schema.sql'), 'utf8')).replace(/\r+\n/g, '\n');

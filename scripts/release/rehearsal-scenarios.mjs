@@ -63,7 +63,7 @@ export function acceptedReceiptReplay(receipt) {
 
 // This runs only against the adapter's disposable restored clone. The normal
 // API creates a new owner and character; no saved encounter/entropy is patched.
-export async function createCanonicalPendingScenario(capability,{label}) {
+export async function createRehearsalAccount(capability,{label}) {
   if(!authorizedRehearsals.has(capability))throw Error('Live owned rehearsal capability required before registration');
   const access=authorizedRehearsals.get(capability);await access.assertOwned();
   const request=access.request;
@@ -72,6 +72,12 @@ export async function createCanonicalPendingScenario(capability,{label}) {
   await request('/auth/register',{username,email:`${username}@example.invalid`,password,display_name:label});
   const auth=await request('/auth/login',{username,password});
   if(typeof auth.token!=='string')throw Error('Canonical clone registration failed');
+  return {username,password,token:auth.token};
+}
+
+export async function createCanonicalPendingScenario(capability,{label}) {
+  const {username,token}=await createRehearsalAccount(capability,{label}),auth={token};
+  const request=authorizedRehearsals.get(capability).request;
   const call=(route,body)=>request(route,body,auth.token);
   const catalog=await call('/character-templates');
   const template=catalog.templates?.find(row=>row.preset_key==='archer');

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Executes existing release gates on a trusted host; stdout is public receipt only.
-import {readFileSync,writeFileSync,mkdirSync,rmSync,lstatSync,realpathSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync,rmSync,lstatSync,realpathSync,existsSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -62,26 +62,37 @@ export async function executeHostGates({directory,packet,request,token,run=execu
     // Re-fetch actual GitHub workflow metadata on the host before using data;
     // uploaded metadata is a comparison input, never its own trust authority.
     const releaseRun=JSON.parse(packet.files['verified-release-run.json'].text),freshRun=path.join(directory,'verified-release-run.json');
-    await command('ci-release.mjs',['verify-run',String(releaseRun.id),request.repository,'-','release',freshRun]);
+    const publication=await command('release-publication.mjs',[String(releaseRun.id),request.repository,freshRun]);
+    const publicationFields=Object.fromEntries(publication.trim().split('\n').map(line=>line.split('=')));
+    if(publicationFields.candidate_available!=='true'||String(releaseRun.artifactId)!==publicationFields.artifact_id
+      ||evidenceHash(read(freshRun))!==evidenceHash(releaseRun))throw Error('Published release attempt changed before host execution');
     await command('deployment-handoff.mjs',['candidate',candidate,freshRun]);
     await command('automatic-release.mjs',['check-current',request.sourceCommit]);
     if(JSON.parse(packet.files['candidate.json'].text).provenance?.firstAdoptionRecovery)await command('first-adoption-recovery-host.mjs',[directory,request.hostConfig]);
     await run('docker',['login','ghcr.io','--username',request.actor,'--password-stdin'],{env,input:token});
+    const publishedCandidate=read(path.join(candidate,'candidate.json'));let frontendProof;
+    if(publishedCandidate.frontendVerification){
+      if(request.mode!=='apply')throw Error('Frontend-only release cannot adopt a legacy deployment');
+      await command('ui-host-release.mjs',[candidate,request.hostConfig,path.join(control,'infra/deployment-policy.json'),freshRun,receipt]);
+      const projectionFile=path.join(receipt,'frontend-proof-anchor.json');
+      if(!existsSync(projectionFile))throw Error('Frontend-only deployment did not publish its original proof binding');
+      frontendProof={status:'published',projection:read(projectionFile)};
+    }else{
     const prepared=await command('prepare-host-release.mjs',[request.hostConfig,path.join(control,'infra/deployment-policy.json'),request.rehearsalConfig,`capture-${request.runId}-${request.attempt}`]);
     const pointers=Object.fromEntries(prepared.trim().split('\n').map(line=>line.split('=')));
     if(!pointers.host_config||!pointers.rehearsal_config||Object.keys(pointers).length!==3)throw Error('Capture did not return exact attempt config');
-    await command('candidate-rehearsal.mjs',['run',candidate,pointers.rehearsal_config,rehearsal]);
+    await command('candidate-rehearsal.mjs',['run',candidate,pointers.rehearsal_config,rehearsal,freshRun]);
     await command('assemble-bundle.mjs',[candidate,rehearsal,ready]);
     await command('deployment-handoff.mjs',['verify',ready,freshRun,'-']);
     await command('automatic-release.mjs',['check-current',request.sourceCommit]);
     const result=JSON.parse(await command('deploy.mjs',[request.mode,'--production',pointers.host_config,path.join(control,'infra/deployment-policy.json'),ready]));
     save(operation,result);
     await command('deployment-handoff.mjs',['receipt',operation,ready,receipt]);
+    await command('active-projection.mjs',[pointers.host_config,operation,path.join(receipt,'manifest.json'),path.join(receipt,'active-projection.json'),directory]);
+    frontendProof=JSON.parse(await command('publish-ui-anchor.mjs',[pointers.host_config,ready,String(request.runId),String(request.attempt),request.controlCommit,path.join(receipt,'frontend-proof-anchor.json')]));
+    }
     const manifest=read(path.join(receipt,'manifest.json')),deployment=read(path.join(receipt,'deployment.json'));
-    const activeProjectionFile=path.join(receipt,'active-projection.json');
-    await command('active-projection.mjs',[pointers.host_config,operation,path.join(receipt,'manifest.json'),activeProjectionFile,directory]);
-    const activeProjection=read(activeProjectionFile);
-    const publicResult=validatePublicReceipt({status:'succeeded',sourceCommit:request.sourceCommit,controlCommit:request.controlCommit,manifest,deployment,activeProjection},request);
+    const publicResult=validatePublicReceipt({status:'succeeded',sourceCommit:request.sourceCommit,controlCommit:request.controlCommit,manifest,deployment,frontendProof,activeProjection:read(path.join(receipt,'active-projection.json'))},request);
     cleanup();
     return publicResult;
   }finally{cleanup();for(const signal of signals)process.removeListener(signal,stop);}

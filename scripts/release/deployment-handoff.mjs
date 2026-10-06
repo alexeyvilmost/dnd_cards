@@ -3,6 +3,7 @@ import {readFileSync, writeFileSync, mkdirSync, copyFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {assertReleaseReady, evidenceHash, validateManifest} from './validate-manifest.mjs';
+import {writerPublication,assertHostedWriterPublication} from './writer-browser-consumption.mjs';
 import {validateRecoveryReference} from './first-adoption-recovery.mjs';
 const read = file => JSON.parse(readFileSync(file, 'utf8'));
 export function deploymentMode(event,adoptLegacy='false'){
@@ -24,13 +25,19 @@ export function verifyCandidateProvenance(candidate,run){
     ||!/^sha256:[a-f0-9]{64}$/.test(p.planHash??'')||p.manifestHash!==evidenceHash(candidate.manifest))throw Error('Candidate provenance differs from trusted release control run');
   if(p.firstAdoptionRecovery) {
     validateRecoveryReference(p.firstAdoptionRecovery);
-    if(p.firstAdoptionRecovery.controlCommit!==p.controlCommit||p.sourceCommit!==p.controlCommit||candidate.manifest.previousReleaseId!==null)throw Error('Recovered first adoption provenance differs');
+    if(p.firstAdoptionRecovery.controlCommit!==p.controlCommit||p.sourceCommit!==p.controlCommit||candidate.manifest.previousReleaseId!==null||candidate.frontendVerification)throw Error('Recovered first adoption provenance differs');
   }
   return p;
 }
 export function verifyHandoff(manifest, bundle, run, sourceCommit, candidate) {
   assertReleaseReady(manifest, bundle);
   const p=verifyCandidateProvenance(candidate,run);
+  const writer=bundle.rehearsalReceipt?.checks?.find(row=>row.id==='writer-compatibility');
+  for(const trace of writer?.traces??[])if(trace.outcomeId==='frontend-pending-job-reload'){
+    const publication=writerPublication(candidate,run);
+    if(evidenceHash(writer.writerPublication)!==evidenceHash(publication))throw Error('Writer proof uses another verified publication');
+    assertHostedWriterPublication(trace,publication,manifest);
+  }
   const application=m=>{const {validationEvidence,...rest}=m;return rest;};
   if (manifest.releaseCommit !== sourceCommit || p.sourceCommit!==sourceCommit || evidenceHash(application(manifest))!==evidenceHash(application(candidate.manifest))) throw Error('Final composition differs from published candidate');
   return {schemaVersion: 1, status: 'validated-handoff', releaseId: manifest.releaseId, releaseCommit: sourceCommit, releaseControlCommit:p.controlCommit,releaseRunId:p.releaseRunId,manifestHash: evidenceHash(manifest)};

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "status": "integrated-local-gates-passed-exact-ci16-pending",
+  "recordedAt": "2026-10-06T00:13:49.282Z",
+  "base": "93265633db105f6027ddd94cc4d8952747524fd4",
+  "predecessorDeployment": 37389067128,
+  "initialLocal": {
+    "reportHash": "sha256:f2dbdae12da14d8b2c759aa37e4abb82fc6b4993a266c5df30bed820e83c56c7",
+    "nodeContracts": {
+      "total": 504,
+      "pass": 499,
+      "declaredLinuxSkips": 5
+    },
+    "vitestPass": 9,
+    "typecheck": "passed",
+    "affectedLint": "passed",
+    "productionBuild": "passed",
+    "dumpScan": "passed",
+    "sourceCatalog": {
+      "status": "passed",
+      "files": 434
+    },
+    "initialScanner": "refused"
+  },
+  "repair": {
+    "reportHash": "sha256:121ea6d56ea34a6c9d3fb8352c517604d2ada8ea9c703feeb8cb2b0dbb086f6e",
+    "contracts": {
+      "tests": 25,
+      "pass": 25,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "checks": [
+      "affected-contracts-and-scanner-negatives",
+      "unchanged-credential-and-registration-policy",
+      "owned-account-real-login",
+      "real-pending-receipt-retry-continuation"
+    ],
+    "canonicalScenario": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "execution": "native-owned-api",
+      "runId": "test_47c5acf3b434a9cb881e95d6",
+      "checks": [
+        "canonical-pending-choice",
+        "read-without-mutation",
+        "decode-accepted-receipt",
+        "duplicate-accepted-twice",
+        "continue-pending-choice",
+        "duplicate-continuation"
+      ],
+      "pendingHash": "sha256:3316cdef1065b7645b2672483e599cf7672a4493ac32d1c4217f2e90bbaa8a83",
+      "acceptedHash": "sha256:bf291cbe60dbaec5cbb4a3da33dbdab54cd34724ee6ad4e3ddcb8efb5c6fb061",
+      "continuedHash": "sha256:ed6b23ba410d91e4b4dc108069a116651270287d58eabca13c47211c4cdaa5eb",
+      "invariantHash": "sha256:6779f6831a144751cf902df7b0fe2f6ef76225293c09eaff72ea156da3e726aa",
+      "limitations": [
+        "Not an OCI image rehearsal",
+        "Does not prove production historical corpus or fresh migration chain"
+      ]
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "source": {
+      "unchanged": true,
+      "files": 4529,
+      "sha256": "f0edec7f2d0c1cd9892e872f577a3a3b1a33c3eb38d7da64f45945f8e087ee47"
+    },
+    "credentialPolicyChanged": false,
+    "registration": "Existing opaque owned-clone capability creates the random browser account; browser driver only logs in. Synthetic DSNs assembled as URL values."
+  },
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "production": {
+    "current": "93265633",
+    "writers": "OFF",
+    "automatic": false,
+    "selective": false,
+    "reconcile": false,
+    "newPacketDeployed": false,
+    "paidRequests": 0
+  },
+  "nativeHashIntegrated": false,
+  "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
+}

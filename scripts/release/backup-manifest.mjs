@@ -38,6 +38,9 @@ export async function verifyDeploymentBackup(directory, releaseManifest, {now, m
   const verifiedAt = now === undefined ? Date.now() : now;
   if (manifest.releaseManifestHash !== evidenceHash(releaseManifest) || verifiedAt - Date.parse(manifest.createdAt) > maximumAgeMs
     || !Number.isFinite(Date.parse(manifest.createdAt)) || Date.parse(manifest.createdAt) > verifiedAt) throw Error('Fresh backup of active release required');
+  return verifyOriginalRestoreProof(directory, releaseManifest, manifest);
+}
+function verifyOriginalRestoreProof(directory, releaseManifest, manifest) {
   const report = JSON.parse(readFileSync(backupFile(directory, 'restore-report.json'), 'utf8'));
   const releaseFile = manifest.files.filter(file => file.category === 'release-manifest');
   if (releaseFile.length !== 1 || evidenceHash(JSON.parse(readFileSync(backupFile(directory, releaseFile[0].path), 'utf8'))) !== evidenceHash(releaseManifest)) throw Error('Backed-up release manifest differs from active release');
@@ -48,4 +51,19 @@ export async function verifyDeploymentBackup(directory, releaseManifest, {now, m
     if (!report.checks.some(check => check.id === id && check.status === 'passed')) throw Error(`Restore check missing: ${id}`);
   }
   return {status: 'verified', manifestHash: manifest.releaseManifestHash, backupHash: evidenceHash(manifest), restoreReportHash: evidenceHash(report), restoreDrillPassed: true};
+}
+
+// This verifies old bytes, never calls dump/restore and never claims a current
+// snapshot. The full deployment verifier above keeps its 30-minute rule.
+export async function verifyRecoverabilityBaseline(directory, originalManifest, {restoreReportHash, now=Date.now()}={}) {
+  const manifest=await verifyBackup(directory);
+  const originalReport=JSON.parse(readFileSync(backupFile(directory,'restore-report.json'),'utf8'));
+  if(originalReport.localOnly||originalReport.simulation)throw Error('Actual accepted recovery proof required');
+  if (manifest.releaseManifestHash!==evidenceHash(originalManifest) || !Number.isFinite(Date.parse(manifest.createdAt)) || Date.parse(manifest.createdAt)>now) throw Error('Original recoverability baseline identity/date mismatch');
+  const proof=verifyOriginalRestoreProof(directory,originalManifest,manifest);
+  if (!hashPattern.test(restoreReportHash)||restoreReportHash!==proof.restoreReportHash) throw Error('Original restore proof changed');
+  return {schemaVersion:1,kind:'recoverability-baseline',status:'verified',currentDatabaseSnapshot:false,
+    originalBackupCreatedAt:manifest.createdAt,originalReleaseManifestHash:manifest.releaseManifestHash,
+    backupHash:proof.backupHash,restoreReportHash:proof.restoreReportHash,schemaFingerprint:manifest.schemaFingerprint,
+    verifiedAt:new Date(now).toISOString()};
 }

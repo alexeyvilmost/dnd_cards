@@ -25,7 +25,7 @@
       "TimeWeb application deployment after required checks",
       "enable automatic main deployment after first successful verified adoption, as requested in item2"
     ],
-    "production_enablement_status": "Exact ab94 CI14 and all3images passed; full host rehearsal8+7 passed. Compose preparation failed before migration/cutover. Exact schema3 recovery preserves original journal; local repair75Linux verified. New exact CI/publication/fresh first adoption required; auto/selective/reconcile/writers OFF."
+    "production_enablement_status": "Exact CI15 and three immutable images passed; first healthy932 adoption independently accepted. Automatic/selective/reconcile and new writers remain OFF pending genuine follow-on acceptance."
   },
   "invariants": [
     "Перед задачей прочитать актуальные AGENTS.md и docs/data-driven-rules.md; проверить HEAD и чужие изменения.",
@@ -619,7 +619,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "TEST-02",
@@ -736,7 +736,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "TEST-03",
@@ -840,7 +840,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "TEST-04",
@@ -946,7 +946,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "TEST-05",
@@ -975,7 +975,7 @@
         4,
         8
       ],
-      "status": "supported_matrix_ci12_verified_historical_fresh278_open",
+      "status": "supported_matrix_ci15_verified_historical_fresh278_open",
       "steps": [
         "Сформировать расширенный manifest всех актуальных offline suites и отдельный ручной перечень historical certification suites. Общие replay/authorization/migration contracts не переносить в legacy только из-за старого имени или включения в прежний coverage pipeline.",
         "Добавить сценарии melee/ranged/caster, разные уровни и multiclass, reactions/saving throws/damage/effects/death/movement, геометрию крупных существ и area delivery, party, camp/shop/loot/journey, короткий/долгий отдых и подготовку. Новые механики проверять второй сущностью на том же примитиве.",
@@ -1064,7 +1064,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "OBS-01",
@@ -1152,7 +1152,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "PERF-01",
@@ -1248,7 +1248,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "PERF-02",
@@ -1274,7 +1274,7 @@
         3,
         6
       ],
-      "status": "initialization_authority_ci14_verified_default_latency_open",
+      "status": "initialization_authority_ci15_verified_default_latency_open",
       "steps": [
         "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
         "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
@@ -1324,19 +1324,17 @@
       },
       "original_status": "not_started",
       "execution_result": {
-        "sourceBaseCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
-        "status": "initialization_authority_ci14_verified_default_latency_open",
         "demonstrated": [
-          "Initialization commit authority and all required supported scenarios passed exact CI14.",
-          "Owner-query batching privately passed canonical equivalence and rights/race tests; full canonical init measurement found no material default-path improvement, so it was declined."
+          "Seven private canonical CPU/real HTTP experiments, exact retry/reload, source stability and owned cleanup measured.",
+          "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance."
         ],
         "limitations": [
-          "No default UI/API latency acceptance; slower optional preparation cache stays OFF."
+          "No general production initialization latency gain demonstrated. Batch/mirrors/cache/native SHA are not enabled on that basis."
         ],
         "nextAcceptance": [
-          "Measure and improve the actual canonical default UI/API initialization path."
+          "Optimize the ordinary full canonical UI/API scenario with paired meaningful acceptance."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "latest_execution_result": {
@@ -1354,7 +1352,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "PERF-03",
@@ -1456,7 +1454,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "PERF-04",
@@ -1565,7 +1563,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "PERF-05",
@@ -1656,7 +1654,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REF-01",
@@ -1754,7 +1752,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REF-02",
@@ -1846,7 +1844,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REL-01",
@@ -1931,7 +1929,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REL-02",
@@ -2029,7 +2027,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REL-03",
@@ -2058,7 +2056,7 @@
         2,
         4
       ],
-      "status": "ci14_full_rehearsal_passed_compose_refused_local_repair_ci15_pending",
+      "status": "first_healthy_adoption_verified_followon_delivery_pending",
       "steps": [
         "Зафиксировать различие release SHA, component source SHA, immutable image digest, input fingerprint, worker executable artifact hash и schema/protocol compatibility. Проверить актуальные файлы реализации health/build identity перед изменением.",
         "Создать versioned manifest schema и validator. Старые single-SHA releases читать через явный адаптер; неизвестная версия, некорректный digest или несовместимый protocol должны отклоняться до mutation.",
@@ -2110,22 +2108,22 @@
       "original_status": "not_started",
       "execution_result": {
         "demonstrated": [
-          "Exact CI14 and all3new immutable images passed.",
-          "Actual host candidate rehearsal8stages and7migration scenarios passed.",
-          "Terminal preparation refusal independently confirmed original component IDs/health and unchanged actual schema/302ledger; original journal retained.",
-          "Compose fix verified read-only on actual2.40 host; schema3 recovery and linear reader passed75focused Linux contracts."
+          "Exact CI15 and all three new immutable images passed.",
+          "Full actual host restore/replay/pending/retry rehearsal and independently verified first healthy adoption passed.",
+          "Actual 305 migration identities and component source/image/launch identities verified.",
+          "Owner chose primary-host backup storage for now."
         ],
         "limitations": [
-          "First healthy adoption remains unaccepted; new exact source requires fresh CI/publication/capture/rehearsal.",
-          "Automatic/selective/reconcile/writers remain OFF; frozen future packet must be rebased after this repair."
+          "Future writer/selective/automatic/reconcile acceptance is still pending.",
+          "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
         "nextAcceptance": [
-          "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
-          "Publish new exact immutable images using the five-attempt reviewed recovery.",
-          "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
-          "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
+          "Verify the final integrated full follow-on source locally and in exact-source CI.",
+          "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
+          "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
+          "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
       "previous_status": "fourth_adoption_refused_utf8_locally_fixed_new_exact_ci_pending",
       "latest_execution_result": {
@@ -2143,7 +2141,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REL-04",
@@ -2234,7 +2232,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REL-05",
@@ -2260,7 +2258,7 @@
         2,
         4
       ],
-      "status": "first_adoption_open_future_packet_reviewed_not_integrated",
+      "status": "healthy_predecessor_verified_integrated_selective_auto_local_ci16_pending",
       "steps": [
         "Создать новый manifest-based runner с legacy adapter: validate candidate, compare deployed manifest, pull digests, verify identities/protocol/schema, определить изменившиеся сервисы и необходимые миграции.",
         "Сохранить lock, immutable release directories, exact identities, health/readiness, retained frontend assets и старые executable artifacts. Не называть symlink switch атомарной заменой всего HTTP-трафика: Compose обновляет сервисы последовательно.",
@@ -2309,22 +2307,22 @@
       "original_status": "not_started",
       "execution_result": {
         "demonstrated": [
-          "Exact CI14 and all3new immutable images passed.",
-          "Actual host candidate rehearsal8stages and7migration scenarios passed.",
-          "Terminal preparation refusal independently confirmed original component IDs/health and unchanged actual schema/302ledger; original journal retained.",
-          "Compose fix verified read-only on actual2.40 host; schema3 recovery and linear reader passed75focused Linux contracts."
+          "Exact CI15 and all three new immutable images passed.",
+          "Full actual host restore/replay/pending/retry rehearsal and independently verified first healthy adoption passed.",
+          "Actual 305 migration identities and component source/image/launch identities verified.",
+          "Owner chose primary-host backup storage for now."
         ],
         "limitations": [
-          "First healthy adoption remains unaccepted; new exact source requires fresh CI/publication/capture/rehearsal.",
-          "Automatic/selective/reconcile/writers remain OFF; frozen future packet must be rebased after this repair."
+          "Future writer/selective/automatic/reconcile acceptance is still pending.",
+          "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
         "nextAcceptance": [
-          "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
-          "Publish new exact immutable images using the five-attempt reviewed recovery.",
-          "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
-          "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
+          "Verify the final integrated full follow-on source locally and in exact-source CI.",
+          "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
+          "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
+          "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
       "previous_status": "first_rehearsal_stopped_selective_auto_private",
       "latest_execution_result": {
@@ -2343,7 +2341,7 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "REL-06",
@@ -2366,7 +2364,7 @@
         1,
         3
       ],
-      "status": "full_host_rehearsal_verified_first_healthy_adoption_pending",
+      "status": "full_host_restore_and_healthy_adoption_verified",
       "steps": [
         "Инвентаризировать backup categories: PostgreSQL snapshot, referenced executable artifacts, release manifest, media manifest и необходимая конфигурация. Текущий pg_dump не содержит /artifacts; не считать его доказательством полного восстановления боя.",
         "Создать backup manifest с хэшами/размерами/временем и проверкой ссылок DB snapshot на artifacts. Секреты не помещать в обычный manifest, логи или Git; отдельно описать защищённый recovery канал конфигурации.",
@@ -2413,22 +2411,22 @@
       "original_status": "not_started",
       "execution_result": {
         "demonstrated": [
-          "Exact CI14 and all3new immutable images passed.",
-          "Actual host candidate rehearsal8stages and7migration scenarios passed.",
-          "Terminal preparation refusal independently confirmed original component IDs/health and unchanged actual schema/302ledger; original journal retained.",
-          "Compose fix verified read-only on actual2.40 host; schema3 recovery and linear reader passed75focused Linux contracts."
+          "Exact CI15 and all three new immutable images passed.",
+          "Full actual host restore/replay/pending/retry rehearsal and independently verified first healthy adoption passed.",
+          "Actual 305 migration identities and component source/image/launch identities verified.",
+          "Owner chose primary-host backup storage for now."
         ],
         "limitations": [
-          "First healthy adoption remains unaccepted; new exact source requires fresh CI/publication/capture/rehearsal.",
-          "Automatic/selective/reconcile/writers remain OFF; frozen future packet must be rebased after this repair."
+          "Future writer/selective/automatic/reconcile acceptance is still pending.",
+          "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
         "nextAcceptance": [
-          "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
-          "Publish new exact immutable images using the five-attempt reviewed recovery.",
-          "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
-          "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
+          "Verify the final integrated full follow-on source locally and in exact-source CI.",
+          "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
+          "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
+          "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       },
       "previous_status": "owned_restore_verified_host_rehearsal_incomplete",
       "latest_execution_result": {
@@ -2447,7 +2445,24 @@
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "owner_scope_override": {
+        "schemaVersion": 1,
+        "recordedAt": "2026-10-05T23:59:21.251Z",
+        "source": "Explicit user reply in this task",
+        "quote": "Нет, резервные копии пока будут храниться на самом сервере",
+        "storageScope": "primary-host-for-now",
+        "externalDurability": "deferred-by-owner",
+        "requiredRestoreVerification": "Owned separate database before deployment",
+        "changesToBackupFreshness": false,
+        "changesToHistoryAndArtifactVerification": false,
+        "productionDatabaseRestoreAuthorized": false,
+        "secretChanges": 0,
+        "providerRequests": 0,
+        "nextReportingAction": "Preserve original plan criteria; record this explicit scope override in human and machine reports. Do not require or ask for external storage again.",
+        "recordHash": "sha256:8dd4c4b94432cbf8fed9b2d1205cdb1d9daca1147018cac9be52c535b08fe1b4",
+        "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
+      }
     },
     {
       "id": "DB-01",
@@ -2536,7 +2551,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "DB-02",
@@ -2636,7 +2651,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "DB-03",
@@ -2735,7 +2750,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "DB-04",
@@ -2838,7 +2853,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "AI-01",
@@ -2913,7 +2928,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "AI-02",
@@ -2934,7 +2949,7 @@
         2,
         3
       ],
-      "status": "implemented_ci_verified_application_cutover_pending",
+      "status": "proxy_backend_deployed_live_configuration_verified_ui_generation_pending",
       "steps": [
         "Направить существующие маршруты в один domain service: provider → storage → entity update.",
         "При отказе не сохранять placeholder и не возвращать ложный success; сохранять прежнее изображение.",
@@ -3000,7 +3015,7 @@
           "firstHealthyDeployment": false
         }
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "AI-03",
@@ -3085,7 +3100,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "CLEAN-01",
@@ -3166,7 +3181,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "CLEAN-02",
@@ -3246,7 +3261,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
     {
       "id": "CLEAN-03",
@@ -3329,7 +3344,7 @@
         "productionAcceptance": "not_claimed",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-14-compose-refusal.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     }
   ],
   "external_sources": [
@@ -3449,24 +3464,23 @@
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
     "schemaVersion": 1,
-    "kind": "exact-ci14-full-rehearsal-and-terminal-compose-refusal",
-    "recordedAt": "2026-10-05T23:06:25.200Z",
-    "sourceCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+    "kind": "exact-ci15-independent-healthy-first-adoption",
+    "recordedAt": "2026-10-06T00:06:07.275Z",
+    "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
     "ci": {
-      "id": 37378116413,
+      "id": 37386799187,
       "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37378116413",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37386799187",
       "status": "completed",
       "conclusion": "success",
-      "aggregateHash": "sha256:4220082810b0af978f5fd3b18f0a3f05c5c0d5696d53fdf5b2ccf7c23f93dc0b",
-      "durationMs": 848471,
+      "aggregateHash": "sha256:e87d12f02805b689acd48292403edd729c76f765c55a8b8a41267ab0cfe00859",
+      "durationMs": 883148,
       "sourceSnapshot": {
-        "sha256": "1fb76f048235d1d13c226559aa9d811f01bd4854645ef3a543f5e371eb1ac968",
-        "files": 4428
+        "sha256": "827cc19b672569c55dfb6f6fb9c906f9e46a54785b60c2ed257e73e4da3b6f5c",
+        "files": 4430
       },
-      "globalCoverageComplete": true,
       "counts": {
-        "node": 723,
+        "node": 731,
         "vitest": 6462,
         "goPackageCases": 754,
         "workerAndDatabase": 25,
@@ -3481,228 +3495,549 @@
       }
     },
     "publication": {
-      "id": 37380069376,
+      "id": 37388524104,
       "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380069376",
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37388524104",
       "status": "completed",
       "conclusion": "success",
       "allThreeNewImmutableImages": true
     },
     "deployment": {
-      "id": 37380712101,
+      "id": 37389067128,
       "attempt": 1,
-      "status": "failed_before_cutover",
-      "conclusion": "failure",
-      "controlCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380712101",
-      "jobCompletedAt": "2026-10-05T22:40:32Z",
-      "releaseId": "candidate-ab94ada2bbf8-1f3a396e803c",
-      "operationHash": "sha256:3355c11b7b62c7476018edc261af5293472e41ebd66ad1c07c58bd4ec77a5d65",
-      "touched": [],
-      "migrationStarted": false,
-      "rehearsal": {
-        "status": "passed",
-        "startedAt": "2026-10-05T22:22:30.327Z",
-        "completedAt": "2026-10-05T22:39:51.633Z",
-        "checks": [
-          {
-            "id": "snapshot",
-            "status": "passed"
-          },
-          {
-            "id": "migrations",
-            "status": "passed"
-          },
-          {
-            "id": "full-candidate-health",
-            "status": "passed"
-          },
-          {
-            "id": "image-contract",
-            "status": "passed"
-          },
-          {
-            "id": "historical-inventory",
-            "status": "passed"
-          },
-          {
-            "id": "historical-replay",
-            "status": "passed"
-          },
-          {
-            "id": "pending-decision",
-            "status": "passed"
-          },
-          {
-            "id": "duplicate-command",
-            "status": "passed"
-          }
-        ],
-        "migrationChecks": [
-          {
-            "id": "atomic-ddl-ledger",
-            "status": "passed"
-          },
-          {
-            "id": "crash-before-ledger",
-            "status": "passed"
-          },
-          {
-            "id": "repeat-after-commit",
-            "status": "passed"
-          },
-          {
-            "id": "same-connection-lock",
-            "status": "passed"
-          },
-          {
-            "id": "unknown-migration-rejected",
-            "status": "passed"
-          },
-          {
-            "id": "schema-proof",
-            "status": "passed"
-          },
-          {
-            "id": "old-readers-after-expansion",
-            "status": "passed"
-          }
-        ],
-        "cleanup": {
-          "status": "stopped",
-          "errors": [],
-          "resourceCount": 26
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37389067128",
+      "status": "succeeded-independently-verified",
+      "manifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+      "projectionHash": "sha256:d3e9cb9f1ee0baab9ed09109b72e01925ded66ab55d3bb140b07f33db2898701",
+      "verifiedAt": "2026-10-06T00:05:41.299Z",
+      "migrationVersions": [
+        "001_create_image_library",
+        "002_add_extended_fields",
+        "003_add_armor_support",
+        "004_add_is_template_field",
+        "005_remove_weapon_templates_table",
+        "006_add_detailed_description",
+        "007_add_slot_field",
+        "008_add_is_equipped_field",
+        "009_create_characters_v2_table",
+        "010_add_text_formatting_fields",
+        "011_add_detailed_description_formatting",
+        "011_add_detailed_description_toggle",
+        "012_fix_character_v2_foreign_key",
+        "013_add_performance_indexes",
+        "014_add_equipped_slot",
+        "015_add_effects",
+        "016_create_shops",
+        "017_create_actions",
+        "018_create_effects",
+        "019_add_weapon_type",
+        "020_add_character_v3_proficiencies",
+        "021_add_image_library_item_fields",
+        "022_remove_actions_resource_check",
+        "023_add_action_distance",
+        "024_add_effects_resources_to_characters_v2",
+        "025_update_rage_action",
+        "026_add_attunement_range_fields",
+        "027_add_elemental_damage_fields",
+        "028_add_battle_profile_field",
+        "029_add_custom_rarity_color",
+        "030_create_spells",
+        "031_spells_arrays_to_jsonb",
+        "032_spells_widen_text_columns",
+        "033_create_feats",
+        "034_create_backgrounds",
+        "035_containers_and_bg_equipment",
+        "036_card_price_currency",
+        "037_create_races",
+        "038_mechanics_and_race_abilities",
+        "039_create_classes",
+        "040_create_characters_v3",
+        "041_feat_related_abilities",
+        "042_forge_mvp_content",
+        "043_character_rule_state",
+        "044_wizard_spell_choices",
+        "045_create_resources",
+        "046_expand_effect_types",
+        "047_spell_resources",
+        "048_character_events",
+        "049_character_runtime",
+        "050_mvp_equipment",
+        "051_race_subrace",
+        "052_race_subrace_level",
+        "053_migrate_legacy_subraces",
+        "054_elf_subrace_content",
+        "055_dragonborn_subraces",
+        "056_spell_mechanics",
+        "057_class_recommended_abilities",
+        "058_card_mechanics",
+        "059_class_subclasses",
+        "060_resource_spent_image",
+        "061_class_equipment_options",
+        "062_basic_actions",
+        "063_create_variables",
+        "064_create_conditions",
+        "065_conditions_as_effects",
+        "066_drop_spell_legacy_fields",
+        "067_card_enchant_bonus",
+        "068_dash_disengage_actions",
+        "069_fix_dash_disengage",
+        "070_create_concepts",
+        "071_widen_cards_damage_type_check",
+        "072_widen_actions_action_type_check",
+        "073_add_effects_repeatable",
+        "074_create_encounters",
+        "075_character_current_encounter",
+        "076_add_card_mastery",
+        "077_add_name_en",
+        "078_restore_feat_slot_effects",
+        "079_expand_card_rarities",
+        "080_character_manual_entities",
+        "081_content_support_certification",
+        "082_character_system_metadata",
+        "083_certify_micro_micro_content",
+        "084_certify_micro_micro_qa_fixes",
+        "085_refresh_transitive_micro_micro_certifications",
+        "086_repair_content_mechanics",
+        "087_idempotent_character_events",
+        "088_normalize_spell_targeting_ranges",
+        "089_repair_spell_targeting_certifications",
+        "090_create_canonical_runtime",
+        "091_add_attack_runtime_v4",
+        "092_add_world_runtime_v5",
+        "093_add_content_migration_receipts",
+        "094_harden_canonical_transport",
+        "095_add_character_runtime_commands",
+        "096_lock_certified_content_mechanics",
+        "096_register_micro_mvp_rules_release",
+        "097_repair_live_mvp_content_contracts",
+        "097_repair_micro_mvp_rules_release_identity",
+        "098_repair_magic_initiate_2024",
+        "098_restore_live_mvp_starting_equipment",
+        "099_apply_disengage_runtime_effect",
+        "100_create_data_driven_monsters",
+        "101_pin_tactical_basic_action_targets",
+        "102_revoke_invalid_feather_fall_certification",
+        "103_revoke_invalid_mage_hand_certification",
+        "104_seed_recommended_skill_choices",
+        "105_repair_active_action_targeting",
+        "106_repair_preserved_locked_action_targeting",
+        "107_normalize_live_happy_path_content",
+        "108_split_weapon_actions_and_unlock_metadata",
+        "109_normalize_goliath_ancestry",
+        "110_deduplicate_goliath_ancestry",
+        "111_align_ranged_weapon_action_declaration",
+        "112_inherit_lineage_source",
+        "113_repair_goliath_reaction_authority",
+        "114_repair_class_starting_equipment_references",
+        "115_repair_goliath_stone_targeting_contract",
+        "116_repair_half_caster_spellcasting_contract",
+        "117_align_certified_metadata_projection",
+        "118_repair_bard_spellcasting_contract",
+        "119_repair_sleep_spell_class_list_contract",
+        "120_repair_bardic_inspiration_boon_contract",
+        "121_repair_spear_weapon_profile",
+        "122_repair_mage_hand_control_narrative",
+        "123_repair_sleep_2024_lifecycle",
+        "124_repair_fire_bolt_upcast_description",
+        "124_repair_mini_mvp_base_styles_origin_runtime",
+        "125_repair_mini_mvp_limited_action_uses",
+        "126_repair_crafter_in_play_choice",
+        "127_repair_missing_weapon_mastery_profiles",
+        "128_repair_level_one_species_runtime_contracts",
+        "129_repair_level_one_monk_runtime_contracts",
+        "130_repair_barbarian_rage_stacking",
+        "131_repair_wood_elf_speed",
+        "132_repair_cloud_goliath_teleport",
+        "133_repair_friends_mind_sliver_cantrips",
+        "134_repair_true_strike_cantrip",
+        "135_suppress_true_strike_zero_damage",
+        "136_repair_mini_mvp_spell_clarity",
+        "137_repair_mini_mvp_spell_trigger_timing",
+        "138_repair_mini_mvp_post_hit_spell_targets",
+        "139_repair_mini_mvp_ranged_post_hit_spell_ranges",
+        "140_materialize_runtime_boons_and_acid_splash_area",
+        "141_materialize_polymorphed_condition",
+        "142_repair_mini_mvp_area_targeting",
+        "143_materialize_condition_library_icons",
+        "144_materialize_mini_mvp_runtime_effects",
+        "145_fill_runtime_effect_icons",
+        "146_materialize_base_equipment_2024",
+        "147_repair_base_equipment_descriptions",
+        "148_repair_base_equipment_runtime",
+        "149_repair_base_equipment_sheet_utilities",
+        "150_repair_base_equipment_healers_kit_targeting",
+        "151_repair_base_equipment_healers_kit_ownership",
+        "152_materialize_combat_areas",
+        "153_add_character_class_levels",
+        "154_materialize_level_two_class_features",
+        "155_repair_level_two_actor_targeting",
+        "156_repair_wizard_level_two_spellbook",
+        "157_repair_retired_starting_equipment",
+        "158_repair_wild_companion_targeting",
+        "159_repair_ranger_favored_enemy_2024",
+        "160_repair_wild_companion_runtime",
+        "161_repair_help_action_advantage",
+        "162_repair_level_two_runtime_contracts",
+        "163_reapply_level_two_runtime_contracts",
+        "164_certify_level_two_classes",
+        "165_materialize_level_three_core",
+        "166_materialize_level_five_spells",
+        "167_materialize_level_five_progression",
+        "168_multiclass_subclasses",
+        "169_harden_level_five_runtime",
+        "170_materialize_level_four_general_feats",
+        "171_materialize_general_spell_feat_signatures",
+        "172_materialize_general_feat_signatures",
+        "173_repair_species_levelled_spell_access",
+        "174_clarify_general_feat_effect_cards",
+        "175_repair_general_feat_action_payloads",
+        "176_repair_wizard_cantrip_growth",
+        "177_repair_level_five_strict_conditions",
+        "178_repair_general_feat_choice_integrity",
+        "179_repair_level_five_base_progression",
+        "180_materialize_warlock_invocations_level_five",
+        "181_repair_level_five_subclass_actions",
+        "182_repair_general_feat_runtime_integrity",
+        "183_repair_species_level_five_integrity",
+        "184_materialize_d20_interrupts",
+        "185_repair_class_level_five_integrity",
+        "186_repair_level_five_spell_integrity",
+        "187_materialize_remaining_level_five_general_feats",
+        "188_materialize_wizard_memorize_spell",
+        "189_repair_species_transformation_runtime",
+        "190_repair_sorcerer_level_five_runtime",
+        "191_repair_level_five_spell_area_runtime",
+        "192_repair_level_five_spell_interactions",
+        "193_repair_draconic_sorcery_spell_ability",
+        "194_repair_subclass_primary_runtime",
+        "195_materialize_owned_summon_lifecycle",
+        "196_materialize_mobile_emanations",
+        "197_repair_second_wind_scaling",
+        "198_create_roguelike_runs",
+        "199_materialize_roguelike_monsters",
+        "200_roguelike_wolf_riders",
+        "201_roguelike_attack_ranges",
+        "202_roguelike_trusted_combat",
+        "203_roguelike_combat_journal",
+        "204_roguelike_parry",
+        "205_roguelike_defenses",
+        "206_roguelike_senses_skills",
+        "207_fighter_tactical_shift",
+        "208_champion_critical_movement",
+        "209_battle_master_foundations",
+        "210_battle_master_evasive",
+        "211_battle_master_menacing",
+        "212_battle_master_trip",
+        "213_battle_master_goading",
+        "214_battle_master_choices",
+        "215_battle_master_distracting",
+        "216_battle_master_parry",
+        "217_battle_master_rally",
+        "218_battle_master_pushing",
+        "219_battle_master_feint",
+        "220_battle_master_checks",
+        "221_battle_master_ambush",
+        "222_battle_master_precision",
+        "223_battle_master_lunging",
+        "224_battle_master_sweeping",
+        "225_battle_master_riposte",
+        "226_battle_master_bait_switch",
+        "227_battle_master_commander",
+        "228_battle_master_maneuvering",
+        "229_battle_master_disarming",
+        "230_psi_warrior_foundations",
+        "231_psi_warrior_strike",
+        "232_psi_warrior_protective_field",
+        "233_psi_warrior_movement",
+        "234_psi_warrior_objects",
+        "235_psi_warrior_hands",
+        "236_eldritch_knight_casting",
+        "237_eldritch_knight_replacement",
+        "238_warrior_weapon_bond",
+        "239_roguelike_camp_clock",
+        "240_roguelike_magic_weapons",
+        "241_fighter_style_replacement",
+        "242_fighter_tactical_mind_timing",
+        "243_dash_movement_allotment",
+        "244_canonical_hide_action",
+        "245_goblin_nimble_escape",
+        "246_giant_wolf_spider_movement",
+        "247_monster_weapon_loadouts",
+        "248_bugbear_grab",
+        "249_roguelike_shop_items",
+        "250_character_templates",
+        "251_archer_alert_template",
+        "252_template_portraits",
+        "253_passive_presentations",
+        "254_roguelike_party",
+        "255_party_potion_targets",
+        "256_martial_classes",
+        "257_glossary_concepts",
+        "258_entity_tags_shop",
+        "259_merchant_copper",
+        "260_audio_presentations",
+        "261_card_price_contract",
+        "262_item_source_classification",
+        "263_oauth_identities",
+        "264_paper_documents",
+        "265_owned_item_grants",
+        "266_paper_document_trash",
+        "267_content_entity_authorship",
+        "268_account_admin_status",
+        "269_restore_certified_guard_projection",
+        "270_readable_catalog_metadata",
+        "271_readable_catalog_local_variants",
+        "272_readable_catalog_compatibility",
+        "273_urvin_run",
+        "274_manual_content_review",
+        "275_seed_recommended_spell_choices",
+        "276_reusable_run_sources",
+        "277_partial_narrative_review",
+        "278_catalog_mechanics_audit",
+        "279_item_mechanics_completion",
+        "280_catalog_variants_and_multitarget",
+        "281_entity_references",
+        "282_effect_classification",
+        "283_explicit_reference_levels",
+        "284_entity_reference_coverage",
+        "285_production_effect_classification",
+        "286_combat_animation_metadata",
+        "287_combat_animation_coverage",
+        "288_force_animation_palette",
+        "289_selected_combat_audio",
+        "290_critical_weapon_animations",
+        "291_expanded_fantasy_music",
+        "292_critical_spell_animations",
+        "293_combat_spell_repairs",
+        "294_explicit_resource_declarations",
+        "295_stable_spell_grant_references",
+        "296_explicit_spell_grant_abilities",
+        "297_retain_generic_spell_free_uses",
+        "298_compact_command_receipts",
+        "299_frozen_combat_catalogs",
+        "300_image_jobs"
+      ],
+      "components": {
+        "backend": {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
+          "imageId": "sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
+          "expectedImageId": "sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
+          "running": true,
+          "health": "healthy",
+          "releaseId": "candidate-93265633db10-deb958c1c9a7",
+          "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+        },
+        "frontend": {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
+          "imageId": "sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
+          "expectedImageId": "sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
+          "running": true,
+          "health": "healthy",
+          "releaseId": "candidate-93265633db10-deb958c1c9a7",
+          "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+        },
+        "rulesWorker": {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
+          "imageId": "sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
+          "expectedImageId": "sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
+          "running": true,
+          "health": "healthy",
+          "releaseId": "candidate-93265633db10-deb958c1c9a7",
+          "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
         }
-      },
-      "auditHash": "sha256:952edefd07a84316daaac3b717a26b0256580c469de8514b8d4dcdc364de3a70",
-      "activeHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
-      "actualDatabase": {
-        "schemaFingerprint": "sha256:6d00949de56ee849345194c42e0326a73a49cdb62b1df69251541807648dbc58",
-        "migrationsHash": "sha256:540de66c370c26d69541c32250030b727b957a4074c705a1f57e15cb1cd87009",
-        "migrationCount": 302
-      },
-      "cleanup": {
-        "remainingOwnedResources": 0,
-        "validatorStopped": true,
-        "dockerAuthRemoved": true,
-        "deploymentJournalCreated": true,
-        "deployLockPresent": false,
-        "operatorApplicationMutations": 0
       },
       "edge": [
         {
           "path": "/",
-          "status": 200
+          "status": 200,
+          "durationMs": 564,
+          "bytes": 992
         },
         {
           "path": "/api/health",
-          "status": 200
+          "status": 200,
+          "durationMs": 20,
+          "bytes": 537,
+          "identity": {
+            "identitySchemaVersion": 1,
+            "component": "backend",
+            "provenance": "baked",
+            "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+            "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+            "inputFingerprint": "sha256:50f9aa1864d0663bf94f70b6b025b9b83fd3644f1a98ff4bfc51c88a9d075e21",
+            "releaseId": "candidate-93265633db10-deb958c1c9a7",
+            "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+            "apiProtocolVersion": 1,
+            "readerCapabilities": [
+              "receipt-v1",
+              "receipt-v2",
+              "image-job-v1"
+            ],
+            "goRuntime": "go1.25.14"
+          }
         },
         {
           "path": "/build-info.json",
-          "status": 200
+          "status": 200,
+          "durationMs": 15,
+          "bytes": 452,
+          "identity": {
+            "identitySchemaVersion": 1,
+            "component": "frontend",
+            "provenance": "baked",
+            "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+            "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+            "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+            "releaseId": "candidate-93265633db10-deb958c1c9a7",
+            "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+            "apiProtocolVersion": 1,
+            "readerCapabilities": [
+              "image-job-v1"
+            ]
+          }
         }
       ],
-      "expiredSnapshotReusableForProduction": false
+      "persistentDeployIdentityRetained": true,
+      "verificationHash": "sha256:158b7b12049fd1e8ed5ed48d21f1c2fcffb3b1ddac785f647bacad9c3b9a9883"
     },
-    "repair": {
-      "status": "local-contracts-passed-new-exact-ci-required",
-      "compose": {
-        "version": "2.40.3+ds1-0ubuntu1~24.04.1",
-        "readOnlyHostCases": [
-          {
-            "retained": null,
-            "status": "passed",
-            "allLaunchesAndDigestsMatched": true
+    "backupPolicy": {
+      "schemaVersion": 1,
+      "recordedAt": "2026-10-05T23:59:21.251Z",
+      "source": "Explicit user reply in this task",
+      "quote": "Нет, резервные копии пока будут храниться на самом сервере",
+      "storageScope": "primary-host-for-now",
+      "externalDurability": "deferred-by-owner",
+      "requiredRestoreVerification": "Owned separate database before deployment",
+      "changesToBackupFreshness": false,
+      "changesToHistoryAndArtifactVerification": false,
+      "productionDatabaseRestoreAuthorized": false,
+      "secretChanges": 0,
+      "providerRequests": 0,
+      "nextReportingAction": "Preserve original plan criteria; record this explicit scope override in human and machine reports. Do not require or ask for external storage again.",
+      "recordHash": "sha256:8dd4c4b94432cbf8fed9b2d1205cdb1d9daca1147018cac9be52c535b08fe1b4",
+      "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
+    },
+    "initializationExperiments": {
+      "status": "measured-no-general-latency-acceptance",
+      "reportHash": "sha256:b368acf4a34fafcf8df92532ee893a805fa39cdc6666277492308d05da9b5f59",
+      "records": [
+        {
+          "file": "outputs/testing/default-init-93265633/report.json",
+          "sha256": "sha256:41358984a3e079cc87a19e392a4be8fb928c945c761a1b09e51ebfbebeb4eb87",
+          "scope": "Current default real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+          "flags": {
+            "catalogBatch": false,
+            "workerMirrors": false,
+            "preparationCache": false
           },
-          {
-            "retained": "backend",
-            "status": "passed",
-            "allLaunchesAndDigestsMatched": true
-          },
-          {
-            "retained": "frontend",
-            "status": "passed",
-            "allLaunchesAndDigestsMatched": true
-          },
-          {
-            "retained": "rulesWorker",
-            "status": "passed",
-            "allLaunchesAndDigestsMatched": true
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
           }
-        ],
-        "serverConfigChanged": false,
-        "secretChanges": false,
-        "globalFallbackPreservesPerComponentLaunch": true
-      },
-      "recovery": {
-        "schemaVersion": 3,
-        "id": "37380712101-1",
-        "proofHash": "sha256:e1cf07f9d6ae7306b0888d005369c46e1e692acb7c3d7fa88117630384351e92",
-        "reviewedFailedDeployments": 5,
-        "originalFourProofFilesUnchanged": true,
-        "originalJournalRetained": true,
-        "requiresFreshCaptureAndRehearsal": true
-      },
-      "local": {
-        "windowsAllReleaseContracts": {
-          "tests": 258,
-          "pass": 253,
-          "fail": 0,
-          "cancelled": 0,
-          "skipped": 5,
-          "todo": 0
         },
-        "actualLinuxFocusedContracts": {
-          "tests": 75,
-          "pass": 75,
-          "fail": 0,
-          "cancelled": 0,
-          "skipped": 0,
-          "todo": 0
+        {
+          "file": "outputs/testing/traced-default-init-93265633/report.json",
+          "sha256": "sha256:1c448c513100917140c7a632d71173537bc1ac66570dd752c92d1f12a7e4c9ff",
+          "scope": "Current default real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+          "flags": {
+            "catalogBatch": false,
+            "workerMirrors": false,
+            "preparationCache": false,
+            "performanceTracing": true
+          },
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
+          }
         },
-        "cleanup": {
-          "status": "stopped",
-          "errors": []
+        {
+          "file": "outputs/testing/enabled-init-93265633/report.json",
+          "sha256": "sha256:769fb8f0e0cd82a6d7914709c2705b42ce4f096392a32ce2b436b2e3ccaf035b",
+          "scope": "Current flagged catalog/wire real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+          "flags": {
+            "catalogBatch": true,
+            "workerMirrors": true,
+            "preparationCache": false
+          },
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
+          }
+        },
+        {
+          "file": "outputs/testing/batch-only-init-93265633/report.json",
+          "sha256": "sha256:e944ca2eb779ba808f38ab836e125141f91db69fa33deac8938b5ddce89eaece",
+          "scope": "Batch-only real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+          "flags": {
+            "catalogBatch": true,
+            "workerMirrors": false,
+            "preparationCache": false,
+            "performanceTracing": true
+          },
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
+          }
+        },
+        {
+          "file": "outputs/testing/native-hash-private-93265633/report.json",
+          "sha256": "sha256:32a7df4ac1b231ce3cd0cf65bbe92373e5d274cdb45097293e87cf0a70c0ba29",
+          "scope": "Private same-source CJS experiment replacing only pure SHA-256 with native Node crypto; direct canonical initialization, interleaved identical inputs, not HTTP/browser/production acceptance"
+        },
+        {
+          "file": "outputs/testing/native-hash-http-private-93265633/report.json",
+          "sha256": "sha256:417084f5dda05476cd9d9852495f865bd7127372755c2ac2e6b18ac8d226d27e",
+          "scope": "Private native SHA-256 experiment real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+          "flags": {
+            "catalogBatch": false,
+            "workerMirrors": false,
+            "preparationCache": false,
+            "performanceTracing": true
+          },
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
+          }
+        },
+        {
+          "file": "outputs/testing/native-hash-http-paired-93265633/report.json",
+          "sha256": "sha256:c0e01c445914bb86d071ba2da486dbf883e55fd0edd798282e3c68f97c065e3f",
+          "scope": "Private interleaved same-stack native SHA-256 comparison real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+          "flags": {
+            "catalogBatch": false,
+            "workerMirrors": false,
+            "preparationCache": false,
+            "performanceTracing": true
+          },
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
+          }
         }
-      }
-    },
-    "linearReader": {
-      "status": "integrated-locally-verified",
-      "oldSeconds": 162.9077199,
-      "newSeconds": 121.62330060000002,
-      "completeResultHash": "sha256:e33a496eb06fb25736fcbbc0db7cb0fade2f8c7a5c7063c507a59e2af17e40ca",
-      "transportBytes": 4118333794,
-      "completeScans": true,
-      "actualPinnedReadSession": true,
-      "oldAndCandidateContracts": 20,
-      "pairedSamples": 1,
-      "counterbalanced": false,
-      "productionTimingClaim": false,
-      "cleanup": {
-        "errors": [],
-        "unrelatedInspectionResourcesObserved": 0,
-        "status": "stopped"
-      }
-    },
-    "ownerBatchHypothesis": {
-      "status": "declined-no-material-canonical-init-latency-gain",
-      "integrated": false,
-      "party6OldMs": 186.4155,
-      "party6NewMs": 186.5853
+      ],
+      "nativeHashIntegrated": false,
+      "productionFlagsEnabled": false,
+      "decision": "CPU-path gain did not meet general real HTTP latency acceptance; ordinary path retained."
     },
     "futurePrivate": {
-      "base": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+      "base": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "status": "source-exact-local-ready-production-acceptance-pending",
       "principalPaths": 127,
       "combinedPaths": 137,
-      "windowsNode": 139,
-      "windowsDeclaredLinuxSkips": 4,
-      "actualLinuxNode": 143,
+      "windowsPass": 174,
+      "windowsDeclaredLinuxSkips": 5,
+      "actualLinuxPass": 179,
       "actualLinuxSkips": 0,
-      "freeze": "outputs/testing/future-release-ab94ada2/FREEZE.json",
-      "sharedSourceApplied": false,
-      "rebaseRequiredAfterThisRepair": true
+      "reviewHash": "sha256:a0618e5780bee9396a32c295c04f48f0574b1781e59ae670f2090be188740836",
+      "exactFutureCommitCiAndHostedAcceptanceRequired": true
     },
+    "policy": {
+      "writers": false,
+      "automatic": false,
+      "selective": false,
+      "reconcile": false
+    },
+    "paidProviderRequestsThisAcceptance": 0,
     "historicalFresh": {
       "lastCompletedMigration": 277,
       "refusingMigration": 278,
@@ -3711,19 +4046,11 @@
       "refusingConditions": 611,
       "status": "authentic-pre278-inputs-required"
     },
-    "policy": {
-      "writers": false,
-      "automatic": false,
-      "selective": false,
-      "reconcile": false
-    },
-    "productionApplicationMutations": 0,
-    "paidProviderRequests": 0,
     "nextSteps": [
-      "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
-      "Publish new exact immutable images using the five-attempt reviewed recovery.",
-      "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
-      "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
+      "Verify the final integrated full follow-on source locally and in exact-source CI.",
+      "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
+      "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
+      "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
     ]
   },
   "execution_history": [
@@ -4458,7 +4785,394 @@
         "Fresh capture/full rehearsal within30minutes, then independent first healthy adoption verification.",
         "Rebase the private next-stage packet, regenerate its final source manifest and validate actual writer/selective/rollback/automatic acceptance."
       ]
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "exact-ci14-full-rehearsal-and-terminal-compose-refusal",
+      "recordedAt": "2026-10-05T23:06:25.200Z",
+      "sourceCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+      "ci": {
+        "id": 37378116413,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37378116413",
+        "status": "completed",
+        "conclusion": "success",
+        "aggregateHash": "sha256:4220082810b0af978f5fd3b18f0a3f05c5c0d5696d53fdf5b2ccf7c23f93dc0b",
+        "durationMs": 848471,
+        "sourceSnapshot": {
+          "sha256": "1fb76f048235d1d13c226559aa9d811f01bd4854645ef3a543f5e371eb1ac968",
+          "files": 4428
+        },
+        "globalCoverageComplete": true,
+        "counts": {
+          "node": 723,
+          "vitest": 6462,
+          "goPackageCases": 754,
+          "workerAndDatabase": 25,
+          "cursorChecks": 22,
+          "browserFlows": 12,
+          "uiFixtures": 48,
+          "battle3d": 8
+        },
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      "publication": {
+        "id": 37380069376,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380069376",
+        "status": "completed",
+        "conclusion": "success",
+        "allThreeNewImmutableImages": true
+      },
+      "deployment": {
+        "id": 37380712101,
+        "attempt": 1,
+        "status": "failed_before_cutover",
+        "conclusion": "failure",
+        "controlCommit": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37380712101",
+        "jobCompletedAt": "2026-10-05T22:40:32Z",
+        "releaseId": "candidate-ab94ada2bbf8-1f3a396e803c",
+        "operationHash": "sha256:3355c11b7b62c7476018edc261af5293472e41ebd66ad1c07c58bd4ec77a5d65",
+        "touched": [],
+        "migrationStarted": false,
+        "rehearsal": {
+          "status": "passed",
+          "startedAt": "2026-10-05T22:22:30.327Z",
+          "completedAt": "2026-10-05T22:39:51.633Z",
+          "checks": [
+            {
+              "id": "snapshot",
+              "status": "passed"
+            },
+            {
+              "id": "migrations",
+              "status": "passed"
+            },
+            {
+              "id": "full-candidate-health",
+              "status": "passed"
+            },
+            {
+              "id": "image-contract",
+              "status": "passed"
+            },
+            {
+              "id": "historical-inventory",
+              "status": "passed"
+            },
+            {
+              "id": "historical-replay",
+              "status": "passed"
+            },
+            {
+              "id": "pending-decision",
+              "status": "passed"
+            },
+            {
+              "id": "duplicate-command",
+              "status": "passed"
+            }
+          ],
+          "migrationChecks": [
+            {
+              "id": "atomic-ddl-ledger",
+              "status": "passed"
+            },
+            {
+              "id": "crash-before-ledger",
+              "status": "passed"
+            },
+            {
+              "id": "repeat-after-commit",
+              "status": "passed"
+            },
+            {
+              "id": "same-connection-lock",
+              "status": "passed"
+            },
+            {
+              "id": "unknown-migration-rejected",
+              "status": "passed"
+            },
+            {
+              "id": "schema-proof",
+              "status": "passed"
+            },
+            {
+              "id": "old-readers-after-expansion",
+              "status": "passed"
+            }
+          ],
+          "cleanup": {
+            "status": "stopped",
+            "errors": [],
+            "resourceCount": 26
+          }
+        },
+        "auditHash": "sha256:952edefd07a84316daaac3b717a26b0256580c469de8514b8d4dcdc364de3a70",
+        "activeHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+        "actualDatabase": {
+          "schemaFingerprint": "sha256:6d00949de56ee849345194c42e0326a73a49cdb62b1df69251541807648dbc58",
+          "migrationsHash": "sha256:540de66c370c26d69541c32250030b727b957a4074c705a1f57e15cb1cd87009",
+          "migrationCount": 302
+        },
+        "cleanup": {
+          "remainingOwnedResources": 0,
+          "validatorStopped": true,
+          "dockerAuthRemoved": true,
+          "deploymentJournalCreated": true,
+          "deployLockPresent": false,
+          "operatorApplicationMutations": 0
+        },
+        "edge": [
+          {
+            "path": "/",
+            "status": 200
+          },
+          {
+            "path": "/api/health",
+            "status": 200
+          },
+          {
+            "path": "/build-info.json",
+            "status": 200
+          }
+        ],
+        "expiredSnapshotReusableForProduction": false
+      },
+      "repair": {
+        "status": "local-contracts-passed-new-exact-ci-required",
+        "compose": {
+          "version": "2.40.3+ds1-0ubuntu1~24.04.1",
+          "readOnlyHostCases": [
+            {
+              "retained": null,
+              "status": "passed",
+              "allLaunchesAndDigestsMatched": true
+            },
+            {
+              "retained": "backend",
+              "status": "passed",
+              "allLaunchesAndDigestsMatched": true
+            },
+            {
+              "retained": "frontend",
+              "status": "passed",
+              "allLaunchesAndDigestsMatched": true
+            },
+            {
+              "retained": "rulesWorker",
+              "status": "passed",
+              "allLaunchesAndDigestsMatched": true
+            }
+          ],
+          "serverConfigChanged": false,
+          "secretChanges": false,
+          "globalFallbackPreservesPerComponentLaunch": true
+        },
+        "recovery": {
+          "schemaVersion": 3,
+          "id": "37380712101-1",
+          "proofHash": "sha256:e1cf07f9d6ae7306b0888d005369c46e1e692acb7c3d7fa88117630384351e92",
+          "reviewedFailedDeployments": 5,
+          "originalFourProofFilesUnchanged": true,
+          "originalJournalRetained": true,
+          "requiresFreshCaptureAndRehearsal": true
+        },
+        "local": {
+          "windowsAllReleaseContracts": {
+            "tests": 258,
+            "pass": 253,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 5,
+            "todo": 0
+          },
+          "actualLinuxFocusedContracts": {
+            "tests": 75,
+            "pass": 75,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0
+          },
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
+          }
+        }
+      },
+      "linearReader": {
+        "status": "integrated-locally-verified",
+        "oldSeconds": 162.9077199,
+        "newSeconds": 121.62330060000002,
+        "completeResultHash": "sha256:e33a496eb06fb25736fcbbc0db7cb0fade2f8c7a5c7063c507a59e2af17e40ca",
+        "transportBytes": 4118333794,
+        "completeScans": true,
+        "actualPinnedReadSession": true,
+        "oldAndCandidateContracts": 20,
+        "pairedSamples": 1,
+        "counterbalanced": false,
+        "productionTimingClaim": false,
+        "cleanup": {
+          "errors": [],
+          "unrelatedInspectionResourcesObserved": 0,
+          "status": "stopped"
+        }
+      },
+      "ownerBatchHypothesis": {
+        "status": "declined-no-material-canonical-init-latency-gain",
+        "integrated": false,
+        "party6OldMs": 186.4155,
+        "party6NewMs": 186.5853
+      },
+      "futurePrivate": {
+        "base": "ab94ada2bbf849d88ca3a542a62c6ee80730dce3",
+        "principalPaths": 127,
+        "combinedPaths": 137,
+        "windowsNode": 139,
+        "windowsDeclaredLinuxSkips": 4,
+        "actualLinuxNode": 143,
+        "actualLinuxSkips": 0,
+        "freeze": "outputs/testing/future-release-ab94ada2/FREEZE.json",
+        "sharedSourceApplied": false,
+        "rebaseRequiredAfterThisRepair": true
+      },
+      "historicalFresh": {
+        "lastCompletedMigration": 277,
+        "refusingMigration": 278,
+        "conditions": 1656,
+        "passingConditions": 1045,
+        "refusingConditions": 611,
+        "status": "authentic-pre278-inputs-required"
+      },
+      "policy": {
+        "writers": false,
+        "automatic": false,
+        "selective": false,
+        "reconcile": false
+      },
+      "productionApplicationMutations": 0,
+      "paidProviderRequests": 0,
+      "nextSteps": [
+        "Commit verified Compose/recovery/reader changes and require complete exact-source CI15.",
+        "Publish new exact immutable images using the five-attempt reviewed recovery.",
+        "Fresh capture, full candidate rehearsal and independently verified healthy first adoption.",
+        "Rebase the private next-stage packet without altering frozen evidence; verify writers/selective/rollback/automatic acceptance."
+      ]
     }
   ],
-  "updated_at": "2026-10-05T23:06:25.200Z"
+  "updated_at": "2026-10-06T00:06:07.275Z",
+  "backup_storage_scope": {
+    "schemaVersion": 1,
+    "recordedAt": "2026-10-05T23:59:21.251Z",
+    "source": "Explicit user reply in this task",
+    "quote": "Нет, резервные копии пока будут храниться на самом сервере",
+    "storageScope": "primary-host-for-now",
+    "externalDurability": "deferred-by-owner",
+    "requiredRestoreVerification": "Owned separate database before deployment",
+    "changesToBackupFreshness": false,
+    "changesToHistoryAndArtifactVerification": false,
+    "productionDatabaseRestoreAuthorized": false,
+    "secretChanges": 0,
+    "providerRequests": 0,
+    "nextReportingAction": "Preserve original plan criteria; record this explicit scope override in human and machine reports. Do not require or ask for external storage again.",
+    "recordHash": "sha256:8dd4c4b94432cbf8fed9b2d1205cdb1d9daca1147018cac9be52c535b08fe1b4",
+    "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
+  },
+  "execution_followon": {
+    "schemaVersion": 1,
+    "status": "integrated-local-gates-passed-exact-ci16-pending",
+    "recordedAt": "2026-10-06T00:13:49.282Z",
+    "base": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "predecessorDeployment": 37389067128,
+    "initialLocal": {
+      "reportHash": "sha256:f2dbdae12da14d8b2c759aa37e4abb82fc6b4993a266c5df30bed820e83c56c7",
+      "nodeContracts": {
+        "total": 504,
+        "pass": 499,
+        "declaredLinuxSkips": 5
+      },
+      "vitestPass": 9,
+      "typecheck": "passed",
+      "affectedLint": "passed",
+      "productionBuild": "passed",
+      "dumpScan": "passed",
+      "sourceCatalog": {
+        "status": "passed",
+        "files": 434
+      },
+      "initialScanner": "refused"
+    },
+    "repair": {
+      "reportHash": "sha256:121ea6d56ea34a6c9d3fb8352c517604d2ada8ea9c703feeb8cb2b0dbb086f6e",
+      "contracts": {
+        "tests": 25,
+        "pass": 25,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "checks": [
+        "affected-contracts-and-scanner-negatives",
+        "unchanged-credential-and-registration-policy",
+        "owned-account-real-login",
+        "real-pending-receipt-retry-continuation"
+      ],
+      "canonicalScenario": {
+        "schemaVersion": 1,
+        "status": "passed",
+        "execution": "native-owned-api",
+        "runId": "test_47c5acf3b434a9cb881e95d6",
+        "checks": [
+          "canonical-pending-choice",
+          "read-without-mutation",
+          "decode-accepted-receipt",
+          "duplicate-accepted-twice",
+          "continue-pending-choice",
+          "duplicate-continuation"
+        ],
+        "pendingHash": "sha256:3316cdef1065b7645b2672483e599cf7672a4493ac32d1c4217f2e90bbaa8a83",
+        "acceptedHash": "sha256:bf291cbe60dbaec5cbb4a3da33dbdab54cd34724ee6ad4e3ddcb8efb5c6fb061",
+        "continuedHash": "sha256:ed6b23ba410d91e4b4dc108069a116651270287d58eabca13c47211c4cdaa5eb",
+        "invariantHash": "sha256:6779f6831a144751cf902df7b0fe2f6ef76225293c09eaff72ea156da3e726aa",
+        "limitations": [
+          "Not an OCI image rehearsal",
+          "Does not prove production historical corpus or fresh migration chain"
+        ]
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "source": {
+        "unchanged": true,
+        "files": 4529,
+        "sha256": "f0edec7f2d0c1cd9892e872f577a3a3b1a33c3eb38d7da64f45945f8e087ee47"
+      },
+      "credentialPolicyChanged": false,
+      "registration": "Existing opaque owned-clone capability creates the random browser account; browser driver only logs in. Synthetic DSNs assembled as URL values."
+    },
+    "writerPolicy": {
+      "compactReceipts": true,
+      "imageJobs": true,
+      "frozenCatalogs": false
+    },
+    "production": {
+      "current": "93265633",
+      "writers": "OFF",
+      "automatic": false,
+      "selective": false,
+      "reconcile": false,
+      "newPacketDeployed": false,
+      "paidRequests": 0
+    },
+    "nativeHashIntegrated": false,
+    "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
+  }
 }

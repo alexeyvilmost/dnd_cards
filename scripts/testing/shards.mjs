@@ -53,7 +53,7 @@ export function aggregateShardReports(reports, expectedPlan) {
     assert.equal(report.shard.sha256,digest({suite:report.shard.suite,names:report.shard.names,units:report.shard.units}));
     assert.deepEqual(report.shard.assigned,plan.units.filter(unit=>unit.shard===report.shard.name).map(unit=>unit.id),'Shard assignment changed');
     assert.equal(report.suite,plan.suite);
-    for(const key of ['candidate','manifest_sha256','component_plan','selection','source_snapshot','ci_source','lockfiles','worktree','go_race'])assert.deepEqual(report[key],first[key],`Shard ${key} differs`);
+    for(const key of ['candidate','manifest_sha256','component_plan','selection','source_snapshot','ci_source','lockfiles','worktree','go_race','frontend_verification','frontend_planning'])assert.deepEqual(report[key],first[key],`Shard ${key} differs`);
     assertShardCoverage(report.shard,report.coverage?.completed??[]);completed.push(...report.coverage.completed);
     assert.ok(report.checks.length&&report.checks.every(check=>check.status==='passed'),'Unfinished shard check');
     const stable=report.checks.find(check=>check.id==='source-stability')?.result;

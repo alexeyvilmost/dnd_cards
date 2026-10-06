@@ -4,7 +4,7 @@ import {ChoiceResolver} from '../../src/character/components';
 import SheetActionLine from '../../src/components/SheetActionLine';
 import type {Action,Card} from '../../src/types';
 import '../../src/pages/CharacterForge.css';
-import '../../src/pages/CharacterSheetV2.css';
+import '../../src/pages/CharacterSheet.css';
 const potion={id:'potion',name:'Зелье лечения',type:'potion',description:'Восстанавливает здоровье.',rarity:'common'} as Card;
 const breath={id:'breath',card_number:'ACT-breath',name:'Дыхание дракона',description:'Выдохните огонь конусом. Цели совершают спасбросок Ловкости.',mechanics:{activation:{cost:[{resource:'action'},{resource:'self_uses'}]},effects:[{resolution:'save',ability:'dex',dc:13,on_fail:[{kind:'damage',dice:'2d6',type:'fire'}]}]}} as Action;
 function Preview(){

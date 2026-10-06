@@ -80,7 +80,7 @@ import SheetRuntimePanel from '../components/SheetRuntimePanel';
 import SheetInPlayController from '../components/SheetInPlayController';
 import ValueBreakdownTip from '../components/ValueBreakdownTip';
 import ValueBreakdownPanel from '../components/ValueBreakdownPanel';
-import CharacterSheetV2 from './CharacterSheetV2';
+import CharacterSheet from './CharacterSheet';
 import EffectiveSenseValue from '../components/EffectiveSenseValue';
 import CharacterAccessBadge from '../components/CharacterAccessBadge';
 import SoloCombatSetupDialog from '../components/SoloCombatSetupDialog';
@@ -1180,7 +1180,7 @@ const CharacterSheetMVP = () => {
       )}
 
       {renderedV2 ? (
-        <CharacterSheetV2
+        <CharacterSheet
           character={character}
           assembled={assembledForActions ?? assembled}
           ruleState={ruleState}

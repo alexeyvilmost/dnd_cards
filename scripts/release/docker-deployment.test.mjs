@@ -47,6 +47,7 @@ async function fixture(t){
       // Simulate Compose's actual env-file merge, including worker override.
       const environment={...JSON.parse(readFileSync(config.appEnvFile)),...JSON.parse(readFileSync(config.workerEnvFile)),RELEASE_ID:'old',RELEASE_COMMIT:active.manifest.releaseCommit};
       const resolved={services:{backend:{image:backend.imageDigest,environment:Object.fromEntries(Object.entries(environment).map(([key,value])=>[key,String(value).replaceAll('$',()=>'$$')]))}}};
+      for(const [key,name] of [['frontend','frontend'],['rulesWorker','rules-worker']])resolved.services[name]={image:active.manifest.components[key].imageDigest,environment:{RELEASE_ID:'old',RELEASE_COMMIT:active.manifest.releaseCommit}};
       mutateAfterRender?.();return JSON.stringify(resolved);
     }
     if(args[0]==='compose'&&args.includes('up')){if(failLaunch){missing=true;failLaunch=false;throw Error('Simulated failed candidate launch');}missing=false;return '';}
@@ -127,4 +128,29 @@ test('missing backend is refused before cutover but known failed replacement can
   restarted.allowRecovery({status:'recovery_required',touched:['backend'],plan:{previous:f.active,desired:f.active}});
   await restarted.assertDatabase([]);await restarted.replace('backend',f.active);
   assert.ok(f.calls.filter(row=>row.args[0]==='run').every(row=>row.options.env.DATABASE_URL===dsn));
+});
+
+
+test('modern permitted ON release is observed exactly while substituted flags fail before database reads',async t=>{
+ const f=await fixture(t);f.active.manifest.writerPolicy={compactReceipts:true,imageJobs:true,frozenCatalogs:false};
+ await writeFile(path.join(f.root,'active.json'),JSON.stringify(f.active));
+ const values={DB_COMPACT_RECEIPTS:'1',DB_FROZEN_CATALOGS:'0',IMAGE_JOBS_ENABLED:'1'};
+ f.container.Config.Env.push(...Object.entries(values).map(([k,v])=>k+'='+v));
+ await writeFile(f.config.appEnvFile,JSON.stringify({DATABASE_URL:dsn,...values}));
+ const adapter=await createDockerDeploymentAdapter(f.config,{command:f.command});
+ await adapter.assertDatabase([]);await adapter.replace('backend',f.active);
+ f.container.Config.Env=f.container.Config.Env.map(row=>row==='IMAGE_JOBS_ENABLED=1'?'IMAGE_JOBS_ENABLED=0':row);
+ const before=f.calls.filter(row=>row.args[0]==='run').length;
+ await assert.rejects(adapter.assertDatabase([]),/captured source/);
+ assert.equal(f.calls.filter(row=>row.args[0]==='run').length,before);
+});
+
+test('modern Compose policy mismatch is rejected even when live source is the exact ON predecessor',async t=>{
+ const f=await fixture(t);f.active.manifest.writerPolicy={compactReceipts:true,imageJobs:true,frozenCatalogs:false};
+ await writeFile(path.join(f.root,'active.json'),JSON.stringify(f.active));
+ f.container.Config.Env.push('DB_COMPACT_RECEIPTS=1','DB_FROZEN_CATALOGS=0','IMAGE_JOBS_ENABLED=1');
+ await writeFile(f.config.appEnvFile,JSON.stringify({DATABASE_URL:dsn,DB_COMPACT_RECEIPTS:'1',DB_FROZEN_CATALOGS:'0',IMAGE_JOBS_ENABLED:'0'}));
+ const adapter=await createDockerDeploymentAdapter(f.config,{command:f.command});
+ await assert.rejects(adapter.replace('backend',f.active),/writer policy/);
+ assert.ok(!f.calls.some(row=>row.args.includes('up')));
 });

@@ -89,7 +89,7 @@ import { useAutomaticCombatDecision } from '../solo-combat/useAutomaticCombatDec
 import { useAutomaticTurnStartAction } from '../solo-combat/useAutomaticTurnStartAction';
 import { useCombatPresentation } from '../solo-combat/useCombatPresentation';
 import './CharacterForge.css';
-import './CharacterSheetV2.css';
+import './CharacterSheet.css';
 import './SoloCombatPage.css';
 
 const MOVEMENT_MODE_CHOICE_ID = 'combat_movement_mode';

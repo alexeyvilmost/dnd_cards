@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SheetAtomicRetryEnvelope } from '../character/sheetAtomicRetry';
 import type { ForgeCharacter } from '../character/types';
-import CharacterSheetV2 from './CharacterSheetV2';
+import CharacterSheet from './CharacterSheet';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -123,13 +123,13 @@ const baseProps = {
   onEvents: vi.fn(),
   onPersistedEvents: vi.fn(),
   readOnly: false,
-} as unknown as Omit<React.ComponentProps<typeof CharacterSheetV2>,
+} as unknown as Omit<React.ComponentProps<typeof CharacterSheet>,
   'pendingAtomicRetry' | 'onPendingAtomicRetryChange'>;
 
 function Harness() {
   const [pendingAtomicRetry, setPendingAtomicRetry] = useState<SheetAtomicRetryEnvelope | null>(null);
   return (
-    <CharacterSheetV2
+    <CharacterSheet
       {...baseProps}
       pendingAtomicRetry={pendingAtomicRetry}
       onPendingAtomicRetryChange={setPendingAtomicRetry}
@@ -137,7 +137,7 @@ function Harness() {
   );
 }
 
-describe('CharacterSheetV2 atomic retry ownership', () => {
+describe('CharacterSheet atomic retry ownership', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -171,7 +171,7 @@ describe('CharacterSheetV2 atomic retry ownership', () => {
   });
 
   it('keeps visual equipment and spell previews while removing executable panels in read-only mode', async () => {
-    await act(async () => root.render(<CharacterSheetV2 {...baseProps} readOnly
+    await act(async () => root.render(<CharacterSheet {...baseProps} readOnly
       pendingAtomicRetry={null} onPendingAtomicRetryChange={vi.fn()} />));
     expect(container.querySelector('[data-testid="actions-atomic-panel"]')).toBeNull();
     expect(container.querySelector('[data-testid="spells-atomic-panel"]')).toBeNull();
@@ -181,7 +181,7 @@ describe('CharacterSheetV2 atomic retry ownership', () => {
 
   it('forwards the dedicated-combat lock to both Action and Spells panels', async () => {
     await act(async () => root.render(
-      <CharacterSheetV2
+      <CharacterSheet
         {...baseProps}
         pendingAtomicRetry={null}
         onPendingAtomicRetryChange={vi.fn()}
