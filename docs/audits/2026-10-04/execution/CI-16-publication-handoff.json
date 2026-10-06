@@ -1,0 +1,836 @@
+{
+  "schemaVersion": 1,
+  "status": "ci16-passed-publication8-refused-before-images-repaired-locally",
+  "recordedAt": "2026-10-06T00:34:56.381Z",
+  "source": "8633d6f30a748539105edfd6157df7931cc27be7",
+  "verification": {
+    "id": 37392948924,
+    "attempt": 1,
+    "status": "success",
+    "suite": "extended",
+    "durationMs": 706884,
+    "sourceSnapshot": {
+      "sha256": "13aa8acb340b54e9e75d0f0d228d62036726bdeb38a5071dec692fa42b17663d",
+      "files": 4526
+    },
+    "reportHash": "sha256:0d98cc2568c3154918a8a11403217b33e2e0eff51b83a4319325e62d2dd1bbec",
+    "checks": [
+      {
+        "id": "source-hygiene",
+        "status": "passed",
+        "result": {
+          "status": "passed"
+        }
+      },
+      {
+        "id": "isolated-stack",
+        "status": "passed",
+        "result": {
+          "run_id": "test_f4dd69593316e5dd097fca32",
+          "mode": "integration"
+        }
+      },
+      {
+        "id": "worker-and-database-node",
+        "status": "passed",
+        "result": {
+          "tests": 25,
+          "passed": 25,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "backend-compile",
+        "status": "passed",
+        "result": {
+          "compiled": true,
+          "tests_executed": false,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "go-backend",
+        "status": "passed",
+        "result": {
+          "required": 407,
+          "passed": 407,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "go-animationpresentation",
+        "status": "passed",
+        "result": {
+          "required": 4,
+          "passed": 4,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "go-audiopresentation",
+        "status": "passed",
+        "result": {
+          "required": 3,
+          "passed": 3,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "go-charactertemplates",
+        "status": "passed",
+        "result": {
+          "no_tests_in_package": true
+        }
+      },
+      {
+        "id": "go-itemsource",
+        "status": "passed",
+        "result": {
+          "required": 5,
+          "passed": 5,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "go-itemsource-cmd-audit",
+        "status": "passed",
+        "result": {
+          "no_tests_in_package": true
+        }
+      },
+      {
+        "id": "go-migrations",
+        "status": "passed",
+        "result": {
+          "required": 333,
+          "passed": 333,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "go-passivepresentation",
+        "status": "passed",
+        "result": {
+          "no_tests_in_package": true
+        }
+      },
+      {
+        "id": "go-roguelikecontent",
+        "status": "passed",
+        "result": {
+          "required": 1,
+          "passed": 1,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "go-weapondata",
+        "status": "passed",
+        "result": {
+          "required": 1,
+          "passed": 1,
+          "discovery": {
+            "attempts": 1
+          }
+        }
+      },
+      {
+        "id": "source-stability",
+        "status": "passed",
+        "result": {
+          "unchanged": true,
+          "files": 4526,
+          "sha256": "13aa8acb340b54e9e75d0f0d228d62036726bdeb38a5071dec692fa42b17663d"
+        }
+      },
+      {
+        "id": "reference-cursor-transport",
+        "status": "passed",
+        "result": {
+          "status": "passed",
+          "checks": [
+            {
+              "id": "owned-internal-only-no-published-ports",
+              "status": "passed"
+            },
+            {
+              "id": "zero-column-and-all-excluded-records-preserve-empty-object-multiset",
+              "status": "passed"
+            },
+            {
+              "id": "parallel-complete-history-preserves-empty-tables-duplicates-unicode-arrays-nulls-and-excluded-columns",
+              "status": "passed"
+            },
+            {
+              "id": "both-declared-additive-formats-preserve-complete-predecessor-history",
+              "status": "passed"
+            },
+            {
+              "id": "fresh-columns-retain-unexpected-added-data",
+              "status": "passed"
+            },
+            {
+              "id": "parallel-complete-history-retains-unexpected-new-column-data",
+              "status": "passed"
+            },
+            {
+              "id": "actual-export-import-complete-inventory",
+              "status": "passed"
+            },
+            {
+              "id": "actual-reader-is-not-superuser",
+              "status": "passed"
+            },
+            {
+              "id": "attached-utf8-stream-preserves-complete-output-without-persisted-container-log",
+              "status": "passed"
+            },
+            {
+              "id": "concurrent-committed-write-invisible-in-one-exported-snapshot",
+              "status": "passed"
+            },
+            {
+              "id": "new-inventory-sees-fresh-committed-reference",
+              "status": "passed"
+            },
+            {
+              "id": "truncate-after-export-before-lock-refuses-completeness",
+              "status": "passed"
+            },
+            {
+              "id": "materialized-refresh-after-export-before-lock-refuses-completeness",
+              "status": "passed"
+            },
+            {
+              "id": "exporter-loss-import-read",
+              "status": "passed"
+            },
+            {
+              "id": "exporter-loss-refuses-complete-result",
+              "status": "passed"
+            },
+            {
+              "id": "cancelled-last-read-import-read",
+              "status": "passed"
+            },
+            {
+              "id": "cancelled-last-read-refuses-complete-result",
+              "status": "passed"
+            },
+            {
+              "id": "metadata-bound-import-read",
+              "status": "passed"
+            },
+            {
+              "id": "metadata-bound-refuses-complete-result",
+              "status": "passed"
+            },
+            {
+              "id": "inflight-process-loss-import-read",
+              "status": "passed"
+            },
+            {
+              "id": "inflight-process-loss-refuses-complete-result",
+              "status": "passed"
+            },
+            {
+              "id": "executed-production-source-unchanged",
+              "status": "passed"
+            }
+          ],
+          "cleanup": [
+            {
+              "kind": "container",
+              "status": "stopped"
+            },
+            {
+              "kind": "network",
+              "status": "stopped"
+            },
+            {
+              "kind": "exporter-and-stream-clients",
+              "status": "stopped"
+            }
+          ],
+          "productionData": false,
+          "report": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_a6e2b7a27036baeccb2ae052/reference-cursor-transport/report.json"
+        }
+      },
+      {
+        "id": "process-crash-recovery",
+        "status": "passed",
+        "result": {
+          "runId": "test_1ea0e586aab98154b30a296f",
+          "status": "passed",
+          "phases": 2,
+          "paidCommands": 2,
+          "exactWorkerReplay": true,
+          "receiptRecoveryWithoutWorker": true,
+          "cleanup": "stopped",
+          "binary": {
+            "sourceRun": "test_a6e2b7a27036baeccb2ae052",
+            "sha256": "sha256:b92b1f359705019a9f7bf8eccb7dfd4524bbe743b20417f470f431540ae58dee",
+            "bytes": 75542186,
+            "goRuntime": "go1.25.14",
+            "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc"
+          }
+        }
+      },
+      {
+        "id": "supported-upgrade-baselines",
+        "status": "passed",
+        "result": {
+          "status": "passed",
+          "cases": 3,
+          "historicalChainVerified": false,
+          "race": true,
+          "report": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_a6e2b7a27036baeccb2ae052/supported-upgrade-matrix/report.json",
+          "baselines": [
+            {
+              "baseline": 297,
+              "runId": "test_0d3530242925369d7149fbd7",
+              "finalSchemaHash": "sha256:cb584269fb6822f0750b90dec177eda86d99b2f2b49701cdc052d4d9c08e884a",
+              "cleanup": "stopped"
+            },
+            {
+              "baseline": 298,
+              "runId": "test_7c69f367c7fa9c34d5af396a",
+              "finalSchemaHash": "sha256:cb584269fb6822f0750b90dec177eda86d99b2f2b49701cdc052d4d9c08e884a",
+              "cleanup": "stopped"
+            },
+            {
+              "baseline": 299,
+              "runId": "test_8194b59861a11a0ac92bc716",
+              "finalSchemaHash": "sha256:cb584269fb6822f0750b90dec177eda86d99b2f2b49701cdc052d4d9c08e884a",
+              "cleanup": "stopped"
+            }
+          ]
+        }
+      },
+      {
+        "id": "observed-legacy-baseline",
+        "status": "passed",
+        "result": {
+          "status": "passed",
+          "tests": 1,
+          "scope": "observed-full-schema297-additive-adoption",
+          "historicalChainVerified": false,
+          "runId": "test_c5781434d90f9bbdde06c139",
+          "race": true,
+          "cleanup": {
+            "status": "stopped",
+            "errors": []
+          },
+          "report": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_a6e2b7a27036baeccb2ae052/observed-legacy-baseline/report.json"
+        }
+      },
+      {
+        "id": "candidate-rehearsal-api",
+        "status": "passed",
+        "result": {
+          "schemaVersion": 1,
+          "status": "passed",
+          "execution": "native-owned-api",
+          "runId": "test_a6e2b7a27036baeccb2ae052",
+          "checks": [
+            "canonical-pending-choice",
+            "read-without-mutation",
+            "decode-accepted-receipt",
+            "duplicate-accepted-twice",
+            "continue-pending-choice",
+            "duplicate-continuation"
+          ],
+          "pendingHash": "sha256:5880a43e3a080effd6e5b9b1eabefa942b5d40cc1698f67fe180286c74398e42",
+          "acceptedHash": "sha256:66eadf64ecd9ceba24c31373678aafb502304caf3f3ebc3bad8298a38d317716",
+          "continuedHash": "sha256:9fb45d1c1fc3615d9c1a84749606c7dcde2b58ba64d3f485dc56b2e8d698620f",
+          "invariantHash": "sha256:f9780b6e9f47d5568fd2d27834adab2e8e4a4a079e1b4d1d31606c7d0cd427e3",
+          "limitations": [
+            "Not an OCI image rehearsal",
+            "Does not prove production historical corpus or fresh migration chain"
+          ]
+        }
+      },
+      {
+        "id": "catalog-equivalence",
+        "status": "passed",
+        "result": {
+          "required": 4,
+          "passed": 4
+        }
+      },
+      {
+        "id": "preparation-cache-equivalence",
+        "status": "passed",
+        "result": {
+          "required": 9,
+          "passed": 9
+        }
+      },
+      {
+        "id": "worker-wire-mirror-equivalence",
+        "status": "passed",
+        "result": {
+          "native": {
+            "required": 2,
+            "passed": 2
+          },
+          "flow": {
+            "runId": "test_a6e2b7a27036baeccb2ae052",
+            "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+            "scenarios": 3,
+            "fullResultEquality": true,
+            "sourceUnchanged": true
+          }
+        }
+      },
+      {
+        "id": "equipment-authority-flow",
+        "status": "passed",
+        "result": [
+          {
+            "authority": "server_intent",
+            "committedCommands": 8,
+            "replayRequests": 8,
+            "sourceIsolated": true,
+            "samples": 4
+          }
+        ]
+      },
+      {
+        "id": "initiative-options-flow",
+        "status": "passed",
+        "result": {
+          "scenarios": 3,
+          "samples": 6,
+          "exactRetry": true,
+          "noOfferMutation": true
+        }
+      },
+      {
+        "id": "library-review-pages",
+        "status": "passed",
+        "result": {
+          "catalogs": 11,
+          "status": "passed"
+        }
+      },
+      {
+        "id": "equipment-runtime-browser",
+        "status": "passed",
+        "result": {
+          "runId": "test_a6e2b7a27036baeccb2ae052",
+          "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+          "uiBuild": {
+            "reused": false,
+            "isolatedBuild": true,
+            "reactProfile": false,
+            "directory": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_a6e2b7a27036baeccb2ae052/ui-dist",
+            "indexHash": "ea92293a0797e2b2e10517cbd0ca91fe4f3fd1c97b8435b2340aa352eeeed6de",
+            "manifestHash": "8a344817b0ac5ad33de421b2114a176369e367cb924f5e24a4bfb177aed60088",
+            "files": 631,
+            "bytes": 169173525
+          },
+          "equipmentPosts": 3,
+          "samePendingCommandAfterReload": true,
+          "exactRetry": true,
+          "inventoryPreserved": true,
+          "equipmentBrowserBuildCalls": 0,
+          "initiativeBrowserBuildCalls": 0,
+          "optionsRequests": 1,
+          "initializeRequests": 1,
+          "pageErrors": 0,
+          "sourceIsolated": true,
+          "outcomeHash": "sha256:f5f659597b8a5dc7e99cc86dabcd1f1160644daa5ea907bfb27468fe5fc728b2"
+        }
+      },
+      {
+        "id": "pwa-offline-shell",
+        "status": "passed",
+        "result": {
+          "run_id": "test_a6e2b7a27036baeccb2ae052",
+          "ui_build": {
+            "reused": false,
+            "isolatedBuild": true,
+            "reactProfile": false,
+            "directory": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_a6e2b7a27036baeccb2ae052/ui-dist",
+            "indexHash": "ea92293a0797e2b2e10517cbd0ca91fe4f3fd1c97b8435b2340aa352eeeed6de",
+            "manifestHash": "8a344817b0ac5ad33de421b2114a176369e367cb924f5e24a4bfb177aed60088",
+            "files": 631,
+            "bytes": 169173525
+          },
+          "precache_entries": 19,
+          "static_chunks": 1,
+          "offline_visited_login": true,
+          "api_cache_entries": 0,
+          "page_errors": 0,
+          "status": "passed"
+        }
+      },
+      {
+        "id": "urvin-owned-journey",
+        "status": "passed",
+        "result": {
+          "schemaVersion": 1,
+          "status": "passed",
+          "execution": "native-owned-api",
+          "runId": "test_a6e2b7a27036baeccb2ae052",
+          "part": "all",
+          "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+          "checks": [
+            {
+              "id": "aura-phoenix",
+              "status": "passed",
+              "party": 2
+            },
+            {
+              "id": "aura-restoration",
+              "status": "passed",
+              "party": 2
+            },
+            {
+              "id": "aura-ferocity",
+              "status": "passed",
+              "party": 2
+            },
+            {
+              "id": "aura-wealth",
+              "status": "passed",
+              "party": 2
+            },
+            {
+              "id": "aura-solitude",
+              "status": "passed",
+              "party": 1
+            },
+            {
+              "id": "wealth-once",
+              "status": "passed"
+            },
+            {
+              "id": "source-independent-copies",
+              "status": "passed"
+            },
+            {
+              "id": "peer-ownership",
+              "status": "passed"
+            },
+            {
+              "id": "route-and-room-gates",
+              "status": "passed"
+            },
+            {
+              "id": "route-combat-reload-retry",
+              "status": "passed"
+            },
+            {
+              "id": "treasure-xp-loot-once",
+              "status": "passed"
+            },
+            {
+              "id": "shop-buy-once-and-close",
+              "status": "passed"
+            },
+            {
+              "id": "pass-canonical-rest-once",
+              "status": "passed",
+              "introducedPools": 1
+            },
+            {
+              "id": "camp-canonical-rest-once",
+              "status": "passed",
+              "introducedPools": 1
+            },
+            {
+              "id": "elite-original-guardian-compiles",
+              "status": "passed"
+            },
+            {
+              "id": "elite-actual-victory-reward-retry",
+              "status": "passed"
+            },
+            {
+              "id": "boss-original-guardian-compiles",
+              "status": "passed"
+            },
+            {
+              "id": "boss-actual-victory-reward-retry",
+              "status": "passed"
+            },
+            {
+              "id": "event-sleeping-goblins-quiet",
+              "status": "passed",
+              "heldChecks": 1,
+              "transitions": 3
+            },
+            {
+              "id": "event-sleeping-goblins-force",
+              "status": "passed",
+              "heldChecks": 2,
+              "transitions": 6
+            },
+            {
+              "id": "event-drowned-purse-recover",
+              "status": "passed",
+              "heldChecks": 2,
+              "transitions": 6
+            },
+            {
+              "id": "event-wayside-healer-help",
+              "status": "passed",
+              "heldChecks": 1,
+              "transitions": 3
+            },
+            {
+              "id": "event-sealed-shrine-ritual",
+              "status": "passed",
+              "heldChecks": 1,
+              "transitions": 3
+            },
+            {
+              "id": "event-broken-bridge-balance",
+              "status": "passed",
+              "heldChecks": 1,
+              "transitions": 3
+            },
+            {
+              "id": "event-broken-bridge-repair",
+              "status": "passed",
+              "heldChecks": 1,
+              "transitions": 3
+            },
+            {
+              "id": "ambush-checkpoint-defeat-retry",
+              "status": "passed"
+            },
+            {
+              "id": "source-sheets-unchanged",
+              "status": "passed",
+              "count": 26
+            }
+          ],
+          "createdRuns": 23,
+          "limitations": [
+            "Integration fixture; historical migration chain not exercised",
+            "Terminal combat uses declared synthetic pre-init stats; not balance proof"
+          ],
+          "fixture": {
+            "schemaVersion": 1,
+            "kind": "owned-urvin-catalog",
+            "sourceHashes": {
+              "backend/migrations/materialize_roguelike_monsters_199.go": "sha256:ed715db7342830dbd3e0e4c567eb3dfb6d23c7b81d72005879fac40eeea4939f",
+              "backend/migrations/urvin_run_273.go": "sha256:e5bfa02e631304929d3406915050836f96e0ebf043756fd6597325979d96f4c0",
+              "backend/roguelikecontent/urvin.json": "sha256:9ad6b8a8eac4b0b121253011a192bd18446624f4d17e444f62e43aa34fbcbadb",
+              "frontend/src/solo-combat/data/urvinMaps.json": "sha256:3b5b5ec1885669a8426617ab085e153060a6c90fd2dd68f264ad1cc34aa8d305"
+            },
+            "seedHash": "sha256:086130c2f7c0cf3de5b71566e3f74442580ed3fc51a4e3298f607cfcfdf1657c",
+            "fixtureHash": "sha256:0b7a62e727d7cdeaedc85f52dc4a711dffc21628b35a8454fa9a79bf02303045",
+            "historicalChainVerified": false,
+            "sourceRows": {
+              "actions": 7,
+              "effects": 5,
+              "monsters": 6
+            }
+          },
+          "fixtureCleanup": {
+            "status": "restored",
+            "sharedCatalogUnchanged": true,
+            "sharedSettingsUnchanged": true,
+            "rewardCardsRetained": 3
+          }
+        }
+      },
+      {
+        "id": "solo-durable-continuations",
+        "status": "passed",
+        "result": {
+          "accepted": 220,
+          "acceptedPhases": {
+            "monsterAttackSequence": 2,
+            "monsterMovement": 2,
+            "pendingAdditionalMovement": 17,
+            "pendingAlertSwapActorIds": 1,
+            "pendingCombatAreaTriggers": 13,
+            "pendingCombatAreaTurnContinuation": 2,
+            "pendingD20Interrupt": 19,
+            "pendingDeathSave": 19,
+            "pendingInterception": 1,
+            "pendingInterceptionTrigger": 31,
+            "pendingMonsterOnHitGrapple": 2,
+            "pendingMovementStep": 51,
+            "pendingReachEntry": 6,
+            "pendingRollInfluenceResume": 2,
+            "pendingTriggeredAction": 84,
+            "pendingTurnStartGrappleDamage": 2,
+            "playerMovement": 10
+          },
+          "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc",
+          "boundaryRejections": 2,
+          "cases": 222,
+          "receiptReplaysPerAcceptedCase": 2,
+          "status": "passed",
+          "workerRequests": 222,
+          "required": {
+            "required": 1,
+            "passed": 1
+          },
+          "report": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_a6e2b7a27036baeccb2ae052/solo-durable-receipts.json"
+        }
+      },
+      {
+        "id": "image-egress-isolation",
+        "status": "passed",
+        "result": {
+          "connectCalls": 3,
+          "directAttempts": 0,
+          "exactReceiptReplays": 3,
+          "externalProviderRequests": 0,
+          "failureCode": "image_network_error",
+          "gameplayCommands": 3,
+          "provider": "local TLS emulator",
+          "providerCalls": 2,
+          "status": "passed",
+          "storage": "local S3 protocol emulator",
+          "storageUploads": 3,
+          "tlsVerified": true,
+          "workerCalls": 18,
+          "required": {
+            "required": 1,
+            "passed": 1
+          },
+          "sourceUnchanged": true,
+          "artifactHash": "sha256:e156b5d4dfee6e238b5eb5fc8866d4664d6f6cb51aaee6781b77c4cc1c1129cc"
+        }
+      },
+      {
+        "id": "browser-ui-fixtures-production",
+        "status": "passed",
+        "result": {
+          "tests": 48,
+          "passed": 48,
+          "skipped": 0,
+          "projects": [
+            "desktop-chromium",
+            "mobile-chromium"
+          ]
+        }
+      },
+      {
+        "id": "browser-ui-fixtures-battle3d",
+        "status": "passed",
+        "result": {
+          "tests": 8,
+          "passed": 8,
+          "skipped": 0,
+          "projects": [
+            "battle3d-local"
+          ]
+        }
+      },
+      {
+        "id": "local-api-spine",
+        "status": "passed",
+        "result": {
+          "exit_code": 0,
+          "contract": "Actual API/worker/PostgreSQL: template copy, run, initialize, exact retry, reload and source isolation"
+        }
+      },
+      {
+        "id": "local-browser-flows",
+        "status": "passed",
+        "result": {
+          "tests": 12,
+          "passed": 12,
+          "skipped": 0,
+          "projects": [
+            ""
+          ]
+        }
+      },
+      {
+        "id": "node-contracts",
+        "status": "passed",
+        "result": {
+          "tests": 935,
+          "passed": 935,
+          "skipped": 0
+        }
+      },
+      {
+        "id": "vitest",
+        "status": "passed",
+        "result": {
+          "tests": 6462,
+          "passed": 6462,
+          "skipped": 0
+        }
+      }
+    ]
+  },
+  "publication": {
+    "id": 37394405646,
+    "attempt": 1,
+    "status": "failure",
+    "stage": "prepare: verified predecessor artifact ID handoff",
+    "imageBuilds": 0,
+    "imagePublication": 0,
+    "hostDeployment": 0,
+    "reason": "githubRun validated selectLatestDeployedRun but returned only verifyRun projection, losing artifactId and runAttempt required by the workflow."
+  },
+  "repair": {
+    "files": [
+      "scripts/release/ci-release.mjs",
+      "scripts/release/ci-release.test.mjs"
+    ],
+    "behavior": "Return the actual verified latest-deployment identity including exact artifact ID, attempt and completion; reject attempt drift.",
+    "localContracts": {
+      "tests": 40,
+      "pass": 40,
+      "fail": 0,
+      "skipped": 0
+    },
+    "credentialScan": "passed",
+    "dumpScan": "passed",
+    "diffCheck": "passed",
+    "freshExactCommitCi": "pending",
+    "actualReadOnlyPredecessor": {
+      "status": "passed",
+      "observedAt": "2026-10-06T00:34:27.354Z",
+      "scope": "actual read-only GitHub predecessor discovery through repaired CLI helper",
+      "verified": {
+        "id": 37389067128,
+        "workflow": ".github/workflows/deploy.yml",
+        "repository": "alexeyvilmost/dnd_cards",
+        "controlCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "event": "workflow_dispatch",
+        "runAttempt": 1,
+        "artifactId": 11382070144,
+        "completedAt": "2026-10-06T00:05:04Z"
+      },
+      "productionMutations": 0,
+      "providerRequests": 0
+    }
+  },
+  "production": {
+    "source": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "deployment": 37389067128,
+    "healthy": true,
+    "writers": "OFF/OFF/OFF",
+    "automatic": false,
+    "selective": false
+  },
+  "nextAcceptance": "Commit only reviewed CLI repair and factual records, run fresh exact-source extended CI, then publish and deploy through unchanged gates. No failed receipt is relabeled successful."
+}

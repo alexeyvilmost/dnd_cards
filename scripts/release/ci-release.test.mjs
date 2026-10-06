@@ -7,7 +7,7 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {assembleCandidateManifest, prepareBuildPlan, validateBuildConfig, validateBuildPlan, validateComponentRecord,
-  verifyBaseline, verifyRun, verifySuiteReport, requiredVerificationTier} from './ci-release.mjs';
+  verifyBaseline, verifyRun, verifySuiteReport, requiredVerificationTier, verifyGithubRunIdentity} from './ci-release.mjs';
 import {assertPublicationInput, fileHash} from './ci-images.mjs';
 import {verifyCandidateProvenance} from './deployment-handoff.mjs';
 import {assertReleaseReady, evidenceHash} from './validate-manifest.mjs';
@@ -23,6 +23,22 @@ function report(candidate) {return {schema_version: 1, status: 'passed', suite: 
   checks: ['source-hygiene', 'source-stability', 'local-api-spine', 'local-browser-flows'].map(id => ({id, status: 'passed',...(id==='source-stability'?{result:{unchanged:true,sha256:'a'.repeat(64),files:4}}:{})})), cleanup: {status: 'stopped', errors: []}};}
 function trustedRun(candidate) {return {id: 10, path: '.github/workflows/ci.yml', status: 'completed', conclusion: 'success', event: 'push', head_branch: 'main', head_sha: candidate,
   repository: {full_name: repository}, head_repository: {full_name: repository}};}
+test('the release CLI retains the exact verified predecessor artifact and rejects attempt drift',async()=>{
+  const source='a'.repeat(40),raw={...trustedRun(source),path:'.github/workflows/deploy.yml',event:'workflow_dispatch',run_attempt:1};
+  const completedAt='2026-10-04T10:01:00Z',now=Date.parse('2026-10-04T12:00:00Z');
+  const get=async route=>{
+    if(route==='actions/runs/10')return structuredClone(raw);
+    if(route.startsWith('actions/workflows/deploy.yml/runs?'))return {total_count:1,workflow_runs:[structuredClone(raw)]};
+    if(route.startsWith('actions/runs/10/jobs?'))return {total_count:1,jobs:[{id:100,run_id:10,run_attempt:1,head_sha:source,name:'deploy',status:'completed',conclusion:'success',started_at:'2026-10-04T10:00:00Z',completed_at:completedAt}]};
+    if(route.startsWith('actions/runs/10/artifacts?'))return {total_count:1,artifacts:[{id:1234,name:'deployed-release',expired:false,size_in_bytes:2048,created_at:'2026-10-04T10:00:30Z',expires_at:'2027-01-01T00:00:00Z',workflow_run:{id:10,head_sha:source}}]};
+    throw Error('Unexpected metadata route');
+  };
+  const verified=await verifyGithubRunIdentity(get,{runId:'10',repository,kind:'deployment',now});
+  assert.equal(verified.artifactId,1234);assert.equal(verified.runAttempt,1);assert.equal(verified.completedAt,completedAt);assert.equal(verified.controlCommit,source);
+  let first=true;
+  await assert.rejects(verifyGithubRunIdentity(async route=>{if(first&&route==='actions/runs/10'){first=false;return {...raw,run_attempt:2};}return get(route);},{runId:'10',repository,kind:'deployment',now}),/manifest attempt/);
+  await assert.rejects(verifyGithubRunIdentity(get,{runId:'11',repository,kind:'deployment',now}),/Unexpected/);
+});
 function fixture(t) {
   const directory = mkdtempSync(path.join(tmpdir(), 'release-ci-fixture-')), repo = path.join(directory, 'source'); mkdirSync(repo);
   t.after(() => {assert.equal(path.dirname(directory), path.resolve(tmpdir())); assert.ok(path.basename(directory).startsWith('release-ci-fixture-')); rmSync(directory, {recursive: true, force: true});});

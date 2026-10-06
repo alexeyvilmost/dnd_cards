@@ -226,6 +226,18 @@ export function assembleCandidateManifest(plan, records, published) {
     missingGates: ['full-candidate-health', 'image-contract', 'complete-historical-inventory', 'pinned-artifacts']};
 }
 
+export async function verifyGithubRunIdentity(get, {runId, repository, candidate, kind, now=Date.now()}) {
+  if (!/^[1-9]\d*$/.test(String(runId)) || !Number.isSafeInteger(Number(runId))) throw Error('Invalid GitHub run identity');
+  const actual = await get(`actions/runs/${runId}`);
+  const run = verifyRun(actual, {repository, candidate, kind});
+  if (kind === 'deployment') {
+    const latest = await selectLatestDeployedRun(get, {repository, now});
+    if (latest?.id !== run.id || latest.controlCommit !== run.controlCommit || latest.runAttempt !== actual.run_attempt) throw Error('Baseline must be the latest successful deployed manifest attempt');
+    return {...run, ...latest};
+  }
+  return run;
+}
+
 async function githubRun(runId, repository, candidate, kind) {
   if (!/^[1-9]\d*$/.test(runId) || !/^[\w.-]+\/[\w.-]+$/.test(repository)) throw Error('Invalid GitHub identity');
   if (!process.env.GITHUB_TOKEN) throw Error('Read-only GitHub token required');
@@ -235,12 +247,7 @@ async function githubRun(runId, repository, candidate, kind) {
     if (!response.ok) throw Error(`GitHub metadata unavailable (${response.status})`);
     return response.json();
   };
-  const run = verifyRun(await get(`actions/runs/${runId}`), {repository, candidate, kind});
-  if (kind === 'deployment') {
-    const latest = await selectLatestDeployedRun(get, {repository});
-    if (latest?.id !== run.id || latest.controlCommit !== run.controlCommit) throw Error('Baseline must be the latest successful deployed manifest');
-  }
-  return run;
+  return verifyGithubRunIdentity(get, {runId, repository, candidate, kind});
 }
 function save(file, value) {mkdirSync(path.dirname(file), {recursive: true}); writeFileSync(file, JSON.stringify(value, null, 2) + '\n', {flag: 'wx'});}
 
