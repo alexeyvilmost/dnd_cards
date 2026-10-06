@@ -22,7 +22,7 @@ func writeBuildIdentityCommand(args []string, output io.Writer) bool {
 			versions = append(versions, migration.Version)
 		}
 		// Historical DB rows do not contain source checksums. Never invent them.
-		_ = json.NewEncoder(output).Encode(map[string]interface{}{"schemaVersion": 1, "versions": versions, "retiredObservedMigrationIds": migrations.RetiredObservedMigrationIDs(), "checksums": "unavailable", "additiveMigrations": migrations.AdditiveMigrationIdentities(), "migrationLockId": migrations.MigrationAdvisoryLockIdentity(), "build": componentBuildIdentity()})
+		_ = json.NewEncoder(output).Encode(map[string]interface{}{"schemaVersion": 1, "versions": versions, "retiredObservedMigrationIds": migrations.RetiredObservedMigrationIDs(), "supportedRetirementMigrations": []migrations.MigrationIdentity{migrations.RetirementMigrationIdentity()}, "checksums": "unavailable", "additiveMigrations": migrations.AdditiveMigrationIdentities(), "migrationLockId": migrations.MigrationAdvisoryLockIdentity(), "build": componentBuildIdentity()})
 		return true
 	}
 	_ = json.NewEncoder(output).Encode(componentBuildIdentity())

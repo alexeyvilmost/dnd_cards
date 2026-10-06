@@ -11,11 +11,13 @@ func TestReleaseMigrationCLIRejectsUnboundAndMalformedRequestsBeforeStartup(t *t
 	t.Cleanup(func() { componentSourceCommit, componentInputFingerprint = previousCommit, previousFingerprint })
 	componentSourceCommit = ""
 	componentInputFingerprint = ""
-	for _, input := range []string{`{}`, `{"schemaVersion":1,"releaseId":"candidate"}`, `{"unknown":true}`, `{} {}`} {
-		var output bytes.Buffer
-		handled, err := runReleaseMigrationCommand([]string{"--migrate-release"}, strings.NewReader(input), &output)
-		if !handled || err == nil || output.Len() != 0 {
-			t.Fatal("untrusted request passed or touched startup")
+	for _, command := range []string{"--migrate-release", "--inspect-release-migrations", "--inspect-character-retirement"} {
+		for _, input := range []string{`{}`, `{"schemaVersion":1,"releaseId":"candidate"}`, `{"unknown":true}`, `{} {}`} {
+			var output bytes.Buffer
+			handled, err := runReleaseMigrationCommand([]string{command}, strings.NewReader(input), &output)
+			if !handled || err == nil || output.Len() != 0 {
+				t.Fatal("untrusted request passed or touched startup")
+			}
 		}
 	}
 	if handled, _ := runReleaseMigrationCommand([]string{"--build-info"}, strings.NewReader(""), &bytes.Buffer{}); handled {

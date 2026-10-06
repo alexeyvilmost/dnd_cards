@@ -7,7 +7,7 @@ import {validateManifest,evidenceHash} from './validate-manifest.mjs';
 import {validateActive,assertServiceIdentities} from './deploy-state.mjs';
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 const hashPattern=/^sha256:[a-f0-9]{64}$/;
-const source=await readFile(new URL('../../infra/migrations/301_retire_legacy_characters.sql',import.meta.url));
+const source=await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-301.sql',import.meta.url));
 const verifiedPlans=new WeakMap();
 const artifactKinds=['sql','dump','archive','archiveRestore','retirementProof','retainedBefore','retainedAfter','readerPair','candidate','active'];
 export const retirementProfile=Object.freeze({schemaVersion:1,id:'retire-character-generations-301-local',migrationId:'301_retire_legacy_characters',mode:'local-owned-rehearsal',fingerprintTimezone:'UTC',sqlSourceHash:hash(source),productionExecutionSupported:false,automaticMigration:false});
@@ -73,6 +73,6 @@ export async function localRetirementProgram(plan){
  const proof=verifiedPlans.get(plan);if(!proof)throw Error('Live verified local retirement plan required');
  assert.equal(hash(await readFile(backupFile(proof.directory,'retirement-bundle.json'))),plan.bundleHash);
  for(const kind of artifactKinds)assert.equal(await checksum(backupFile(proof.directory,proof.bundle.artifacts[kind].path)),proof.bundle.artifacts[kind].sha256);
- assert.equal(hash(await readFile(new URL('../../infra/migrations/301_retire_legacy_characters.sql',import.meta.url))),plan.sqlSourceHash);
+ assert.equal(hash(await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-301.sql',import.meta.url))),plan.sqlSourceHash);
  return proof.source.toString('utf8').replace(":'retirement_request'","'"+JSON.stringify(proof.request).replaceAll("'","''")+"'");
 }

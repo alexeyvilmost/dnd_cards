@@ -30,15 +30,19 @@ func TestMigrationInfoCommand(t *testing.T) {
 		t.Fatal("migration inspection mode not handled")
 	}
 	var info struct {
-		Versions                    []string `json:"versions"`
-		Checksums                   string   `json:"checksums"`
-		MigrationLockID             string   `json:"migrationLockId"`
-		RetiredObservedMigrationIDs []string `json:"retiredObservedMigrationIds"`
+		Versions                      []string                       `json:"versions"`
+		Checksums                     string                         `json:"checksums"`
+		MigrationLockID               string                         `json:"migrationLockId"`
+		RetiredObservedMigrationIDs   []string                       `json:"retiredObservedMigrationIds"`
+		SupportedRetirementMigrations []migrations.MigrationIdentity `json:"supportedRetirementMigrations"`
 	}
 	if err := json.Unmarshal(output.Bytes(), &info); err != nil {
 		t.Fatal(err)
 	}
 	registered := migrations.GetAllMigrations()
+	if !reflect.DeepEqual(info.SupportedRetirementMigrations, []migrations.MigrationIdentity{migrations.RetirementMigrationIdentity()}) {
+		t.Fatal("retirement support must bind embedded SQL separately from executable migrations")
+	}
 	if !reflect.DeepEqual(info.RetiredObservedMigrationIDs, migrations.RetiredObservedMigrationIDs()) {
 		t.Fatal("retired observation support must be distinct from executable migration versions")
 	}

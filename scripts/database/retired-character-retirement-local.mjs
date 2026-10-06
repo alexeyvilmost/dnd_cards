@@ -5,7 +5,7 @@ import {fileURLToPath} from "node:url";
 import path from 'node:path';
 import {startTestStack} from '../testing/stack.mjs';
 const root=fileURLToPath(new URL("../../",import.meta.url));
-const source=path.join(root,'infra/migrations/301_retire_legacy_characters.sql'),sql=await readFile(source,'utf8');
+const source=path.join(root,'backend/migrations/data/retire-legacy-characters-301.sql'),sql=await readFile(source,'utf8');
 const hash=value=>'sha256:'+createHash('sha256').update(value).digest('hex');
 const sourceHash=hash(sql),startedAt=new Date().toISOString(),directory=path.join(root,'outputs/testing/retired-character-301-'+startedAt.replaceAll(':','-'));
 await mkdir(path.join(root,"outputs/testing"),{recursive:true});
