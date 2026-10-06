@@ -1,6 +1,7 @@
 import {evidenceHash,compositionFingerprint,validateMigrationSet,assertObservedMigrationBinding} from './validate-manifest.mjs';
 import {isLegacyBaseline,validateLegacyBaseline,legacyMigrationBaseline} from './legacy-baseline.mjs';
 import {validateRetirementDatabaseState,retirementDatabaseStateFromInspection} from './retirement-state.mjs';
+import {retirementInspectionFromExecution} from './retirement-execution-result.mjs';
 const equal=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const hash=value=>typeof value==='string'&&/^sha256:[a-f0-9]{64}$/.test(value);
 const image=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$/.test(value);
@@ -76,4 +77,8 @@ export function databaseStateFromResult(plan,receipt) {
 }
 export function stateWithDatabase(active,database){const state={...active,database};validateDatabaseState(state);return state;}
 export function databaseStateFromRetirementInspection(args,receipt){validateDatabaseState(args.active);if(isLegacyBaseline(args.active))throw Error('Retirement requires an adopted manifest baseline');return retirementDatabaseStateFromInspection(args,receipt);}
+export function databaseStateFromRetirementExecution(args,receipt){
+  const observed=retirementInspectionFromExecution(args.request,receipt);
+  return databaseStateFromRetirementInspection({...args,request:observed.request},observed.inspection);
+}
 export function requiresOldReaders(active){return isLegacyBaseline(active)?Boolean(active.database):!equal(databaseMigrationSet(active),active.manifest.migrationSet);}

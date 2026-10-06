@@ -17,3 +17,9 @@ export function retirementStateUnitFixture(){
  const inspection={schemaVersion:1,status:'verified',result:{schemaVersion:1,status:'verified',releaseId:request.releaseId,observedVersions:request.expectedCurrent.map(row=>row.id).sort(),sqlSourceHash:retirementSQLHash,receiptHash:request.receiptHash,schemaProofHash:h('6'),applied:[],rollbackReadersSafe:true},build:{provenance:'baked',sourceCommit:request.candidateSourceCommit,inputFingerprint:request.candidateInputFingerprint}};
  return {active,executorManifest,request,inspection,approvalHash:h('e')};
 }
+export function retirementExecutionUnitFixture(){
+ const f=retirementStateUnitFixture(),inspectionRequest=structuredClone(f.request);
+ delete f.request.receiptHash;f.request.kind='execute-character-retirement-301';f.request.expectedCurrent=structuredClone(f.active.database.migrationSet);
+ f.execution={schemaVersion:1,status:'verified',build:structuredClone(f.inspection.build),result:{schemaVersion:1,status:'verified',releaseId:f.request.releaseId,applied:[retirementMigrationId],request:inspectionRequest,inspection:structuredClone(f.inspection.result)}};
+ return f;
+}
