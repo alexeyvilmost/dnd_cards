@@ -1772,8 +1772,8 @@
     },
     {
       "path": "backend/roguelike_catalog_batch.go",
-      "sha256": "sha256:39ecb444f487992a262e103cfe76b5778f1c94e13b53acf4994f53bac53db985",
-      "bytes": 7709
+      "sha256": "sha256:0b3c84a3b8eae47533d4189d521080ae6580f403fc85f030b66a70a6b3c60c04",
+      "bytes": 7808
     },
     {
       "path": "backend/roguelike_catalog_prefetch.go",

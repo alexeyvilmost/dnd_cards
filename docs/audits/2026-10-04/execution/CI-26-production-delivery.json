@@ -1,0 +1,245 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-ci26-publication15-full-host-delivery",
+  "status": "deployed-and-independently-verified",
+  "recordedAt": "2026-10-06T16:25:07.580Z",
+  "applicationSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+  "deploymentControlCommit": "02541c07a08ac5559e93401393cc5ba4cf936edf",
+  "releaseId": "candidate-f05abed68215-847b49a2fabc",
+  "ci": {
+    "id": 37438145505,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37438145505",
+    "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+    "status": "passed",
+    "durationMs": 747027,
+    "reportHash": "sha256:864643f02386ddcccfb846c169a7d287f3c17f2fbc22fba83b391bf67cfcf66a",
+    "sourceSnapshot": {
+      "sha256": "3a142b2b531d5cb470369e02d303621a0547192b81a8c9171dd5d463deec8c5d",
+      "files": 4538
+    },
+    "counts": [
+      {
+        "id": "worker-and-database-node",
+        "tests": 25,
+        "passed": 25,
+        "skipped": 0
+      },
+      {
+        "id": "observed-legacy-baseline",
+        "tests": 1
+      },
+      {
+        "id": "browser-ui-fixtures-production",
+        "tests": 48,
+        "passed": 48,
+        "skipped": 0
+      },
+      {
+        "id": "browser-ui-fixtures-battle3d",
+        "tests": 8,
+        "passed": 8,
+        "skipped": 0
+      },
+      {
+        "id": "local-browser-flows",
+        "tests": 12,
+        "passed": 12,
+        "skipped": 0
+      },
+      {
+        "id": "node-contracts",
+        "tests": 980,
+        "passed": 980,
+        "skipped": 0
+      },
+      {
+        "id": "vitest",
+        "tests": 6462,
+        "passed": 6462,
+        "skipped": 0
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "publication": {
+    "id": 37440361187,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37440361187",
+    "status": "success",
+    "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+    "components": {
+      "backend": {
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:18df7b7d8b25e59c2dcaeb5bea7d9a893543958b5abce0096fcfd7a14c0243e4",
+        "releaseId": "candidate-f05abed68215-847b49a2fabc",
+        "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
+      },
+      "frontend": {
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:576def7922b9fff7643a5f42fe01814204afdf9b8247de3097aaed11363fd70a",
+        "releaseId": "candidate-f05abed68215-847b49a2fabc",
+        "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
+      },
+      "rulesWorker": {
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:44854500e2afb3a1c3721410cf59f7b121b949efbd37c2f6f1a20a9085d52a2f",
+        "releaseId": "candidate-f05abed68215-847b49a2fabc",
+        "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
+      }
+    }
+  },
+  "deployment": {
+    "id": 37486931185,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37486931185",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
+  "independentVerification": {
+    "sha256": "sha256:d9fd57af746d4a5c69b7158925fd1342a053f16b8de4feb0b3378308d06ac0a0",
+    "verifiedAt": "2026-10-06T16:09:56.574Z",
+    "healthyComponents": [
+      "backend",
+      "frontend",
+      "rulesWorker"
+    ],
+    "edgeRoutes": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "path": "/build-info.json",
+        "status": 200
+      }
+    ],
+    "migrationCount": 305
+  },
+  "previousProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+  "previousProductionVersionRecord": "/opt/bagofholding/backups/version-before-f05-2026-10-06T14-42-38.944Z.json",
+  "backup": {
+    "schemaVersion": 1,
+    "status": "fresh-backup-captured",
+    "observedAt": "2026-10-06T15:30:49.201Z",
+    "createdAt": "2026-10-06T15:27:20.030Z",
+    "backupDirectory": "/opt/bagofholding/backups/capture-37486931185-1",
+    "databaseDump": {
+      "path": "/opt/bagofholding/backups/capture-37486931185-1/database.dump",
+      "bytes": 974883784,
+      "sha256": "sha256:2172ab61600cd1ef70194b7d46a590fbf3346a129b0ac901a94063941e791931"
+    },
+    "files": 44,
+    "totalBytes": 1045942501,
+    "previousSourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "previousReleaseId": "candidate-93265633db10-deb958c1c9a7",
+    "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24",
+    "releaseManifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+    "targetSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+    "deploymentRunId": 37486931185,
+    "liveDatabaseRestored": false
+  },
+  "rehearsal": {
+    "checksPassed": 9,
+    "anchor": {
+      "kind": "full-proof-anchor",
+      "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
+      "bundleHash": "sha256:b6f14294293326bd10fcff71c26fdce0b9e2f457b9da9150f0a19ff2c472ebbd",
+      "rehearsalHash": "sha256:11af3552b69351f0baed3c8d3da679fb25e533fc4bf7987f9d331d818eb22e02",
+      "backupHash": "sha256:1aff688740c9b2559e56fd37ee47a3710f90cceaa1c43ff859ea72f07c71441a",
+      "restoreReportHash": "sha256:cb5a872a180b3a0c61018bf02e26d2e6d8e5ad2547d70f0b22c7b445b6d53470",
+      "filesystemHash": "sha256:82e5463f3b57b8784730e67a9ca97330295ed04fb805bfdc2917689bb6c0e747",
+      "runtimeCompatibilityHash": "sha256:c3a42c8ab656d65279292b56ff84f6b645c52493d06cf11a26c53f2559a9ccf9",
+      "completedAt": "2026-10-06T16:01:20.644Z",
+      "backupCreatedAt": "2026-10-06T15:27:20.030Z"
+    },
+    "ownedCleanup": "stopped",
+    "productionDatabaseRestored": false
+  },
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "frontendSelective": {
+    "enabled": true,
+    "enabledAt": "2026-10-06T16:21:54.734Z",
+    "repositoryVariableVerifiedAt": "2026-10-06T16:23:02.682Z",
+    "anchorHash": "sha256:38209e9f00c3f036c6dc60ff597377dced8e4e8ce6cced0fa4a7ac090dc51794",
+    "originalObservedAt": "2026-10-06T16:06:36.895Z",
+    "hostConfigHash": "sha256:a6c48b4d8f22bf3242674c0854f2454c3c6b9c3e466a2d54c9e2954696aaead7",
+    "actualSelectiveDeploymentAccepted": false,
+    "serviceReplacementsDuringEnablement": 0,
+    "automatic": false
+  },
+  "automation": {
+    "release": false,
+    "deploy": false,
+    "reconcile": false,
+    "actualAcceptancePending": true
+  },
+  "runtime": {
+    "host": {
+      "logicalCpus": 2,
+      "totalMemoryBytes": 4106096640,
+      "availableMemoryBytes": 3347161088,
+      "diskTotalBytes": 50884108288,
+      "diskAvailableBytes": 7804448768
+    },
+    "components": {
+      "backend": {
+        "nanoCpus": 0,
+        "memoryLimitBytes": 0,
+        "pidsLimit": null,
+        "environment": {
+          "RULES_WORKER_MIRRORS_ENABLED": "1",
+          "DB_FROZEN_CATALOGS": "0",
+          "RULES_WORKER_MAX_INFLIGHT": "4",
+          "IMAGE_JOBS_ENABLED": "1",
+          "DB_COMPACT_RECEIPTS": "1",
+          "RULES_CATALOG_BATCH_ENABLED": "1"
+        }
+      },
+      "frontend": {
+        "nanoCpus": 0,
+        "memoryLimitBytes": 0,
+        "pidsLimit": null,
+        "environment": {}
+      },
+      "rulesWorker": {
+        "nanoCpus": 0,
+        "memoryLimitBytes": 0,
+        "pidsLimit": null,
+        "environment": {
+          "RULES_WORKER_MAX_CACHED_ARTIFACTS": "4"
+        }
+      }
+    },
+    "measurement": "Read-only live limits and capacity; no production latency improvement inferred."
+  },
+  "storageCleanup": {
+    "freedBytes": 4490361267,
+    "receiptFiles": [
+      "derived-dump-cleanup-2026-10-06T15-14-50.545Z.json",
+      "derived-expired-dump-cleanup-2026-10-06T15-45-21.972Z.json",
+      "unpacked-control-archive-cleanup-2026-10-06T15-54-58.169Z.json"
+    ]
+  },
+  "paidProviderRequestsThisAcceptance": 0,
+  "productionDatabaseRestored": false,
+  "persistentDeployIdentityRetained": true,
+  "backupStorage": "primary-host-per-owner-decision",
+  "overallOriginalPlanComplete": false,
+  "remaining": [
+    "Genuine frontend-only deployment with unchanged backend/worker image and container identities; owned full rollback and automatic/reconcile acceptance.",
+    "Integrate and verify local legacy-character data retirement with current retained-history rollback boundary; no current V3/shared inventory deletion.",
+    "Integrate separately measured performance changes and repeat paired canonical API/UI acceptance on exact source; current flags alone do not prove speedup.",
+    "Historical fresh-through-278 requires authentic pre278 inputs; supported migration upgrade proof does not close this different boundary.",
+    "Verify the intended live application image-generation/storage/history flow without an unbounded paid retry."
+  ]
+}

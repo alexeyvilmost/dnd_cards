@@ -16,7 +16,12 @@ import (
 // rights/content contract; request UUIDs or access tokens cannot provide one.
 func (catalog *roguelikeFrozenCatalog) fulfillWave(tx *gorm.DB, needs []roguelikeWorkerNeed) error {
 	if os.Getenv("RULES_CATALOG_BATCH_ENABLED") != "1" {
+		seen := map[roguelikeWorkerNeed]bool{}
 		for _, need := range needs {
+			if seen[need] {
+				continue
+			}
+			seen[need] = true
 			if err := catalog.fulfill(tx, need); err != nil {
 				return err
 			}

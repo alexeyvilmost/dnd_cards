@@ -137,3 +137,101 @@ func TestCatalogBatchMissingUnknownAliasesAndEmptyCompleteness(t *testing.T) {
 		}
 	}
 }
+
+func TestCatalogWaveDedupPreservesRowsAndFreshness(t *testing.T) {
+	t.Setenv("RULES_CATALOG_BATCH_ENABLED", "0")
+	f := openCharacterV3AccessFixture(t)
+	if err := f.db.AutoMigrate(&Action{}, &Effect{}, &Variable{}); err != nil {
+		t.Fatal(err)
+	}
+	a := Action{ID: uuid.New(), Name: "Distinct A", CardNumber: "WAVE-A"}
+	b := Action{ID: uuid.New(), Name: "Distinct B", CardNumber: "WAVE-B"}
+	x, y := "wave_x", "wave_y"
+	e1 := Effect{ID: uuid.New(), Name: "Effect X", CardNumber: "WAVE-X", Type: &x}
+	e2 := Effect{ID: uuid.New(), Name: "Effect Y", CardNumber: "WAVE-Y", Type: &y}
+	v := Variable{VariableID: "catalog-wave", Name: "First value"}
+	for _, row := range []any{&a, &b, &e1, &e2, &v} {
+		if err := f.db.Create(row).Error; err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := registerPerformanceCallbacks(f.db); err != nil {
+		t.Fatal(err)
+	}
+	needs := []roguelikeWorkerNeed{{Kind: "entity", EntityType: "action", Reference: a.ID.String()}, {Kind: "entity", EntityType: "action", Reference: b.CardNumber}, {Kind: "effect_type", EffectType: x}, {Kind: "effect_type", EffectType: y}, {Kind: "variables"}}
+	needs = append(needs, needs...)
+	reference, actual := emptyRoguelikeFrozenCatalog(), emptyRoguelikeFrozenCatalog()
+	trace := &requestPerformance{values: map[string]float64{}}
+	tx := f.db.WithContext(context.WithValue(context.Background(), performanceContextKey{}, trace))
+	for _, need := range needs {
+		if err := reference.fulfill(f.db, need); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := actual.fulfillWave(tx, needs); err != nil {
+		t.Fatal(err)
+	}
+	expected, _ := json.Marshal(reference)
+	saved, _ := json.Marshal(actual)
+	if string(expected) != string(saved) {
+		t.Fatal("wave changed canonical catalog bytes")
+	}
+	if trace.snapshot()["sql_count"] != 5 {
+		t.Fatalf("duplicate needs still read SQL: %.0f", trace.snapshot()["sql_count"])
+	}
+	if err := f.db.Model(&v).Update("name", "Second value").Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := actual.fulfillWave(tx, needs); err != nil {
+		t.Fatal(err)
+	}
+	if trace.snapshot()["sql_count"] != 10 || actual.Variables[0].Name != "Second value" {
+		t.Fatal("deduplication escaped its wave and reused old variables")
+	}
+	if err := f.db.Model(&a).Update("name", "Changed A").Error; err != nil {
+		t.Fatal(err)
+	}
+	fresh := emptyRoguelikeFrozenCatalog()
+	if err := fresh.fulfillWave(f.db, needs); err != nil {
+		t.Fatal(err)
+	}
+	freshBytes, _ := json.Marshal(fresh)
+	if string(freshBytes) == string(saved) {
+		t.Fatal("new preparation reused old entities")
+	}
+}
+func TestCatalogWaveDedupPreservesAliasAndRefusals(t *testing.T) {
+	t.Setenv("RULES_CATALOG_BATCH_ENABLED", "0")
+	f := openCharacterV3AccessFixture(t)
+	if err := f.db.AutoMigrate(&Spell{}, &Effect{}, &Variable{}); err != nil {
+		t.Fatal(err)
+	}
+	alias := "Hunter's Mark!"
+	a := Spell{ID: uuid.New(), Name: "Alias A", NameEn: &alias, CardNumber: "WAVE-ALIAS-A"}
+	b := Spell{ID: uuid.New(), Name: "Alias B", NameEn: &alias, CardNumber: "WAVE-ALIAS-B"}
+	if err := f.db.Create(&a).Error; err != nil {
+		t.Fatal(err)
+	}
+	need := roguelikeWorkerNeed{Kind: "entity", EntityType: "spell", Reference: "hunters_mark"}
+	actual := emptyRoguelikeFrozenCatalog()
+	if err := actual.fulfillWave(f.db, []roguelikeWorkerNeed{need, need}); err != nil || len(actual.Entities["spell"]) != 1 {
+		t.Fatal("canonical alias lost")
+	}
+	if err := f.db.Create(&b).Error; err != nil {
+		t.Fatal(err)
+	}
+	ambiguous := emptyRoguelikeFrozenCatalog()
+	err := ambiguous.fulfillWave(f.db, []roguelikeWorkerNeed{need, need})
+	var rejection *roguelikeWorkerRejection
+	if !errors.As(err, &rejection) || rejection.Code != "combat_catalog_ambiguous_ref" {
+		t.Fatal("ambiguous alias accepted")
+	}
+	for _, bad := range []roguelikeWorkerNeed{{Kind: "unknown"}, {Kind: "entity", EntityType: "unknown", Reference: "id"}, {Kind: "entity", EntityType: "spell"}, {Kind: "entity", EntityType: "spell", Reference: "absent"}} {
+		old, new := emptyRoguelikeFrozenCatalog(), emptyRoguelikeFrozenCatalog()
+		expected := old.fulfill(f.db, bad)
+		got := new.fulfillWave(f.db, []roguelikeWorkerNeed{bad, bad})
+		if expected == nil || got == nil || expected.Error() != got.Error() {
+			t.Fatal("canonical refusal changed")
+		}
+	}
+}

@@ -12,7 +12,7 @@
   "frontendApiUrl": "",
   "frontendMediaVariants": false,
   "writerPolicy": {"compactReceipts": true, "imageJobs": true, "frozenCatalogs": false},
-  "contentManifestHash": "sha256:792705aca1d66e2ed086a649ea5783b953bfb7c6130e1861bc79c3b205a79121",
+  "contentManifestHash": "sha256:cc7b8a35fac552dff5ef59e3d4b1c8d8da5f5e61a28ffb9bcf1d7bc2b91843d6",
   "migrationSet": [
     {
       "id": "001_create_image_library",

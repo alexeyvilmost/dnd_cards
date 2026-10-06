@@ -257,15 +257,13 @@
     {
       "id": "PERF-03",
       "title": "Сокращение runtime payload и устранение CPU-очереди worker по измерениям",
-      "status": "implemented_ci_verified_bounded_capacity_scope",
+      "status": "implemented_ci_verified_live_capacity_recorded",
       "evidence": "docs/audits/2026-10-04/execution/PERF-03.md",
-      "remaining_gates": [
-        "PERF-HOST"
-      ],
+      "remaining_gates": [],
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "followup_evidence": [],
-      "previous_status": "verified_default_off",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "previous_status": "implemented_ci_verified_bounded_capacity_scope",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "Exact-mirror transport reduces party 1/2/6 wire bytes by 47.3/64.7/64.8%; pure aura projection preserves output/RNG. Bounded admission and artifact LRU; actual before/after-commit process kills and 160-command/retry long-combat proof."
@@ -278,7 +276,10 @@
         ]
       },
       "historical_acceptance_scope": "Mirrors transport OFF; CPU fix и пределы admission/LRU реализованы. Process-kill2phase и long-combat160+100 с exact retries/replays PASS. Общего memory bound нет: processedCommandIds +195B/turn в измеренном сценарии. Это dedup ledger, не доказанная heap leak.",
-      "historical_final_local_suite_status": "pending_fresh_source_after_completion_followup"
+      "historical_final_local_suite_status": "pending_fresh_source_after_completion_followup",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
+      ]
     },
     {
       "id": "PERF-04",
@@ -444,21 +445,23 @@
     {
       "id": "REL-03",
       "title": "Manifest релиза и достоверная идентификация компонентов",
-      "status": "first_healthy_adoption_verified_followon_delivery_pending",
+      "status": "full_followon_production_verified_selective_auto_pending",
       "evidence": "docs/audits/2026-10-04/execution/REL-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
-        "OCI-CANDIDATE"
+        "OCI-SELECTIVE",
+        "REL-ENABLE"
       ],
       "latest_evidence_note": "Статус pending_oci устарел: настоящий локальный registry build/publish/pull/reuse9/9 и collector health/history/migration8+7 выполнены. Это сохранённые local-only fixtures, не CI-attested текущий production candidate.",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json",
         "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.json",
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
-        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
-      "previous_status": "fourth_adoption_refused_utf8_locally_fixed_new_exact_ci_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "previous_status": "first_healthy_adoption_verified_followon_delivery_pending",
       "latest_execution_result": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
@@ -520,24 +523,24 @@
     {
       "id": "REL-05",
       "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
-      "status": "healthy_predecessor_verified_ci19_passed_metadata_reader_repair_pending",
+      "status": "full_followon_verified_selective_enabled_acceptance_pending",
       "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
         "OCI-SELECTIVE",
-        "OCI-CANDIDATE",
         "REL-ENABLE"
       ],
-      "previous_status": "first_rehearsal_stopped_selective_auto_private",
+      "previous_status": "healthy_predecessor_verified_ci19_passed_metadata_reader_repair_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "latest_evidence_note": "Local OCI collector действительно passed8/8 плюс7/7 additive matrix с stopped cleanup; полная legacy-adapter adoption/rollback и production first adoption пока не подтверждены этой квитанцией.",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/REL-05-oci-rehearsal.json",
         "docs/audits/2026-10-04/execution/REL-05-typed-reference-inventory.json",
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
-        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
@@ -566,18 +569,17 @@
     {
       "id": "REL-06",
       "title": "Проверяемый backup/restore для БД, правил и релизов",
-      "status": "full_host_restore_and_healthy_adoption_verified",
+      "status": "full_host_ninth_gate_restore_delivery_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-06.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "OCI-CANDIDATE"
-      ],
+      "remaining_gates": [],
       "current_evidence": [
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
-        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
+        "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "previous_status": "owned_restore_verified_host_rehearsal_incomplete",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "previous_status": "full_host_restore_and_healthy_adoption_verified",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
@@ -692,14 +694,12 @@
     {
       "id": "DB-02",
       "title": "Компактные новые квитанции команд без потери идемпотентности",
-      "status": "implemented_ci_verified_writer_off_followon_pending",
+      "status": "compact_new_writes_ci_and_production_verified",
       "evidence": "docs/audits/2026-10-04/execution/DB-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "REL-ENABLE"
-      ],
-      "previous_status": "verified_default_off",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "remaining_gates": [],
+      "previous_status": "implemented_ci_verified_writer_off_followon_pending",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "New bounded gzip receipts with version/hash/length, legacy reader and exact retry. 1000-command shadow comparison relation bytes 44507136→26492928 (40.47%). Same-014f actual ON/OFF/restart/corruption+full restore proves both receipt families locally."
@@ -710,7 +710,10 @@
         "nextAcceptance": [
           "After genuine dual-reader first adoption, integrate ninth-stage writer gate; run exact published distinct pair on public synthetic fixture plus independent full retained-history restore; enable only new writes after accepted proof and record monotonic format obligation."
         ]
-      }
+      },
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
+      ]
     },
     {
       "id": "DB-03",
@@ -824,16 +827,13 @@
     {
       "id": "AI-03",
       "title": "Фоновые image jobs и изолированная исходящая сеть",
-      "status": "implemented_ci_verified_jobs_off_followon_pending",
+      "status": "image_jobs_ci_and_production_enabled_verified",
       "evidence": "docs/audits/2026-10-04/execution/AI-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "APPLICATION-CUTOVER",
-        "COMPATIBLE-WRITER-ROLLOUT"
-      ],
-      "previous_status": "in_progress_completion_audit",
+      "remaining_gates": [],
+      "previous_status": "implemented_ci_verified_jobs_off_followon_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "latest_execution_result": {
         "demonstrated": [
           "Durable owner jobs, accepted-ID replay even with writer disabled, status/history recovery and explicit unknown acknowledgement. Real Go/PG/Node gameplay continues during held/failing CONNECT. Same-014f jobs/browser/expanded restore and ON→OFF→ON foundations passed."
@@ -845,7 +845,10 @@
           "Integrate/run exact-pair hosted browser + host format/history ninth gate after actual compatible predecessor exists; preserve ON→OFF→OFF obligation and unknown outcome no-retry semantics, then enable jobs through recorded policy."
         ]
       },
-      "historical_acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline."
+      "historical_acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
+      ]
     },
     {
       "id": "CLEAN-01",
@@ -929,7 +932,7 @@
     "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim.",
     "CI10/all3publication passed; second actual manual deploy refused beforecapture root0755. Exact root0700 repair verified, originallive4549 healthy/noapplicationmutations. Both old failures remain actual; reviewed-chain source/fullCI/newfreshadoption pending."
   ],
-  "updated_at": "2026-10-06T06:47:50.847Z",
+  "updated_at": "2026-10-06T16:32:47.371Z",
   "work_status": "reviewed_replay_fix_local_pass_pending_new_exact_ci_and_fresh_adoption",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
@@ -997,7 +1000,7 @@
     "skill": ".agents/skills/timeweb-deploy/SKILL.md",
     "ssh_identity_verified": true,
     "production_mutated": true,
-    "production_mutation_scope": "Permanent private Sota gateway, protected host configuration and historical certificate recovery, dedicated main-only GitHub SSH environment; one paid ImagesPOST successful. Existing application4549fb3c unchanged."
+    "production_mutation_scope": "Verified f05 full service delivery; compact new receipts and image jobs ON, frozen catalogs OFF; frontend selective policy enabled without service replacement; no live database restore."
   },
   "previous_verified_source": {
     "sha256": "9006ebdf46d135173693de59024649515d0706e4f2c2fc5eba540ef7df16aabb",
@@ -2006,597 +2009,842 @@
       "evidence": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
       "status": "ci19-passed-publication-predecessor-refresh-refused-bounded-reader-locally-verified",
       "recordedAt": "2026-10-06T02:13:36.728Z"
+    },
+    {
+      "schemaVersion": 1,
+      "kind": "exact-ci15-independent-healthy-first-adoption",
+      "recordedAt": "2026-10-06T00:06:07.275Z",
+      "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "ci": {
+        "id": 37386799187,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37386799187",
+        "status": "completed",
+        "conclusion": "success",
+        "aggregateHash": "sha256:e87d12f02805b689acd48292403edd729c76f765c55a8b8a41267ab0cfe00859",
+        "durationMs": 883148,
+        "sourceSnapshot": {
+          "sha256": "827cc19b672569c55dfb6f6fb9c906f9e46a54785b60c2ed257e73e4da3b6f5c",
+          "files": 4430
+        },
+        "counts": {
+          "node": 731,
+          "vitest": 6462,
+          "goPackageCases": 754,
+          "workerAndDatabase": 25,
+          "cursorChecks": 22,
+          "browserFlows": 12,
+          "uiFixtures": 48,
+          "battle3d": 8
+        },
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      "publication": {
+        "id": 37388524104,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37388524104",
+        "status": "completed",
+        "conclusion": "success",
+        "allThreeNewImmutableImages": true
+      },
+      "deployment": {
+        "id": 37389067128,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37389067128",
+        "status": "succeeded-independently-verified",
+        "manifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+        "projectionHash": "sha256:d3e9cb9f1ee0baab9ed09109b72e01925ded66ab55d3bb140b07f33db2898701",
+        "verifiedAt": "2026-10-06T00:05:41.299Z",
+        "migrationVersions": [
+          "001_create_image_library",
+          "002_add_extended_fields",
+          "003_add_armor_support",
+          "004_add_is_template_field",
+          "005_remove_weapon_templates_table",
+          "006_add_detailed_description",
+          "007_add_slot_field",
+          "008_add_is_equipped_field",
+          "009_create_characters_v2_table",
+          "010_add_text_formatting_fields",
+          "011_add_detailed_description_formatting",
+          "011_add_detailed_description_toggle",
+          "012_fix_character_v2_foreign_key",
+          "013_add_performance_indexes",
+          "014_add_equipped_slot",
+          "015_add_effects",
+          "016_create_shops",
+          "017_create_actions",
+          "018_create_effects",
+          "019_add_weapon_type",
+          "020_add_character_v3_proficiencies",
+          "021_add_image_library_item_fields",
+          "022_remove_actions_resource_check",
+          "023_add_action_distance",
+          "024_add_effects_resources_to_characters_v2",
+          "025_update_rage_action",
+          "026_add_attunement_range_fields",
+          "027_add_elemental_damage_fields",
+          "028_add_battle_profile_field",
+          "029_add_custom_rarity_color",
+          "030_create_spells",
+          "031_spells_arrays_to_jsonb",
+          "032_spells_widen_text_columns",
+          "033_create_feats",
+          "034_create_backgrounds",
+          "035_containers_and_bg_equipment",
+          "036_card_price_currency",
+          "037_create_races",
+          "038_mechanics_and_race_abilities",
+          "039_create_classes",
+          "040_create_characters_v3",
+          "041_feat_related_abilities",
+          "042_forge_mvp_content",
+          "043_character_rule_state",
+          "044_wizard_spell_choices",
+          "045_create_resources",
+          "046_expand_effect_types",
+          "047_spell_resources",
+          "048_character_events",
+          "049_character_runtime",
+          "050_mvp_equipment",
+          "051_race_subrace",
+          "052_race_subrace_level",
+          "053_migrate_legacy_subraces",
+          "054_elf_subrace_content",
+          "055_dragonborn_subraces",
+          "056_spell_mechanics",
+          "057_class_recommended_abilities",
+          "058_card_mechanics",
+          "059_class_subclasses",
+          "060_resource_spent_image",
+          "061_class_equipment_options",
+          "062_basic_actions",
+          "063_create_variables",
+          "064_create_conditions",
+          "065_conditions_as_effects",
+          "066_drop_spell_legacy_fields",
+          "067_card_enchant_bonus",
+          "068_dash_disengage_actions",
+          "069_fix_dash_disengage",
+          "070_create_concepts",
+          "071_widen_cards_damage_type_check",
+          "072_widen_actions_action_type_check",
+          "073_add_effects_repeatable",
+          "074_create_encounters",
+          "075_character_current_encounter",
+          "076_add_card_mastery",
+          "077_add_name_en",
+          "078_restore_feat_slot_effects",
+          "079_expand_card_rarities",
+          "080_character_manual_entities",
+          "081_content_support_certification",
+          "082_character_system_metadata",
+          "083_certify_micro_micro_content",
+          "084_certify_micro_micro_qa_fixes",
+          "085_refresh_transitive_micro_micro_certifications",
+          "086_repair_content_mechanics",
+          "087_idempotent_character_events",
+          "088_normalize_spell_targeting_ranges",
+          "089_repair_spell_targeting_certifications",
+          "090_create_canonical_runtime",
+          "091_add_attack_runtime_v4",
+          "092_add_world_runtime_v5",
+          "093_add_content_migration_receipts",
+          "094_harden_canonical_transport",
+          "095_add_character_runtime_commands",
+          "096_lock_certified_content_mechanics",
+          "096_register_micro_mvp_rules_release",
+          "097_repair_live_mvp_content_contracts",
+          "097_repair_micro_mvp_rules_release_identity",
+          "098_repair_magic_initiate_2024",
+          "098_restore_live_mvp_starting_equipment",
+          "099_apply_disengage_runtime_effect",
+          "100_create_data_driven_monsters",
+          "101_pin_tactical_basic_action_targets",
+          "102_revoke_invalid_feather_fall_certification",
+          "103_revoke_invalid_mage_hand_certification",
+          "104_seed_recommended_skill_choices",
+          "105_repair_active_action_targeting",
+          "106_repair_preserved_locked_action_targeting",
+          "107_normalize_live_happy_path_content",
+          "108_split_weapon_actions_and_unlock_metadata",
+          "109_normalize_goliath_ancestry",
+          "110_deduplicate_goliath_ancestry",
+          "111_align_ranged_weapon_action_declaration",
+          "112_inherit_lineage_source",
+          "113_repair_goliath_reaction_authority",
+          "114_repair_class_starting_equipment_references",
+          "115_repair_goliath_stone_targeting_contract",
+          "116_repair_half_caster_spellcasting_contract",
+          "117_align_certified_metadata_projection",
+          "118_repair_bard_spellcasting_contract",
+          "119_repair_sleep_spell_class_list_contract",
+          "120_repair_bardic_inspiration_boon_contract",
+          "121_repair_spear_weapon_profile",
+          "122_repair_mage_hand_control_narrative",
+          "123_repair_sleep_2024_lifecycle",
+          "124_repair_fire_bolt_upcast_description",
+          "124_repair_mini_mvp_base_styles_origin_runtime",
+          "125_repair_mini_mvp_limited_action_uses",
+          "126_repair_crafter_in_play_choice",
+          "127_repair_missing_weapon_mastery_profiles",
+          "128_repair_level_one_species_runtime_contracts",
+          "129_repair_level_one_monk_runtime_contracts",
+          "130_repair_barbarian_rage_stacking",
+          "131_repair_wood_elf_speed",
+          "132_repair_cloud_goliath_teleport",
+          "133_repair_friends_mind_sliver_cantrips",
+          "134_repair_true_strike_cantrip",
+          "135_suppress_true_strike_zero_damage",
+          "136_repair_mini_mvp_spell_clarity",
+          "137_repair_mini_mvp_spell_trigger_timing",
+          "138_repair_mini_mvp_post_hit_spell_targets",
+          "139_repair_mini_mvp_ranged_post_hit_spell_ranges",
+          "140_materialize_runtime_boons_and_acid_splash_area",
+          "141_materialize_polymorphed_condition",
+          "142_repair_mini_mvp_area_targeting",
+          "143_materialize_condition_library_icons",
+          "144_materialize_mini_mvp_runtime_effects",
+          "145_fill_runtime_effect_icons",
+          "146_materialize_base_equipment_2024",
+          "147_repair_base_equipment_descriptions",
+          "148_repair_base_equipment_runtime",
+          "149_repair_base_equipment_sheet_utilities",
+          "150_repair_base_equipment_healers_kit_targeting",
+          "151_repair_base_equipment_healers_kit_ownership",
+          "152_materialize_combat_areas",
+          "153_add_character_class_levels",
+          "154_materialize_level_two_class_features",
+          "155_repair_level_two_actor_targeting",
+          "156_repair_wizard_level_two_spellbook",
+          "157_repair_retired_starting_equipment",
+          "158_repair_wild_companion_targeting",
+          "159_repair_ranger_favored_enemy_2024",
+          "160_repair_wild_companion_runtime",
+          "161_repair_help_action_advantage",
+          "162_repair_level_two_runtime_contracts",
+          "163_reapply_level_two_runtime_contracts",
+          "164_certify_level_two_classes",
+          "165_materialize_level_three_core",
+          "166_materialize_level_five_spells",
+          "167_materialize_level_five_progression",
+          "168_multiclass_subclasses",
+          "169_harden_level_five_runtime",
+          "170_materialize_level_four_general_feats",
+          "171_materialize_general_spell_feat_signatures",
+          "172_materialize_general_feat_signatures",
+          "173_repair_species_levelled_spell_access",
+          "174_clarify_general_feat_effect_cards",
+          "175_repair_general_feat_action_payloads",
+          "176_repair_wizard_cantrip_growth",
+          "177_repair_level_five_strict_conditions",
+          "178_repair_general_feat_choice_integrity",
+          "179_repair_level_five_base_progression",
+          "180_materialize_warlock_invocations_level_five",
+          "181_repair_level_five_subclass_actions",
+          "182_repair_general_feat_runtime_integrity",
+          "183_repair_species_level_five_integrity",
+          "184_materialize_d20_interrupts",
+          "185_repair_class_level_five_integrity",
+          "186_repair_level_five_spell_integrity",
+          "187_materialize_remaining_level_five_general_feats",
+          "188_materialize_wizard_memorize_spell",
+          "189_repair_species_transformation_runtime",
+          "190_repair_sorcerer_level_five_runtime",
+          "191_repair_level_five_spell_area_runtime",
+          "192_repair_level_five_spell_interactions",
+          "193_repair_draconic_sorcery_spell_ability",
+          "194_repair_subclass_primary_runtime",
+          "195_materialize_owned_summon_lifecycle",
+          "196_materialize_mobile_emanations",
+          "197_repair_second_wind_scaling",
+          "198_create_roguelike_runs",
+          "199_materialize_roguelike_monsters",
+          "200_roguelike_wolf_riders",
+          "201_roguelike_attack_ranges",
+          "202_roguelike_trusted_combat",
+          "203_roguelike_combat_journal",
+          "204_roguelike_parry",
+          "205_roguelike_defenses",
+          "206_roguelike_senses_skills",
+          "207_fighter_tactical_shift",
+          "208_champion_critical_movement",
+          "209_battle_master_foundations",
+          "210_battle_master_evasive",
+          "211_battle_master_menacing",
+          "212_battle_master_trip",
+          "213_battle_master_goading",
+          "214_battle_master_choices",
+          "215_battle_master_distracting",
+          "216_battle_master_parry",
+          "217_battle_master_rally",
+          "218_battle_master_pushing",
+          "219_battle_master_feint",
+          "220_battle_master_checks",
+          "221_battle_master_ambush",
+          "222_battle_master_precision",
+          "223_battle_master_lunging",
+          "224_battle_master_sweeping",
+          "225_battle_master_riposte",
+          "226_battle_master_bait_switch",
+          "227_battle_master_commander",
+          "228_battle_master_maneuvering",
+          "229_battle_master_disarming",
+          "230_psi_warrior_foundations",
+          "231_psi_warrior_strike",
+          "232_psi_warrior_protective_field",
+          "233_psi_warrior_movement",
+          "234_psi_warrior_objects",
+          "235_psi_warrior_hands",
+          "236_eldritch_knight_casting",
+          "237_eldritch_knight_replacement",
+          "238_warrior_weapon_bond",
+          "239_roguelike_camp_clock",
+          "240_roguelike_magic_weapons",
+          "241_fighter_style_replacement",
+          "242_fighter_tactical_mind_timing",
+          "243_dash_movement_allotment",
+          "244_canonical_hide_action",
+          "245_goblin_nimble_escape",
+          "246_giant_wolf_spider_movement",
+          "247_monster_weapon_loadouts",
+          "248_bugbear_grab",
+          "249_roguelike_shop_items",
+          "250_character_templates",
+          "251_archer_alert_template",
+          "252_template_portraits",
+          "253_passive_presentations",
+          "254_roguelike_party",
+          "255_party_potion_targets",
+          "256_martial_classes",
+          "257_glossary_concepts",
+          "258_entity_tags_shop",
+          "259_merchant_copper",
+          "260_audio_presentations",
+          "261_card_price_contract",
+          "262_item_source_classification",
+          "263_oauth_identities",
+          "264_paper_documents",
+          "265_owned_item_grants",
+          "266_paper_document_trash",
+          "267_content_entity_authorship",
+          "268_account_admin_status",
+          "269_restore_certified_guard_projection",
+          "270_readable_catalog_metadata",
+          "271_readable_catalog_local_variants",
+          "272_readable_catalog_compatibility",
+          "273_urvin_run",
+          "274_manual_content_review",
+          "275_seed_recommended_spell_choices",
+          "276_reusable_run_sources",
+          "277_partial_narrative_review",
+          "278_catalog_mechanics_audit",
+          "279_item_mechanics_completion",
+          "280_catalog_variants_and_multitarget",
+          "281_entity_references",
+          "282_effect_classification",
+          "283_explicit_reference_levels",
+          "284_entity_reference_coverage",
+          "285_production_effect_classification",
+          "286_combat_animation_metadata",
+          "287_combat_animation_coverage",
+          "288_force_animation_palette",
+          "289_selected_combat_audio",
+          "290_critical_weapon_animations",
+          "291_expanded_fantasy_music",
+          "292_critical_spell_animations",
+          "293_combat_spell_repairs",
+          "294_explicit_resource_declarations",
+          "295_stable_spell_grant_references",
+          "296_explicit_spell_grant_abilities",
+          "297_retain_generic_spell_free_uses",
+          "298_compact_command_receipts",
+          "299_frozen_combat_catalogs",
+          "300_image_jobs"
+        ],
+        "components": {
+          "backend": {
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
+            "imageId": "sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
+            "expectedImageId": "sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
+            "running": true,
+            "health": "healthy",
+            "releaseId": "candidate-93265633db10-deb958c1c9a7",
+            "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+          },
+          "frontend": {
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
+            "imageId": "sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
+            "expectedImageId": "sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
+            "running": true,
+            "health": "healthy",
+            "releaseId": "candidate-93265633db10-deb958c1c9a7",
+            "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+          },
+          "rulesWorker": {
+            "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
+            "imageId": "sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
+            "expectedImageId": "sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
+            "running": true,
+            "health": "healthy",
+            "releaseId": "candidate-93265633db10-deb958c1c9a7",
+            "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+          }
+        },
+        "edge": [
+          {
+            "path": "/",
+            "status": 200,
+            "durationMs": 564,
+            "bytes": 992
+          },
+          {
+            "path": "/api/health",
+            "status": 200,
+            "durationMs": 20,
+            "bytes": 537,
+            "identity": {
+              "identitySchemaVersion": 1,
+              "component": "backend",
+              "provenance": "baked",
+              "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+              "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+              "inputFingerprint": "sha256:50f9aa1864d0663bf94f70b6b025b9b83fd3644f1a98ff4bfc51c88a9d075e21",
+              "releaseId": "candidate-93265633db10-deb958c1c9a7",
+              "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+              "apiProtocolVersion": 1,
+              "readerCapabilities": [
+                "receipt-v1",
+                "receipt-v2",
+                "image-job-v1"
+              ],
+              "goRuntime": "go1.25.14"
+            }
+          },
+          {
+            "path": "/build-info.json",
+            "status": 200,
+            "durationMs": 15,
+            "bytes": 452,
+            "identity": {
+              "identitySchemaVersion": 1,
+              "component": "frontend",
+              "provenance": "baked",
+              "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+              "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+              "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+              "releaseId": "candidate-93265633db10-deb958c1c9a7",
+              "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+              "apiProtocolVersion": 1,
+              "readerCapabilities": [
+                "image-job-v1"
+              ]
+            }
+          }
+        ],
+        "persistentDeployIdentityRetained": true,
+        "verificationHash": "sha256:158b7b12049fd1e8ed5ed48d21f1c2fcffb3b1ddac785f647bacad9c3b9a9883"
+      },
+      "backupPolicy": {
+        "schemaVersion": 1,
+        "recordedAt": "2026-10-05T23:59:21.251Z",
+        "source": "Explicit user reply in this task",
+        "quote": "Нет, резервные копии пока будут храниться на самом сервере",
+        "storageScope": "primary-host-for-now",
+        "externalDurability": "deferred-by-owner",
+        "requiredRestoreVerification": "Owned separate database before deployment",
+        "changesToBackupFreshness": false,
+        "changesToHistoryAndArtifactVerification": false,
+        "productionDatabaseRestoreAuthorized": false,
+        "secretChanges": 0,
+        "providerRequests": 0,
+        "nextReportingAction": "Preserve original plan criteria; record this explicit scope override in human and machine reports. Do not require or ask for external storage again.",
+        "recordHash": "sha256:8dd4c4b94432cbf8fed9b2d1205cdb1d9daca1147018cac9be52c535b08fe1b4",
+        "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
+      },
+      "initializationExperiments": {
+        "status": "measured-no-general-latency-acceptance",
+        "reportHash": "sha256:b368acf4a34fafcf8df92532ee893a805fa39cdc6666277492308d05da9b5f59",
+        "records": [
+          {
+            "file": "outputs/testing/default-init-93265633/report.json",
+            "sha256": "sha256:41358984a3e079cc87a19e392a4be8fb928c945c761a1b09e51ebfbebeb4eb87",
+            "scope": "Current default real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+            "flags": {
+              "catalogBatch": false,
+              "workerMirrors": false,
+              "preparationCache": false
+            },
+            "cleanup": {
+              "status": "stopped",
+              "errors": []
+            }
+          },
+          {
+            "file": "outputs/testing/traced-default-init-93265633/report.json",
+            "sha256": "sha256:1c448c513100917140c7a632d71173537bc1ac66570dd752c92d1f12a7e4c9ff",
+            "scope": "Current default real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+            "flags": {
+              "catalogBatch": false,
+              "workerMirrors": false,
+              "preparationCache": false,
+              "performanceTracing": true
+            },
+            "cleanup": {
+              "status": "stopped",
+              "errors": []
+            }
+          },
+          {
+            "file": "outputs/testing/enabled-init-93265633/report.json",
+            "sha256": "sha256:769fb8f0e0cd82a6d7914709c2705b42ce4f096392a32ce2b436b2e3ccaf035b",
+            "scope": "Current flagged catalog/wire real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+            "flags": {
+              "catalogBatch": true,
+              "workerMirrors": true,
+              "preparationCache": false
+            },
+            "cleanup": {
+              "status": "stopped",
+              "errors": []
+            }
+          },
+          {
+            "file": "outputs/testing/batch-only-init-93265633/report.json",
+            "sha256": "sha256:e944ca2eb779ba808f38ab836e125141f91db69fa33deac8938b5ddce89eaece",
+            "scope": "Batch-only real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+            "flags": {
+              "catalogBatch": true,
+              "workerMirrors": false,
+              "preparationCache": false,
+              "performanceTracing": true
+            },
+            "cleanup": {
+              "status": "stopped",
+              "errors": []
+            }
+          },
+          {
+            "file": "outputs/testing/native-hash-private-93265633/report.json",
+            "sha256": "sha256:32a7df4ac1b231ce3cd0cf65bbe92373e5d274cdb45097293e87cf0a70c0ba29",
+            "scope": "Private same-source CJS experiment replacing only pure SHA-256 with native Node crypto; direct canonical initialization, interleaved identical inputs, not HTTP/browser/production acceptance"
+          },
+          {
+            "file": "outputs/testing/native-hash-http-private-93265633/report.json",
+            "sha256": "sha256:417084f5dda05476cd9d9852495f865bd7127372755c2ac2e6b18ac8d226d27e",
+            "scope": "Private native SHA-256 experiment real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+            "flags": {
+              "catalogBatch": false,
+              "workerMirrors": false,
+              "preparationCache": false,
+              "performanceTracing": true
+            },
+            "cleanup": {
+              "status": "stopped",
+              "errors": []
+            }
+          },
+          {
+            "file": "outputs/testing/native-hash-http-paired-93265633/report.json",
+            "sha256": "sha256:c0e01c445914bb86d071ba2da486dbf883e55fd0edd798282e3c68f97c065e3f",
+            "scope": "Private interleaved same-stack native SHA-256 comparison real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
+            "flags": {
+              "catalogBatch": false,
+              "workerMirrors": false,
+              "preparationCache": false,
+              "performanceTracing": true
+            },
+            "cleanup": {
+              "status": "stopped",
+              "errors": []
+            }
+          }
+        ],
+        "nativeHashIntegrated": false,
+        "productionFlagsEnabled": false,
+        "decision": "CPU-path gain did not meet general real HTTP latency acceptance; ordinary path retained."
+      },
+      "futurePrivate": {
+        "base": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "status": "source-exact-local-ready-production-acceptance-pending",
+        "principalPaths": 127,
+        "combinedPaths": 137,
+        "windowsPass": 174,
+        "windowsDeclaredLinuxSkips": 5,
+        "actualLinuxPass": 179,
+        "actualLinuxSkips": 0,
+        "reviewHash": "sha256:a0618e5780bee9396a32c295c04f48f0574b1781e59ae670f2090be188740836",
+        "exactFutureCommitCiAndHostedAcceptanceRequired": true
+      },
+      "policy": {
+        "writers": false,
+        "automatic": false,
+        "selective": false,
+        "reconcile": false
+      },
+      "paidProviderRequestsThisAcceptance": 0,
+      "historicalFresh": {
+        "lastCompletedMigration": 277,
+        "refusingMigration": 278,
+        "conditions": 1656,
+        "passingConditions": 1045,
+        "refusingConditions": 611,
+        "status": "authentic-pre278-inputs-required"
+      },
+      "nextSteps": [
+        "Verify the final integrated full follow-on source locally and in exact-source CI.",
+        "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
+        "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
+        "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
+      ]
     }
   ],
   "execution_current": {
     "schemaVersion": 1,
-    "kind": "exact-ci15-independent-healthy-first-adoption",
-    "recordedAt": "2026-10-06T00:06:07.275Z",
-    "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "kind": "exact-ci26-publication15-full-host-delivery",
+    "status": "deployed-and-independently-verified",
+    "recordedAt": "2026-10-06T16:25:07.580Z",
+    "applicationSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+    "deploymentControlCommit": "02541c07a08ac5559e93401393cc5ba4cf936edf",
+    "releaseId": "candidate-f05abed68215-847b49a2fabc",
     "ci": {
-      "id": 37386799187,
+      "id": 37438145505,
       "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37386799187",
-      "status": "completed",
-      "conclusion": "success",
-      "aggregateHash": "sha256:e87d12f02805b689acd48292403edd729c76f765c55a8b8a41267ab0cfe00859",
-      "durationMs": 883148,
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37438145505",
+      "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+      "status": "passed",
+      "durationMs": 747027,
+      "reportHash": "sha256:864643f02386ddcccfb846c169a7d287f3c17f2fbc22fba83b391bf67cfcf66a",
       "sourceSnapshot": {
-        "sha256": "827cc19b672569c55dfb6f6fb9c906f9e46a54785b60c2ed257e73e4da3b6f5c",
-        "files": 4430
+        "sha256": "3a142b2b531d5cb470369e02d303621a0547192b81a8c9171dd5d463deec8c5d",
+        "files": 4538
       },
-      "counts": {
-        "node": 731,
-        "vitest": 6462,
-        "goPackageCases": 754,
-        "workerAndDatabase": 25,
-        "cursorChecks": 22,
-        "browserFlows": 12,
-        "uiFixtures": 48,
-        "battle3d": 8
-      },
+      "counts": [
+        {
+          "id": "worker-and-database-node",
+          "tests": 25,
+          "passed": 25,
+          "skipped": 0
+        },
+        {
+          "id": "observed-legacy-baseline",
+          "tests": 1
+        },
+        {
+          "id": "browser-ui-fixtures-production",
+          "tests": 48,
+          "passed": 48,
+          "skipped": 0
+        },
+        {
+          "id": "browser-ui-fixtures-battle3d",
+          "tests": 8,
+          "passed": 8,
+          "skipped": 0
+        },
+        {
+          "id": "local-browser-flows",
+          "tests": 12,
+          "passed": 12,
+          "skipped": 0
+        },
+        {
+          "id": "node-contracts",
+          "tests": 980,
+          "passed": 980,
+          "skipped": 0
+        },
+        {
+          "id": "vitest",
+          "tests": 6462,
+          "passed": 6462,
+          "skipped": 0
+        }
+      ],
       "cleanup": {
         "status": "stopped",
         "errors": []
       }
     },
     "publication": {
-      "id": 37388524104,
+      "id": 37440361187,
       "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37388524104",
-      "status": "completed",
-      "conclusion": "success",
-      "allThreeNewImmutableImages": true
-    },
-    "deployment": {
-      "id": 37389067128,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37389067128",
-      "status": "succeeded-independently-verified",
-      "manifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
-      "projectionHash": "sha256:d3e9cb9f1ee0baab9ed09109b72e01925ded66ab55d3bb140b07f33db2898701",
-      "verifiedAt": "2026-10-06T00:05:41.299Z",
-      "migrationVersions": [
-        "001_create_image_library",
-        "002_add_extended_fields",
-        "003_add_armor_support",
-        "004_add_is_template_field",
-        "005_remove_weapon_templates_table",
-        "006_add_detailed_description",
-        "007_add_slot_field",
-        "008_add_is_equipped_field",
-        "009_create_characters_v2_table",
-        "010_add_text_formatting_fields",
-        "011_add_detailed_description_formatting",
-        "011_add_detailed_description_toggle",
-        "012_fix_character_v2_foreign_key",
-        "013_add_performance_indexes",
-        "014_add_equipped_slot",
-        "015_add_effects",
-        "016_create_shops",
-        "017_create_actions",
-        "018_create_effects",
-        "019_add_weapon_type",
-        "020_add_character_v3_proficiencies",
-        "021_add_image_library_item_fields",
-        "022_remove_actions_resource_check",
-        "023_add_action_distance",
-        "024_add_effects_resources_to_characters_v2",
-        "025_update_rage_action",
-        "026_add_attunement_range_fields",
-        "027_add_elemental_damage_fields",
-        "028_add_battle_profile_field",
-        "029_add_custom_rarity_color",
-        "030_create_spells",
-        "031_spells_arrays_to_jsonb",
-        "032_spells_widen_text_columns",
-        "033_create_feats",
-        "034_create_backgrounds",
-        "035_containers_and_bg_equipment",
-        "036_card_price_currency",
-        "037_create_races",
-        "038_mechanics_and_race_abilities",
-        "039_create_classes",
-        "040_create_characters_v3",
-        "041_feat_related_abilities",
-        "042_forge_mvp_content",
-        "043_character_rule_state",
-        "044_wizard_spell_choices",
-        "045_create_resources",
-        "046_expand_effect_types",
-        "047_spell_resources",
-        "048_character_events",
-        "049_character_runtime",
-        "050_mvp_equipment",
-        "051_race_subrace",
-        "052_race_subrace_level",
-        "053_migrate_legacy_subraces",
-        "054_elf_subrace_content",
-        "055_dragonborn_subraces",
-        "056_spell_mechanics",
-        "057_class_recommended_abilities",
-        "058_card_mechanics",
-        "059_class_subclasses",
-        "060_resource_spent_image",
-        "061_class_equipment_options",
-        "062_basic_actions",
-        "063_create_variables",
-        "064_create_conditions",
-        "065_conditions_as_effects",
-        "066_drop_spell_legacy_fields",
-        "067_card_enchant_bonus",
-        "068_dash_disengage_actions",
-        "069_fix_dash_disengage",
-        "070_create_concepts",
-        "071_widen_cards_damage_type_check",
-        "072_widen_actions_action_type_check",
-        "073_add_effects_repeatable",
-        "074_create_encounters",
-        "075_character_current_encounter",
-        "076_add_card_mastery",
-        "077_add_name_en",
-        "078_restore_feat_slot_effects",
-        "079_expand_card_rarities",
-        "080_character_manual_entities",
-        "081_content_support_certification",
-        "082_character_system_metadata",
-        "083_certify_micro_micro_content",
-        "084_certify_micro_micro_qa_fixes",
-        "085_refresh_transitive_micro_micro_certifications",
-        "086_repair_content_mechanics",
-        "087_idempotent_character_events",
-        "088_normalize_spell_targeting_ranges",
-        "089_repair_spell_targeting_certifications",
-        "090_create_canonical_runtime",
-        "091_add_attack_runtime_v4",
-        "092_add_world_runtime_v5",
-        "093_add_content_migration_receipts",
-        "094_harden_canonical_transport",
-        "095_add_character_runtime_commands",
-        "096_lock_certified_content_mechanics",
-        "096_register_micro_mvp_rules_release",
-        "097_repair_live_mvp_content_contracts",
-        "097_repair_micro_mvp_rules_release_identity",
-        "098_repair_magic_initiate_2024",
-        "098_restore_live_mvp_starting_equipment",
-        "099_apply_disengage_runtime_effect",
-        "100_create_data_driven_monsters",
-        "101_pin_tactical_basic_action_targets",
-        "102_revoke_invalid_feather_fall_certification",
-        "103_revoke_invalid_mage_hand_certification",
-        "104_seed_recommended_skill_choices",
-        "105_repair_active_action_targeting",
-        "106_repair_preserved_locked_action_targeting",
-        "107_normalize_live_happy_path_content",
-        "108_split_weapon_actions_and_unlock_metadata",
-        "109_normalize_goliath_ancestry",
-        "110_deduplicate_goliath_ancestry",
-        "111_align_ranged_weapon_action_declaration",
-        "112_inherit_lineage_source",
-        "113_repair_goliath_reaction_authority",
-        "114_repair_class_starting_equipment_references",
-        "115_repair_goliath_stone_targeting_contract",
-        "116_repair_half_caster_spellcasting_contract",
-        "117_align_certified_metadata_projection",
-        "118_repair_bard_spellcasting_contract",
-        "119_repair_sleep_spell_class_list_contract",
-        "120_repair_bardic_inspiration_boon_contract",
-        "121_repair_spear_weapon_profile",
-        "122_repair_mage_hand_control_narrative",
-        "123_repair_sleep_2024_lifecycle",
-        "124_repair_fire_bolt_upcast_description",
-        "124_repair_mini_mvp_base_styles_origin_runtime",
-        "125_repair_mini_mvp_limited_action_uses",
-        "126_repair_crafter_in_play_choice",
-        "127_repair_missing_weapon_mastery_profiles",
-        "128_repair_level_one_species_runtime_contracts",
-        "129_repair_level_one_monk_runtime_contracts",
-        "130_repair_barbarian_rage_stacking",
-        "131_repair_wood_elf_speed",
-        "132_repair_cloud_goliath_teleport",
-        "133_repair_friends_mind_sliver_cantrips",
-        "134_repair_true_strike_cantrip",
-        "135_suppress_true_strike_zero_damage",
-        "136_repair_mini_mvp_spell_clarity",
-        "137_repair_mini_mvp_spell_trigger_timing",
-        "138_repair_mini_mvp_post_hit_spell_targets",
-        "139_repair_mini_mvp_ranged_post_hit_spell_ranges",
-        "140_materialize_runtime_boons_and_acid_splash_area",
-        "141_materialize_polymorphed_condition",
-        "142_repair_mini_mvp_area_targeting",
-        "143_materialize_condition_library_icons",
-        "144_materialize_mini_mvp_runtime_effects",
-        "145_fill_runtime_effect_icons",
-        "146_materialize_base_equipment_2024",
-        "147_repair_base_equipment_descriptions",
-        "148_repair_base_equipment_runtime",
-        "149_repair_base_equipment_sheet_utilities",
-        "150_repair_base_equipment_healers_kit_targeting",
-        "151_repair_base_equipment_healers_kit_ownership",
-        "152_materialize_combat_areas",
-        "153_add_character_class_levels",
-        "154_materialize_level_two_class_features",
-        "155_repair_level_two_actor_targeting",
-        "156_repair_wizard_level_two_spellbook",
-        "157_repair_retired_starting_equipment",
-        "158_repair_wild_companion_targeting",
-        "159_repair_ranger_favored_enemy_2024",
-        "160_repair_wild_companion_runtime",
-        "161_repair_help_action_advantage",
-        "162_repair_level_two_runtime_contracts",
-        "163_reapply_level_two_runtime_contracts",
-        "164_certify_level_two_classes",
-        "165_materialize_level_three_core",
-        "166_materialize_level_five_spells",
-        "167_materialize_level_five_progression",
-        "168_multiclass_subclasses",
-        "169_harden_level_five_runtime",
-        "170_materialize_level_four_general_feats",
-        "171_materialize_general_spell_feat_signatures",
-        "172_materialize_general_feat_signatures",
-        "173_repair_species_levelled_spell_access",
-        "174_clarify_general_feat_effect_cards",
-        "175_repair_general_feat_action_payloads",
-        "176_repair_wizard_cantrip_growth",
-        "177_repair_level_five_strict_conditions",
-        "178_repair_general_feat_choice_integrity",
-        "179_repair_level_five_base_progression",
-        "180_materialize_warlock_invocations_level_five",
-        "181_repair_level_five_subclass_actions",
-        "182_repair_general_feat_runtime_integrity",
-        "183_repair_species_level_five_integrity",
-        "184_materialize_d20_interrupts",
-        "185_repair_class_level_five_integrity",
-        "186_repair_level_five_spell_integrity",
-        "187_materialize_remaining_level_five_general_feats",
-        "188_materialize_wizard_memorize_spell",
-        "189_repair_species_transformation_runtime",
-        "190_repair_sorcerer_level_five_runtime",
-        "191_repair_level_five_spell_area_runtime",
-        "192_repair_level_five_spell_interactions",
-        "193_repair_draconic_sorcery_spell_ability",
-        "194_repair_subclass_primary_runtime",
-        "195_materialize_owned_summon_lifecycle",
-        "196_materialize_mobile_emanations",
-        "197_repair_second_wind_scaling",
-        "198_create_roguelike_runs",
-        "199_materialize_roguelike_monsters",
-        "200_roguelike_wolf_riders",
-        "201_roguelike_attack_ranges",
-        "202_roguelike_trusted_combat",
-        "203_roguelike_combat_journal",
-        "204_roguelike_parry",
-        "205_roguelike_defenses",
-        "206_roguelike_senses_skills",
-        "207_fighter_tactical_shift",
-        "208_champion_critical_movement",
-        "209_battle_master_foundations",
-        "210_battle_master_evasive",
-        "211_battle_master_menacing",
-        "212_battle_master_trip",
-        "213_battle_master_goading",
-        "214_battle_master_choices",
-        "215_battle_master_distracting",
-        "216_battle_master_parry",
-        "217_battle_master_rally",
-        "218_battle_master_pushing",
-        "219_battle_master_feint",
-        "220_battle_master_checks",
-        "221_battle_master_ambush",
-        "222_battle_master_precision",
-        "223_battle_master_lunging",
-        "224_battle_master_sweeping",
-        "225_battle_master_riposte",
-        "226_battle_master_bait_switch",
-        "227_battle_master_commander",
-        "228_battle_master_maneuvering",
-        "229_battle_master_disarming",
-        "230_psi_warrior_foundations",
-        "231_psi_warrior_strike",
-        "232_psi_warrior_protective_field",
-        "233_psi_warrior_movement",
-        "234_psi_warrior_objects",
-        "235_psi_warrior_hands",
-        "236_eldritch_knight_casting",
-        "237_eldritch_knight_replacement",
-        "238_warrior_weapon_bond",
-        "239_roguelike_camp_clock",
-        "240_roguelike_magic_weapons",
-        "241_fighter_style_replacement",
-        "242_fighter_tactical_mind_timing",
-        "243_dash_movement_allotment",
-        "244_canonical_hide_action",
-        "245_goblin_nimble_escape",
-        "246_giant_wolf_spider_movement",
-        "247_monster_weapon_loadouts",
-        "248_bugbear_grab",
-        "249_roguelike_shop_items",
-        "250_character_templates",
-        "251_archer_alert_template",
-        "252_template_portraits",
-        "253_passive_presentations",
-        "254_roguelike_party",
-        "255_party_potion_targets",
-        "256_martial_classes",
-        "257_glossary_concepts",
-        "258_entity_tags_shop",
-        "259_merchant_copper",
-        "260_audio_presentations",
-        "261_card_price_contract",
-        "262_item_source_classification",
-        "263_oauth_identities",
-        "264_paper_documents",
-        "265_owned_item_grants",
-        "266_paper_document_trash",
-        "267_content_entity_authorship",
-        "268_account_admin_status",
-        "269_restore_certified_guard_projection",
-        "270_readable_catalog_metadata",
-        "271_readable_catalog_local_variants",
-        "272_readable_catalog_compatibility",
-        "273_urvin_run",
-        "274_manual_content_review",
-        "275_seed_recommended_spell_choices",
-        "276_reusable_run_sources",
-        "277_partial_narrative_review",
-        "278_catalog_mechanics_audit",
-        "279_item_mechanics_completion",
-        "280_catalog_variants_and_multitarget",
-        "281_entity_references",
-        "282_effect_classification",
-        "283_explicit_reference_levels",
-        "284_entity_reference_coverage",
-        "285_production_effect_classification",
-        "286_combat_animation_metadata",
-        "287_combat_animation_coverage",
-        "288_force_animation_palette",
-        "289_selected_combat_audio",
-        "290_critical_weapon_animations",
-        "291_expanded_fantasy_music",
-        "292_critical_spell_animations",
-        "293_combat_spell_repairs",
-        "294_explicit_resource_declarations",
-        "295_stable_spell_grant_references",
-        "296_explicit_spell_grant_abilities",
-        "297_retain_generic_spell_free_uses",
-        "298_compact_command_receipts",
-        "299_frozen_combat_catalogs",
-        "300_image_jobs"
-      ],
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37440361187",
+      "status": "success",
+      "sourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
       "components": {
         "backend": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
-          "imageId": "sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
-          "expectedImageId": "sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
-          "running": true,
-          "health": "healthy",
-          "releaseId": "candidate-93265633db10-deb958c1c9a7",
-          "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:18df7b7d8b25e59c2dcaeb5bea7d9a893543958b5abce0096fcfd7a14c0243e4",
+          "releaseId": "candidate-f05abed68215-847b49a2fabc",
+          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
         },
         "frontend": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
-          "imageId": "sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
-          "expectedImageId": "sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
-          "running": true,
-          "health": "healthy",
-          "releaseId": "candidate-93265633db10-deb958c1c9a7",
-          "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:576def7922b9fff7643a5f42fe01814204afdf9b8247de3097aaed11363fd70a",
+          "releaseId": "candidate-f05abed68215-847b49a2fabc",
+          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
         },
         "rulesWorker": {
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
-          "imageId": "sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
-          "expectedImageId": "sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
-          "running": true,
-          "health": "healthy",
-          "releaseId": "candidate-93265633db10-deb958c1c9a7",
-          "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4"
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:44854500e2afb3a1c3721410cf59f7b121b949efbd37c2f6f1a20a9085d52a2f",
+          "releaseId": "candidate-f05abed68215-847b49a2fabc",
+          "releaseCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d"
         }
-      },
-      "edge": [
+      }
+    },
+    "deployment": {
+      "id": 37486931185,
+      "attempt": 1,
+      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37486931185",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
+    "independentVerification": {
+      "sha256": "sha256:d9fd57af746d4a5c69b7158925fd1342a053f16b8de4feb0b3378308d06ac0a0",
+      "verifiedAt": "2026-10-06T16:09:56.574Z",
+      "healthyComponents": [
+        "backend",
+        "frontend",
+        "rulesWorker"
+      ],
+      "edgeRoutes": [
         {
           "path": "/",
-          "status": 200,
-          "durationMs": 564,
-          "bytes": 992
+          "status": 200
         },
         {
           "path": "/api/health",
-          "status": 200,
-          "durationMs": 20,
-          "bytes": 537,
-          "identity": {
-            "identitySchemaVersion": 1,
-            "component": "backend",
-            "provenance": "baked",
-            "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
-            "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
-            "inputFingerprint": "sha256:50f9aa1864d0663bf94f70b6b025b9b83fd3644f1a98ff4bfc51c88a9d075e21",
-            "releaseId": "candidate-93265633db10-deb958c1c9a7",
-            "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
-            "apiProtocolVersion": 1,
-            "readerCapabilities": [
-              "receipt-v1",
-              "receipt-v2",
-              "image-job-v1"
-            ],
-            "goRuntime": "go1.25.14"
-          }
+          "status": 200
         },
         {
           "path": "/build-info.json",
-          "status": 200,
-          "durationMs": 15,
-          "bytes": 452,
-          "identity": {
-            "identitySchemaVersion": 1,
-            "component": "frontend",
-            "provenance": "baked",
-            "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
-            "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
-            "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
-            "releaseId": "candidate-93265633db10-deb958c1c9a7",
-            "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
-            "apiProtocolVersion": 1,
-            "readerCapabilities": [
-              "image-job-v1"
-            ]
-          }
+          "status": 200
         }
       ],
-      "persistentDeployIdentityRetained": true,
-      "verificationHash": "sha256:158b7b12049fd1e8ed5ed48d21f1c2fcffb3b1ddac785f647bacad9c3b9a9883"
+      "migrationCount": 305
     },
-    "backupPolicy": {
+    "previousProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "previousProductionVersionRecord": "/opt/bagofholding/backups/version-before-f05-2026-10-06T14-42-38.944Z.json",
+    "backup": {
       "schemaVersion": 1,
-      "recordedAt": "2026-10-05T23:59:21.251Z",
-      "source": "Explicit user reply in this task",
-      "quote": "Нет, резервные копии пока будут храниться на самом сервере",
-      "storageScope": "primary-host-for-now",
-      "externalDurability": "deferred-by-owner",
-      "requiredRestoreVerification": "Owned separate database before deployment",
-      "changesToBackupFreshness": false,
-      "changesToHistoryAndArtifactVerification": false,
-      "productionDatabaseRestoreAuthorized": false,
-      "secretChanges": 0,
-      "providerRequests": 0,
-      "nextReportingAction": "Preserve original plan criteria; record this explicit scope override in human and machine reports. Do not require or ask for external storage again.",
-      "recordHash": "sha256:8dd4c4b94432cbf8fed9b2d1205cdb1d9daca1147018cac9be52c535b08fe1b4",
-      "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
+      "status": "fresh-backup-captured",
+      "observedAt": "2026-10-06T15:30:49.201Z",
+      "createdAt": "2026-10-06T15:27:20.030Z",
+      "backupDirectory": "/opt/bagofholding/backups/capture-37486931185-1",
+      "databaseDump": {
+        "path": "/opt/bagofholding/backups/capture-37486931185-1/database.dump",
+        "bytes": 974883784,
+        "sha256": "sha256:2172ab61600cd1ef70194b7d46a590fbf3346a129b0ac901a94063941e791931"
+      },
+      "files": 44,
+      "totalBytes": 1045942501,
+      "previousSourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "previousReleaseId": "candidate-93265633db10-deb958c1c9a7",
+      "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24",
+      "releaseManifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+      "targetSourceCommit": "f05abed68215e1ec2b31f29bae1423cd60c2d49d",
+      "deploymentRunId": 37486931185,
+      "liveDatabaseRestored": false
     },
-    "initializationExperiments": {
-      "status": "measured-no-general-latency-acceptance",
-      "reportHash": "sha256:b368acf4a34fafcf8df92532ee893a805fa39cdc6666277492308d05da9b5f59",
-      "records": [
-        {
-          "file": "outputs/testing/default-init-93265633/report.json",
-          "sha256": "sha256:41358984a3e079cc87a19e392a4be8fb928c945c761a1b09e51ebfbebeb4eb87",
-          "scope": "Current default real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
-          "flags": {
-            "catalogBatch": false,
-            "workerMirrors": false,
-            "preparationCache": false
-          },
-          "cleanup": {
-            "status": "stopped",
-            "errors": []
+    "rehearsal": {
+      "checksPassed": 9,
+      "anchor": {
+        "kind": "full-proof-anchor",
+        "manifestHash": "sha256:111b4ee2b2f34d2b185f152ac366f399adf5668024a00ee47a079c7950ad346d",
+        "bundleHash": "sha256:b6f14294293326bd10fcff71c26fdce0b9e2f457b9da9150f0a19ff2c472ebbd",
+        "rehearsalHash": "sha256:11af3552b69351f0baed3c8d3da679fb25e533fc4bf7987f9d331d818eb22e02",
+        "backupHash": "sha256:1aff688740c9b2559e56fd37ee47a3710f90cceaa1c43ff859ea72f07c71441a",
+        "restoreReportHash": "sha256:cb5a872a180b3a0c61018bf02e26d2e6d8e5ad2547d70f0b22c7b445b6d53470",
+        "filesystemHash": "sha256:82e5463f3b57b8784730e67a9ca97330295ed04fb805bfdc2917689bb6c0e747",
+        "runtimeCompatibilityHash": "sha256:c3a42c8ab656d65279292b56ff84f6b645c52493d06cf11a26c53f2559a9ccf9",
+        "completedAt": "2026-10-06T16:01:20.644Z",
+        "backupCreatedAt": "2026-10-06T15:27:20.030Z"
+      },
+      "ownedCleanup": "stopped",
+      "productionDatabaseRestored": false
+    },
+    "writerPolicy": {
+      "compactReceipts": true,
+      "imageJobs": true,
+      "frozenCatalogs": false
+    },
+    "frontendSelective": {
+      "enabled": true,
+      "enabledAt": "2026-10-06T16:21:54.734Z",
+      "repositoryVariableVerifiedAt": "2026-10-06T16:23:02.682Z",
+      "anchorHash": "sha256:38209e9f00c3f036c6dc60ff597377dced8e4e8ce6cced0fa4a7ac090dc51794",
+      "originalObservedAt": "2026-10-06T16:06:36.895Z",
+      "hostConfigHash": "sha256:a6c48b4d8f22bf3242674c0854f2454c3c6b9c3e466a2d54c9e2954696aaead7",
+      "actualSelectiveDeploymentAccepted": false,
+      "serviceReplacementsDuringEnablement": 0,
+      "automatic": false
+    },
+    "automation": {
+      "release": false,
+      "deploy": false,
+      "reconcile": false,
+      "actualAcceptancePending": true
+    },
+    "runtime": {
+      "host": {
+        "logicalCpus": 2,
+        "totalMemoryBytes": 4106096640,
+        "availableMemoryBytes": 3347161088,
+        "diskTotalBytes": 50884108288,
+        "diskAvailableBytes": 7804448768
+      },
+      "components": {
+        "backend": {
+          "nanoCpus": 0,
+          "memoryLimitBytes": 0,
+          "pidsLimit": null,
+          "environment": {
+            "RULES_WORKER_MIRRORS_ENABLED": "1",
+            "DB_FROZEN_CATALOGS": "0",
+            "RULES_WORKER_MAX_INFLIGHT": "4",
+            "IMAGE_JOBS_ENABLED": "1",
+            "DB_COMPACT_RECEIPTS": "1",
+            "RULES_CATALOG_BATCH_ENABLED": "1"
           }
         },
-        {
-          "file": "outputs/testing/traced-default-init-93265633/report.json",
-          "sha256": "sha256:1c448c513100917140c7a632d71173537bc1ac66570dd752c92d1f12a7e4c9ff",
-          "scope": "Current default real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
-          "flags": {
-            "catalogBatch": false,
-            "workerMirrors": false,
-            "preparationCache": false,
-            "performanceTracing": true
-          },
-          "cleanup": {
-            "status": "stopped",
-            "errors": []
-          }
+        "frontend": {
+          "nanoCpus": 0,
+          "memoryLimitBytes": 0,
+          "pidsLimit": null,
+          "environment": {}
         },
-        {
-          "file": "outputs/testing/enabled-init-93265633/report.json",
-          "sha256": "sha256:769fb8f0e0cd82a6d7914709c2705b42ce4f096392a32ce2b436b2e3ccaf035b",
-          "scope": "Current flagged catalog/wire real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
-          "flags": {
-            "catalogBatch": true,
-            "workerMirrors": true,
-            "preparationCache": false
-          },
-          "cleanup": {
-            "status": "stopped",
-            "errors": []
-          }
-        },
-        {
-          "file": "outputs/testing/batch-only-init-93265633/report.json",
-          "sha256": "sha256:e944ca2eb779ba808f38ab836e125141f91db69fa33deac8938b5ddce89eaece",
-          "scope": "Batch-only real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
-          "flags": {
-            "catalogBatch": true,
-            "workerMirrors": false,
-            "preparationCache": false,
-            "performanceTracing": true
-          },
-          "cleanup": {
-            "status": "stopped",
-            "errors": []
-          }
-        },
-        {
-          "file": "outputs/testing/native-hash-private-93265633/report.json",
-          "sha256": "sha256:32a7df4ac1b231ce3cd0cf65bbe92373e5d274cdb45097293e87cf0a70c0ba29",
-          "scope": "Private same-source CJS experiment replacing only pure SHA-256 with native Node crypto; direct canonical initialization, interleaved identical inputs, not HTTP/browser/production acceptance"
-        },
-        {
-          "file": "outputs/testing/native-hash-http-private-93265633/report.json",
-          "sha256": "sha256:417084f5dda05476cd9d9852495f865bd7127372755c2ac2e6b18ac8d226d27e",
-          "scope": "Private native SHA-256 experiment real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
-          "flags": {
-            "catalogBatch": false,
-            "workerMirrors": false,
-            "preparationCache": false,
-            "performanceTracing": true
-          },
-          "cleanup": {
-            "status": "stopped",
-            "errors": []
-          }
-        },
-        {
-          "file": "outputs/testing/native-hash-http-paired-93265633/report.json",
-          "sha256": "sha256:c0e01c445914bb86d071ba2da486dbf883e55fd0edd798282e3c68f97c065e3f",
-          "scope": "Private interleaved same-stack native SHA-256 comparison real HTTP initialize_combat including canonical worker, DB commit, persisted exact retry/reload and unchanged source sheets; owned public integration fixture; no browser/production gain claim",
-          "flags": {
-            "catalogBatch": false,
-            "workerMirrors": false,
-            "preparationCache": false,
-            "performanceTracing": true
-          },
-          "cleanup": {
-            "status": "stopped",
-            "errors": []
+        "rulesWorker": {
+          "nanoCpus": 0,
+          "memoryLimitBytes": 0,
+          "pidsLimit": null,
+          "environment": {
+            "RULES_WORKER_MAX_CACHED_ARTIFACTS": "4"
           }
         }
-      ],
-      "nativeHashIntegrated": false,
-      "productionFlagsEnabled": false,
-      "decision": "CPU-path gain did not meet general real HTTP latency acceptance; ordinary path retained."
+      },
+      "measurement": "Read-only live limits and capacity; no production latency improvement inferred."
     },
-    "futurePrivate": {
-      "base": "93265633db105f6027ddd94cc4d8952747524fd4",
-      "status": "source-exact-local-ready-production-acceptance-pending",
-      "principalPaths": 127,
-      "combinedPaths": 137,
-      "windowsPass": 174,
-      "windowsDeclaredLinuxSkips": 5,
-      "actualLinuxPass": 179,
-      "actualLinuxSkips": 0,
-      "reviewHash": "sha256:a0618e5780bee9396a32c295c04f48f0574b1781e59ae670f2090be188740836",
-      "exactFutureCommitCiAndHostedAcceptanceRequired": true
-    },
-    "policy": {
-      "writers": false,
-      "automatic": false,
-      "selective": false,
-      "reconcile": false
+    "storageCleanup": {
+      "freedBytes": 4490361267,
+      "receiptFiles": [
+        "derived-dump-cleanup-2026-10-06T15-14-50.545Z.json",
+        "derived-expired-dump-cleanup-2026-10-06T15-45-21.972Z.json",
+        "unpacked-control-archive-cleanup-2026-10-06T15-54-58.169Z.json"
+      ]
     },
     "paidProviderRequestsThisAcceptance": 0,
-    "historicalFresh": {
-      "lastCompletedMigration": 277,
-      "refusingMigration": 278,
-      "conditions": 1656,
-      "passingConditions": 1045,
-      "refusingConditions": 611,
-      "status": "authentic-pre278-inputs-required"
-    },
-    "nextSteps": [
-      "Verify the final integrated full follow-on source locally and in exact-source CI.",
-      "Publish genuine CI-bound image-job/compact-receipt cross-image/browser proof.",
-      "Run the full host restore/history/ninth-stage proof and independently accept writers ON/ON/OFF.",
-      "Perform genuine UI-only release, owned full rollback and hosted automatic/reconcile acceptance."
+    "productionDatabaseRestored": false,
+    "persistentDeployIdentityRetained": true,
+    "backupStorage": "primary-host-per-owner-decision",
+    "overallOriginalPlanComplete": false,
+    "remaining": [
+      "Genuine frontend-only deployment with unchanged backend/worker image and container identities; owned full rollback and automatic/reconcile acceptance.",
+      "Integrate and verify local legacy-character data retirement with current retained-history rollback boundary; no current V3/shared inventory deletion.",
+      "Integrate separately measured performance changes and repeat paired canonical API/UI acceptance on exact source; current flags alone do not prove speedup.",
+      "Historical fresh-through-278 requires authentic pre278 inputs; supported migration upgrade proof does not close this different boundary.",
+      "Verify the intended live application image-generation/storage/history flow without an unbounded paid retry."
     ]
   },
   "backup_storage_scope": {
@@ -2708,23 +2956,16 @@
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
   "execution_followon_current": {
-    "status": "locally-verified-awaiting-exact-new-ci",
-    "evidence": "docs/audits/2026-10-04/execution/CI-26-rehearsal-recovery.json",
-    "sourceParent": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
-    "ci": {
-      "status": "not-started",
-      "id": null,
-      "exactCommit": null
-    },
-    "productionChanged": false,
+    "status": "full-delivery-accepted-next-local-performance-integration-verified",
+    "deployedEvidence": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+    "nextLocalEvidence": "docs/audits/2026-10-04/execution/PERF-02-wave-integration.json",
+    "productionChangedByThisIntegration": false,
     "next": [
-      "Commit only the locally verified release recovery and public evidence",
-      "Run and independently accept exact CI for that commit",
-      "Publish all three candidate images and verified control packet",
-      "Notify the owner and wait for their reply that active use has ended",
-      "Capture fresh production backup; run all nine gates and deploy without restoring an old snapshot over live data",
-      "Independently accept production; execute genuine selective release, rollback and automatic delivery",
-      "Complete all remaining tasks of the original 29-task plan"
+      "Commit only this checked scope with current public delivery reports; accept exact extended CI.",
+      "Publish the full candidate because backend/source provenance and the recorded control refusal differ from the actual application baseline; do not label that composition frontend-only.",
+      "Before any new production cutover notify owner, obtain fresh protected capture and all nine gates; never restore a diagnostic dump over live rows.",
+      "Evaluate non-batch deduplicated configuration with an exact-source paired canonical latency comparison before changing live performance flags.",
+      "After that full source becomes actual baseline, verify the already prepared UI-only change, unchanged backend/worker containers, owned rollback and automatic/reconcile delivery."
     ]
   },
   "latest_paired_batch_measurement": {
@@ -2811,10 +3052,11 @@
     "productionUnchanged": true
   },
   "latest_wave_dedup_measurement": {
-    "status": "independent-local-confirmation-passed-not-integrated",
-    "evidence": "docs/audits/2026-10-04/execution/CI-22-reviewed-followon-recovery.json",
-    "integrated": false,
-    "productionEnabled": false
+    "status": "integrated-current-local-verification-passed-exact-ci-pending",
+    "evidence": "docs/audits/2026-10-04/execution/PERF-02-wave-integration.json",
+    "integrated": true,
+    "productionEnabled": false,
+    "productionSpeedupClaimed": false
   },
   "latest_reviewed_followon_recovery": {
     "status": "local-reviewed-recovery-verified-new-exact-ci-required",
@@ -2886,91 +3128,18 @@
   },
   "production_user_window": {
     "schemaVersion": 1,
-    "recordedAt": "2026-10-06T07:52:18Z",
-    "status": "hold-production-database-changes-until-user-ready",
-    "source": "Direct user instruction: actively using the service and modifying its database during the next hour; notify before database rollout to prevent data loss.",
-    "plannedActiveUseWindowEndsAt": "2026-10-06T08:52:18Z",
-    "expiresAutomatically": false,
-    "requiredBeforeProductionChange": [
-      "Notify the user in this chat before production migrations, data cleanup, writer enablement or application deployment affecting ongoing work.",
-      "Wait for the user's reply that active use has ended, as promised in the acknowledgement.",
-      "Re-observe production state and capture a fresh protected backup for the actual release.",
-      "Never restore the downloaded diagnostic snapshot over the working production database."
-    ],
-    "allowedMeanwhile": [
-      "Local isolated reproduction using the protected diagnostic snapshot",
-      "Local development and verification",
-      "Read-only production observations",
-      "CI and image publication without production deployment"
-    ],
-    "lastKnownProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
-    "automaticProductionDeployment": "disabled"
+    "status": "user-authorized-production-rollout",
+    "authorizedAt": "2026-10-06T14:41:43.422Z",
+    "source": "Direct owner instruction: save current production backup and commit identity, then deploy immediately.",
+    "supersedesHoldRecordedAt": "2026-10-06T07:52:18Z",
+    "productionDatabaseRestored": false,
+    "automaticProductionDeployment": "disabled",
+    "evidence": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
   },
   "latest_rehearsal_recovery": {
-    "status": "locally-verified-awaiting-exact-new-ci",
-    "evidence": "docs/audits/2026-10-04/execution/CI-26-rehearsal-recovery.json",
-    "sourceParent": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
-    "localFullRehearsal": {
-      "sourceCommit": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
-      "originalCaptureDate": "2026-10-06T07:19:51.535Z",
-      "startedAt": "2026-10-06T08:09:37.466Z",
-      "completedAt": "2026-10-06T08:35:56.317Z",
-      "durationMs": 1578851,
-      "checks": [
-        {
-          "id": "snapshot",
-          "status": "passed"
-        },
-        {
-          "id": "migrations",
-          "status": "passed"
-        },
-        {
-          "id": "full-candidate-health",
-          "status": "passed"
-        },
-        {
-          "id": "image-contract",
-          "status": "passed"
-        },
-        {
-          "id": "historical-inventory",
-          "status": "passed"
-        },
-        {
-          "id": "historical-replay",
-          "status": "passed"
-        },
-        {
-          "id": "pending-decision",
-          "status": "passed"
-        },
-        {
-          "id": "duplicate-command",
-          "status": "passed"
-        },
-        {
-          "id": "writer-compatibility",
-          "status": "passed"
-        }
-      ],
-      "reportHash": "sha256:1802330b9ba3fb73f9306086a5e7d4e17b17a26a8c9c6b2d7d73a25435163419",
-      "cleanup": {
-        "status": "stopped",
-        "errors": [],
-        "resourceCount": 19
-      },
-      "localOnly": true,
-      "deployable": false,
-      "productionWrites": 0,
-      "providerRequests": 0
-    },
-    "ci": {
-      "status": "not-started",
-      "id": null,
-      "exactCommit": null
-    },
-    "productionChanged": false,
+    "status": "deployed-and-independently-verified",
+    "evidence": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+    "productionChanged": true,
     "fullGoalComplete": false
   }
 }
