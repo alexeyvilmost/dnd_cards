@@ -26,3 +26,7 @@ test('CI carries fresh downloaded planning into every lane and uses independent 
  assert.ok(w.jobs.plan.steps.find(s=>s.id==='policy').env.FRONTEND_PLANNING_FILE);
  assert.match(w.jobs.contracts.steps.find(s=>s.name==='Run the shared suite runner').run,/--frontend-planning outputs\/testing\/frontend-planning.json/);
 });
+test('failed mixed verification preserves only its bounded report and cannot publish a release candidate',()=>{
+ const steps=workflow('release').jobs.publish.steps,failed=steps.find(step=>step.with?.name==='frontend-mixed-failure'),candidate=steps.find(step=>step.with?.name==='release-candidate');
+ assert.equal(failed.if,"failure() && steps.mixed.outputs.required == 'true'");assert.equal(failed.with.path,'artifacts/frontend-mixed/frontend-mixed-report.json');assert.match(failed.uses,/^actions\/upload-artifact@[a-f0-9]{40}$/);assert.equal(candidate.if,undefined);assert.ok(steps.indexOf(failed)<steps.indexOf(candidate));
+});

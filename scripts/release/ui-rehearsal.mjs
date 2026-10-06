@@ -3,17 +3,25 @@ import {frontendRehearsalChecks,verifyOriginalFullAnchor,assertFrontendOnlyRelea
 import {assertFrontendEligibility} from './ui-release-policy.mjs';import {verifyFrontendCIReport} from './ui-release-planning.mjs';
 import {assertImmutablePreservation,assertUnchangedRunningRuntime} from './ui-preservation.mjs';
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
+const startupStages=new Set(['postgres-start','catalog-seed','application-start','initial-observation','original-ui','frontend-prepare','frontend-replace']);
+const failureCodes=new Set(['docker-step-failed','ETIMEDOUT','ENOBUFS','mixed-startup-failed']);
+// Keep only bounded control metadata. Raw errors may contain commands, fixture
+// credentials or provider responses and must never become a public report.
+function safeFailure(error,stage){
+  return {stage,...(startupStages.has(error?.rehearsalStage)?{startupStage:error.rehearsalStage}:{}),code:failureCodes.has(error?.code)?error.code:'rehearsal-step-failed',...(Number.isInteger(error?.exitCode)&&error.exitCode>=0&&error.exitCode<=255?{exitCode:error.exitCode}:{})};
+}
 // Actual-driver seam also used by a local-only OCI drill. It does not create a
 // CI authorization or an original full anchor. No missing driver can be skipped.
 export async function executeFrontendChecks(adapter,input){
   if(adapter?.execution!=='docker'||adapter.scope!=='owned-synthetic'||typeof adapter.start!=='function'||typeof adapter.check!=='function'
     ||typeof adapter.cleanup!=='function'||typeof adapter.observeProtected!=='function')throw Error('Actual owned Docker frontend adapter required');
-  const runId=randomUUID(),checks=[];let error,started=false,runtimeBefore,runtimeAfter,runtimeAfterRollback,cleanup;
+  const runId=randomUUID(),checks=[];let error,stage='start',failure,started=false,runtimeBefore,runtimeAfter,runtimeAfterRollback,cleanup;
   try{
     const ready=await adapter.start({...input,runId});started=true;
     if(ready?.status!=='ready'||ready.runId!==runId||ready.execution!=='docker'||ready.scope!=='owned-synthetic')throw Error('Owned mixed OCI startup did not attest its run');
-    runtimeBefore=await adapter.observeProtected();
+    stage='initial-runtime-observation';runtimeBefore=await adapter.observeProtected();
     for(const id of frontendRehearsalChecks){
+      stage=id;
       const result=await adapter.check(id,{...input,runId});
       if(result?.status!=='passed'||result.runId!==runId||result.id!==id||result.execution!=='docker')throw Error('Required actual frontend check failed: '+id);
       checks.push({id,status:'passed',disposition:'executed',evidenceHash:evidenceHash(result),
@@ -23,14 +31,14 @@ export async function executeFrontendChecks(adapter,input){
       if(id==='old-chunk-fetch')runtimeAfterRollback=await adapter.observeProtected();
     }
     assertUnchangedRunningRuntime(runtimeBefore,runtimeAfter);assertUnchangedRunningRuntime(runtimeBefore,runtimeAfterRollback);
-  }catch(failure){error=failure;}
+  }catch(cause){error=cause;failure=safeFailure(cause,stage);}
   finally{
     // Cleanup runs even if start partially created resources before throwing.
     try{cleanup=await adapter.cleanup({runId,started});if(cleanup?.status!=='stopped'||cleanup.errors?.length)throw Error('Owned OCI cleanup incomplete');}
-    catch(failure){error??=failure;cleanup={status:'failed',errors:['owned-cleanup-failed']};}
+    catch(cause){error??=cause;failure??=safeFailure(cause,'cleanup');cleanup={status:'failed',errors:['owned-cleanup-failed']};}
   }
   const result={schemaVersion:1,kind:'frontend-oci-checks',execution:'docker',scope:'owned-synthetic',runId,status:error?'failed':'passed',checks,
-    runtimeBefore,runtimeAfter,runtimeAfterRollback,cleanup,completedAt:new Date().toISOString(),authorization:'not-produced'};
+    runtimeBefore,runtimeAfter,runtimeAfterRollback,cleanup,...(failure?{failure}:{}),completedAt:new Date().toISOString(),authorization:'not-produced'};
   if(error)throw Object.assign(Error('Mixed frontend OCI checks failed'),{evidence:result});return result;
 }
 export async function collectFrontendRehearsal({manifest,context,adapter,observeHost}){

@@ -1,6 +1,6 @@
 # Выкатка по manifest и сохранение истории
 
-Статус 06.10.2026: версия fed0195f выкачена и независимо проверена; сохранены свежая копия БД и предыдущий коммит f05abed6. Все три сервиса здоровы, 305 миграций проверены. Реальная выборочная выкатка и автоматика ещё не приняты: первый frontend-only CI выявил расхождение каталогов тестов, локальное исправление прошло 36 проверок. [Подробные результаты](audits/2026-10-04/execution/CI-28-production-delivery.md).
+Статус на 2026-10-06T20:18:01.730Z: f383c905 выкачена и независимо проверена; БД и предыдущий коммит fed0195f сохранены. CI31 frontend-only прошёл, но публикация отказала при запуске отдельного стенда; selective delivery не принята. Политика автоматического main подготовлена после успешного полного внедрения; внешнее включение и actual acceptance ещё впереди. [Доказательства и границы](audits/2026-10-04/execution/CI-31-selective-publication-refusal.md).
 
 ## Состав и состояние
 
@@ -62,7 +62,7 @@ Compose expansion profile явно выключает DB_COMPACT_RECEIPTS, DB_FR
 rollback проверяется отсутствие новых receipt/catalog/job состояний. Включение
 writers требует отдельно проверенной политики совместимости отката.
 
-Даже UI-only требует свежего backup активного manifest и matching restore report:
+Полный путь требует свежего backup активного manifest и matching restore report:
 checksum/размер snapshot и CJS, schema, pending decision, duplicate command и media
 references. Backup gate принимает только доказанный REL-06 bundle. Это сохраняет
 обязательность pre-release backup до принятия иной политики. Подготовленный
@@ -74,6 +74,15 @@ capture должен быть не старше 30 минут при начал�
 или превышающий час предел запрещён. Оригинальный отчёт стадий сохраняется до
 поздней freshness-проверки, а при отказе verified-backup/ready не создаются.
 Остановленная попытка требует нового capture, не продления старого сертификата.
+
+Отдельный типизированный frontend-only путь (`ui-host-release.mjs`) применим
+только при точном совпадении неизменённых backend/worker, их конфигурации,
+схемы, протоколов и защищённых каталогов с исходным полным proof anchor.
+Он проверяет свежий frontend CI и 12 фактически выполненных mixed OCI сценариев,
+включая откат и старые файлы интерфейса. Перед и после замены проверяются текущие
+контейнеры и неизменяемые файлы. В этом пути нет нового дампа, восстановления,
+миграции или сканирования ссылок рабочей БД; текущая полнота её ссылок не
+утверждается. Неизвестное изменение возвращает выпуск в полный путь.
 
 Подготовленный
 `capture-host-backup.mjs HOSTCONFIG POLICY NEWOUTPUTDIR` создаёт новый pg_dump
@@ -91,8 +100,9 @@ Capture root — существующий protected `config.root/backups`, но�
 owned-clone restore/inventory в collector нет backup.json, complete/schema/PASS
 claims. Collector завершает backup/media/restore reports, а private runtime config
 указывает deployment gate на этот же каталог. Первый внешний capture и restore
-выполнены; complete candidate rehearsal не принят. Исходная дата снимка сохранена,
-остановленная попытка не считается успешным backup/restore/release bundle.
+выполнены. Для f383c905 полный candidate rehearsal принят: девять проверок прошли,
+временные ресурсы убраны без ошибок. Исходная дата снимка сохранена; остановленная
+попытка никогда не считается успешным backup/restore/release bundle.
 
 Перед заменой pull/inspection всех digests, проверка каждого referenced CJS,
 сохранение предыдущих и новых immutable assets/workbox/WebP. Новые копии
@@ -120,8 +130,9 @@ Deployment receipt различает releaseCommit приложения и cont
 workflow_run может выполняться на более новом default branch SHA. Baseline consumer
 проверяет оба значения и hash manifest, а не подменяет один другим.
 
-Разрешение пользователя уже получено. Перед заменой всё равно требуются Linux/OCI
+Разрешение пользователя уже получено. Полный путь перед заменой требует Linux/OCI
 проверки, restore актуального backup, exact-candidate rehearsal и registry pull access.
+Типизированный frontend-only путь проверяется по отдельному контракту выше.
 Репозиторий публичный: используется hosted runner, отдельный SSH-ключ environment
 `production`, закреплённые known_hosts и Node 24.19.0 на сервере. Production
 self-hosted Actions runner не устанавливается. Environment допускает только `main`.
@@ -147,7 +158,10 @@ node scripts/release/deploy.mjs legacy-inspect previous-legacy.json
 нельзя удалять его автоматически: сначала подтвердить завершение владельца и
 сохранить journal/наблюдения. Отдельного unsafe force режима нет.
 
-## Границы доказательства
+## Первые проверки и исторические отказы
+
+Ниже сохранена история первоначального внедрения. Текущее состояние и отдельно
+незавершённая выборочная приёмка приведены в датированной записи в начале файла.
 
 Native PostgreSQL 17 acceptance проверяет 298–300, атомарность/повтор/lock, crash
 до ledger, старые bytes и отказ при schema tampering. REL-06 synthetic native

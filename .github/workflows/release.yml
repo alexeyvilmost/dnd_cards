@@ -286,6 +286,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node control/scripts/release/ui-mixed-oci.mjs artifacts/candidate artifacts/build-plan.json artifacts/frontend-mixed
+      - if: failure() && steps.mixed.outputs.required == 'true'
+        name: Preserve bounded mixed fixture failure evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: frontend-mixed-failure
+          path: artifacts/frontend-mixed/frontend-mixed-report.json
+          if-no-files-found: ignore
+          retention-days: 30
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: release-candidate

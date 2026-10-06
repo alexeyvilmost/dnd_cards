@@ -13,3 +13,13 @@ test('missing/failed/foreign-run stage or cleanup failure cannot produce a passe
 test('backend replacement in owned rollback fails even when protected host remains unchanged',async()=>{
   const f=setup();let reads=0;f.adapter.observeProtected=async()=>{const value=structuredClone(f.context.bundle.rehearsalReceipt.rehearsalRuntimeBefore);if(reads++===2)value.backend.containerId='e'.repeat(64);return value;};await assert.rejects(collectFrontendRehearsal(f),error=>error.evidence.status==='failed');assert.equal(f.seen.at(-1),'cleanup');
 });
+test('failed startup reports its bounded stage and code without raw errors or credentials',async()=>{
+  const f=setup();f.adapter.start=async()=>{throw Object.assign(Error('password=private provider response'),{code:'ETIMEDOUT',exitCode:1,rehearsalStage:'application-start',stderr:'private stderr'});};
+  await assert.rejects(executeFrontendChecks(f.adapter,{}),error=>{
+    assert.deepEqual(error.evidence.failure,{stage:'start',startupStage:'application-start',code:'ETIMEDOUT',exitCode:1});assert.equal(error.evidence.status,'failed');assert.equal(error.evidence.cleanup.status,'stopped');assert.deepEqual(error.evidence.checks,[]);assert.doesNotMatch(JSON.stringify(error.evidence),/private|password|stderr/);return true;
+  });
+});
+test('arbitrary diagnostic fields cannot enter the published failure report',async()=>{
+  const f=setup();f.adapter.check=async()=>{throw Object.assign(Error('private error'),{code:'private-code',exitCode:'private',rehearsalStage:'private-stage'});};
+  await assert.rejects(executeFrontendChecks(f.adapter,{}),error=>{assert.deepEqual(error.evidence.failure,{stage:'image-contract',code:'rehearsal-step-failed'});assert.doesNotMatch(JSON.stringify(error.evidence),/private/);return true;});
+});

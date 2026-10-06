@@ -1,0 +1,528 @@
+{
+  "schemaVersion": 1,
+  "status": "full-production-delivered-selective-publication-refused",
+  "recordedAt": "2026-10-06T20:18:01.730Z",
+  "currentProduction": {
+    "schemaVersion": 1,
+    "status": "production-delivered-independently-verified",
+    "recordedAt": "2026-10-06T19:52:18.805Z",
+    "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+    "controlCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+    "releaseId": "candidate-f383c905e062-8a315ebc6db8",
+    "manifestHash": "sha256:d04d0a99228028f146e71911d0a7a70e8125432214c1e4849a220542fb4b90d9",
+    "deploymentRun": 37515741656,
+    "deploymentUrl": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37515741656",
+    "completedAt": "2026-10-06T19:41:49Z",
+    "ci": {
+      "run": 37510545749,
+      "reportHash": "sha256:7e8623b6fcad025a893c4272ec6bf57b6a1c5aff2f6eb63d5014daa82186f8f5",
+      "status": "passed",
+      "checks": [
+        {
+          "id": "source-hygiene",
+          "status": "passed"
+        },
+        {
+          "id": "isolated-stack",
+          "status": "passed"
+        },
+        {
+          "id": "worker-and-database-node",
+          "status": "passed",
+          "tests": 25,
+          "passed": 25,
+          "skipped": 0
+        },
+        {
+          "id": "backend-compile",
+          "status": "passed"
+        },
+        {
+          "id": "go-backend",
+          "status": "passed",
+          "required": 409
+        },
+        {
+          "id": "go-animationpresentation",
+          "status": "passed",
+          "required": 4
+        },
+        {
+          "id": "go-audiopresentation",
+          "status": "passed",
+          "required": 3
+        },
+        {
+          "id": "go-charactertemplates",
+          "status": "passed"
+        },
+        {
+          "id": "go-itemsource",
+          "status": "passed",
+          "required": 5
+        },
+        {
+          "id": "go-itemsource-cmd-audit",
+          "status": "passed"
+        },
+        {
+          "id": "go-migrations",
+          "status": "passed",
+          "required": 333
+        },
+        {
+          "id": "go-passivepresentation",
+          "status": "passed"
+        },
+        {
+          "id": "go-roguelikecontent",
+          "status": "passed",
+          "required": 1
+        },
+        {
+          "id": "go-weapondata",
+          "status": "passed",
+          "required": 1
+        },
+        {
+          "id": "source-stability",
+          "status": "passed"
+        },
+        {
+          "id": "reference-cursor-transport",
+          "status": "passed"
+        },
+        {
+          "id": "process-crash-recovery",
+          "status": "passed"
+        },
+        {
+          "id": "supported-upgrade-baselines",
+          "status": "passed"
+        },
+        {
+          "id": "observed-legacy-baseline",
+          "status": "passed",
+          "tests": 1
+        },
+        {
+          "id": "candidate-rehearsal-api",
+          "status": "passed"
+        },
+        {
+          "id": "catalog-equivalence",
+          "status": "passed",
+          "required": 4
+        },
+        {
+          "id": "preparation-cache-equivalence",
+          "status": "passed",
+          "required": 9
+        },
+        {
+          "id": "worker-wire-mirror-equivalence",
+          "status": "passed"
+        },
+        {
+          "id": "equipment-authority-flow",
+          "status": "passed"
+        },
+        {
+          "id": "initiative-options-flow",
+          "status": "passed"
+        },
+        {
+          "id": "library-review-pages",
+          "status": "passed"
+        },
+        {
+          "id": "equipment-runtime-browser",
+          "status": "passed"
+        },
+        {
+          "id": "pwa-offline-shell",
+          "status": "passed"
+        },
+        {
+          "id": "urvin-owned-journey",
+          "status": "passed"
+        },
+        {
+          "id": "solo-durable-continuations",
+          "status": "passed",
+          "required": {
+            "required": 1,
+            "passed": 1
+          }
+        },
+        {
+          "id": "image-egress-isolation",
+          "status": "passed",
+          "required": {
+            "required": 1,
+            "passed": 1
+          }
+        },
+        {
+          "id": "browser-ui-fixtures-production",
+          "status": "passed",
+          "tests": 48,
+          "passed": 48,
+          "skipped": 0
+        },
+        {
+          "id": "browser-ui-fixtures-battle3d",
+          "status": "passed",
+          "tests": 8,
+          "passed": 8,
+          "skipped": 0
+        },
+        {
+          "id": "local-api-spine",
+          "status": "passed"
+        },
+        {
+          "id": "local-browser-flows",
+          "status": "passed",
+          "tests": 12,
+          "passed": 12,
+          "skipped": 0
+        },
+        {
+          "id": "node-contracts",
+          "status": "passed",
+          "tests": 1001,
+          "passed": 1001,
+          "skipped": 0
+        },
+        {
+          "id": "vitest",
+          "status": "passed",
+          "tests": 6465,
+          "passed": 6465,
+          "skipped": 0
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    "publication": {
+      "run": 37512888829,
+      "publishedManifestHash": "sha256:ed56fe62fa4544f873689ac67e9859c62080a984c6fface3e2fd20290755af5c"
+    },
+    "backup": {
+      "schemaVersion": 1,
+      "status": "fresh-backup-captured",
+      "observedAt": "2026-10-06T19:07:13.110Z",
+      "createdAt": "2026-10-06T19:04:18.508Z",
+      "backupDirectory": "/opt/bagofholding/backups/capture-37515741656-1",
+      "databaseDump": {
+        "path": "/opt/bagofholding/backups/capture-37515741656-1/database.dump",
+        "bytes": 974883784,
+        "sha256": "sha256:6fee7e148d80f9b3d6e0da8f09c9c1beeb5e994e7633ec44a0c95d2a444334a8",
+        "independentlyRehashed": true
+      },
+      "files": 44,
+      "totalBytes": 1045942787,
+      "previousSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
+      "previousReleaseId": "candidate-fed0195f3f05-1a608a4b3dd4",
+      "activeHash": "sha256:c5d002e5f094ac3e32bc4159a4f15306e76b0b85f60f3338ac1a288c8fad1f18",
+      "releaseManifestHash": "sha256:65fb9d748015caea05ccba37f03facbc1092bcf0c75d3c039de533dfe5cdbc6f",
+      "targetSourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+      "deploymentRunId": 37515741656,
+      "liveDatabaseRestored": false
+    },
+    "previousSourceCommit": "fed0195f3f054e70d7d930b756a4cc06c7dc1e68",
+    "hostRehearsal": {
+      "status": "passed",
+      "runId": "56015f6c-6d1a-496e-ab4c-36d74caf53d0",
+      "startedAt": "2026-10-06T19:13:08.537Z",
+      "completedAt": "2026-10-06T19:36:49.992Z",
+      "checks": [
+        {
+          "id": "snapshot",
+          "status": "passed"
+        },
+        {
+          "id": "migrations",
+          "status": "passed"
+        },
+        {
+          "id": "full-candidate-health",
+          "status": "passed"
+        },
+        {
+          "id": "image-contract",
+          "status": "passed"
+        },
+        {
+          "id": "historical-inventory",
+          "status": "passed"
+        },
+        {
+          "id": "historical-replay",
+          "status": "passed"
+        },
+        {
+          "id": "pending-decision",
+          "status": "passed"
+        },
+        {
+          "id": "duplicate-command",
+          "status": "passed"
+        },
+        {
+          "id": "writer-compatibility",
+          "status": "passed"
+        }
+      ],
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "resourceCount": 19
+      }
+    },
+    "services": {
+      "backend": {
+        "healthy": true,
+        "containerId": "9eec450344a79e69cc67adc3b66ef573d194bc83b5b59b771b6a3b2b58754b28",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:c879133542a65a48bbe8d3492f6d5e04ea056a3520be8f2cdf9a594df8cb2bf9",
+        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
+      },
+      "frontend": {
+        "healthy": true,
+        "containerId": "b0e756568c761ec4cfb15ccd4cebd55243c305b0c25fcec49a1eee7f4debe618",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c9574bd200b3071ce961029fa4d5c664b2ce70e2c225b5f4e3af8ab881279e9f",
+        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
+      },
+      "rulesWorker": {
+        "healthy": true,
+        "containerId": "042f6c5a7f822d2105aa9b01b0101be58ae05ae56f6431f05677ddbaed0794b0",
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:f6d7bd3ff4feded0d9e9dbc1d16f44ba6e8a1647bffd30477899dd0d1344af00",
+        "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d"
+      }
+    },
+    "edge": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200,
+        "identity": {
+          "identitySchemaVersion": 1,
+          "component": "backend",
+          "provenance": "baked",
+          "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+          "source_commit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+          "inputFingerprint": "sha256:70c68bf463ba3f03fee3ba3a2db56fa0da468b53751651e7cbd9c4b4f8733671",
+          "releaseId": "candidate-f383c905e062-8a315ebc6db8",
+          "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+          "apiProtocolVersion": 1,
+          "readerCapabilities": [
+            "receipt-v1",
+            "receipt-v2",
+            "image-job-v1"
+          ],
+          "goRuntime": "go1.25.14"
+        }
+      },
+      {
+        "path": "/build-info.json",
+        "status": 200,
+        "identity": {
+          "identitySchemaVersion": 1,
+          "component": "frontend",
+          "provenance": "baked",
+          "sourceCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+          "source_commit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+          "inputFingerprint": "sha256:a08e98dbaeb75b9e7d2689d0a4821c6c6690d3b2a38e60de538d3cdcf5971c6f",
+          "releaseId": "candidate-f383c905e062-8a315ebc6db8",
+          "releaseCommit": "f383c905e0629b40d8cf984fd5314227a05bb75d",
+          "apiProtocolVersion": 1,
+          "readerCapabilities": [
+            "image-job-v1"
+          ]
+        }
+      }
+    ],
+    "migrationCount": 305,
+    "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+    "writerPolicy": {
+      "compactReceipts": true,
+      "imageJobs": true,
+      "frozenCatalogs": false
+    },
+    "selective": false,
+    "liveDatabaseRestored": false,
+    "persistentDeployIdentityRetained": true,
+    "paidRequestsDuringAcceptance": 0,
+    "all29Complete": false,
+    "remaining": [
+      "Actual selective frontend delivery and rollback acceptance",
+      "Automatic main release and reconciliation acceptance",
+      "Authentic historical fresh278 baseline",
+      "Ordinary-item authoritative-path latency",
+      "Real image generation UI to provider, storage and entity acceptance"
+    ]
+  },
+  "frontendOnlyCI": {
+    "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
+    "runId": 37522307188,
+    "suite": "core",
+    "reportHash": "sha256:d702ed25e662f85bc98479b9db0e5b09a244a083bab705e5fb27173aeac816ef",
+    "mandatorySkips": 0,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "globalCoverageComplete": true,
+    "checks": [
+      {
+        "id": "source-hygiene",
+        "status": "passed"
+      },
+      {
+        "id": "isolated-stack",
+        "status": "passed"
+      },
+      {
+        "id": "worker-and-database-node",
+        "status": "passed",
+        "tests": 2,
+        "passed": 2,
+        "skipped": 0
+      },
+      {
+        "id": "backend-compile",
+        "status": "passed"
+      },
+      {
+        "id": "go-backend",
+        "status": "passed",
+        "required": 15
+      },
+      {
+        "id": "source-stability",
+        "status": "passed"
+      },
+      {
+        "id": "local-api-spine",
+        "status": "passed"
+      },
+      {
+        "id": "local-browser-flows",
+        "status": "passed",
+        "tests": 12,
+        "passed": 12,
+        "skipped": 0
+      },
+      {
+        "id": "node-contracts",
+        "status": "passed",
+        "tests": 563,
+        "passed": 563,
+        "skipped": 0
+      },
+      {
+        "id": "vitest",
+        "status": "passed",
+        "tests": 566,
+        "passed": 566,
+        "skipped": 0
+      }
+    ]
+  },
+  "failedPublication": {
+    "runId": 37523259999,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37523259999",
+    "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
+    "status": "failed",
+    "stage": "owned hosted mixed OCI startup",
+    "completedChecks": 0,
+    "cleanup": "stopped without errors",
+    "candidatePublished": false,
+    "productionDeploymentDispatched": false,
+    "rootCause": "not established; original log contains no underlying startup cause"
+  },
+  "localDiagnostic": {
+    "status": "passed",
+    "scope": "locally reassembled diagnostic manifest from exact actual build plan and actual published component images; original publication timestamps unavailable; no CI or deployment authority",
+    "checks": [
+      {
+        "id": "image-contract",
+        "status": "passed"
+      },
+      {
+        "id": "api-routing",
+        "status": "passed"
+      },
+      {
+        "id": "character",
+        "status": "passed"
+      },
+      {
+        "id": "equipment",
+        "status": "passed"
+      },
+      {
+        "id": "combat-pending",
+        "status": "passed"
+      },
+      {
+        "id": "reload",
+        "status": "passed"
+      },
+      {
+        "id": "exact-retry",
+        "status": "passed"
+      },
+      {
+        "id": "paper",
+        "status": "passed"
+      },
+      {
+        "id": "json-export",
+        "status": "passed"
+      },
+      {
+        "id": "pdf-export",
+        "status": "passed"
+      },
+      {
+        "id": "frontend-rollback",
+        "status": "passed"
+      },
+      {
+        "id": "old-chunk-fetch",
+        "status": "passed"
+      }
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": [],
+      "retainedImages": true
+    },
+    "controllerCleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "productionMutations": 0
+  },
+  "nextChange": {
+    "boundedFailureDiagnostics": true,
+    "failedReportArtifact": true,
+    "focusedTests": {
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0
+    },
+    "automaticPolicyPrepared": true,
+    "repositoryAutomaticVariables": "still OFF at recording; explicit enablement follows clean policy commit and verification of healthy full adoption",
+    "actualAutomaticDeliveryAcceptance": "pending"
+  },
+  "all29Complete": false
+}

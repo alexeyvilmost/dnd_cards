@@ -12,7 +12,7 @@ export const gatewayImage='caddy@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9c
 const repository=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),read=file=>JSON.parse(readFileSync(file,'utf8'));
 const hash=bytes=>'sha256:'+createHash('sha256').update(bytes).digest('hex');
 function docker(args,input){try{return execFileSync('docker',args,{input,encoding:'utf8',stdio:['pipe','pipe','pipe'],timeout:300000,maxBuffer:16*1024*1024}).trim();}
-  catch(error){throw Object.assign(Error('Owned mixed OCI operation failed'),{code:error.code??'docker-step-failed'});}}
+  catch(error){throw Object.assign(Error('Owned mixed OCI operation failed'),{code:error.code??'docker-step-failed',exitCode:error.status});}}
 export function createDockerUIRehearsal({directory,postgresImage,executionProfile,browserRuntimeDirectory=path.join(repository,'frontend/node_modules'),command=docker}){
   if(process.platform!=='linux'||!path.isAbsolute(directory)||!/^.+@sha256:[a-f0-9]{64}$/.test(postgresImage??''))throw Error('Linux hosted collector and pinned PostgreSQL required');
   validateExecutionProfile(executionProfile);const root=path.resolve(directory);mkdirSync(root,{mode:0o700});
@@ -46,6 +46,7 @@ export function createDockerUIRehearsal({directory,postgresImage,executionProfil
   const request=resource=>JSON.parse(command(['exec',names.rulesWorker,'node','--input-type=module','-e',"const r=await fetch('http://frontend:3000'+process.argv[1]);const b=Buffer.from(await r.arrayBuffer());const{createHash}=await import('node:crypto');console.log(JSON.stringify({status:r.status,hash:createHash('sha256').update(b).digest('hex'),html:process.argv[1]==='/'?b.toString():undefined}));",resource]));
   return {execution:command===docker?'docker':'simulation',scope:'owned-synthetic',
     async start(input){
+      let rehearsalStage='postgres-start';try{
       runId=input.runId;validateManifest(input.manifest);validateManifest(input.previousManifest);
       const profile=executionProfile,previous=input.previousManifest,candidate=input.manifest;
       for(const key of ['backend','rulesWorker'])if(evidenceHash(previous.components[key])!==evidenceHash(candidate.components[key]))throw Error('Mixed fixture requires exact reused backend/worker');
@@ -62,15 +63,16 @@ export function createDockerUIRehearsal({directory,postgresImage,executionProfil
       const actual=JSON.parse(command(['inspect',names.postgres]))[0];if(actual.Config.Labels['bagofholding.rehearsal']!==owner||Object.keys(actual.NetworkSettings.Networks).join()!==names.network)throw Error('Fixture database ownership differs');
       await query(`CREATE TABLE test_run_ownership(run_id text PRIMARY KEY);INSERT INTO test_run_ownership VALUES ('${runMarker}');`);
       if((await query('SELECT current_database()||\':\'||run_id FROM test_run_ownership;')).trim()!=='rehearsal:'+runMarker)throw Error('Fixture database marker differs');
-      fixtureProof=await seedIntegrationCatalog({query});fixtureProof.templates=await seedCanonicalTemplates({query});await query('ANALYZE;');
-      chmodSync(config.artifactDirectory,0o777);compose('up','-d','--wait','rules-worker','backend','frontend','gateway');
+      rehearsalStage='catalog-seed';fixtureProof=await seedIntegrationCatalog({query});fixtureProof.templates=await seedCanonicalTemplates({query});await query('ANALYZE;');
+      rehearsalStage='application-start';chmodSync(config.artifactDirectory,0o777);compose('up','-d','--wait','rules-worker','backend','frontend','gateway');
       const instances={backend:profile.backend.instance,rulesWorker:profile.rulesWorker.instance,frontend:{releaseId:previous.releaseId,releaseCommit:previous.releaseCommit}};
       before={schemaVersion:1,status:'active',manifest:previous,instances};desired={...structuredClone(before),manifest:candidate,instances:{...structuredClone(instances),frontend:{releaseId:candidate.releaseId,releaseCommit:candidate.releaseCommit}}};
-      const observation=await observeUIHost(config,before,{run:command}),anchor={kind:'owned-observation',runtimeCompatibilityHash:evidenceHash(observation.protectedRuntime)};
+      rehearsalStage='initial-observation';const observation=await observeUIHost(config,before,{run:command}),anchor={kind:'owned-observation',runtimeCompatibilityHash:evidenceHash(observation.protectedRuntime)};
       boundary=createObservedFrontendBoundary(config,{document:{binding:anchor},runtime:JSON.parse(compose('config','--format','json'))},{command});
-      const html=request('/');oldChunks=Object.fromEntries([...html.html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map(match=>[match[1],request(match[1])]));if(!Object.keys(oldChunks).length)throw Error('Original frontend chunks absent');
-      await boundary.prepare({kind:'frontend-only',changed:['frontend'],anchor,previous:before,desired});await boundary.replaceFrontend(desired);
+      rehearsalStage='original-ui';const html=request('/');oldChunks=Object.fromEntries([...html.html.matchAll(/(?:src|href)="(\/assets\/[^\"]+)"/g)].map(match=>[match[1],request(match[1])]));if(!Object.keys(oldChunks).length)throw Error('Original frontend chunks absent');
+      rehearsalStage='frontend-prepare';await boundary.prepare({kind:'frontend-only',changed:['frontend'],anchor,previous:before,desired});rehearsalStage='frontend-replace';await boundary.replaceFrontend(desired);
       return {status:'ready',runId,execution:'docker',scope:'owned-synthetic'};
+      }catch(error){throw Object.assign(Error('Owned mixed OCI startup failed'),{code:error.code??'mixed-startup-failed',exitCode:error.exitCode,rehearsalStage});}
     },
     async observeProtected(){return (await boundary.observeProtected(before)).protectedRuntime;},
     async check(id){
