@@ -4,6 +4,10 @@ import {selectLatestDeployedRun} from './deployed-baseline.mjs';import {assemble
 import {createUIProofProjection} from './ui-proof-projection.mjs';import {runtimeCompatibilityHash} from './ui-release-policy.mjs';import {safeExecutionEnvironment} from './ui-execution-profile.mjs';
 import {evidenceHash} from './validate-manifest.mjs';import {fixture,recordsFor,publishedFor} from './ui-planning-unit-fixture.mjs';import {uiFixture} from './ui-release-unit-fixture.mjs';
 import {catalogTests} from '../testing/suites.mjs';import {suiteWorkload} from '../testing/workload.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+import {retirementDatabaseStateFromInspection} from './retirement-state.mjs';
+import {projectRetirementObservation,retirementBaselineReceipt} from './retirement-projection.mjs';
+import {createDeploymentStore} from './deploy-state.mjs';
 async function setup(t,{suiteManifest={groups:[],legacy_manual:[]},files={}}={}){
  const f=fixture(t);mkdirSync(path.join(f.repo,'tests'));writeFileSync(path.join(f.repo,'tests/suites.json'),JSON.stringify(suiteManifest));
  for(const [file,text] of Object.entries(files)){mkdirSync(path.dirname(path.join(f.repo,file)),{recursive:true});writeFileSync(path.join(f.repo,file),text);}
@@ -51,4 +55,13 @@ test('canonical documentation-only dispatch creates no candidate and leaves depl
  const f=await setup(t),before=readFileSync(path.join(f.baselineDirectory,'manifest.json'));writeFileSync(path.join(f.repo,'README.md'),'Documentation-only change');const candidate=f.commit();
  const options={...f.options(),candidate,suiteReport:{},verification:{},controlCommit:candidate,releaseRunId:44};const result=await prepareDispatchedBuild(options,{get:f.get});
  assert.equal(result.kind,'no-deployment-needed');for(const key of ['publishImages','createCandidate','deploy','advanceBaseline'])assert.equal(result[key],false);assert.equal(result.previousManifestHash,evidenceHash(f.manifest));assert.deepEqual(readFileSync(path.join(f.baselineDirectory,'manifest.json')),before);assert.equal(result.matrix,undefined);
+});
+test('exact retirement artifact forces extended planning despite an existing frontend anchor',async t=>{
+ const f=await setup(t),s=retirementStateUnitFixture();s.active.manifest.releaseCommit=f.candidate;
+ const active={...s.active,database:retirementDatabaseStateFromInspection(s,s.inspection)},stamp='2026-10-06T00:00:00Z',operation={schemaVersion:1,kind:'character-retirement-observation-301',releaseId:s.request.releaseId,status:'succeeded',previous:s.active,desired:active,transitionHash:evidenceHash({previous:s.active,desired:active}),createdAt:stamp,updatedAt:stamp};
+ const root=path.join(f.directory,'protected');mkdirSync(root);const store=createDeploymentStore(root);store.writeActive(active);store.writeOperation(operation);
+ const request={repository:'fixture/project',runId:f.run.id,attempt:f.run.runAttempt,controlCommit:f.run.controlCommit,sourceCommit:f.candidate},p=projectRetirementObservation({store,operation,manifest:s.active.manifest,request});
+ for(const [name,value] of Object.entries({'manifest.json':s.active.manifest,'deployment.json':retirementBaselineReceipt(p),'retirement-observation.json':p}))writeFileSync(path.join(f.baselineDirectory,name),JSON.stringify(value));
+ const planning=await loadPublishedUIPlanning(f.options());assert.deepEqual(planning,{eligibility:{kind:'full',requiredTier:'extended',reason:'recorded-character-retirement'}});
+ rmSync(path.join(f.baselineDirectory,'retirement-observation.json'));await assert.rejects(loadPublishedUIPlanning(f.options()),/Exact retirement artifact/);
 });

@@ -12,6 +12,7 @@ import {verifyDeploymentBackup,verifyBackup,backupFile,checksum,captureMaximumSt
 import {verifyCandidateProvenance} from './deployment-handoff.mjs';
 import {writerPublication} from './writer-browser-consumption.mjs';
 import {safeDockerFailure} from './rehearsal-command.mjs';
+import {validatePublicActive} from './active-projection.mjs';
 export const rehearsalStages=candidateRehearsalStages;
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 function assertInputWriterPublication(input,check){
@@ -26,7 +27,8 @@ export function rehearsalInput(candidate,active,backup) {
   const evidence=manifest.validationEvidence.find(row=>row.gate==='core');
   if(core?.status!=='passed'||core.compositionFingerprint!==compositionFingerprint(manifest)||evidence?.reportHash!==evidenceHash(core))throw Error('Exact candidate core report required');
   if(manifest.previousReleaseId!==(isLegacyBaseline(active)?null:active.manifest.releaseId)||backup.releaseManifestHash!==evidenceHash(baselineDocument(active)))throw Error('Candidate, active release and backup predecessor differ');
-  validateWriterTransition(manifest,isLegacyBaseline(active)?null:active.manifest);
+  const retirementActive=active.database?.status==='verified-character-retirement'?validatePublicActive(active):undefined;
+  validateWriterTransition(manifest,isLegacyBaseline(active)?null:active.manifest,retirementActive);
   const baseline=databaseMigrationSet(active);
   if(!migrationBaselineMatches(active,manifest.migrationSet))migrationRehearsalRequest({active,manifest});
   if(!same([...backup.migrations].sort(),baseline.map(row=>row.id).sort()))throw Error('Backup migration ledger differs from observed active database');
@@ -51,7 +53,7 @@ export async function collectRehearsal(input,adapter,{runId=randomUUID(),onRepor
     const image=report.checks.find(row=>row.id==='image-contract');
     assertInputWriterPublication(input,report.checks.find(row=>row.id==='writer-compatibility'));
     assertWriterRehearsalBoundary(input.manifest,Object.fromEntries(report.checks.map(row=>[row.id,row])));
-    assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:image?.images,identities:image?.identities,rehearsalReceipt:report},report.checks.find(row=>row.id==='writer-compatibility'));
+    assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:image?.images,identities:image?.identities,rehearsalReceipt:report,...retirementWriterBaseline(input)},report.checks.find(row=>row.id==='writer-compatibility'));
   } catch(error){failure=error;report.failure='candidate-rehearsal-failed';report.failureStage=stage;
     const processFailure=safeDockerFailure(error);
     if(processFailure)report.processFailure=processFailure;
@@ -85,8 +87,14 @@ export function validateRehearsal(input,report) {
   else if(report.additiveMigrations)throw Error('Unexpected additive migration receipt');
   assertInputWriterPublication(input,checks['writer-compatibility']);
   assertWriterRehearsalBoundary(input.manifest,checks);
-  assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:checks['image-contract'].images,identities:checks['image-contract'].identities,rehearsalReceipt:report},checks['writer-compatibility']);
+  assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:checks['image-contract'].images,identities:checks['image-contract'].identities,rehearsalReceipt:report,...retirementWriterBaseline(input)},checks['writer-compatibility']);
   return checks;
+}
+export function retirementWriterBaseline(input){
+  if(input.active.database?.status!=='verified-character-retirement')return {};
+  validatePublicActive(input.active);
+  if(evidenceHash(input.active)!==input.activeHash)throw Error('Retirement state differs from rehearsal input');
+  return {retirementActive:structuredClone(input.active)};
 }
 export async function persistRehearsalResult({output,backupDirectory,input,report,capture}) {
   // Retain the actual nine-check result even when a later freshness gate

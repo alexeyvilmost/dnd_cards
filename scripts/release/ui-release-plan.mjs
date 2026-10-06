@@ -4,6 +4,7 @@ import {loadControlRecovery,assertRecoveredInitialHistory,recoveryFields} from '
 import {prepareBuildPlan} from './ci-release.mjs';import {selectLatestDeployedRun} from './deployed-baseline.mjs';
 import {githubReader,loadPublishedUIPlanning} from './ui-ci.mjs';import {dispatchVerifiedRelease} from './ui-release-dispatch.mjs';
 import {catalogTests,selectGroups,hash} from '../testing/suites.mjs';import {suiteWorkload} from '../testing/workload.mjs';import {shardPlan} from '../testing/shards.mjs';
+import {readRetirementBaselineArtifact} from './retirement-baseline.mjs';
 const read=file=>JSON.parse(readFileSync(file,'utf8'));
 export function frontendWorkload(repo,planning,report){
   const bytes=readFileSync(path.join(repo,'tests/suites.json')),manifest=JSON.parse(bytes);
@@ -18,8 +19,8 @@ export async function prepareDispatchedBuild(options,{get}){
   if(options.firstAdoptionRecovery) {
     const ref=options.firstAdoptionRecovery;
     const {proof}=loadControlRecovery({id:ref.id,reference:ref,controlRoot:path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..'),controlCommit:options.controlCommit,repository});
-    if(candidate!==options.controlCommit||options.frontendVerification||options.baseline||options.baselineRun||options.baselineReceipt||options.baselineFile
-      ||['manifest.json','deployment.json'].some(file=>existsSync(path.join(baselineDirectory,file)))
+    if(candidate!==options.controlCommit||options.frontendVerification||options.baseline||options.baselineRun||options.baselineReceipt||options.baselineFile||options.retirementObservation!==undefined
+      ||['manifest.json','deployment.json','retirement-observation.json'].some(file=>existsSync(path.join(baselineDirectory,file)))
       ||existsSync(path.join(path.dirname(baselineDirectory),'verified-baseline-run.json')))throw Error('Recovery cannot use a baseline or selective verification');
     if((await get('commits/main')).sha!==candidate)throw Error('Recovery candidate has been superseded on main');
     await assertRecoveredInitialHistory(get,{proof});
@@ -27,7 +28,7 @@ export async function prepareDispatchedBuild(options,{get}){
   }
   const run=await selectLatestDeployedRun(get,{repository}),baselineFile=path.join(baselineDirectory,'manifest.json');
   if(Boolean(run)!==existsSync(baselineFile))throw Error('Latest deployed baseline download missing or unexpected');
-  const common={...options,...(run?{baselineFile,baseline:read(baselineFile),baselineReceipt:read(path.join(baselineDirectory,'deployment.json')),baselineRun:run}:{})};
+  const common={...options,...(run?{baselineFile,baseline:read(baselineFile),baselineReceipt:read(path.join(baselineDirectory,'deployment.json')),baselineRun:run,retirementObservation:readRetirementBaselineArtifact(baselineDirectory)}:{})};
   const freshPlanning=()=>loadPublishedUIPlanning({get,repository,run,baselineDirectory,repo,candidate,config});
   const current=await freshPlanning();
   if(current.eligibility.kind==='full')return prepareBuildPlan(common);
@@ -43,7 +44,7 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
     controlCommit:process.env.GITHUB_SHA,releaseRunId:Number(process.env.GITHUB_RUN_ID),...recoveryFields(requestFile?read(requestFile).firstAdoptionRecovery:undefined)};
   // Default OFF preserves canonical full preparation and its old plan hashes.
   const plan=(options.firstAdoptionRecovery||process.env.FRONTEND_SELECTIVE_ENABLED==='true')?await prepareDispatchedBuild(options,{get:githubReader(repository,process.env.GITHUB_TOKEN)}):prepareBuildPlan({...options,
-    ...(existsSync(path.join(baselineDirectory,'manifest.json'))?{baselineFile:path.join(baselineDirectory,'manifest.json'),baseline:read(path.join(baselineDirectory,'manifest.json')),baselineReceipt:read(path.join(baselineDirectory,'deployment.json')),baselineRun:read(path.join(path.dirname(baselineDirectory),'verified-baseline-run.json'))}:{})});
+    ...(existsSync(path.join(baselineDirectory,'manifest.json'))?{baselineFile:path.join(baselineDirectory,'manifest.json'),baseline:read(path.join(baselineDirectory,'manifest.json')),baselineReceipt:read(path.join(baselineDirectory,'deployment.json')),baselineRun:read(path.join(path.dirname(baselineDirectory),'verified-baseline-run.json')),retirementObservation:readRetirementBaselineArtifact(baselineDirectory)}:{})});
   mkdirSync(path.dirname(output),{recursive:true});writeFileSync(output,JSON.stringify(plan,null,2)+'\n',{flag:'wx'});
   const noop=plan.kind==='no-deployment-needed';process.stdout.write(`no_deployment=${noop}\nmatrix=${JSON.stringify({include:noop?[]:plan.matrix.map(row=>({name:row.name}))})}\nbuildkit_image=${noop?'':plan.config.buildkitImage}\n`);
 }

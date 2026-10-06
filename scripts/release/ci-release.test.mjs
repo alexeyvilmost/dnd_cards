@@ -17,6 +17,10 @@ const sha = char => `sha256:${char.repeat(64)}`;
 const repository = 'fixture/project';
 import {loadControlRecovery} from './first-adoption-recovery.mjs';
 import {prepareDispatchedBuild} from './ui-release-plan.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+import {retirementDatabaseStateFromInspection} from './retirement-state.mjs';
+import {projectRetirementObservation,retirementBaselineReceipt} from './retirement-projection.mjs';
+import {createDeploymentStore} from './deploy-state.mjs';
 function config() {return {schemaVersion: 1, enabled: true, platform: 'linux/amd64', frontendApiUrl: '', contentManifestHash: sha('a'), migrationSet: [],
   buildkitImage: `moby/buildkit@${sha('b')}`, baseImages: Object.fromEntries(['GO_IMAGE', 'ALPINE_IMAGE', 'NODE_IMAGE', 'NGINX_IMAGE'].map((key, i) => [key, `example.test/base/${key.toLowerCase()}@${sha(String(i + 1))}`]))};}
 function report(candidate) {return {schema_version: 1, status: 'passed', suite: 'extended',ci_source:{clean_checkout:true}, source_snapshot:{sha256:'a'.repeat(64),files:4},candidate: {sha: candidate}, component_plan: {mode: 'ci', candidate: {sha: candidate}},
@@ -340,4 +344,28 @@ test('same-source manual policy plan changes composition and requires extended w
   const core={...report(f.candidate),suite:'core'};assert.throws(()=>f.plan(f.candidate,{...predecessor,config:{...configuration,writerPolicy:on},suiteReport:core}),/extended/);
   const forged=structuredClone(disabled);forged.config.writerPolicy=on;assert.throws(()=>validateBuildPlan(forged),/hash mismatch/);
   assert.throws(()=>f.plan(f.candidate,{config:{...configuration,writerPolicy:on}}),/legacy adoption/);
+});
+
+test('recorded retirement builds the full installed set with writers enabled without rewriting predecessor',t=>{
+  // Real clean Git and protected files; synthetic database/image observations.
+  const f=fixture(t),seed=f.plan(f.candidate),s=retirementStateUnitFixture(),on={compactReceipts:true,imageJobs:true,frozenCatalogs:false};
+  s.active.manifest.releaseCommit=f.candidate;s.active.manifest.writerPolicy=on;
+  const baseline=structuredClone(s.active.manifest),bytes=JSON.stringify(baseline,null,3)+'\n',baselineFile=path.join(f.directory,'retirement-baseline.json');writeFileSync(baselineFile,bytes);
+  const retired={...structuredClone(s.active),database:retirementDatabaseStateFromInspection(s,s.inspection)},stamp='2026-10-06T00:00:00Z';
+  const operation={schemaVersion:1,kind:'character-retirement-observation-301',releaseId:s.request.releaseId,status:'succeeded',previous:s.active,desired:retired,transitionHash:evidenceHash({previous:s.active,desired:retired}),createdAt:stamp,updatedAt:stamp};
+  const root=path.join(f.directory,'protected');mkdirSync(root);const store=createDeploymentStore(root);store.writeActive(retired);store.writeOperation(operation);
+  const request={repository,runId:71,attempt:2,controlCommit:'c'.repeat(40),sourceCommit:f.candidate};
+  const retirementObservation=projectRetirementObservation({store,operation,manifest:baseline,request}),baselineReceipt=retirementBaselineReceipt(retirementObservation);
+  const baselineRun={repository,id:71,runAttempt:2,controlCommit:request.controlCommit};
+  const configuration={...seed.config,writerPolicy:on,migrationSet:retired.database.migrationSet},options={baseline,baselineFile,baselineReceipt,baselineRun,retirementObservation,config:configuration};
+  const plan=f.plan(f.candidate,options);validateBuildPlan(plan);assert.deepEqual(plan.previousManifest,baseline);assert.equal(plan.verificationEvidence.requiredTier,'extended');
+  assert.deepEqual(plan.retirementBaseline.observation.active,retired);assert.equal(readFileSync(baselineFile,'utf8'),bytes);
+  const candidate=assembleCandidateManifest(plan,recordsFor(plan),publishedFor(plan));assert.deepEqual(candidate.manifest.migrationSet,retired.database.migrationSet);assert.deepEqual(candidate.manifest.writerPolicy,on);assert.equal(candidate.deployable,false);
+  assert.throws(()=>f.plan(f.candidate,{...options,retirementObservation:undefined}),/Exact retirement artifact/);
+  assert.throws(()=>f.plan(f.candidate,{...options,config:{...configuration,migrationSet:baseline.migrationSet}}),/complete recorded/);
+  assert.throws(()=>f.plan(f.candidate,{...options,suiteReport:{...report(f.candidate),suite:'core'}}),/extended/);
+  assert.throws(()=>f.plan(f.candidate,{...options,frontendVerification:{}}),/full extended/);
+  for(const mutate of [p=>p.retirementBaseline.observation.deployment.runId++,p=>p.retirementBaseline.run.repository='other/project',p=>p.config.migrationSet.pop(),p=>p.retirementBaseline.private='PRIVATE_CANARY']){
+    const p=structuredClone(plan);mutate(p);p.planHash=evidenceHash({candidate:p.candidate,controlCommit:p.controlCommit,releaseRunId:p.releaseRunId,selection:p.selection,matrix:p.matrix,config:p.config,verification:p.verificationEvidence,baselineIdentity:p.baselineIdentity,retirementBaseline:p.retirementBaseline});assert.throws(()=>validateBuildPlan(p));
+  }
 });

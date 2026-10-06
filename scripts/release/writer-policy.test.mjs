@@ -7,6 +7,10 @@ import {attachUnitRehearsal} from './unit-rehearsal-fixture.mjs';
 import {unitWriterTrace} from './unit-writer-trace-fixture.mjs';
 import {writerTraceBinding} from './writer-traces.mjs';
 import {pair,off,on,manifest,refresh,hash} from './writer-policy-unit-fixture.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+import {retirementDatabaseStateFromInspection} from './retirement-state.mjs';
+import {writerCompatibilityRequirements} from './validate-manifest.mjs';
+import {retirementWriterBaseline} from './candidate-rehearsal.mjs';
 test('absent policy preserves historical fingerprint, eight-stage receipt and manifest bytes',()=>{
  const f=pair(off);delete f.candidate.writerPolicy;f.bundle.rehearsalReceipt.checks.pop();f.bundle.rehearsalReceipt.compositionFingerprint=compositionFingerprint(f.candidate);refresh(f.candidate,f.bundle);
  const bytes=JSON.stringify(f.candidate);
@@ -26,6 +30,22 @@ test('enabled policy rejects legacy adoption, schema changes and missing exact a
   const candidate=structuredClone(f.candidate);mutate(candidate);assert.throws(()=>validateWriterTransition(candidate,f.active.manifest),/same schema/);
  }
  for(const id of ['298_compact_command_receipts','300_image_jobs']){const candidate=structuredClone(f.candidate),previous=structuredClone(f.active.manifest);candidate.migrationSet=candidate.migrationSet.filter(row=>row.id!==id);previous.migrationSet=structuredClone(candidate.migrationSet);assert.throws(()=>validateWriterTransition(candidate,previous),/298\/300/);}
+});
+test('enabled writer declaration may acknowledge only an exactly recorded retirement',()=>{
+ const s=retirementStateUnitFixture(),retired={...s.active,database:retirementDatabaseStateFromInspection(s,s.inspection)},f=pair(on,on,on,retired);
+ f.candidate.migrationSet=structuredClone(retired.database.migrationSet);
+ assert.throws(()=>validateWriterTransition(f.candidate,f.active.manifest),/same schema/);
+ assert.deepEqual(validateWriterTransition(f.candidate,f.active.manifest,f.active),on);
+ const input={active:f.active,activeHash:evidenceHash(f.active)},fields=retirementWriterBaseline(input);
+ assert.deepEqual(fields.retirementActive,f.active);assert.notEqual(fields.retirementActive,f.active);
+ f.check.compositionFingerprint=compositionFingerprint(f.candidate);
+ assert.ok(writerCompatibilityRequirements(f.candidate,{...f.bundle,...fields},f.check).length>0);
+ for(const mutate of [x=>x.candidate.migrationSet.push({id:'999',checksum:hash('9')}),x=>x.candidate.migrationSet[0].checksum=hash('9'),x=>x.candidate.workerProtocolVersion++,x=>x.candidate.supportedWorldSchemaVersions=[6],x=>x.active.database.approvalHash='bad',x=>x.active.manifest.releaseId='changed']){
+  const bad=structuredClone(f);mutate(bad);assert.throws(()=>validateWriterTransition(bad.candidate,bad.bundle.previousManifest,bad.active));
+ }
+ const badBundle={...f.bundle,...fields,rehearsalReceipt:{...f.bundle.rehearsalReceipt,activeHash:hash('0')}};assert.throws(()=>writerCompatibilityRequirements(f.candidate,badBundle,f.check),/actual rehearsal/);
+ assert.throws(()=>retirementWriterBaseline({...input,activeHash:hash('0')}));
+ assert.deepEqual(retirementWriterBaseline({active:s.active}),{});
 });
 test('new policy cannot reuse a historical eight-stage OFF receipt',()=>{
  const f=pair();f.bundle.rehearsalReceipt.checks.pop();refresh(f.candidate,f.bundle);assert.throws(()=>assertReleaseReady(f.candidate,f.bundle),/rehearsal/);

@@ -14,11 +14,11 @@ export async function readDeployedUIBaseline(get,{repository,readArtifact}) {
   if (!run) return null;
   // readArtifact must fetch this exact immutable artifact, not search by name
   // again. Discovery already rejects expired/deleted and rerun ambiguity.
-  const {manifest,receipt}=await readArtifact(run.artifactId);
-  verifyBaseline(manifest,receipt,run);
+  const {manifest,receipt,retirementObservation}=await readArtifact(run.artifactId);
+  verifyBaseline(manifest,receipt,run,retirementObservation);
   const latest=await selectLatestDeployedRun(get,{repository});
   if (evidenceHash(latest)!==evidenceHash(run)) throw Error('Deployment changed while reading baseline');
-  return {manifest,receipt,binding:{repository,runId:run.id,runAttempt:run.runAttempt,artifactId:run.artifactId,
+  return {manifest,receipt,...(retirementObservation?{retirementObservation}:{}),binding:{repository,runId:run.id,runAttempt:run.runAttempt,artifactId:run.artifactId,
     controlCommit:run.controlCommit,sourceCommit:manifest.releaseCommit,manifestHash:evidenceHash(manifest),
     receiptHash:evidenceHash(receipt),completedAt:run.completedAt}};
 }
@@ -28,8 +28,9 @@ export function prepareFrontendVerification({repo,candidate,repository,config,ba
   const git=args=>execFileSync('git',args,{cwd:repo,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
   if (!/^[a-f0-9]{40}$/.test(candidate) || git(['rev-parse','HEAD'])!==candidate || git(['status','--porcelain','--untracked-files=all'])) throw Error('Exact clean candidate checkout required');
   git(['merge-base','--is-ancestor',candidate,'refs/remotes/origin/main']);
-  verifyBaseline(baseline.manifest,baseline.receipt,{controlCommit:baseline.binding.controlCommit});
+  verifyBaseline(baseline.manifest,baseline.receipt,{repository:baseline.binding.repository,id:baseline.binding.runId,runAttempt:baseline.binding.runAttempt,controlCommit:baseline.binding.controlCommit},baseline.retirementObservation);
   if (evidenceHash(JSON.parse(readFileSync(baselineFile,'utf8')))!==baseline.binding.manifestHash) throw Error('Baseline file differs from selected deployment');
+  if(baseline.retirementObservation)return {eligibility:{kind:'full',requiredTier:'extended',reason:'recorded-character-retirement'}};
   assertSourceContentManifest(repo,config);
   const selection=createPlan({repo,mode:'deploy',candidate,deployedManifest:baselineFile});
   const matrix=calculateBuildMatrix({repo,candidate,repository,config,selection,baseline:baseline.manifest});

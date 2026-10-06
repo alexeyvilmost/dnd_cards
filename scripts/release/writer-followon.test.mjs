@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {writerEnvironment,assertRuntimeWriterPolicy,assertExpansionWritersOff,assertMigrationWriterPolicy} from './writer-environment.mjs';
 import {writerTraceBinding,validateWriterTrace} from './writer-traces.mjs';
 import {collectWriterCompatibility} from './writer-compatibility.mjs';
-import {assertReleaseReady,evidenceHash,lifecycleMigrationIdentity} from './validate-manifest.mjs';
+import {assertReleaseReady,evidenceHash,lifecycleMigrationIdentity,compositionFingerprint} from './validate-manifest.mjs';
 import {assembleDeploymentBundle} from './assemble-bundle.mjs';
 import {rehearsalInput,collectRehearsal,main as rehearsalMain} from './candidate-rehearsal.mjs';
 import {mkdtemp,writeFile,rm,access} from 'node:fs/promises';
@@ -12,6 +12,9 @@ import path from 'node:path';
 import {deploymentEnvironment} from './deploy-state.mjs';
 import {pair,on,off,refresh} from './writer-policy-unit-fixture.mjs';
 import {unitWriterTrace,unitHostedBrowserTrace,unitWriterPublication} from './unit-writer-trace-fixture.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+import {retirementDatabaseStateFromInspection} from './retirement-state.mjs';
+import {databaseMigrationSet} from './migration-transition.mjs';
 const env=policy=>Object.entries(writerEnvironment({writerPolicy:policy})).map(([k,v])=>k+'='+v);
 test('runtime environment is exact, rejects duplicate flags and preserves legacy absent OFF',()=>{
   const f=pair();assert.deepEqual(Object.fromEntries(Object.entries(deploymentEnvironment(f.active)).filter(([k])=>k.startsWith('DB_')||k==='IMAGE_JOBS_ENABLED')),writerEnvironment(f.active.manifest));
@@ -73,8 +76,8 @@ test('owned invalid-version fault must prove database rejection and exact restor
     assert.throws(()=>assertReleaseReady(f.candidate,f.bundle));
   }
 });
-function collectorFixture(){
-  const f=pair(),input={manifest:f.candidate,previousManifest:f.active.manifest,active:f.active,activeHash:evidenceHash(f.active),backupHash:f.bundle.rehearsalReceipt.backupHash,publishedCandidate:f.check.writerPublication,verifiedReleaseRun:f.check.writerPublication.verifiedReleaseRun};let restored=0,called=0;
+function collectorFixture(f=pair()){
+  const input={manifest:f.candidate,previousManifest:f.active.manifest,active:f.active,activeHash:evidenceHash(f.active),backupHash:f.bundle.rehearsalReceipt.backupHash,publishedCandidate:f.check.writerPublication,verifiedReleaseRun:f.check.writerPublication.verifiedReleaseRun};let restored=0,called=0;
   const io={retainedHistory:async()=>structuredClone(f.check.retainedHistory),observeCandidate:async()=>({...f.check.candidate,environment:env(on),executionProfile:f.check.executionProfile.candidate}),observePrevious:async()=>({...f.check.previous,environment:env(off),executionProfile:f.check.executionProfile.previous}),assertOwnedImages:async()=>{},restoreCandidateAndObserve:async()=>{restored++;return {...f.check.candidate,environment:env(on),executionProfile:f.check.executionProfile.candidate};},
     drivers:Object.fromEntries(f.check.outcomes.map(({id})=>[id,async binding=>{called++;return id==='frontend-pending-job-reload'?unitHostedBrowserTrace(binding,f.check.writerPublication):unitWriterTrace(id,binding);}]))};
   return {f,input,io,counts:()=>({restored,called})};
@@ -98,10 +101,10 @@ test('producer rejects missing actual preview and changed restored runtime setti
  const drift=collectorFixture();drift.io.restoreCandidateAndObserve=async()=>{const value={...structuredClone(drift.f.check.candidate),environment:env(on),executionProfile:structuredClone(drift.f.check.executionProfile.candidate)};value.executionProfile.backend.environment.RULES_WORKER_MAX_INFLIGHT='5';return value;};
  await assert.rejects(collectWriterCompatibility(drift.input,drift.io,{runId:drift.f.bundle.rehearsalReceipt.runId}),/restore candidate runtime profile/);
 });
-function assemblyFixture(){
-  const f=pair(),manifest=structuredClone(f.candidate);manifest.validationEvidence=manifest.validationEvidence.filter(row=>row.gate==='core');
+function assemblyFixture(f=pair()){
+  const manifest=structuredClone(f.candidate);manifest.validationEvidence=manifest.validationEvidence.filter(row=>row.gate==='core');
   const publication=unitWriterPublication(manifest),candidate={status:'candidate-only',deployable:false,manifest,reports:{core:f.bundle.reports.core},provenance:publication.provenance};
-  const backup={migrations:f.active.manifest.migrationSet.map(r=>r.id),releaseManifestHash:evidenceHash(f.active.manifest),schemaFingerprint:'sha256:'+'b'.repeat(64),referencedArtifactHashes:[manifest.rulesArtifactHash],files:[{category:'rules-artifact',sha256:manifest.rulesArtifactHash}]};
+  const backup={migrations:databaseMigrationSet(f.active).map(r=>r.id),releaseManifestHash:evidenceHash(f.active.manifest),schemaFingerprint:'sha256:'+'b'.repeat(64),referencedArtifactHashes:[manifest.rulesArtifactHash],files:[{category:'rules-artifact',sha256:manifest.rulesArtifactHash}]};
   const input=rehearsalInput(candidate,f.active,backup),receipt=structuredClone(f.bundle.rehearsalReceipt);
   input.verifiedReleaseRun=publication.verifiedReleaseRun;
   const writer=receipt.checks.find(r=>r.id==='writer-compatibility');writer.writerPublication=publication;
@@ -111,6 +114,22 @@ function assemblyFixture(){
   Object.assign(receipt,{candidateHash:input.candidateHash,backupHash:input.backupHash});receipt.checks.find(r=>r.id==='writer-compatibility').retainedHistory.closure.backupHash=input.backupHash;Object.assign(receipt.checks[0],{backupHash:input.backupHash,schemaFingerprint:backup.schemaFingerprint});
   return {candidate,input,receipt};
 }
+
+test('retired baseline reaches the writer collector and final bundle without weakening cross-image probes',async()=>{
+ // Protocol-only fabricated drivers. No new Docker or production claim.
+ const s=retirementStateUnitFixture(),active={...s.active,database:retirementDatabaseStateFromInspection(s,s.inspection)},f=pair(on,off,on,active);
+ f.candidate.migrationSet=structuredClone(active.database.migrationSet);const fp=compositionFingerprint(f.candidate);
+ f.bundle.rehearsalReceipt.compositionFingerprint=fp;f.bundle.rehearsalReceipt.checks.find(r=>r.id==='migrations').versions=f.candidate.migrationSet.map(r=>r.id).sort();f.check.compositionFingerprint=fp;
+ f.check.writerPublication=unitWriterPublication(f.candidate);
+ f.check.traces=f.check.outcomes.map(({id})=>{const binding=writerTraceBinding(f.candidate,f.check,f.bundle.rehearsalReceipt);return id==='frontend-pending-job-reload'?unitHostedBrowserTrace(binding,f.check.writerPublication):unitWriterTrace(id,binding);});
+ f.check.outcomes=f.check.traces.map(trace=>({id:trace.outcomeId,status:'passed',traceHash:evidenceHash(trace)}));refresh(f.candidate,f.bundle);
+ const collected=collectorFixture(f);assert.equal((await collectWriterCompatibility(collected.input,collected.io,{runId:f.bundle.rehearsalReceipt.runId})).traces.length,5);assert.equal(collected.counts().restored,1);
+ const a=assemblyFixture(f),input=a.input,receipt=a.receipt;
+ const adapter={execution:'docker',start:async()=>{},check:async id=>structuredClone(receipt.checks.find(row=>row.id===id)),cleanup:async()=>({status:'stopped',errors:[]})};
+ const result=assembleDeploymentBundle(a.candidate,input,await collectRehearsal(input,adapter,{runId:receipt.runId}));
+ assert.deepEqual(result.bundle.retirementActive,f.active);assert.deepEqual(result.bundle.previousManifest,f.active.manifest);assert.notDeepEqual(result.manifest.migrationSet,result.bundle.previousManifest.migrationSet);assertReleaseReady(result.manifest,result.bundle);
+ const forged=structuredClone(result.bundle);forged.retirementActive.database.approvalHash='sha256:'+'0'.repeat(64);assert.throws(()=>assertReleaseReady(result.manifest,forged));
+});
 
 test('writer CLI consumes independently refreshed host metadata before config, backup or Docker',async t=>{
   const directory=await mkdtemp(path.join(os.tmpdir(),'writer-fresh-publication-'));

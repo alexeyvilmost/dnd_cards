@@ -3,7 +3,7 @@ import {readFile,mkdir,writeFile,copyFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {assertReleaseReady,evidenceHash} from './validate-manifest.mjs';
-import {rehearsalInput,validateRehearsal} from './candidate-rehearsal.mjs';
+import {rehearsalInput,validateRehearsal,retirementWriterBaseline} from './candidate-rehearsal.mjs';
 import {writerPublication} from './writer-browser-consumption.mjs';
 export function assembleDeploymentBundle(candidate,input,receipt) {
   const expected=rehearsalInput(candidate,input.active,input.backup);
@@ -20,7 +20,7 @@ export function assembleDeploymentBundle(candidate,input,receipt) {
       pendingDecisionChecked:true,replay:checks['historical-replay'],duplicate:checks['duplicate-command']}};
   manifest.validationEvidence=Object.entries(reports).map(([gate,report])=>({gate,status:'passed',reportHash:evidenceHash(report),inputFingerprint:input.compositionFingerprint,completedAt:receipt.completedAt}));
   const bundle={reports,previousManifest:input.previousManifest,historicalInventoryComplete:true,historicalArtifactHashes:input.historicalArtifactHashes,
-    images:image.images,identities:image.identities,rehearsalReceipt:receipt};
+    images:image.images,identities:image.identities,rehearsalReceipt:receipt,...retirementWriterBaseline(input)};
   if(input.legacyBaseline)bundle.legacyBaseline=input.active;
   if(receipt.additiveMigrations){
     reports.additiveMigrations=receipt.additiveMigrations.report;

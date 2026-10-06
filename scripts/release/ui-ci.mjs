@@ -7,6 +7,7 @@ import {selectLatestDeployedRun} from './deployed-baseline.mjs';import {verifyBa
 import {prepareFrontendVerification} from './ui-release-planning.mjs';import {assertUIProofProjection} from './ui-proof-projection.mjs';
 import {components,inventory,ignorePolicy} from './measure-local.mjs';import {evidenceHash} from './validate-manifest.mjs';
 import {catalogTests} from '../testing/suites.mjs';
+import {readRetirementBaselineArtifact} from './retirement-baseline.mjs';
 const read=file=>JSON.parse(readFileSync(file,'utf8'));
 const save=(file,value)=>{mkdirSync(path.dirname(file),{recursive:true});writeFileSync(file,JSON.stringify(value,null,2)+'\n',{flag:'wx'});};
 export function githubReader(repository,token){
@@ -19,7 +20,9 @@ export async function loadPublishedUIPlanning({get,repository,run,baselineDirect
   if(!run)return {eligibility:{kind:'full',requiredTier:'extended',reason:'no-deployed-baseline'}};
   const fresh=await selectLatestDeployedRun(get,{repository});if(evidenceHash(fresh)!==evidenceHash(run))throw Error('Latest deployed attempt changed while downloading planning evidence');
   const manifest=read(path.join(baselineDirectory,'manifest.json')),receipt=read(path.join(baselineDirectory,'deployment.json'));
-  verifyBaseline(manifest,receipt,run);
+  const retirementObservation=readRetirementBaselineArtifact(baselineDirectory);
+  verifyBaseline(manifest,receipt,run,retirementObservation);
+  if(retirementObservation)return {eligibility:{kind:'full',requiredTier:'extended',reason:'recorded-character-retirement'}};
   const projectionFile=path.join(baselineDirectory,'frontend-proof-anchor.json');
   // A missing projection on the first tooling follow-on requires full release.
   // Malformed/provided evidence is rejected instead of silently downgrading.

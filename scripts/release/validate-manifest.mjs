@@ -8,6 +8,7 @@ import {assertOCIMediaDisabled} from './write-build-identity.mjs';
 import {assertWriterTraces} from './writer-traces.mjs';
 import {assertRetainedWriterHistory} from './writer-retained-history.mjs';
 import {validateWriterPreviewProfiles} from './writer-runtime-profile.mjs';
+import {validateRetirementDatabaseState} from './retirement-state.mjs';
 
 export const manifestSchema = JSON.parse(readFileSync(new URL('../../infra/release-manifest.schema.json', import.meta.url), 'utf8'));
 const keys = ['frontend', 'backend', 'rulesWorker'];
@@ -80,14 +81,18 @@ export function lifecycleWriterExpansion(candidate,previous) {
     && baseline.every(row=>target.some(other=>json(other)===json(row)))
     && target.some(row=>json(row)===json(lifecycleMigrationIdentity));
 }
-export function validateWriterTransition(candidate, previous) {
+export function validateWriterTransition(candidate, previous, retirementActive) {
   const policy=writerPolicy(candidate);
   if(previous)writerPolicy(previous);
   if(previous && Object.hasOwn(previous,'writerPolicy') && !Object.hasOwn(candidate,'writerPolicy')) throw Error('Writer policy cannot disappear from a manifest release line');
   if(policy.compactReceipts || policy.imageJobs) {
     if(!previous || candidate.previousReleaseId!==previous.releaseId) throw Error('Enabled writers require a verified manifest predecessor; legacy adoption is forbidden');
     for(const key of ['apiProtocolVersion','workerProtocolVersion','supportedWorldSchemaVersions']) if(json(candidate[key])!==json(previous[key])) throw Error('Enabled writer policy requires the same schema and migration identities');
-    if(json(candidate.migrationSet)!==json(previous.migrationSet)&&!lifecycleWriterExpansion(candidate,previous))throw Error('Enabled writer policy requires the same schema and migration identities or the exact approved lifecycle expansion');
+    if(json(candidate.migrationSet)!==json(previous.migrationSet)&&!lifecycleWriterExpansion(candidate,previous)){
+      if(!retirementActive||json(retirementActive.manifest)!==json(previous))throw Error('Enabled writer policy requires the same schema and migration identities');
+      const database=validateRetirementDatabaseState(retirementActive);
+      if(json(database.baselineMigrationSet)!==json(previous.migrationSet)||json(database.migrationSet)!==json(candidate.migrationSet))throw Error('Writer transition must declare exactly the already recorded retirement');
+    }
     for(const id of ['298_compact_command_receipts','300_image_jobs']) if(!candidate.migrationSet.some(row=>row.id===id && hashPattern.test(row.checksum))) throw Error('Enabled writers require exact additive migration 298/300 checksums');
   }
   return policy;
@@ -219,7 +224,8 @@ function observedReaders(manifest,images,identities,instances) {
   return result;
 }
 export function writerCompatibilityRequirements(manifest,bundle,check) {
-  const previous=bundle.previousManifest,policy=validateWriterTransition(manifest,previous);
+  const previous=bundle.previousManifest,policy=validateWriterTransition(manifest,previous,bundle.retirementActive);
+  if(bundle.retirementActive&&evidenceHash(bundle.retirementActive)!==bundle.rehearsalReceipt?.activeHash)throw Error('Retirement writer baseline differs from the actual rehearsal input');
   if(!Object.hasOwn(manifest,'writerPolicy'))return [];
   if(check?.status!=='passed'||check.compositionFingerprint!==compositionFingerprint(manifest)||json(check.writerPolicy)!==json(policy)
     ||json(check.candidate?.images)!==json(bundle.images)||json(check.candidate?.identities)!==json(bundle.identities))throw Error('Exact writer compatibility rehearsal is required');
