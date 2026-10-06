@@ -7,6 +7,8 @@ import {adaptLegacyManifest} from './validate-manifest.mjs';
 import {assertHostConfiguration, createDockerDeploymentAdapter} from './docker-deployment.mjs';
 import {isLegacyBaseline} from './legacy-baseline.mjs';
 import {assertHostFirstAdoptionRecovery} from './first-adoption-recovery-host.mjs';
+import {assertHostReviewedDeploymentRefusal,refusalMetadataReader}from'./reviewed-deployment-refusal-host.mjs';
+import {existsSync}from'node:fs';
 const read = file => JSON.parse(readFileSync(file, 'utf8'));
 export async function main(args) {
   const [mode, ...rest] = args;
@@ -26,6 +28,10 @@ export async function main(args) {
     if(published.provenance?.firstAdoptionRecovery) {
       if(mode!=='adopt'||!path.isAbsolute(process.env.RECOVERY_ATTEMPT_DIRECTORY??''))throw Error('Recovered first adoption requires the authenticated host attempt');
       beforePrepare=()=>assertHostFirstAdoptionRecovery({directory:process.env.RECOVERY_ATTEMPT_DIRECTORY,config,underLock:true});
+    }
+    if(mode==='apply'&&existsSync(new URL('../../infra/reviewed-deployment-refusals',import.meta.url))){
+      if(!path.isAbsolute(process.env.RECOVERY_ATTEMPT_DIRECTORY??''))throw Error('Reviewed refusal recheck requires the authenticated host attempt');
+      beforePrepare=()=>assertHostReviewedDeploymentRefusal({directory:process.env.RECOVERY_ATTEMPT_DIRECTORY,underLock:true,get:refusalMetadataReader()});
     }
     return deploy({store, adapter, candidate: read(path.join(target, 'manifest.json')), bundle: read(path.join(target, 'bundle.json')),beforePrepare});
   }

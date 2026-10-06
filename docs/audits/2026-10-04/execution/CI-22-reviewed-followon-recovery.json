@@ -1,0 +1,628 @@
+{
+  "schemaVersion": 1,
+  "status": "local-reviewed-recovery-verified-new-exact-ci-required",
+  "recordedAt": "2026-10-06T04:09:51.171Z",
+  "sourceBaseCommit": "a3e8159c2e1e54587b169f4a0de50aff8d8a1137",
+  "ci22": {
+    "schemaVersion": 1,
+    "status": "passed",
+    "sourceCommit": "a3e8159c2e1e54587b169f4a0de50aff8d8a1137",
+    "ciRun": 37409907741,
+    "attempt": 1,
+    "observedAt": "2026-10-06T03:56:16.462Z",
+    "durationMs": 885132,
+    "reportHash": "sha256:7ec3824574d73e0972c82f4b9be3ad6040a3291f7d41c4892d49131575917b2d",
+    "sourceSnapshot": {
+      "sha256": "b076e6009bf069a010a149dfb2b5ed7765f8987bd962f31b507d0bd541cb9e11",
+      "files": 4526
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "aggregation": {
+      "schema_version": 1,
+      "plan_sha256": "e77ac407c9a5ec1c82842660a949f60775dd4757ffd6554562020b85a3115322",
+      "workload": 912,
+      "global_coverage_complete": true,
+      "max_shard_duration_ms": 867560,
+      "shards": [
+        {
+          "name": "backend",
+          "report_sha256": "0aeff267e1d072df3610f0386cc32cff6c688582db286f934acf4436ce17310f",
+          "run_id": "test_825a6a8937074fa4c2e7cc89",
+          "checks": 15,
+          "duration_ms": 359711
+        },
+        {
+          "name": "extended",
+          "report_sha256": "44b48864b546511ad0e664f3ee3453d4f1c801a3be0c585b7893019716a3e687",
+          "run_id": "test_10e2f05387c01af615e37210",
+          "checks": 21,
+          "duration_ms": 867560
+        },
+        {
+          "name": "flows",
+          "report_sha256": "7949b6d4329cb384d1d8e75cf8e20f3ddaf6165dc75926a3ca6d285fd6b03ec2",
+          "run_id": "test_0025c31ddd9de19138c24c39",
+          "checks": 5,
+          "duration_ms": 143122
+        },
+        {
+          "name": "unit",
+          "report_sha256": "108e867ebd72f2d0b6b80f43bdb91b18e3afc1956268a879b1c6bdc2ffeff6c3",
+          "run_id": null,
+          "checks": 4,
+          "duration_ms": 560736
+        }
+      ]
+    },
+    "checks": [
+      {
+        "id": "source-hygiene",
+        "status": "passed"
+      },
+      {
+        "id": "isolated-stack",
+        "status": "passed"
+      },
+      {
+        "id": "worker-and-database-node",
+        "status": "passed",
+        "tests": 25,
+        "passed": 25,
+        "skipped": 0
+      },
+      {
+        "id": "backend-compile",
+        "status": "passed"
+      },
+      {
+        "id": "go-backend",
+        "status": "passed",
+        "required": 407
+      },
+      {
+        "id": "go-animationpresentation",
+        "status": "passed",
+        "required": 4
+      },
+      {
+        "id": "go-audiopresentation",
+        "status": "passed",
+        "required": 3
+      },
+      {
+        "id": "go-charactertemplates",
+        "status": "passed"
+      },
+      {
+        "id": "go-itemsource",
+        "status": "passed",
+        "required": 5
+      },
+      {
+        "id": "go-itemsource-cmd-audit",
+        "status": "passed"
+      },
+      {
+        "id": "go-migrations",
+        "status": "passed",
+        "required": 333
+      },
+      {
+        "id": "go-passivepresentation",
+        "status": "passed"
+      },
+      {
+        "id": "go-roguelikecontent",
+        "status": "passed",
+        "required": 1
+      },
+      {
+        "id": "go-weapondata",
+        "status": "passed",
+        "required": 1
+      },
+      {
+        "id": "source-stability",
+        "status": "passed"
+      },
+      {
+        "id": "reference-cursor-transport",
+        "status": "passed"
+      },
+      {
+        "id": "process-crash-recovery",
+        "status": "passed"
+      },
+      {
+        "id": "supported-upgrade-baselines",
+        "status": "passed"
+      },
+      {
+        "id": "observed-legacy-baseline",
+        "status": "passed",
+        "tests": 1
+      },
+      {
+        "id": "candidate-rehearsal-api",
+        "status": "passed"
+      },
+      {
+        "id": "catalog-equivalence",
+        "status": "passed",
+        "required": 4
+      },
+      {
+        "id": "preparation-cache-equivalence",
+        "status": "passed",
+        "required": 9
+      },
+      {
+        "id": "worker-wire-mirror-equivalence",
+        "status": "passed"
+      },
+      {
+        "id": "equipment-authority-flow",
+        "status": "passed"
+      },
+      {
+        "id": "initiative-options-flow",
+        "status": "passed"
+      },
+      {
+        "id": "library-review-pages",
+        "status": "passed"
+      },
+      {
+        "id": "equipment-runtime-browser",
+        "status": "passed"
+      },
+      {
+        "id": "pwa-offline-shell",
+        "status": "passed"
+      },
+      {
+        "id": "urvin-owned-journey",
+        "status": "passed"
+      },
+      {
+        "id": "solo-durable-continuations",
+        "status": "passed",
+        "required": {
+          "required": 1,
+          "passed": 1
+        }
+      },
+      {
+        "id": "image-egress-isolation",
+        "status": "passed",
+        "required": {
+          "required": 1,
+          "passed": 1
+        }
+      },
+      {
+        "id": "browser-ui-fixtures-production",
+        "status": "passed",
+        "tests": 48,
+        "passed": 48,
+        "skipped": 0
+      },
+      {
+        "id": "browser-ui-fixtures-battle3d",
+        "status": "passed",
+        "tests": 8,
+        "passed": 8,
+        "skipped": 0
+      },
+      {
+        "id": "local-api-spine",
+        "status": "passed"
+      },
+      {
+        "id": "local-browser-flows",
+        "status": "passed",
+        "tests": 12,
+        "passed": 12,
+        "skipped": 0
+      },
+      {
+        "id": "node-contracts",
+        "status": "passed",
+        "tests": 944,
+        "passed": 944,
+        "skipped": 0
+      },
+      {
+        "id": "vitest",
+        "status": "passed",
+        "tests": 6462,
+        "passed": 6462,
+        "skipped": 0
+      }
+    ],
+    "sourceUnchanged": true,
+    "productionMutations": 0
+  },
+  "publicationAttempt": {
+    "status": "refused-before-dispatch",
+    "reason": "Latest actual failed deploy job requires reviewed recovery. The failed 022 attempt remains failed; no POST was sent.",
+    "workflowDispatches": 0,
+    "productionMutations": 0
+  },
+  "reviewedRecovery": {
+    "failedRunId": 37405297914,
+    "failedAttempt": 1,
+    "baselineRunId": 37389067128,
+    "proofFile": "infra/reviewed-deployment-refusals/37405297914-1.json",
+    "proofHash": "sha256:81c954d169a679b598d77c4a40dcec841974a9c737672b985413d658fef42138",
+    "hostAuditObservedAt": "2026-10-06T03:59:33.249Z",
+    "hostAudit": "real read-only protected host inspection; no production SQL, restore, paid request or container replacement",
+    "cleanup": {
+      "remainingOwnedResources": 0,
+      "validatorStopped": true,
+      "dockerAuthRemoved": true,
+      "deploymentJournalCreated": false,
+      "deployLockPresent": false,
+      "operatorApplicationMutations": 0
+    },
+    "retainedFiles": 5,
+    "checks": [
+      "Complete bounded history with actual fresh workflow/job identities; exactly committed reviewed refusal may be reconciled",
+      "Existing successful predecessor still requires its genuine unexpired artifact and exact manifest hash",
+      "Unknown/unreviewed failure, attempt drift, changed completion and new failure remain refusal",
+      "Native host rereads old transfer, five phase hashes, failed rehearsal, absent later stages, cleanup, original active state and runtime/files before capture",
+      "Same protected state is checked again under the ordinary cutover lock before journal creation",
+      "Normal fresh capture, full historical restore, all nine gates and 30-minute freshness remain required"
+    ],
+    "localReleaseContracts": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "scope": "Local Windows release Node contracts; declared Linux-only skips are not host evidence",
+      "exitCode": 0,
+      "signal": null,
+      "files": 76,
+      "counts": {
+        "tests": 482,
+        "pass": 476,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 6,
+        "todo": 0
+      },
+      "durationMs": 25396,
+      "logHash": "sha256:a55800b2e830fc71a4bc1d7c4d8d24441b6c9c95ec2f6c8240e96de0d5cd1dda",
+      "productionMutations": 0
+    },
+    "linuxReaderContracts": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "scope": "Native Linux owned filesystem and controlled Docker/HTTP observations; unit evidence only, no production or OCI application proof",
+      "image": "node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6",
+      "counts": {
+        "tests": 6,
+        "pass": 6,
+        "fail": 0,
+        "skipped": 0,
+        "cancelled": 0,
+        "todo": 0
+      },
+      "logHash": "sha256:540f294d3957d6e70883649aac17b60396690e085e0dd96ffc09577ec2fbfc63",
+      "cleanup": "stopped-verified-container-absent",
+      "productionMutations": 0,
+      "providerRequests": 0
+    },
+    "actualMetadataSelection": {
+      "status": "read-only-real-history-reviewed-baseline-verified",
+      "baseline": 37389067128,
+      "reviewedFailures": [
+        37405297914
+      ],
+      "proofHash": "sha256:31d0fa8d84631b0a98fb4a01445f623006689883a6a4ae0e7ca3a262467eee77"
+    },
+    "limitations": [
+      "Source-controlled proof authorizes reconciliation of this one observed pre-cutover refusal only",
+      "Controlled Linux filesystem test is unit evidence, not production deployment or OCI application acceptance",
+      "New canonical host guard has not yet executed as part of a successful authenticated rollout; exact new CI/publication still required"
+    ],
+    "localSourceStability": {
+      "status": "passed",
+      "files": 188,
+      "sourceUnchanged": true,
+      "scope": "All release modules/tests, test selection and actual reviewed refusal proof; includes new untracked inputs",
+      "sha256": "sha256:7689b258f36a4ccccba2b63a42db77d9f2f760b4e871d1b117667519fbc88932"
+    }
+  },
+  "waveDedupConfirmation": {
+    "schemaVersion": 1,
+    "status": "independent-local-confirmation-passed-not-integrated",
+    "recordedAt": "2026-10-06T03:44:27.587Z",
+    "reportHash": "sha256:09b672757c5f86af7717683aababcc2a4e94f6e80e228a48831d3f33ea5681aa",
+    "source": {
+      "commit": "a3e8159c2e1e54587b169f4a0de50aff8d8a1137",
+      "files": 4526,
+      "sha256": "a9e4a11e40bb833a4293238a8da3785d6c2b5b12a1b7943f6b1900812326d824"
+    },
+    "sourceUnchanged": {
+      "unchanged": true,
+      "files": 4526,
+      "sha256": "a9e4a11e40bb833a4293238a8da3785d6c2b5b12a1b7943f6b1900812326d824"
+    },
+    "privateExperiment": {
+      "kind": "wave-dedup-overlay-paired",
+      "sameBackendBinary": false,
+      "overlayFile": "C:\\Projects\\dnd_cards\\outputs\\testing\\wave-dedup-preparation-r2-197fd282/overlay.json",
+      "sameDatabase": true,
+      "sameCanonicalWorker": true,
+      "roleFlags": {
+        "baseline": "0",
+        "dedup": "0"
+      },
+      "workerMirrors": false,
+      "preparationCache": false,
+      "nativeHash": false,
+      "baselinePort": 65078,
+      "batchPort": 65104,
+      "backendHashes": {
+        "baseline": "sha256:2f9292c7f4bab09956a589a05e5ded6016c8d0b78fcafd7a9c0b0070d20e2e72",
+        "dedup": "sha256:e3ae285920366b5a6304bb2e5117f0351bf01e0b6f9a0c9fa15d0c8929c171df"
+      }
+    },
+    "comparisons": [
+      {
+        "partySize": 1,
+        "baseline": {
+          "count": 40,
+          "median_ms": 294.5,
+          "p95_ms": 329.59999999403954,
+          "p95_preliminary": true,
+          "min_ms": 272.5,
+          "max_ms": 344,
+          "phase_means": {
+            "backend_first_write_uncompressed_bytes": 278377.7,
+            "backend_to_first_write_ms": 97.65730000000002,
+            "backend_worker_body_read_ms": 0.47372499999999995,
+            "backend_worker_marshal_ms": 2.6424249999999994,
+            "backend_worker_unmarshal_ms": 2.5132749999999993,
+            "catalog_final_bytes": 73459,
+            "catalog_fulfill_ms": 6.03475,
+            "catalog_needs_count": 25,
+            "catalog_needs_rounds": 5,
+            "catalog_resolution_total_ms": 50.868025,
+            "cold_run_compare_ms": 0,
+            "initialize_api_headers_ms": 101.92089999999999,
+            "lock_acquired_to_tx_return_ms": 36.322075000000005,
+            "lock_statement_ms": 0.8621500000000001,
+            "persist_sql_ms": 22.010599999999997,
+            "receipt_encode_ms": 0,
+            "receipt_encoded_bytes": 0,
+            "sql_count": 45,
+            "sql_operation_ms": 39.441250000000004,
+            "sql_rows": 61,
+            "transaction_ms": 36.913124999999994,
+            "worker_admitted_calls": 6,
+            "worker_artifact_cache_hit": 6,
+            "worker_artifact_load_ms": 0.02160000000000001,
+            "worker_body_read_ms": 0.540575,
+            "worker_callback_to_send_ms": 31.157775000000004,
+            "worker_calls": 6,
+            "worker_client_total_ms": 38.97077499999999,
+            "worker_correlated_calls": 6,
+            "worker_execute_ms": 26.239500000000003,
+            "worker_http_headers_ms": 33.27437499999999,
+            "worker_parse_ms": 1.5700499999999997,
+            "worker_process_cpu_ms": 29.3,
+            "worker_project_ms": 0.8133750000000001,
+            "worker_request_bytes": 349289.8,
+            "worker_response_bytes": 269502.675,
+            "worker_snapshot_hash_ms": 0.9940750000000003,
+            "worker_stringify_ms": 0.8626000000000001
+          }
+        },
+        "variant": {
+          "count": 40,
+          "median_ms": 299.70000000298023,
+          "p95_ms": 327.8999999910593,
+          "p95_preliminary": true,
+          "min_ms": 274.59999999403954,
+          "max_ms": 343.3999999910593,
+          "phase_means": {
+            "backend_first_write_uncompressed_bytes": 282945.6,
+            "backend_to_first_write_ms": 101.60112500000001,
+            "backend_worker_body_read_ms": 1.1629,
+            "backend_worker_marshal_ms": 2.3984499999999995,
+            "backend_worker_unmarshal_ms": 2.4883,
+            "catalog_final_bytes": 73459,
+            "catalog_fulfill_ms": 6.255975,
+            "catalog_needs_count": 25,
+            "catalog_needs_rounds": 5,
+            "catalog_resolution_total_ms": 54.501875,
+            "cold_run_compare_ms": 0,
+            "initialize_api_headers_ms": 105.872375,
+            "lock_acquired_to_tx_return_ms": 36.16525000000001,
+            "lock_statement_ms": 0.879475,
+            "persist_sql_ms": 22.22547500000001,
+            "receipt_encode_ms": 0,
+            "receipt_encoded_bytes": 0,
+            "sql_count": 45,
+            "sql_operation_ms": 40.10445,
+            "sql_rows": 61,
+            "transaction_ms": 36.7846,
+            "worker_admitted_calls": 6,
+            "worker_artifact_cache_hit": 6,
+            "worker_artifact_load_ms": 0.02135000000000001,
+            "worker_body_read_ms": 0.5527249999999999,
+            "worker_callback_to_send_ms": 33.997225,
+            "worker_calls": 6,
+            "worker_client_total_ms": 42.503375,
+            "worker_correlated_calls": 6,
+            "worker_execute_ms": 29.051574999999996,
+            "worker_http_headers_ms": 36.22345000000001,
+            "worker_parse_ms": 1.6009,
+            "worker_process_cpu_ms": 39.075,
+            "worker_project_ms": 0.8281750000000001,
+            "worker_request_bytes": 349292.5,
+            "worker_response_bytes": 274075.475,
+            "worker_snapshot_hash_ms": 0.9608250000000002,
+            "worker_stringify_ms": 0.8620249999999998
+          }
+        },
+        "medianChangePercent": 1.7657045850527187,
+        "p95ChangePercent": -0.5157766999426494
+      },
+      {
+        "partySize": 6,
+        "baseline": {
+          "count": 40,
+          "median_ms": 771,
+          "p95_ms": 1019.5,
+          "p95_preliminary": true,
+          "min_ms": 645.2999999970198,
+          "max_ms": 1169.8999999910593,
+          "phase_means": {
+            "backend_first_write_uncompressed_bytes": 1631255.9,
+            "backend_to_first_write_ms": 492.00290000000007,
+            "backend_worker_body_read_ms": 5.6175250000000005,
+            "backend_worker_marshal_ms": 4.698200000000001,
+            "backend_worker_unmarshal_ms": 12.882549999999998,
+            "catalog_final_bytes": 73459,
+            "catalog_fulfill_ms": 31.784100000000002,
+            "catalog_needs_count": 150,
+            "catalog_needs_rounds": 5,
+            "catalog_resolution_total_ms": 292.0719500000001,
+            "cold_run_compare_ms": 0,
+            "initialize_api_headers_ms": 507.9844749999999,
+            "lock_acquired_to_tx_return_ms": 160.14357500000003,
+            "lock_statement_ms": 2.5760000000000005,
+            "persist_sql_ms": 99.22350000000002,
+            "receipt_encode_ms": 0,
+            "receipt_encoded_bytes": 0,
+            "sql_count": 183,
+            "sql_operation_ms": 161.569575,
+            "sql_rows": 274,
+            "transaction_ms": 161.75462499999998,
+            "worker_admitted_calls": 6,
+            "worker_artifact_cache_hit": 6,
+            "worker_artifact_load_ms": 0.02012500000000001,
+            "worker_body_read_ms": 0.6133000000000001,
+            "worker_callback_to_send_ms": 226.26394999999997,
+            "worker_calls": 6,
+            "worker_client_total_ms": 254.46567499999998,
+            "worker_correlated_calls": 6,
+            "worker_execute_ms": 211.63027500000007,
+            "worker_http_headers_ms": 231.05902499999996,
+            "worker_parse_ms": 2.926225,
+            "worker_process_cpu_ms": 244.8,
+            "worker_project_ms": 2.4723749999999995,
+            "worker_request_bytes": 679700.65,
+            "worker_response_bytes": 1583965.5,
+            "worker_snapshot_hash_ms": 4.223800000000001,
+            "worker_stringify_ms": 4.24555
+          }
+        },
+        "variant": {
+          "count": 40,
+          "median_ms": 684,
+          "p95_ms": 972.2000000029802,
+          "p95_preliminary": true,
+          "min_ms": 611.7999999970198,
+          "max_ms": 1170.2000000029802,
+          "phase_means": {
+            "backend_first_write_uncompressed_bytes": 1612793.125,
+            "backend_to_first_write_ms": 424.81047499999994,
+            "backend_worker_body_read_ms": 3.3711000000000007,
+            "backend_worker_marshal_ms": 4.7423,
+            "backend_worker_unmarshal_ms": 13.0484,
+            "catalog_final_bytes": 73459,
+            "catalog_fulfill_ms": 5.799525000000001,
+            "catalog_needs_count": 25,
+            "catalog_needs_rounds": 5,
+            "catalog_resolution_total_ms": 231.705825,
+            "cold_run_compare_ms": 0,
+            "initialize_api_headers_ms": 440.771325,
+            "lock_acquired_to_tx_return_ms": 154.29435,
+            "lock_statement_ms": 2.6030249999999997,
+            "persist_sql_ms": 95.49887500000003,
+            "receipt_encode_ms": 0.013550000000000001,
+            "receipt_encoded_bytes": 0,
+            "sql_count": 58,
+            "sql_operation_ms": 137.90132499999999,
+            "sql_rows": 94,
+            "transaction_ms": 155.86179999999996,
+            "worker_admitted_calls": 6,
+            "worker_artifact_cache_hit": 6,
+            "worker_artifact_load_ms": 0.019450000000000012,
+            "worker_body_read_ms": 0.5779249999999999,
+            "worker_callback_to_send_ms": 193.8213,
+            "worker_calls": 6,
+            "worker_client_total_ms": 219.956,
+            "worker_correlated_calls": 6,
+            "worker_execute_ms": 179.72195,
+            "worker_http_headers_ms": 198.56969999999995,
+            "worker_parse_ms": 2.8119,
+            "worker_process_cpu_ms": 204.35,
+            "worker_project_ms": 2.4423249999999994,
+            "worker_request_bytes": 679696.75,
+            "worker_response_bytes": 1565494,
+            "worker_snapshot_hash_ms": 3.8625749999999996,
+            "worker_stringify_ms": 4.262524999999999
+          }
+        },
+        "medianChangePercent": -11.284046692607008,
+        "p95ChangePercent": -4.639529180678736
+      }
+    ],
+    "accepted": 176,
+    "timed": 160,
+    "actualWorkerChecks": [
+      "TestCatalogBatchWaveMatchesLegacyAndDeduplicatesSQL",
+      "TestCatalogBatchMissingUnknownAliasesAndEmptyCompleteness",
+      "TestPrivateWaveDedupPreservesRowsAndFreshness",
+      "TestPrivateWaveDedupPreservesAliasAndRefusals",
+      "TestCatalogBatchActualWorkerEquivalentForOwnedFixtures",
+      "TestCatalogPrefetchAdvisoryClosurePreservesExactNeeds",
+      "TestCatalogPrefetchNeverWidensCardRights"
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "browserCleanup": "stopped",
+    "limitations": [
+      "Headless desktop browser on local machine; no production or mobile latency guarantee",
+      "Distinct fresh run, characters and RNG per sample",
+      "p95 based on 40 timed samples per role and party size; local experiment only",
+      "No production speed or identical combat outcome claim; each UI sample uses fresh run/RNG.",
+      "Correctness checks use the same party-1/2/6 fixtures and fixed seeds for actual worker canonical results.",
+      "Only duplicate needs within one existing catalog wave are removed. Catalog batch, caches and persisted writers remain OFF.",
+      "Root source unchanged, private Go overlay only; integration requires separate reviewed source, exact CI and rollout."
+    ],
+    "productionMutations": 0,
+    "paidProviderRequests": 0,
+    "integrated": false,
+    "productionEnabled": false
+  },
+  "production": {
+    "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "writers": "OFF",
+    "selective": false,
+    "automatic": false,
+    "reconcile": false
+  },
+  "backupPolicy": {
+    "location": "same-production-server",
+    "ownerDecision": true,
+    "offHost": "deferred"
+  },
+  "nextAcceptance": [
+    "Commit locally verified recovery code and source-controlled actual refusal proof",
+    "Accept the new exact full CI; a3 CI22 is historical evidence only for a3",
+    "Publish fresh immutable candidate/browser proof from that exact source",
+    "Execute fresh full protected capture/rehearsal/cutover and independently verify writers ON/ON/OFF",
+    "Accept real frontend-only delivery, owned full rollback and automatic/reconcile behavior",
+    "Integrate measured five-line wave dedup separately with its tests, source manifest, exact CI and rollout"
+  ],
+  "finalLocalVerificationAt": "2026-10-06T04:12:18.295Z"
+}

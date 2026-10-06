@@ -10,6 +10,7 @@ import {createPlan, classifyPath} from './plan-components.mjs';
 import {componentInputFingerprint, evidenceHash, compositionFingerprint, validateManifest,validateMigrationSet,writerPolicy,writerPolicyFields,validateWriterTransition} from './validate-manifest.mjs';
 import {assertOCIMediaDisabled} from './write-build-identity.mjs';
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';
+import {assertReviewedRefusalBaseline}from'./reviewed-deployment-refusal.mjs';
 import {loadControlRecovery,recoveryFields} from './first-adoption-recovery.mjs';
 import {assertSourceContentManifest} from './source-content-manifest.mjs';
 import {verifyFrontendCIReport} from './ui-release-planning.mjs';
@@ -73,6 +74,7 @@ export function verifySuiteReport(report, candidate, {requiredTier='extended'}={
 }
 export function verifyBaseline(manifest, receipt, run) {
   validateManifest(manifest);
+  for(const proof of run.reviewedRefusals??[])assertReviewedRefusalBaseline(proof,run,manifest);
   if (receipt?.releaseCommit !== manifest.releaseCommit || receipt.controlCommit !== run.controlCommit || receipt.schemaVersion !== 1 || receipt.status !== 'succeeded'
     || receipt.manifestHash !== evidenceHash(manifest) || receipt.releaseId !== manifest.releaseId) throw Error('Baseline is not an attested successful deployment');
   return manifest;

@@ -32,6 +32,7 @@
         "scripts/release/ci-release.test.mjs",
         "scripts/release/automatic-release.test.mjs",
         "scripts/release/deployed-baseline.test.mjs",
+        "scripts/release/reviewed-deployment-refusal.test.mjs",
         "scripts/release/first-adoption-recovery.test.mjs",
         "scripts/release/first-adoption-recovery-host.test.mjs",
         "scripts/release/capture-host-backup.test.mjs",

@@ -1,0 +1,227 @@
+{
+  "schemaVersion": 1,
+  "kind": "reviewed-followon-pre-cutover-refusal-audit",
+  "status": "passed",
+  "observedAt": "2026-10-06T03:59:33.249Z",
+  "repository": "alexeyvilmost/dnd_cards",
+  "failed": {
+    "id": 37405297914,
+    "attempt": 1,
+    "controlCommit": "02259b22203de7b28cbb0c6fc04daa2aba646786",
+    "completedAt": "2026-10-06T03:10:23Z"
+  },
+  "baseline": {
+    "id": 37389067128,
+    "attempt": 1,
+    "controlCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "releaseId": "candidate-93265633db10-deb958c1c9a7",
+    "manifestHash": "sha256:7fae0ca17c7feab090eba17760d58b75987b631c3f00e584afa5d3a7c8daeb41",
+    "activeHash": "sha256:713ed527a58867d4a5c7a75cc0b1d0f0c91d4f2c6ae238496b88c66c03179d24"
+  },
+  "candidateManifestHash": "sha256:9ad5d3a3223d534c834d19d00ec4725e5a79176d78ae5a99fd85b0d953c47643",
+  "failedReleaseId": "candidate-02259b22203d-0539e721a75f",
+  "hostConfigHash": "sha256:e5bf90d61172dce59dd0eed686429a958b5a724e62fadb69bb9128c239d89a6e",
+  "transferHash": "sha256:dd5669a798c87dd5e829ec6cddf44bd6cc51c5f76481284faf775eb79ac0e30f",
+  "rehearsalHash": "sha256:e8c829880579d6c254568a2040d6b8331670e3898350d6323e833b22eee92130",
+  "rehearsalRunId": "8647d921-1bfe-4319-81a2-ea4e0109fa63",
+  "rehearsalCompletedAt": "2026-10-06T03:10:21.897Z",
+  "phaseHashes": [
+    {
+      "file": "phase-01.json",
+      "sha256": "sha256:9b0685aca40e9d7602c41f28948498bd697c0e1aa91f9c711f8a640b844a4f25"
+    },
+    {
+      "file": "phase-02.json",
+      "sha256": "sha256:b1e8bccf72c672c2c699c6c53017281475de9938c6181118118557e5d2655206"
+    },
+    {
+      "file": "phase-03.json",
+      "sha256": "sha256:6f3439083fe135a7e91b6a9ac1b1f9e2e3557d32b0323b631af480d468b5d989"
+    },
+    {
+      "file": "phase-04.json",
+      "sha256": "sha256:dcf25296fdd10a71516b4330a6d61aa79ffd41a65443f528ccde8c7a4f9d9054"
+    },
+    {
+      "file": "phase-05.json",
+      "sha256": "sha256:13a8a5ec4a78fddfa7585bcb22ebf3f71be4de23ee0bc2eaa4dec4fda53e7c0c"
+    }
+  ],
+  "retained": [
+    {
+      "file": "state.json",
+      "sha256": "sha256:3d43bbfe411fd84ceebadaa58a9daf62c44514713180eb63736160396397ae3e"
+    },
+    {
+      "file": "compose.env",
+      "sha256": "sha256:0c383de376d0ff32a3e640e9fe26d40e783d3cd9a7081d9e332cb39b0bb767e4"
+    },
+    {
+      "file": "compose.prod.yml",
+      "sha256": "sha256:e6dfdc232d4cea26d6550f5973e0bffedf2562075a9e583084511cf0cd29f95b"
+    },
+    {
+      "file": "Caddyfile",
+      "sha256": "sha256:12a29ac3af7d73614c3e3d7fdf58e0f35dbeab10c9b23704e15de9da43c2cb99"
+    },
+    {
+      "file": "compose.runtime.json",
+      "sha256": "sha256:17e79072d360f1107a3724c8fda9fbd85620d1c82a50a92858167285f0eab14b"
+    }
+  ],
+  "operations": [
+    {
+      "file": "candidate-93265633db10-deb958c1c9a7.json",
+      "sha256": "sha256:ba31d7fd0f8fdeba6d7c9378d4898453938ce60a0b7e242ada4a0df5034879bc"
+    },
+    {
+      "file": "candidate-ab94ada2bbf8-1f3a396e803c.json",
+      "sha256": "sha256:4bc6b9c0b2cd948e6321e96546b232d8e6f572b01286bc2a10b05d52d034153b"
+    }
+  ],
+  "services": {
+    "backend": {
+      "healthy": true,
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:50a76c05d86267a061b144aefe362c10bddedd186770d430ebd136627ff4b001",
+      "containerId": "11ac74946a01bf40b71b483777afd5c7f670b5ea2996319d356fcb5abbe209a1",
+      "identity": {
+        "apiProtocolVersion": 1,
+        "component": "backend",
+        "goRuntime": "go1.25.14",
+        "identitySchemaVersion": 1,
+        "inputFingerprint": "sha256:50f9aa1864d0663bf94f70b6b025b9b83fd3644f1a98ff4bfc51c88a9d075e21",
+        "provenance": "baked",
+        "readerCapabilities": [
+          "receipt-v1",
+          "receipt-v2",
+          "image-job-v1"
+        ],
+        "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "releaseId": "candidate-93265633db10-deb958c1c9a7",
+        "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "status": "ok"
+      }
+    },
+    "rulesWorker": {
+      "healthy": true,
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:b9ef60b6a9d1bae45f8a432fc72d5c2035a675af652ba2d2885f6e680c5759d2",
+      "containerId": "1a61c331f61149d529b5a0a2eda03eb8dc0b2d61faedc10ace27d0e71b70db4e",
+      "identity": {
+        "status": "ok",
+        "identitySchemaVersion": 1,
+        "component": "rulesWorker",
+        "provenance": "baked",
+        "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "inputFingerprint": "sha256:57ccc9ba57f732aa91538ee3bfbaa9bc002a243b426399d0803e47cd1f9fa701",
+        "apiProtocolVersion": 1,
+        "workerProtocolVersion": 1,
+        "supportedWorldSchemaVersions": [
+          5
+        ],
+        "capabilities": [
+          "pinned-artifact-routing",
+          "pending-decision-pass-through"
+        ],
+        "workerRuntime": {
+          "name": "node",
+          "version": "24.21.0"
+        },
+        "artifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+        "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "releaseId": "candidate-93265633db10-deb958c1c9a7"
+      }
+    },
+    "frontend": {
+      "healthy": true,
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:0bfe5f131c115478c590df659d3575be839203ec81499ec08fbb8264ceacca8c",
+      "containerId": "a0f41dc9100ef9a464c699d106f52da9aa9cb4d21fe5a68edeb330d95136d894",
+      "identity": {
+        "identitySchemaVersion": 1,
+        "component": "frontend",
+        "provenance": "baked",
+        "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+        "apiProtocolVersion": 1,
+        "readerCapabilities": [
+          "image-job-v1"
+        ],
+        "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "releaseId": "candidate-93265633db10-deb958c1c9a7"
+      }
+    }
+  },
+  "protectedRuntime": {
+    "backend": {
+      "containerId": "11ac74946a01bf40b71b483777afd5c7f670b5ea2996319d356fcb5abbe209a1",
+      "identity": {
+        "apiProtocolVersion": 1,
+        "component": "backend",
+        "goRuntime": "go1.25.14",
+        "identitySchemaVersion": 1,
+        "inputFingerprint": "sha256:50f9aa1864d0663bf94f70b6b025b9b83fd3644f1a98ff4bfc51c88a9d075e21",
+        "provenance": "baked",
+        "readerCapabilities": [
+          "receipt-v1",
+          "receipt-v2",
+          "image-job-v1"
+        ],
+        "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "releaseId": "candidate-93265633db10-deb958c1c9a7",
+        "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "status": "ok"
+      },
+      "configurationHash": "sha256:be9e70b2db62905b719baf080329e95bf7bc4adf6f3d78c62f0f0f4ba5e48c6d",
+      "mountsHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "databaseBindingHash": "sha256:df6712f20d121b60ecef85b158bd9854f15ea5d400b90e54d055f19338a5132b"
+    },
+    "rulesWorker": {
+      "containerId": "1a61c331f61149d529b5a0a2eda03eb8dc0b2d61faedc10ace27d0e71b70db4e",
+      "identity": {
+        "status": "ok",
+        "identitySchemaVersion": 1,
+        "component": "rulesWorker",
+        "provenance": "baked",
+        "sourceCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "source_commit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "inputFingerprint": "sha256:57ccc9ba57f732aa91538ee3bfbaa9bc002a243b426399d0803e47cd1f9fa701",
+        "apiProtocolVersion": 1,
+        "workerProtocolVersion": 1,
+        "supportedWorldSchemaVersions": [
+          5
+        ],
+        "capabilities": [
+          "pinned-artifact-routing",
+          "pending-decision-pass-through"
+        ],
+        "workerRuntime": {
+          "name": "node",
+          "version": "24.21.0"
+        },
+        "artifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+        "releaseCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+        "releaseId": "candidate-93265633db10-deb958c1c9a7"
+      },
+      "configurationHash": "sha256:b44871b0efe402bf8ca40cfa4634fa35160895faaa5668cd97275fb3e318a209",
+      "mountsHash": "sha256:81b880df6e5ef716d5a3b6c33f7384685b1d2602183326c6fa83a11690f5f9b6",
+      "databaseBindingHash": "sha256:df6712f20d121b60ecef85b158bd9854f15ea5d400b90e54d055f19338a5132b"
+    }
+  },
+  "databaseBindingHash": "sha256:df6712f20d121b60ecef85b158bd9854f15ea5d400b90e54d055f19338a5132b",
+  "routingSecurityHash": "sha256:2cb2cee55d072d822a6926af54da11a8b498fcf32a136293541897ecc7f975c4",
+  "cleanup": {
+    "remainingOwnedResources": 0,
+    "validatorStopped": true,
+    "dockerAuthRemoved": true,
+    "deploymentJournalCreated": false,
+    "deployLockPresent": false,
+    "operatorApplicationMutations": 0
+  },
+  "readOnly": true,
+  "sqlQueries": 0,
+  "serviceReplacements": 0,
+  "providerRequests": 0
+}

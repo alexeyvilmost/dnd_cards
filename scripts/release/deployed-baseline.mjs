@@ -1,5 +1,6 @@
 // Read-only discovery. A green workflow with a skipped deploy job is not a
 // deployment. The receipt contents are validated separately after download.
+import {loadReviewedDeploymentRefusal,assertReviewedRefusalRun,assertReviewedRefusalBaseline}from'./reviewed-deployment-refusal.mjs';
 const positive = value => Number.isSafeInteger(value) && value > 0;
 const timestamp = value => {
   const match = typeof value === 'string' && /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,3}))?Z$/.exec(value);
@@ -51,14 +52,14 @@ async function list(get, route, key) {
   return rows;
 }
 
-export async function selectLatestDeployedRun(get, {repository, now = Date.now()} = {}) {
+export async function selectLatestDeployedRun(get, {repository, now = Date.now(),controlRoot} = {}) {
   if (typeof get !== 'function' || !/^[\w.-]+\/[\w.-]+$/.test(repository ?? '') || !Number.isFinite(now)) {
     throw Error('Invalid deployment baseline discovery request');
   }
   // Include failed completed runs: an attempted cutover with an unclear result
   // requires recovery, not an automatic return to an older successful baseline.
   const route = 'actions/workflows/deploy.yml/runs?branch=main&status=completed';
-  let latest, tied = false;
+  let latest, tied = false;const refused=[];
   // GitHub orders workflow runs by creation. A historical manual rerun can
   // deploy after a newer-created run, so every available page must be scanned.
   // Filtered workflow searches return at most 1,000 rows. At that boundary
@@ -83,12 +84,18 @@ export async function selectLatestDeployedRun(get, {repository, now = Date.now()
       if (!['success', 'failure', 'cancelled', 'timed_out', 'neutral', 'action_required', 'stale'].includes(job.conclusion)) throw Error('Deploy job has an unknown or ambiguous terminal result');
       const started = timestamp(job.started_at), completed = timestamp(job.completed_at);
       if (!Number.isFinite(started) || !Number.isFinite(completed) || completed < started || completed > now) throw Error('Deploy job timestamps are unavailable or invalid');
+      // Only a committed, individually audited rehearsal refusal may be
+      // reconciled. Unknown failures, reruns and changed metadata still block.
+      if(job.conclusion!=='success'||identity.conclusion!=='success'){
+        const proof=loadReviewedDeploymentRefusal({id:identity.id,attempt:identity.runAttempt,repository,controlRoot});
+        if(proof){assertReviewedRefusalRun(proof,{identity,job,now});if(!sameRun(identity,runIdentity(await get(`actions/runs/${identity.id}`),repository)))throw Error('Reviewed refused deployment changed during discovery');refused.push({proof,completed});continue;}
+      }
       if (!latest || completed > latest.completed) {
         latest = {identity, job, started, completed}; tied = false;
       } else if (completed === latest.completed) tied = true;
     }
   }
-  if (!latest) return null;
+  if (!latest){if(refused.length)throw Error('Reviewed refusal has no genuine successful baseline');return null;}
   if (tied) throw Error('Latest deployment completion timestamp is ambiguous; recovery is required');
   const {identity, job, started, completed} = latest;
   if (job.conclusion !== 'success' || identity.conclusion !== 'success') {
@@ -104,6 +111,8 @@ export async function selectLatestDeployedRun(get, {repository, now = Date.now()
     throw Error('Actual deployment receipt is expired, stale, or belongs to another workflow attempt');
   }
   if (!sameRun(identity, runIdentity(await get(`actions/runs/${identity.id}`), repository))) throw Error('Deployment workflow changed during discovery');
-  return {id: identity.id, workflow: identity.workflow, repository, controlCommit: identity.controlCommit,
+  const selected={id: identity.id, workflow: identity.workflow, repository, controlCommit: identity.controlCommit,
     event: identity.event, runAttempt: identity.runAttempt, artifactId: receipt.id, completedAt: job.completed_at};
+  const applicable=refused.filter(row=>row.completed>=completed);for(const row of applicable){if(row.completed===completed)throw Error('Reviewed refusal completion is ambiguous');assertReviewedRefusalBaseline(row.proof,selected);}
+  return {...selected,...(applicable.length?{reviewedRefusals:applicable.map(row=>row.proof)}:{})};
 }

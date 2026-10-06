@@ -69,6 +69,7 @@ export async function executeHostGates({directory,packet,request,token,run=execu
     await command('deployment-handoff.mjs',['candidate',candidate,freshRun]);
     await command('automatic-release.mjs',['check-current',request.sourceCommit]);
     if(JSON.parse(packet.files['candidate.json'].text).provenance?.firstAdoptionRecovery)await command('first-adoption-recovery-host.mjs',[directory,request.hostConfig]);
+    if(existsSync(path.join(control,'infra','reviewed-deployment-refusals')))await command('reviewed-deployment-refusal-host.mjs',[directory]);
     await run('docker',['login','ghcr.io','--username',request.actor,'--password-stdin'],{env,input:token});
     const publishedCandidate=read(path.join(candidate,'candidate.json'));let frontendProof;
     if(publishedCandidate.frontendVerification){

@@ -107,6 +107,16 @@ test('every host gate failure cleans attempt credentials and never retries cutov
   assert.equal(existsSync(path.join(directory,'docker-auth')),false);assert.ok(applies<=1);assert.equal(existsSync(path.join(directory,'deployed-release')),false);
  }
 });
+test('reviewed follow-on refusal rechecks the host before login or capture and cannot mutate on failed recheck',async t=>{
+ const directory=await temp(t),req={...request(),mode:'apply'},packet=fixture(req),calls=[];
+ await mkdir(path.join(directory,'control','infra','reviewed-deployment-refusals'),{recursive:true});
+ await assert.rejects(executeHostGates({directory,packet,request:req,token:'unit-read-token',run:async(bin,args)=>{
+  calls.push(bin==='docker'?'docker':path.basename(args[0]));
+  if(path.basename(args[0])==='release-publication.mjs'){await writeFile(args.at(-1),packet.files['verified-release-run.json'].text);return 'candidate_available=true\nartifact_id=99\n';}
+  if(path.basename(args[0])==='reviewed-deployment-refusal-host.mjs')throw Error('reviewed refused state changed');return '';
+ }}),/refused state changed/);
+ assert.deepEqual(calls,['release-publication.mjs','deployment-handoff.mjs','automatic-release.mjs','reviewed-deployment-refusal-host.mjs']);assert.equal(existsSync(path.join(directory,'docker-auth')),false);assert.equal(existsSync(path.join(directory,'rehearsal')),false);assert.equal(existsSync(path.join(directory,'deployment-operation.json')),false);
+});
 
 test('changed release attempt or artifact is rejected on host before registry login',async t=>{
  for(const mutation of [r=>{r.runAttempt++;},r=>{r.artifactId++;},r=>{r.controlCommit='d'.repeat(40);}]){
