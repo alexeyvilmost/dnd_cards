@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -23,7 +24,13 @@ func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer
 	if len(args) != 1 {
 		return true, errors.New("migration request must be supplied on stdin")
 	}
-	decoder := json.NewDecoder(io.LimitReader(input, 512*1024))
+	// A truncated reader can report EOF after an otherwise valid JSON object
+	// and hide oversized trailing input. Reject the actual byte limit first.
+	payload, err := io.ReadAll(io.LimitReader(input, 512*1024+1))
+	if err != nil || len(payload) > 512*1024 {
+		return true, errors.New("one bounded migration request required")
+	}
+	decoder := json.NewDecoder(bytes.NewReader(payload))
 	decoder.DisallowUnknownFields()
 	var request migrations.ReleaseMigrationRequest
 	var retirement migrations.ReleaseRetirementInspectionRequest

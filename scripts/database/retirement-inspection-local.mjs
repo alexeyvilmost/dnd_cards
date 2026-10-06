@@ -17,7 +17,7 @@ let stack;
 try{
  stack=await startTestStack({dbOnly:true});receipt.runId=stack.registry.runId;
  receipt.results.push(await runRequiredGo(stack,{packagePath:'./migrations',tests:['TestRetirementIdentityIsSupportedButNeverExecutable','TestRetirementReceiptRejectsUnknownAndMalformedData','TestReleaseRetirementInspectionReadOnlyAndRejectsDrift']}));
- receipt.results.push(await runRequiredGo(stack,{tests:['TestReleaseMigrationCLIRejectsUnboundAndMalformedRequestsBeforeStartup','TestMigrationInfoCommand']}));
+ receipt.results.push(await runRequiredGo(stack,{tests:['TestReleaseMigrationCLIRejectsUnboundAndMalformedRequestsBeforeStartup','TestReleaseMigrationCLIBoundsInputBeforeDatabaseConnection','TestMigrationInfoCommand']}));
  assert.deepEqual(await hashes(),sourceHashes);receipt.sourceUnchanged=true;receipt.status='passed';
 }catch(error){receipt.status='failed';receipt.errorCode='retirement-inspection-test-failed';throw error;}
 finally{
