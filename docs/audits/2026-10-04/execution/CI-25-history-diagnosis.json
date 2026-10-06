@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "kind": "exact-ci25-local-captured-history-diagnosis",
+  "recordedAt": "2026-10-06T08:06:27.172Z",
+  "status": "local-history-compatible-full-candidate-diagnosis-required",
+  "sourceCommit": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
+  "ci": {
+    "id": 37425975659,
+    "attempt": 1,
+    "conclusion": "success",
+    "counts": {
+      "node": 970,
+      "vitest": 6462,
+      "go": 754,
+      "workerDatabase": 25,
+      "ui": 48,
+      "battle3d": 8,
+      "browser": 12
+    },
+    "durationMs": 713773
+  },
+  "publication": {
+    "id": 37427637628,
+    "attempt": 1,
+    "conclusion": "success",
+    "allThreeImages": true
+  },
+  "deployment": {
+    "id": 37428679118,
+    "attempt": 1,
+    "conclusion": "failure",
+    "stage": "historical-replay",
+    "passedStages": [
+      "snapshot",
+      "migrations",
+      "full-candidate-health",
+      "image-contract",
+      "historical-inventory"
+    ],
+    "ownedResourceCleanup": {
+      "status": "stopped",
+      "resources": 12
+    },
+    "originalReportRetained": true,
+    "originalProcessCauseKnown": false,
+    "productionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "productionChanged": false
+  },
+  "localHistory": {
+    "snapshotHash": "sha256:2391ba4146fe16bd29ef04c1237428e71167fcf94b0d9890310c596d4881d3e5",
+    "reportHash": "sha256:419073a28c071d07240254e3b127962d237445776117a4973d0ba59bf3a322ce",
+    "records": 2344,
+    "combats": 136,
+    "commands": 2209,
+    "failed": 0,
+    "privateACL": "current-user-only",
+    "productionWrites": 0,
+    "historyBytesChanged": false,
+    "cleanup": "stopped"
+  },
+  "publishedWorker": {
+    "image": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:cd7ef6dc9186d2c6e24d071929c312955fa26b1dbfaa2a71be7ab4a9a2b9a9ff",
+    "consumerHash": "sha256:d1a0534d7332f3657a8d40a9dcf0da6c0fe2f7326fe40d5f9b99816ba80a7205",
+    "payloadHash": "sha256:de0a51722e1003aebb26372804a4ea5e369dfffeecb2daf7fdf5e32286c10f89",
+    "payloadBytes": 71832014,
+    "reportHash": "sha256:78f9493a4de3692393d8eb1f83a67fd563276dc4ea34d5df604aa515c6cdbf35",
+    "expectedCapturedArtifacts": 18,
+    "commands": 2209,
+    "combats": 136,
+    "replayMs": 137947,
+    "cleanup": "stopped",
+    "fullRehearsalAcceptance": false,
+    "scope": "Original captured history; excludes the additional candidate-only canonical combat"
+  },
+  "diagnosticRepair": {
+    "status": "local-tested-uncommitted",
+    "checkedSources": [
+      {
+        "path": "scripts/release/rehearsal-command.mjs",
+        "sha256": "sha256:74de54d106489da24ca21d216707ba8b5ea093ff758ab223048baadfdb11ba4f"
+      },
+      {
+        "path": "scripts/release/rehearsal-command.test.mjs",
+        "sha256": "sha256:137f25a7f506b49a5605fa962b55de989f5e8ce31639d1a853131b71526232e2"
+      },
+      {
+        "path": "scripts/release/candidate-rehearsal.mjs",
+        "sha256": "sha256:11a94fbc685e0a3379864d302b268b93297ca64016eb8b0629f1ff61f28946e9"
+      },
+      {
+        "path": "scripts/release/candidate-rehearsal.test.mjs",
+        "sha256": "sha256:74aa88cdc64ba3b42dfb414a7a6a2e2ea2c8c50e45569f4ed387cb80cc5b5e99"
+      }
+    ],
+    "windows": {
+      "tests": 502,
+      "pass": 494,
+      "fail": 0,
+      "skippedLinuxOnly": 8,
+      "evidence": "Actual Node test process completed successfully during this turn"
+    },
+    "linux": {
+      "tests": 33,
+      "pass": 33,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "exitCode": 0,
+      "cleanup": "stopped",
+      "logHash": "sha256:1ff612fe565b1d15574f8f262163a30ccd0f3368ffced8bc9d21983980bf7ca8"
+    },
+    "sourceManifest": {
+      "files": 434,
+      "status": "passed"
+    },
+    "repositoryKnownCredentialScan": "passed"
+  },
+  "productionWindow": {
+    "schemaVersion": 1,
+    "recordedAt": "2026-10-06T07:52:18Z",
+    "status": "hold-production-database-changes-until-user-ready",
+    "source": "Direct user instruction: actively using the service and modifying its database during the next hour; notify before database rollout to prevent data loss.",
+    "plannedActiveUseWindowEndsAt": "2026-10-06T08:52:18Z",
+    "expiresAutomatically": false,
+    "requiredBeforeProductionChange": [
+      "Notify the user in this chat before production migrations, data cleanup, writer enablement or application deployment affecting ongoing work.",
+      "Wait for the user's reply that active use has ended, as promised in the acknowledgement.",
+      "Re-observe production state and capture a fresh protected backup for the actual release.",
+      "Never restore the downloaded diagnostic snapshot over the working production database."
+    ],
+    "allowedMeanwhile": [
+      "Local isolated reproduction using the protected diagnostic snapshot",
+      "Local development and verification",
+      "Read-only production observations",
+      "CI and image publication without production deployment"
+    ],
+    "lastKnownProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "automaticProductionDeployment": "disabled"
+  },
+  "next": [
+    "Download and verify remaining files of the original capture without live database writes",
+    "Reproduce the full candidate scenario locally, including its newly created canonical current-artifact combat",
+    "Determine and fix the actual refusal; do not assume timeout or reduce historical coverage",
+    "Audit the original terminal refusal and cleanup for strict predecessor discovery",
+    "Run exact new CI and publication; notify owner and wait for active-use completion before deployment; capture fresh backup",
+    "Complete actual selective releases, rollback, automatic delivery and remaining original 29 tasks"
+  ],
+  "limitations": [
+    "The diagnostic capture is not current production data and must never overwrite the live database",
+    "The candidate-only canonical encounter was removed with the failed rehearsal and is absent from the original capture",
+    "No independent production acceptance of the latest candidate",
+    "Timeout is not a proven original root cause"
+  ],
+  "goalStatus": "active"
+}

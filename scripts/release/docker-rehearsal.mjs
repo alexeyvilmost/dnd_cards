@@ -24,6 +24,9 @@ import {runMigrationRehearsal,createMigrationDockerAdapter} from './migration-re
 const uuid=value=>{if(!/^[a-f0-9-]{36}$/.test(value))throw Error('Invalid snapshot entity identity');return value;};
 const equal=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const readJSON=async file=>JSON.parse(await readFile(file,'utf8'));
+// Verify the entire captured corpus on shared hosts within a bounded budget.
+// This changes no replay inputs, executable hashes, outcomes or RNG checks.
+export const historicalReplayMaximumMs=10*60_000;
 export function createDockerRehearsal({postgresImage,backupDirectory,directory,executeDocker=dockerCommand}) {
   const run=`rehearsal_${randomBytes(12).toString('hex')}`,label=`bagofholding.rehearsal=${run}`;
   const names={postgres:`${run}_db`,rulesWorker:`${run}_worker`,backend:`${run}_api`,frontend:`${run}_ui`,network:`${run}_net`,volume:`${run}_artifacts`,pgVolume:`${run}_pgdata`};
@@ -199,7 +202,7 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
       if(id==='historical-replay'){
         const groups=await queryJSON("SELECT coalesce(json_agg(records),'[]'::json) FROM (SELECT jsonb_agg(record ORDER BY revision) records FROM roguelike_combat_events GROUP BY run_id,combat_key) q;");
         const replay=`import{replayCombatRecords,GO_JSON_MAP_ENCODING}from'./replay.mjs';import{createRequire}from'node:module';import{readFile}from'node:fs/promises';import{createHash}from'node:crypto';const require=createRequire(import.meta.url);process.stdin.setEncoding('utf8');let raw='';for await(const c of process.stdin)raw+=c;const input=JSON.parse(raw),counts={};for(const records of input.groups){const hash=records[0]?.artifactHash;if(!/^sha256:[a-f0-9]{64}$/.test(hash)||!records.every(r=>r.artifactHash===hash))throw Error('mixed artifact');const file='/artifacts/'+hash.slice(7)+'.cjs';if('sha256:'+createHash('sha256').update(await readFile(file)).digest('hex')!==hash)throw Error('artifact bytes');const result=replayCombatRecords(records,require(file),{sourceEncoding:GO_JSON_MAP_ENCODING});counts[hash]=(counts[hash]??0)+result.commands}for(const hash of input.expected)if(!(counts[hash]>0))throw Error('missing historical transitions');console.log(JSON.stringify({status:'passed',artifactHashes:input.expected,commands:Object.values(counts).reduce((a,b)=>a+b,0),combats:input.groups.length}));`;
-        return JSON.parse(await command(['exec','-i',names.rulesWorker,'node','--input-type=module','-e',replay],{input:JSON.stringify({groups,expected:input.historicalArtifactHashes}),timeout:300000}));
+        return JSON.parse(await command(['exec','-i',names.rulesWorker,'node','--input-type=module','-e',replay],{input:JSON.stringify({groups,expected:input.historicalArtifactHashes}),timeout:historicalReplayMaximumMs}));
       }
       if(id==='pending-decision'){
         return loadPending();

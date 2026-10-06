@@ -6,6 +6,8 @@ import {assembleDeploymentBundle} from './assemble-bundle.mjs';
 import {attachUnitRehearsal} from './unit-rehearsal-fixture.mjs';
 import {compositionFingerprint,evidenceHash,assertReleaseReady} from './validate-manifest.mjs';
 import {migrationScenarios} from './migration-transition.mjs';
+import {createDockerCommand} from './rehearsal-command.mjs';
+import {spawn} from 'node:child_process';
 const hash=char=>`sha256:${char.repeat(64)}`;
 function fixture({additive=false}={}){
   const previous={schemaVersion:1,releaseId:'previous',releaseCommit:'a'.repeat(40),previousReleaseId:null,createdAt:'2026-10-04T10:00:00Z',
@@ -115,6 +117,13 @@ test('failure diagnostics keep the private cause in memory and persist only fixe
  await assert.rejects(collectRehearsal(input,{execution:'simulation',start:async()=>{throw cause;},cleanup:async()=>({status:'stopped',errors:[]})},{onReport:async report=>{saved=report;}}),error=>error.cause===cause);
  assert.equal(saved.failureStage,'start');assert.deepEqual(saved.migrationFailure,{stage:'unavailable',completedScenarios:['atomic-ddl-ledger'],cleanup:'incomplete'});
  assert.ok(!JSON.stringify(saved).includes(secret));
+});
+
+test('actual subprocess failure keeps only safe diagnosis in the persisted rehearsal receipt',async()=>{
+ const {input}=fixture(),secret='PRIVATE_COMMAND_CAUSE_CANARY';let saved;
+ const invoke=createDockerCommand({spawnProcess:(_exe,args,settings)=>spawn(process.execPath,['-e',...args],settings)});
+ await assert.rejects(collectRehearsal(input,{execution:'simulation',start:async()=>{await invoke([`process.stderr.write('${secret}');process.exitCode=9;`]);},cleanup:async()=>({status:'stopped',errors:[]})},{onReport:async r=>{saved=r;}}));
+ assert.equal(saved.status,'failed');assert.equal(saved.failureStage,'start');assert.equal(saved.processFailure.reason,'process-exit');assert.equal(saved.processFailure.exitCode,9);assert.equal(saved.processFailure.stderrBytes,Buffer.byteLength(secret));assert.ok(!JSON.stringify(saved).includes(secret));assert.equal(saved.cleanup.status,'stopped');
 });
 
 test('reviewed replay refusal binds the full failed report and all seven additive cases without claiming replay passed',()=>{

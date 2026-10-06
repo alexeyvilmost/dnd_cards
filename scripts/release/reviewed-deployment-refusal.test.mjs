@@ -1,10 +1,31 @@
 // Unit contracts only; controlled observations are not host recovery evidence.
 import test from'node:test';import assert from'node:assert/strict';import {readFileSync,mkdtempSync,mkdirSync,writeFileSync,rmSync,chmodSync,utimesSync,statSync}from'node:fs';import {tmpdir}from'node:os';import path from'node:path';import {createHash}from'node:crypto';
-import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,assertReviewedRefusalRun,assertReviewedRefusalBaseline,reviewedRefusalPhaseScripts,isCompletedRestoreRefusal}from'./reviewed-deployment-refusal.mjs';
+import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,assertReviewedRefusalRun,assertReviewedRefusalBaseline,reviewedRefusalPhaseScripts,isCompletedRestoreRefusal,assertReviewedRehearsalRefusal}from'./reviewed-deployment-refusal.mjs';
 import {assertReviewedRefusalObservation,assertHostReviewedDeploymentRefusal}from'./reviewed-deployment-refusal-host.mjs';
-import {evidenceHash}from'./validate-manifest.mjs';import {uiFixture}from'./ui-release-unit-fixture.mjs';
+import {evidenceHash,compositionFingerprint,candidateRehearsalStages}from'./validate-manifest.mjs';import {uiFixture}from'./ui-release-unit-fixture.mjs';
 const original=JSON.parse(readFileSync(new URL('../../infra/reviewed-deployment-refusals/37405297914-1.json',import.meta.url),'utf8'));
 const observation=p=>({...structuredClone(p),activeHash:p.baseline.activeHash,cleanupComplete:true});
+
+function detailedFixture(stage='historical-replay'){
+ const proof=structuredClone(original),manifest=structuredClone(uiFixture().planning.input.previousManifest);
+ const active={schemaVersion:1,status:'active',manifest,instances:Object.fromEntries(Object.keys(manifest.components).map(key=>[key,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]))};
+ proof.schemaVersion=2;proof.baseline.manifestHash=evidenceHash(manifest);proof.baseline.activeHash=evidenceHash(active);
+ const candidate={manifest:{...manifest,releaseId:proof.failedReleaseId,previousReleaseId:manifest.releaseId}},capture={schemaVersion:1,kind:'candidate-capture',status:'captured',createdAt:'2026-10-06T01:00:00.000Z',activeHash:evidenceHash(active),releaseManifestHash:evidenceHash(manifest)};
+ proof.candidateManifestHash=evidenceHash(candidate.manifest);
+ const backup={createdAt:capture.createdAt,releaseManifestHash:proof.baseline.manifestHash};
+ const input={active,manifest:candidate.manifest,backup,candidateHash:evidenceHash(candidate),activeHash:evidenceHash(active),backupHash:evidenceHash(backup),compositionFingerprint:compositionFingerprint(candidate.manifest)};
+ const completedChecks=candidateRehearsalStages.slice(0,candidateRehearsalStages.indexOf(stage));
+ const report={schemaVersion:1,kind:'candidate-rehearsal',execution:'docker',status:'failed',failure:'candidate-rehearsal-failed',failureStage:stage,candidateHash:input.candidateHash,activeHash:input.activeHash,backupHash:input.backupHash,compositionFingerprint:input.compositionFingerprint,releaseId:proof.failedReleaseId,runId:proof.rehearsalRunId,startedAt:'2026-10-06T01:00:01.000Z',completedAt:proof.rehearsalCompletedAt,checks:completedChecks.map(id=>({id,status:'passed'})),cleanup:{status:'stopped',errors:[],resourceCount:12}};
+ proof.rehearsalFailure={stage,completedChecks,inputHash:evidenceHash(input),captureHash:evidenceHash(capture),cleanupResourceCount:12};
+ return {proof,candidate,input,capture,report,inputHash:evidenceHash(input),captureHash:evidenceHash(capture)};
+}
+for(const stage of ['historical-replay','pending-decision'])test(`version2 binds the actual failed prefix and original inputs at ${stage}, without assuming a writer failure`,()=>{
+ const f=detailedFixture(stage);assert.equal(assertReviewedRehearsalRefusal(f.proof,f),f.proof.rehearsalFailure);assertReviewedRefusalObservation(f.proof,observation(f.proof));
+ for(const mutate of [x=>x.proof.rehearsalFailure.stage='unknown',x=>x.proof.rehearsalFailure.completedChecks.pop(),x=>x.proof.rehearsalFailure.inputHash='sha256:'+'0'.repeat(64),x=>x.proof.rehearsalFailure.captureHash='sha256:'+'0'.repeat(64),x=>x.report.status='passed',x=>x.report.execution='simulation',x=>x.report.checks[0].status='failed',x=>x.report.checks.reverse(),x=>x.input.backup.createdAt='2020-01-01',x=>x.input.active.status='different',x=>x.input.manifest.releaseId='substituted',x=>x.report.candidateHash='sha256:'+'0'.repeat(64),x=>x.report.cleanup.errors.push('incomplete'),x=>x.report.cleanup.resourceCount++,x=>x.report.failureStage='start',x=>x.capture.status='changed',x=>x.report.kind='local-candidate-rehearsal']){
+  const changed=structuredClone(f);mutate(changed);assert.throws(()=>assertReviewedRehearsalRefusal(changed.proof,changed));
+ }
+ const changed=observation(f.proof);changed.rehearsalFailure.inputHash='sha256:'+'0'.repeat(64);assert.throws(()=>assertReviewedRefusalObservation(f.proof,changed));
+});
 test('reviewed refusal binds exact failed workflow, existing genuine baseline and immutable host observations',()=>{
  const p=structuredClone(original);validateReviewedDeploymentRefusal(p);
  assertReviewedRefusalRun(p,{identity:{id:p.failed.id,runAttempt:1,repository:p.repository,controlCommit:p.failed.controlCommit,event:'workflow_dispatch',conclusion:'failure'},job:{conclusion:'failure',completed_at:p.failed.completedAt},now:Date.parse(p.observedAt)});
@@ -29,7 +50,7 @@ test('rerun, changed failure time, future audit or different baseline cannot reu
  assert.throws(()=>assertReviewedRefusalRun(original,{identity,job:{...job,completed_at:'2026-01-01T00:00:00Z'},now}));assert.throws(()=>assertReviewedRefusalRun(original,{identity,job,now:now-1}));
  assert.throws(()=>assertReviewedRefusalBaseline(original,{id:original.baseline.id+1,runAttempt:1,controlCommit:original.baseline.controlCommit}));assert.throws(()=>assertReviewedRefusalBaseline(original,{id:original.baseline.id,runAttempt:1,controlCommit:original.baseline.controlCommit},{releaseId:original.baseline.releaseId}));
 });
-for(const template of [original,...['37414694346','37420370284'].map(id=>JSON.parse(readFileSync(new URL('../../infra/reviewed-deployment-refusals/'+id+'-1.json',import.meta.url),'utf8')))])test(`Linux private host reader accepts ${template.failed.id} ${template.phaseHashes.length}-phase 0644 evidence, rechecks under lock and refuses later-stage files`,{skip:process.platform!=='linux'},async t=>{
+for(const template of [original,...['37414694346','37420370284','37428679118'].map(id=>JSON.parse(readFileSync(new URL('../../infra/reviewed-deployment-refusals/'+id+'-1.json',import.meta.url),'utf8')))])test(`Linux private host reader accepts ${template.failed.id} ${template.phaseHashes.length}-phase 0644 evidence, rechecks under lock and refuses later-stage files`,{skip:process.platform!=='linux'},async t=>{
  const original=template;
  const root=mkdtempSync(path.join(tmpdir(),'refusal-host-reader-'));t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('refusal-host-reader-'));rmSync(root,{recursive:true,force:true});});
  const write=(file,value,mode=0o600)=>{mkdirSync(path.dirname(file),{recursive:true,mode:0o700});writeFileSync(file,typeof value==='string'?value:JSON.stringify(value),{mode});},digest=file=>'sha256:'+createHash('sha256').update(readFileSync(file)).digest('hex');
@@ -52,6 +73,14 @@ for(const template of [original,...['37414694346','37420370284'].map(id=>JSON.pa
   const stamp=new Date(p.expiry.restoreReportWrittenAt);utimesSync(backupDirectory+'/restore-report.json',stamp,stamp);p.expiry.restoreReportWrittenAt=statSync(backupDirectory+'/restore-report.json').mtime.toISOString();
   for(const name of ['candidate-rehearsal.mjs','backup-manifest.mjs'])write(old+'/control/scripts/release/'+name,readFileSync(new URL(name,import.meta.url),'utf8'),0o644);
   for(const[key,file]of Object.entries({captureHash:backupDirectory+'/capture.json',backupFileHash:backupDirectory+'/backup.json',inputHash:old+'/rehearsal/input.json',restoreReportHash:backupDirectory+'/restore-report.json',collectorCodeHash:old+'/control/scripts/release/candidate-rehearsal.mjs',backupCodeHash:old+'/control/scripts/release/backup-manifest.mjs'}))p.expiry[key]=digest(file);
+ }else if(p.schemaVersion===2){
+  const candidate=JSON.parse(oldPacket.files['candidate.json'].text),startedAt=new Date(Date.parse(p.rehearsalCompletedAt)-1000).toISOString();
+  const capture={schemaVersion:1,kind:'candidate-capture',status:'captured',createdAt:new Date(Date.parse(startedAt)-1000).toISOString(),activeHash:p.baseline.activeHash,releaseManifestHash:p.baseline.manifestHash};
+  const backup={createdAt:capture.createdAt,releaseManifestHash:p.baseline.manifestHash};
+  const input={active,manifest:candidate.manifest,backup,activeHash:p.baseline.activeHash,candidateHash:evidenceHash(candidate),backupHash:evidenceHash(backup),compositionFingerprint:compositionFingerprint(candidate.manifest)};
+  const report={schemaVersion:1,kind:'candidate-rehearsal',execution:'docker',status:'failed',failure:'candidate-rehearsal-failed',failureStage:p.rehearsalFailure.stage,runId:p.rehearsalRunId,startedAt,completedAt:p.rehearsalCompletedAt,releaseId:p.failedReleaseId,activeHash:input.activeHash,candidateHash:input.candidateHash,backupHash:input.backupHash,compositionFingerprint:input.compositionFingerprint,checks:p.rehearsalFailure.completedChecks.map(id=>({id,status:'passed'})),cleanup:{status:'stopped',errors:[],resourceCount:p.rehearsalFailure.cleanupResourceCount}};
+  const inputFile=old+'/rehearsal/input.json',captureFile=config.root+'/backups/capture-'+p.failed.id+'-1/capture.json';write(inputFile,input);write(captureFile,capture);write(old+'/rehearsal/rehearsal.json',report);
+  p.rehearsalHash=digest(old+'/rehearsal/rehearsal.json');p.rehearsalFailure.inputHash=digest(inputFile);p.rehearsalFailure.captureHash=digest(captureFile);
  }else{
   write(old+'/rehearsal/rehearsal.json',{status:'failed',failureStage:'writer-compatibility',runId:p.rehearsalRunId,activeHash:p.baseline.activeHash,completedAt:p.rehearsalCompletedAt,cleanup:{status:'stopped',errors:[]},checks:Array.from({length:8},()=>({status:'passed'}))});p.rehearsalHash=digest(old+'/rehearsal/rehearsal.json');
  }

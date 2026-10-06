@@ -11,6 +11,7 @@ import {migrationRehearsalRequest,validateMigrationRehearsal} from './migration-
 import {verifyDeploymentBackup,verifyBackup,backupFile,checksum,captureMaximumStartAgeMs} from './backup-manifest.mjs';
 import {verifyCandidateProvenance} from './deployment-handoff.mjs';
 import {writerPublication} from './writer-browser-consumption.mjs';
+import {safeDockerFailure} from './rehearsal-command.mjs';
 export const rehearsalStages=candidateRehearsalStages;
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 function assertInputWriterPublication(input,check){
@@ -52,6 +53,8 @@ export async function collectRehearsal(input,adapter,{runId=randomUUID(),onRepor
     assertWriterRehearsalBoundary(input.manifest,Object.fromEntries(report.checks.map(row=>[row.id,row])));
     assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:image?.images,identities:image?.identities,rehearsalReceipt:report},report.checks.find(row=>row.id==='writer-compatibility'));
   } catch(error){failure=error;report.failure='candidate-rehearsal-failed';report.failureStage=stage;
+    const processFailure=safeDockerFailure(error);
+    if(processFailure)report.processFailure=processFailure;
     // Only our fixed scenario IDs enter persisted diagnostics. The original
     // exception stays in memory and may contain private process details.
     if(error?.migrationReport){const m=error.migrationReport;report.migrationFailure={stage:migrationScenarios.includes(m.failureStage)?m.failureStage:'unavailable',

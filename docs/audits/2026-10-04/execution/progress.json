@@ -2707,7 +2707,26 @@
     "nativeHashIntegrated": false,
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
-  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-24-backup-expiry-recovery.json",
+  "execution_followon_current": {
+    "status": "locally-verified-awaiting-exact-new-ci",
+    "evidence": "docs/audits/2026-10-04/execution/CI-26-rehearsal-recovery.json",
+    "sourceParent": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
+    "ci": {
+      "status": "not-started",
+      "id": null,
+      "exactCommit": null
+    },
+    "productionChanged": false,
+    "next": [
+      "Commit only the locally verified release recovery and public evidence",
+      "Run and independently accept exact CI for that commit",
+      "Publish all three candidate images and verified control packet",
+      "Notify the owner and wait for their reply that active use has ended",
+      "Capture fresh production backup; run all nine gates and deploy without restoring an old snapshot over live data",
+      "Independently accept production; execute genuine selective release, rollback and automatic delivery",
+      "Complete all remaining tasks of the original 29-task plan"
+    ]
+  },
   "latest_paired_batch_measurement": {
     "status": "paired-local-measurement-passed-not-enabled",
     "evidence": "docs/audits/2026-10-04/execution/CI-17-browser-boundary.json",
@@ -2816,5 +2835,142 @@
     "productionUnchanged": true,
     "nextExactCiRequired": true,
     "backupStorage": "same-server-owner-approved"
+  },
+  "latest_historical_replay_diagnosis": {
+    "status": "local-history-compatible-full-candidate-diagnosis-required",
+    "evidence": "docs/audits/2026-10-04/execution/CI-25-history-diagnosis.json",
+    "source": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
+    "ci": {
+      "id": 37425975659,
+      "attempt": 1,
+      "conclusion": "success",
+      "counts": {
+        "node": 970,
+        "vitest": 6462,
+        "go": 754,
+        "workerDatabase": 25,
+        "ui": 48,
+        "battle3d": 8,
+        "browser": 12
+      },
+      "durationMs": 713773
+    },
+    "publication": {
+      "id": 37427637628,
+      "attempt": 1,
+      "conclusion": "success",
+      "allThreeImages": true
+    },
+    "deployment": {
+      "id": 37428679118,
+      "attempt": 1,
+      "conclusion": "failure",
+      "stage": "historical-replay",
+      "passedStages": [
+        "snapshot",
+        "migrations",
+        "full-candidate-health",
+        "image-contract",
+        "historical-inventory"
+      ],
+      "ownedResourceCleanup": {
+        "status": "stopped",
+        "resources": 12
+      },
+      "originalReportRetained": true,
+      "originalProcessCauseKnown": false,
+      "productionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "productionChanged": false
+    },
+    "fullGoalComplete": false
+  },
+  "production_user_window": {
+    "schemaVersion": 1,
+    "recordedAt": "2026-10-06T07:52:18Z",
+    "status": "hold-production-database-changes-until-user-ready",
+    "source": "Direct user instruction: actively using the service and modifying its database during the next hour; notify before database rollout to prevent data loss.",
+    "plannedActiveUseWindowEndsAt": "2026-10-06T08:52:18Z",
+    "expiresAutomatically": false,
+    "requiredBeforeProductionChange": [
+      "Notify the user in this chat before production migrations, data cleanup, writer enablement or application deployment affecting ongoing work.",
+      "Wait for the user's reply that active use has ended, as promised in the acknowledgement.",
+      "Re-observe production state and capture a fresh protected backup for the actual release.",
+      "Never restore the downloaded diagnostic snapshot over the working production database."
+    ],
+    "allowedMeanwhile": [
+      "Local isolated reproduction using the protected diagnostic snapshot",
+      "Local development and verification",
+      "Read-only production observations",
+      "CI and image publication without production deployment"
+    ],
+    "lastKnownProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "automaticProductionDeployment": "disabled"
+  },
+  "latest_rehearsal_recovery": {
+    "status": "locally-verified-awaiting-exact-new-ci",
+    "evidence": "docs/audits/2026-10-04/execution/CI-26-rehearsal-recovery.json",
+    "sourceParent": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
+    "localFullRehearsal": {
+      "sourceCommit": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
+      "originalCaptureDate": "2026-10-06T07:19:51.535Z",
+      "startedAt": "2026-10-06T08:09:37.466Z",
+      "completedAt": "2026-10-06T08:35:56.317Z",
+      "durationMs": 1578851,
+      "checks": [
+        {
+          "id": "snapshot",
+          "status": "passed"
+        },
+        {
+          "id": "migrations",
+          "status": "passed"
+        },
+        {
+          "id": "full-candidate-health",
+          "status": "passed"
+        },
+        {
+          "id": "image-contract",
+          "status": "passed"
+        },
+        {
+          "id": "historical-inventory",
+          "status": "passed"
+        },
+        {
+          "id": "historical-replay",
+          "status": "passed"
+        },
+        {
+          "id": "pending-decision",
+          "status": "passed"
+        },
+        {
+          "id": "duplicate-command",
+          "status": "passed"
+        },
+        {
+          "id": "writer-compatibility",
+          "status": "passed"
+        }
+      ],
+      "reportHash": "sha256:1802330b9ba3fb73f9306086a5e7d4e17b17a26a8c9c6b2d7d73a25435163419",
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "resourceCount": 19
+      },
+      "localOnly": true,
+      "deployable": false,
+      "productionWrites": 0,
+      "providerRequests": 0
+    },
+    "ci": {
+      "status": "not-started",
+      "id": null,
+      "exactCommit": null
+    },
+    "productionChanged": false,
+    "fullGoalComplete": false
   }
 }

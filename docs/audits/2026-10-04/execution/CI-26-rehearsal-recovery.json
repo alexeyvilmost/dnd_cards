@@ -1,0 +1,254 @@
+{
+  "schemaVersion": 1,
+  "kind": "full-candidate-local-rehearsal-and-release-recovery",
+  "recordedAt": "2026-10-06T08:43:02.256Z",
+  "status": "locally-verified-awaiting-exact-new-ci",
+  "sourceParent": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
+  "ci": {
+    "status": "not-started",
+    "id": null,
+    "exactCommit": null
+  },
+  "localFullRehearsal": {
+    "sourceCommit": "1d6490dc3af8259ad9c17691c1a5fbc222357e45",
+    "originalCaptureDate": "2026-10-06T07:19:51.535Z",
+    "startedAt": "2026-10-06T08:09:37.466Z",
+    "completedAt": "2026-10-06T08:35:56.317Z",
+    "durationMs": 1578851,
+    "checks": [
+      {
+        "id": "snapshot",
+        "status": "passed"
+      },
+      {
+        "id": "migrations",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "status": "passed"
+      },
+      {
+        "id": "image-contract",
+        "status": "passed"
+      },
+      {
+        "id": "historical-inventory",
+        "status": "passed"
+      },
+      {
+        "id": "historical-replay",
+        "status": "passed"
+      },
+      {
+        "id": "pending-decision",
+        "status": "passed"
+      },
+      {
+        "id": "duplicate-command",
+        "status": "passed"
+      },
+      {
+        "id": "writer-compatibility",
+        "status": "passed"
+      }
+    ],
+    "reportHash": "sha256:1802330b9ba3fb73f9306086a5e7d4e17b17a26a8c9c6b2d7d73a25435163419",
+    "cleanup": {
+      "status": "stopped",
+      "errors": [],
+      "resourceCount": 19
+    },
+    "localOnly": true,
+    "deployable": false,
+    "productionWrites": 0,
+    "providerRequests": 0
+  },
+  "repairs": {
+    "checkedSources": [
+      {
+        "path": "scripts/release/rehearsal-command.mjs",
+        "sha256": "sha256:74de54d106489da24ca21d216707ba8b5ea093ff758ab223048baadfdb11ba4f"
+      },
+      {
+        "path": "scripts/release/rehearsal-command.test.mjs",
+        "sha256": "sha256:137f25a7f506b49a5605fa962b55de989f5e8ce31639d1a853131b71526232e2"
+      },
+      {
+        "path": "scripts/release/candidate-rehearsal.mjs",
+        "sha256": "sha256:11a94fbc685e0a3379864d302b268b93297ca64016eb8b0629f1ff61f28946e9"
+      },
+      {
+        "path": "scripts/release/candidate-rehearsal.test.mjs",
+        "sha256": "sha256:74aa88cdc64ba3b42dfb414a7a6a2e2ea2c8c50e45569f4ed387cb80cc5b5e99"
+      },
+      {
+        "path": "scripts/release/docker-rehearsal.mjs",
+        "sha256": "sha256:78126a5ee0b5247564ae433fa2e756e25f402494eb1c486e4cdf93040104755b"
+      },
+      {
+        "path": "scripts/release/reviewed-deployment-refusal.mjs",
+        "sha256": "sha256:9689f4781d57b2c15acba560c22f4f7d38a5a106fdedfd193ab0508086371a97"
+      },
+      {
+        "path": "scripts/release/reviewed-deployment-refusal-host.mjs",
+        "sha256": "sha256:37b00784f76b6bc4510dd723f58b6890f22f48a2bf61f89c41227fa2e13e27fb"
+      },
+      {
+        "path": "scripts/release/reviewed-deployment-refusal.test.mjs",
+        "sha256": "sha256:f6e6fd19fd799d3661b26bdbc8b1f74c67b8ec06244d2898b9f673da440b14b4"
+      },
+      {
+        "path": "scripts/release/deployed-baseline.test.mjs",
+        "sha256": "sha256:ca96538340bd6cac7c70c5f74887ebc90e9be42f7f434bbc97cd69adbf257a97"
+      }
+    ],
+    "safeProcessDiagnostics": true,
+    "rawProcessOutputPublished": false,
+    "historicalReplayBudgetMs": 600000,
+    "replayProgramChanged": false,
+    "originalRootCauseProven": false,
+    "reviewedRefusal": {
+      "schemaVersion": 2,
+      "failedRunId": 37428679118,
+      "stage": "historical-replay",
+      "completedChecks": [
+        "snapshot",
+        "migrations",
+        "full-candidate-health",
+        "image-contract",
+        "historical-inventory"
+      ],
+      "originalInputHash": "sha256:d90e2543ee60e449dabbe8c9f60cb959077bd7fc5dab6b69f23d1f9d73b84181",
+      "originalCaptureHash": "sha256:bf7e6651d805b49cb638372399aa247400223a6d484ffe3998f1d7ed41eab2a0",
+      "originalReportHash": "sha256:b81e5a24d17787436dff45942450d4d0d1ba6d898e20eded0ff7f21fbaa61e0c",
+      "cleanupResourceCount": 12,
+      "auditObservedAt": "2026-10-06T08:15:20.317Z",
+      "proofHash": "sha256:9593559a6c5d2f713ac0e8ee211f413613d6af5d54f7fb9e83537dfed52ee5ce"
+    },
+    "actualBaselineSelection": {
+      "id": 37389067128,
+      "workflow": ".github/workflows/deploy.yml",
+      "repository": "alexeyvilmost/dnd_cards",
+      "controlCommit": "93265633db105f6027ddd94cc4d8952747524fd4",
+      "event": "workflow_dispatch",
+      "runAttempt": 1,
+      "artifactId": 11382070144,
+      "completedAt": "2026-10-06T00:05:04Z",
+      "reviewedRefusals": [
+        {
+          "failedRunId": 37428679118,
+          "schemaVersion": 2,
+          "kind": "reviewed-followon-pre-cutover-refusal-audit",
+          "baselineRunId": 37389067128
+        },
+        {
+          "failedRunId": 37420370284,
+          "schemaVersion": 1,
+          "kind": "reviewed-followon-completed-restore-refusal-audit",
+          "baselineRunId": 37389067128
+        },
+        {
+          "failedRunId": 37414694346,
+          "schemaVersion": 1,
+          "kind": "reviewed-followon-pre-cutover-refusal-audit",
+          "baselineRunId": 37389067128
+        },
+        {
+          "failedRunId": 37405297914,
+          "schemaVersion": 1,
+          "kind": "reviewed-followon-pre-cutover-refusal-audit",
+          "baselineRunId": 37389067128
+        }
+      ]
+    }
+  },
+  "checks": {
+    "windows": {
+      "tests": 506,
+      "pass": 497,
+      "fail": 0,
+      "skippedLinuxOnly": 9,
+      "logHash": "sha256:5fe7430b6f7c54ca387567a0d7429f788c7e3dcab9bc61d6786b5ba2d281a2cf"
+    },
+    "linux": {
+      "tests": 36,
+      "pass": 36,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0,
+      "exitCode": 0,
+      "cleanup": "stopped",
+      "logHash": "sha256:3b3f0cfe4e566a28b9b6e73d5c357e39d4937f11b07160c6cc98a8b61de64b87"
+    },
+    "historicalBudgetFocusedWindows": {
+      "tests": 49,
+      "pass": 45,
+      "fail": 0,
+      "skippedLinuxOnly": 4
+    },
+    "sourceManifest": {
+      "files": 434,
+      "status": "passed"
+    },
+    "repositoryKnownCredentialScan": "passed",
+    "databaseDumpScan": "passed"
+  },
+  "automaticDelivery": {
+    "observedAt": "2026-10-06T08:32:03.219Z",
+    "automaticProductionChangesDisabled": true,
+    "variables": {
+      "AUTO_RELEASE_MAIN_ENABLED": "false",
+      "AUTO_DEPLOY_MAIN_ENABLED": "false",
+      "AUTO_RECONCILE_MAIN_ENABLED": "",
+      "FRONTEND_SELECTIVE_ENABLED": ""
+    },
+    "readOnly": true
+  },
+  "productionWindow": {
+    "schemaVersion": 1,
+    "recordedAt": "2026-10-06T07:52:18Z",
+    "status": "hold-production-database-changes-until-user-ready",
+    "source": "Direct user instruction: actively using the service and modifying its database during the next hour; notify before database rollout to prevent data loss.",
+    "plannedActiveUseWindowEndsAt": "2026-10-06T08:52:18Z",
+    "expiresAutomatically": false,
+    "requiredBeforeProductionChange": [
+      "Notify the user in this chat before production migrations, data cleanup, writer enablement or application deployment affecting ongoing work.",
+      "Wait for the user's reply that active use has ended, as promised in the acknowledgement.",
+      "Re-observe production state and capture a fresh protected backup for the actual release.",
+      "Never restore the downloaded diagnostic snapshot over the working production database."
+    ],
+    "allowedMeanwhile": [
+      "Local isolated reproduction using the protected diagnostic snapshot",
+      "Local development and verification",
+      "Read-only production observations",
+      "CI and image publication without production deployment"
+    ],
+    "lastKnownProductionSource": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "automaticProductionDeployment": "disabled"
+  },
+  "production": {
+    "source": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "changed": false,
+    "writerFlags": "off",
+    "selective": "off",
+    "automaticDelivery": "off"
+  },
+  "next": [
+    "Commit only the locally verified release recovery and public evidence",
+    "Run and independently accept exact CI for that commit",
+    "Publish all three candidate images and verified control packet",
+    "Notify the owner and wait for their reply that active use has ended",
+    "Capture fresh production backup; run all nine gates and deploy without restoring an old snapshot over live data",
+    "Independently accept production; execute genuine selective release, rollback and automatic delivery",
+    "Complete all remaining tasks of the original 29-task plan"
+  ],
+  "limitations": [
+    "The successful private local rehearsal is not a production acceptance or a new backup freshness date",
+    "The root cause of the original historical replay refusal remains unproven",
+    "No production deployment is allowed during the user window without the promised readiness reply"
+  ],
+  "goalStatus": "active",
+  "fullGoalComplete": false
+}

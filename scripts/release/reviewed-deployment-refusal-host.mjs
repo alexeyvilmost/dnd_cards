@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';import {readFileSync,lstatSync,realpathSync,existsSync,readdirSync}from'node:fs';
 import path from'node:path';import {fileURLToPath}from'node:url';import {createHash}from'node:crypto';
 import {evidenceHash}from'./validate-manifest.mjs';import {validateHostPacket}from'./ssh-host-release.mjs';import {observeUIHost,localDockerRead}from'./ui-host-observation.mjs';
-import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,reviewedRefusalPhaseScripts,isCompletedRestoreRefusal}from'./reviewed-deployment-refusal.mjs';
+import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,reviewedRefusalPhaseScripts,isCompletedRestoreRefusal,isDetailedRehearsalRefusal,assertReviewedRehearsalRefusal}from'./reviewed-deployment-refusal.mjs';
 import {observeCompletedRestoreRefusal}from'./completed-restore-refusal.mjs';
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 function bytes(file){assert.equal(realpathSync(file),path.resolve(file));const s=lstatSync(file);assert.ok(s.isFile()&&!s.isSymbolicLink()&&s.size<=32*1024*1024);if(process.platform!=='win32')assert.equal(s.mode&0o077,0);return readFileSync(file);}
@@ -11,6 +11,7 @@ const read=f=>JSON.parse(bytes(f));
 export function assertReviewedRefusalObservation(proof,observed){
  validateReviewedDeploymentRefusal(proof);
  for(const key of ['hostConfigHash','transferHash',isCompletedRestoreRefusal(proof)?'expiry':'rehearsalHash','phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash'])assert.equal(evidenceHash(observed[key]),evidenceHash(proof[key]),'Reviewed refusal host state changed: '+key);
+ if(isDetailedRehearsalRefusal(proof))assert.deepEqual(observed.rehearsalFailure,proof.rehearsalFailure);
  assert.equal(observed.activeHash,proof.baseline.activeHash);assert.equal(observed.cleanupComplete,true);return {status:'verified-reviewed-pre-cutover-refusal',failedRunId:proof.failed.id,baselineRunId:proof.baseline.id,proofHash:evidenceHash(proof),applicationMutations:0};
 }
 function assertValidatorAbsent(directory){
@@ -36,6 +37,13 @@ export async function assertHostReviewedDeploymentRefusal({directory,underLock=f
   for(const name of ['ready','deployed-release','deployment-operation.json','docker-auth'])assert.equal(existsSync(path.join(old,name)),false);assert.equal(existsSync(path.join(config.root,'operations',proof.failedReleaseId+'.json')),false);
   let rehearsalEvidence;
   if(isCompletedRestoreRefusal(proof))rehearsalEvidence={expiry:await observeCompletedRestoreRefusal({proof,old,root:config.root,active,candidate:oldCandidate})};
+  else if(isDetailedRehearsalRefusal(proof)){
+   const inputFile=path.join(old,'rehearsal','input.json'),captureDirectory=path.join(config.backupDirectory??path.join(config.root,'backups'),`capture-${proof.failed.id}-1`),captureFile=path.join(captureDirectory,'capture.json');
+   assert.equal(existsSync(path.join(old,'rehearsal','verified-backup.json')),false);assert.equal(existsSync(path.join(captureDirectory,'restore-report.json')),false);
+   const input=read(inputFile),capture=read(captureFile),report=read(path.join(old,'rehearsal','rehearsal.json'));
+   const rehearsalFailure=assertReviewedRehearsalRefusal(proof,{candidate:oldCandidate,input,capture,report,inputHash:hash(bytes(inputFile)),captureHash:hash(bytes(captureFile))});
+   rehearsalEvidence={rehearsalFailure,rehearsalHash:hash(bytes(path.join(old,'rehearsal','rehearsal.json')))};
+  }
   else{
    const rehearsal=read(path.join(old,'rehearsal','rehearsal.json'));assert.equal(rehearsal.status,'failed');assert.equal(rehearsal.failureStage,'writer-compatibility');assert.equal(rehearsal.runId,proof.rehearsalRunId);assert.equal(rehearsal.activeHash,proof.baseline.activeHash);assert.equal(rehearsal.completedAt,proof.rehearsalCompletedAt);assert.equal(rehearsal.cleanup.status,'stopped');assert.deepEqual(rehearsal.cleanup.errors,[]);assert.equal(rehearsal.checks.length,8);assert.ok(rehearsal.checks.every(c=>c.status==='passed'));
    rehearsalEvidence={rehearsalHash:hash(bytes(path.join(old,'rehearsal','rehearsal.json')))};
