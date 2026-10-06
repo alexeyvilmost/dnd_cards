@@ -5,13 +5,18 @@ const hash=value=>typeof value==='string'&&/^sha256:[a-f0-9]{64}$/.test(value);
 const image=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$/.test(value);
 const allowed=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle']);
 export const retiredObservedMigrationIds=Object.freeze(['011_add_detailed_description_formatting','096_register_micro_mvp_rules_release','097_repair_micro_mvp_rules_release_identity','098_repair_magic_initiate_2024']);
+export const characterRetirementMigrationId='301_retire_legacy_characters';
 // Executable registration and historical ledger retention are separate sets.
 // Only exact candidate metadata may attest support for these non-executable IDs.
 export function assertExecutableMigrationRegistry(metadata,target,baseline){
   if(metadata?.schemaVersion!==1||!Array.isArray(metadata.versions)||new Set(metadata.versions).size!==metadata.versions.length||metadata.versions.some(id=>typeof id!=='string'))throw Error('Candidate executable migration registry is invalid');
+  if(metadata.versions.includes(characterRetirementMigrationId))throw Error('Character retirement must never be a startup migration');
   const registered=new Set(metadata.versions),before=new Set(baseline.map(row=>row.id));
   const retained=target.filter(row=>!registered.has(row.id));
-  if(retained.length&&(!equal(metadata.retiredObservedMigrationIds,retiredObservedMigrationIds)||retained.some(row=>!retiredObservedMigrationIds.includes(row.id)||!before.has(row.id)||row.kind!=='observed-id-only'||!hash(row.observationHash)||row.checksum!==undefined)))throw Error('Unsupported, unobserved or invented retired migration identity');
+  const retirement=retained.filter(row=>row.id===characterRetirementMigrationId),observed=retained.filter(row=>row.id!==characterRetirementMigrationId);
+  if(retirement.length&&(retirement.length!==1||!hash(retirement[0].checksum)||retirement[0].kind!==undefined||retirement[0].observationHash!==undefined
+    ||!equal(metadata.supportedRetirementMigrations,retirement)||!baseline.some(row=>equal(row,retirement[0]))))throw Error('Exact previously installed retirement checksum and baked reader support required');
+  if(observed.length&&(!equal(metadata.retiredObservedMigrationIds,retiredObservedMigrationIds)||observed.some(row=>!retiredObservedMigrationIds.includes(row.id)||!before.has(row.id)||row.kind!=='observed-id-only'||!hash(row.observationHash)||row.checksum!==undefined)))throw Error('Unsupported, unobserved or invented retired migration identity');
   if(!equal([...metadata.versions,...retained.map(row=>row.id)].sort(),target.map(row=>row.id).sort()))throw Error('Candidate executable would run undeclared migrations');
   return true;
 }
