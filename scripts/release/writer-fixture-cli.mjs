@@ -25,7 +25,7 @@ export function activeForWriterFixture({candidate,discovery,manifest,deployment,
 }
 async function read(file,max=32*1024*1024){const absolute=path.resolve(file),stat=await lstat(absolute);assert.ok(stat.isFile()&&!stat.isSymbolicLink()&&stat.size>0&&stat.size<=max);assert.equal(await realpath(absolute),absolute);return {text:await readFile(absolute,'utf8'),file:absolute};}
 function githubReader(environment){assert.ok(environment.GITHUB_TOKEN,'Read-only metadata token required');assert.match(environment.GITHUB_REPOSITORY??'',/^[\w.-]+\/[\w.-]+$/);return async route=>{assert.ok(/^actions\//.test(route)&&!route.includes('..'));const response=await fetch('https://api.github.com/repos/'+environment.GITHUB_REPOSITORY+'/'+route,{headers:{Authorization:'Bearer '+environment.GITHUB_TOKEN,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},redirect:'error',signal:AbortSignal.timeout(15000)});if(!response.ok)throw Error('GitHub writer metadata request failed');return response.json();};}
-export async function writerFixtureCLI(args,environment=process.env){
+export async function writerFixtureCLI(args,environment=process.env,{onPhase=()=>{}}={}){
  const [mode,candidateFile,discoveryFile,...rest]=args;assert.ok(['discover','produce'].includes(mode)&&candidateFile&&discoveryFile);
  const input=await read(candidateFile),candidate=JSON.parse(input.text);hostedWriterProvenance(candidate,environment);
  const get=Object.hasOwn(candidate.manifest,'writerPolicy')?githubReader(environment):()=>{throw Error('Unexpected predecessor lookup');};
@@ -34,15 +34,19 @@ export async function writerFixtureCLI(args,environment=process.env){
   return {required:String(result.required),source_commit:result.provenance.sourceCommit,...result.required?{baseline_run_id:String(result.predecessor.id),baseline_artifact_id:String(result.predecessor.artifactId)}:{}};
  }
  assert.equal(rest.length,3);const [previousDirectory,repositoryRoot,directory]=rest,discovery=JSON.parse((await read(discoveryFile)).text);
+ onPhase('predecessor-refresh');
  same(await discoverWriterFixture(candidate,{get,environment}),discovery);if(!discovery.required)return{status:'not-required',candidateUnchanged:true};
  const previous={};for(const [key,file]of [['manifest','manifest.json'],['deployment','deployment.json'],['projection','active-projection.json']])previous[key]=JSON.parse((await read(path.join(previousDirectory,file))).text);
  const active=activeForWriterFixture({candidate,discovery,...previous});assert.equal(candidate.writerFixture,undefined,'A published writer package cannot be silently replaced');
- const writerFixture=await produceHostedWriterFixture({candidate,active,repositoryRoot:path.resolve(repositoryRoot),directory:path.resolve(directory),postgresImage:'postgres@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73',environment});
+ const writerFixture=await produceHostedWriterFixture({candidate,active,repositoryRoot:path.resolve(repositoryRoot),directory:path.resolve(directory),postgresImage:'postgres@sha256:18cfe3ef5e6815560c98237d6216d1e5119702fb0f3894c8785dd58b8bbe5d73',environment,onPhase});
  // A deployment or workflow rerun during a long browser probe invalidates it.
- same(await discoverWriterFixture(candidate,{get,environment}),discovery);assert.equal((await read(candidateFile)).text,input.text);
+ onPhase('final-predecessor-refresh');same(await discoverWriterFixture(candidate,{get,environment}),discovery);assert.equal((await read(candidateFile)).text,input.text);
  const output=JSON.stringify({...candidate,writerFixture})+'\n';assert.ok(Buffer.byteLength(output)<32*1024*1024);
- const temporary=input.file+'.writer-'+randomBytes(12).toString('hex');let wrote=false;
+ onPhase('candidate-write');const temporary=input.file+'.writer-'+randomBytes(12).toString('hex');let wrote=false;
  try{await writeFile(temporary,output,{flag:'wx',mode:0o600});wrote=true;assert.equal((await read(candidateFile)).text,input.text);await rename(temporary,input.file);wrote=false;}finally{if(wrote)await unlink(temporary);}
  return {status:'passed',writerFixtureHash:evidenceHash(writerFixture),browserProofHash:evidenceHash(writerFixture.browserProof),originalManifestHash:evidenceHash(candidate.manifest),previousActiveHash:evidenceHash(active)};
 }
-if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))writerFixtureCLI(process.argv.slice(2)).then(result=>{if(process.argv[2]==='discover')for(const[k,v]of Object.entries(result))console.log(k+'='+v);else console.log(JSON.stringify(result));}).catch(()=>{console.error('Hosted writer fixture refused; candidate was not authorized for publication. Inspect the private workflow attempt; do not fabricate a predecessor or successful run.');process.exitCode=1;});
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
+ let phase='input-validation';
+ writerFixtureCLI(process.argv.slice(2),process.env,{onPhase:value=>{phase=value;console.log('Writer fixture phase: '+phase);}}).then(result=>{if(process.argv[2]==='discover')for(const[k,v]of Object.entries(result))console.log(k+'='+v);else console.log(JSON.stringify(result));}).catch(()=>{console.error('Hosted writer fixture refused at '+phase+'; candidate was not authorized for publication. Inspect the private workflow attempt; do not fabricate a predecessor or successful run.');process.exitCode=1;});
+}

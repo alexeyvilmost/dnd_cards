@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "status": "ci18-passed-publication-refused-linux-socket-repair-locally-verified",
+  "recordedAt": "2026-10-06T01:42:06.788Z",
+  "verifiedSource": "4336325a6aed8feb3d647a4ef3fb634914ea5f89",
+  "ci": {
+    "runId": 37396343027,
+    "attempt": 1,
+    "status": "passed",
+    "durationMs": 879542,
+    "sourceSnapshot": {
+      "files": 4526,
+      "sha256": "a993f6efc2fffaa03b92f0772a55720bd0d0b00b5bebc3de5e0a211e84ae0d07",
+      "cleanCheckout": true
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "node": 936,
+    "vitest": 6462,
+    "requiredGo": 754,
+    "databaseWorker": 25,
+    "ui": 48,
+    "battle3d": 8,
+    "requiredBrowser": 12,
+    "requiredSkips": 0,
+    "reportHash": "sha256:3f824154b836d204bb2da172e4d8cb5da9de5332b5f17c364d492f1158aa7668"
+  },
+  "publication": {
+    "runId": 37397903525,
+    "attempt": 1,
+    "status": "failure",
+    "componentsPublished": [
+      "backend",
+      "frontend",
+      "rulesWorker"
+    ],
+    "failedStep": "Attach exact-image writer browser proof only after actual fixture cleanup",
+    "candidateUploaded": false,
+    "hostActivated": false,
+    "deployDispatched": false,
+    "originalCauseNotRecorded": true
+  },
+  "repair": {
+    "paths": [
+      "scripts/release/writer-browser-runtime.mjs",
+      "scripts/release/writer-browser-runtime.test.mjs",
+      "scripts/release/produce-writer-browser-proof.mjs",
+      "scripts/release/writer-fixture-cli.mjs"
+    ],
+    "observedFailure": "Native Linux Chromium aborts when TMPDIR below the deep evidence directory makes SingletonSocket exceed the Unix socket path limit",
+    "originalHostedCause": "Inference from native reproduction and hosted evidence path; original workflow suppressed the underlying error",
+    "behavior": "Private short /tmp/wb-* runtime, mode 0700, guarded owned cleanup including launch failure; fixed phase names identify future refusal without printing raw errors or credentials",
+    "localChecks": {
+      "releaseTests": {
+        "passed": 458,
+        "skipped": 5,
+        "scope": "Initial short-temp repair; environment-dependent skips remain separate from hosted required CI"
+      },
+      "finalFocusedTests": {
+        "passed": 12,
+        "skipped": 0
+      },
+      "credentialScan": "passed",
+      "databaseDumpScan": "passed",
+      "diffCheck": "passed"
+    },
+    "nativeLinux": {
+      "status": "passed",
+      "nodeVersion": "v24.18.1",
+      "scope": "Native Linux writer browser controller with exact failed-publication OCI pair and immutable copied owned public dump; no successful CI-publication authority claimed",
+      "ownedExecutions": 2,
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "browserRuntime": {
+        "kind": "playwright-bundled-chromium",
+        "playwrightVersion": "1.62.1",
+        "browserRevision": "1234",
+        "browserVersion": "151.0.7922.34",
+        "executableSHA256": "sha256:0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+        "runnerOS": "linux",
+        "architecture": "x64"
+      },
+      "reportHash": "sha256:46d01f7dc0a561094a3e33105406cc017f808a649026ade6acb5221f3aaa326a",
+      "sourceSnapshot": {
+        "unchanged": true,
+        "files": 4526,
+        "sha256": "2b6707e5f3b99e14ff66a4ce4bb93471a16e13c7ad1a5e5addc4836a0f987df3"
+      },
+      "artifactRecovery": {
+        "status": "passed",
+        "volumeReadOnly": true,
+        "originalAttemptUnchanged": true,
+        "reason": "Windows refused a browser-created home symlink; original attempt is retained unchanged",
+        "reportHash": "sha256:e4140e7b35a2b79822c16c5eda079913c3c3bb30d49f76584d8392695689fa3a"
+      },
+      "localOnly": true,
+      "deployable": false,
+      "ciProvenance": null
+    },
+    "nextExactCI": "pending"
+  },
+  "pairedUI": {
+    "source": {
+      "commit": "4336325a6aed8feb3d647a4ef3fb634914ea5f89",
+      "files": 4526,
+      "sha256": "165bfe8b852f77953dd173edd8c087c26da26ee9ea2a5ed8cc176783bd5a08d4"
+    },
+    "scope": "Actual local production UI: real camp button click through server start_encounter/initialize_combat to painted initiative rows; same stack, alternating batch-only roles, public owned integration data, no response mocking",
+    "accepted": 68,
+    "timed": 60,
+    "measurements": {
+      "ui_camp_to_initiative_party_1_baseline": {
+        "count": 15,
+        "median_ms": 298.20000000298023,
+        "p95_ms": 386.3999999910593,
+        "p95_preliminary": true,
+        "min_ms": 278.5,
+        "max_ms": 386.3999999910593,
+        "phase_means": {}
+      },
+      "ui_camp_to_initiative_party_1_batch": {
+        "count": 15,
+        "median_ms": 304.79999999701977,
+        "p95_ms": 388.79999999701977,
+        "p95_preliminary": true,
+        "min_ms": 280.40000000596046,
+        "max_ms": 388.79999999701977,
+        "phase_means": {}
+      },
+      "ui_camp_to_initiative_party_6_baseline": {
+        "count": 15,
+        "median_ms": 706.2999999970198,
+        "p95_ms": 960.7999999970198,
+        "p95_preliminary": true,
+        "min_ms": 647.7999999970198,
+        "max_ms": 960.7999999970198,
+        "phase_means": {}
+      },
+      "ui_camp_to_initiative_party_6_batch": {
+        "count": 15,
+        "median_ms": 672.5,
+        "p95_ms": 991,
+        "p95_preliminary": true,
+        "min_ms": 613.9000000059605,
+        "max_ms": 991,
+        "phase_means": {}
+      }
+    },
+    "limitations": [
+      "Headless desktop browser on local machine; no production or mobile latency guarantee",
+      "Distinct fresh run, characters and RNG per sample",
+      "p95 is preliminary with 15 timed samples per role and party size"
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "browserCleanup": "stopped",
+    "reportHash": "sha256:0b8614c26b3b9177141b1f3b33493c6be9a108bd3fa6baee1cb91b0e87a7d7c9",
+    "decision": "Batch remains OFF; mixed UI results do not establish a general latency improvement"
+  },
+  "production": {
+    "source": "93265633db105f6027ddd94cc4d8952747524fd4",
+    "changed": false,
+    "writerFlags": {
+      "compactReceipts": false,
+      "imageJobs": false,
+      "frozenCatalogs": false
+    },
+    "selectiveEnabled": false,
+    "automaticEnabled": false
+  },
+  "backupStorage": {
+    "ownerDecision": "Keep backups on the primary server for now",
+    "externalStorage": "deferred-by-owner"
+  },
+  "paidProviderRequests": 0,
+  "nextAcceptance": [
+    "Fresh exact committed source CI",
+    "Genuine successful candidate publication with actual browser proof",
+    "Protected host profile activation and full backup/restore/history/ninth-stage rehearsal",
+    "Independent healthy release and protected full anchor",
+    "Actual frontend-only release retaining backend/worker containers",
+    "Owned ON/OFF/ON full rollback proof",
+    "Enable and verify automatic latest-main reconciliation"
+  ]
+}

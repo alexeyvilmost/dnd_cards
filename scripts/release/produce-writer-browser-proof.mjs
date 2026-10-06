@@ -78,11 +78,15 @@ export async function executeWriterBrowserPair({candidate,active,publicDump,imag
  const trace={schemaVersion:1,kind:'writer-compatibility-trace',execution:'docker',outcomeId:'frontend-pending-job-reload',bindingHash:evidenceHash(binding),observations};validateWriterTrace(trace,trace.outcomeId,binding);
  return {binding,trace,executionProfile,browserRuntime,cleanup:{status:'stopped',errors:[]},ownedExecutions:cleanups.length};
 }
-export async function produceHostedWriterFixture({candidate,active,repositoryRoot,directory,postgresImage,environment=process.env}){
+export async function produceHostedWriterFixture({candidate,active,repositoryRoot,directory,postgresImage,environment=process.env,onPhase=()=>{}}){
  const provenance=hostedWriterProvenance(candidate,environment);directory=path.resolve(directory);await mkdir(directory,{mode:0o700});
+ onPhase('image-observation');
  const inputHash=evidenceHash({candidate,active});const {imageRoles,roleLaunches}=observeWriterImageRoles({candidate:candidate.manifest,active});validatePublicWriterImageRoles(imageRoles,{candidate,active});
+ onPhase('public-dump');
  const publicDump=await producePublicWriterDump({repositoryRoot,sourceCommit:provenance.sourceCommit});
+ onPhase('browser-pair');
  const actual=await executeWriterBrowserPair({candidate,active,publicDump,imageRoles,roleLaunches,repositoryRoot,directory:path.join(directory,'browser-proof'),postgresImage});
+ onPhase('fixture-assembly');
  assert.equal(evidenceHash({candidate,active}),inputHash);same(hostedWriterProvenance(candidate,environment),provenance);
  const browserProof={schemaVersion:1,kind:'writer-browser-oci-proof',status:'passed',execution:'docker',binding:actual.binding,trace:actual.trace,provenance,cleanup:actual.cleanup,executionProfile:actual.executionProfile,browserRuntime:actual.browserRuntime};
  const writerFixture={schemaVersion:1,kind:'public-writer-fixture',scope:'checked-in-public-catalog-and-synthetic-accounts',baseline:publicDump.baseline,sourceFiles:publicDump.sourceFiles,ruleData:publicDump.ruleData,dump:publicDump.dump,accounts:publicDump.accounts,imageRoles,provenance,browserProof};
