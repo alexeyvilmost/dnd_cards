@@ -209,7 +209,7 @@
       "evidence": "docs/audits/2026-10-04/execution/PERF-02.md",
       "remaining_gates": [
         "PERF-HOST",
-        "General UI latency improvement remains unproven; paired batch experiment has mixed results and remains OFF"
+        "Batch remains OFF after 160 measured actual UI runs; stable overall initialization improvement is unproven"
       ],
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
@@ -252,7 +252,7 @@
       },
       "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_ui_measurement": "docs/audits/2026-10-04/execution/CI-18-writer-browser-repair.json"
+      "latest_ui_measurement": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json"
     },
     {
       "id": "PERF-03",
@@ -520,7 +520,7 @@
     {
       "id": "REL-05",
       "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
-      "status": "healthy_predecessor_verified_followon_ci18_passed_publication_browser_repair_pending",
+      "status": "healthy_predecessor_verified_ci19_passed_metadata_reader_repair_pending",
       "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
@@ -537,7 +537,7 @@
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-18-writer-browser-repair.json",
+      "current_verification": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
       "latest_execution_result": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
@@ -929,7 +929,7 @@
     "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim.",
     "CI10/all3publication passed; second actual manual deploy refused beforecapture root0755. Exact root0700 repair verified, originallive4549 healthy/noapplicationmutations. Both old failures remain actual; reviewed-chain source/fullCI/newfreshadoption pending."
   ],
-  "updated_at": "2026-10-06T01:42:06.788Z",
+  "updated_at": "2026-10-06T02:13:36.728Z",
   "work_status": "reviewed_replay_fix_local_pass_pending_new_exact_ci_and_fresh_adoption",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
@@ -2001,6 +2001,11 @@
       "evidence": "docs/audits/2026-10-04/execution/CI-18-writer-browser-repair.json",
       "status": "ci18-passed-publication-refused-linux-socket-repair-locally-verified",
       "recordedAt": "2026-10-06T01:42:06.788Z"
+    },
+    {
+      "evidence": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
+      "status": "ci19-passed-publication-predecessor-refresh-refused-bounded-reader-locally-verified",
+      "recordedAt": "2026-10-06T02:13:36.728Z"
     }
   ],
   "execution_current": {
@@ -2702,7 +2707,7 @@
     "nativeHashIntegrated": false,
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
-  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-18-writer-browser-repair.json",
+  "execution_followon_current": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
   "latest_paired_batch_measurement": {
     "status": "paired-local-measurement-passed-not-enabled",
     "evidence": "docs/audits/2026-10-04/execution/CI-17-browser-boundary.json",
@@ -2710,62 +2715,69 @@
   },
   "latest_paired_ui_measurement": {
     "source": {
-      "commit": "4336325a6aed8feb3d647a4ef3fb634914ea5f89",
+      "commit": "49770e6f09562ea13a96cceb2e55a9a7229b80ab",
       "files": 4526,
-      "sha256": "165bfe8b852f77953dd173edd8c087c26da26ee9ea2a5ed8cc176783bd5a08d4"
+      "sha256": "d143f8c99808ce08b723526ac700c6ae04981f900f3f7b59c041887b79ee87e8"
     },
     "scope": "Actual local production UI: real camp button click through server start_encounter/initialize_combat to painted initiative rows; same stack, alternating batch-only roles, public owned integration data, no response mocking",
-    "accepted": 68,
-    "timed": 60,
+    "accepted": 176,
+    "timed": 160,
+    "samplesPerRole": 40,
+    "warmupsPerRole": 4,
     "measurements": {
       "ui_camp_to_initiative_party_1_baseline": {
-        "count": 15,
-        "median_ms": 298.20000000298023,
-        "p95_ms": 386.3999999910593,
+        "count": 40,
+        "median_ms": 256.90000000596046,
+        "p95_ms": 282.79999999701977,
         "p95_preliminary": true,
-        "min_ms": 278.5,
-        "max_ms": 386.3999999910593,
+        "min_ms": 230,
+        "max_ms": 288.70000000298023,
         "phase_means": {}
       },
       "ui_camp_to_initiative_party_1_batch": {
-        "count": 15,
-        "median_ms": 304.79999999701977,
-        "p95_ms": 388.79999999701977,
+        "count": 40,
+        "median_ms": 259.30000001192093,
+        "p95_ms": 290.59999999403954,
         "p95_preliminary": true,
-        "min_ms": 280.40000000596046,
-        "max_ms": 388.79999999701977,
+        "min_ms": 235.90000000596046,
+        "max_ms": 292.6000000089407,
         "phase_means": {}
       },
       "ui_camp_to_initiative_party_6_baseline": {
-        "count": 15,
-        "median_ms": 706.2999999970198,
-        "p95_ms": 960.7999999970198,
+        "count": 40,
+        "median_ms": 574.7999999970198,
+        "p95_ms": 728.7000000029802,
         "p95_preliminary": true,
-        "min_ms": 647.7999999970198,
-        "max_ms": 960.7999999970198,
+        "min_ms": 537.6000000089407,
+        "max_ms": 812.5,
         "phase_means": {}
       },
       "ui_camp_to_initiative_party_6_batch": {
-        "count": 15,
-        "median_ms": 672.5,
-        "p95_ms": 991,
+        "count": 40,
+        "median_ms": 568.2000000029802,
+        "p95_ms": 902.9000000059605,
         "p95_preliminary": true,
-        "min_ms": 613.9000000059605,
-        "max_ms": 991,
+        "min_ms": 526.8000000119209,
+        "max_ms": 951.4000000059605,
         "phase_means": {}
       }
     },
     "limitations": [
       "Headless desktop browser on local machine; no production or mobile latency guarantee",
       "Distinct fresh run, characters and RNG per sample",
-      "p95 is preliminary with 15 timed samples per role and party size"
+      "p95 based on 40 timed samples per role and party size; local experiment only"
     ],
     "cleanup": {
       "status": "stopped",
       "errors": []
     },
     "browserCleanup": "stopped",
-    "reportHash": "sha256:0b8614c26b3b9177141b1f3b33493c6be9a108bd3fa6baee1cb91b0e87a7d7c9",
-    "decision": "Batch remains OFF; mixed UI results do not establish a general latency improvement"
+    "sourceUnchanged": {
+      "unchanged": true,
+      "files": 4526,
+      "sha256": "d143f8c99808ce08b723526ac700c6ae04981f900f3f7b59c041887b79ee87e8"
+    },
+    "reportHash": "sha256:f62fed5bd90b94a90f8ac4cae2705bed1dcb80e460dd4dbf723d687d50130152",
+    "decision": "Keep batch OFF. Group one median +0.93%, p95 +2.76%; group six median -1.15%, p95 +23.91%. Larger local UI series still does not establish a stable gain; earlier API gain is a narrower result."
   }
 }
