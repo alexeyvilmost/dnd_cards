@@ -1384,6 +1384,14 @@
             "duplicateBrowserParticipantBuilds": 0
           },
           "productionFlagChanged": false
+        },
+        "currentEquipmentBrowser20261007": {
+          "status": "measured_no_general_enablement_gain",
+          "source": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+          "report": "docs/audits/2026-10-04/execution/PERF-02-equipment-current-source-20261007.json",
+          "commands": 372,
+          "equipmentIntentActivated": false,
+          "sortedUIExperimentReverted": true
         }
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",

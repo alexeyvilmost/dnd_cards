@@ -1,0 +1,410 @@
+{
+  "schemaVersion": 1,
+  "status": "measured_no_general_enablement_gain",
+  "recordedAt": "2026-10-07T05:08:55.543Z",
+  "scope": "native Windows actual canonical browser equipment commands, loopback API and worker, two data-driven item fixtures",
+  "currentSource": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+  "applicationBuild": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+  "currentApplicationSourceDiffEmpty": true,
+  "nodeVersion": "v24.21.0",
+  "measurement": "DOM click capture on the actual equipment button through committed mirror render and two animation frames; includes canonical browser preparation and actual API, excludes opening the item preview.",
+  "commonFlags": {
+    "DB_COMPACT_RECEIPTS": "1",
+    "DB_FROZEN_CATALOGS": "0",
+    "RULES_WORKER_MIRRORS_ENABLED": "1",
+    "RULES_CATALOG_BATCH_ENABLED": "1",
+    "RULES_PREPARATION_CACHE_ENABLED": "0",
+    "RULES_CATALOG_PREFETCH_ENABLED": "0",
+    "RULES_INITIATIVE_OPTIONS_ENABLED": "1",
+    "IMAGE_JOBS_ENABLED": "0",
+    "RULES_PERFORMANCE_ENABLED": "1"
+  },
+  "commands": 372,
+  "measuredCommands": 360,
+  "profiles": [
+    {
+      "id": "current-intent-off",
+      "runId": "test_0e5a758212c994be5ac2dfbd",
+      "inputReportHash": "sha256:3c4588e7aad7cc70d2721970da418b6b9830e07e0baa0c116db562fa3d24f69a",
+      "status": "passed",
+      "intent": false,
+      "binaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+      "sourceSnapshot": "5346597705a8a26b8684d5eb52b2a354a0dde562592b80d3c580d9b9d42193ab",
+      "samples": 124,
+      "warmupCommands": 4,
+      "measuredCommands": 120,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 401.95,
+            "p95": 615.32
+          },
+          "apiRequests": {
+            "p50": 15,
+            "p95": 17.55
+          },
+          "equipmentPrepareMs": {
+            "p50": 367.45,
+            "p95": 585.59
+          },
+          "equipmentCommitMs": {
+            "p50": 16.8,
+            "p95": 22.5
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 346.75,
+            "p95": 548.9
+          },
+          "apiRequests": {
+            "p50": 15,
+            "p95": 16
+          },
+          "equipmentPrepareMs": {
+            "p50": 314,
+            "p95": 511.6
+          },
+          "equipmentCommitMs": {
+            "p50": 17.7,
+            "p95": 23.82
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 412.8,
+            "p95": 483.91
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 19.55
+          },
+          "equipmentPrepareMs": {
+            "p50": 336.8,
+            "p95": 398.89
+          },
+          "equipmentCommitMs": {
+            "p50": 67.35,
+            "p95": 73.96
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 479.4,
+            "p95": 564.29
+          },
+          "apiRequests": {
+            "p50": 15,
+            "p95": 19.55
+          },
+          "equipmentPrepareMs": {
+            "p50": 393.6,
+            "p95": 485.29
+          },
+          "equipmentCommitMs": {
+            "p50": 66.55,
+            "p95": 82.44
+          }
+        }
+      ],
+      "flags": {
+        "DB_COMPACT_RECEIPTS": "1",
+        "DB_FROZEN_CATALOGS": "0",
+        "RULES_WORKER_MIRRORS_ENABLED": "1",
+        "RULES_CATALOG_BATCH_ENABLED": "1",
+        "RULES_PREPARATION_CACHE_ENABLED": "0",
+        "RULES_CATALOG_PREFETCH_ENABLED": "0",
+        "RULES_INITIATIVE_OPTIONS_ENABLED": "1",
+        "IMAGE_JOBS_ENABLED": "0",
+        "RULES_PERFORMANCE_ENABLED": "1",
+        "RULES_EQUIPMENT_INTENT_ENABLED": "0"
+      },
+      "originalReportPath": "outputs/testing/runs/test_0e5a758212c994be5ac2dfbd/equipment-browser-current.json"
+    },
+    {
+      "id": "current-intent-on",
+      "runId": "test_0142aa60b48d337602e46a84",
+      "inputReportHash": "sha256:862aaa85ea12e8891b3d37c3209ed85da2e05021ccf7ecede5a67b086bf03aa9",
+      "status": "passed",
+      "intent": true,
+      "binaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+      "sourceSnapshot": "5346597705a8a26b8684d5eb52b2a354a0dde562592b80d3c580d9b9d42193ab",
+      "samples": 124,
+      "warmupCommands": 4,
+      "measuredCommands": 120,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 682.65,
+            "p95": 735.74
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 17
+          },
+          "equipmentPrepareMs": {
+            "p50": 581.2,
+            "p95": 632.73
+          },
+          "equipmentCommitMs": {
+            "p50": 81.85,
+            "p95": 106.29
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 676.05,
+            "p95": 742.86
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 17
+          },
+          "equipmentPrepareMs": {
+            "p50": 579.85,
+            "p95": 635.24
+          },
+          "equipmentCommitMs": {
+            "p50": 83.2,
+            "p95": 111.19
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 97.45,
+            "p95": 726.24
+          },
+          "apiRequests": {
+            "p50": 16,
+            "p95": 17
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.6,
+            "p95": 601.15
+          },
+          "equipmentCommitMs": {
+            "p50": 78.45,
+            "p95": 110.02
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 96.75,
+            "p95": 726.75
+          },
+          "apiRequests": {
+            "p50": 16,
+            "p95": 17
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.6,
+            "p95": 620.42
+          },
+          "equipmentCommitMs": {
+            "p50": 76.05,
+            "p95": 89.55
+          }
+        }
+      ],
+      "flags": {
+        "DB_COMPACT_RECEIPTS": "1",
+        "DB_FROZEN_CATALOGS": "0",
+        "RULES_WORKER_MIRRORS_ENABLED": "1",
+        "RULES_CATALOG_BATCH_ENABLED": "1",
+        "RULES_PREPARATION_CACHE_ENABLED": "0",
+        "RULES_CATALOG_PREFETCH_ENABLED": "0",
+        "RULES_INITIATIVE_OPTIONS_ENABLED": "1",
+        "IMAGE_JOBS_ENABLED": "0",
+        "RULES_PERFORMANCE_ENABLED": "1",
+        "RULES_EQUIPMENT_INTENT_ENABLED": "1"
+      },
+      "originalReportPath": "outputs/testing/runs/test_0142aa60b48d337602e46a84/equipment-browser-current.json"
+    },
+    {
+      "id": "sorted-ui-intent-off",
+      "runId": "test_62aa95f9982fbaafe1ce36eb",
+      "inputReportHash": "sha256:129a9ca02603b3ea1165b9d332afc2789e4432c7f19fc7e41112ddba2cb829be",
+      "status": "passed",
+      "intent": false,
+      "binaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiManifestHash": "b3ab710bd82cf0371e1b398a0c037512d6bcc22aee8f435e3100812d534c767c",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+      "sourceSnapshot": "5ea59f380b668d769889e804d9e0c125405dcda3af6e34c8fa94926e3ebcba55",
+      "samples": 124,
+      "warmupCommands": 4,
+      "measuredCommands": 120,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 365.9,
+            "p95": 489.08
+          },
+          "apiRequests": {
+            "p50": 14.5,
+            "p95": 16
+          },
+          "equipmentPrepareMs": {
+            "p50": 332.95,
+            "p95": 458.87
+          },
+          "equipmentCommitMs": {
+            "p50": 17.2,
+            "p95": 26.73
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 395.65,
+            "p95": 611.02
+          },
+          "apiRequests": {
+            "p50": 15,
+            "p95": 18
+          },
+          "equipmentPrepareMs": {
+            "p50": 364.8,
+            "p95": 570.69
+          },
+          "equipmentCommitMs": {
+            "p50": 17.45,
+            "p95": 27.31
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 442.1,
+            "p95": 693.7
+          },
+          "apiRequests": {
+            "p50": 15,
+            "p95": 20
+          },
+          "equipmentPrepareMs": {
+            "p50": 358.05,
+            "p95": 612.76
+          },
+          "equipmentCommitMs": {
+            "p50": 65.95,
+            "p95": 97.47
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 491,
+            "p95": 678.23
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 20.55
+          },
+          "equipmentPrepareMs": {
+            "p50": 404.2,
+            "p95": 596.85
+          },
+          "equipmentCommitMs": {
+            "p50": 65.95,
+            "p95": 86.64
+          }
+        }
+      ],
+      "flags": {
+        "DB_COMPACT_RECEIPTS": "1",
+        "DB_FROZEN_CATALOGS": "0",
+        "RULES_WORKER_MIRRORS_ENABLED": "1",
+        "RULES_CATALOG_BATCH_ENABLED": "1",
+        "RULES_PREPARATION_CACHE_ENABLED": "0",
+        "RULES_CATALOG_PREFETCH_ENABLED": "0",
+        "RULES_INITIATIVE_OPTIONS_ENABLED": "1",
+        "IMAGE_JOBS_ENABLED": "0",
+        "RULES_PERFORMANCE_ENABLED": "1",
+        "RULES_EQUIPMENT_INTENT_ENABLED": "0"
+      },
+      "originalReportPath": "outputs/testing/runs/test_62aa95f9982fbaafe1ce36eb/equipment-browser-current.json"
+    }
+  ],
+  "sortedUI": {
+    "component": "frontend/src/components/SheetEquipmentPanel.tsx",
+    "change": "Stable sorted set of referenced card IDs",
+    "productionBuild": true,
+    "typechecks": 2,
+    "accessibilityTests": 3,
+    "patchHash": "sha256:3409da05d505a551e1ba82ed622ae2e78fa1348bd3ac31b1314be9c390dad552",
+    "generalLatencyGainProven": false,
+    "sourceChangeReverted": true
+  },
+  "decision": {
+    "enableEquipmentIntent": false,
+    "deploySortedUIExperiment": false,
+    "productionFlagsChanged": false
+  },
+  "limitations": [
+    "Sequential independent OFF/ON/sorted-OFF arms; no randomized or paired causal estimate.",
+    "Native Windows unbaked backend and locally built UI/worker; not a Linux OCI or production latency result.",
+    "These measurements assert accepted effect/revision/resource capacity and source isolation; exact retry/RNG/rights/pending behavior is covered separately by current CI authority flows.",
+    "No provider calls or production database writes.",
+    "Long API reads and concurrent canonical projections are observed; PostgreSQL planner/JIT causality has not been established."
+  ],
+  "nextSteps": [
+    "Capture the actual authorized item-read query and EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) only in a new owned local fixture matching the slow scenario.",
+    "Identify whether repeated canonical projection, connection admission, item-rights query plan or JIT explains the long reads before choosing a change.",
+    "Preserve the same library/grant/run entitlement predicates, canonical assemblers and pending exact-result protocol; do not add a positive rights-cache TTL or a reduced calculator.",
+    "Compare ordinary and resource items using identical source/build/fixture/flags, then verify forgery/reload/retry/second-entity contracts before any activation."
+  ],
+  "goalComplete": false,
+  "rawSamplesRetained": "All 372 command records remain in the owned ignored input reports referenced by path and SHA-256; public JSON retains aggregate measurements and reproducible next steps."
+}
