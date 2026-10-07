@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "AI-02",
+  "recordedAt": "2026-10-07T01:02:28Z",
+  "evidenceKind": "human_owner_production_confirmation",
+  "ownerStatement": "Пропусти локальный тест генерации, я проверил - генерация работает в проде",
+  "decision": "skip_local_real_generation_test_as_requested",
+  "knownLastAcceptedRelease": {
+    "commit": "4ac64458449959fd905cb7b0498f1ea41c82c087",
+    "releaseId": "candidate-4ac644584499-6e46df9c9c05",
+    "deploymentRun": "37540642524/3",
+    "backendSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d"
+  },
+  "claimScope": "Owner reports generation works in production. The statement does not identify the exact route, generated object, timestamp, request ID or release observed.",
+  "automatedEndToEndGenerationClaimed": false,
+  "additionalPaidProviderCalls": 0,
+  "productionDatabaseRestored": false,
+  "productionConfigurationChanged": false,
+  "existingAutomatedEvidence": "Shared provider/storage/entity adapters, error contracts and failure preservation are covered by local and accepted full CI tests; this record adds owner observation, not another automated generation probe.",
+  "limitations": [
+    "No new independently observed generation request or object-storage persistence trace.",
+    "Historical AI-02.md implementation measurements remain dated 2026-10-04; failed early deployment records do not describe the current accepted release."
+  ]
+}
