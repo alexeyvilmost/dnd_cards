@@ -63,6 +63,36 @@ test('no test selection, stale baseline attempt, or forged core coverage cannot 
   const g=uiFixture(),fresh=structuredClone(g.planning);fresh.input.baselineBinding.runAttempt++;fresh.eligibility=classifyReleaseVerification(fresh.input);
   assert.throws(()=>revalidateFrontendCI(g.ciReport,g.planning,fresh,g.workloadPlan),/new verification/);
 });
+function verificationFixture(){
+  const f=uiFixture(),i=f.planning.input;
+  i.selection.changed_files=['scripts/testing/check-historical-fresh.mjs','tests/suites.json','docs/audits/result.json'];
+  i.selection.components={frontend:false,backend:false,worker:false,infrastructure:true};
+  i.candidateManifest.components=structuredClone(i.previousManifest.components);
+  i.matrix[0]={...i.matrix[0],...i.previousManifest.components.frontend,sourceFingerprint:h('2'),operation:'reuse'};
+  assert.equal(componentInputFingerprint(i.matrix[0]),i.matrix[0].inputFingerprint);
+  return i;
+}
+test('verification-only change requires extended CI and leaves exact runtime images and baseline unchanged',()=>{
+  const i=verificationFixture(),before=evidenceHash(i);
+  const result=classifyReleaseVerification(i);
+  assert.equal(result.kind,'no-deployment-needed');assert.equal(result.reason,'verification-only-exact-runtime-reuse');
+  assert.equal(selectCISuite({candidate:{sha:i.candidateManifest.releaseCommit},components:i.selection.components},{eventName:'push'}),'extended');
+  assert.equal(selectCISuite({candidate:{sha:i.candidateManifest.releaseCommit},components:i.selection.components},{eventName:'pull_request'}),'extended');
+  assert.equal(evidenceHash(i),before);
+});
+test('verification reuse refuses missing current closure, new image/pins, domain drift and runtime paths',()=>{
+  for(const mutate of [
+    i=>{delete i.fullAnchor;},i=>{delete i.workerInputs;},i=>{i.workerInputs.sourceCommit='e'.repeat(40);},
+    i=>{i.workerInputs.paths.push(i.selection.changed_files[0]);},i=>{i.workerInputs.paths=[];},
+    i=>{i.matrix[0].operation='build';},i=>{i.matrix[0].imageDigest='example.test/new@'+h('f');},
+    i=>{i.matrix[0].sourceFingerprint=h('f');i.matrix[0].inputFingerprint=componentInputFingerprint(i.matrix[0]);},
+    i=>{i.candidateManifest.components.frontend.imageDigest='example.test/new@'+h('f');},
+    i=>{i.candidateDomain.routingSecurityHash=h('f');},i=>{i.selection.changed_files.push('infra/nginx.conf');},
+    i=>{i.selection.changed_files.push('scripts/release/plan-components.mjs');},i=>{i.selection.changed_files.push('backend/api.go');},
+    i=>{i.selection.changed_files.push('frontend/src/components/Button.tsx');},i=>{i.selection.components.worker=true;},
+    i=>{i.selection.changed_files.push('scripts/testing/../release/policy.mjs');}
+  ]){const i=verificationFixture();mutate(i);assert.equal(classifyReleaseVerification(i).kind,'full');}
+});
 test('workload refuses dropping real E2E or unregistered affected UI tests',()=>{
   const f=uiFixture();assert.throws(()=>suiteWorkload({selection:{selected:[]},catalog:f.catalog,manifest:{},suite:'core',frontendPlanning:f.planning}),/real API/);
   assert.throws(()=>suiteWorkload({selection:f.selectionGroups,catalog:[],manifest:{},suite:'core',frontendPlanning:f.planning}),/mandatory catalog/);

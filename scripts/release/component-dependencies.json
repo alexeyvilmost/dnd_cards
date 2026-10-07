@@ -4,6 +4,7 @@
   "fallback_components": ["frontend", "backend", "worker", "infrastructure"],
   "rules": [
     {"id": "release-tooling", "patterns": ["scripts/release/**", ".github/workflows/**", "infra/**", "docker-compose*.yml", ".dockerignore"], "components": ["frontend", "backend", "worker", "infrastructure"]},
+    {"id": "verification-tooling", "patterns": ["scripts/testing/**", "scripts/performance/**", "tests/suites.json"], "components": ["infrastructure"]},
     {"id": "animation-catalog", "patterns": ["backend/animationpresentation/catalog.json"], "components": ["frontend", "backend", "worker"]},
     {"id": "audio-catalog", "patterns": ["backend/audiopresentation/catalog.json"], "components": ["frontend", "backend"]},
     {"id": "backend", "patterns": ["backend/**"], "components": ["backend"]},

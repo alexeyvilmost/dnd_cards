@@ -662,6 +662,13 @@
         "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
         "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
         "firstHealthyDeployment": false
+      },
+      "execution_result": {
+        "verificationOnlyPolicy": {
+          "record": "docs/audits/2026-10-04/execution/REL-05-verification-only-policy-20261007.json",
+          "status": "verification_only_release_policy_locally_verified_hosted_ci_pending",
+          "productionAccepted": false
+        }
       }
     },
     {
@@ -1000,7 +1007,15 @@
         ]
       },
       "historical_acceptance_scope": "Explicitly authorized V1/V2 code/support removal completed with native PG11 and fresh UI/worker13 checks. Current V3, paper, runs, shared inventories and historical DB rows preserved; physical retired-storage removal requires verified backup/migration separately. Fresh full suite pending.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "execution_result": {
+        "current307Archive": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-current307-real-archive-20261007.json",
+          "status": "passed_local",
+          "productionReady": false,
+          "productionChanges": 0
+        }
+      }
     },
     {
       "id": "CLEAN-03",
@@ -1036,7 +1051,7 @@
     "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim.",
     "CI10/all3publication passed; second actual manual deploy refused beforecapture root0755. Exact root0700 repair verified, originallive4549 healthy/noapplicationmutations. Both old failures remain actual; reviewed-chain source/fullCI/newfreshadoption pending."
   ],
-  "updated_at": "2026-10-06T22:00:36.353Z",
+  "updated_at": "2026-10-07T13:32:13.655Z",
   "work_status": "reviewed_replay_fix_local_pass_pending_new_exact_ci_and_fresh_adoption",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
@@ -3108,5 +3123,12 @@
     "productionDatabaseRestored": false,
     "all29Complete": false,
     "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+  },
+  "latestMaintenanceJournalRecovery": {
+    "record": "docs/audits/2026-10-04/execution/CI-34-maintenance-journal-recovery-20261007.json",
+    "sourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "runId": 37623876785,
+    "attempt": 2,
+    "acceptedNewDeployment": false
   }
 }

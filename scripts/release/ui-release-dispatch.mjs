@@ -8,8 +8,11 @@ const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 export async function dispatchVerifiedRelease({planning,ciReport,workloadPlan,freshPlanning,prepareFull,prepareFrontend}){
   const current=await freshPlanning(),mode=classifyReleaseVerification(current.input);
   if(!same(mode,current.eligibility))throw Error('Fresh planning output differs from exact inputs');
-  if(mode.kind==='no-deployment-needed')return {schemaVersion:1,kind:'no-deployment-needed',status:'not-deployed',candidate:current.input.candidateManifest.releaseCommit,
+  if(mode.kind==='no-deployment-needed'){
+    if(mode.reason==='verification-only-exact-runtime-reuse')verifySuiteReport(ciReport,current.input.candidateManifest.releaseCommit,{requiredTier:'extended'});
+    return {schemaVersion:1,kind:'no-deployment-needed',status:'not-deployed',candidate:current.input.candidateManifest.releaseCommit,
     previousManifestHash:mode.previousManifestHash,selectionHash:mode.selectionHash,matrixHash:mode.matrixHash,publishImages:false,createCandidate:false,deploy:false,advanceBaseline:false};
+  }
   if(mode.kind==='full'){
     // Canonical full preparation verifies its required extended CI tier. No UI
     // core report is adapted into a full report or a successful deploy marker.

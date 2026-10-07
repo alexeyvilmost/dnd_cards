@@ -2588,6 +2588,11 @@
           "frontendOnlyCI": "passed",
           "actualSelectiveDelivery": "not achieved",
           "localMixedOCI": "12 checks passed; diagnostic only"
+        },
+        "verificationOnlyPolicy": {
+          "record": "docs/audits/2026-10-04/execution/REL-05-verification-only-policy-20261007.json",
+          "status": "verification_only_release_policy_locally_verified_hosted_ci_pending",
+          "productionAccepted": false
         }
       },
       "previous_status": "healthy_predecessor_verified_integrated_selective_auto_local_ci16_pending",
@@ -3814,6 +3819,12 @@
           "productionChanges": 0,
           "post307FreshProofRequired": true,
           "postCatalogFreshProofRequired": true
+        },
+        "current307Archive": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-current307-real-archive-20261007.json",
+          "status": "passed_local",
+          "productionReady": false,
+          "productionChanges": 0
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
@@ -5639,7 +5650,7 @@
       ]
     }
   ],
-  "updated_at": "2026-10-06T22:00:36.353Z",
+  "updated_at": "2026-10-07T13:32:13.655Z",
   "backup_storage_scope": {
     "schemaVersion": 1,
     "recordedAt": "2026-10-05T23:59:21.251Z",
@@ -6509,5 +6520,12 @@
     "attempts": 2,
     "productionAccepted": false,
     "goalComplete": false
+  },
+  "latestMaintenanceJournalRecovery": {
+    "record": "docs/audits/2026-10-04/execution/CI-34-maintenance-journal-recovery-20261007.json",
+    "sourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "runId": 37623876785,
+    "attempt": 2,
+    "acceptedNewDeployment": false
   }
 }

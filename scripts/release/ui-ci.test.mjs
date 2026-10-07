@@ -31,6 +31,27 @@ test('downloaded planning binds exact latest deployed attempt, source, profile a
  const planning=await loadPublishedUIPlanning(f.options());assert.equal(planning.eligibility.kind,'frontend-only');assert.deepEqual(planning.executionProfile,f.projection.executionProfile);assert.equal(planning.input.baselineBinding.artifactId,712);assert.equal(planning.input.baselineBinding.runAttempt,2);
  f.raw.run_attempt++;f.job.run_attempt++;await assert.rejects(loadPublishedUIPlanning(f.options()),/changed while downloading/);
 });
+test('actual verification-only Git diff reuses all Docker inputs and stops before publishing or deployment',async t=>{
+ const f=await setup(t),before=readFileSync(path.join(f.baselineDirectory,'manifest.json'));
+ for(const [file,text] of Object.entries({'scripts/testing/check-new.mjs':'// extended test gate','scripts/performance/check-new.mjs':'// performance evidence','docs/audits/check.json':'{"status":"local"}'})){
+  mkdirSync(path.dirname(path.join(f.repo,file)),{recursive:true});writeFileSync(path.join(f.repo,file),text);
+ }
+ writeFileSync(path.join(f.repo,'tests/suites.json'),JSON.stringify({groups:[],legacy_manual:[],note:'Updated test routing'}));f.commit();
+ const planning=await loadPublishedUIPlanning(f.options());
+ assert.equal(planning.eligibility.kind,'no-deployment-needed');assert.equal(planning.eligibility.reason,'verification-only-exact-runtime-reuse');
+ assert.deepEqual(planning.input.selection.components,{frontend:false,backend:false,worker:false,infrastructure:true});
+ for(const row of planning.input.matrix){assert.equal(row.operation,'reuse');assert.deepEqual({sourceCommit:row.sourceCommit,inputFingerprint:row.inputFingerprint,imageDigest:row.imageDigest},f.manifest.components[row.component]);}
+ const report=structuredClone(uiFixture().ciReport),candidate=f.options().candidate;
+ report.suite='extended';report.candidate.sha=candidate;report.component_plan.candidate.sha=candidate;
+ const options={...f.options(),suiteReport:report,verification:{},controlCommit:candidate,releaseRunId:44};
+ const result=await prepareDispatchedBuild(options,{get:f.get});
+ assert.equal(result.kind,'no-deployment-needed');for(const key of ['publishImages','createCandidate','deploy','advanceBaseline'])assert.equal(result[key],false);
+ assert.deepEqual(readFileSync(path.join(f.baselineDirectory,'manifest.json')),before);
+ await assert.rejects(prepareDispatchedBuild({...options,suiteReport:{...report,suite:'core'}},{get:f.get}),/extended/);
+ await assert.rejects(prepareDispatchedBuild({...options,suiteReport:{...report,cleanup:{status:'running'}}},{get:f.get}),/cleanup/);
+ const changed=f.options();changed.config.baseImages={...changed.config.baseImages,GO_IMAGE:'example.test/go@sha256:'+'e'.repeat(64)};
+ assert.equal((await loadPublishedUIPlanning(changed)).eligibility.kind,'full');
+});
 
 test('planning and mandatory workload share TS/TSX inventory and exclude explicit manual tests',async t=>{
  const manifest={groups:[],legacy_manual:[{id:'manual-diagnostic',patterns:['frontend/src/components/Old.test.tsx'],reason:'Explicit manual-only diagnostic',runner:'vitest'}]};
