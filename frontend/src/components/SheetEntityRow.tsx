@@ -65,6 +65,7 @@ export default function SheetEntityRow({
         className={rowClassName}
         style={accent ? { borderLeftColor: accent } : undefined}
         role={onClick ? 'button' : undefined}
+        aria-label={onClick ? name : undefined}
         tabIndex={onClick && !disabled ? 0 : undefined}
         aria-disabled={disabled || undefined}
         aria-pressed={selected}
@@ -94,6 +95,7 @@ export default function SheetEntityRow({
       style={accent ? { borderLeftColor: accent } : undefined}
       onClick={disabled ? undefined : onClick}
       aria-disabled={disabled || undefined}
+      aria-label={name}
       aria-pressed={selected}
       aria-description={title ?? name}
       onMouseEnter={onMouseEnter}
