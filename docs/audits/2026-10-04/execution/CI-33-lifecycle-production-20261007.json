@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "status": "production_release_accepted",
+  "recordedAt": "2026-10-07T04:05:08.079Z",
+  "releaseCommit": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+  "releaseId": "candidate-95546ec37f35-52413bb0f016",
+  "workflow": {
+    "id": 37565712775,
+    "attempt": 1,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37565712775",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "verification": {
+    "verifiedAt": "2026-10-07T04:03:48.822Z",
+    "record": "outputs/operations/lifecycle-deployment-37565712775/deployed-release/independent-live-verification.json",
+    "evidenceHash": "sha256:f60bd978484fb9372534d3c733be3b0b427aa3f68407d866af906750e4545f6d",
+    "healthyComponents": [
+      "backend",
+      "frontend",
+      "rulesWorker"
+    ],
+    "migrationCount": 306,
+    "lifecycleMigration": "301_character_lifecycle",
+    "requests": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/health",
+        "status": 200
+      },
+      {
+        "path": "/build-info.json",
+        "status": 200
+      }
+    ],
+    "selective": false,
+    "writerPolicy": {
+      "compactReceipts": true,
+      "imageJobs": true,
+      "frozenCatalogs": false
+    }
+  },
+  "backup": {
+    "verifiedAt": "2026-10-07T04:01:57.910Z",
+    "directory": "/opt/bagofholding/backups/capture-37565712775-1",
+    "status": "captured",
+    "createdAt": "2026-10-07T03:15:05.958Z",
+    "fileCount": 44,
+    "captureHash": "sha256:73707bec9a6190553c8f1b80e5c4f0de11ee1b1524f3f75310eb795ce3f7dc20",
+    "previousCommit": "4ac64458449959fd905cb7b0498f1ea41c82c087",
+    "releaseHash": "sha256:901365ac9ce4336281c255db7358009198079396d38632dab1d92a1fa71cc777",
+    "database": {
+      "recordedBytes": 982423914,
+      "actualBytes": 982423914,
+      "recordedHash": "sha256:05a9a5d9dfb024e00765d3f9e3370994d45e44e9190897a0983f10178925902a",
+      "actualHash": "sha256:05a9a5d9dfb024e00765d3f9e3370994d45e44e9190897a0983f10178925902a"
+    }
+  },
+  "runtime": {
+    "observedAt": "2026-10-07T04:05:08.093Z",
+    "release": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+    "backendImage": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:ca44d63076698552194f26287e11119cbe0731b77d8c8d5e64b2ee37f0794a7f",
+    "flags": {
+      "RULES_CATALOG_BATCH_ENABLED": "1",
+      "RULES_WORKER_MIRRORS_ENABLED": "1",
+      "RULES_PREPARATION_CACHE_ENABLED": "0",
+      "RULES_EQUIPMENT_INTENT_ENABLED": "0",
+      "RULES_INITIATIVE_OPTIONS_ENABLED": "0",
+      "RULES_CATALOG_PREFETCH_ENABLED": "0",
+      "RULES_PERFORMANCE_ENABLED": "0",
+      "DB_COMPACT_RECEIPTS": "1",
+      "DB_FROZEN_CATALOGS": "0",
+      "IMAGE_JOBS_ENABLED": "1"
+    },
+    "productionChanges": 0
+  },
+  "productionDatabaseRestored": false,
+  "paidGenerationRequestsByThisWork": 0,
+  "generationVerification": "Local real generation skipped at explicit owner request; owner confirmed production generation works.",
+  "remaining": [
+    "The local initiative-options activation c1324a1f is not part of this release; production flag is OFF.",
+    "Physical legacy-character table retirement302 remains local and was not applied.",
+    "This accepted production release does not mark all29 original tasks complete."
+  ]
+}
