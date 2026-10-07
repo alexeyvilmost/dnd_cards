@@ -38,11 +38,25 @@ describe('combat command lifecycle', () => {
   const render = () => act(async () => root.render(<StrictMode><Harness/></StrictMode>));
   beforeEach(async () => {
     vi.clearAllMocks();
+    localStorage.clear();
     sessionKey = 'fighter:owned-run'; runRef.current = run(); presentationBlockedRef.current = false;
     container = document.createElement('div'); document.body.append(container); root = createRoot(container);
     await render();
   });
   afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
+
+  it('serializes the explicit upgrade with gameplay and discards responses after changing sessions', async () => {
+    const pending = deferred<RoguelikeRun>(); api.command.mockReturnValueOnce(pending.promise);
+    let completion: Promise<void>;
+    await act(async () => { completion = dispatch.upgrade(); dispatch(intent, local); });
+    expect(api.command).toHaveBeenCalledTimes(1);
+    expect(api.command.mock.calls[0].slice(0,4)).toEqual(['owned-run',7,'upgrade_combat_rules',{}]);
+    sessionKey = 'other:other-run'; const other = {...run(2),id:'other-run'}; runRef.current = other;
+    await render();
+    await act(async () => { pending.resolve(run(8)); await completion; });
+    expect(onAccepted).not.toHaveBeenCalled(); expect(runRef.current).toBe(other);
+    expect(setBusy.mock.calls).toEqual([[true]]);
+  });
 
   it('reconciles a lost response before unlocking and uses the confirmed revision on the next click', async () => {
     const command = deferred<RoguelikeRun>(), reconciliation = deferred<RoguelikeRun>();

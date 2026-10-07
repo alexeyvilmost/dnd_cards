@@ -42,7 +42,13 @@ func roguelikeCombatJournalRecord(request RoguelikeCommandRequest, before JSONMa
 		}
 		record["participantRuntimeRevisions"] = revisions
 	}
-	if request.Type == "initialize_combat" {
+	if request.Type == "upgrade_combat_rules" {
+		// A new explicit replay segment. Old events and the exact preceding
+		// frame remain immutable and both executable versions remain retained.
+		record["baseline"] = result.Envelope
+		record["baselinePosition"] = "after"
+		record["previousBaseline"] = before
+	} else if request.Type == "initialize_combat" {
 		record["baseline"] = result.Envelope
 		record["baselinePosition"] = "after"
 	} else if first {
@@ -66,6 +72,20 @@ func appendRoguelikeCombatEvent(tx *gorm.DB, run *RoguelikeRun, request Roguelik
 	record, err := roguelikeCombatJournalRecord(request, before, result, count == 0)
 	if err != nil {
 		return err
+	}
+	if request.Type == "upgrade_combat_rules" {
+		previousKey, err := roguelikeCombatJournalKey(before)
+		if err != nil {
+			return err
+		}
+		record["previousCombatKey"] = previousKey
+		record["previousRunRevision"] = run.Revision - 1
+		var previous RoguelikeCombatEvent
+		if err = tx.Where("run_id = ? AND combat_key = ?", run.ID, previousKey).Order("revision DESC").First(&previous).Error; err == nil {
+			record["previousEventId"] = previous.ID
+		} else if err != gorm.ErrRecordNotFound {
+			return err
+		}
 	}
 	encounterNumber, _ := numberFromJSON(run.Encounter["number"])
 	return tx.Create(&RoguelikeCombatEvent{RunID: run.ID, CommandID: request.CommandID, Revision: run.Revision,

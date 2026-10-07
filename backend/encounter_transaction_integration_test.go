@@ -92,7 +92,8 @@ func openEncounterTransactionFixture(t *testing.T) encounterTransactionFixture {
 			active_effects JSONB,
 			runtime_revision BIGINT NOT NULL DEFAULT 0,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			deleted_at TIMESTAMPTZ
 		);
 		CREATE TABLE encounters (
 			id UUID PRIMARY KEY,

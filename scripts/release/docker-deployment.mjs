@@ -3,7 +3,7 @@ import {execFileSync} from 'node:child_process';
 import {readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, lstatSync} from 'node:fs';
 import path from 'node:path';
 import {evidenceHash} from './validate-manifest.mjs';
-import {assertRuntimeWriterPolicy,assertExpansionWritersOff} from './writer-environment.mjs';
+import {assertRuntimeWriterPolicy,assertExpansionWritersOff,assertMigrationWriterPolicy} from './writer-environment.mjs';
 export {assertExpansionWritersOff} from './writer-environment.mjs';
 import {deploymentEnvironment, assertServiceIdentities} from './deploy-state.mjs';
 import {readRetainedRuntime} from './retained-runtime.mjs';
@@ -263,7 +263,7 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     },
     async migrate(plan) {
       if (config.migrationMode !== 'additive-298-300' || plan.migrationMode !== 'additive-298-300') throw Error('Additive migration policy required');
-      permit(plan.previous);permit(plan.desired);assertLiveWriterPolicy(plan.previous);assertExpansionWritersOff(JSON.parse(command(['inspect',compose(plan.previous,['ps','-q','backend'])]))[0].Config.Env);effectiveComposition(plan.previous);effectiveComposition(plan.desired);
+      permit(plan.previous);permit(plan.desired);assertLiveWriterPolicy(plan.previous);assertMigrationWriterPolicy(JSON.parse(command(['inspect',compose(plan.previous,['ps','-q','backend'])]))[0].Config.Env,plan);effectiveComposition(plan.previous);effectiveComposition(plan.desired);
       const database = {request: plan.migration.request, executorImageDigest: plan.desired.manifest.components.backend.imageDigest};
       // Reconcile a previously committed transaction before considering a retry.
       try {const observed = migrationCommand(database, true); databaseStateFromResult(plan, observed); return observed;}

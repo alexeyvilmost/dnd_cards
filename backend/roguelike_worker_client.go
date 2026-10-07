@@ -90,6 +90,9 @@ func publicStructuredWorkerRejection(code string) *roguelikeWorkerRejection {
 }
 
 func publicWorkerRejection(code, message, rejectionCode string) *roguelikeWorkerRejection {
+	if code == "rules_already_current" {
+		return &roguelikeWorkerRejection{"combat_rules_current", "Этот бой уже использует текущую версию правил. Состояние не изменено."}
+	}
 	if code == "artifact_unavailable" {
 		return &roguelikeWorkerRejection{"combat_rules_unavailable", "Версия правил этого боя временно недоступна. Действие не применено."}
 	}
@@ -355,6 +358,10 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 	if result.Status == "needs_content" {
 		if len(result.Needs) == 0 || len(result.Needs) > 2048 {
 			return nil, fmt.Errorf("invalid dependency request")
+		}
+	} else if endpoint == "/upgrade" {
+		if len(result.Envelope) == 0 || !roguelikeSnapshotHash.MatchString(result.ArtifactHash) || len(result.Trace) == 0 {
+			return nil, fmt.Errorf("incomplete rules upgrade result")
 		}
 	} else if endpoint == "/initiative-options" {
 		if result.Status != "ready" || result.InitiativeOptions == nil || len(result.InitiativeOptions) > 256 {

@@ -1554,6 +1554,9 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 			return fmt.Errorf("Disable image job admission; retain jobs and their outcomes for reconciliation")
 		}},
 		// Здесь можно добавлять новые миграции
+		{Version: "301_character_lifecycle", Description: "Remove owned characters and runs from live collections while retaining historical identities", Up: addCharacterLifecycle301, Down: func(db *sql.DB) error {
+			return fmt.Errorf("Deleted identities and historical references must be retained")
+		}},
 	}
 }
 

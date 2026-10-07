@@ -91,6 +91,10 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		writeRoguelikeError(c, err)
 		return
 	}
+	if request.Type == "upgrade_combat_rules" {
+		rc.upgradeCombatRulesCommand(c, run, request, requestHash)
+		return
+	}
 	if roguelikePartySize(run) > 1 {
 		rc.trustedPartyCommand(c, run, request, requestHash)
 		return

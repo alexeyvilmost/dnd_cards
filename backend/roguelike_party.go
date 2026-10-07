@@ -126,8 +126,17 @@ func validatePartySources(ids []uuid.UUID) error {
 	return nil
 }
 func createRoguelikeParty(tx *gorm.DB, userID uuid.UUID, ids []uuid.UUID) (*RoguelikeRun, error) {
-	if err := validatePartySources(ids); err != nil {
-		return nil, err
+	return createRoguelikePartyWithTemplates(tx, userID, ids, nil)
+}
+
+func createRoguelikePartyWithTemplates(tx *gorm.DB, userID uuid.UUID, ids []uuid.UUID, templates []RoguelikeTemplateSource) (*RoguelikeRun, error) {
+	if len(ids)+len(templates) < 1 || len(ids)+len(templates) > 6 {
+		return nil, roguelikeError(400, "invalid_party_size", "В группе должно быть от 1 до 6 персонажей")
+	}
+	if len(ids) > 0 {
+		if err := validatePartySources(ids); err != nil {
+			return nil, err
+		}
 	}
 	sorted := append([]uuid.UUID{}, ids...)
 	sort.Slice(sorted, func(i, j int) bool { return sorted[i].String() < sorted[j].String() })
@@ -141,6 +150,30 @@ func createRoguelikeParty(tx *gorm.DB, userID uuid.UUID, ids []uuid.UUID) (*Rogu
 			return nil, err
 		}
 		sources[id] = c
+	}
+	fromTemplate := map[uuid.UUID]bool{}
+	for _, selection := range templates {
+		name := strings.TrimSpace(selection.Name)
+		if selection.TemplateID == uuid.Nil || name == "" || len([]rune(name)) > 100 {
+			return nil, roguelikeError(400, "invalid_template_source", "Выберите шаблон и имя от 1 до 100 символов")
+		}
+		var template CharacterTemplate
+		if err := tx.First(&template, "id = ?", selection.TemplateID).Error; err != nil {
+			return nil, roguelikeError(404, "template_not_found", "Шаблон не найден")
+		}
+		character, err := characterFromTemplate(template, userID, name)
+		if err != nil {
+			return nil, err
+		}
+		if err = validateRoguelikeSource(tx, &character, userID); err != nil {
+			return nil, err
+		}
+		if err = validateCharacterSubclassOwnership(tx, character); err != nil {
+			return nil, err
+		}
+		sources[character.ID] = character
+		fromTemplate[character.ID] = true
+		ids = append(ids, character.ID)
 	}
 	seed, err := newRoguelikeSeed()
 	if err != nil {
@@ -175,10 +208,15 @@ func createRoguelikeParty(tx *gorm.DB, userID uuid.UUID, ids []uuid.UUID) (*Rogu
 		partyMoney += currencyCopper(&source)
 		setCurrencyCopper(&clone, 0)
 		run.Characters = append(run.Characters, &clone)
-		members = append(members, roguelikePartyMember{clone.ID, id})
+		sourceID := id
+		if fromTemplate[id] {
+			sourceID = clone.ID
+		}
+		members = append(members, roguelikePartyMember{clone.ID, sourceID})
 	}
 	run.Character = run.Characters[0]
 	run.CharacterID = run.Character.ID
+	run.SourceCharacterID = members[0].SourceCharacterID
 	run.Gold = partyMoney / 100
 	setCurrencyCopper(run.Character, partyMoney)
 	run.Party, err = mapFromJSON(map[string]any{"members": members})

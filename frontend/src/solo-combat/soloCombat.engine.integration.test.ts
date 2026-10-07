@@ -27,6 +27,7 @@ import type { Action, PassiveEffect } from '../types';
 import type { Monster } from '../monsters/types';
 import { resolvePlayerShoveOutcome, resumePendingMovement, addSoloCombatCharacter, addSoloCombatMonster, advanceTurn, canStandActor, standActor, autoResolveSystemDecisions, combatDetectMagicStatus, createSoloCombatState, executeCombatAction, executeCombatTouchSpellThroughFamiliar, moveActor, moveCombatDancingLights, refreshSoloCombatParticipants, refreshSoloCombatResources, revealCombatMagicAura, resolvePlayerReaction, resolveSoloCombatAlertSwap, resolveSoloCombatInterception, resolveSoloCombatTurnStart, resolveTriggeredCombatAction, runMonsterTurn, selectedTargetsForAction, setSoloCombatInitiativeTotals, setSoloCombatMount } from './engine';
 import { readSoloCombatState, writeSoloCombatState } from './persistence';
+import {laboratoryCharacter, saveLaboratorySession, readLaboratorySession, clearLaboratorySession} from './laboratorySession';
 import { actorMustCrawl, effectiveCombatActorSpeedFt, gridDistanceFt } from './tacticalGrid';
 import { isPlayerControlledCombatActor, SOLO_COMBAT_KEY, type SoloCombatState } from './types';
 import { collectSoloCombatActionChoices, UNARMED_STRIKE_CHOICE_ID } from './actionChoices';
@@ -44,6 +45,32 @@ const fixture = compiledFixtureJson as unknown as {
 };
 
 function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)) as T; }
+
+it('restores laboratory participants and pending decisions without modifying their original sheets',async()=>{
+  const storage=new Map<string,string>();
+  const oldStorage=Object.getOwnPropertyDescriptor(globalThis,'localStorage');
+  Object.defineProperty(globalThis,'localStorage',{configurable:true,value:{getItem:(key:string)=>storage.get(key)??null,setItem:(key:string,value:string)=>storage.set(key,value),removeItem:(key:string)=>storage.delete(key)}});
+  try {
+    const root=fighterSeed(),ally=wizardSeed(),id=root.character.id,allyId=ally.character.id;
+    const originals={ [id]:clone(root.character),[allyId]:clone(ally.character) },before=JSON.stringify(originals);
+    let scene=await createSoloCombatState({character:root.character,participant:root,selected:[{monster:goblin(),quantity:1}],actions:[scimitar()],effects:[],rng:()=>0.5});
+    scene=await addSoloCombatCharacter({state:scene,participant:ally});
+    scene.world.actors[id].runtime.hp.current=0;scene.world.actors[allyId].runtime.hp.current=2;
+    scene.pendingDeathSave={actorId:id,round:1,phase:'rolled',randomValues:[0.7],
+      before:{successes:0,failures:0,stable:false,dead:false},
+      roll:{kind:'save',deathSave:true,dice:[],advantage:'none',modifiers:[],total:15,target:{type:'dc',value:10},text:'Death save: 15'}};
+    saveLaboratorySession(id,scene,originals);
+    const restored=readLaboratorySession(id)!;
+    expect(restored.state.world.actors[id].runtime.hp.current).toBe(0);expect(restored.state.pendingDeathSave).toEqual(scene.pendingDeathSave);
+    expect(laboratoryCharacter(originals[allyId],id).current_hp).toBe(2);
+    const row=laboratoryCharacter(originals[id],id);
+    expect(readSoloCombatState(row.turn_state,id,row.runtime_revision??0)?.log).toEqual(scene.log);
+    expect(JSON.stringify(originals)).toBe(before);
+    clearLaboratorySession(id);expect(readLaboratorySession(id)).toBeNull();
+  } finally {
+    if(oldStorage)Object.defineProperty(globalThis,'localStorage',oldStorage);else Reflect.deleteProperty(globalThis,'localStorage');
+  }
+});
 
 it('encounter lifecycle runs once during solo creation and never retroactively when loading a saved fight',async()=>{
   const participant=fighterSeed(),id=participant.character.id;
@@ -3976,6 +4003,54 @@ describe('wolf Bite in the shared combat engine', () => {
   );
 });
 
+
+describe('incapacitated monster turn completion', () => {
+  it.each(['incapacitated', 'stunned'])('finishes a %s turn without an illegal attack, including a saved continuation', async condition => {
+    const participant = fighterSeed();
+    const actorId = participant.character.id;
+    let state = await createSoloCombatState({character: participant.character, participant,
+      selected: [{monster: goblin(), quantity:1}], actions:[scimitar(), dash()], effects:[], dashAction:dash(), rng:()=>0.5});
+    state = advanceTurn(state,()=>0.5);
+    const monsterId = Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+    state.world.actors[monsterId].runtime.activeEffects.push({id:'control',name:'Control',source:'test',
+      mechanics:{kind:'condition',value:condition,save_ends:{ability:'wis',dc:1}}});
+    const before = state.world.actors[actorId].runtime.hp.current;
+    const restored = readSoloCombatState(writeSoloCombatState({},state),actorId,state.runtimeRevision)!;
+    const next = runMonsterTurn(restored,()=>0.5);
+    expect(activeId(next)).toBe(actorId);
+    expect(next.world.actors[actorId].runtime.hp.current).toBe(before);
+    expect(next.world.actors[monsterId].runtime.activeEffects.some(row=>row.id==='control')).toBe(false);
+  });
+  it('continues a failed control save through the authoritative worker without changing prior rolls', async () => {
+    const participant = wizardSeed(), actorId=participant.character.id;
+    const action: RuleActionDefinition={id:'qa-laughter-control',name:'Control spell',kind:'spell',spell:{level:1},
+      sourceEntityIds:['qa-control-source'],mechanics:{activation:{mode:'active',cost:[{resource:'action'}]},
+        targeting:{shape:'multiple',min_targets:1,max_targets:1,range_ft:30,additional_target_slots_per_spell_slot_above_base:1},
+        effects:[{resolution:'save',who:'target',ability:'wis',dc:99,on_success:[],on_fail:[
+          {kind:'condition',value:'prone',duration:{type:'rounds',amount:10},save_ends:{ability:'wis',dc:99}},
+          {kind:'condition',value:'incapacitated',duration:{type:'rounds',amount:10},save_ends:{ability:'wis',dc:99}},
+        ]}]},targeting:{minTargets:1,maxTargets:1,rangeFt:30,requiresLineOfSight:false,allowedRelations:['enemy']}};
+    const actions = [...participant.canonical.actions, action];
+    participant.canonical.actions = actions;
+    const actor=participant.canonical.world.actors[actorId];
+    actor.capabilities.actionIds.push(action.id);
+    actor.spellcastingAccess!.grants.push({grantId:'qa-control',sourceId:'qa-source',actionId:action.id,access:'always_prepared',level:1,spellcastingAbility:'int',slotResource:'spell_slot_1'});
+    participant.canonical.catalog={getAction:id=>actions.find(row=>row.id===id),listActions:()=>actions};
+    let state=await createSoloCombatState({character:participant.character,participant,selected:[{monster:goblin(),quantity:1}],actions:[scimitar(),dash()],effects:[],dashAction:dash(),rng:()=>0.5});
+    const monsterId=Object.values(state.world.actors).find(row=>row.kind==='monster')!.id;
+    state=placeAdjacent(state,actorId,monsterId);
+    state=executeCombatAction({state,actorId,actionId:action.id,targetIds:[monsterId],rng:()=>0.5});
+    state=autoResolveSystemDecisions(state,()=>0.5);
+    const hp=state.world.actors[actorId].runtime.hp.current;
+    const priorLog=clone(state.log);
+    const artifactHash='sha256:'+'a'.repeat(64);
+    const result=stepRoguelikeCombat({schemaVersion:1,artifactHash,entropy:{seed:'control-regression',cursor:0},state},{type:'end_turn',actorId},artifactHash);
+    expect(activeId(result.envelope.state)).toBe(actorId);
+    expect(result.envelope.state.world.actors[actorId].runtime.hp.current).toBe(hp);
+    expect(result.envelope.state.log.slice(0,priorLog.length)).toEqual(priorLog);
+    expect(state.log).toEqual(priorLog);
+  });
+});
 
 describe('Prone tactical movement', () => {
   async function scene() {

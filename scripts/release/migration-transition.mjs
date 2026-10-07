@@ -3,7 +3,7 @@ import {isLegacyBaseline,validateLegacyBaseline,legacyMigrationBaseline} from '.
 const equal=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const hash=value=>typeof value==='string'&&/^sha256:[a-f0-9]{64}$/.test(value);
 const image=value=>typeof value==='string'&&/^[a-z0-9][a-z0-9._:/-]*@sha256:[a-f0-9]{64}$/.test(value);
-const allowed=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs']);
+const allowed=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle']);
 export const retiredObservedMigrationIds=Object.freeze(['011_add_detailed_description_formatting','096_register_micro_mvp_rules_release','097_repair_micro_mvp_rules_release_identity','098_repair_magic_initiate_2024']);
 // Executable registration and historical ledger retention are separate sets.
 // Only exact candidate metadata may attest support for these non-executable IDs.

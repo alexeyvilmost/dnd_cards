@@ -5,7 +5,7 @@ type Dict = Record<string, unknown>;
 const object = (value: unknown): value is Dict => !!value && typeof value === 'object' && !Array.isArray(value);
 const positive = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
 
-/** Capacity belongs to the container card. Unknown measurements never count as zero. */
+/** Capacity belongs to the container card. Unspecified weight/external volume count as zero. */
 export function containerTransferIssue(state: RuntimeState, cards: ReadonlyMap<string, Card>, containerId: string, addedId: string, quantity: number): string | null {
   const container = cards.get(containerId);
   if (!container || container.type !== 'container') return 'Целевой предмет не является контейнером';
@@ -23,7 +23,8 @@ export function containerTransferIssue(state: RuntimeState, cards: ReadonlyMap<s
     const card = cards.get(id);
     if (!card) return 'Карточка содержимого ещё не загружена';
     const physical = object(card.mechanics?.physical_profile) ? card.mechanics.physical_profile : {};
-    const value = key === 'weight' ? card.weight : physical[key];
+    const declared = key === 'weight' ? card.weight : physical[key];
+    const value = declared == null && key !== 'liquid_oz' ? 0 : declared;
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return `У предмета «${card.name}» не задан ${key === 'weight' ? 'вес' : key === 'liquid_oz' ? 'объём жидкости' : 'внешний объём'}`;
     if (key !== 'weight') return value;
     let result = value;

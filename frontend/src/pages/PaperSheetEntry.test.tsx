@@ -15,7 +15,7 @@ vi.mock('./PaperCharacterSheet', () => ({ default: () => <div data-testid="edito
 let node: HTMLDivElement, root: Root;
 beforeEach(() => { auth.isAuthenticated = false; vi.mocked(paperDocumentApi.list).mockResolvedValue([]); localStorage.clear(); node = document.createElement('div'); root = createRoot(node); });
 afterEach(async () => { await act(async () => root.unmount()); vi.clearAllMocks(); });
-const render = async (path = '/paper-sheet') => { await act(async () => { root.render(<MemoryRouter initialEntries={[path]}><Routes><Route path="/paper-sheet/:id?" element={<PaperSheetEntry />} /></Routes></MemoryRouter>); }); };
+const render = async (path = '/paper-sheet') => { await act(async () => { root.render(<MemoryRouter initialEntries={[path]}><Routes><Route path="/paper-sheet/:id?" element={<PaperSheetEntry embedded />} /></Routes></MemoryRouter>); }); };
 it('shows a guest gate and never opens the editor before an explicit choice', async () => {
  await render();
  expect(node.querySelector('[data-testid="editor"]')).toBeNull();

@@ -67,13 +67,27 @@ export function writerPolicyFields(previous,config) {
   return previous && Object.hasOwn(previous,'writerPolicy') || Object.hasOwn(config,'writerPolicy')
     ? {writerPolicy:writerPolicy(config)} : {};
 }
+// Only the reviewed nullable lifecycle expansion keeps the existing writer
+// formats unchanged. This allows building a candidate, never authorizes cutover:
+// planDeployment still requires the exact-image migration approval and all
+// cross-image writer, retained-history, pending/retry and rollback outcomes.
+export const lifecycleMigrationIdentity = Object.freeze({id:'301_character_lifecycle',checksum:'sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5'});
+export function lifecycleWriterExpansion(candidate,previous) {
+  if(!candidate || !previous || json(writerPolicy(candidate))!==json(writerPolicy(previous)))return false;
+  const baseline=previous.migrationSet,target=candidate.migrationSet;
+  return Array.isArray(baseline)&&Array.isArray(target)&&target.length===baseline.length+1
+    && !baseline.some(row=>row.id===lifecycleMigrationIdentity.id)
+    && baseline.every(row=>target.some(other=>json(other)===json(row)))
+    && target.some(row=>json(row)===json(lifecycleMigrationIdentity));
+}
 export function validateWriterTransition(candidate, previous) {
   const policy=writerPolicy(candidate);
   if(previous)writerPolicy(previous);
   if(previous && Object.hasOwn(previous,'writerPolicy') && !Object.hasOwn(candidate,'writerPolicy')) throw Error('Writer policy cannot disappear from a manifest release line');
   if(policy.compactReceipts || policy.imageJobs) {
     if(!previous || candidate.previousReleaseId!==previous.releaseId) throw Error('Enabled writers require a verified manifest predecessor; legacy adoption is forbidden');
-    for(const key of ['apiProtocolVersion','workerProtocolVersion','supportedWorldSchemaVersions','migrationSet']) if(json(candidate[key])!==json(previous[key])) throw Error('Enabled writer policy requires the same schema and migration identities');
+    for(const key of ['apiProtocolVersion','workerProtocolVersion','supportedWorldSchemaVersions']) if(json(candidate[key])!==json(previous[key])) throw Error('Enabled writer policy requires the same schema and migration identities');
+    if(json(candidate.migrationSet)!==json(previous.migrationSet)&&!lifecycleWriterExpansion(candidate,previous))throw Error('Enabled writer policy requires the same schema and migration identities or the exact approved lifecycle expansion');
     for(const id of ['298_compact_command_receipts','300_image_jobs']) if(!candidate.migrationSet.some(row=>row.id===id && hashPattern.test(row.checksum))) throw Error('Enabled writers require exact additive migration 298/300 checksums');
   }
   return policy;
@@ -90,7 +104,7 @@ export function validateManifest(manifest) {
   }
   return manifest;
 }
-export const additiveMigrationIDs=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs']);
+export const additiveMigrationIDs=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle']);
 export function validateMigrationSet(rows){
   checkSchema(rows,{type:'array',items:{$ref:'#/$defs/migrationIdentity'}});
   if(new Set(rows.map(row=>row.id)).size!==rows.length)throw Error('Duplicate migration ID');

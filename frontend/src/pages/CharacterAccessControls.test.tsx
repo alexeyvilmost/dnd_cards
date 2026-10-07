@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   remove: vi.fn(),
 }));
 
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: true }) }));
+
 vi.mock('../character/api', () => ({
   charactersV3Api: {
     list: mocks.list,

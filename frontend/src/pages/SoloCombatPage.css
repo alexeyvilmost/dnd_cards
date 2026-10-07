@@ -1344,3 +1344,4 @@
 .combat-hotbar__actions.is-row-view .sheet-item-row { width:100%; text-align:left; }
 .combat-hotbar__actions.is-row-view .combat-hotbar__action-label { display:none; }
 .combat-reaction-actions.combat-triggered-action-icons{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:12px}
+.combat-scene-constructor { top: var(--site-navigation-height, 0px); }

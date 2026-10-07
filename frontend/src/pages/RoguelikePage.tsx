@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {withoutLegacyRunSuffix} from '../character/familiarLabels';
-import { RotateCcw, Trophy } from 'lucide-react';
+import { RotateCcw, Trophy, Trash2 } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { charactersV3Api } from '../character/api';
 import {isRunEligible} from '../roguelike/eligibility';
@@ -17,7 +17,7 @@ import MerchantSettingsDialog from '../components/MerchantSettingsDialog';
 import {merchantSettingsApi} from '../api/entityTags';
 import RunCharacterIdentity from '../components/RunCharacterIdentity';
 import {runCharacters,notifyRunUpdated} from '../roguelike/navigation';
-import {characterTemplatesApi, type CharacterTemplate} from '../character/templatesApi';
+import {type CharacterTemplate} from '../character/templatesApi';
 import HoverCard from '../components/HoverCard';
 import {useCombatDialogFocus} from '../components/useCombatDialogFocus';
 
@@ -43,11 +43,11 @@ function RunList() {
   const [presets, setPresets] = useState<CharacterTemplate[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [naming, setNaming] = useState(false);
-  const copies = useRef(new Map<string, string>());
   const dialogRef = useCombatDialogFocus(naming);
   const count = selected.length + presets.length;
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [deletingRun, setDeletingRun] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,23 +70,21 @@ function RunList() {
     setError(null);
     try {
       if(mode==='urvin'&&!aura)throw Error('Выберите стартовую ауру');
-      const sources = [...selected];
-      for (const preset of presets) {
-        const name = names[preset.id].trim();
-        const key = `${preset.id}:${name}`;
-        let sourceId = copies.current.get(key);
-        if (!sourceId) {
-          sourceId = (await characterTemplatesApi.copy(preset.id, name)).id;
-          copies.current.set(key, sourceId);
-        }
-        sources.push(sourceId);
-      }
-      const run = mode==='urvin'?await roguelikeApi.create(sources,{mode,aura_id:aura}):await roguelikeApi.create(sources);
+      const options = {...(mode === 'urvin' ? {mode, aura_id: aura} : {}),
+        ...(presets.length ? {templates: presets.map(preset => ({template_id: preset.id, name: names[preset.id].trim()}))} : {})};
+      const run = Object.keys(options).length ? await roguelikeApi.create(selected, options) : await roguelikeApi.create(selected);
       navigate(`/roguelike/${run.id}`);
     } catch (reason) {
       setError(errorMessage(reason));
       setBusy(false);
     }
+  };
+  const removeRun = async (id: string) => {
+    if(busy) return;
+    setBusy(true); setError(null);
+    try {await roguelikeApi.remove(id); setRuns(rows => rows.filter(run => run.id !== id)); setDeletingRun(null);}
+    catch(reason) {setError(errorMessage(reason));}
+    finally {setBusy(false);}
   };
 
   return (
@@ -147,12 +145,18 @@ function RunList() {
             {runs.length === 0 ? <p>Здесь появятся ваши забеги.</p> : runs.map((run) => {
               const members = runCharacters(run);
               return (
-              <Link className="roguelike-run-row" to={`/roguelike/${run.id}`} key={run.id}>
+              <div className="roguelike-run-entry" key={run.id}><Link className="roguelike-run-row" to={`/roguelike/${run.id}`}>
                 <div className="run-row-heading"><strong>{run.mode==='urvin'?'Урвинский · ':''}{members.length > 1 ? `Группа · участников: ${members.length}` : 'Одиночный забег'}</strong>
                   <em data-status={run.status}>{run.status === 'victory' ? 'Победа' : run.status === 'defeat' ? 'Поражение' : run.status === 'abandoned' ? 'Завершён' : run.phase === 'combat' ? 'В бою' : 'В лагере'}</em></div>
                 <span className="run-row-members">{members.map(member => <RunCharacterIdentity key={member.id} character={member} />)}</span>
                 <span className="run-row-progress">{run.experience.toLocaleString('ru-RU')} XP · {run.encounters_won} побед · попытка {run.attempt}</span>
               </Link>
+              {deletingRun === run.id ? <div className="roguelike-run-delete-confirm">
+                <p>Удалить забег и все его игровые листы? Исходные персонажи сохранятся.</p>
+                <button className="roguelike-secondary" disabled={busy} onClick={() => setDeletingRun(null)}>Отмена</button>
+                <button className="roguelike-secondary" disabled={busy} onClick={() => void removeRun(run.id)}>Удалить забег</button>
+              </div> : <button className="roguelike-secondary roguelike-run-delete" aria-label={`Удалить забег: ${members.map(member => member.name).join(', ')}`} disabled={busy} onClick={() => setDeletingRun(run.id)}><Trash2 size={16} />Удалить</button>}
+              </div>
             );})}
           </section>
         </div>

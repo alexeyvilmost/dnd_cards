@@ -1,9 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {writerEnvironment,assertRuntimeWriterPolicy,assertExpansionWritersOff} from './writer-environment.mjs';
+import {writerEnvironment,assertRuntimeWriterPolicy,assertExpansionWritersOff,assertMigrationWriterPolicy} from './writer-environment.mjs';
 import {writerTraceBinding,validateWriterTrace} from './writer-traces.mjs';
 import {collectWriterCompatibility} from './writer-compatibility.mjs';
-import {assertReleaseReady,evidenceHash} from './validate-manifest.mjs';
+import {assertReleaseReady,evidenceHash,lifecycleMigrationIdentity} from './validate-manifest.mjs';
 import {assembleDeploymentBundle} from './assemble-bundle.mjs';
 import {rehearsalInput,collectRehearsal,main as rehearsalMain} from './candidate-rehearsal.mjs';
 import {mkdtemp,writeFile,rm,access} from 'node:fs/promises';
@@ -29,6 +29,21 @@ test('stored traces are mandatory, rehashed mutations cannot bypass semantic ver
     const f=pair();mutate(f.check);if(f.check.traces)f.check.outcomes=f.check.traces.map(t=>({id:t.outcomeId,status:'passed',traceHash:evidenceHash(t)}));refresh(f.candidate,f.bundle);
     assert.throws(()=>assertReleaseReady(f.candidate,f.bundle));
   }
+});
+test('live migration retains writer flags only for the exact approved lifecycle expansion',()=>{
+ const f=pair(on,on),candidate=structuredClone(f.candidate);candidate.migrationSet.push({...lifecycleMigrationIdentity});
+ const plan={previous:f.active,desired:{manifest:candidate},migration:{mode:'additive-298-300',
+  approvalHash:'sha256:'+'a'.repeat(64),added:[{...lifecycleMigrationIdentity}],baseline:f.active.manifest.migrationSet,target:candidate.migrationSet}};
+ assertMigrationWriterPolicy(env(on),plan);
+ for(const actual of [env(off),[],[...env(on),'IMAGE_JOBS_ENABLED=1'],['DB_COMPACT_RECEIPTS=1','DB_FROZEN_CATALOGS=1','IMAGE_JOBS_ENABLED=1']])assert.throws(()=>assertMigrationWriterPolicy(actual,plan));
+ for(const mutate of [
+  p=>{delete p.migration.approvalHash;},p=>{p.migration.mode='no-schema-change';},
+  p=>{p.migration.added=[];},p=>{p.migration.target=[];},p=>{p.migration.baseline=[];},
+  p=>{p.desired.manifest.migrationSet.at(-1).checksum='sha256:'+'f'.repeat(64);},
+  p=>{p.desired.manifest.writerPolicy.imageJobs=false;},
+ ]){const bad=structuredClone(plan);mutate(bad);assert.throws(()=>assertMigrationWriterPolicy(env(on),bad));}
+ assertMigrationWriterPolicy(env(off),{previous:f.active,desired:{manifest:f.candidate}});
+ assert.throws(()=>assertMigrationWriterPolicy(env(on),{previous:f.active,desired:{manifest:f.candidate}}),/writers/);
 });
 
 test('full captured history stays OFF and every separate fixture is stopped before acceptance',()=>{

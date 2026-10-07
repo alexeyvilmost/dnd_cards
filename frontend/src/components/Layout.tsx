@@ -46,7 +46,6 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
   const navItems: NavItem[] = [
     { path: '/library', label: 'Библиотека', icon: BookOpen },
     { path: '/characters-forge', label: 'Персонажи', icon: Users },
-    { path: '/paper-sheet', label: 'Бумажный лист', icon: ScrollText },
     { path: '/roguelike', label: 'Забег', icon: Dices },
     {
       label: 'Ещё', icon: MoreHorizontal,
@@ -54,6 +53,7 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
         ...(showAdditionalSections ? [{ path: '/templates', label: 'Шаблоны' }] : []),
         { path: '/export', label: 'Экспорт' },
         { path: '/initiative', label: 'Инициатива' },
+        { path: '/combat-lab', label: 'Тестовый бой' },
         ...(!user ? [{ path: '/settings', label: 'Настройки' }] : []),
       ],
     },
@@ -73,9 +73,10 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
 
   const isActive = (path?: string) => !!path && (location.pathname === path
     || (path === '/library' && location.pathname === '/monsters')
-    || (path === '/characters-forge' && /^\/characters-v3\//.test(location.pathname))
+    || (path === '/characters-forge' && /^\/(?:characters-v3|character-forge|paper-sheet)(?:\/|$)/.test(location.pathname))
     || (path === '/roguelike' && location.pathname.startsWith('/roguelike/')));
 
+  const paperActive = paperLayout || (location.pathname === '/characters-forge' && new URLSearchParams(location.search).get('tab') === 'paper');
   return (
     <WorkspaceNavigationContext.Provider value={workspace ? { expanded, toggle: toggleNavigation } : null}>
     <div className={`site-layout min-h-screen ${workspace ? 'site-layout-workspace' : ''} ${paperLayout ? 'site-layout-paper bg-gray-50' : 'site-page-theme'} ${landing ? 'site-layout-landing' : ''}`} style={paperLayout ? {
@@ -91,11 +92,11 @@ const Layout = ({ children, landing = false, workspace = false }: LayoutProps) =
             </Link>
 
             <Link
-              to="/paper-sheet"
-              aria-label="Бумажный лист"
-              aria-current={isActive('/paper-sheet') ? 'page' : undefined}
+              to="/characters-forge?tab=paper"
+              aria-label="Бумажные персонажи"
+              aria-current={paperActive ? 'page' : undefined}
               className={`min-[1100px]:hidden ml-auto flex shrink-0 items-center gap-1.5 px-2 py-1.5 rounded-md text-xs sm:text-sm font-medium transition-colors ${
-                isActive('/paper-sheet') ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                paperActive ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
             >
               <ScrollText size={16} />

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 const (
@@ -20,6 +21,7 @@ const (
 // dedicated dungeon_crawl CharacterV3 so the existing certified rules engine is
 // reused without introducing a second implementation of D&D mechanics.
 type RoguelikeRun struct {
+	DeletedAt                    gorm.DeletedAt `json:"-" gorm:"index"`
 	Mode                         string         `json:"mode" gorm:"type:varchar(24);not null;default:'classic'"`
 	Journey                      JSONMap        `json:"journey" gorm:"type:jsonb;not null;default:'{}'"`
 	ModeRules                    JSONMap        `json:"-" gorm:"type:jsonb;not null;default:'{}'"`
@@ -94,10 +96,16 @@ type RoguelikeCombatEvent struct {
 func (RoguelikeCombatEvent) TableName() string { return "roguelike_combat_events" }
 
 type CreateRoguelikeRunRequest struct {
-	Mode               string      `json:"mode"`
-	AuraID             string      `json:"aura_id"`
-	SourceCharacterID  uuid.UUID   `json:"source_character_id"`
-	SourceCharacterIDs []uuid.UUID `json:"source_character_ids"`
+	Templates          []RoguelikeTemplateSource `json:"templates"`
+	Mode               string                    `json:"mode"`
+	AuraID             string                    `json:"aura_id"`
+	SourceCharacterID  uuid.UUID                 `json:"source_character_id"`
+	SourceCharacterIDs []uuid.UUID               `json:"source_character_ids"`
+}
+
+type RoguelikeTemplateSource struct {
+	TemplateID uuid.UUID `json:"template_id"`
+	Name       string    `json:"name"`
 }
 
 type RoguelikeCommandRequest struct {

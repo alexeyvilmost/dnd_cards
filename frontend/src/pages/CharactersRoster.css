@@ -1,0 +1,19 @@
+.characters-roster-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:24px 0;border-bottom:1px solid var(--forge-border,#c6ab6940);padding-bottom:10px}
+.characters-roster-tabs button{padding:10px 16px;background:transparent;border:1px solid transparent;border-radius:6px;color:inherit;font:inherit;cursor:pointer;min-height:44px}
+.characters-roster-tabs button:hover{background:#c6ab6912}
+.characters-roster-tabs button[aria-selected=true]{border-color:#c6ab6966;background:#c6ab691c;color:var(--forge-gold,#e6cb87)}
+.characters-roster-tabs button:focus-visible{outline:2px solid #c6ab69;outline-offset:3px}
+.characters-roster-tabs .roster-template-tab{border-inline-start:1px solid #c6ab6966;margin-inline-start:8px;padding-inline-start:24px;border-start-start-radius:0;border-end-start-radius:0}
+.paper-entry--embedded{padding:12px 0}
+.paper-entry--embedded .paper-entry-hero{min-height:0;background:none;border:0;box-shadow:none}
+.paper-entry--embedded .paper-entry-hero>img,.paper-entry--embedded .paper-entry-copy>svg,.paper-entry--embedded .paper-entry-eyebrow{display:none}
+.paper-entry--embedded .paper-entry-copy{padding:0;max-width:none}
+.paper-entry--embedded .paper-entry-copy h1,.paper-entry--embedded .paper-entry-copy h2{font-size:24px}
+.paper-entry--embedded .paper-entry-copy h1 br{display:none}
+.combat-lab-setup{max-width:1000px;margin:auto}
+.combat-lab-fields{display:grid;grid-template-columns:1fr 1fr 120px;gap:16px;margin:24px 0}
+.combat-lab-fields label{display:grid;gap:8px}
+.combat-lab-fields select,.combat-lab-fields input{padding:12px;border:1px solid #c6ab6966;border-radius:6px;background:#171d18;color:#f0e9d8;min-width:0;font-size:16px}
+.combat-lab-fields button{grid-column:1/-1;justify-self:start}
+@media(max-width:650px){.combat-lab-fields{grid-template-columns:1fr}}
+@media(max-width:580px){.characters-roster-tabs{gap:2px}.characters-roster-tabs button{padding:10px;font-size:14px}.characters-roster-tabs .roster-template-tab{margin-inline-start:0;padding-inline-start:12px}.forge-char-card-actions{flex-wrap:wrap}}

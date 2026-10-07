@@ -20,7 +20,7 @@ type additiveExecer interface {
 // Only these reviewed, reentrant expansions can be run before cutover. The
 // historical Migrator.Run API and historical migration implementations remain.
 //
-//go:embed compact_receipts_298.go frozen_catalogs_299.go image_jobs_300.go
+//go:embed compact_receipts_298.go frozen_catalogs_299.go image_jobs_300.go character_lifecycle_301.go
 var additiveSources embed.FS
 
 type MigrationIdentity struct {
@@ -60,6 +60,7 @@ func additiveRegistry() []additiveMigration {
 		{compactReceipts298Version, "compact_receipts_298.go", addCompactReceipts298On},
 		{frozenCatalogs299Version, "frozen_catalogs_299.go", addFrozenCatalogs299On},
 		{"300_image_jobs", "image_jobs_300.go", addImageJobs300On},
+		{"301_character_lifecycle", "character_lifecycle_301.go", addCharacterLifecycle301On},
 	}
 }
 func hashBytes(bytes []byte) string {
@@ -67,7 +68,7 @@ func hashBytes(bytes []byte) string {
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 func AdditiveMigrationIdentities() []MigrationIdentity {
-	result := make([]MigrationIdentity, 0, 3)
+	result := make([]MigrationIdentity, 0, len(additiveRegistry()))
 	for _, migration := range additiveRegistry() {
 		source, err := additiveSources.ReadFile(migration.source)
 		if err != nil {
@@ -335,7 +336,7 @@ func (m *Migrator) releaseAdditive(ctx context.Context, request ReleaseMigration
 	if !reflect.DeepEqual(result.ObservedVersions, sortedIdentityIDs(target)) {
 		return result, errors.New("post-migration registry mismatch")
 	}
-	result.RollbackReadersSafe, err = oldReadersSafe(ctx, tx)
+	result.RollbackReadersSafe, err = oldReadersSafe(ctx, tx, lifecycleRetainsWriterFormats(before, target))
 	if err != nil {
 		return result, err
 	}
@@ -345,8 +346,45 @@ func (m *Migrator) releaseAdditive(ctx context.Context, request ReleaseMigration
 	return result, nil
 }
 
-func oldReadersSafe(ctx context.Context, tx *sql.Tx) (bool, error) {
+// The preceding exact schema already declared compact receipts and image jobs.
+// Only 301 adds nullable lifecycle columns; source/image reader compatibility
+// remains a separate required OCI rehearsal, never inferred from this receipt.
+func lifecycleRetainsWriterFormats(before, target map[string]string) bool {
+	if len(target) != len(before)+1 {
+		return false
+	}
+	if _, exists := before["301_character_lifecycle"]; exists {
+		return false
+	}
+	for id, identity := range before {
+		if !reflect.DeepEqual(identity, target[id]) {
+			return false
+		}
+	}
+	identities := map[string]string{}
+	for _, identity := range AdditiveMigrationIdentities() {
+		identities[identity.ID] = identity.Checksum
+	}
+	if !reflect.DeepEqual(target["301_character_lifecycle"], identities["301_character_lifecycle"]) {
+		return false
+	}
+	for _, id := range []string{compactReceipts298Version, frozenCatalogs299Version, "300_image_jobs"} {
+		if !reflect.DeepEqual(before[id], identities[id]) {
+			return false
+		}
+	}
+	return true
+}
+
+func oldReadersSafe(ctx context.Context, tx *sql.Tx, existingWriterFormats bool) (bool, error) {
 	var safe bool
+	if existingWriterFormats {
+		err := tx.QueryRowContext(ctx, `SELECT NOT EXISTS(SELECT 1 FROM roguelike_command_receipts WHERE response_version NOT IN (1,2))
+		 AND NOT EXISTS(SELECT 1 FROM character_runtime_commands WHERE response_version NOT IN (1,2))
+		 AND NOT EXISTS(SELECT 1 FROM roguelike_runs WHERE combat_catalog_ref IS NOT NULL)
+		 AND NOT EXISTS(SELECT 1 FROM image_jobs WHERE state NOT IN ('queued','running','unknown','succeeded','failed'))`).Scan(&safe)
+		return safe, err
+	}
 	err := tx.QueryRowContext(ctx, `SELECT NOT EXISTS(SELECT 1 FROM roguelike_command_receipts WHERE response_version<>1)
 	 AND NOT EXISTS(SELECT 1 FROM character_runtime_commands WHERE response_version<>1)
 	 AND NOT EXISTS(SELECT 1 FROM roguelike_runs WHERE combat_catalog_ref IS NOT NULL)

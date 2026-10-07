@@ -75,6 +75,7 @@ const RulesLab = lazy(() => import('./pages/RulesLab'));
 const MonsterLibrary = lazy(() => import('./pages/MonsterLibrary'));
 const MonsterCreator = lazy(() => import('./pages/MonsterCreator'));
 const SoloCombatPage = lazy(() => import('./pages/SoloCombatPage'));
+const CombatLabPage = lazy(() => import('./pages/CombatLabPage'));
 const RoguelikePage = lazy(() => import('./pages/RoguelikePage'));
 const RulesAuthorityBoundary = lazy(() => import('./components/RulesAuthorityBoundary'));
 
@@ -147,11 +148,14 @@ function AppContent() {
         {/* CharacterV3 хранит личные листы/журналы и требует валидную сессию. */}
         <Route path="/character-forge" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
         <Route path="/character-forge/:id" element={<ProtectedRoute>{withRulesAuthority(<CharacterForge />)}</ProtectedRoute>} />
-        <Route path="/characters-forge" element={<AuthenticatedSectionGate section="characters"><Layout><CharactersForgeList /></Layout></AuthenticatedSectionGate>} />
+        <Route path="/characters-forge" element={location.search && new URLSearchParams(location.search).get('tab') === 'paper'
+          ? <Layout><CharactersForgeList /></Layout>
+          : <AuthenticatedSectionGate section="characters"><Layout><CharactersForgeList /></Layout></AuthenticatedSectionGate>} />
         <Route path="/spell/:id" element={<Layout><EntityPage fixedType="spells" /></Layout>} />
         <Route path="/entity/:type/:id" element={<Layout><EntityPage /></Layout>} />
         <Route path="/characters-v3/:id" element={<ProtectedRoute>{withRulesAuthority(<Layout workspace><CharacterSheetMVP /></Layout>)}</ProtectedRoute>} />
         <Route path="/characters-v3/:id/combat" element={<ProtectedRoute>{withRulesAuthority(<Layout workspace><SoloCombatPage /></Layout>)}</ProtectedRoute>} />
+        <Route path="/combat-lab/:id?" element={<ProtectedRoute>{withRulesAuthority(<Layout workspace><CombatLabPage /></Layout>)}</ProtectedRoute>} />
         <Route path="/roguelike" element={<AuthenticatedSectionGate section="runs">{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</AuthenticatedSectionGate>} />
         <Route path="/roguelike/:id" element={<AuthenticatedSectionGate section="runs">{withRulesAuthority(<Layout><RoguelikePage /></Layout>)}</AuthenticatedSectionGate>} />
 

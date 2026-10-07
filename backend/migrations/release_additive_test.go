@@ -16,6 +16,7 @@ func releaseFixture(t *testing.T) (*sql.DB, ReleaseMigrationRequest) {
 	CREATE TABLE roguelike_command_receipts(id integer PRIMARY KEY,response jsonb NOT NULL);
 	CREATE TABLE character_runtime_commands(id integer PRIMARY KEY,response jsonb NOT NULL);
 	CREATE TABLE roguelike_runs(id integer PRIMARY KEY,user_id uuid NOT NULL);
+	CREATE TABLE characters_v3(id uuid PRIMARY KEY);
 	INSERT INTO roguelike_command_receipts VALUES(1,'{"past":"unchanged"}');INSERT INTO character_runtime_commands VALUES(1,'{"past":"unchanged"}');`)
 	if err != nil {
 		t.Fatal(err)
@@ -45,7 +46,7 @@ func TestReleaseAdditiveAtomicRepeatAndHistory(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Applied) != 3 || !result.RollbackReadersSafe || len(result.SchemaProofHash) != 71 {
+	if len(result.Applied) != len(additiveRegistry()) || !result.RollbackReadersSafe || len(result.SchemaProofHash) != 71 {
 		t.Fatalf("incomplete result: %+v", result)
 	}
 	repeated, err := m.RunReleaseAdditive(context.Background(), request)
@@ -86,7 +87,7 @@ func TestReleaseAdditiveCrashBeforeLedgerRollsBackDDLAndResumes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Applied) != 3 {
+	if len(result.Applied) != len(additiveRegistry()) {
 		t.Fatal("restart did not finish exactly once")
 	}
 }
@@ -119,6 +120,21 @@ func TestReleaseAdditiveRejectsUnknownChecksumAndWrongSchema(t *testing.T) {
 			t.Fatal("missing baseline accepted")
 		}
 	})
+	for name, statement := range map[string]string{
+		"lifecycle_wrong_type":   "ALTER TABLE characters_v3 ADD COLUMN deleted_at text",
+		"lifecycle_not_nullable": "ALTER TABLE roguelike_runs ADD COLUMN deleted_at timestamptz NOT NULL DEFAULT NOW()",
+		"lifecycle_wrong_index":  "CREATE INDEX idx_characters_v3_deleted_at ON characters_v3(id)",
+	} {
+		t.Run(name, func(t *testing.T) {
+			db, request := releaseFixture(t)
+			if _, err := db.Exec(statement); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := NewMigrator(db).RunReleaseAdditive(context.Background(), request); err == nil {
+				t.Fatal("incorrect lifecycle schema accepted")
+			}
+		})
+	}
 }
 func TestReleaseAdditiveResumesReentrantPartialOldStartup(t *testing.T) {
 	db, request := releaseFixture(t)
@@ -210,6 +226,64 @@ func TestReleaseAdditiveOldReadersBecomeUnsafeWithoutRewritingHistory(t *testing
 	}
 }
 
+func TestReleaseAdditiveLifecycleRetainsExistingWriterFormatsOnly(t *testing.T) {
+	db, request := releaseFixture(t)
+	m := NewMigrator(db)
+	if _, err := m.RunReleaseAdditive(context.Background(), request); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`DELETE FROM schema_migrations WHERE version='301_character_lifecycle';
+	 INSERT INTO roguelike_command_receipts(id,response,response_version,response_payload,response_sha256,response_length) VALUES(2,'{}',2,'x',repeat('a',64),1);
+	 INSERT INTO character_runtime_commands(id,response,response_version,response_payload,response_sha256,response_length) VALUES(2,'{}',2,'y',repeat('b',64),1);
+	 INSERT INTO image_jobs(id,owner_id,fingerprint,kind,state,prompt,quality,size,folder) VALUES
+	 ('00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002',repeat('c',64),'standalone','queued','Private saved job','low','1024x1024','test');`); err != nil {
+		t.Fatal(err)
+	}
+	request.ExpectedCurrent = nil
+	for _, identity := range request.Target {
+		if identity.ID != "301_character_lifecycle" {
+			request.ExpectedCurrent = append(request.ExpectedCurrent, identity)
+		}
+	}
+	for repeat := 0; repeat < 2; repeat++ {
+		result, err := m.RunReleaseAdditive(context.Background(), request)
+		if err != nil || !result.RollbackReadersSafe {
+			t.Fatalf("existing 300 formats rejected on 301: %+v %v", result, err)
+		}
+		if len(result.Applied) != 1-repeat {
+			t.Fatalf("unexpected reapplication: %+v", result)
+		}
+	}
+	var state, payload string
+	if err := db.QueryRow("SELECT state FROM image_jobs").Scan(&state); err != nil || state != "queued" {
+		t.Fatal("pending job changed")
+	}
+	if err := db.QueryRow("SELECT encode(response_payload,'hex') FROM roguelike_command_receipts WHERE id=2").Scan(&payload); err != nil || payload != "78" {
+		t.Fatal("existing compact receipt changed")
+	}
+	if _, err := db.Exec(`INSERT INTO frozen_combat_catalogs(user_id,content_hash,serializer_version,protocol_version,artifact_hash,payload)
+	 VALUES('00000000-0000-4000-8000-000000000002',repeat('d',64),1,1,'sha256:'||repeat('e',64),'{}');
+	 INSERT INTO roguelike_runs(id,user_id,combat_catalog_ref) VALUES(1,'00000000-0000-4000-8000-000000000002',repeat('d',64));`); err != nil {
+		t.Fatal(err)
+	}
+	result, err := m.InspectReleaseAdditive(context.Background(), request)
+	if err != nil || result.RollbackReadersSafe {
+		t.Fatal("frozen catalog reader incompatibility was bypassed")
+	}
+	before, target, err := validateReleaseMigrationRequest(request)
+	if err != nil || !lifecycleRetainsWriterFormats(before, target) {
+		t.Fatal("exact reviewed transition missing")
+	}
+	for _, id := range []string{compactReceipts298Version, frozenCatalogs299Version, "300_image_jobs"} {
+		identity := before[id]
+		delete(before, id)
+		if lifecycleRetainsWriterFormats(before, target) {
+			t.Fatal("incomplete writer-format baseline accepted")
+		}
+		before[id] = identity
+	}
+}
+
 func TestReleaseAdditiveConnectionLossWhileLedgerBlockedRollsBackSameSessionDDL(t *testing.T) {
 	db, request := releaseFixture(t)
 	holder, err := db.BeginTx(context.Background(), nil)
@@ -262,11 +336,11 @@ func TestReleaseAdditiveConnectionLossWhileLedgerBlockedRollsBackSameSessionDDL(
 	if err = db.QueryRow("SELECT count(*) FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='roguelike_command_receipts' AND column_name='response_version'").Scan(&added); err != nil || added != 0 {
 		t.Fatal("uncommitted DDL survived process loss")
 	}
-	if err = db.QueryRow("SELECT count(*) FROM schema_migrations WHERE version LIKE '298_%' OR version LIKE '299_%' OR version LIKE '300_%'").Scan(&added); err != nil || added != 0 {
+	if err = db.QueryRow("SELECT count(*) FROM schema_migrations WHERE version LIKE '298_%' OR version LIKE '299_%' OR version LIKE '300_%' OR version LIKE '301_%'").Scan(&added); err != nil || added != 0 {
 		t.Fatal("ledger survived aborted DDL")
 	}
 	result, err := NewMigrator(db).RunReleaseAdditive(context.Background(), request)
-	if err != nil || len(result.Applied) != 3 {
+	if err != nil || len(result.Applied) != len(additiveRegistry()) {
 		t.Fatalf("clean restart failed: %+v %v", result, err)
 	}
 }

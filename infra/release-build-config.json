@@ -11,8 +11,12 @@
   "buildkitImage": "moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
   "frontendApiUrl": "",
   "frontendMediaVariants": false,
-  "writerPolicy": {"compactReceipts": true, "imageJobs": true, "frozenCatalogs": false},
-  "contentManifestHash": "sha256:cc7b8a35fac552dff5ef59e3d4b1c8d8da5f5e61a28ffb9bcf1d7bc2b91843d6",
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "contentManifestHash": "sha256:d28e25b45750c618327986ab1349e67fc0808a85007dac02b23ffa3b987eaaee",
   "migrationSet": [
     {
       "id": "001_create_image_library",
@@ -1535,6 +1539,10 @@
     {
       "id": "300_image_jobs",
       "checksum": "sha256:36a1c567eee001cfbdc67bf9fd3caea300419fa02d60393a9f2d51d5d002db69"
+    },
+    {
+      "id": "301_character_lifecycle",
+      "checksum": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
     }
   ]
 }

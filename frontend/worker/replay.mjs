@@ -30,6 +30,14 @@ export function replayCombatRecords(records, artifact, {sourceEncoding = 'direct
     assert.equal(record.schemaVersion, 1, 'Unsupported journal schema');
     if (record.baseline) {
       assert.equal(envelope, undefined, 'Unexpected second baseline in one combat');
+      if (record.type === 'upgrade_combat_rules') {
+        assert.equal(record.baselinePosition, 'after', 'Invalid rules version boundary');
+        assert.ok(record.previousBaseline, 'Missing preceding rules frame');
+        assert.equal(snapshotHash(record.previousBaseline), record.beforeHash, 'Preceding frame hash mismatch');
+        assert.notEqual(record.previousBaseline.artifactHash, record.artifactHash, 'Unchanged rules version');
+        assert.deepEqual({...record.baseline, artifactHash: record.previousBaseline.artifactHash}, record.previousBaseline, 'Rules upgrade changed gameplay');
+        assert.deepEqual(record.randomValues ?? [], [], 'Rules upgrade consumed random values');
+      }
       envelope = structuredClone(record.baseline);
       const expected = record.baselinePosition === 'after' ? record.afterHash : record.beforeHash;
       assert.equal(snapshotHash(envelope), expected, 'Baseline hash mismatch');

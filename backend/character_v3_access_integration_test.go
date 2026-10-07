@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -528,6 +529,9 @@ func TestCharacterV3AtomicCreateFailureLeavesNoPartialRow(t *testing.T) {
 func TestCharacterV3LinkedRuntimeIsEncounterOwnedButOtherEditsPersist(t *testing.T) {
 	t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
 	fixture := openCharacterV3AccessFixture(t)
+	if err := fixture.db.AutoMigrate(&Encounter{}, &EncounterEvent{}); err != nil {
+		t.Fatal(err)
+	}
 	encounterID := uuid.New()
 	originalEffects := ActiveEffectRows{{ID: "encounter-effect", Name: "Encounter effect"}}
 	originalTurnState := JSONMap{"temp_hp": float64(6), "death_saves": map[string]any{"failures": float64(1)}}
@@ -592,11 +596,11 @@ func TestCharacterV3LinkedRuntimeIsEncounterOwnedButOtherEditsPersist(t *testing
 		t, fixture.router, http.MethodDelete,
 		"/api/characters-v3/"+fixture.ownerCharacter.ID.String(), token, nil,
 	)
-	if deleteResponse.Code != http.StatusConflict || !strings.Contains(deleteResponse.Body.String(), "уберите персонажа") {
+	if deleteResponse.Code != http.StatusOK {
 		t.Fatalf("linked DELETE: got %d: %s", deleteResponse.Code, deleteResponse.Body.String())
 	}
-	if err := fixture.db.First(&CharacterV3{}, "id = ?", fixture.ownerCharacter.ID).Error; err != nil {
-		t.Fatalf("linked character was deleted: %v", err)
+	if err := fixture.db.First(&CharacterV3{}, "id = ?", fixture.ownerCharacter.ID).Error; !errors.Is(err, gorm.ErrRecordNotFound) {
+		t.Fatalf("stale encounter link prevented deletion: %v", err)
 	}
 }
 

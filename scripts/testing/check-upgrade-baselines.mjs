@@ -58,7 +58,7 @@ export async function checkUpgradeBaselines({output,go,pgBin,race=process.env.TE
         const args=['tool','test2json','-t','-p','dnd-cards-backend/migrations',binary,'-test.run=^TestSupportedBaselineUpgradeMatrix$','-test.count=1','-test.v=test2json'];
         const result=await execute(executable,args,{cwd:path.join(repositoryRoot,'backend'),env,log,timeout:180000});verifyGoRun(result,baseline);
         assert.equal(fixtureHash(await readFile(binary)),report.testBinary.sha256,'Matrix executable changed during run');
-        row.result=JSON.parse(await readFile(path.join(stack.registry.directory,'baseline-upgrade-case.json')));assert.equal(row.result.status,'passed');assert.equal(row.result.case,baseline);assert.equal(row.result.applied.length,300-baseline);assert.equal(row.result.repeatApplied.length,0);
+        row.result=JSON.parse(await readFile(path.join(stack.registry.directory,'baseline-upgrade-case.json')));assert.equal(row.result.status,'passed');assert.equal(row.result.case,baseline);assert.equal(row.result.applied.length,301-baseline);assert.equal(row.result.repeatApplied.length,0);
         const inventory=await databaseRecoveryInventory(stack.database);assert.deepEqual(inventory.artifactHashes,[fixture.input.artifactHash]);
         assert.equal(fixtureHash(await readFile(fixture.artifactFile)),fixture.input.artifactHash);
         row.artifactInventory=inventory.artifactHashes;row.finalSchemaHash=await finalStructure(stack.database,inventory);row.status='passed';

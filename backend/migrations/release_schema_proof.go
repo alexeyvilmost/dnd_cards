@@ -15,15 +15,17 @@ type proofTable struct {
 	columns          []string
 	constraints      []string
 	indexes, trigger bool
+	indexNames       []string
 }
 
 func proofTables() []proofTable {
 	return []proofTable{
-		{"roguelike_command_receipts", []string{"response_version", "response_payload", "response_sha256", "response_length"}, []string{"roguelike_command_receipts_storage_version"}, false, false},
-		{"character_runtime_commands", []string{"response_version", "response_payload", "response_sha256", "response_length"}, []string{"character_runtime_commands_storage_version"}, false, false},
-		{"roguelike_runs", []string{"combat_catalog_ref"}, []string{"roguelike_frozen_catalog_ref"}, false, false},
-		{"frozen_combat_catalogs", nil, nil, true, true},
-		{"image_jobs", nil, nil, true, true},
+		{"roguelike_command_receipts", []string{"response_version", "response_payload", "response_sha256", "response_length"}, []string{"roguelike_command_receipts_storage_version"}, false, false, nil},
+		{"character_runtime_commands", []string{"response_version", "response_payload", "response_sha256", "response_length"}, []string{"character_runtime_commands_storage_version"}, false, false, nil},
+		{"roguelike_runs", []string{"combat_catalog_ref", "deleted_at"}, []string{"roguelike_frozen_catalog_ref"}, true, false, []string{"idx_roguelike_runs_deleted_at"}},
+		{"characters_v3", []string{"deleted_at"}, []string{}, true, false, []string{"idx_characters_v3_deleted_at"}},
+		{"frozen_combat_catalogs", nil, nil, true, true, nil},
+		{"image_jobs", nil, nil, true, true, nil},
 	}
 }
 
@@ -45,7 +47,7 @@ func verifyAdditiveSchema(ctx context.Context, tx *sql.Tx) ([]byte, error) {
 		return nil, err
 	}
 	if _, err = tx.ExecContext(ctx, "CREATE SCHEMA "+schema+"; SET LOCAL search_path="+schema+",pg_catalog;"+
-		"CREATE TABLE roguelike_command_receipts(response jsonb); CREATE TABLE character_runtime_commands(response jsonb); CREATE TABLE roguelike_runs(user_id uuid);"); err != nil {
+		"CREATE TABLE roguelike_command_receipts(response jsonb); CREATE TABLE character_runtime_commands(response jsonb); CREATE TABLE roguelike_runs(user_id uuid); CREATE TABLE characters_v3(id uuid);"); err != nil {
 		return nil, errors.New("cannot create transactional schema proof")
 	}
 	for _, migration := range additiveRegistry() {
@@ -81,11 +83,11 @@ func captureAdditiveSchema(ctx context.Context, tx *sql.Tx) (map[string]json.Raw
 		 'constraints',(SELECT jsonb_agg(jsonb_build_array(c.conname,c.contype,c.convalidated,pg_get_constraintdef(c.oid)) ORDER BY c.conname)
 		 FROM pg_constraint c WHERE c.conrelid=to_regclass($1) AND ($3::text[] IS NULL OR c.conname=ANY($3::text[]))),
 		 'indexes',CASE WHEN $4 THEN (SELECT jsonb_agg(jsonb_build_array(i.relname,x.indisvalid,x.indisready,pg_get_indexdef(x.indexrelid)) ORDER BY i.relname)
-		 FROM pg_index x JOIN pg_class i ON i.oid=x.indexrelid WHERE x.indrelid=to_regclass($1)) ELSE NULL END,
+		 FROM pg_index x JOIN pg_class i ON i.oid=x.indexrelid WHERE x.indrelid=to_regclass($1) AND ($6::text[] IS NULL OR i.relname=ANY($6::text[]))) ELSE NULL END,
 		 'triggers',CASE WHEN $5 THEN (SELECT jsonb_agg(jsonb_build_array(t.tgname,t.tgenabled,t.tgtype,pg_get_expr(t.tgqual,t.tgrelid),t.tgattr::text,encode(t.tgargs,'hex'),
 		 t.tgdeferrable,t.tginitdeferred,t.tgoldtable,t.tgnewtable,p.proname,p.prosrc,p.provolatile,p.prosecdef,p.proisstrict,p.proleakproof,p.proconfig,l.lanname,
 		 p.pronamespace=(SELECT relnamespace FROM pg_class WHERE oid=t.tgrelid),pg_get_function_identity_arguments(p.oid),format_type(p.prorettype,NULL)) ORDER BY t.tgname)
-		 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_language l ON l.oid=p.prolang WHERE t.tgrelid=to_regclass($1) AND NOT t.tgisinternal) ELSE NULL END)::text`, table.name, table.columns, table.constraints, table.indexes, table.trigger).Scan(&definition)
+		 FROM pg_trigger t JOIN pg_proc p ON p.oid=t.tgfoid JOIN pg_language l ON l.oid=p.prolang WHERE t.tgrelid=to_regclass($1) AND NOT t.tgisinternal) ELSE NULL END)::text`, table.name, table.columns, table.constraints, table.indexes, table.trigger, table.indexNames).Scan(&definition)
 		if err != nil {
 			return nil, errors.New("cannot inspect additive schema")
 		}

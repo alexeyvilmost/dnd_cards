@@ -7,7 +7,7 @@ import {isLegacyBaseline} from './legacy-baseline.mjs';
 import {parallelHistoryReadSQL} from './history-fingerprint.mjs';
 const equal=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const hash=value=>typeof value==='string'&&/^sha256:[a-f0-9]{64}$/.test(value);
-const allowed=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs']);
+const allowed=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle']);
 function requestFor(input){
   assertLegacyMigrationBinding(input.active,input.manifest.migrationSet);
   const baseline=databaseMigrationSet(input.active),target=input.manifest.migrationSet;

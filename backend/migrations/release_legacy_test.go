@@ -51,7 +51,7 @@ func TestReleaseAdditiveObservedLegacyAtomicCrashRepeat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(first.Applied) != 3 || first.BaselineObservationHash != request.BaselineObservationHash || !first.RollbackReadersSafe {
+	if len(first.Applied) != len(additiveRegistry()) || first.BaselineObservationHash != request.BaselineObservationHash || !first.RollbackReadersSafe {
 		t.Fatalf("incomplete legacy result: %+v", first)
 	}
 	// A lost acknowledgement is reconciled by the same exact candidate request.

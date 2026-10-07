@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, FilePlus2, LogIn, RotateCcw, ScrollText, Trash2 } from 'lucide-react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { createPaperSheet, loadPaperSheet, PAPER_SHEET_STORAGE_KEY } from '../paper-sheet/model';
 import { paperDocumentApi, paperDocumentError, type PaperDocumentSummary, type SavedPaperDocument } from '../paper-sheet/documentApi';
@@ -38,7 +38,7 @@ function SavedEditor({ saved }: { saved: SavedPaperDocument }) {
   </>;
 }
 
-export default function PaperSheetEntry() {
+export default function PaperSheetEntry({embedded = false}: {embedded?: boolean}) {
   const { id } = useParams();
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -56,6 +56,7 @@ export default function PaperSheetEntry() {
   const [hasLegacy] = useState(() => { try { return localStorage.getItem(PAPER_SHEET_STORAGE_KEY) !== null; } catch { return false; } });
   useEffect(() => {
     if (isLoading) return;
+    if (!id && isAuthenticated && !embedded) {setLoading(false); return;}
     let active = true;
     setSaved(null); setError(''); setSheets([]);
     if (!id && !isAuthenticated) { setLoading(false); return; }
@@ -63,7 +64,7 @@ export default function PaperSheetEntry() {
     const request = id ? paperDocumentApi.get(id).then(doc => { if (active) setSaved(doc); }) : paperDocumentApi.list(deleted).then(rows => { if (active) setSheets(rows); });
     void request.catch(cause => { if (active) setError(paperDocumentError(cause)); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [id, isAuthenticated, isLoading, retry, deleted]);
+  }, [id, isAuthenticated, isLoading, retry, deleted, embedded]);
   const changeDeletion = async (sheet: PaperDocumentSummary, restore = false) => {
     if (changingRef.current) return;
     changingRef.current = true; setChanging(true); setMutationError('');
@@ -87,9 +88,10 @@ export default function PaperSheetEntry() {
     finally { setCreating(false); }
   };
   if (isLoading || (id && loading)) return <div className="paper-entry-loading" role="status">Загрузка листа…</div>;
+  if (!id && isAuthenticated && !embedded) return <Navigate replace to="/characters-forge?tab=paper" />;
   if (id) return saved ? <SavedEditor key={`${saved.id}:${isAuthenticated}`} saved={saved} /> : <section className="paper-entry-state"><h1>Не удалось открыть лист</h1><p role="alert">{error || 'Проверяем ссылку…'}</p><button onClick={() => setRetry(value => value + 1)}>Повторить</button>{!isAuthenticated && <Link to="/login" state={{ from: { pathname: `/paper-sheet/${id}` } }}>Авторизоваться</Link>}<Link to="/paper-sheet">К бумажным листам</Link></section>;
-  return <div className="paper-entry">
-    <section className="paper-entry-hero"><img src="/images/home/paper.jpg" alt="" /><div className="paper-entry-copy"><ScrollText size={32} strokeWidth={1.3} /><span className="paper-entry-eyebrow">ВАША ИСТОРИЯ НА БУМАГЕ</span><h1>Бумажные листы<br />персонажей</h1>
+  return <div className={`paper-entry${embedded ? ' paper-entry--embedded' : ''}`}>
+    <section className="paper-entry-hero"><img src="/images/home/paper.jpg" alt="" /><div className="paper-entry-copy"><ScrollText size={32} strokeWidth={1.3} /><span className="paper-entry-eyebrow">ВАША ИСТОРИЯ НА БУМАГЕ</span>{embedded ? <h2>Бумажные листы персонажей</h2> : <h1>Бумажные листы<br />персонажей</h1>}
       {isAuthenticated ? <p>Создавайте героев, заполняйте листы и возвращайтесь к ним с любого устройства.</p> : <><p>Листами персонажей удобнее пользоваться после авторизации: они будут доступны в вашем аккаунте.</p><p>Можно создать и анонимный лист. Сохраните его ID из адресной строки, а лучше всю ссылку — только так вы сможете вернуться к нему. Не передавайте ссылку тем, кому не хотите разрешать редактирование.</p></>}
       <div className="paper-entry-actions">{!isAuthenticated && <Link className="paper-entry-primary" to="/login" state={{ from: { pathname: '/paper-sheet' } }}><LogIn size={17} />Авторизоваться</Link>}<Link className={isAuthenticated ? 'paper-entry-primary' : ''} to="/paper-sheet/create"><FilePlus2 size={17} />Конструктор персонажа</Link><button disabled={creating} onClick={() => { void create(); }}><ScrollText size={17} />{creating ? 'Создаём…' : isAuthenticated ? 'Создать лист' : 'Создать анонимный'}</button></div>
     </div></section>
