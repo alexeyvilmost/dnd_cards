@@ -69,7 +69,25 @@
     "actualOlderOwnedRestores": 8,
     "unexpectedPrivateRowCanaryRejected": 8,
     "privateImportedRows": 0,
-    "ownedCleanup": "stopped"
+    "ownedCleanup": "stopped",
+    "selectionSecurityRegistration": {
+      "manifest": "tests/suites.json",
+      "sha256": "sha256:2ed2daf26444d5be8c657c9406ee192a871e16dbcc1d559ebb1d3a3d4d828893",
+      "group": "selection-security",
+      "always": true,
+      "localVerification": {
+        "files": [
+          "scripts/testing/catalog-snapshot.test.mjs",
+          "scripts/testing/guards.test.mjs",
+          "scripts/testing/suites.test.mjs"
+        ],
+        "tests": 32,
+        "passed": 32,
+        "skipped": 0,
+        "exitCode": 0
+      },
+      "productionCIClaimed": false
+    }
   },
   "catalogSource": {
     "originalFullSnapshot": false,
