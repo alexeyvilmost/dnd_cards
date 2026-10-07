@@ -6753,5 +6753,21 @@
       "Actual frontend-only hosted mixed checks and independent production acceptance",
       "Separately verified physical legacy-table retirement"
     ]
+  },
+  "latest_ci_bootstrap_repair": {
+    "record": "docs/audits/2026-10-04/execution/CI-42-postgresql-ci-mirror-repair-20261007.json",
+    "status": "passed-local-only",
+    "localSignedPostgresInstallationPassed": true,
+    "localDurationMs": 74844,
+    "hostedCIOfFixAccepted": false,
+    "supersededCI": {
+      "runId": 37664710388,
+      "sourceCommit": "b88788e3ff2fcd227d0c58127810e9320a3adf94",
+      "unitJobId": 112941289401,
+      "postgresStepStartedAt": "2026-10-07T18:11:24Z",
+      "cancellationRequested": true,
+      "actualCauseForThisRun": "Live logs unavailable until terminal; do not infer exact failed host from status alone."
+    },
+    "productionChanges": 0
   }
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-verified-bounded-ci-postgresql-bootstrap",
+  "status": "passed-local-only",
+  "createdAt": "2026-10-07T18:23:07.621Z",
+  "baseCommit": "b88788e3ff2fcd227d0c58127810e9320a3adf94",
+  "workflow": ".github/workflows/ci.yml",
+  "workflowSourceHash": "sha256:97ab13f435b0c391066ffdaa109d34a9f36e10a03ba4a24e1fca3b6a94eb76d3",
+  "change": {
+    "officialSignedUbuntuAndPGDGSources": true,
+    "mirrorFileTarget": "https://archive.ubuntu.com/ubuntu/",
+    "curlConnectTimeoutSeconds": 15,
+    "curlMaximumSeconds": 60,
+    "curlRetries": 2,
+    "aptTransportTimeoutSeconds": 15,
+    "aptRetries": 1,
+    "updateMaximumSeconds": 180,
+    "installMaximumSeconds": 240,
+    "stepMaximumMinutes": 8,
+    "continueOnError": false
+  },
+  "actualLocalLinux": {
+    "status": "passed",
+    "startedAt": "2026-10-07T18:21:10.208Z",
+    "completedAt": "2026-10-07T18:22:25.052Z",
+    "sourceHash": "sha256:baf506605e1e6731ef43ec8e682f75cbddebe6b2db50fa0f27416d16b5605842",
+    "image": "ubuntu@sha256:534baea6a22c03a63003dbc8dbe78fe34bc0d7e595d9a9dc9834884ff530eb55",
+    "actualLinuxInstallation": true,
+    "originalAzureMirrorBypassed": true,
+    "signatureChecksPreserved": true,
+    "ignoreFailures": false,
+    "privateClusterOrProductionDatabaseUsed": false,
+    "productionChanges": 0,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "scope": "Local bootstrap proposal only; not yet tracked, committed, or accepted by hosted CI.",
+    "durationMs": 74844,
+    "scriptCommandsMatchTrackedWorkflow": true,
+    "mirrorFileTransportObserved": true,
+    "postgresVersion": "17.11"
+  },
+  "historicalCI": {
+    "runId": 37662026737,
+    "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
+    "unitJobId": 112932064090,
+    "postgresStepStartedAt": "2026-10-07T17:50:47Z",
+    "lastNormalMirrorOutputAt": "2026-10-07T17:51:06.7379222Z",
+    "cancelledAt": "2026-10-07T18:09:12.1505855Z",
+    "failureClass": "Repeated Ign lines for Azure mirror; suite did not start on this lane."
+  },
+  "supersededCI": {
+    "runId": 37664710388,
+    "sourceCommit": "b88788e3ff2fcd227d0c58127810e9320a3adf94",
+    "unitJobId": 112941289401,
+    "postgresStepStartedAt": "2026-10-07T18:11:24Z",
+    "cancellationRequested": true,
+    "actualCauseForThisRun": "Live logs unavailable until terminal; do not infer exact failed host from status alone."
+  },
+  "sourceReferences": [
+    "https://manpages.ubuntu.com/manpages/jammy/man5/apt.conf.5.html",
+    "https://github.com/actions/runner-images/issues/14594"
+  ],
+  "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
+  "productionChanges": 0,
+  "productionDatabaseRestored": false,
+  "hostedCIOfFixAccepted": false,
+  "automaticDeploymentAccepted": false,
+  "paidProviderRequests": 0,
+  "remaining": [
+    "Fresh exact-source CI and normal publication/deployment of all collected fixes",
+    "Actual subsequent frontend-only acceptance",
+    "Separately verified physical legacy-table retirement"
+  ]
+}
