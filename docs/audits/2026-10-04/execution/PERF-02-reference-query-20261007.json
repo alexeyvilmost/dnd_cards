@@ -1,0 +1,633 @@
+{
+  "schemaVersion": 1,
+  "status": "canonical_reference_query_optimized_locally_measured_equipment_activation_prepared",
+  "recordedAt": "2026-10-07T05:48:37.050Z",
+  "scope": "Native Windows loopback canonical browser/API/engine; two data-driven item fixtures; no production performance claim",
+  "diagnosis": {
+    "cause": "Resolved-reference enrichment OR predicate evaluated the lateral alias resolver over unrelated edges; canonical card access itself was below one millisecond.",
+    "requestEvidence": {
+      "runId": "test_a5e1cf81600d28200908ee84",
+      "slowCardResponsesJoinedByRequestId": 85,
+      "networkEvents": 188,
+      "requestBodiesAndAuthorizationRecorded": false
+    },
+    "explain": {
+      "runId": "test_36a628d20cd2f6d18e3503e2",
+      "inputHash": "sha256:c91174cde79618e07db663905a9fe886af79cca8f41c24fbeaaee4a3eee3759d",
+      "planGroups": [
+        {
+          "queryKind": "direct_access",
+          "plans": 24,
+          "executionMs": {
+            "min": 0.384,
+            "max": 0.676
+          },
+          "items": [
+            {
+              "itemIndex": 0,
+              "rows": [
+                1
+              ]
+            },
+            {
+              "itemIndex": 1,
+              "rows": [
+                1
+              ]
+            },
+            {
+              "itemIndex": 2,
+              "rows": [
+                1
+              ]
+            },
+            {
+              "itemIndex": 3,
+              "rows": [
+                1
+              ]
+            }
+          ],
+          "jitSettings": [
+            "on",
+            "off"
+          ],
+          "jitActuallyReported": false
+        },
+        {
+          "queryKind": "reference_enrichment",
+          "plans": 24,
+          "executionMs": {
+            "min": 245.576,
+            "max": 280.353
+          },
+          "items": [
+            {
+              "itemIndex": 0,
+              "rows": [
+                0
+              ]
+            },
+            {
+              "itemIndex": 1,
+              "rows": [
+                1
+              ]
+            },
+            {
+              "itemIndex": 2,
+              "rows": [
+                1
+              ]
+            },
+            {
+              "itemIndex": 3,
+              "rows": [
+                3
+              ]
+            }
+          ],
+          "jitSettings": [
+            "on",
+            "off"
+          ],
+          "jitActuallyReported": false
+        },
+        {
+          "queryKind": "prefiltered_reference_enrichment",
+          "plans": 24,
+          "executionMs": {
+            "min": 0.179,
+            "max": 3.69
+          },
+          "items": [
+            {
+              "itemIndex": 0,
+              "rows": [
+                0
+              ]
+            },
+            {
+              "itemIndex": 1,
+              "rows": [
+                1
+              ]
+            },
+            {
+              "itemIndex": 2,
+              "rows": [
+                1
+              ]
+            },
+            {
+              "itemIndex": 3,
+              "rows": [
+                3
+              ]
+            }
+          ],
+          "jitSettings": [
+            "on",
+            "off"
+          ],
+          "jitActuallyReported": false
+        }
+      ],
+      "rowCountsEqual": true,
+      "fullRowEquivalenceCoveredByHTTPFixture": true
+    },
+    "rejectedHypothesis": "JIT setting changed neither direct-access nor enrichment execution; no JIT was reported."
+  },
+  "implementation": {
+    "file": "backend/entity_references.go",
+    "sourceHash": "sha256:213851dcb3874e0d2d44f425ae8f7558cdf376a9a16f5e2ba6ff1dcd1c1253c5",
+    "change": "Bound raw edge candidates by outgoing identity or incoming alias before the existing canonical lateral resolver; retain exact resolved predicate and referenceVisibility.",
+    "newRightsCache": false,
+    "newRulesCalculator": false,
+    "databaseMigration": false
+  },
+  "profiles": [
+    {
+      "label": "old-off",
+      "runId": "test_0e5a758212c994be5ac2dfbd",
+      "inputReport": "equipment-browser-current.json",
+      "inputReportHash": "sha256:3c4588e7aad7cc70d2721970da418b6b9830e07e0baa0c116db562fa3d24f69a",
+      "intent": false,
+      "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+      "sourceSnapshot": "5346597705a8a26b8684d5eb52b2a354a0dde562592b80d3c580d9b9d42193ab",
+      "applicationBuildCommit": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+      "applicationBuildScope": null,
+      "binaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "measuredCommands": 120,
+      "warmupCommands": 4,
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 401.95,
+            "p95": 615.32
+          },
+          "equipmentPrepareMs": {
+            "p50": 367.45,
+            "p95": 585.59
+          },
+          "equipmentCommitMs": {
+            "p50": 16.8,
+            "p95": 22.5
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 8.64,
+            "p95": 12.98
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 346.75,
+            "p95": 548.9
+          },
+          "equipmentPrepareMs": {
+            "p50": 314,
+            "p95": 511.6
+          },
+          "equipmentCommitMs": {
+            "p50": 17.7,
+            "p95": 23.82
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 9.26,
+            "p95": 15.19
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 412.8,
+            "p95": 483.91
+          },
+          "equipmentPrepareMs": {
+            "p50": 336.8,
+            "p95": 398.89
+          },
+          "equipmentCommitMs": {
+            "p50": 67.35,
+            "p95": 73.96
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 58.67,
+            "p95": 64.1
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 479.4,
+            "p95": 564.29
+          },
+          "equipmentPrepareMs": {
+            "p50": 393.6,
+            "p95": 485.29
+          },
+          "equipmentCommitMs": {
+            "p50": 66.55,
+            "p95": 82.44
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 57.19,
+            "p95": 73.13
+          }
+        }
+      ]
+    },
+    {
+      "label": "old-on",
+      "runId": "test_0142aa60b48d337602e46a84",
+      "inputReport": "equipment-browser-current.json",
+      "inputReportHash": "sha256:862aaa85ea12e8891b3d37c3209ed85da2e05021ccf7ecede5a67b086bf03aa9",
+      "intent": true,
+      "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+      "sourceSnapshot": "5346597705a8a26b8684d5eb52b2a354a0dde562592b80d3c580d9b9d42193ab",
+      "applicationBuildCommit": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+      "applicationBuildScope": null,
+      "binaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "measuredCommands": 120,
+      "warmupCommands": 4,
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 682.65,
+            "p95": 735.74
+          },
+          "equipmentPrepareMs": {
+            "p50": 581.2,
+            "p95": 632.73
+          },
+          "equipmentCommitMs": {
+            "p50": 81.85,
+            "p95": 106.29
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 9.92,
+            "p95": 22.6
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 676.05,
+            "p95": 742.86
+          },
+          "equipmentPrepareMs": {
+            "p50": 579.85,
+            "p95": 635.24
+          },
+          "equipmentCommitMs": {
+            "p50": 83.2,
+            "p95": 111.19
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 9.79,
+            "p95": 18.55
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 97.45,
+            "p95": 726.24
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.6,
+            "p95": 601.15
+          },
+          "equipmentCommitMs": {
+            "p50": 78.45,
+            "p95": 110.02
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 9.07,
+            "p95": 16.47
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 96.75,
+            "p95": 726.75
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.6,
+            "p95": 620.42
+          },
+          "equipmentCommitMs": {
+            "p50": 76.05,
+            "p95": 89.55
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 8.75,
+            "p95": 13.85
+          }
+        }
+      ]
+    },
+    {
+      "label": "new-off",
+      "runId": "test_7afdff22002126fe5d1e6c5e",
+      "inputReport": "equipment-browser-reference-scope.json",
+      "inputReportHash": "sha256:e3d2d6f92eb1bd0e0cb784609d72445578ee070c3a78471d8ebbd2159d2715ae",
+      "intent": false,
+      "sourceCommit": "e21249059b6bb6fb5ef302421e24cfe6e4c79c3f",
+      "sourceSnapshot": "f7a29d74beaf3720f11dedd2f4beef0d857179873ebf651ff70fd0b9ee73e3fa",
+      "applicationBuildCommit": null,
+      "applicationBuildScope": {
+        "sourceCommit": "e21249059b6bb6fb5ef302421e24cfe6e4c79c3f",
+        "uncommittedApplicationChange": "backend/entity_references.go: narrow edge candidates before canonical resolver",
+        "sourceSnapshot": "f7a29d74beaf3720f11dedd2f4beef0d857179873ebf651ff70fd0b9ee73e3fa",
+        "backendHash": "sha256:6b10ce04699698b2d2c8c05085d80a39c8236ed0fe5b91e588fe48a8b5101a9e",
+        "backendGoRuntime": "C:\\Users\\alexe\\.codex\\worktrees\\wave-dedup\\dnd_cards\\outputs\\testing\\runs\\test_18928b3c8cb3260d33a8c0f5/backend.exe: go1.25.12",
+        "canonicalMetadataVerificationRun": "test_f2cc7be3ba620c689674d005",
+        "buildSourceUnchanged": true,
+        "paidProviderRequests": 0,
+        "productionChanged": false
+      },
+      "binaryHash": "sha256:6b10ce04699698b2d2c8c05085d80a39c8236ed0fe5b91e588fe48a8b5101a9e",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "measuredCommands": 120,
+      "warmupCommands": 4,
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 41.05,
+            "p95": 51.05
+          },
+          "equipmentPrepareMs": {
+            "p50": 12.6,
+            "p95": 15.22
+          },
+          "equipmentCommitMs": {
+            "p50": 14.5,
+            "p95": 20.76
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 7.4,
+            "p95": 12.59
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 40.65,
+            "p95": 50.08
+          },
+          "equipmentPrepareMs": {
+            "p50": 12.5,
+            "p95": 14.97
+          },
+          "equipmentCommitMs": {
+            "p50": 14.45,
+            "p95": 19.61
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 7.48,
+            "p95": 11.36
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 84.5,
+            "p95": 102.59
+          },
+          "equipmentPrepareMs": {
+            "p50": 12.65,
+            "p95": 13.71
+          },
+          "equipmentCommitMs": {
+            "p50": 60.4,
+            "p95": 72.61
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 52.32,
+            "p95": 63.55
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 84.45,
+            "p95": 109.35
+          },
+          "equipmentPrepareMs": {
+            "p50": 12.45,
+            "p95": 13.35
+          },
+          "equipmentCommitMs": {
+            "p50": 60.2,
+            "p95": 79.81
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 52.38,
+            "p95": 71.03
+          }
+        }
+      ]
+    },
+    {
+      "label": "new-on",
+      "runId": "test_5ec7c70cabd7be5c05a059f3",
+      "inputReport": "equipment-browser-reference-scope.json",
+      "inputReportHash": "sha256:d8f5b01bb7c1f38c34ae7dac871571e33fe374c28fcdd9ea48479608e0a4adab",
+      "intent": true,
+      "sourceCommit": "e21249059b6bb6fb5ef302421e24cfe6e4c79c3f",
+      "sourceSnapshot": "f7a29d74beaf3720f11dedd2f4beef0d857179873ebf651ff70fd0b9ee73e3fa",
+      "applicationBuildCommit": null,
+      "applicationBuildScope": {
+        "sourceCommit": "e21249059b6bb6fb5ef302421e24cfe6e4c79c3f",
+        "uncommittedApplicationChange": "backend/entity_references.go: narrow edge candidates before canonical resolver",
+        "sourceSnapshot": "f7a29d74beaf3720f11dedd2f4beef0d857179873ebf651ff70fd0b9ee73e3fa",
+        "backendHash": "sha256:6b10ce04699698b2d2c8c05085d80a39c8236ed0fe5b91e588fe48a8b5101a9e",
+        "backendGoRuntime": "C:\\Users\\alexe\\.codex\\worktrees\\wave-dedup\\dnd_cards\\outputs\\testing\\runs\\test_18928b3c8cb3260d33a8c0f5/backend.exe: go1.25.12",
+        "canonicalMetadataVerificationRun": "test_f2cc7be3ba620c689674d005",
+        "buildSourceUnchanged": true,
+        "paidProviderRequests": 0,
+        "productionChanged": false
+      },
+      "binaryHash": "sha256:6b10ce04699698b2d2c8c05085d80a39c8236ed0fe5b91e588fe48a8b5101a9e",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "measuredCommands": 120,
+      "warmupCommands": 4,
+      "sourceCharacterUnchanged": true,
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 95.3,
+            "p95": 116.99
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.5,
+            "p95": 6.86
+          },
+          "equipmentCommitMs": {
+            "p50": 74.95,
+            "p95": 96.42
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 8.54,
+            "p95": 14.36
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 95.5,
+            "p95": 120.29
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.5,
+            "p95": 6.97
+          },
+          "equipmentCommitMs": {
+            "p50": 75.15,
+            "p95": 98.99
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 8.58,
+            "p95": 11.04
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 90.5,
+            "p95": 110.76
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.5,
+            "p95": 6.95
+          },
+          "equipmentCommitMs": {
+            "p50": 71.05,
+            "p95": 89.75
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 8.36,
+            "p95": 9.4
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "n": 30,
+          "clickToReadyMs": {
+            "p50": 90,
+            "p95": 99.04
+          },
+          "equipmentPrepareMs": {
+            "p50": 6.5,
+            "p95": 6.66
+          },
+          "equipmentCommitMs": {
+            "p50": 70.75,
+            "p95": 78.37
+          },
+          "lockAcquiredToTransactionReturnMs": {
+            "p50": 8.22,
+            "p95": 9.35
+          }
+        }
+      ]
+    }
+  ],
+  "authority": {
+    "reportHash": "sha256:3dcac35c903bb954a7a2081863b938779ff5c42a77b5536f8c8559c5891ba61d",
+    "runId": "test_0fe201ce7fc41c7b7fbff62a",
+    "requiredParentTests": 7,
+    "passedIncludingSubtests": 15,
+    "sourceSnapshot": "ba86a0d245f6e4b877c7857cd66b474a40cf8ff2e2f1a6a4e578739a9c47aaf3",
+    "checks": "Canonical equipment transport, unchanged/revoked dependency rights, races, row-lock-free preparation, exactly-once replay with rollback flag OFF; HTTP reference metadata/privacy and exact differential resolver rows",
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "latestResolver284Included": true
+  },
+  "runtimeActivation": {
+    "productionChanged": false,
+    "preparedEquipmentIntentFlag": "1",
+    "composeHash": "sha256:53d41a24846099fce3235df61c9c59c3c38e9b5fed645bae20fbabcc2b48495c",
+    "actualComposeParsing": "passed",
+    "configurationReportHash": "sha256:4a3871d0602fefd2ebb41c9e93b246869e8f76c8506dae1f2ec3506fc9253cf3",
+    "onlyResolvedChange": "backend.environment.RULES_EQUIPMENT_INTENT_ENABLED=0 -> 1",
+    "rollback": "Use protected predecessor application configuration; accepted command receipts remain readable with intent flag OFF; never restore production database."
+  },
+  "decision": {
+    "deployQueryOptimization": true,
+    "prepareEquipmentIntentActivation": true,
+    "reason": "Both modes become faster than their original measured paths. Intent keeps worker preparation outside write locks; resource-item lock p95 drops to about 9 ms from 64–70 ms on optimized legacy.",
+    "tradeoff": "Optimized ordinary legacy is about 41 ms median, optimized intent about 95 ms. Intent is selected for canonical server authority and bounded locks, not claimed to beat optimized legacy in every latency metric."
+  },
+  "limitations": [
+    "Four sequential local arms, not a randomized causal experiment or Linux OCI/production SLA.",
+    "New binary built from explicitly dirty local application source, not a published commit/image; exact binary and inputs recorded.",
+    "Temporary EXPLAIN-only test was preserved in ignored outputs and removed after measurement. Permanent tests and latest resolver284 subsequently passed.",
+    "One intermediate test run was rejected because the content manifest changed while tests ran; complete seven-parent test set was rerun successfully on stable final inputs.",
+    "Real production activation and rollback of this next release remain unverified."
+  ],
+  "paidProviderRequests": 0,
+  "productionDatabaseChanges": 0,
+  "goalComplete": false
+}

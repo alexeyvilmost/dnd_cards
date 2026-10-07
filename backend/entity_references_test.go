@@ -3,6 +3,9 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -29,7 +32,7 @@ func TestEntityReferencesHTTPMetadataPreviewPersistenceAndPrivacy(t *testing.T) 
 		t.Fatal(err)
 	}
 	for _, migration := range migrations.GetAllMigrations() {
-		if migration.Version == "281_entity_references" {
+		if migration.Version == "281_entity_references" || migration.Version == "284_entity_reference_coverage" {
 			if err := migration.Up(sqlDB); err != nil {
 				t.Fatal(err)
 			}
@@ -184,5 +187,55 @@ func TestEntityReferencesHTTPMetadataPreviewPersistenceAndPrivacy(t *testing.T) 
 	aliasRefs := get("/api/entity-references/spell/tests_bright_spell", owner)["references"].([]any)
 	if len(aliasRefs) != 1 || aliasRefs[0].(map[string]any)["entity_id"] != otherEffect.String() {
 		t.Fatalf("URL resolver ignored stable identity precedence: %+v", aliasRefs)
+	}
+	// The narrower read must preserve typed, wildcard and hinted resolution,
+	// stable-alias precedence, missing links, levels, and current item privacy.
+	if err := f.db.Exec(`INSERT INTO entity_reference_edges(source_type,source_id,target_type,target_key,level,path)
+	 VALUES ('card',?,'spell','tests_bright_spell',0,'scope.typed'),
+	 ('card',?,'*','tests_bright_spell',3,'scope.wildcard'),
+	 ('card',?,'$spell','tests_bright_spell',5,'scope.hinted'),
+	 ('card',?,'spell',?,1,'scope.private'),
+	 ('effect',?,'card',?,0,'scope.missing')`, publicCard, publicCard, publicCard, privateCard, stable.ID, effect, uuid.NewString()).Error; err != nil {
+		t.Fatal(err)
+	}
+	for _, adminRead := range []bool{false, true} {
+		ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
+		ctx.Set("user_id", f.owner.ID)
+		ctx.Set("is_admin", adminRead)
+		for _, selection := range []struct {
+			kind string
+			ids  []string
+		}{
+			{"card", []string{publicCard.String(), privateCard.String()}},
+			{"effect", []string{effect.String(), otherEffect.String()}},
+			{"class", []string{classID.String()}}, {"race", []string{raceID.String()}},
+			{"spell", []string{stable.ID.String()}},
+		} {
+			var before, after []entityReferenceRow
+			original := f.db.Table("entity_reference_resolved_edges e").Select("e.*, n.name AS source_name").
+				Joins("JOIN entity_reference_nodes n ON n.entity_type=e.source_type AND n.entity_id=e.source_id").
+				Where("(e.source_type=? AND e.source_id IN ?) OR (e.target_type=? AND e.target_id IN ?)", selection.kind, selection.ids, selection.kind, selection.ids)
+			if err := referenceVisibility(original, f.db, ctx).Find(&before).Error; err != nil {
+				t.Fatal(err)
+			}
+			if err := entityReferenceReadQuery(f.db, ctx, selection.kind, selection.ids).Find(&after).Error; err != nil {
+				t.Fatal(err)
+			}
+			normalize := func(rows []entityReferenceRow) []string {
+				result := make([]string, 0, len(rows))
+				for _, row := range rows {
+					value, err := json.Marshal(row)
+					if err != nil {
+						t.Fatal(err)
+					}
+					result = append(result, string(value))
+				}
+				sort.Strings(result)
+				return result
+			}
+			if !reflect.DeepEqual(normalize(before), normalize(after)) {
+				t.Fatalf("Reference scope changed %s metadata; admin=%v", selection.kind, adminRead)
+			}
+		}
 	}
 }

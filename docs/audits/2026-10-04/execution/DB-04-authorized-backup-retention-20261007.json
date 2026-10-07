@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "status": "authorized_backup_retention_applied_filesystem_reclaimed",
+  "recordedAt": "2026-10-07T05:48:37.053Z",
+  "authorization": "Human explicitly requested TimeWeb disk optimization, keeping 1–2 database backups, with several originals allowed on this PC.",
+  "cleanup": {
+    "completedAt": "2026-10-07T05:19:36.217Z",
+    "originalReportHash": "sha256:04f12421e336780a4fb834e5085c3562c19ec4f529b9df83b25961620c517f4f",
+    "before": {
+      "total": 50884108288,
+      "used": 46781886464,
+      "available": 4042506240
+    },
+    "after": {
+      "total": 50884108288,
+      "used": 20940644352,
+      "available": 29883748352
+    },
+    "reclaimedFilesystemBytes": 25841242112,
+    "deletedDumpCount": 29,
+    "deletedDumpBytes": 25842412270
+  },
+  "retainedProductionBackupCount": 2,
+  "retained": [
+    "/opt/bagofholding/backups/capture-37573584439-2",
+    "/opt/bagofholding/backups/capture-37565712775-1"
+  ],
+  "freshBackup": {
+    "status": "passed",
+    "directory": "/opt/bagofholding/backups/capture-37573584439-2",
+    "verifiedAt": "2026-10-07T05:26:04.897Z",
+    "createdAt": "2026-10-07T05:22:37.340Z",
+    "previousCommit": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+    "activeHash": "sha256:5d407cdb7b28512ac380936970f6977801ac86fef62f144a25ec8853dff5df12",
+    "captureHash": "sha256:656fc42ea780df2b00e67935395b7db0535cb79d1286e8ce4fe376945084994b",
+    "fileCount": 45,
+    "database": {
+      "path": "database.dump",
+      "bytes": 982883486,
+      "sha256": "sha256:550ec98c9567158b9107e9393e2b85fce70e151b81bfcc9d74b25f6ab484d2c0"
+    },
+    "productionMutations": 0,
+    "productionDatabaseRestored": false,
+    "independentReportHash": "sha256:0cdddca37ceee98dd043f08ced234a7e0d778cf6b29ecf18e4a1baa85f285803"
+  },
+  "replacement": {
+    "status": "passed",
+    "completedAt": "2026-10-07T05:26:54.614Z",
+    "deleted": "/opt/bagofholding/backups/capture-37573584439-1/database.dump",
+    "deletedBytes": 982424895,
+    "retained": [
+      "/opt/bagofholding/backups/capture-37573584439-2",
+      "/opt/bagofholding/backups/capture-37565712775-1"
+    ],
+    "productionDatabaseChanges": 0,
+    "reportHash": "sha256:46007a4cd1f849ede1422d9b04918ae409f5c4aef910e9c0aad632ad3b92fe64"
+  },
+  "locallyPreserved": {
+    "directory": "C:\\Projects\\dnd_cards\\outputs\\operations\\preserved-three-legacy-backups-20261007",
+    "count": 3,
+    "bytes": 2257172120,
+    "verification": "Each local and remote original independently rehashed with SHA-256 immediately before addressed remote deletion; local NTFS ACL restricted to current user"
+  },
+  "currentDiskObservation": {
+    "observedAt": "2026-10-07T05:43:20.415Z",
+    "total": 50884108288,
+    "used": 25345253376,
+    "available": 25479139328,
+    "reportHash": "sha256:01ec2d5f9adf2f9e4041eda54df260f0e23e649a7a22a1b733beb65375b37e58",
+    "note": "Temporary live candidate rehearsal consumes part of the released space."
+  },
+  "postgresReusableBytesFromThisCleanup": 0,
+  "productionDatabaseChanges": 0,
+  "sharedExecutableArtifactsDeleted": 0,
+  "appendOnlyHistoryChanged": false,
+  "receiptOrArtifactTTLIntroduced": false,
+  "automaticRetentionSchedulerInstalled": false,
+  "limits": [
+    "This is addressed filesystem backup retention, not production index deletion, inline media rewrite or VACUUM FULL.",
+    "Historical rehearsal proof dumps and active test containers are preserved; they are not full production backup captures."
+  ],
+  "goalComplete": false
+}

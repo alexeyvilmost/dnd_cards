@@ -125,10 +125,7 @@ func loadEntityReferences(db *gorm.DB, c *gin.Context, kind string, ids []string
 		return result, nil
 	}
 	var rows []entityReferenceRow
-	q := db.Table("entity_reference_resolved_edges e").Select("e.*, n.name AS source_name").
-		Joins("JOIN entity_reference_nodes n ON n.entity_type=e.source_type AND n.entity_id=e.source_id").
-		Where("(e.source_type=? AND e.source_id IN ?) OR (e.target_type=? AND e.target_id IN ?)", kind, ids, kind, ids)
-	if err := referenceVisibility(q, db, c).Find(&rows).Error; err != nil {
+	if err := entityReferenceReadQuery(db, c, kind, ids).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	for _, row := range rows {
@@ -147,6 +144,22 @@ func loadEntityReferences(db *gorm.DB, c *gin.Context, kind string, ids []string
 		result[id] = fields
 	}
 	return result, nil
+}
+
+func entityReferenceReadQuery(db *gorm.DB, c *gin.Context, kind string, ids []string) *gorm.DB {
+	// Bound raw edges before the lateral resolver. Every incoming resolved key
+	// must be an alias of a requested node; literal IDs also retain missing edges.
+	// Keep the original resolved predicate and visibility as the final authority.
+	candidates := db.Table("entity_reference_edges").Select("source_type,source_id,level,path").Where(`
+		(source_type=? AND source_id IN ?) OR (target_type IN ? AND (
+			target_key IN ? OR target_key IN (
+				SELECT unnest(aliases) FROM entity_reference_nodes WHERE entity_type=? AND entity_id IN ?
+			)))`, kind, ids, []string{kind, "*", "$" + kind}, ids, kind, ids)
+	query := db.Table("entity_reference_resolved_edges e").Select("e.*, n.name AS source_name").
+		Joins("JOIN entity_reference_nodes n ON n.entity_type=e.source_type AND n.entity_id=e.source_id").
+		Where("(e.source_type=? AND e.source_id IN ?) OR (e.target_type=? AND e.target_id IN ?)", kind, ids, kind, ids).
+		Where("(e.source_type,e.source_id,e.level,e.path) IN (?)", candidates)
+	return referenceVisibility(query, db, c)
 }
 
 func entityReferenceFilter(query *gorm.DB, c *gin.Context, kind, table string) (*gorm.DB, error) {

@@ -1274,7 +1274,7 @@
         3,
         6
       ],
-      "status": "current_source_browser_measured_default_activation_pending",
+      "status": "reference_query_optimized_measured_equipment_activation_prepared",
       "steps": [
         "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
         "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
@@ -1392,6 +1392,15 @@
           "commands": 372,
           "equipmentIntentActivated": false,
           "sortedUIExperimentReverted": true
+        },
+        "referenceQueryOptimization": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-02-reference-query-20261007.json",
+          "status": "canonical_reference_query_optimized_locally_measured_equipment_activation_prepared",
+          "browserCommands": 496,
+          "newBrowserCommands": 248,
+          "authorityRequiredParentTests": 7,
+          "equipmentIntentProductionActivated": false,
+          "productionChanges": 0
         }
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
@@ -2929,7 +2938,7 @@
         2,
         5
       ],
-      "status": "owned_cleanup_protocol_verified_no_production_deletion",
+      "status": "owned_protocol_verified_authorized_backup_retention_applied",
       "steps": [
         "По DB-01 составить ownership/retention matrix для пользовательских документов, active/ended runs, receipts, append-only journals, migration archives, OAuth/outbox, legacy tables, backups и media. Сроки хранения и удаление пользовательских данных не придумывать без решения владельца.",
         "Проверить candidate duplicate indexes через фактические definitions/constraints/query plans и статистику с известным окном наблюдения. Рассмотреть cloudinary_id UNIQUE плюс обычный индекс и session_id/seq индексы как кандидаты, а не как разрешённые удаления.",
@@ -3018,6 +3027,14 @@
             "productionChanges": 0,
             "applicationAndArtifactRecoveryProven": false
           }
+        },
+        "productionBackupRetention": {
+          "evidence": "docs/audits/2026-10-04/execution/DB-04-authorized-backup-retention-20261007.json",
+          "status": "authorized_backup_retention_applied_filesystem_reclaimed",
+          "reclaimedFilesystemBytes": 25841242112,
+          "retainedProductionBackups": 2,
+          "localPreservedOriginals": 3,
+          "productionDatabaseChanges": 0
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
