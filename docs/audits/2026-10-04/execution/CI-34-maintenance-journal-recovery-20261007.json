@@ -32,5 +32,28 @@
   "serviceReplacementsDuringCorrection": 0,
   "currentAcceptedSource": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
   "acceptedNewDeployment": false,
-  "rerunMethod": "GitHub rerun failed jobs; same exact source and immutable published candidate, new protected attempt and fresh backup; no production apply bypass."
+  "rerunMethod": "GitHub rerun failed jobs; same exact source and immutable published candidate, new protected attempt and fresh backup; no production apply bypass.",
+  "localFollowOn": {
+    "status": "early_capture_pending_operation_guard_locally_verified",
+    "recordedAt": "2026-10-07T13:44:00.467Z",
+    "sourceParent": "431574f562c1fc54e06ba936e393a7db84fba256",
+    "checks": {
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0
+    },
+    "inputs": [
+      {
+        "file": "scripts/release/capture-host-backup.mjs",
+        "sha256": "sha256:5e59448b5109dd36ba49f22d0c2c7e31abc337c84edcf39291ae713cd170c0d1"
+      },
+      {
+        "file": "scripts/release/capture-host-backup.test.mjs",
+        "sha256": "sha256:093761e9f52ea3ae6a27cf668bc9741fd7d5b2d104f8e26e5c8ab789b38448e8"
+      }
+    ],
+    "behavior": "An existing deployment lock or any unresolved journal now refuses before database preflight/pg_dump and before creating a capture directory. Completed deployment outcomes and separately stored maintenance receipts keep normal capture. The final under-lock cutover guard remains unchanged.",
+    "hostedCI": "pending",
+    "productionAccepted": false
+  }
 }
