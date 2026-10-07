@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-07T23:05:44.941Z",
+  "task": "CLEAN-03",
+  "status": "local_verified_exact_commit_ci_and_production_pending",
+  "baseCommit": "78cdd7d27243c66d4e7651694088bc02669eac73",
+  "productionApplied": false,
+  "implementation": {
+    "files": [
+      "frontend/Dockerfile",
+      "frontend/Dockerfile.dockerignore",
+      "frontend/scripts/compile-layer.mjs",
+      "frontend/scripts/compile-layer.test.mjs"
+    ],
+    "mechanism": "Only byte-identical build-public copies are omitted from the application layer. Generated files and different same-path overrides remain. The original public media layer supplies omitted bytes.",
+    "mediaVariantsEnabled": false,
+    "originalURLsChanged": false,
+    "originalImagesChanged": false,
+    "gitHistoryRewritten": false
+  },
+  "measurements": {
+    "scope": "Local pinned Linux/amd64 images; before is the actual accepted 35a9 image, after is an owned synthetic build of the three exact changed build inputs over 78cdd7d2. Not a deployable candidate.",
+    "before": {
+      "imageBytes": 430954745,
+      "registryPayloadBytes": 188307705,
+      "imageId": "sha256:8e5c60ca312222e2039966dae15bab2472bf3fd15cbdae7da2a02c1d61e71acf"
+    },
+    "after": {
+      "imageBytes": 427917431,
+      "registryPayloadBytes": 186965859,
+      "imageId": "sha256:2e0a704e8eb79f6cb71451ddca8c9da7fa9e1f8146bdde14c58aa069df708441"
+    },
+    "imageBytesSaved": 3037314,
+    "registryPayloadBytesSaved": 1341846,
+    "compressedLayerBytesSaved": 1345410,
+    "payloadDefinition": "actual hash-verified HTTP response payload bytes; complete published linux/amd64 index including attestations; unique objects; excludes headers/TLS and Docker cache",
+    "originalSourceContext": {
+      "kind": "read-only-source-context-inventory-not-network-transfer",
+      "files": 1324,
+      "bytes": 173965773,
+      "fingerprint": "sha256:5222dab0f7d6d7a848993e1d5430ef209a95b7aabb651fa7fc3bd6ecb75cd3e3"
+    },
+    "candidateSourceContext": {
+      "kind": "read-only-source-context-inventory-not-network-transfer",
+      "files": 1325,
+      "bytes": 173968398,
+      "fingerprint": "sha256:412489d568719451757e48b7d83b425afda968fc3d8a142ed5a848f0ea95810f"
+    },
+    "cloneArchive": "No originals removed or history rewritten; no clone/archive reduction claimed. Historical separately measured inventory remains CLEAN-03-media.md.",
+    "initialBrowserTransfer": "No change claimed: all served bytes are identical. Historical optional WebP measurements remain separately scoped."
+  },
+  "verification": {
+    "actualFullFrontendProductionBuild": true,
+    "windows": {
+      "tests": 19,
+      "passed": 19,
+      "skipped": 0
+    },
+    "linuxPinnedContainer": {
+      "tests": 19,
+      "passed": 19,
+      "skipped": 0
+    },
+    "actualImageContent": {
+      "files": 635,
+      "allPathsAndHashesIdentical": true,
+      "sha256": "sha256:4e559539cc1635722505a35e021f94affb9a5d6bf1bcae80df3b05f90eee0421"
+    },
+    "mandatoryCatalog": {
+      "file": "frontend/scripts/compile-layer.test.mjs",
+      "runner": "node",
+      "tier": "extended"
+    },
+    "cleanup": [
+      {
+        "status": "stopped",
+        "errors": []
+      },
+      {
+        "status": "stopped",
+        "errors": []
+      }
+    ],
+    "productionChanges": 0,
+    "paidRequests": 0
+  },
+  "evidence": [
+    {
+      "path": "outputs/release-measure/compile-layer-486cd63f-1aff-4aa2-9794-2f1a48136dbd/pair-result.json",
+      "sha256": "sha256:3f960bbd50e17ed7117e1a811788443366a89901365f1a406e0e480fc2275c57"
+    },
+    {
+      "path": "outputs/release-measure/compile-layer-486cd63f-1aff-4aa2-9794-2f1a48136dbd/content-equivalence-r2.json",
+      "sha256": "sha256:f914813432f696c6fb3de43ece5d68839f9dcc142664595c58840af83185e32d"
+    },
+    {
+      "path": "outputs/release-measure/compile-layer-486cd63f-1aff-4aa2-9794-2f1a48136dbd/before-content-r2.json",
+      "sha256": "sha256:4bc95d39ea50166c62b271908b2d6adab75e284092114e8727dfe018ef9f8d3e"
+    },
+    {
+      "path": "outputs/release-measure/compile-layer-486cd63f-1aff-4aa2-9794-2f1a48136dbd/after-content-r2.json",
+      "sha256": "sha256:4bc95d39ea50166c62b271908b2d6adab75e284092114e8727dfe018ef9f8d3e"
+    }
+  ],
+  "diagnostic": {
+    "preservedOriginal": "content-equivalence.json",
+    "reason": "First observation helper rejected the real image because of an unsupported >1000 file-count assumption. Revised helper enumerates all actual files and compares both complete sets; actual count is 635. No build or content failure was hidden."
+  },
+  "remaining": [
+    "Complete the current 78cdd7d2 full deployment before moving main.",
+    "Review and commit only these scoped files and this report after local checks.",
+    "Run authentic exact-commit CI, publication, image browser fixture and TimeWeb deployment; inspect actual component identities and full-anchor predecessor.",
+    "Preserve the current public media URLs and mandatory TypeScript/Vite/DiceBox checks; rollback only the frontend image if required."
+  ]
+}
