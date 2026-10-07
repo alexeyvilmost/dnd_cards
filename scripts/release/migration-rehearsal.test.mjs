@@ -59,6 +59,23 @@ test('actual executable metadata excludes retained ledger IDs while the rehearsa
  assert.throws(()=>assertExecutableMigrationRegistry(f.metadata,target,before.filter(row=>row.id!==retiredObservedMigrationIds[0])));
  assert.throws(()=>assertExecutableMigrationRegistry(f.metadata,[...target,{id:'012_unknown',kind:'observed-id-only',observationHash:hash('8')}],[...before,{id:'012_unknown'}]));
 });
+test('all scenarios fit three full database copies and retain the first until repeat/schema proof',async()=>{
+ const f=fixture(),create=f.adapter.createTrial;let peak=f.dbs.size;
+ f.adapter.createTrial=async()=>{assert.ok(f.dbs.size<3,'completed siblings must be retired before another full copy');const id=await create();peak=Math.max(peak,f.dbs.size);return id;};
+ const result=await runMigrationRehearsal(f.input,f.adapter);validateMigrationRehearsal(f.input,result);
+ assert.equal(peak,3);assert.deepEqual(result.report.checks.map(row=>row.id),migrationScenarios);
+ assert.deepEqual(f.calls.filter(row=>row[0]==='drop').map(row=>row[1]),['trial2','trial3','trial4','trial1']);
+ assert.ok(f.calls.findIndex(row=>row[0]==='drop'&&row[1]==='trial1')>f.calls.findIndex(row=>row[0]==='mutate'&&row[2]==='trigger-when-false'));
+ assert.deepEqual([...f.dbs.keys()],['main']);
+});
+test('an early failed DROP remains owned for final cleanup and cannot authorize the release',async()=>{
+ const f=fixture(),drop=f.adapter.dropTrial;let failedOnce=false;
+ f.adapter.dropTrial=async id=>{if(id==='trial2'&&!failedOnce){failedOnce=true;throw Error('disposable drop was not confirmed');}return drop(id);};
+ await assert.rejects(runMigrationRehearsal(f.input,f.adapter),error=>{
+  assert.equal(error.migrationReport.failureStage,'crash-before-ledger');assert.deepEqual(error.migrationReport.cleanup,{status:'trials-cleared',remaining:0});return true;
+ });
+ assert.deepEqual([...f.dbs.keys()],['main']);assert.ok(!f.calls.some(row=>row[0]==='old-start'));
+});
 for(const fault of ['metadata','history','connections','same-session','rollback','repeat','unknown','schema','old-history','old-proof','cleanup'])test(`migration rehearsal fails closed on ${fault} and never returns an approval`,async()=>{
   const f=fixture(fault);await assert.rejects(runMigrationRehearsal(f.input,f.adapter));
   if(fault!=='cleanup')assert.deepEqual([...f.dbs.keys()],['main']);
