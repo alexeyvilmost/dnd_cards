@@ -1,10 +1,19 @@
 # CI образов и выборочная доставка
 
-Текущий статус: EE7 (`ee7b585e`) выкачена и независимо принята. E089 actual core CI выбрал frontend-only, но обе попытки публикации отказали на initial-observation; selective production acceptance пока открыта. Локальный прогон тех же images выполнил 12 mixed checks. [Фактические доказательства и границы](audits/2026-10-04/execution/REL-05-E089-selective-refusal-20261007.md).
+Текущая принятая версия и выполняющиеся попытки указаны в [реестре выполнения](audits/2026-10-04/execution/README.md). Исторический отказ выборочной публикации E089 и границы локальной проверки сохранены в [отдельном отчёте](audits/2026-10-04/execution/REL-05-E089-selective-refusal-20261007.md).
 
 Историческая запись до CI32: CI31 frontend-only прошёл, но публикация отказала при запуске отдельного стенда; selective delivery не была принята. [Доказательства и границы](audits/2026-10-04/execution/CI-31-selective-publication-refusal.md).
 
 ## Как устроен pipeline
+
+Изменения `scripts/testing`, `scripts/performance` и `tests/suites.json` требуют
+расширенного CI. При полном совпадении трёх production-образов, Docker input
+fingerprints, защищённой конфигурации и актуального состава входов worker
+планировщик может вернуть `no-deployment-needed`: публикации, резервной копии
+и замены приложений не происходит, deployed baseline не продвигается. Отчёт
+extended CI и завершённая очистка стенда проверяются перед этим результатом.
+Изменения release-tooling, build inputs или runtime продолжают требовать
+соответствующий полный либо выборочный выпуск. [Локальная проверка новой политики](audits/2026-10-04/execution/REL-05-verification-only-policy-20261007.md).
 
 `.github/workflows/release.yml` поддерживает ручной `workflow_dispatch` и
 `workflow_run` после успешного CI в `main`, когда включены соответствующие variables.
