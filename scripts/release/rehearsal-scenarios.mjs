@@ -7,6 +7,12 @@ import {dockerCommand} from './rehearsal-command.mjs';
 // adapter, origin, serialized proof or a lookalike object to register users.
 const authorizedRehearsals=new WeakMap();
 function authorize(access){const capability=Object.freeze({kind:'owned-rehearsal'});authorizedRehearsals.set(capability,access);return capability;}
+export function rehearsalRequestFailure(status,route,method,body,data){
+  const safeRoute=String(route).replace(/[a-f0-9-]{36}/gi,':id');
+  const safeIdentifier=value=>typeof value==='string'&&/^[a-z][a-z0-9_]{0,80}$/.test(value)?value:null;
+  const details=[safeIdentifier(body?.type),safeIdentifier(body?.payload?.intent?.type),safeIdentifier(data?.code)].filter(Boolean);
+  return Error(`Owned canonical API returned HTTP ${status}: ${method} ${safeRoute}${details.length?' ('+details.join(', ')+')':''}`);
+}
 export async function authorizeNativeRehearsal(stack){
   const assertOwned=async()=>{
     const context=await localAcceptanceContext(stack.env);
@@ -18,7 +24,7 @@ export async function authorizeNativeRehearsal(stack){
   const request=async(route,body,bearer,method=body?'POST':'GET')=>{
     const context=await assertOwned();
     const response=await context.request(`/api${route}`,{method,headers:{'content-type':'application/json',...(bearer?{authorization:`Bearer ${bearer}`}:{})},...(body?{body:JSON.stringify(body)}:{})});
-    if(![200,201].includes(response.status))throw Error(`Owned canonical API returned HTTP ${response.status}`);
+    if(![200,201].includes(response.status))throw rehearsalRequestFailure(response.status,route,method,body,await response.json().catch(()=>null));
     return response.json();
   };
   return authorize({assertOwned,request});
@@ -49,7 +55,7 @@ export async function authorizeDockerRehearsal({names,owner}){
   const request=async(route,body,bearer,method=body?'POST':'GET')=>{
     await assertOwned();
     const result=JSON.parse(await dockerCommand(['exec','-i',names.rulesWorker,'node','--input-type=module','-e',program],{input:JSON.stringify({route,body,method,headers:{'content-type':'application/json',...(bearer?{authorization:`Bearer ${bearer}`}:{})}})}));
-    if(![200,201].includes(result.status))throw Error(`Owned canonical API returned HTTP ${result.status}`);
+    if(![200,201].includes(result.status))throw rehearsalRequestFailure(result.status,route,method,body,result.data);
     return result.data;
   };
   return authorize({assertOwned,request});
