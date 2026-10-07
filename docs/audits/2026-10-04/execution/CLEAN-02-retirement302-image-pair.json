@@ -114,7 +114,6 @@
     "C/D share their backend and worker; this does not certify two different backend implementations.",
     "Application OCI images came from an exact verified existing local cache. Registry download availability is not proven; the failed initial pull remains recorded.",
     "C/D are historical compositions once another production release is accepted; fresh current-pair and backup validation is still required before production deletion.",
-    "The generic local artifact verifier currently requires the active ledger count: C/D have305 entries, while these native/Linux proofs explicitly add lifecycle301 to306 before retirement302. This transition must be represented explicitly or replaced by a genuinely accepted301 snapshot; counts/manifests are not rewritten.",
     "Production host executor/approval integration is not yet supported by this local302 profile."
   ],
   "previousAttempt": {
@@ -358,5 +357,16 @@
     "sqlSourceUnchanged": true,
     "helperSourceUnchanged": true
   },
-  "localBrowserChecksPassed": true
+  "localBrowserChecksPassed": true,
+  "historicalIntegrationGap": {
+    "observedAt": "2026-10-07T01:54:00Z",
+    "description": "The generic local artifact verifier currently requires the active ledger count: C/D have305 entries, while these native/Linux proofs explicitly add lifecycle301 to306 before retirement302. This transition must be represented explicitly or replaced by a genuinely accepted301 snapshot; counts/manifests are not rewritten.",
+    "resolvedBy": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-bundle.json",
+    "sourceCommit": "c644730b6abd2e2c448cad123f7be93c7cd85492",
+    "status": "explicit_v2_expansion_and_real_native_bound_execution_verified"
+  },
+  "localArtifactIntegration": {
+    "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-bundle.json",
+    "status": "actual_v2_bundle_and_native_bound_execution_exact_repeat_verified"
+  }
 }

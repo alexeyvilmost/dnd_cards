@@ -3422,6 +3422,15 @@
           "productionReady": false,
           "browserStatus": "real_previous_and_candidate_rendered_browser_checks_passed_with_exact_local_oci_cache",
           "localBrowserChecksPassed": true
+        },
+        "retirement302ArtifactIntegration": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-bundle.json",
+          "status": "actual_v2_bundle_and_native_bound_execution_exact_repeat_verified",
+          "sourceCommit": "c644730b6abd2e2c448cad123f7be93c7cd85492",
+          "productionChanges": 0,
+          "productionReady": false,
+          "nativeBoundExecutionVerified": true,
+          "syntheticExternalProofHashes": false
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"

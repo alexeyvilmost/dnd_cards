@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "actual_v2_bundle_and_native_bound_execution_exact_repeat_verified",
+  "recordedAt": "2026-10-07T02:06:28.749Z",
+  "implementationSourceCommit": "c644730b6abd2e2c448cad123f7be93c7cd85492",
+  "sourceHashes": {
+    "scripts/release/retirement-artifacts.mjs": "sha256:908e8ef0e89a9acb6707c2e2177985909c1ac5f14c2ba005da0b11ea7a06c746",
+    "scripts/release/retirement-artifacts.test.mjs": "sha256:740871df724a3152a75e177d9cbe88c736a045283596759f9d7928480f9f87cc",
+    "backend/migrations/character_lifecycle_301.go": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5",
+    "backend/migrations/data/retire-legacy-characters-302.sql": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff"
+  },
+  "verification": {
+    "schemaVersion": 1,
+    "kind": "local-actual-expanded-retirement302-artifact-bundle-verification",
+    "status": "passed",
+    "startedAt": "2026-10-07T01:58:34.956Z",
+    "completedAt": "2026-10-07T01:58:38.698Z",
+    "directory": "outputs/operations/first-capture-private-cfe9/local_retirement302_bundle_2026-10-07T01-58-34.956Z",
+    "profileId": "retire-character-generations-302-local",
+    "bundleHash": "sha256:b5f602ba505b40c46988890e8f9949a57cdc2afd8a55fb088d1bbfebb954d0dc",
+    "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+    "sourceCapture": "37540642524/3",
+    "sourceDumpHash": "sha256:335838a2bf57e4cfb4ecad756ee82955725c8cae85e793ac6d9dd461aab47c1c",
+    "sourceCommitOfNativeAndLinuxExecutors": "57f6c2682a46fc75c6ed5724176d1cedd45f96eb",
+    "previousSource": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+    "candidateSource": "4ac64458449959fd905cb7b0498f1ea41c82c087",
+    "originalCaptureLedgerCount": 305,
+    "verifiedExecutionLedgerCount": 306,
+    "localLifecycleExpansionIdentity": {
+      "id": "301_character_lifecycle",
+      "checksum": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
+    },
+    "localExpansionArtifactHash": "sha256:d831f8842f579987b7d010aeefc930270b205720e138e405ef61c906aaac2ea3",
+    "readerPairHash": "sha256:f4bf3af9c9524c161b285a83fe380632a91fbc8ff3b846bb101dd929a92dc280",
+    "archiveRestoreReportHash": "sha256:37bad79a13cfb99a430e4fdac59af60f868323d0538b225368c6415c798b5ec3",
+    "retainedFingerprintTables": 93,
+    "originalManifestsUnchanged": true,
+    "originalProofsUnchanged": true,
+    "programPrepared": true,
+    "programExecuted": false,
+    "productionChanges": 0,
+    "productionReady": false,
+    "productionExecutionSupported": false,
+    "productionDatabaseRestored": false,
+    "paidProviderRequests": 0,
+    "receiptHash": "sha256:83f93fbfc4b7642d9044b723163d44b3901b367fec66413c29a56e1f9dfde7d5",
+    "originalRetainedTables": 92,
+    "localOwnershipMarkerTables": 1
+  },
+  "localTests": {
+    "artifactCases": 41,
+    "relatedReleaseCases": 148,
+    "skipped": 0,
+    "initialDevelopmentRun": {
+      "artifactPassed": 40,
+      "artifactFailed": 1,
+      "cause": "The missing-artifact negative fixture recreated its descriptor while saving. Fixed the fixture so deletion happens after saving; the verifier was not relaxed."
+    }
+  },
+  "nativeExecution": {
+    "status": "passed",
+    "privateDirectory": "outputs/operations/first-capture-private-cfe9/verified_bundle302_native_2026-10-07T02-01-30.109Z",
+    "receiptHash": "sha256:c0662525fb86b93b6e453a2995e1c8d37b5de71267a7ce03c009c73a71ab4a99",
+    "sourceCommit": "c644730b6abd2e2c448cad123f7be93c7cd85492",
+    "bundleHash": "sha256:b5f602ba505b40c46988890e8f9949a57cdc2afd8a55fb088d1bbfebb954d0dc",
+    "readerPairHash": "sha256:f4bf3af9c9524c161b285a83fe380632a91fbc8ff3b846bb101dd929a92dc280",
+    "archiveRestoreReportHash": "sha256:37bad79a13cfb99a430e4fdac59af60f868323d0538b225368c6415c798b5ec3",
+    "syntheticExternalProofHashes": false,
+    "programExecuted": true,
+    "firstApplied": true,
+    "repeatApplied": false,
+    "exactReceiptHash": "sha256:2da7d97f044eb12e6bee08813d983b5e0e25ccb7de1b7843368ab2bd14ae727a",
+    "originalRetainedTablesPreserved": 92,
+    "priorMigrationRowsPreserved": 306,
+    "originalCaptureLedgerCount": 305,
+    "checks": [
+      "full-original-source-restored-with-exact305-ledger",
+      "exact301-expansion-preserves-all-original-ledger-rows",
+      "actual-artifact-bound-request-preserves-all92-original-retained-tables",
+      "same-artifact-bound-repeat-retains-identical-original-receipt"
+    ],
+    "sourceDumpUnchanged": true,
+    "bundleUnchanged": true,
+    "helperUnchanged": true,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "productionChanges": 0,
+    "paidProviderRequests": 0
+  },
+  "productionExecutionSupported": false,
+  "productionReady": false,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "limits": [
+    "These are historical C/D compositions and a historical D3 snapshot. Fresh then-current snapshot and pair verification remain required before production deletion.",
+    "The original native/Linux execution proofs remain pinned to57f; c644 changes only local proof validation, tests and documentation.",
+    "Production host approval/executor/controller integration is not implemented by this local-only profile."
+  ]
+}
