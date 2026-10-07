@@ -1,0 +1,718 @@
+{
+  "schemaVersion": 1,
+  "status": "current_integrated_initiative_latency_observed_local",
+  "recordedAt": "2026-10-07T03:52:11.881Z",
+  "applicationBuildCommit": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+  "observedConfigurationCommit": "c1324a1fc74bc9116e331e6fd85edbf151db0994",
+  "upstreamMain": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+  "sourceSnapshot": "9ac44957ef05696e9a7de246316d2472144de1abcdf9fcd157a6002f65add542",
+  "backendBinaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+  "rulesArtifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+  "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+  "runtimes": {
+    "node": "v24.21.0",
+    "go": "go1.25.12",
+    "platform": "native Windows",
+    "browserChannel": "chrome"
+  },
+  "dataset": "Owned synthetic integration baseline and canonical line preset; independent fresh run/owner identifiers and crypto-random battle entropy in each arm.",
+  "network": "Owned loopback API/worker/UI; browser proxy only permits those origins; provider disabled.",
+  "commonFlags": {
+    "DB_COMPACT_RECEIPTS": "1",
+    "DB_FROZEN_CATALOGS": "0",
+    "RULES_WORKER_MIRRORS_ENABLED": "1",
+    "RULES_CATALOG_BATCH_ENABLED": "1",
+    "RULES_PREPARATION_CACHE_ENABLED": "0",
+    "RULES_CATALOG_PREFETCH_ENABLED": "0",
+    "RULES_EQUIPMENT_INTENT_ENABLED": "0"
+  },
+  "percentileMethod": "nearest-rank ceil(n*p), excluding one warmup per arm",
+  "arms": [
+    {
+      "initiativeOptions": false,
+      "startedAt": "2026-10-07T03:43:25.904Z",
+      "metrics": {
+        "measuredSamples": 30,
+        "initiativeMs": {
+          "p50": 2025,
+          "p95": 2122.9000000059605
+        },
+        "battleMs": {
+          "p50": 2396.7000000178814,
+          "p95": 2679.5999999940395
+        },
+        "duplicateBrowserParticipantBuilds": 30
+      },
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "evidence": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/runs/test_ddc38a36932d220270f5fe6b/initiative-browser.json",
+      "evidenceHash": "sha256:9e17f19ac5a80f523774eb6d8f0d707609ab7cf3939a5c88ffd1c2a49432fb33",
+      "samples": [
+        {
+          "index": -1,
+          "warmup": true,
+          "initiativeMs": 1916.300000011921,
+          "battleMs": 2675.600000023842,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 0,
+          "warmup": false,
+          "initiativeMs": 2059,
+          "battleMs": 2400.2999999821186,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 1,
+          "warmup": false,
+          "initiativeMs": 2078,
+          "battleMs": 2646.199999988079,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 2,
+          "warmup": false,
+          "initiativeMs": 2113,
+          "battleMs": 2654.399999976158,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 3,
+          "warmup": false,
+          "initiativeMs": 2122.9000000059605,
+          "battleMs": 2390.5999999940395,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 4,
+          "warmup": false,
+          "initiativeMs": 2117,
+          "battleMs": 2406.2000000178814,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 5,
+          "warmup": false,
+          "initiativeMs": 2064.5,
+          "battleMs": 2694.5,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 6,
+          "warmup": false,
+          "initiativeMs": 2025,
+          "battleMs": 2405.0999999940395,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 7,
+          "warmup": false,
+          "initiativeMs": 2044.1000000238419,
+          "battleMs": 2658,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 8,
+          "warmup": false,
+          "initiativeMs": 2090.4000000059605,
+          "battleMs": 2405.5999999940395,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 9,
+          "warmup": false,
+          "initiativeMs": 2061.5999999940395,
+          "battleMs": 2659.2000000178814,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 10,
+          "warmup": false,
+          "initiativeMs": 2028.699999988079,
+          "battleMs": 2650.699999988079,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 11,
+          "warmup": false,
+          "initiativeMs": 2062.899999976158,
+          "battleMs": 2651.399999976158,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 12,
+          "warmup": false,
+          "initiativeMs": 2114.5999999940395,
+          "battleMs": 2664.800000011921,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 13,
+          "warmup": false,
+          "initiativeMs": 2131,
+          "battleMs": 2679.5999999940395,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 14,
+          "warmup": false,
+          "initiativeMs": 1974.7000000178814,
+          "battleMs": 2414.100000023842,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 15,
+          "warmup": false,
+          "initiativeMs": 2033.199999988079,
+          "battleMs": 2656.699999988079,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 16,
+          "warmup": false,
+          "initiativeMs": 1946.8999999761581,
+          "battleMs": 2393.399999976158,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 17,
+          "warmup": false,
+          "initiativeMs": 2045.800000011921,
+          "battleMs": 2396.7000000178814,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 18,
+          "warmup": false,
+          "initiativeMs": 695.0999999940395,
+          "battleMs": 879.3000000119209,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 19,
+          "warmup": false,
+          "initiativeMs": 168,
+          "battleMs": 517.3000000119209,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 20,
+          "warmup": false,
+          "initiativeMs": 186.5,
+          "battleMs": 535.7000000178814,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 21,
+          "warmup": false,
+          "initiativeMs": 137.2000000178814,
+          "battleMs": 247.5,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 22,
+          "warmup": false,
+          "initiativeMs": 132.7000000178814,
+          "battleMs": 253.10000002384186,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 23,
+          "warmup": false,
+          "initiativeMs": 194.5,
+          "battleMs": 268.59999999403954,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 24,
+          "warmup": false,
+          "initiativeMs": 134.40000000596046,
+          "battleMs": 253.90000000596046,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 25,
+          "warmup": false,
+          "initiativeMs": 159.2000000178814,
+          "battleMs": 511.30000001192093,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 26,
+          "warmup": false,
+          "initiativeMs": 150.7000000178814,
+          "battleMs": 526.2000000178814,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 27,
+          "warmup": false,
+          "initiativeMs": 124.60000002384186,
+          "battleMs": 252,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 28,
+          "warmup": false,
+          "initiativeMs": 133.5,
+          "battleMs": 241.80000001192093,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 29,
+          "warmup": false,
+          "initiativeMs": 161.69999998807907,
+          "battleMs": 260.80000001192093,
+          "browserBuilderCalls": 1,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        }
+      ]
+    },
+    {
+      "initiativeOptions": true,
+      "startedAt": "2026-10-07T03:47:06.734Z",
+      "metrics": {
+        "measuredSamples": 30,
+        "initiativeMs": {
+          "p50": 210.69999998807907,
+          "p95": 435.5
+        },
+        "battleMs": {
+          "p50": 365.69999998807907,
+          "p95": 865.2000000178814
+        },
+        "duplicateBrowserParticipantBuilds": 0
+      },
+      "pageErrors": 0,
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "ownedChildrenExited": true
+      },
+      "evidence": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/runs/test_316d8b6b02ce89ad51d38573/initiative-browser.json",
+      "evidenceHash": "sha256:117e40626650267c9563693d42a6090d31ef3e19134d55a38a102bac3955b42e",
+      "samples": [
+        {
+          "index": -1,
+          "warmup": true,
+          "initiativeMs": 712.4000000059605,
+          "battleMs": 1294.2000000178814,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 0,
+          "warmup": false,
+          "initiativeMs": 286.2000000178814,
+          "battleMs": 387.90000000596046,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 1,
+          "warmup": false,
+          "initiativeMs": 226.7999999821186,
+          "battleMs": 365.69999998807907,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 2,
+          "warmup": false,
+          "initiativeMs": 200.7000000178814,
+          "battleMs": 338.5,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 3,
+          "warmup": false,
+          "initiativeMs": 192,
+          "battleMs": 290.39999997615814,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 4,
+          "warmup": false,
+          "initiativeMs": 229.80000001192093,
+          "battleMs": 626,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 5,
+          "warmup": false,
+          "initiativeMs": 203.5,
+          "battleMs": 305.30000001192093,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 6,
+          "warmup": false,
+          "initiativeMs": 193.90000000596046,
+          "battleMs": 275.5,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 7,
+          "warmup": false,
+          "initiativeMs": 184.69999998807907,
+          "battleMs": 307.59999999403954,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 8,
+          "warmup": false,
+          "initiativeMs": 196.80000001192093,
+          "battleMs": 278,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 9,
+          "warmup": false,
+          "initiativeMs": 228.09999999403954,
+          "battleMs": 621.8000000119209,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 10,
+          "warmup": false,
+          "initiativeMs": 233.30000001192093,
+          "battleMs": 607.9000000059605,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 11,
+          "warmup": false,
+          "initiativeMs": 210.69999998807907,
+          "battleMs": 560.1999999880791,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 12,
+          "warmup": false,
+          "initiativeMs": 196.69999998807907,
+          "battleMs": 297,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 13,
+          "warmup": false,
+          "initiativeMs": 185.59999999403954,
+          "battleMs": 274.5,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 14,
+          "warmup": false,
+          "initiativeMs": 239.59999999403954,
+          "battleMs": 626.2999999821186,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 15,
+          "warmup": false,
+          "initiativeMs": 435.5,
+          "battleMs": 865.2000000178814,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 16,
+          "warmup": false,
+          "initiativeMs": 460.30000001192093,
+          "battleMs": 1130.5,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 17,
+          "warmup": false,
+          "initiativeMs": 216.5,
+          "battleMs": 621.5,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 18,
+          "warmup": false,
+          "initiativeMs": 202.59999999403954,
+          "battleMs": 574,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 19,
+          "warmup": false,
+          "initiativeMs": 232.69999998807907,
+          "battleMs": 358.90000000596046,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 20,
+          "warmup": false,
+          "initiativeMs": 199.10000002384186,
+          "battleMs": 291.2000000178814,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 21,
+          "warmup": false,
+          "initiativeMs": 232,
+          "battleMs": 607.3000000119209,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 22,
+          "warmup": false,
+          "initiativeMs": 193,
+          "battleMs": 291.40000000596046,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 23,
+          "warmup": false,
+          "initiativeMs": 236.7000000178814,
+          "battleMs": 627.4000000059605,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 24,
+          "warmup": false,
+          "initiativeMs": 224.59999999403954,
+          "battleMs": 355.59999999403954,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 25,
+          "warmup": false,
+          "initiativeMs": 182.09999999403954,
+          "battleMs": 259.7999999821186,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 26,
+          "warmup": false,
+          "initiativeMs": 205.59999999403954,
+          "battleMs": 558.4000000059605,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 27,
+          "warmup": false,
+          "initiativeMs": 186.30000001192093,
+          "battleMs": 268.40000000596046,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 28,
+          "warmup": false,
+          "initiativeMs": 217.90000000596046,
+          "battleMs": 629.6999999880791,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        },
+        {
+          "index": 29,
+          "warmup": false,
+          "initiativeMs": 216.2000000178814,
+          "battleMs": 573.9000000059605,
+          "browserBuilderCalls": 0,
+          "initializeCommands": 1,
+          "optionsRequests": 1,
+          "exactRetry": true
+        }
+      ]
+    }
+  ],
+  "allVerificationSourcesUnchanged": true,
+  "allAcceptedInitializationsIncludingWarmup": 62,
+  "allExactRetries": 62,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "productionFlagChanged": false,
+  "decision": "Retain locally prepared activation for canonical next-release verification; leave prefetch, preparation cache and equipment intent OFF.",
+  "limits": [
+    "Sequential OFF then ON arms; temporal bias/noise is not eliminated and no paired causal interval is claimed.",
+    "Game entropy and run/owner identities differ; no equality of cross-arm outcomes or catalogs is claimed.",
+    "Current native source and synthetic fixtures; not production SLA, Linux OCI timing or production activation.",
+    "CPU isolation/model and exact Chrome executable/version were not attested by this driver; Node/Go, binary, artifact, UI and source hashes are recorded.",
+    "This latency series does not replace the separate four-case cost/party/reload correctness proof."
+  ]
+}

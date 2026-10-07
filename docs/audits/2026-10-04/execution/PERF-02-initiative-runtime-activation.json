@@ -86,5 +86,34 @@
     "No new current-production latency or Linux OCI initiative execution claim.",
     "Earlier native timing comparison remains separately scoped to source C with its documented median/tail tradeoff.",
     "Preparation cache, equipment intent, prefetch and frozen catalog settings stay as observed."
-  ]
+  ],
+  "currentIntegratedLatency": {
+    "evidence": "docs/audits/2026-10-04/execution/PERF-02-integrated-initiative-timing-20261007.json",
+    "evidenceHash": "sha256:845f51488dc8b81915fab9928df2548e9cb5fcb93c6edd77edb09c7f4d3ca4b0",
+    "off": {
+      "measuredSamples": 30,
+      "initiativeMs": {
+        "p50": 2025,
+        "p95": 2122.9000000059605
+      },
+      "battleMs": {
+        "p50": 2396.7000000178814,
+        "p95": 2679.5999999940395
+      },
+      "duplicateBrowserParticipantBuilds": 30
+    },
+    "on": {
+      "measuredSamples": 30,
+      "initiativeMs": {
+        "p50": 210.69999998807907,
+        "p95": 435.5
+      },
+      "battleMs": {
+        "p50": 365.69999998807907,
+        "p95": 865.2000000178814
+      },
+      "duplicateBrowserParticipantBuilds": 0
+    },
+    "scope": "Sequential native observations, not production or paired causal evidence"
+  }
 }
