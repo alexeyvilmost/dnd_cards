@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "genuine_d3_archive_restore_and_retirement302_locally_verified",
+  "observedAt": "2026-10-07T01:19:50.111Z",
+  "sourceCommit": "57f6c2682a46fc75c6ed5724176d1cedd45f96eb",
+  "sourceCapture": "37540642524/3",
+  "sourceCaptureCreatedAt": "2026-10-06T23:55:22.617Z",
+  "sourceDumpHash": "sha256:335838a2bf57e4cfb4ecad756ee82955725c8cae85e793ac6d9dd461aab47c1c",
+  "sourceDumpBytes": 982423914,
+  "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+  "originalCaptureMigrationCount": 305,
+  "ordinaryMigrationCountAfterLocalLifecycle": 306,
+  "originalCaptureLedgerHash": "sha256:a42ed1b3dcd2a893ce2945fd700c624a168faf0debe51c08d85326ea450889b6",
+  "localLifecycleExpansion": {
+    "identity": {
+      "id": "301_character_lifecycle",
+      "checksum": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
+    },
+    "schemaProofHash": "sha256:672c5347ecefbfd0b9460b7d47a46616bcbdb3a699e4f1af8e5ddfd284111c72",
+    "originalLedgerRowsPreserved": 305,
+    "v3AndRunOriginalRowsPreserved": true,
+    "repeatApplied": 0
+  },
+  "archive": {
+    "bytes": 486063,
+    "sha256": "sha256:c299b1a2b1679bfd6095368bc0b407bdc58f86af1cc3728c26ef0c0bcd7f1d0b",
+    "preimages": {
+      "characters": {
+        "rows": 21,
+        "sha256": "sha256:f10d69e39e0744c2da4584c7eea24bf3dd21b97adcc32577096742a3146512cb"
+      },
+      "characters_v2": {
+        "rows": 12,
+        "sha256": "sha256:80c03f34e26870967c54ba99819dbffce6ddb4d9fe8a99eee1b7771ec142fd80"
+      },
+      "retired_items": {
+        "rows": 45,
+        "sha256": "sha256:c5e72cef3262a4569e3b256689ae0c87b0d211736ff411170d89822d796b99eb"
+      },
+      "retired_inventories": {
+        "rows": 10,
+        "sha256": "sha256:47147d9d71d5677e1b4d0c4f0d8e47dbe2a53114650c3dc3f0119fc7e49e7001"
+      }
+    },
+    "restoreReportHash": "sha256:37bad79a13cfb99a430e4fdac59af60f868323d0538b225368c6415c798b5ec3",
+    "actualFullRowRestoreProven": true
+  },
+  "retained": {
+    "totalTablesIncludingOwnedMarker": 93,
+    "originalSnapshotTables": 92,
+    "allFullRowFingerprintsPreserved": true,
+    "localOwnershipMarkerPreserved": true
+  },
+  "checks": [
+    "complete-source-restored-on-owned-native-postgres",
+    "exact-retired-row-archive-created-under-private-acl",
+    "actual-private-archive-restored-with-identical-full-row-preimages",
+    "all-retained-table-row-fingerprints-preserved-during-archive-restore",
+    "all-existing-migration-ledger-rows-retained-exactly",
+    "real-owned-retirement-preserves-all-retained-table-full-row-fingerprints",
+    "same-request-retry-retains-identical-journal-receipt"
+  ],
+  "proofReceiptHash": "sha256:eedd7f372cea9686641b1525a265d47a7437726ff3de5ab460edeb8373e21f79",
+  "helperSourceHash": "sha256:539f8d11dcc1932ea521fd882d8361e517c720a38eb8e20db70fd291f2a50586",
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "sourceDumpUnchanged": true,
+  "compiledSourcesUnchanged": true,
+  "paidProviderRequests": 0,
+  "productionChanges": 0,
+  "productionDatabaseRestored": false,
+  "productionReady": false,
+  "actualApplicationRollbackPairProven": false,
+  "privateEvidenceDirectory": "outputs/operations/first-capture-private-cfe9/real_retired_archive302_2026-10-07T01-14-30.060Z",
+  "limitations": [
+    "Snapshot was captured before release D; its freshness cannot authorize later production deletion.",
+    "Lifecycle301 and retirement302 were executed only on an owned local restore, not production.",
+    "Application pair binding in this SQL/archive proof is explicitly synthetic; actual image/browser verification is a separate running step.",
+    "The count93 includes one local ownership marker;92 retained tables belong to the original snapshot."
+  ]
+}

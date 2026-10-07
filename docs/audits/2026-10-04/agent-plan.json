@@ -3402,6 +3402,23 @@
           "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
           "productionChanges": 0,
           "productionReady": false
+        },
+        "retirement302RealArchive": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-real-archive.json",
+          "status": "genuine_d3_archive_restore_and_retirement302_locally_verified",
+          "sourceCapture": "37540642524/3",
+          "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+          "actualFullRowRestoreProven": true,
+          "originalSnapshotTables": 92,
+          "productionChanges": 0,
+          "productionReady": false
+        },
+        "retirement302ImagePair": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-image-pair.json",
+          "status": "actual_c_d_image_checks_partial_rollback_startup_failed_retry_running",
+          "rollbackAccepted": false,
+          "productionChanges": 0,
+          "productionReady": false
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
