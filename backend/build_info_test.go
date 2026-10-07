@@ -30,12 +30,13 @@ func TestMigrationInfoCommand(t *testing.T) {
 		t.Fatal("migration inspection mode not handled")
 	}
 	var info struct {
-		Versions                           []string                       `json:"versions"`
-		Checksums                          string                         `json:"checksums"`
-		MigrationLockID                    string                         `json:"migrationLockId"`
-		RetiredObservedMigrationIDs        []string                       `json:"retiredObservedMigrationIds"`
-		SupportedRetirementMigrations      []migrations.MigrationIdentity `json:"supportedRetirementMigrations"`
-		RetirementExecutionProtocolVersion int                            `json:"retirementExecutionProtocolVersion"`
+		Versions                                []string                       `json:"versions"`
+		Checksums                               string                         `json:"checksums"`
+		MigrationLockID                         string                         `json:"migrationLockId"`
+		RetiredObservedMigrationIDs             []string                       `json:"retiredObservedMigrationIds"`
+		SupportedRetirementMigrations           []migrations.MigrationIdentity `json:"supportedRetirementMigrations"`
+		RetirementExecutionProtocolVersion      int                            `json:"retirementExecutionProtocolVersion"`
+		RetirementReconciliationProtocolVersion int                            `json:"retirementReconciliationProtocolVersion"`
 	}
 	if err := json.Unmarshal(output.Bytes(), &info); err != nil {
 		t.Fatal(err)
@@ -43,6 +44,9 @@ func TestMigrationInfoCommand(t *testing.T) {
 	registered := migrations.GetAllMigrations()
 	if info.RetirementExecutionProtocolVersion != 1 {
 		t.Fatal("explicit retirement execution must advertise its separate source-owned protocol")
+	}
+	if info.RetirementReconciliationProtocolVersion != 1 {
+		t.Fatal("read-only outcome recovery must advertise its separate protocol before dispatch")
 	}
 	if !reflect.DeepEqual(info.SupportedRetirementMigrations, []migrations.MigrationIdentity{migrations.RetirementMigrationIdentity()}) {
 		t.Fatal("retirement support must bind embedded SQL separately from executable migrations")

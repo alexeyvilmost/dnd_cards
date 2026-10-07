@@ -93,14 +93,6 @@ func (m *Migrator) RunReleaseRetirement(ctx context.Context, request ReleaseReti
 		}
 		applied = append(applied, retirement302Version)
 	}
-	receipt, err := decodeRetirementReceipt(raw)
-	if err != nil || !reflect.DeepEqual(receipt.Request, request.Retirement) {
-		return result, errors.New("retirement receipt belongs to another request")
-	}
-	inspectionRequest := ReleaseRetirementInspectionRequest{SchemaVersion: 1, Kind: "inspect-character-retirement-302", ReleaseID: request.ReleaseID,
-		ExpectedCurrent: append(append([]MigrationIdentity{}, request.ExpectedCurrent...), RetirementMigrationIdentity()), SQLSourceHash: request.SQLSourceHash,
-		ExpectedAdditiveSchemaProofHash: request.ExpectedAdditiveSchemaProofHash, ReceiptHash: hashBytes(raw), Retirement: request.Retirement,
-		CandidateSourceCommit: request.CandidateSourceCommit, CandidateInputFingerprint: request.CandidateInputFingerprint}
 	// Inspection takes the same advisory lock on its own read-only connection.
 	// Release this one first; any intervening drift is rejected by inspection.
 	releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -110,9 +102,59 @@ func (m *Migrator) RunReleaseRetirement(ctx context.Context, request ReleaseReti
 	if err != nil {
 		return result, errors.New("explicit retirement lock release failed")
 	}
+	return m.observeRetirementExecution(ctx, request, raw, applied)
+}
+
+// Reconstruct a lost result from the retained original execution request.
+// The absence of a receipt is a refusal, never permission to execute SQL.
+func (m *Migrator) ReconcileReleaseRetirement(ctx context.Context, request ReleaseRetirementExecutionRequest) (result ReleaseRetirementExecutionResult, runErr error) {
+	before, err := validateRetirementExecution(request)
+	if err != nil {
+		return result, err
+	}
+	connection, err := m.acquireAdvisoryLock(ctx)
+	if err != nil {
+		return result, errors.New("retirement reconciliation lock unavailable")
+	}
+	released := false
+	defer func() {
+		if !released {
+			releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if releaseAdvisoryLock(releaseCtx, connection) != nil && runErr == nil {
+				runErr = errors.New("retirement reconciliation lock release failed")
+			}
+		}
+	}()
+	raw, err := retirementExecutionPreflight(ctx, connection, request, before)
+	if err != nil {
+		return result, err
+	}
+	if len(raw) == 0 {
+		return result, errors.New("retirement outcome not recorded; no mutation performed")
+	}
+	releaseCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	err = releaseAdvisoryLock(releaseCtx, connection)
+	cancel()
+	released = true
+	if err != nil {
+		return result, errors.New("retirement reconciliation lock release failed")
+	}
+	return m.observeRetirementExecution(ctx, request, raw, []string{})
+}
+
+func (m *Migrator) observeRetirementExecution(ctx context.Context, request ReleaseRetirementExecutionRequest, raw []byte, applied []string) (ReleaseRetirementExecutionResult, error) {
+	receipt, err := decodeRetirementReceipt(raw)
+	if err != nil || !reflect.DeepEqual(receipt.Request, request.Retirement) {
+		return ReleaseRetirementExecutionResult{}, errors.New("retirement receipt belongs to another request")
+	}
+	inspectionRequest := ReleaseRetirementInspectionRequest{SchemaVersion: 1, Kind: "inspect-character-retirement-302", ReleaseID: request.ReleaseID,
+		ExpectedCurrent: append(append([]MigrationIdentity{}, request.ExpectedCurrent...), RetirementMigrationIdentity()), SQLSourceHash: request.SQLSourceHash,
+		ExpectedAdditiveSchemaProofHash: request.ExpectedAdditiveSchemaProofHash, ReceiptHash: hashBytes(raw), Retirement: request.Retirement,
+		CandidateSourceCommit: request.CandidateSourceCommit, CandidateInputFingerprint: request.CandidateInputFingerprint}
 	inspection, err := m.InspectReleaseRetirement(ctx, inspectionRequest)
 	if err != nil {
-		return result, errors.New("retirement applied or observed; read-only reconciliation required")
+		return ReleaseRetirementExecutionResult{}, errors.New("retirement applied or observed; read-only reconciliation required")
 	}
 	return ReleaseRetirementExecutionResult{1, "verified", request.ReleaseID, applied, inspectionRequest, inspection}, nil
 }

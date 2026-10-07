@@ -13,7 +13,7 @@ func TestReleaseMigrationCLIBoundsInputBeforeDatabaseConnection(t *testing.T) {
 	componentSourceCommit, componentInputFingerprint = strings.Repeat("a", 40), "sha256:"+strings.Repeat("b", 64)
 	t.Setenv("DATABASE_URL", "")
 	prefix, _ := json.Marshal(map[string]any{"schemaVersion": 1, "releaseId": "owned-bounded-input", "candidateSourceCommit": componentSourceCommit, "candidateInputFingerprint": componentInputFingerprint})
-	for _, command := range []string{"--migrate-release", "--inspect-release-migrations", "--inspect-character-retirement", "--execute-character-retirement"} {
+	for _, command := range []string{"--migrate-release", "--inspect-release-migrations", "--inspect-character-retirement", "--execute-character-retirement", "--reconcile-character-retirement"} {
 		for _, suffix := range []string{strings.Repeat(" ", 512*1024), strings.Repeat(" ", 512*1024) + ` {"extra":true}`} {
 			var output bytes.Buffer
 			handled, err := runReleaseMigrationCommand([]string{command}, strings.NewReader(string(prefix)+suffix), &output)
@@ -29,7 +29,7 @@ func TestReleaseMigrationCLIRejectsUnboundAndMalformedRequestsBeforeStartup(t *t
 	t.Cleanup(func() { componentSourceCommit, componentInputFingerprint = previousCommit, previousFingerprint })
 	componentSourceCommit = ""
 	componentInputFingerprint = ""
-	for _, command := range []string{"--migrate-release", "--inspect-release-migrations", "--inspect-character-retirement", "--execute-character-retirement"} {
+	for _, command := range []string{"--migrate-release", "--inspect-release-migrations", "--inspect-character-retirement", "--execute-character-retirement", "--reconcile-character-retirement"} {
 		for _, input := range []string{`{}`, `{"schemaVersion":1,"releaseId":"candidate"}`, `{"unknown":true}`, `{} {}`} {
 			var output bytes.Buffer
 			handled, err := runReleaseMigrationCommand([]string{command}, strings.NewReader(input), &output)

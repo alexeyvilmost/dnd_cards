@@ -118,6 +118,16 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 				t.Fatal(err)
 			}
 			m := NewMigrator(db)
+			if _, err := m.ReconcileReleaseRetirement(context.Background(), request); err == nil {
+				t.Fatal("missing receipt was treated as a completed retirement")
+			}
+			if err := db.QueryRow(snapshot).Scan(&after); err != nil || after != before {
+				t.Fatal("reconciliation without a receipt changed the database", err)
+			}
+			var legacyPresent bool
+			if err := db.QueryRow("SELECT to_regclass('characters') IS NOT NULL AND to_regclass('characters_v2') IS NOT NULL").Scan(&legacyPresent); err != nil || !legacyPresent {
+				t.Fatal("reconciliation executed retirement instead of observing it", err)
+			}
 			const lifecycleSnapshot = `SELECT jsonb_build_object('v3',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM characters_v3 t),'runs',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM roguelike_runs t))::text`
 			var lifecycleBefore, lifecycleAfter string
 			if snapshotErr := db.QueryRow(lifecycleSnapshot).Scan(&lifecycleBefore); snapshotErr != nil {
@@ -158,6 +168,16 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 			if err != nil || len(second.Applied) != 0 || !reflect.DeepEqual(first.Request, second.Request) || !reflect.DeepEqual(first.Inspection, second.Inspection) {
 				t.Fatal("same-request reconciliation differs", err)
 			}
+			if err = db.QueryRow(snapshot).Scan(&before); err != nil {
+				t.Fatal(err)
+			}
+			reconciled, err := m.ReconcileReleaseRetirement(context.Background(), request)
+			if err != nil || len(reconciled.Applied) != 0 || !reflect.DeepEqual(first.Request, reconciled.Request) || !reflect.DeepEqual(first.Inspection, reconciled.Inspection) {
+				t.Fatal("lost receipt was not reconstructed from the original request", err)
+			}
+			if err = db.QueryRow(snapshot).Scan(&after); err != nil || after != before {
+				t.Fatal("receipt reconstruction changed the committed database", err)
+			}
 			if _, err = db.Exec(`UPDATE characters_v3 SET payload='{"playedAfterRetirement":true}';UPDATE inventory_items SET payload='{"current":2}' WHERE id=3`); err != nil {
 				t.Fatal(err)
 			}
@@ -180,7 +200,7 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 				}
 				expected := first.Inspection
 				expected.RollbackReadersSafe = false
-				current, err := m.RunReleaseRetirement(context.Background(), request)
+				current, err := m.ReconcileReleaseRetirement(context.Background(), request)
 				if err != nil || len(current.Applied) != 0 || !reflect.DeepEqual(current.Inspection, expected) || !reflect.DeepEqual(current.Request, first.Request) {
 					t.Fatal("current-reader requirement changed the accepted retirement proof", err)
 				}
@@ -190,11 +210,48 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 			}
 			changed := request
 			changed.Retirement.BackupHash = "sha256:" + strings.Repeat("d", 64)
+			if _, err = m.ReconcileReleaseRetirement(context.Background(), changed); err == nil {
+				t.Fatal("read-only reconciliation accepted another original request")
+			}
 			if _, err = m.RunReleaseRetirement(context.Background(), changed); err == nil {
 				t.Fatal("different request replaced retirement")
 			}
 			if err = db.QueryRow(snapshot).Scan(&after); err != nil || after != before {
 				t.Fatal("repeat changed gameplay or receipt")
+			}
+		})
+	}
+}
+
+func TestRetirementReadOnlyReconciliationRejectsPostCommitDrift(t *testing.T) {
+	for name, mutation := range map[string]string{
+		"recreated-legacy-table": `CREATE TABLE characters(id integer PRIMARY KEY); INSERT INTO characters VALUES(99)`,
+		"tampered-receipt":       `UPDATE schema_migrations SET description=(description::jsonb || '{"unknown":true}'::jsonb)::text WHERE version='302_retire_legacy_characters'`,
+		"unknown-ledger":         `INSERT INTO schema_migrations(version) VALUES('999_unknown')`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			db, request := explicitRetirementFixture(t)
+			m := NewMigrator(db)
+			if _, err := m.RunReleaseRetirement(context.Background(), request); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := db.Exec(mutation); err != nil {
+				t.Fatal(err)
+			}
+			const snapshot = `SELECT jsonb_build_object('ledger',(SELECT jsonb_agg(to_jsonb(t) ORDER BY version) FROM schema_migrations t),'v3',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM characters_v3 t),'inventories',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM inventories t),'items',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM inventory_items t),'legacy',to_regclass('characters')::text)::text`
+			var before, after string
+			if err := db.QueryRow(snapshot).Scan(&before); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := m.ReconcileReleaseRetirement(context.Background(), request); err == nil {
+				t.Fatal("drift was accepted by read-only reconciliation")
+			}
+			if err := db.QueryRow(snapshot).Scan(&after); err != nil || after != before {
+				t.Fatal("reconciliation repaired or rewrote a changed database", err)
+			}
+			var locks int
+			if err := db.QueryRow("SELECT count(*) FROM pg_locks l JOIN pg_stat_activity a ON a.pid=l.pid WHERE l.locktype='advisory' AND a.datname=current_database()").Scan(&locks); err != nil || locks != 0 {
+				t.Fatal("reconciliation retained an advisory lock", err)
 			}
 		})
 	}

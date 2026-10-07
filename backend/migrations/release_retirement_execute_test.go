@@ -30,6 +30,9 @@ func TestExplicitRetirementRejectsUnboundRequestsBeforeConnecting(t *testing.T) 
 			if _, err := NewMigrator(nil).RunReleaseRetirement(context.Background(), copy); err == nil {
 				t.Fatal("unbound execution accepted")
 			}
+			if _, err := NewMigrator(nil).ReconcileReleaseRetirement(context.Background(), copy); err == nil {
+				t.Fatal("unbound reconciliation accepted")
+			}
 		})
 	}
 }

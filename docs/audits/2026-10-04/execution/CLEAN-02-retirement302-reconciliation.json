@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "read_only_lost_outcome_recovery_verified_on_owned_native_postgres",
+  "recordedAt": "2026-10-07T02:59:59.092Z",
+  "sourceHashes": {
+    "backend/migrations/release_retirement_execute.go": "sha256:4ccc09c08b38561d3ff9a0da9154ccb8bb84e505923bbebf3931eb2bf4159bc5",
+    "backend/migrations/release_retirement_execute_test.go": "sha256:659c30856c781241f2ee80c4ca35fb2da8d719053cb1a95502bf6cb7e85ba732",
+    "backend/migrations/release_retirement_execution_integration_test.go": "sha256:c562b03fac781640802c0acbf3dad1a29f91ee981cb4ae15904062522b799563",
+    "backend/migrations/release_retirement.go": "sha256:4b005eda783bb7db1f24aa773c60d0a4170ba91a68d4bb7640d87cabaead5149",
+    "backend/migrations/release_additive_test.go": "sha256:e3d6126b2f6b2cf244efb7e656ac005869bc02a4a33db2e8cc222980989671b3",
+    "backend/migrations/data/retire-legacy-characters-302.sql": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+    "backend/release_migration_command.go": "sha256:f7bc439ebf794eda0ec5c4136c3500c1f02c2bc36980a99d9275a06584f9f1af",
+    "backend/release_migration_command_test.go": "sha256:521730f3779bbf8440ac5b743900a58715fa60b6678301300bcd39827126dc01",
+    "backend/build_info.go": "sha256:52253ae1b285b2b572cca18eb87d15289f55dd204264a448e5610d65c36989de",
+    "backend/build_info_test.go": "sha256:e78816f9a4a251f6afa762a393ff646fcd19f34c3be5117d5b8ad48c49b883c7",
+    "scripts/database/retirement-execution-local.mjs": "sha256:31c9b2781bdf3af30d300665333fcc1b05fc6272cb90701e5b459583dad21802"
+  },
+  "command": "--reconcile-character-retirement",
+  "stdin": "The unchanged saved ReleaseRetirementExecutionRequest; receiptHash is discovered from the original matching ledger row.",
+  "requiredCapability": {
+    "retirementReconciliationProtocolVersion": 1,
+    "supportedRetirementMigrationSQLHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+    "bakedSourceAndFingerprintMatchRequired": true
+  },
+  "native": {
+    "receipt": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/retirement-execution-2026-10-07T02-57-39.571Z/receipt.json",
+    "receiptHash": "sha256:a156424ecb3982b6ad6faf1539f29f74f121dec441056773c759d2bd76135bf3",
+    "runId": "test_e6fe070885f702ccd31461dc",
+    "counts": {
+      "requiredParents": 8,
+      "passedParents": 8,
+      "passedCases": 38,
+      "skippedCases": 0,
+      "failedCases": 0
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "enclosingFixtureUnchanged": true,
+    "childDatabasesCleaned": true,
+    "sourceUnchanged": true
+  },
+  "build": {
+    "status": "passed",
+    "binaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b"
+  },
+  "manifestAndShardTests": {
+    "passed": 41,
+    "skipped": 0
+  },
+  "checks": [
+    "No receipt: refusal without running retirement SQL; legacy tables and database snapshot remain.",
+    "Lost successful outcome: reconstruct the original receiptHash and inspection with applied=[], without a second execution.",
+    "Later V3 gameplay and both current-format command stores remain unchanged.",
+    "Changed original request, recreated legacy table, unknown ledger and tampered receipt fail without repair.",
+    "Shared advisory locks are released on failure; inspection and validation use existing canonical code.",
+    "CLI retains bounded stdin, strict field parsing and baked source/fingerprint checks; the new protocol is separately advertised."
+  ],
+  "earlierCanonicalAttempt": {
+    "receipt": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/retirement-execution-2026-10-07T02-56-14.871Z/receipt.json",
+    "status": "failed",
+    "reason": "Go tests printed PASS but Go exited1 when Windows denied deletion of its temporary test executable. Kept the failed receipt; a separate owned repeat passed with normal exit and cleanup."
+  },
+  "scope": "Real native PostgreSQL with synthetic retired rows and external proof hashes. Command input guards and metadata are tested; this is not a published OCI executor or production host authorization.",
+  "productionChanges": 0,
+  "productionReady": false,
+  "productionExecutionSupported": false,
+  "paidProviderRequests": 0,
+  "remaining": [
+    "Bind the actual published executor and accepted current backup/archive/image evidence to the host controller.",
+    "Dispatch and reconcile the saved intent through the shared host operation journal; do not execute an unsupported reconciliation flag on an older image.",
+    "Verify the then-current image pair and fresh source before production retirement."
+  ]
+}

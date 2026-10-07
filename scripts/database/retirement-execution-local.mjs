@@ -17,7 +17,7 @@ try{
  stack=await startTestStack({dbOnly:true});receipt.runId=stack.registry.runId;
  const enclosing=async()=>({marker:(await stack.database.query('SELECT current_database()||\':\'||run_id FROM test_run_ownership;')).trim(),tables:(await stack.database.query("SELECT coalesce(json_agg(table_name ORDER BY table_name),'[]'::json) FROM information_schema.tables WHERE table_schema='public';")).trim(),databases:(await stack.database.query("SELECT coalesce(json_agg(datname ORDER BY datname),'[]'::json) FROM pg_database WHERE datname LIKE 'test_%';")).trim()});
  const before=await enclosing();
- receipt.results.push(await runRequiredGo(stack,{packagePath:'./migrations',tests:['TestExplicitRetirementRejectsUnboundRequestsBeforeConnecting','TestExplicitRetirementAtomicExecutionRetryAndReconciliation','TestReleaseRetirementInspectionReadOnlyAndRejectsDrift','TestReleaseAdditiveAtomicRepeatAndHistory']}));
+ receipt.results.push(await runRequiredGo(stack,{packagePath:'./migrations',tests:['TestExplicitRetirementRejectsUnboundRequestsBeforeConnecting','TestExplicitRetirementAtomicExecutionRetryAndReconciliation','TestRetirementReadOnlyReconciliationRejectsPostCommitDrift','TestReleaseRetirementInspectionReadOnlyAndRejectsDrift','TestReleaseAdditiveAtomicRepeatAndHistory']}));
  receipt.results.push(await runRequiredGo(stack,{tests:['TestReleaseMigrationCLIRejectsUnboundAndMalformedRequestsBeforeStartup','TestReleaseMigrationCLIBoundsInputBeforeDatabaseConnection','TestMigrationInfoCommand']}));
  assert.deepEqual(await enclosing(),before);receipt.enclosingFixtureUnchanged=true;receipt.childDatabasesCleaned=true;
  assert.deepEqual(await hashes(),sourceHashes);receipt.sourceUnchanged=true;receipt.status='passed';
