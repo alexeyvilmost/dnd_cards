@@ -49,7 +49,28 @@
     "testLog": "outputs/testing/github-metadata-shared-final-20261007.log",
     "testLogHash": "sha256:2209bf9add554b06a1297fe453874ba0c1d48c07e2d006a3de7cdced8b2a121f",
     "credentialScan": "passed",
-    "dumpScan": "passed"
+    "dumpScan": "passed",
+    "linux": {
+      "status": "passed",
+      "requiredTests": 89,
+      "passed": 89,
+      "failed": 0,
+      "skipped": 0,
+      "network": "none",
+      "sourceReadOnly": true,
+      "sourceUnchanged": true,
+      "image": "sha256:8cc57e76a0c57777601a09b9e07869edc0baefd2f65d4cb653db711fd4be8f9d",
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "receipt": "outputs/testing/github-metadata-linux-1791355525986/receipt.json",
+      "earlierHarnessFailures": [
+        "outputs/testing/github-metadata-linux-1791355490098/receipt.json",
+        "outputs/testing/github-metadata-linux-1791355508600/receipt.json"
+      ],
+      "harnessRepair": "Read-only bind of the existing installed frontend dependencies; prior Linux harness lacked js-yaml. No repository implementation or test assertions changed."
+    }
   },
   "productionChanges": 0,
   "remaining": "Publish this separate release-tooling change through the full required CI/publication gates after accepting the genuine frontend-only release; no success is claimed for the currently running deployment."
