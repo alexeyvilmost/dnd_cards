@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
-import {safeBrowserFailureDiagnostics} from './browser-failure-diagnostics.mjs';
+import {safeBrowserFailureDiagnostics, withBrowserFailureDiagnostics} from './browser-failure-diagnostics.mjs';
 
 const file = 'frontend/e2e/battle-3d.spec.ts';
 const settings = {files: [file], root: '/work/project', testDirectory: 'frontend/e2e'};
@@ -54,27 +54,52 @@ test('assertion locations retain only valid coordinates within the failing selec
     [{file, line: 17, column: 1, status: 'failed', errorLocations: [{file, line: 64, column: 9}]}]);
 });
 
-test('an actual failing Playwright process produces safe locations without exposing assertion text', () => {
+test('actual failing Playwright processes retain safe diagnostics for fixture and full-stack profiles', async () => {
+ for (const profile of ['frontend/e2e', 'frontend/e2e-local']) {
   const directory = mkdtempSync(path.join(tmpdir(), 'dnd-browser-diagnostics-'));
   const root = fileURLToPath(new URL('../../', import.meta.url));
   const packageEntry = path.join(root, 'frontend/node_modules/@playwright/test/index.js').replaceAll('\\', '/');
   const resultFile = path.join(directory, 'result.json');
   try {
-    const testDirectory = path.join(directory, 'frontend/e2e');
+    const testDirectory = path.join(directory, profile);
     mkdirSync(testDirectory, {recursive: true});
     writeFileSync(path.join(directory, 'playwright.config.mjs'), `export default ${JSON.stringify({testDir: testDirectory, workers: 1, retries: 0, reporter: [['json', {outputFile: resultFile}]]})};`);
     writeFileSync(path.join(testDirectory, 'example.spec.ts'), `import {test,expect} from ${JSON.stringify(packageEntry)};\ntest('private test name',()=>{expect('private assertion value').toBe('different value');});\n`);
-    const result = spawnSync(process.execPath, [path.join(root, 'frontend/node_modules/@playwright/test/cli.js'), 'test', '--config', path.join(directory, 'playwright.config.mjs')], {cwd: directory, encoding: 'utf8', timeout: 30000});
-    assert.equal(result.status, 1);
-    const actualReport = JSON.parse(readFileSync(resultFile, 'utf8'));
-    const diagnostics = safeBrowserFailureDiagnostics(actualReport, {root: directory, files: ['frontend/e2e/example.spec.ts'], testDirectory: 'frontend/e2e'});
-    assert.deepEqual(diagnostics.failures, [{file: 'frontend/e2e/example.spec.ts', line: 2, column: 5, status: 'failed',
-      errorLocations: [{file: 'frontend/e2e/example.spec.ts', line: 2, column: 65}]}]);
+    let failure;
+    await assert.rejects(withBrowserFailureDiagnostics(async () => {
+      const result = spawnSync(process.execPath, [path.join(root, 'frontend/node_modules/@playwright/test/cli.js'), 'test', '--config', path.join(directory, 'playwright.config.mjs')], {cwd: directory, encoding: 'utf8', timeout: 30000});
+      assert.equal(result.status, 1);
+      failure = Object.assign(new Error('Browser process exited 1'), {output: result.stdout + result.stderr});
+      throw failure;
+    }, {reportFile: resultFile, root: directory, files: [profile + '/example.spec.ts'], testDirectory: profile}), error => error === failure);
+    const diagnostics = failure.browserDiagnostics;
+    assert.deepEqual(diagnostics.failures, [{file: profile + '/example.spec.ts', line: 2, column: 5, status: 'failed',
+      errorLocations: [{file: profile + '/example.spec.ts', line: 2, column: 65}]}]);
     assert.ok(!JSON.stringify(diagnostics).includes('private'));
   } finally {
     // mkdtemp returns a new absolute directory beneath the fixed task prefix.
     const target = path.resolve(directory), expectedParent = path.resolve(tmpdir());
     assert.equal(path.dirname(target), expectedParent);
+    assert.ok(path.basename(target).startsWith('dnd-browser-diagnostics-'));
+    rmSync(target, {recursive: true, force: true});
+  }
+ }
+});
+
+test('unavailable diagnostics preserve the original rejection and successful actions remain successful', async () => {
+  const directory = mkdtempSync(path.join(tmpdir(), 'dnd-browser-diagnostics-'));
+  const reportFile = path.join(directory, 'result.json');
+  try {
+    for (const contents of [undefined, 'not JSON', '{}']) {
+      if (contents !== undefined) writeFileSync(reportFile, contents);
+      const failure = new Error('Original browser failure');
+      await assert.rejects(withBrowserFailureDiagnostics(() => Promise.reject(failure), {reportFile, ...settings}), error => error === failure);
+      assert.equal(failure.browserDiagnostics, undefined);
+    }
+    assert.equal(await withBrowserFailureDiagnostics(() => Promise.resolve(42), {reportFile, ...settings}), 42);
+  } finally {
+    const target = path.resolve(directory);
+    assert.equal(path.dirname(target), path.resolve(tmpdir()));
     assert.ok(path.basename(target).startsWith('dnd-browser-diagnostics-'));
     rmSync(target, {recursive: true, force: true});
   }

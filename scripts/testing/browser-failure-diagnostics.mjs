@@ -1,4 +1,18 @@
 import path from 'node:path';
+import {readFile} from 'node:fs/promises';
+
+export async function withBrowserFailureDiagnostics(action, {reportFile, ...settings}) {
+  try {
+    return await action();
+  } catch (error) {
+    try {
+      error.browserDiagnostics = safeBrowserFailureDiagnostics(JSON.parse(await readFile(reportFile, 'utf8')), settings);
+    } catch {
+      // An unavailable or malformed report must preserve the original failure.
+    }
+    throw error;
+  }
+}
 
 const sourcePattern = /^frontend\/(?:e2e|e2e-local)\/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+\.spec\.ts$/;
 const failureStatuses = new Set(['failed', 'timedOut', 'interrupted']);
