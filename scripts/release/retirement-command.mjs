@@ -13,7 +13,7 @@ function parse(value) {
   return JSON.parse(bytes);
 }
 
-export async function runRetirementCommand({mode, executorManifest, request, command}) {
+export async function prepareRetirementCommand({mode, executorManifest, request, command}) {
   if (!Object.hasOwn(commands, mode) || typeof command !== 'function') throw Error('Explicit retirement command transport required');
   // Snapshot before awaiting transport, so concurrent caller edits cannot
   // change the request whose executor capability was checked.
@@ -32,14 +32,23 @@ export async function runRetirementCommand({mode, executorManifest, request, com
   const metadata = parse(await command({imageDigest: backend.imageDigest, args: ['--migration-info'], input: null}));
   if (metadata.build?.provenance !== 'baked' || metadata.build.sourceCommit !== backend.sourceCommit || metadata.build.inputFingerprint !== backend.inputFingerprint
       || metadata.retirementExecutionProtocolVersion !== 1
-      || mode === 'reconcile' && metadata.retirementReconciliationProtocolVersion !== 1
+      || mode !== 'inspect' && metadata.retirementReconciliationProtocolVersion !== 1
       || !same(metadata.supportedRetirementMigrations, [{id: retirementMigrationId, checksum: retirementSQLHash}])) throw Error('Exact baked retirement command capability required');
   assertExecutableMigrationRegistry(metadata, accepted.expectedCurrent, accepted.expectedCurrent);
-  const receipt = parse(await command({imageDigest: backend.imageDigest, args: [commands[mode]], input}));
-  if (mode === 'inspect') assertRetirementInspectionResult({request: accepted}, receipt);
-  else {
-    retirementInspectionFromExecution(accepted, receipt);
-    if (mode === 'reconcile' && !same(receipt.result.applied, [])) throw Error('Read-only reconciliation reported a mutation');
-  }
-  return receipt;
+  // The controller may now persist uncertainty immediately before dispatch.
+  // This closure retains the checked image/request; serialization cannot
+  // manufacture an executable capability.
+  return async () => {
+    const receipt = parse(await command({imageDigest: backend.imageDigest, args: [commands[mode]], input}));
+    if (mode === 'inspect') assertRetirementInspectionResult({request: accepted}, receipt);
+    else {
+      retirementInspectionFromExecution(accepted, receipt);
+      if (mode === 'reconcile' && !same(receipt.result.applied, [])) throw Error('Read-only reconciliation reported a mutation');
+    }
+    return receipt;
+  };
+}
+
+export async function runRetirementCommand(options) {
+  return (await prepareRetirementCommand(options))();
 }

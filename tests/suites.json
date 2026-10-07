@@ -118,6 +118,7 @@
         "scripts/release/retirement-artifacts.test.mjs",
         "scripts/release/retirement-build-baseline.test.mjs",
         "scripts/release/retirement-command.test.mjs",
+        "scripts/release/retirement-controller.test.mjs",
         "scripts/release/retirement-execution-result.test.mjs",
         "scripts/release/retirement-outcome-journal.test.mjs",
         "scripts/release/retirement-projection.test.mjs",

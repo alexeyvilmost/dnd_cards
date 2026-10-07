@@ -27,10 +27,11 @@ export function assertRetirementExecutionIntentBinding(intent,{active,executorMa
  if(!same(binding(intent),{previous:active,executorManifest,approvalHash,request}))throw Error('Changed retirement intent cannot replace the original request');
  return intent;
 }
-export async function prepareRetirementExecutionIntent({store,executorManifest,approvalHash,request}){
+export async function prepareRetirementExecutionIntent({store,executorManifest,approvalHash,request,expectedActive}){
  const unlock=store.lock();
  try{
   validateRetirementExecutionRequest(request);const active=store.active(),existing=store.operation(request.releaseId);
+  if(expectedActive!==undefined&&!same(active,expectedActive))throw Error('Retirement baseline changed after artifact verification');
   if(existing){assertRetirementExecutionIntentBinding(existing,{active,executorManifest,approvalHash,request});if(store.pending().some(op=>op.releaseId!==request.releaseId))throw Error('Another operation requires reconciliation');return {...existing,repeated:true};}
   if(store.pending().length)throw Error('Another operation requires reconciliation');
   const now=new Date().toISOString(),intent={schemaVersion:1,kind,releaseId:request.releaseId,status:'retirement_prepared',previous:structuredClone(active),executorManifest:structuredClone(executorManifest),approvalHash,request:structuredClone(request),createdAt:now,updatedAt:now};intent.intentHash=evidenceHash(binding(intent));

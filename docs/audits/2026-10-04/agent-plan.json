@@ -3536,6 +3536,16 @@
           "newBoundaryCases": 15,
           "productionChanges": 0,
           "productionReady": false
+        },
+        "retirement302Controller": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-controller.json",
+          "status": "durable_retirement_command_orchestration_locally_verified",
+          "windowsPassed": 222,
+          "linuxPassed": 222,
+          "skipped": 0,
+          "newControllerCases": 13,
+          "productionChanges": 0,
+          "productionReady": false
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
