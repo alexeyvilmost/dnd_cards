@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import {readFile,stat} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {backupFile,checksum} from './backup-manifest.mjs';
-import {validateManifest,evidenceHash} from './validate-manifest.mjs';
+import {validateManifest,validateMigrationSet,evidenceHash} from './validate-manifest.mjs';
 import {validateActive,assertServiceIdentities} from './deploy-state.mjs';
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 const hashPattern=/^sha256:[a-f0-9]{64}$/;
 const source=await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-302.sql',import.meta.url));
+const lifecycleSourceUrl=new URL('../../backend/migrations/character_lifecycle_301.go',import.meta.url);
+const lifecycleIdentity=Object.freeze({id:'301_character_lifecycle',checksum:hash(await readFile(lifecycleSourceUrl))});
 const verifiedPlans=new WeakMap();
 const artifactKinds=['sql','dump','archive','archiveRestore','retirementProof','retainedBefore','retainedAfter','readerPair','candidate','active'];
 export const retirementProfile=Object.freeze({schemaVersion:1,id:'retire-character-generations-302-local',migrationId:'302_retire_legacy_characters',mode:'local-owned-rehearsal',fingerprintTimezone:'UTC',sqlSourceHash:hash(source),productionExecutionSupported:false,automaticMigration:false});
@@ -21,16 +23,32 @@ function frozen(value){if(value&&typeof value==='object'){for(const child of Obj
 function passed(report){assert.equal(report.status,'passed');assert.equal(report.cleanup.status,'stopped');assert.deepEqual(report.cleanup.errors,[]);assert.equal(report.productionChanges,0);}
 function preimages(value){assert.deepEqual(Object.keys(value).sort(),['characters','characters_v2','retired_inventories','retired_items']);for(const row of Object.values(value)){assert.deepEqual(Object.keys(row).sort(),['rows','sha256']);assert(Number.isSafeInteger(row.rows)&&row.rows>=0);assert(hashPattern.test(row.sha256));}return value;}
 function tableFingerprints(value){assert(value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).length>0);for(const [name,row]of Object.entries(value)){assert(/^[a-z][a-z0-9_]*$/.test(name));assert(Number.isSafeInteger(row.rows)&&row.rows>=0);assert(hashPattern.test(row.sha256));}return value;}
+const orderedMigrations=rows=>[...rows].sort((a,b)=>a.id.localeCompare(b.id));
+function localExpansion(raw,pair,expansion,baseline){
+ assert.deepEqual(Object.keys(expansion).sort(),['fingerprint','identity','ordinaryMigrationSet','originalLedgerRowsPreserved','repeatApplied','schemaProofHash','sourceCommit','v3AndRunOriginalRowsPreserved']);
+ assert.deepEqual(raw.localLifecycleExpansion,expansion);assert.deepEqual(expansion.identity,lifecycleIdentity);
+ assert(/^[a-f0-9]{40}$/.test(expansion.sourceCommit));assert.equal(raw.sourceCommit,expansion.sourceCommit);
+ assert(hashPattern.test(expansion.fingerprint));assert(hashPattern.test(expansion.schemaProofHash));
+ assert.equal(raw.originalCaptureMigrationCount,baseline.length);assert(hashPattern.test(raw.originalCaptureLedgerHash));
+ assert.equal(expansion.originalLedgerRowsPreserved,baseline.length);assert.equal(expansion.v3AndRunOriginalRowsPreserved,true);assert.equal(expansion.repeatApplied,0);
+ assert(!baseline.some(row=>row.id===lifecycleIdentity.id));validateMigrationSet(expansion.ordinaryMigrationSet);
+ const target=[...baseline,lifecycleIdentity];assert.deepEqual(orderedMigrations(expansion.ordinaryMigrationSet),orderedMigrations(target));
+ assert.equal(raw.priorMigrationCount,target.length);assert.deepEqual(pair.localLifecycleExpansionIdentity,lifecycleIdentity);
+ const linux=pair.actualLinuxExecutor302;assert.equal(linux.status,'passed');assert.equal(linux.sourceCommit,expansion.sourceCommit);
+ assert.equal(linux.localDiagnosticBinary,true);assert.equal(linux.publishedExecutor,false);assert.equal(linux.repeatApplied,0);assert(hashPattern.test(linux.receiptHash));
+ return target;
+}
 
 export async function verifyLocalRetirementArtifacts(directory){
  try{
   const bytes=await readFile(backupFile(directory,'retirement-bundle.json'));
   assert(bytes.length<=1024*1024);const bundle=JSON.parse(bytes);
-  assert.equal(bundle.schemaVersion,1);assert.equal(bundle.kind,'local-retirement-artifact-bundle');assert.equal(bundle.profileId,retirementProfile.id);
+  assert([1,2].includes(bundle.schemaVersion));assert.equal(bundle.kind,'local-retirement-artifact-bundle');assert.equal(bundle.profileId,retirementProfile.id);
   assert.equal(bundle.mode,retirementProfile.mode);assert.equal(bundle.fingerprintTimezone,'UTC');assert.equal(bundle.productionReady,false);
-  assert.deepEqual(Object.keys(bundle.artifacts).sort(),[...artifactKinds].sort());
+  const kinds=bundle.schemaVersion===2?[...artifactKinds,'lifecycleExpansion']:artifactKinds;
+  assert.deepEqual(Object.keys(bundle.artifacts).sort(),[...kinds].sort());
   const paths=new Set(),files={},values={};
-  for(const kind of artifactKinds){
+  for(const kind of kinds){
    const row=bundle.artifacts[kind];assert.deepEqual(Object.keys(row).sort(),['bytes','path','sha256']);assert(hashPattern.test(row.sha256));assert(Number.isSafeInteger(row.bytes)&&row.bytes>0);
    const file=backupFile(directory,row.path);assert(!paths.has(file));paths.add(file);
    assert.equal((await stat(file)).size,row.bytes);assert.equal(await checksum(file),row.sha256);files[kind]=file;
@@ -53,8 +71,11 @@ export async function verifyLocalRetirementArtifacts(directory){
   const candidate=values.candidate,active=values.active;validateManifest(candidate.manifest);validateActive(active);
   assert.equal(candidate.status,'candidate-only');assert.equal(candidate.deployable,false);assert.equal(candidate.provenance.manifestHash,evidenceHash(candidate.manifest));assert.equal(candidate.provenance.sourceCommit,candidate.manifest.releaseCommit);
   assert.equal(candidate.manifest.previousReleaseId,active.manifest.releaseId);
-  const expectedCurrentMigrations=(active.database?.migrationSet??active.manifest.migrationSet).map(row=>row.id).sort();
-  assert.equal(raw.priorMigrationCount,expectedCurrentMigrations.length);
+  const snapshotMigrationSet=active.database?.migrationSet??active.manifest.migrationSet;
+  let currentMigrationSet=snapshotMigrationSet;
+  if(bundle.schemaVersion===2)currentMigrationSet=localExpansion(raw,pair,values.lifecycleExpansion,snapshotMigrationSet);
+  else {assert.equal(raw.localLifecycleExpansion,undefined);assert.equal(pair.localLifecycleExpansionIdentity,undefined);assert.equal(raw.priorMigrationCount,snapshotMigrationSet.length);}
+  const expectedCurrentMigrations=currentMigrationSet.map(row=>row.id).sort();
   for(const c of pair.checks.filter(c=>c.id==='image-contract')){
    const manifest=c.generation==='candidate'?candidate.manifest:active.manifest;
    const state=c.generation==='candidate'?{schemaVersion:1,status:'active',manifest,instances:Object.fromEntries(Object.keys(manifest.components).map(k=>[k,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]))}:active;
@@ -62,8 +83,8 @@ export async function verifyLocalRetirementArtifacts(directory){
   }
   assert.equal(hash(await readFile(backupFile(directory,'retirement-bundle.json'))),hash(bytes));
   const request={schemaVersion:1,kind:'retire-character-generations-302',backupHash:raw.sourceDumpHash,archiveRestoreReportHash:raw.archiveRestoreReportHash,acceptedRollbackPairHash:bundle.artifacts.readerPair.sha256,preimages:structuredClone(raw.preimages)};
-  const plan=frozen({schemaVersion:1,kind:'verified-local-retirement-plan',profileId:retirementProfile.id,migrationId:retirementProfile.migrationId,mode:retirementProfile.mode,productionReady:false,productionExecutionSupported:false,bundleHash:hash(bytes),sqlSourceHash:raw.sqlSourceHash,request,candidateSource:candidate.manifest.releaseCommit,previousSource:active.manifest.releaseCommit,expectedCurrentMigrations,retainedFingerprints:structuredClone(values.retainedBefore),retainedTables:raw.retainedTableCount});
-  verifiedPlans.set(plan,{directory,files,bundle:structuredClone(bundle),source:Buffer.from(source),request:structuredClone(request)});return plan;
+  const plan=frozen({schemaVersion:1,kind:'verified-local-retirement-plan',profileId:retirementProfile.id,migrationId:retirementProfile.migrationId,mode:retirementProfile.mode,productionReady:false,productionExecutionSupported:false,bundleHash:hash(bytes),sqlSourceHash:raw.sqlSourceHash,request,candidateSource:candidate.manifest.releaseCommit,previousSource:active.manifest.releaseCommit,expectedCurrentMigrations,snapshotMigrations:snapshotMigrationSet.map(row=>row.id).sort(),...(bundle.schemaVersion===2?{localLifecycleExpansionIdentity:structuredClone(lifecycleIdentity),localExpansionArtifactHash:bundle.artifacts.lifecycleExpansion.sha256}:{}),retainedFingerprints:structuredClone(values.retainedBefore),retainedTables:raw.retainedTableCount});
+  verifiedPlans.set(plan,{directory,files,kinds:[...kinds],bundle:structuredClone(bundle),source:Buffer.from(source),request:structuredClone(request)});return plan;
  }catch{throw Error('Local retirement artifact verification refused');}
 }
 
@@ -72,7 +93,8 @@ export async function verifyLocalRetirementArtifacts(directory){
 export async function localRetirementProgram(plan){
  const proof=verifiedPlans.get(plan);if(!proof)throw Error('Live verified local retirement plan required');
  assert.equal(hash(await readFile(backupFile(proof.directory,'retirement-bundle.json'))),plan.bundleHash);
- for(const kind of artifactKinds)assert.equal(await checksum(backupFile(proof.directory,proof.bundle.artifacts[kind].path)),proof.bundle.artifacts[kind].sha256);
+ for(const kind of proof.kinds)assert.equal(await checksum(backupFile(proof.directory,proof.bundle.artifacts[kind].path)),proof.bundle.artifacts[kind].sha256);
+ if(plan.localLifecycleExpansionIdentity)assert.equal(hash(await readFile(lifecycleSourceUrl)),plan.localLifecycleExpansionIdentity.checksum);
  assert.equal(hash(await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-302.sql',import.meta.url))),plan.sqlSourceHash);
  return proof.source.toString('utf8').replace(":'retirement_request'","'"+JSON.stringify(proof.request).replaceAll("'","''")+"'");
 }

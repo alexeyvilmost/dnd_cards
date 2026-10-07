@@ -56,3 +56,32 @@ test('a parent directory junction cannot redirect an artifact outside its declar
 test('changed bytes after verification refuse preparation of executable SQL',async t=>{const f=await fixture(t),plan=await verifyLocalRetirementArtifacts(f.directory);await writeFile(path.join(f.directory,f.bundle.artifacts.dump.path),'new dump');await assert.rejects(localRetirementProgram(plan));});
 test('a serialized plan cannot reach any database adapter',async t=>{const f=await fixture(t),plan=await verifyLocalRetirementArtifacts(f.directory);let calls=0;await assert.rejects(applyNativeLocalRetirement(structuredClone(plan),{database:{query(){calls++;throw Error('Unexpected query');}}}),/Live verified/);assert.equal(calls,0);});
 test('an artifact directory cannot become a database target by presenting a loopback-looking DSN',async t=>{const f=await fixture(t),plan=await verifyLocalRetirementArtifacts(f.directory);let calls=0;await assert.rejects(applyNativeLocalRetirement(plan,{registry:{directory:f.directory},database:{dsn:'postgres://test_runner@127.0.0.1:5432/test_fake?sslmode=disable',query(){calls++;throw Error('Unexpected query');}}}));assert.equal(calls,0);});
+
+async function expandedFixture(t){
+ const f=await fixture(t),identity={id:'301_character_lifecycle',checksum:hash(await readFile(new URL('../../backend/migrations/character_lifecycle_301.go',import.meta.url)))};
+ const expansion={sourceCommit:'c'.repeat(40),fingerprint:h('e'),identity,schemaProofHash:h('f'),ordinaryMigrationSet:[...f.values.active.manifest.migrationSet,identity],originalLedgerRowsPreserved:1,v3AndRunOriginalRowsPreserved:true,repeatApplied:0};
+ f.bundle.schemaVersion=2;f.values.lifecycleExpansion=expansion;Object.assign(f.values.retirementProof,{sourceCommit:expansion.sourceCommit,originalCaptureMigrationCount:1,originalCaptureLedgerHash:h('a'),priorMigrationCount:2,localLifecycleExpansion:structuredClone(expansion)});
+ Object.assign(f.values.readerPair,{localLifecycleExpansionIdentity:identity,actualLinuxExecutor302:{status:'passed',sourceCommit:expansion.sourceCommit,localDiagnosticBinary:true,publishedExecutor:false,receiptHash:h('b'),repeatApplied:0}});
+ f.saveExpansion=async()=>{f.values.retirementProof.localLifecycleExpansion=structuredClone(f.values.lifecycleExpansion);for(const kind of ['retirementProof','readerPair','lifecycleExpansion'])await f.save(kind);await f.saveBundle();};await f.saveExpansion();return f;
+}
+test('an explicitly bound native lifecycle expansion preserves the original snapshot manifest and targets the expanded ledger',async t=>{
+ const f=await expandedFixture(t),before=structuredClone(f.values.active),plan=await verifyLocalRetirementArtifacts(f.directory);
+ assert.deepEqual(f.values.active,before);assert.deepEqual(plan.snapshotMigrations,['001']);assert.deepEqual(plan.expectedCurrentMigrations,['001','301_character_lifecycle']);assert.equal(plan.productionExecutionSupported,false);assert.equal(plan.localExpansionArtifactHash,f.bundle.artifacts.lifecycleExpansion.sha256);assert(Object.isFrozen(plan.localLifecycleExpansionIdentity));await localRetirementProgram(plan);
+});
+for(const [name,mutate]of [
+ ['unknown bundle version',f=>{f.bundle.schemaVersion=3;}],
+ ['unbound expansion in the old bundle format',f=>{f.bundle.schemaVersion=1;f.removeExpansionArtifact=true;}],
+ ['missing expansion artifact',f=>{f.removeExpansionArtifact=true;}],
+ ['changed lifecycle checksum',f=>{f.values.lifecycleExpansion.identity.checksum=h('0');}],
+ ['another additive migration',f=>{f.values.lifecycleExpansion.ordinaryMigrationSet.push({id:'303_unapproved',checksum:h('0')});}],
+ ['changed original migration identity',f=>{f.values.lifecycleExpansion.ordinaryMigrationSet[0].checksum=h('0');}],
+ ['invented original ledger count',f=>{f.values.retirementProof.originalCaptureMigrationCount=2;}],
+ ['lost original ledger row',f=>{f.values.lifecycleExpansion.originalLedgerRowsPreserved=0;}],
+ ['mutated V3 or run row',f=>{f.values.lifecycleExpansion.v3AndRunOriginalRowsPreserved=false;}],
+ ['repeat expansion that applies again',f=>{f.values.lifecycleExpansion.repeatApplied=1;}],
+ ['another executor source',f=>{f.values.readerPair.actualLinuxExecutor302.sourceCommit='d'.repeat(40);}],
+ ['fake published executor',f=>{f.values.readerPair.actualLinuxExecutor302.publishedExecutor=true;}],
+ ['different reader lifecycle checksum',f=>{f.values.readerPair.localLifecycleExpansionIdentity={id:'301_character_lifecycle',checksum:h('0')};}],
+])test('local expansion refuses '+name,async t=>{const f=await expandedFixture(t);mutate(f);await f.saveExpansion();if(f.removeExpansionArtifact){delete f.bundle.artifacts.lifecycleExpansion;await f.saveBundle();}await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);});
+test('changing the separately hashed expansion after verification prevents SQL preparation',async t=>{const f=await expandedFixture(t),plan=await verifyLocalRetirementArtifacts(f.directory);await writeFile(path.join(f.directory,f.bundle.artifacts.lifecycleExpansion.path),'{}');await assert.rejects(localRetirementProgram(plan));});
+test('the original direct path accepts a genuinely current lifecycle ledger without a claimed local expansion',async t=>{const f=await fixture(t),identity={id:'301_character_lifecycle',checksum:hash(await readFile(new URL('../../backend/migrations/character_lifecycle_301.go',import.meta.url)))};f.values.active.manifest.migrationSet.push(identity);f.values.candidate.manifest.migrationSet.push(identity);f.values.candidate.provenance.manifestHash=evidenceHash(f.values.candidate.manifest);f.values.retirementProof.priorMigrationCount=2;for(const kind of ['active','candidate','retirementProof'])await f.save(kind);await f.saveBundle();const plan=await verifyLocalRetirementArtifacts(f.directory);assert.deepEqual(plan.snapshotMigrations,plan.expectedCurrentMigrations);assert.equal(plan.localExpansionArtifactHash,undefined);});
