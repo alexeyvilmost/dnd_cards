@@ -211,7 +211,15 @@ func baselineMatrixRetainedSchema(t *testing.T, db *sql.DB, before map[string]st
 	t.Helper()
 	after := baselineMatrixSchemaObjects(t, db)
 	for key, value := range before {
-		if actual, exists := after[key]; !exists || actual != value {
+		actual, exists := after[key]
+		// 307 only expands the reviewed root metadata exclusions. Preserve the
+		// complete manual-review function definition after removing those two
+		// exact new fields; every other historical schema object stays exact.
+		if key == "function:invalidate_content_support()" && exists {
+			actual = strings.ReplaceAll(actual, "'is_narrative', ", "")
+			actual = strings.ReplaceAll(actual, "'is_technical', ", "")
+		}
+		if !exists || actual != value {
 			t.Fatal("historical schema definition changed:", key)
 		}
 	}
@@ -251,7 +259,7 @@ func TestSupportedBaselineUpgradeMatrix(t *testing.T) {
 			target = append(target, migration.Version)
 		}
 		sort.Strings(target)
-		tail := []string{"298_compact_command_receipts", "299_frozen_combat_catalogs", "300_image_jobs", "301_character_lifecycle"}
+		tail := []string{"298_compact_command_receipts", "299_frozen_combat_catalogs", "300_image_jobs", "301_character_lifecycle", "307_catalog_presentation"}
 		expectedTarget := append(append([]string{}, input.Versions...), tail...)
 		sort.Strings(expectedTarget)
 		// The checked-in schema ledger retains four retired identifiers. They

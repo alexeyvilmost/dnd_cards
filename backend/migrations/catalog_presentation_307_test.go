@@ -151,3 +151,55 @@ func TestCatalogPresentation307TransactionAndReplay(t *testing.T) {
 		t.Fatalf("failed migration left receipt: %d, %v", count, err)
 	}
 }
+
+func TestCatalogPresentation307RetainsManualReviewSemantics(t *testing.T) {
+	db := openIsolatedPostgresSchema(t, "CONTENT_MIGRATION_TEST_DSN")
+	for _, table := range []string{"actions", "effects", "spells"} {
+		if _, err := db.Exec(fmt.Sprintf(`CREATE TABLE %s(id uuid PRIMARY KEY,mechanics jsonb,support jsonb,version int DEFAULT 1,name text)`, table)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := addCatalogPresentation307(db); err != nil {
+		t.Fatal(err)
+	}
+	var locks int
+	if err := db.QueryRow(`SELECT count(*) FROM pg_proc WHERE pronamespace=current_schema()::regnamespace AND proname='protect_certified_content_mechanics'`).Scan(&locks); err != nil || locks != 0 {
+		t.Fatal("catalog lock restored", err)
+	}
+	for _, row := range []struct{ table, flag, id string }{
+		{"actions", "is_narrative", "10000000-0000-4000-8000-000000000001"},
+		{"effects", "is_technical", "20000000-0000-4000-8000-000000000002"},
+	} {
+		t.Run(row.table, func(t *testing.T) {
+			if _, err := db.Exec(fmt.Sprintf(`CREATE TRIGGER review BEFORE INSERT OR UPDATE ON %s FOR EACH ROW EXECUTE FUNCTION invalidate_content_support()`, row.table)); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := db.Exec(fmt.Sprintf(`INSERT INTO %s(id,mechanics,support) VALUES($1,'{"value":1}','{"status":"verified"}')`, row.table), row.id); err != nil {
+				t.Fatal(err)
+			}
+			check := func(expected string) {
+				t.Helper()
+				var actual string
+				if err := db.QueryRow(fmt.Sprintf(`SELECT support->>'status' FROM %s WHERE id=$1`, row.table), row.id).Scan(&actual); err != nil || actual != expected {
+					t.Fatalf("review=%s want=%s: %v", actual, expected, err)
+				}
+			}
+			check("not_tested")
+			if _, err := db.Exec(fmt.Sprintf(`UPDATE %s SET support='{"status":"verified_partial","mechanics_locked":true}' WHERE id=$1`, row.table), row.id); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := db.Exec(fmt.Sprintf(`UPDATE %s SET %s=true,name='presentation',version=version+1 WHERE id=$1`, row.table, row.flag), row.id); err != nil {
+				t.Fatal(err)
+			}
+			check("verified_partial")
+			if _, err := db.Exec(fmt.Sprintf(`UPDATE %s SET mechanics='{"value":2}' WHERE id=$1`, row.table), row.id); err != nil {
+				t.Fatal("mechanics must stay editable", err)
+			}
+			check("not_verified")
+			if _, err := db.Exec(fmt.Sprintf(`UPDATE %s SET support='{"status":"unknown"}' WHERE id=$1`, row.table), row.id); err == nil {
+				t.Fatal("invalid review accepted")
+			}
+			check("not_verified")
+		})
+	}
+}

@@ -81,7 +81,7 @@ export function lifecycleWriterExpansion(candidate,previous) {
     && baseline.every(row=>target.some(other=>json(other)===json(row)))
     && target.some(row=>json(row)===json(lifecycleMigrationIdentity));
 }
-export const presentationMigrationIdentity = Object.freeze({id:'307_catalog_presentation',checksum:"sha256:a529597dac046426d532e18f68a083963dc1c120fdb6efd5c464e7f16226a0c1"});
+export const presentationMigrationIdentity = Object.freeze({id:'307_catalog_presentation',checksum:"sha256:f2a1975deccfaadc1b83d9339977792c49ea0cad9d754d68608483419dbcbd32"});
 export function presentationWriterExpansion(candidate,previous) {
  if(!candidate || !previous || json(writerPolicy(candidate))!==json(writerPolicy(previous)))return false;
  const baseline=previous.migrationSet,target=candidate.migrationSet;

@@ -72,6 +72,22 @@ test('canonical content hash ignores editable metadata and detects executable ed
   assert.notEqual(contentHash({ ...entity, action_type: 'reaction' }), before);
 });
 
+test('presentation classification is excluded only at the certified entity root', () => {
+  for (const entity of [
+    { id: 'action-root', mechanics: { activation: { mode: 'active' } } },
+    { id: 'effect-root', mechanics: { duration: { rounds: 2 }, is_technical: false } },
+  ]) {
+    const before = contentHash(entity);
+    assert.equal(contentHash({ ...entity, is_narrative: true, is_technical: true }), before);
+    assert.equal(contentHash({ ...entity, is_narrative: false, is_technical: false }), before);
+    for (const field of ['is_narrative', 'is_technical']) {
+      assert.notEqual(contentHash({ ...entity, mechanics: { ...entity.mechanics, [field]: true } }), before);
+    }
+    assert.notEqual(contentHash({ ...entity, id: entity.id + '-changed' }), before);
+    assert.notEqual(contentHash({ ...entity, undeclared_execution_field: true }), before);
+  }
+});
+
 test('gate ignores dependency metadata but invalidates executable dependency changes', () => {
   const effect = {
     id: 'effect-1', card_number: 'EFFECT-1', description: 'До',

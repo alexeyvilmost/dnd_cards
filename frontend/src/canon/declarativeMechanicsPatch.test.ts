@@ -302,6 +302,8 @@ describe('versioned declarative micro-MVP L1 content patch', () => {
       rarity: 'rare',
       author: 'Редактор',
       source: 'Редактируемый источник',
+      is_narrative: false,
+      is_technical: true,
     });
 
     const verified = materializeMicroMvpL1ContentPatch(materialized);

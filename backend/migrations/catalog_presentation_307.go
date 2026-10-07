@@ -118,17 +118,23 @@ func applyCatalogPresentation307On(tx *sql.Tx) error {
 		if !compatible {
 			return fmt.Errorf("choice ability %s conflicts with existing content", effect.CardNumber)
 		}
-		_, err = tx.Exec(`INSERT INTO effects(id,card_number,name,description,mechanics,effect_type,rarity,image_url,author,source,support,created_at,updated_at)
+		result, insertErr := tx.Exec(`INSERT INTO effects(id,card_number,name,description,mechanics,effect_type,rarity,image_url,author,source,support,created_at,updated_at)
 		 SELECT $1,$2,$3,$4,$5::jsonb,$6,'common',image_url,'Admin','Выбор способности',
 		 '{"status":"not_verified"}'::jsonb,now(),now() FROM effects WHERE id=$7 AND deleted_at IS NULL
 		 ON CONFLICT(id) DO NOTHING`, effect.ID, effect.CardNumber, effect.Name, effect.Description, string(effect.Mechanics), effect.EffectType, effect.SourceID)
-		if err != nil {
-			return fmt.Errorf("create choice ability %s: %w", effect.CardNumber, err)
+		if insertErr != nil {
+			return fmt.Errorf("create choice ability %s: %w", effect.CardNumber, insertErr)
 		}
-		// The canonical BEFORE INSERT invalidator removes unsupported certificates.
-		// Annotate the resulting row in a second write; retain an existing review.
-		if _, err = tx.Exec(`UPDATE effects SET support='{"status":"not_verified"}'::jsonb WHERE id=$1 AND support IS NULL`, effect.ID); err != nil {
-			return err
+		inserted, rowsErr := result.RowsAffected()
+		if rowsErr != nil {
+			return rowsErr
+		}
+		// Canonical inserts start at not_tested. Annotate only a newly created
+		// choice; a conflicting existing row retains its manual review.
+		if inserted == 1 {
+			if _, err = tx.Exec(`UPDATE effects SET support='{"status":"not_verified"}'::jsonb WHERE id=$1`, effect.ID); err != nil {
+				return err
+			}
 		}
 	}
 	for _, parent := range manifest.Parents {

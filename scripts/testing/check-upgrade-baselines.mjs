@@ -12,7 +12,7 @@ import {evidenceHash} from '../release/validate-manifest.mjs';
 
 async function migrationInputs(){
   const result={};
-  async function walk(relative){for(const entry of await readdir(path.join(repositoryRoot,relative),{withFileTypes:true})){const file=relative+'/'+entry.name;if(entry.isDirectory())await walk(file);else if(/\.(go|json)$/.test(file))result[file]=fixtureHash(await readFile(path.join(repositoryRoot,file)));}}
+  async function walk(relative){for(const entry of await readdir(path.join(repositoryRoot,relative),{withFileTypes:true})){const file=relative+'/'+entry.name;if(entry.isDirectory())await walk(file);else if(/\.(go|json|sql)$/.test(file))result[file]=fixtureHash(await readFile(path.join(repositoryRoot,file)));}}
   await walk('backend/migrations');
   for(const file of ['backend/go.mod','backend/go.sum','scripts/testing/check-upgrade-baselines.mjs','scripts/testing/upgrade-baseline-fixture.mjs'])result[file]=fixtureHash(await readFile(path.join(repositoryRoot,file)));
   return result;
@@ -58,7 +58,7 @@ export async function checkUpgradeBaselines({output,go,pgBin,race=process.env.TE
         const args=['tool','test2json','-t','-p','dnd-cards-backend/migrations',binary,'-test.run=^TestSupportedBaselineUpgradeMatrix$','-test.count=1','-test.v=test2json'];
         const result=await execute(executable,args,{cwd:path.join(repositoryRoot,'backend'),env,log,timeout:180000});verifyGoRun(result,baseline);
         assert.equal(fixtureHash(await readFile(binary)),report.testBinary.sha256,'Matrix executable changed during run');
-        row.result=JSON.parse(await readFile(path.join(stack.registry.directory,'baseline-upgrade-case.json')));assert.equal(row.result.status,'passed');assert.equal(row.result.case,baseline);assert.equal(row.result.applied.length,301-baseline);assert.equal(row.result.repeatApplied.length,0);
+        row.result=JSON.parse(await readFile(path.join(stack.registry.directory,'baseline-upgrade-case.json')));assert.equal(row.result.status,'passed');assert.equal(row.result.case,baseline);assert.deepEqual(row.result.applied,['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle','307_catalog_presentation'].slice(baseline-297));assert.equal(row.result.repeatApplied.length,0);
         const inventory=await databaseRecoveryInventory(stack.database);assert.deepEqual(inventory.artifactHashes,[fixture.input.artifactHash]);
         assert.equal(fixtureHash(await readFile(fixture.artifactFile)),fixture.input.artifactHash);
         row.artifactInventory=inventory.artifactHashes;row.finalSchemaHash=await finalStructure(stack.database,inventory);row.status='passed';

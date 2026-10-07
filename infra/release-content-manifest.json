@@ -657,8 +657,8 @@
     },
     {
       "path": "backend/migrations/catalog_presentation_307.go",
-      "sha256": "sha256:5313f3cd2046b732461bfcd644aa2d157dfef4c00b8304eb5911a7975e7c26cc",
-      "bytes": 9942
+      "sha256": "sha256:0518a18b73cd3d58239406822aafd0f923d122abb87b803a7185718221badca4",
+      "bytes": 10047
     },
     {
       "path": "backend/migrations/catalog_presentation_schema_307.go",
@@ -667,8 +667,8 @@
     },
     {
       "path": "backend/migrations/catalog_presentation_schema_307.sql",
-      "sha256": "sha256:b1896ebd10744bc1808150fce6a4c6bc0a2ade2cebe5c8c9557ef1dfb5a24967",
-      "bytes": 4726
+      "sha256": "sha256:d08a2d19671bad93ab78e5e1c0c56d7a71b25df6ac2847d6329af54941d53332",
+      "bytes": 2481
     },
     {
       "path": "backend/migrations/catalog_variants_280.go",
@@ -2052,8 +2052,8 @@
     },
     {
       "path": "frontend/src/canon/data/certified_mutable_metadata_fields.v1.json",
-      "sha256": "sha256:1eac63df5ae3bdb8cc10c9d1db4212863ba31b4b67221a62dc2d8b8464dd45c4",
-      "bytes": 572
+      "sha256": "sha256:6e69203a9c419c28a26e30b7f71644eb88f10e507277f7d4aa467f73b058c56b",
+      "bytes": 612
     },
     {
       "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.schema.json",
