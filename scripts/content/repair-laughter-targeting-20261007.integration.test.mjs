@@ -26,6 +26,10 @@ test('targeted repair commits once and rolls back preimage, trigger and historic
   run(`CREATE TABLE spells(id uuid PRIMARY KEY, name text, mechanics jsonb, support jsonb, deleted_at timestamptz,updated_at timestamptz);
    CREATE TABLE roguelike_runs(id uuid PRIMARY KEY,combat_envelope jsonb,combat_catalog jsonb,combat_catalog_ref jsonb,encounter jsonb,checkpoint jsonb);
    CREATE TABLE frozen_combat_catalogs(user_id uuid,content_hash text,catalog jsonb);
+   CREATE FUNCTION invalidate_content_support() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN
+    IF (to_jsonb(NEW)-ARRAY['support','updated_at']::text[]) IS DISTINCT FROM (to_jsonb(OLD)-ARRAY['support','updated_at']::text[]) THEN NEW.support=NULL; END IF;
+    RETURN NEW; END$$;
+   CREATE TRIGGER invalidate_content_support BEFORE UPDATE ON spells FOR EACH ROW EXECUTE FUNCTION invalidate_content_support();
    INSERT INTO spells VALUES('${laughterTargetingPatch.entityId}','Original','{"targeting":{"shape":"multiple","additional_target_slots_per_spell_slot_above_base":1},"effects":[]}','{"notes":"retain"}',NULL,'2026-01-01');
    INSERT INTO roguelike_runs VALUES('00000000-0000-4000-8000-000000000001','{"roll":12}','{"old":true}',NULL,'{}','{"encounter_history":["old"]}');
    INSERT INTO frozen_combat_catalogs VALUES('00000000-0000-4000-8000-000000000002','sha256:old','{"old":true}');`);
@@ -33,7 +37,7 @@ test('targeted repair commits once and rolls back preimage, trigger and historic
   const original=run(`SELECT jsonb_build_object('spell',(SELECT to_jsonb(s) FROM spells s),'run',(SELECT to_jsonb(r) FROM roguelike_runs r),'catalog',(SELECT to_jsonb(c) FROM frozen_combat_catalogs c))::text`);
   run(targetingRepairSQL('sha256:'+'0'.repeat(64)),true);
   assert.equal(run(`SELECT jsonb_build_object('spell',(SELECT to_jsonb(s) FROM spells s),'run',(SELECT to_jsonb(r) FROM roguelike_runs r),'catalog',(SELECT to_jsonb(c) FROM frozen_combat_catalogs c))::text`),original);
-  for(const mutation of ["NEW.name:='Unexpected';", "UPDATE roguelike_runs SET combat_envelope='{\"changed\":true}';"]){
+  for(const mutation of ["NEW.name:='Unexpected';", "NEW.support:='{\"status\":\"verified\"}';", "UPDATE roguelike_runs SET combat_envelope='{\"changed\":true}';"]){
    run(`CREATE FUNCTION repair_conflict() RETURNS trigger LANGUAGE plpgsql AS $$BEGIN ${mutation} RETURN NEW; END$$;
     CREATE TRIGGER repair_conflict BEFORE UPDATE ON spells FOR EACH ROW EXECUTE FUNCTION repair_conflict();`);
    run(targetingRepairSQL(hash),true);
@@ -44,7 +48,7 @@ test('targeted repair commits once and rolls back preimage, trigger and historic
   assert.equal(result.status,'applied');assert.equal(result.affected,1);
   const after=JSON.parse(run(`SELECT jsonb_build_object('spell',(SELECT to_jsonb(s) FROM spells s),'run',(SELECT to_jsonb(r) FROM roguelike_runs r),'catalog',(SELECT to_jsonb(c) FROM frozen_combat_catalogs c))::text`));
   assert.equal(after.spell.mechanics.targeting.max_targets,1);assert.equal(after.spell.name,'Original');
-  assert.equal(after.spell.support.notes,'retain');assert.deepEqual(after.run,JSON.parse(original).run);assert.deepEqual(after.catalog,JSON.parse(original).catalog);
+  assert.equal(after.spell.support.notes,'retain');assert.equal(after.spell.support.status,'not_verified');assert.deepEqual(after.run,JSON.parse(original).run);assert.deepEqual(after.catalog,JSON.parse(original).catalog);
   const committed=JSON.stringify(after);
   run(targetingRepairSQL(hash),true);
   assert.equal(JSON.stringify(JSON.parse(run(`SELECT jsonb_build_object('spell',(SELECT to_jsonb(s) FROM spells s),'run',(SELECT to_jsonb(r) FROM roguelike_runs r),'catalog',(SELECT to_jsonb(c) FROM frozen_combat_catalogs c))::text`))),committed);

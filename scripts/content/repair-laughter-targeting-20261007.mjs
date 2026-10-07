@@ -48,8 +48,11 @@ export function targetingRepairSQL(expectedHash){
   OR (original.mechanics->'targeting' ? 'min_targets' AND original.mechanics#>'{targeting,min_targets}' IS DISTINCT FROM '${baseTargets}'::jsonb)
   OR original.mechanics->'targeting' ? 'max_targets' THEN RAISE EXCEPTION 'Repair predicate changed'; END IF;
  runs_before := (${protectedRuns}); catalogs_before := (${protectedCatalogs});
+ -- The canonical invalidation trigger revokes support on mechanics changes.
+ -- Restore the reviewed status only after that change, inside this transaction.
  UPDATE spells SET mechanics=jsonb_set(jsonb_set(mechanics,'{targeting,max_targets}','${baseTargets}'::jsonb,true),'{targeting,min_targets}','${baseTargets}'::jsonb,true),
-  support=COALESCE(support,'{}'::jsonb)||'{"status":"not_verified"}'::jsonb,updated_at=NOW() WHERE id='${entityId}';
+  updated_at=NOW() WHERE id='${entityId}';
+ UPDATE spells SET support=COALESCE(original.support,'{}'::jsonb)||'{"status":"not_verified"}'::jsonb WHERE id='${entityId}';
  SELECT * INTO STRICT repaired FROM spells WHERE id='${entityId}';
  IF (to_jsonb(repaired)-'mechanics'-'support'-'updated_at') IS DISTINCT FROM (to_jsonb(original)-'mechanics'-'support'-'updated_at')
   OR repaired.mechanics IS DISTINCT FROM jsonb_set(jsonb_set(original.mechanics,'{targeting,max_targets}','${baseTargets}'::jsonb,true),'{targeting,min_targets}','${baseTargets}'::jsonb,true)

@@ -20,6 +20,6 @@ test('application requires exact preimage, holds its row and rejects changes to 
  assert.throws(()=>targetingRepairSQL("'; SELECT 1"),/hash/);
  const sql=targetingRepairSQL('sha256:'+'a'.repeat(64));
  assert.match(sql,/FOR UPDATE/);assert.match(sql,/Reviewed preimage changed/);assert.match(sql,/Frozen history changed/);
- assert.equal((sql.match(/UPDATE spells/g)||[]).length,1);assert.doesNotMatch(sql,/UPDATE roguelike_runs|UPDATE frozen_combat_catalogs/);
+ assert.equal((sql.match(/UPDATE spells/g)||[]).length,2);assert.doesNotMatch(sql,/UPDATE roguelike_runs|UPDATE frozen_combat_catalogs/);
  assert.match(sql,/BEGIN ISOLATION LEVEL REPEATABLE READ/);assert.match(sql,/COMMIT/);
 });
