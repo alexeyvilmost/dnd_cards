@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "status": "captured_database_docker_transport_locally_verified_host_artifact_entrypoint_pending",
+  "recordedAt": "2026-10-07T06:24:15.184Z",
+  "baseCommit": "a1614e16ff33e0a013bb7a6ce79a7d2dfae9f5d7",
+  "sourceHashes": {
+    "scripts/release/docker-deployment.mjs": "sha256:0dfae25b210193234da8869fce09bbeb40f8f8904db3ddefa4ab3038673075bf",
+    "scripts/release/docker-deployment.test.mjs": "sha256:930a421899f05906117f4cc83e49a4c68b80c67f64bc566edb3df554911eeb55"
+  },
+  "implementation": "createDockerDeploymentAdapter.createRetirementCommand",
+  "verification": {
+    "windowsRelated": {
+      "passed": 246,
+      "failed": 0,
+      "skipped": 0,
+      "logSha256": "sha256:639dbc0e5b2a4f7e0c23c2c29c2bd6669ee983d6345b48930fa5f408f5f27d68"
+    },
+    "linuxTargeted": {
+      "passed": 46,
+      "failed": 0,
+      "skipped": 0,
+      "imageDigest": "sha256:8cc57e76a0c57777601a09b9e07869edc0baefd2f65d4cb653db711fd4be8f9d",
+      "network": "none",
+      "sourceReadOnly": true,
+      "sourceUnchanged": true,
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "receiptSha256": "sha256:af028c03b5feba2d408c320e796138165ee8026345857c6d1b5e0b1a0d16af0d"
+    },
+    "newBoundaryCases": 7
+  },
+  "demonstrated": [
+    "Reuses canonical captured database binding and verified Compose database network; no alternate DSN source.",
+    "Exact executor digest, single supported CLI flag, bounded stdin and source/schema identity; metadata has network none and no database environment.",
+    "Authoritative active.json and healthy actual live backend rechecked before dispatch and after response.",
+    "DSN only in private child environment, never argv or mutable app env files; launch/migration/pull operations absent.",
+    "Unknown outcome is sanitized and remains a controller reconciliation case; no blind execute retry.",
+    "Cleanup checks exact generated name and ownership label, and refuses a changed owner without deleting that container.",
+    "Controller archive-verifier failure is proven to stop before durable intent and database command."
+  ],
+  "limitations": [
+    "Synthetic Docker command boundary responses do not prove an actual image/SQL execution.",
+    "The public host entry point still must bind real fresh backup, exact retired-row archive restoration, and actual candidate/previous reader pair acceptance.",
+    "Transport creation does not authorize retirement; ordinary prepare/migrate continue not to dispatch retirement.",
+    "No production retirement or application release of this transport occurred."
+  ],
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "productionReady": false
+}

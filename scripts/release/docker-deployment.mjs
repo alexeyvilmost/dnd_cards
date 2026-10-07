@@ -1,11 +1,12 @@
 // Prepared host adapter. Unit tests inject its Docker boundary; policy starts disabled.
 import {execFileSync} from 'node:child_process';
+import {randomUUID} from 'node:crypto';
 import {readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, lstatSync} from 'node:fs';
 import path from 'node:path';
-import {evidenceHash} from './validate-manifest.mjs';
+import {evidenceHash,validateManifest} from './validate-manifest.mjs';
 import {assertRuntimeWriterPolicy,assertExpansionWritersOff,assertMigrationWriterPolicy} from './writer-environment.mjs';
 export {assertExpansionWritersOff} from './writer-environment.mjs';
-import {deploymentEnvironment, assertServiceIdentities} from './deploy-state.mjs';
+import {deploymentEnvironment, assertServiceIdentities,validateActive} from './deploy-state.mjs';
 import {readRetainedRuntime} from './retained-runtime.mjs';
 import {databaseMigrationSet,databaseStateFromResult,assertExecutableMigrationRegistry} from './migration-transition.mjs';
 import {inspectIdentity} from './ci-images.mjs';
@@ -15,7 +16,8 @@ import {readDockerInventory,readDockerSchemaLedgerProof} from './read-snapshot.m
 import {verifyBackupSourceReleases} from './source-release-references.mjs';
 import {bindDeploymentDatabase,databaseURLFromEnvironment,databaseIdentityHash} from './database-binding.mjs';
 import {isLegacyBaseline,validateLegacyBaseline,baselineDocument,componentImage,legacyRuntimeFingerprint,deploymentStateFile} from './legacy-baseline.mjs';
-import {assertRetirementInspectionResult} from './retirement-state.mjs';
+import {assertRetirementInspectionResult,validateRetirementInspectionRequest} from './retirement-state.mjs';
+import {validateRetirementExecutionRequest} from './retirement-execution-result.mjs';
 const service = {backend: 'backend', frontend: 'frontend', rulesWorker: 'rules-worker'};
 const read = file => JSON.parse(readFileSync(file, 'utf8'));
 export async function assertLiveReferenceCoverage({inventory,plan,backup,backupDirectory,artifactDirectory}){
@@ -69,15 +71,16 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
   const permitted=new Map();
   const permit=state=>permitted.set(evidenceHash(releaseApplicationState(state)),state);
   permit(read(deploymentStateFile(config)));
-  function assertLiveDatabase(state){
+  function assertLiveDatabase(state,{requireHealthy=false}={}){
     if(state)permit(state);
     // A failed candidate can be stopped during rollback. Its immutable image
     // and actual launch environment still bind the DB; final service health is
     // separately mandatory in observe(). Never infer a missing container's DSN.
     const id=command(['ps','-a','--filter',`label=com.docker.compose.project=${config.project}`,'--filter','label=com.docker.compose.service=backend','--no-trunc','--format','{{.ID}}']);
-    if(id===''&&backendReplacementStarted&&binding)return binding;
+    if(id===''&&backendReplacementStarted&&binding&&!requireHealthy)return binding;
     if(!/^[a-f0-9]{64}$/.test(id))throw Error('Exactly one backend container required for database binding');
     const container=JSON.parse(command(['inspect',id]))[0];let dsn;
+    if(requireHealthy&&(container.State?.Running!==true||container.State.Health?.Status!=='healthy'))throw Error('Healthy live backend required for explicit retirement');
     const candidates=[...permitted.values()].filter(value=>isLegacyBaseline(value)?value.components.backend.imageId===container.Image:componentImage(value,'backend')===container.Config?.Image);
     for(const candidate of candidates){
       const image=JSON.parse(command(['image','inspect',componentImage(candidate,'backend')]))[0];
@@ -192,6 +195,49 @@ export async function createDockerDeploymentAdapter(config,{command:run=command,
     await retainImmutableAssets(extraction, config.assetDirectory);
   }
   return {
+    // Transport for the separately verified retirement controller. Ordinary
+    // prepare/migrate never dispatch retirement. External archive/reader proof
+    // and durable uncertainty must be accepted before its execute call.
+    createRetirementCommand({state,executorManifest}) {
+      validateActive(state);validateManifest(executorManifest);
+      const original=structuredClone(state),executor=structuredClone(executorManifest),activeHash=evidenceHash(original);
+      const assertCurrent=()=>{if(evidenceHash(read(deploymentStateFile(config)))!==activeHash)throw Error('Retirement active baseline changed');assertLiveDatabase(original,{requireHealthy:true});};
+      const modes=new Set(['--execute-character-retirement','--reconcile-character-retirement','--inspect-character-retirement']);
+      return async call=>{
+        if(!call||evidenceHash(Object.keys(call).sort())!==evidenceHash(['args','imageDigest','input'])
+          ||call.imageDigest!==executor.components.backend.imageDigest||!Array.isArray(call.args)||call.args.length!==1)throw Error('Exact retirement transport call required');
+        const flag=call.args[0];
+        if(flag==='--migration-info'){
+          if(call.input!==null)throw Error('Metadata probe must have no input');
+          assertCurrent();
+          return command(['run','--rm','--read-only','--network','none',call.imageDigest,flag]);
+        }
+        if(!modes.has(flag)||typeof call.input!=='string'||Buffer.byteLength(call.input)>512*1024)throw Error('Bounded explicit retirement command required');
+        const request=JSON.parse(call.input);
+        if(flag==='--inspect-character-retirement')validateRetirementInspectionRequest(request);else validateRetirementExecutionRequest(request);
+        if(request.candidateSourceCommit!==executor.components.backend.sourceCommit||request.candidateInputFingerprint!==executor.components.backend.inputFingerprint
+          ||original.database?.status!=='verified-additive'&&original.database?.status!=='verified-character-retirement'
+          ||request.expectedAdditiveSchemaProofHash!==(original.database.status==='verified-additive'?original.database.schemaProofHash:original.database.request.expectedAdditiveSchemaProofHash)
+          ||flag!=='--inspect-character-retirement'&&evidenceHash(request.expectedCurrent)!==evidenceHash(databaseMigrationSet(original)))throw Error('Retirement request differs from captured active executor/schema');
+        assertCurrent();validateDatabaseNetwork();
+        const owner='character-retirement-'+randomUUID(),label='bagofholding.retirement-command';
+        try{
+          const result=command(['run','--rm','-i','--name',owner,'--label',label+'='+owner,'--read-only','--network',databaseNetwork,
+            '-e','DATABASE_URL','-e','RELEASE_ID='+request.releaseId,'-e','RELEASE_COMMIT='+request.candidateSourceCommit,
+            call.imageDigest,flag],{input:call.input,env:{DATABASE_URL:binding}});
+          assertCurrent();return result;
+        }catch{throw Error('Retirement transport outcome requires read-only reconciliation');}
+        finally{
+          try{
+            const ids=command(['ps','-aq','--no-trunc','--filter','label='+label+'='+owner]).trim().split(/\s+/).filter(Boolean);
+            for(const id of ids){if(!/^[a-f0-9]{64}$/.test(id))throw Error('Invalid owned command container');const info=JSON.parse(command(['inspect',id]));
+              if(info.length!==1||info[0].Name!=='/'+owner||info[0].Config?.Labels?.[label]!==owner)throw Error('Command container ownership changed');
+              command(['rm','--force',id]);}
+            if(command(['ps','-aq','--no-trunc','--filter','label='+label+'='+owner]).trim())throw Error('Command container still exists');
+          }catch{throw Error('Retirement command cleanup requires inspection; outcome remains uncertain');}
+        }
+      };
+    },
     allowRecovery(operation){
       if(!operation.touched?.includes('backend')||['succeeded','rolled_back','failed_before_cutover'].includes(operation.status))return;
       const {previous,desired}=operation.plan;permit(previous);permit(desired);

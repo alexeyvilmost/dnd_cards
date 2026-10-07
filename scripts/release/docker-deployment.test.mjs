@@ -9,8 +9,11 @@ import {checksum} from './backup-manifest.mjs';
 import {databaseIdentityHash} from './database-binding.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
 import {legacyRuntimeFingerprint} from './legacy-baseline.mjs';
-import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+import {retirementStateUnitFixture,retirementExecutionUnitFixture} from './retirement-state-unit-fixture.mjs';
 import {databaseStateFromRetirementInspection} from './migration-transition.mjs';
+import {retirementMigrationId,retirementSQLHash} from './retirement-state.mjs';
+import {executeRetirement} from './retirement-controller.mjs';
+import {createDeploymentStore} from './deploy-state.mjs';
 const h=x=>`sha256:${x.repeat(64)}`;
 const dsn='postgresql://user:password@db/source?sslmode=require';
 async function fixture(t){
@@ -63,6 +66,75 @@ test('database probes inherit only the inspected live DSN, never mutable app env
   await f.adapter.assertDatabase([]);
   const query=f.calls.find(row=>row.args[0]==='run');
   assert.deepEqual(query.options.env,{DATABASE_URL:dsn});assert.ok(!query.args.includes('--env-file'));assert.ok(query.args.includes('DATABASE_URL'));assert.ok(!query.args.includes(dsn));
+});
+
+async function retirementTransportFixture(t){
+ const f=await fixture(t),unit=retirementExecutionUnitFixture();f.active.database=structuredClone(unit.active.database);
+ await writeFile(path.join(f.root,'active.json'),JSON.stringify(f.active));
+ const calls=[];let surviving,fail=false,changedOwner=false;
+ const command=(args,options)=>{
+  calls.push({args,options});
+  if(args[0]==='ps'&&args.some(arg=>arg.startsWith('label=bagofholding.retirement-command=')))return surviving?'d'.repeat(64):'';
+  if(args[0]==='inspect'&&args[1]==='d'.repeat(64))return JSON.stringify([{Name:'/'+surviving,Config:{Labels:{'bagofholding.retirement-command':changedOwner?'another-owner':surviving}}}]);
+  if(args[0]==='rm'&&args[1]==='--force'){assert.equal(args[2],'d'.repeat(64));surviving=null;return '';}
+  if(args[0]==='run'){
+   if(args.at(-1)==='--migration-info')return JSON.stringify({schemaVersion:1,versions:unit.request.expectedCurrent.map(r=>r.id),build:unit.execution.build,retirementExecutionProtocolVersion:1,retirementReconciliationProtocolVersion:1,supportedRetirementMigrations:[{id:retirementMigrationId,checksum:retirementSQLHash}]});
+   if(fail){surviving=args[args.indexOf('--name')+1];throw Error('private DSN '+dsn);}
+   return JSON.stringify(unit.execution);
+  }
+  return f.command(args,options);
+ };
+ const adapter=await createDockerDeploymentAdapter(f.config,{command});
+ const transport=adapter.createRetirementCommand({state:f.active,executorManifest:unit.executorManifest});
+ return {...f,unit,calls,transport,failTransport({ownerChanges=false}={}){fail=true;changedOwner=ownerChanges;}};
+}
+test('explicit retirement transport keeps metadata offline and uses only captured live DSN for all three database modes',async t=>{
+ const f=await retirementTransportFixture(t),imageDigest=f.unit.executorManifest.components.backend.imageDigest;
+ await writeFile(f.config.appEnvFile,JSON.stringify({DATABASE_URL:dsn.replace('/source','/other')}));
+ await f.transport({imageDigest,args:['--migration-info'],input:null});
+ for(const flag of ['--execute-character-retirement','--reconcile-character-retirement','--inspect-character-retirement']){
+  const request=flag==='--inspect-character-retirement'?f.unit.execution.result.request:f.unit.request;
+  await f.transport({imageDigest,args:[flag],input:JSON.stringify(request)});
+ }
+ const runs=f.calls.filter(c=>c.args[0]==='run');assert.equal(runs.length,4);
+ assert(runs[0].args.includes('none'));assert(!runs[0].args.includes('DATABASE_URL'));assert.equal(runs[0].options,undefined);
+ for(const c of runs.slice(1)){assert(c.args.includes('fixture_edge'));assert(c.args.includes('--read-only'));assert(!c.args.includes('--env-file'));assert(!c.args.join(' ').includes(dsn));assert.deepEqual(c.options.env,{DATABASE_URL:dsn});assert(c.args.includes(imageDigest));assert(c.args.includes('--name'));}
+ assert(!f.calls.some(c=>c.args.includes('up')||c.args.includes('pull')||c.args.includes('--migrate-release')));
+});
+test('retirement transport refuses different images, injected flags, oversized input, changed source and schema before dispatch',async t=>{
+ const f=await retirementTransportFixture(t),call={imageDigest:f.unit.executorManifest.components.backend.imageDigest,args:['--execute-character-retirement'],input:JSON.stringify(f.unit.request)};
+ for(const mutation of [c=>{c.imageDigest='example.test/backend@'+h('f');},c=>{c.args.push('--migrate-release');},c=>{c.args=['--migrate-release'];},c=>{c.input='x'.repeat(512*1024+1);},c=>{const r=JSON.parse(c.input);r.candidateSourceCommit='c'.repeat(40);c.input=JSON.stringify(r);},c=>{const r=JSON.parse(c.input);r.expectedCurrent.pop();c.input=JSON.stringify(r);},c=>{const r=JSON.parse(c.input);r.expectedAdditiveSchemaProofHash=h('f');c.input=JSON.stringify(r);}]){const altered=structuredClone(call);mutation(altered);await assert.rejects(f.transport(altered));}
+ assert(!f.calls.some(c=>c.args[0]==='run'));
+});
+test('retirement transport rechecks authoritative active and actual database source immediately before dispatch',async t=>{
+ const f=await retirementTransportFixture(t),call={imageDigest:f.unit.executorManifest.components.backend.imageDigest,args:['--execute-character-retirement'],input:JSON.stringify(f.unit.request)};
+ f.container.Config.Env[0]='DATABASE_URL='+dsn.replace('/source','/other');await assert.rejects(f.transport(call),/captured source/);
+ f.container.Config.Env[0]='DATABASE_URL='+dsn;
+ const changed=structuredClone(f.active);changed.instances.frontend.releaseId='changed';await writeFile(path.join(f.root,'active.json'),JSON.stringify(changed));await assert.rejects(f.transport(call),/active baseline changed/);
+ assert(!f.calls.some(c=>c.args[0]==='run'));
+});
+test('uncertain retirement transport sanitizes failures and cleans only its exact owned container without retrying execute',async t=>{
+ const f=await retirementTransportFixture(t);f.failTransport();
+ await assert.rejects(f.transport({imageDigest:f.unit.executorManifest.components.backend.imageDigest,args:['--execute-character-retirement'],input:JSON.stringify(f.unit.request)}),error=>!error.message.includes(dsn)&&error.message.includes('read-only reconciliation'));
+ assert.equal(f.calls.filter(c=>c.args[0]==='run').length,1);assert.equal(f.calls.filter(c=>c.args[0]==='rm').length,1);
+});
+test('changed command container ownership blocks cleanup and never deletes the mismatched container',async t=>{
+ const f=await retirementTransportFixture(t);f.failTransport({ownerChanges:true});
+ await assert.rejects(f.transport({imageDigest:f.unit.executorManifest.components.backend.imageDigest,args:['--execute-character-retirement'],input:JSON.stringify(f.unit.request)}),/cleanup requires inspection/);
+ assert(!f.calls.some(c=>c.args[0]==='rm'));
+});
+test('unhealthy or stopped backend refuses even the offline retirement capability probe',async t=>{
+ const f=await retirementTransportFixture(t),call={imageDigest:f.unit.executorManifest.components.backend.imageDigest,args:['--migration-info'],input:null};
+ f.container.State.Health.Status='unhealthy';await assert.rejects(f.transport(call),/Healthy live backend/);
+ f.container.State.Health.Status='healthy';f.container.State.Running=false;await assert.rejects(f.transport(call),/Healthy live backend/);
+ assert(!f.calls.some(c=>c.args[0]==='run'));
+});
+test('controller with the real Docker transport shape rejects changed external archive proof before intent or SQL dispatch',async t=>{
+ const f=await retirementTransportFixture(t),store=createDeploymentStore(f.root);
+ await assert.rejects(executeRetirement({store,executorManifest:f.unit.executorManifest,approvalHash:f.unit.approvalHash,request:f.unit.request,
+  command:f.transport,verifyArtifacts:async()=>{throw Error('retired archive bytes changed');},observe:async()=>{throw Error('must not observe');}}),/archive bytes changed/);
+ assert.equal(store.operation(f.unit.request.releaseId),null);assert.deepEqual(store.active(),f.active);
+ assert.deepEqual(f.calls.filter(c=>c.args[0]==='run').map(c=>c.args.at(-1)),['--migration-info']);
 });
 
 test('installed retirement uses the exact read-only inspector and captured DB binding instead of additive execution',async t=>{
