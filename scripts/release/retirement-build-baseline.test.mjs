@@ -19,7 +19,7 @@ function fixture(){
 function storeFixture(t){
  const f=fixture(),root=mkdtempSync(path.join(tmpdir(),'retirement-build-baseline-'));t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert(path.basename(root).startsWith('retirement-build-baseline-'));rmSync(root,{recursive:true,force:true});});
  f.root=root;f.store=createDeploymentStore(root);f.store.writeActive(f.retired);
- const transition={previous:f.active,desired:f.retired};f.operation={schemaVersion:1,kind:'character-retirement-observation-301',releaseId:f.request.releaseId,status:'succeeded',...transition,transitionHash:evidenceHash(transition),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};f.store.writeOperation(f.operation);return f;
+ const transition={previous:f.active,desired:f.retired};f.operation={schemaVersion:1,kind:'character-retirement-observation-302',releaseId:f.request.releaseId,status:'succeeded',...transition,transitionHash:evidenceHash(transition),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};f.store.writeOperation(f.operation);return f;
 }
 test('next configuration explicitly retains all installed identities without registering retirement as startup',()=>{
  const f=fixture(),before=structuredClone(f.config),result=retirementBuildConfig({...f,active:f.retired});assert.deepEqual(result.config.migrationSet,f.retired.database.migrationSet);assert.equal(result.receipt.changed,true);

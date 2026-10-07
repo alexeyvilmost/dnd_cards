@@ -37,14 +37,14 @@ async function retained(query,expected){
 }
 export async function applyNativeLocalRetirement(plan,stack){
  const program=await localRetirementProgram(plan),owned=await target(stack),query=owned.query;
- const ledgerSQL="SELECT coalesce(jsonb_agg(to_jsonb(m) ORDER BY version),'[]'::jsonb) FROM public.schema_migrations m WHERE version <> '301_retire_legacy_characters';";
+ const ledgerSQL="SELECT coalesce(jsonb_agg(to_jsonb(m) ORDER BY version),'[]'::jsonb) FROM public.schema_migrations m WHERE version <> '302_retire_legacy_characters';";
  const ledger=(await query(ledgerSQL)).trim(),rows=JSON.parse(ledger);assert.deepEqual(rows.map(r=>r.version).sort(),plan.expectedCurrentMigrations);
- const prior=(await query("SELECT description FROM public.schema_migrations WHERE version='301_retire_legacy_characters';")).trim();
+ const prior=(await query("SELECT description FROM public.schema_migrations WHERE version='302_retire_legacy_characters';")).trim();
  let fingerprints;
  if(prior){assert.deepEqual(JSON.parse(prior).request,plan.request);}else fingerprints=await retained(query,plan.retainedFingerprints);
  // Recheck the actual native target after potentially lengthy file/data hashes.
  await target(stack);await query(program);
- const receipt=(await query("SELECT description FROM public.schema_migrations WHERE version='301_retire_legacy_characters';")).trim();
+ const receipt=(await query("SELECT description FROM public.schema_migrations WHERE version='302_retire_legacy_characters';")).trim();
  assert.deepEqual(JSON.parse(receipt).request,plan.request);if(prior)assert.equal(receipt,prior);
  assert.equal((await query(ledgerSQL)).trim(),ledger);
  assert.equal((await query("SELECT to_regclass('public.characters') IS NULL AND to_regclass('public.characters_v2') IS NULL AND NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='inventories' AND column_name='character_id');")).trim(),'t');

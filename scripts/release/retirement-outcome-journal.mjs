@@ -6,7 +6,7 @@ import {validateActive,assertObserved} from './deploy-state.mjs';
 import {databaseStateFromRetirementExecution,stateWithDatabase,databaseMigrationSet} from './migration-transition.mjs';
 
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
-const kind='character-retirement-observation-301';
+const kind='character-retirement-observation-302';
 export function validateRetirementOutcomeJournal(operation){
   if(operation?.schemaVersion!==1||operation.kind!==kind||!['retirement_observed','recovery_required','succeeded'].includes(operation.status)
     ||!same(Object.keys(operation).sort(),['schemaVersion','kind','releaseId','status','previous','desired','transitionHash','createdAt','updatedAt'].sort()))throw Error('Exact retirement observation journal required');

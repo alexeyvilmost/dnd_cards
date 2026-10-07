@@ -352,7 +352,7 @@ test('recorded retirement builds the full installed set with writers enabled wit
   s.active.manifest.releaseCommit=f.candidate;s.active.manifest.writerPolicy=on;
   const baseline=structuredClone(s.active.manifest),bytes=JSON.stringify(baseline,null,3)+'\n',baselineFile=path.join(f.directory,'retirement-baseline.json');writeFileSync(baselineFile,bytes);
   const retired={...structuredClone(s.active),database:retirementDatabaseStateFromInspection(s,s.inspection)},stamp='2026-10-06T00:00:00Z';
-  const operation={schemaVersion:1,kind:'character-retirement-observation-301',releaseId:s.request.releaseId,status:'succeeded',previous:s.active,desired:retired,transitionHash:evidenceHash({previous:s.active,desired:retired}),createdAt:stamp,updatedAt:stamp};
+  const operation={schemaVersion:1,kind:'character-retirement-observation-302',releaseId:s.request.releaseId,status:'succeeded',previous:s.active,desired:retired,transitionHash:evidenceHash({previous:s.active,desired:retired}),createdAt:stamp,updatedAt:stamp};
   const root=path.join(f.directory,'protected');mkdirSync(root);const store=createDeploymentStore(root);store.writeActive(retired);store.writeOperation(operation);
   const request={repository,runId:71,attempt:2,controlCommit:'c'.repeat(40),sourceCommit:f.candidate};
   const retirementObservation=projectRetirementObservation({store,operation,manifest:baseline,request}),baselineReceipt=retirementBaselineReceipt(retirementObservation);

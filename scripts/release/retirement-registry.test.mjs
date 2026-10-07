@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {assertExecutableMigrationRegistry,characterRetirementMigrationId,retiredObservedMigrationIds} from './migration-transition.mjs';
-const hash='sha256:'+createHash('sha256').update(await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-301.sql',import.meta.url))).digest('hex');
+const hash='sha256:'+createHash('sha256').update(await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-302.sql',import.meta.url))).digest('hex');
 function fixture(){
  const ordinary=[{id:'001',checksum:'sha256:'+'a'.repeat(64)}],retirement={id:characterRetirementMigrationId,checksum:hash};
  const observed=retiredObservedMigrationIds.map(id=>({id,kind:'observed-id-only',observationHash:'sha256:'+'b'.repeat(64)}));
@@ -22,6 +22,7 @@ for(const [name,mutate]of Object.entries({
  'retirement must not become a startup executable':f=>{f.metadata.versions.push(characterRetirementMigrationId);},
  'duplicate retirement identities are refused':f=>{f.target.push({...f.target.at(-1)});},
  'unknown ledger identity is refused':f=>{f.target.push({id:'999_unknown',checksum:hash});f.baseline.push({id:'999_unknown',checksum:hash});},
+ 'old local-only retirement identity cannot authorize the new operation':f=>{f.target=f.target.map(row=>row.id===characterRetirementMigrationId?{...row,id:'301_retire_legacy_characters'}:row);f.baseline=structuredClone(f.target);f.metadata.supportedRetirementMigrations=[f.target.at(-1)];},
 }))test(name,()=>{const f=fixture();mutate(f);assert.throws(()=>assertExecutableMigrationRegistry(f.metadata,f.target,f.baseline));});
 test('existing observed history remains supported when no retirement is installed',()=>{
  const f=fixture();f.target=f.target.filter(row=>row.id!==characterRetirementMigrationId);f.baseline=f.baseline.filter(row=>row.id!==characterRetirementMigrationId);

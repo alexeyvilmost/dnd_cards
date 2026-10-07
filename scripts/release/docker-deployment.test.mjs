@@ -73,7 +73,7 @@ test('installed retirement uses the exact read-only inspector and captured DB bi
  const observed=await adapter.assertDatabase(database.migrationSet,database);assert.equal(observed.schemaProofHash,database.schemaProofHash);assert.equal(observed.oldReadersSafe,true);
  const run=calls.find(row=>row.args.includes('--inspect-character-retirement'));
  assert(run.args.includes('--read-only'));assert(run.args.includes(database.executorImageDigest));assert(!run.args.includes('--migrate-release'));assert(!run.args.includes('--inspect-release-migrations'));assert(!run.args.includes(dsn));assert.deepEqual(run.options.env,{DATABASE_URL:dsn});assert.deepEqual(JSON.parse(run.options.input),database.request);
- for(const change of [r=>{r.result.receiptHash=h('a');},r=>{r.result.sqlSourceHash=h('a');},r=>{r.result.applied=['301_retire_legacy_characters'];},r=>{r.build.sourceCommit='c'.repeat(40);},r=>{r.result.schemaProofHash=h('a');}]){receipt=structuredClone(unit.inspection);change(receipt);await assert.rejects(adapter.assertDatabase(database.migrationSet,database));}
+ for(const change of [r=>{r.result.receiptHash=h('a');},r=>{r.result.sqlSourceHash=h('a');},r=>{r.result.applied=['302_retire_legacy_characters'];},r=>{r.build.sourceCommit='c'.repeat(40);},r=>{r.result.schemaProofHash=h('a');}]){receipt=structuredClone(unit.inspection);change(receipt);await assert.rejects(adapter.assertDatabase(database.migrationSet,database));}
  receipt=structuredClone(unit.inspection);receipt.result.rollbackReadersSafe=false;assert.equal((await adapter.assertDatabase(database.migrationSet,database)).oldReadersSafe,false);
  assert(calls.filter(row=>row.args[0]==='run').every(row=>row.args.includes('--inspect-character-retirement')));
 });

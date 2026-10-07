@@ -3393,7 +3393,16 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "retirement302Preparation": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302.json",
+          "status": "retirement302_integrated_current_schema_locally_verified_not_production_ready",
+          "baseCommit": "fa78a45d1958ce4a9cf8f02f37f110973d65d716",
+          "migrationId": "302_retire_legacy_characters",
+          "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+          "productionChanges": 0,
+          "productionReady": false
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },

@@ -5,12 +5,12 @@ import {fileURLToPath} from "node:url";
 import path from 'node:path';
 import {startTestStack} from '../testing/stack.mjs';
 const root=fileURLToPath(new URL("../../",import.meta.url));
-const source=path.join(root,'backend/migrations/data/retire-legacy-characters-301.sql'),sql=await readFile(source,'utf8');
+const source=path.join(root,'backend/migrations/data/retire-legacy-characters-302.sql'),sql=await readFile(source,'utf8');
 const hash=value=>'sha256:'+createHash('sha256').update(value).digest('hex');
-const sourceHash=hash(sql),startedAt=new Date().toISOString(),directory=path.join(root,'outputs/testing/retired-character-301-'+startedAt.replaceAll(':','-'));
+const sourceHash=hash(sql),startedAt=new Date().toISOString(),directory=path.join(root,'outputs/testing/retired-character-302-'+startedAt.replaceAll(':','-'));
 await mkdir(path.join(root,"outputs/testing"),{recursive:true});
 await mkdir(directory,{recursive:false});
-const receipt={schemaVersion:1,scope:'owned-synthetic-postgres-retirement-301-transaction',startedAt,status:'running',sqlSourceHash:sourceHash,testSourceHash:hash(await readFile(new URL(import.meta.url))),sqlSource:source,syntheticExternalProofHashes:true,actualArchiveRestoreProven:false,productionChanges:0,tests:[],cleanup:{status:'pending'}};
+const receipt={schemaVersion:1,scope:'owned-synthetic-postgres-retirement-302-transaction',startedAt,status:'running',sqlSourceHash:sourceHash,testSourceHash:hash(await readFile(new URL(import.meta.url))),sqlSource:source,syntheticExternalProofHashes:true,actualArchiveRestoreProven:false,productionChanges:0,tests:[],cleanup:{status:'pending'}};
 const quote=value=>"'"+value.replaceAll("'","''")+"'";
 const fixture=`CREATE TABLE users(id integer PRIMARY KEY); INSERT INTO users VALUES(1),(2);
 CREATE TABLE groups(id integer PRIMARY KEY); INSERT INTO groups VALUES(1);
@@ -66,7 +66,7 @@ try {
     await query("CREATE TABLE test_run_ownership(run_id text PRIMARY KEY); INSERT INTO test_run_ownership VALUES("+quote(stack.registry.runId)+");"+fixture+(item.setup??''));
     assert.equal((await query('SELECT run_id FROM test_run_ownership;')).trim(),stack.registry.runId);
     if(item.timestamps)for(const table of ['characters','characters_v2','inventories','inventory_items'])await query(`ALTER TABLE ${table} ADD COLUMN created_at timestamptz NOT NULL DEFAULT '2026-01-01T03:00:00+03:00';`);
-    const request={schemaVersion:1,kind:'retire-character-generations-301',backupHash:hash('synthetic-backup'),archiveRestoreReportHash:hash('synthetic-archive-restore'),acceptedRollbackPairHash:hash('synthetic-rollback-pair'),preimages:JSON.parse((await query(preimages)).trim())};
+    const request={schemaVersion:1,kind:'retire-character-generations-302',backupHash:hash('synthetic-backup'),archiveRestoreReportHash:hash('synthetic-archive-restore'),acceptedRollbackPairHash:hash('synthetic-rollback-pair'),preimages:JSON.parse((await query(preimages)).trim())};
     item.changeRequest?.(request);if(item.afterRequest)await query(item.afterRequest);
     const before=JSON.parse((await query(snapshotSQL)).trim()),protectedBefore=JSON.parse((await query(protectedSQL)).trim());
     const program=(item.executionTimezone?"SET TIME ZONE "+quote(item.executionTimezone)+";":'')+sql.replace(":'retirement_request'",quote(JSON.stringify(request)));
@@ -79,22 +79,22 @@ try {
       await query(program);
       assert.deepEqual(JSON.parse((await query(protectedSQL)).trim()),protectedBefore);
       assert.equal((await query("SELECT to_regclass('public.characters') IS NULL AND to_regclass('public.characters_v2') IS NULL AND NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='inventories' AND column_name='character_id');")).trim(),'t');
-      const first=(await query("SELECT description FROM schema_migrations WHERE version='301_retire_legacy_characters';")).trim();
+      const first=(await query("SELECT description FROM schema_migrations WHERE version='302_retire_legacy_characters';")).trim();
       assert.deepEqual(JSON.parse(first).request,request);
-      await query(program);assert.equal((await query("SELECT description FROM schema_migrations WHERE version='301_retire_legacy_characters';")).trim(),first);
+      await query(program);assert.equal((await query("SELECT description FROM schema_migrations WHERE version='302_retire_legacy_characters';")).trim(),first);
       if(item.ownershipChecks){
         for(const invalid of ["INSERT INTO inventories VALUES(10,'personal',NULL,NULL,'{}');","INSERT INTO inventories VALUES(11,'group',NULL,NULL,'{}');","INSERT INTO inventories VALUES(12,'character',1,NULL,'{}');"]){await assert.rejects(query(invalid));}
         assert.deepEqual(JSON.parse((await query(protectedSQL)).trim()),protectedBefore);
       }
       const other=sql.replace(":'retirement_request'",quote(JSON.stringify({...request,backupHash:hash('different-backup')})));
       await assert.rejects(query(other));
-      assert.equal((await query("SELECT description FROM schema_migrations WHERE version='301_retire_legacy_characters';")).trim(),first);
+      assert.equal((await query("SELECT description FROM schema_migrations WHERE version='302_retire_legacy_characters';")).trim(),first);
       receipt.tests.push({name:item.name,status:'passed',sameRequestRetry:'same-receipt',differentRequestRetry:'refused'});
     } else {
       await assert.rejects(query(program),error=>!item.expected||(typeof error.output==='string'&&error.output.includes(item.expected)));
       assert.deepEqual(JSON.parse((await query(snapshotSQL)).trim()),before);
       assert.deepEqual(JSON.parse((await query(protectedSQL)).trim()),protectedBefore);
-      assert.equal((await query("SELECT count(*) FROM schema_migrations WHERE version='301_retire_legacy_characters';")).trim(),'0');
+      assert.equal((await query("SELECT count(*) FROM schema_migrations WHERE version='302_retire_legacy_characters';")).trim(),'0');
       receipt.tests.push({name:item.name,status:'passed',partialMutation:false});
     }
     console.log(JSON.stringify({check:receipt.tests.at(-1)}));

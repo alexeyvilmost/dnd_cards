@@ -12,14 +12,14 @@ export function retirementStateUnitFixture(){
   request:{schemaVersion:1,releaseId:'prior-expansion',expectedCurrent:[structuredClone(manifest.migrationSet[0])],target:structuredClone(manifest.migrationSet),candidateSourceCommit:manifest.components.backend.sourceCommit,candidateInputFingerprint:manifest.components.backend.inputFingerprint}};
  const executorManifest=structuredClone(manifest);executorManifest.releaseId='retirement-inspector';executorManifest.releaseCommit='b'.repeat(40);executorManifest.previousReleaseId='old';
  Object.assign(executorManifest.components.backend,{sourceCommit:'b'.repeat(40),inputFingerprint:h('9'),imageDigest:`example.test/backend@${h('0')}`});
- const request={schemaVersion:1,kind:'inspect-character-retirement-301',releaseId:executorManifest.releaseId,expectedCurrent:[...structuredClone(manifest.migrationSet),{id:retirementMigrationId,checksum:retirementSQLHash}],sqlSourceHash:retirementSQLHash,expectedAdditiveSchemaProofHash:active.database.schemaProofHash,receiptHash:h('1'),
-  retirement:{schemaVersion:1,kind:'retire-character-generations-301',backupHash:h('2'),archiveRestoreReportHash:h('3'),acceptedRollbackPairHash:h('4'),preimages:Object.fromEntries(['characters','characters_v2','retired_inventories','retired_items'].map((key,i)=>[key,{rows:i+1,sha256:h('5')}]))},candidateSourceCommit:executorManifest.components.backend.sourceCommit,candidateInputFingerprint:executorManifest.components.backend.inputFingerprint};
+ const request={schemaVersion:1,kind:'inspect-character-retirement-302',releaseId:executorManifest.releaseId,expectedCurrent:[...structuredClone(manifest.migrationSet),{id:retirementMigrationId,checksum:retirementSQLHash}],sqlSourceHash:retirementSQLHash,expectedAdditiveSchemaProofHash:active.database.schemaProofHash,receiptHash:h('1'),
+  retirement:{schemaVersion:1,kind:'retire-character-generations-302',backupHash:h('2'),archiveRestoreReportHash:h('3'),acceptedRollbackPairHash:h('4'),preimages:Object.fromEntries(['characters','characters_v2','retired_inventories','retired_items'].map((key,i)=>[key,{rows:i+1,sha256:h('5')}]))},candidateSourceCommit:executorManifest.components.backend.sourceCommit,candidateInputFingerprint:executorManifest.components.backend.inputFingerprint};
  const inspection={schemaVersion:1,status:'verified',result:{schemaVersion:1,status:'verified',releaseId:request.releaseId,observedVersions:request.expectedCurrent.map(row=>row.id).sort(),sqlSourceHash:retirementSQLHash,receiptHash:request.receiptHash,schemaProofHash:h('6'),applied:[],rollbackReadersSafe:true},build:{provenance:'baked',sourceCommit:request.candidateSourceCommit,inputFingerprint:request.candidateInputFingerprint}};
  return {active,executorManifest,request,inspection,approvalHash:h('e')};
 }
 export function retirementExecutionUnitFixture(){
  const f=retirementStateUnitFixture(),inspectionRequest=structuredClone(f.request);
- delete f.request.receiptHash;f.request.kind='execute-character-retirement-301';f.request.expectedCurrent=structuredClone(f.active.database.migrationSet);
+ delete f.request.receiptHash;f.request.kind='execute-character-retirement-302';f.request.expectedCurrent=structuredClone(f.active.database.migrationSet);
  f.execution={schemaVersion:1,status:'verified',build:structuredClone(f.inspection.build),result:{schemaVersion:1,status:'verified',releaseId:f.request.releaseId,applied:[retirementMigrationId],request:inspectionRequest,inspection:structuredClone(f.inspection.result)}};
  return f;
 }

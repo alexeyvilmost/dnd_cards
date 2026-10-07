@@ -10,13 +10,13 @@ import (
 
 func testRetirementRequest() RetirementRequest {
 	hash := "sha256:" + strings.Repeat("b", 64)
-	return RetirementRequest{1, "retire-character-generations-301", hash, hash, hash, map[string]RetirementPreimage{
+	return RetirementRequest{1, "retire-character-generations-302", hash, hash, hash, map[string]RetirementPreimage{
 		"characters": {21, hash}, "characters_v2": {12, hash}, "retired_inventories": {10, hash}, "retired_items": {45, hash},
 	}}
 }
 func TestRetirementIdentityIsSupportedButNeverExecutable(t *testing.T) {
 	identity := RetirementMigrationIdentity()
-	if identity.Checksum != hashBytes(retirement301Source) || !validIdentityHash(identity.Checksum) {
+	if identity.Checksum != hashBytes(retirement302Source) || !validIdentityHash(identity.Checksum) {
 		t.Fatal("source identity differs")
 	}
 	for _, row := range GetAllMigrations() {
@@ -31,6 +31,14 @@ func TestRetirementIdentityIsSupportedButNeverExecutable(t *testing.T) {
 	}
 	if !reflect.DeepEqual(RetirementSupportedMigrationIDs(), []string{identity.ID}) {
 		t.Fatal("unsupported metadata")
+	}
+	if identity.ID != "302_retire_legacy_characters" {
+		t.Fatal("retirement must follow the independently accepted lifecycle identity")
+	}
+	oldRequest := testRetirementRequest()
+	oldRequest.Kind = "retire-character-generations-301"
+	if validRetirementRequest(oldRequest) {
+		t.Fatal("previous local-only proof cannot authorize the new retirement")
 	}
 }
 func TestRetirementReceiptRejectsUnknownAndMalformedData(t *testing.T) {
@@ -63,17 +71,17 @@ func TestReleaseRetirementInspectionReadOnlyAndRejectsDrift(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if _, err := db.Exec(`CREATE TABLE characters_v3(id int PRIMARY KEY,payload jsonb); INSERT INTO characters_v3 VALUES(1,'{"keep":"v3"}');
+			if _, err := db.Exec(`ALTER TABLE characters_v3 ADD COLUMN payload jsonb; INSERT INTO characters_v3(id,payload) VALUES('33333333-3333-4333-8333-333333333333','{"keep":"v3"}');
 			CREATE TABLE inventories(id int PRIMARY KEY,type text,user_id int,group_id int); INSERT INTO inventories VALUES(1,'personal',1,NULL),(2,'group',NULL,2);
 			CREATE TABLE inventory_items(id int PRIMARY KEY,inventory_id int,payload jsonb); INSERT INTO inventory_items VALUES(1,1,'{"current":true}');`); err != nil {
 				t.Fatal(err)
 			}
 			retirement := testRetirementRequest()
 			raw, _ := json.Marshal(retirementReceipt{"retired-character-generations-receipt", retirement, strings.Repeat("a", 64), strings.Repeat("c", 64)})
-			if _, err := db.Exec(`INSERT INTO schema_migrations(version,description) VALUES($1,$2)`, retirement301Version, string(raw)); err != nil {
+			if _, err := db.Exec(`INSERT INTO schema_migrations(version,description) VALUES($1,$2)`, retirement302Version, string(raw)); err != nil {
 				t.Fatal(err)
 			}
-			request := ReleaseRetirementInspectionRequest{SchemaVersion: 1, Kind: "inspect-character-retirement-301", ReleaseID: "owned-retirement-inspection", ExpectedCurrent: append(ordinary.Target, RetirementMigrationIdentity()), SQLSourceHash: RetirementMigrationIdentity().Checksum, ReceiptHash: hashBytes(raw), Retirement: retirement}
+			request := ReleaseRetirementInspectionRequest{SchemaVersion: 1, Kind: "inspect-character-retirement-302", ReleaseID: "owned-retirement-inspection", ExpectedCurrent: append(ordinary.Target, RetirementMigrationIdentity()), SQLSourceHash: RetirementMigrationIdentity().Checksum, ReceiptHash: hashBytes(raw), Retirement: retirement}
 			request.ExpectedAdditiveSchemaProofHash = expansion.SchemaProofHash
 			success := name == "valid-and-repeat" || name == "v3-and-personal-gameplay-after-retirement"
 			var mutation string
@@ -81,11 +89,11 @@ func TestReleaseRetirementInspectionReadOnlyAndRejectsDrift(t *testing.T) {
 			case "v3-and-personal-gameplay-after-retirement":
 				mutation = `UPDATE characters_v3 SET payload='{"currentGame":2}';INSERT INTO inventories VALUES(3,'personal',9,NULL);INSERT INTO inventory_items VALUES(2,3,'{"newItem":true}');`
 			case "missing-receipt":
-				mutation = `DELETE FROM schema_migrations WHERE version='301_retire_legacy_characters'`
+				mutation = `DELETE FROM schema_migrations WHERE version='302_retire_legacy_characters'`
 			case "different-request":
 				request.Retirement.BackupHash = "sha256:" + strings.Repeat("d", 64)
 			case "receipt-changed":
-				mutation = `UPDATE schema_migrations SET description=description||' ' WHERE version='301_retire_legacy_characters'`
+				mutation = `UPDATE schema_migrations SET description=description||' ' WHERE version='302_retire_legacy_characters'`
 			case "wrong-sql":
 				request.SQLSourceHash = "sha256:" + strings.Repeat("d", 64)
 			case "unknown-migration":
@@ -126,7 +134,7 @@ func TestReleaseRetirementInspectionReadOnlyAndRejectsDrift(t *testing.T) {
 				if err != nil || !reflect.DeepEqual(first, second) || len(first.Applied) != 0 || !validIdentityHash(first.SchemaProofHash) {
 					t.Fatal("read-only repeat differs", err)
 				}
-				// The ordinary executor still refuses 301, even when it is present.
+				// The ordinary executor still refuses 302, even when it is present.
 				if _, err := m.RunReleaseAdditive(context.Background(), ReleaseMigrationRequest{SchemaVersion: 1, ReleaseID: request.ReleaseID, ExpectedCurrent: request.ExpectedCurrent, Target: request.ExpectedCurrent}); err == nil {
 					t.Fatal("retirement entered additive executor")
 				}

@@ -9,11 +9,11 @@ function exact(value,keys){
 }
 const executionKeys=['schemaVersion','kind','releaseId','expectedCurrent','sqlSourceHash','expectedAdditiveSchemaProofHash','retirement','candidateSourceCommit','candidateInputFingerprint'];
 function inspectionRequest(request,receiptHash){
-  return {...structuredClone(request),kind:'inspect-character-retirement-301',expectedCurrent:[...structuredClone(request.expectedCurrent),{id:retirementMigrationId,checksum:retirementSQLHash}],receiptHash};
+  return {...structuredClone(request),kind:'inspect-character-retirement-302',expectedCurrent:[...structuredClone(request.expectedCurrent),{id:retirementMigrationId,checksum:retirementSQLHash}],receiptHash};
 }
 export function validateRetirementExecutionRequest(request){
   exact(request,executionKeys);
-  if(request.kind!=='execute-character-retirement-301'||!Array.isArray(request.expectedCurrent)||!request.expectedCurrent.length||request.expectedCurrent.some(row=>row.id===retirementMigrationId))throw Error('Explicit retirement requires the complete prior migration set');
+  if(request.kind!=='execute-character-retirement-302'||!Array.isArray(request.expectedCurrent)||!request.expectedCurrent.length||request.expectedCurrent.some(row=>row.id===retirementMigrationId))throw Error('Explicit retirement requires the complete prior migration set');
   validateRetirementInspectionRequest(inspectionRequest(request,'sha256:'+'0'.repeat(64)));
   return request;
 }

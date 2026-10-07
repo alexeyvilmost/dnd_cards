@@ -58,7 +58,7 @@ test('canonical documentation-only dispatch creates no candidate and leaves depl
 });
 test('exact retirement artifact forces extended planning despite an existing frontend anchor',async t=>{
  const f=await setup(t),s=retirementStateUnitFixture();s.active.manifest.releaseCommit=f.candidate;
- const active={...s.active,database:retirementDatabaseStateFromInspection(s,s.inspection)},stamp='2026-10-06T00:00:00Z',operation={schemaVersion:1,kind:'character-retirement-observation-301',releaseId:s.request.releaseId,status:'succeeded',previous:s.active,desired:active,transitionHash:evidenceHash({previous:s.active,desired:active}),createdAt:stamp,updatedAt:stamp};
+ const active={...s.active,database:retirementDatabaseStateFromInspection(s,s.inspection)},stamp='2026-10-06T00:00:00Z',operation={schemaVersion:1,kind:'character-retirement-observation-302',releaseId:s.request.releaseId,status:'succeeded',previous:s.active,desired:active,transitionHash:evidenceHash({previous:s.active,desired:active}),createdAt:stamp,updatedAt:stamp};
  const root=path.join(f.directory,'protected');mkdirSync(root);const store=createDeploymentStore(root);store.writeActive(active);store.writeOperation(operation);
  const request={repository:'fixture/project',runId:f.run.id,attempt:f.run.runAttempt,controlCommit:f.run.controlCommit,sourceCommit:f.candidate},p=projectRetirementObservation({store,operation,manifest:s.active.manifest,request});
  for(const [name,value] of Object.entries({'manifest.json':s.active.manifest,'deployment.json':retirementBaselineReceipt(p),'retirement-observation.json':p}))writeFileSync(path.join(f.baselineDirectory,name),JSON.stringify(value));

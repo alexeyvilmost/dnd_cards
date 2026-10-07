@@ -35,7 +35,7 @@ type ReleaseRetirementExecutionResult struct {
 }
 
 func validateRetirementExecution(request ReleaseRetirementExecutionRequest) (map[string]string, error) {
-	if request.SchemaVersion != 1 || request.Kind != "execute-character-retirement-301" || request.ReleaseID == "" ||
+	if request.SchemaVersion != 1 || request.Kind != "execute-character-retirement-302" || request.ReleaseID == "" ||
 		request.SQLSourceHash != RetirementMigrationIdentity().Checksum || !validIdentityHash(request.ExpectedAdditiveSchemaProofHash) || !validRetirementRequest(request.Retirement) {
 		return nil, errors.New("invalid explicit retirement execution request")
 	}
@@ -79,25 +79,25 @@ func (m *Migrator) RunReleaseRetirement(ctx context.Context, request ReleaseReti
 	applied := []string{}
 	if len(raw) == 0 {
 		encoded, err := json.Marshal(request.Retirement)
-		if err != nil || strings.Count(string(retirement301Source), ":'retirement_request'") != 1 {
+		if err != nil || strings.Count(string(retirement302Source), ":'retirement_request'") != 1 {
 			return result, errors.New("retirement source binding unavailable")
 		}
 		// JSON is a SQL string value, never an SQL fragment or shell argument.
 		literal := "'" + strings.ReplaceAll(string(encoded), "'", "''") + "'"
-		program := strings.Replace(string(retirement301Source), ":'retirement_request'", literal, 1)
+		program := strings.Replace(string(retirement302Source), ":'retirement_request'", literal, 1)
 		if _, err = connection.ExecContext(ctx, program); err != nil {
 			return result, errors.New("retirement rejected or commit outcome unknown")
 		}
-		if err = connection.QueryRowContext(ctx, "SELECT description FROM public.schema_migrations WHERE version=$1", retirement301Version).Scan(&raw); err != nil {
+		if err = connection.QueryRowContext(ctx, "SELECT description FROM public.schema_migrations WHERE version=$1", retirement302Version).Scan(&raw); err != nil {
 			return result, errors.New("retirement receipt unavailable after execution")
 		}
-		applied = append(applied, retirement301Version)
+		applied = append(applied, retirement302Version)
 	}
 	receipt, err := decodeRetirementReceipt(raw)
 	if err != nil || !reflect.DeepEqual(receipt.Request, request.Retirement) {
 		return result, errors.New("retirement receipt belongs to another request")
 	}
-	inspectionRequest := ReleaseRetirementInspectionRequest{SchemaVersion: 1, Kind: "inspect-character-retirement-301", ReleaseID: request.ReleaseID,
+	inspectionRequest := ReleaseRetirementInspectionRequest{SchemaVersion: 1, Kind: "inspect-character-retirement-302", ReleaseID: request.ReleaseID,
 		ExpectedCurrent: append(append([]MigrationIdentity{}, request.ExpectedCurrent...), RetirementMigrationIdentity()), SQLSourceHash: request.SQLSourceHash,
 		ExpectedAdditiveSchemaProofHash: request.ExpectedAdditiveSchemaProofHash, ReceiptHash: hashBytes(raw), Retirement: request.Retirement,
 		CandidateSourceCommit: request.CandidateSourceCommit, CandidateInputFingerprint: request.CandidateInputFingerprint}
@@ -141,7 +141,7 @@ func retirementExecutionPreflight(ctx context.Context, connection *sql.Conn, req
 		return nil, errors.New("retirement baseline observation failed")
 	}
 	var raw []byte
-	err = tx.QueryRowContext(ctx, "SELECT description FROM public.schema_migrations WHERE version=$1", retirement301Version).Scan(&raw)
+	err = tx.QueryRowContext(ctx, "SELECT description FROM public.schema_migrations WHERE version=$1", retirement302Version).Scan(&raw)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, errors.New("retirement receipt observation failed")
 	}
@@ -175,6 +175,6 @@ func addRetirementIdentity(before map[string]string, checksum string) map[string
 	for key, value := range before {
 		target[key] = value
 	}
-	target[retirement301Version] = checksum
+	target[retirement302Version] = checksum
 	return target
 }

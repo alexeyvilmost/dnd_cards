@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "retirement302_integrated_current_schema_locally_verified_not_production_ready",
+  "recordedAt": "2026-10-07T01:09:10.136Z",
+  "baseCommit": "fa78a45d1958ce4a9cf8f02f37f110973d65d716",
+  "oldLocalRetirementCommit": "60ab5722885ea781a0644a56690e931b3b71cbff",
+  "originalLocalProofsRetained": true,
+  "old301ProofsRelabeled": false,
+  "migrationId": "302_retire_legacy_characters",
+  "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+  "sourceHashes": {
+    "backend/build_info.go": "sha256:cc0302bfb38d0c6266ed8fa65ef7ad7057a01edf63435f68746764aad4f33a9a",
+    "backend/build_info_test.go": "sha256:5fff23815ad80772b700959132e920489016322753ef9dd3a6d08ec2c3368e86",
+    "backend/migrations/data/retire-legacy-characters-302.sql": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+    "backend/migrations/release_additive_test.go": "sha256:e3d6126b2f6b2cf244efb7e656ac005869bc02a4a33db2e8cc222980989671b3",
+    "backend/migrations/release_retirement.go": "sha256:4b005eda783bb7db1f24aa773c60d0a4170ba91a68d4bb7640d87cabaead5149",
+    "backend/migrations/release_retirement_execute.go": "sha256:686a8a796758d137a7bffba74f364a64374dfa8a332a968a45142df6ab95509b",
+    "backend/migrations/release_retirement_execute_test.go": "sha256:17a01d113b65db1d2b158643145b8b0effdccba0810f6d429fe7512e2c96ab29",
+    "backend/migrations/release_retirement_execution_integration_test.go": "sha256:3ffda73dfeb2a9d0512bf8007edd9632acc8dfd021f90cbc9786184ff4235533",
+    "backend/migrations/release_retirement_test.go": "sha256:a4cf3f228fdfb8b7f8d7355af8714d416a4b71b3c9d313809cb26067715f0118",
+    "backend/release_migration_command.go": "sha256:6c3b4d492712e3c25e23962f4597b3d348695f6b1e6ce3c714b7b0f9f32635c3",
+    "backend/release_migration_command_test.go": "sha256:11779dc0b86211165c8bdf1583e9d7c07b541ad09db6e6e57c14b7df1a0c5c65",
+    "infra/migrations/302_retire_legacy_characters.md": "sha256:0736b20d5f7d507882a18d046dd9ea354445e9dc3a2ae23c2eb087c79cdd3c71",
+    "scripts/database/retired-character-retirement-local.mjs": "sha256:86b59b6a364bd734e50ab65a13346f9f3715e92f8514e3374ec4007e4d1ecee7",
+    "scripts/database/retirement-execution-local.mjs": "sha256:89655446bc3ff7be9be1e0a0b6eb3b77830e48a2658134b52530d2e0e5cd086f",
+    "scripts/database/retirement-inspection-local.mjs": "sha256:9c60990134342297ed02d5c1cb4c9ae375477e606351aea51ce06c02fe00dbb4",
+    "scripts/performance/check-character-retirement.mjs": "sha256:829a19a209bd302929c7d3c7ed457cd117162809265535523524ef8c25b60531",
+    "scripts/release/active-projection.mjs": "sha256:f11d101c73284877536a9390ab9c483912c9c945cefdbcd78e2cfb11a416e271",
+    "scripts/release/assemble-bundle.mjs": "sha256:e5403bf1db07598bc2f066077470ecac3fd3826951fc3437bddb6b0c7abe8cd7",
+    "scripts/release/candidate-rehearsal.mjs": "sha256:cea0f11dfac9bcfef14884e5d55debbef20fa29d0c560b9f9964b85a8030daab",
+    "scripts/release/ci-release.mjs": "sha256:4d53c6609743a80c27f81a38e6ad2c6ccdceb899f012292c40b098ca4f2267d1",
+    "scripts/release/ci-release.test.mjs": "sha256:ae6caf837d3800102027120e9587dd8a734e6da0ce2e6d8f209a8faafa757e69",
+    "scripts/release/deploy-state.mjs": "sha256:bac53c7ae13e6787eae7862fb69da9dc8cba507602aeece7d93321b748b7beb0",
+    "scripts/release/deploy-state.test.mjs": "sha256:6519987fff4093af14ae04cf49feb20ecfdc17cc381632cc23fceafda66db951",
+    "scripts/release/docker-deployment.mjs": "sha256:344c74fa902e540be82c6e620c94eb236830dee19c9c740742a0c9fa28a00df4",
+    "scripts/release/docker-deployment.test.mjs": "sha256:124e05b40b2a4d06322e7f9d8de7396f9a24f3ac3b5a11942e84519f3a0efea6",
+    "scripts/release/migration-transition.mjs": "sha256:4fc1d89777baf1d4ebc8f68486f0f514d8ecc5dde01cdf71eb61657021f066e5",
+    "scripts/release/retirement-artifacts.mjs": "sha256:a46555d34a4a657a73a08c380f02379026a9b1cf770d863dec70f0af931e9a06",
+    "scripts/release/retirement-artifacts.test.mjs": "sha256:1bf1eabcc991235af8cd7f63b32e396259b949a17dc14f72a5066a719e39ac9e",
+    "scripts/release/retirement-baseline.mjs": "sha256:7775fec967a4829174fc1dfac5bf417c1e3272a708f1eb1718213eb8c08d21da",
+    "scripts/release/retirement-build-baseline.mjs": "sha256:115bb85117a64af29e1b69db369cc04f1dd716a8ee393258f8137f8513d087ee",
+    "scripts/release/retirement-build-baseline.test.mjs": "sha256:01e69b68a25d7f0f006b88405019058b1c42f2482e03f6517f9c28d575446424",
+    "scripts/release/retirement-execution-result.mjs": "sha256:0a71bd5d831d92d7a68a4a1d66c67ec818e07a77d84ea405ff318750192f79cc",
+    "scripts/release/retirement-execution-result.test.mjs": "sha256:59335647955d5bf592e0256d4279ff86bf89d28c553e91801076e7b6d7909813",
+    "scripts/release/retirement-native-local.mjs": "sha256:f41f69b456d984b2e63ff4d906946e4b5be24f37c371e5da771118edcb51b999",
+    "scripts/release/retirement-outcome-journal.mjs": "sha256:96d8ac9cdfe9753682aff10fbb6e77ef536ea6ecee73650127a1993445d25f1c",
+    "scripts/release/retirement-outcome-journal.test.mjs": "sha256:32f3abd4eaa3e98634a7047b468f89075ea441b02ef9f88e523d40bb3c66aa67",
+    "scripts/release/retirement-preflight.mjs": "sha256:7b0532a000fe817b56f59d02e5fd01f5ad67bf82a961ca0f1c19a9118fa7341a",
+    "scripts/release/retirement-projection.mjs": "sha256:73fc0498fa703c7e556f318ff0878fc43347a79e0c2e24caac6cde056b5ee84c",
+    "scripts/release/retirement-projection.test.mjs": "sha256:38e88467175c45a29497b3ed263535a6c6b974375fb037fca5cc96130745029a",
+    "scripts/release/retirement-registry.test.mjs": "sha256:21b6ad0393a1643d7b7311d12db12e20b8529aa23d33f978cda54d76bb998342",
+    "scripts/release/retirement-state-unit-fixture.mjs": "sha256:9b0d2246f6985a237efa6c252318ee0f801a95d8ef2f3ad570422cdf1df6cf20",
+    "scripts/release/retirement-state.mjs": "sha256:53a0ee864af51a89e60f7661f784a6c5971d6f07c5959b20726b5f011f6a9ef6",
+    "scripts/release/retirement-state.test.mjs": "sha256:b11254b34ae3247cc17f3897bf7422aa6f0f279777911b6899d19af740273e03",
+    "scripts/release/ui-ci.mjs": "sha256:029af9a976faf1578865daecaeb57658704c8d74428b2886d880e2d9c7fcca82",
+    "scripts/release/ui-ci.test.mjs": "sha256:9f78465d8a253289e6e97e117621fdeb9be758f12eee1fced5246705e455f4c9",
+    "scripts/release/ui-release-plan.mjs": "sha256:d11e36e70a2657be20cf2f94979fc98b26e87c181d592681864eb9df618f5002",
+    "scripts/release/ui-release-planning.mjs": "sha256:ac6ac39fbda08045cf79dc86167b699c7a984c5845d0e33bdb483b4b14d32386",
+    "scripts/release/validate-manifest.mjs": "sha256:a9e8573633f91486f2762e02e2035dd70d2f325b42afbc8b31fe959f16869d77",
+    "scripts/release/writer-compatibility.mjs": "sha256:0c7a8dcec3a4e126663ba26503d6a1cd907f7fdb83a14184e4af9c962fb0d827",
+    "scripts/release/writer-followon.test.mjs": "sha256:bb366dbc027e4ed0c8c2a018bb1ed78eacd70d7b5ce5433905b3a1a8244af71b",
+    "scripts/release/writer-policy.test.mjs": "sha256:634f6e7895a37196d72cc50439474361cc0a69b4bf6c54fcb614bd981c22e96e",
+    "tests/suites.json": "sha256:e29ce367abe5d765ab387aab125e6adbad96d9430df7cbd86e52810581b95432"
+  },
+  "lifecycleSourceHash": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5",
+  "lifecycleSourceUnchanged": true,
+  "verification": {
+    "releaseNode": {
+      "tests": 207,
+      "passed": 207,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "terminal output of tool session69616"
+    },
+    "manifestAndShards": {
+      "tests": 41,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "terminal output of command cc4091"
+    },
+    "backendBuild": "passed",
+    "credentialScan": "passed",
+    "diffCheck": "passed",
+    "receipts": {
+      "execution": {
+        "file": "outputs/testing/retirement-execution-2026-10-07T01-07-08.597Z/receipt.json",
+        "sha256": "sha256:f8973beb1bf6ea09a137358339c2fed7410cb7c0f97349ce72ed776b4ba7cb0d",
+        "status": "passed",
+        "scope": "owned-native-postgres-explicit-retirement-execution",
+        "results": [
+          {
+            "required": 4,
+            "passed": 4
+          },
+          {
+            "required": 3,
+            "passed": 3
+          }
+        ],
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      "inspection": {
+        "file": "outputs/testing/retirement-inspection-2026-10-07T01-07-57.042Z/receipt.json",
+        "sha256": "sha256:2ea94deb251d50a7eb787ed54aee8dfe795d8568d3c52f23e3573174f812a66d",
+        "status": "passed",
+        "scope": "owned-native-postgres-retirement-read-only-inspection",
+        "results": [
+          {
+            "required": 3,
+            "passed": 3
+          },
+          {
+            "required": 3,
+            "passed": 3
+          }
+        ],
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      },
+      "sql": {
+        "file": "outputs/testing/retired-character-302-2026-10-07T01-06-32.220Z/receipt.json",
+        "sha256": "sha256:5e5c6a656a30eb85fea5286bcd7b6f04893cc5b153b4020c0e810aee963ebda0",
+        "status": "passed",
+        "scope": "owned-synthetic-postgres-retirement-302-transaction",
+        "results": {
+          "checks": 22
+        },
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        }
+      }
+    }
+  },
+  "correctedInitialFailure": {
+    "file": "outputs/testing/retirement-execution-2026-10-07T01-06-05.034Z/receipt.json",
+    "status": "failed",
+    "reason": "Rebase changed oldReadersSafe signature and new lifecycle snapshot test initially used an out-of-scope error variable; fixed without weakening the conservative reader predicate.",
+    "cleanup": "stopped"
+  },
+  "additionalChecks": [
+    "Current UUID V3 fixture keeps lifecycle deleted_at column/index instead of recreating the table.",
+    "Active and soft-deleted V3 characters and runs are compared by full rows before/after every retirement outcome.",
+    "Old local-only301 request and ledger identity cannot authorize302.",
+    "Startup/additive registry remains unable to execute destructive302."
+  ],
+  "productionChanges": 0,
+  "productionReady": false,
+  "actualArchiveRestore302Proven": false,
+  "publishedExecutor302Proven": false,
+  "actualCurrentRollbackPair302Proven": false,
+  "remaining": [
+    "Bind new302 SQL to a fresh full snapshot, genuine retired-row archive and independently verified archive restoration.",
+    "Rehearse accepted V3-only current/predecessor OCI readers and rendered V3/paper/run/equipment flows on the exact new target schema.",
+    "Connect a separate explicit production retirement approval/executor to backup validation and outcome journal; retain all301/historical migration identities.",
+    "Notify owner before production execution; reconcile an uncertain result using the same request; never restore an old database over current gameplay."
+  ]
+}

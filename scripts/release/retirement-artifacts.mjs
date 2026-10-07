@@ -7,10 +7,10 @@ import {validateManifest,evidenceHash} from './validate-manifest.mjs';
 import {validateActive,assertServiceIdentities} from './deploy-state.mjs';
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 const hashPattern=/^sha256:[a-f0-9]{64}$/;
-const source=await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-301.sql',import.meta.url));
+const source=await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-302.sql',import.meta.url));
 const verifiedPlans=new WeakMap();
 const artifactKinds=['sql','dump','archive','archiveRestore','retirementProof','retainedBefore','retainedAfter','readerPair','candidate','active'];
-export const retirementProfile=Object.freeze({schemaVersion:1,id:'retire-character-generations-301-local',migrationId:'301_retire_legacy_characters',mode:'local-owned-rehearsal',fingerprintTimezone:'UTC',sqlSourceHash:hash(source),productionExecutionSupported:false,automaticMigration:false});
+export const retirementProfile=Object.freeze({schemaVersion:1,id:'retire-character-generations-302-local',migrationId:'302_retire_legacy_characters',mode:'local-owned-rehearsal',fingerprintTimezone:'UTC',sqlSourceHash:hash(source),productionExecutionSupported:false,automaticMigration:false});
 export const retirementReaderChecks=Object.freeze([
  ['previous','image-contract'],['previous','full-candidate-health'],['previous','v3-paper-personal-inventory-equipment-and-exact-retry'],
  ['candidate','image-contract'],['candidate','full-candidate-health'],['candidate','v3-paper-personal-inventory-equipment-and-exact-retry'],['candidate','pending-decision'],
@@ -61,7 +61,7 @@ export async function verifyLocalRetirementArtifacts(directory){
    const services=Object.fromEntries(Object.keys(manifest.components).map(k=>[k,{healthy:true,imageDigest:c.images[k],identity:c.identities[k]}]));assertServiceIdentities(state,services);
   }
   assert.equal(hash(await readFile(backupFile(directory,'retirement-bundle.json'))),hash(bytes));
-  const request={schemaVersion:1,kind:'retire-character-generations-301',backupHash:raw.sourceDumpHash,archiveRestoreReportHash:raw.archiveRestoreReportHash,acceptedRollbackPairHash:bundle.artifacts.readerPair.sha256,preimages:structuredClone(raw.preimages)};
+  const request={schemaVersion:1,kind:'retire-character-generations-302',backupHash:raw.sourceDumpHash,archiveRestoreReportHash:raw.archiveRestoreReportHash,acceptedRollbackPairHash:bundle.artifacts.readerPair.sha256,preimages:structuredClone(raw.preimages)};
   const plan=frozen({schemaVersion:1,kind:'verified-local-retirement-plan',profileId:retirementProfile.id,migrationId:retirementProfile.migrationId,mode:retirementProfile.mode,productionReady:false,productionExecutionSupported:false,bundleHash:hash(bytes),sqlSourceHash:raw.sqlSourceHash,request,candidateSource:candidate.manifest.releaseCommit,previousSource:active.manifest.releaseCommit,expectedCurrentMigrations,retainedFingerprints:structuredClone(values.retainedBefore),retainedTables:raw.retainedTableCount});
   verifiedPlans.set(plan,{directory,files,bundle:structuredClone(bundle),source:Buffer.from(source),request:structuredClone(request)});return plan;
  }catch{throw Error('Local retirement artifact verification refused');}
@@ -73,6 +73,6 @@ export async function localRetirementProgram(plan){
  const proof=verifiedPlans.get(plan);if(!proof)throw Error('Live verified local retirement plan required');
  assert.equal(hash(await readFile(backupFile(proof.directory,'retirement-bundle.json'))),plan.bundleHash);
  for(const kind of artifactKinds)assert.equal(await checksum(backupFile(proof.directory,proof.bundle.artifacts[kind].path)),proof.bundle.artifacts[kind].sha256);
- assert.equal(hash(await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-301.sql',import.meta.url))),plan.sqlSourceHash);
+ assert.equal(hash(await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-302.sql',import.meta.url))),plan.sqlSourceHash);
  return proof.source.toString('utf8').replace(":'retirement_request'","'"+JSON.stringify(proof.request).replaceAll("'","''")+"'");
 }

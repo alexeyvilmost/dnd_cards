@@ -21,11 +21,11 @@ BEGIN
   END IF;
 END;
 $preflight$;
-CREATE TEMP TABLE retirement_request_301 (request jsonb NOT NULL) ON COMMIT DROP;
-INSERT INTO retirement_request_301 VALUES (:'retirement_request'::jsonb);
+CREATE TEMP TABLE retirement_request_302 (request jsonb NOT NULL) ON COMMIT DROP;
+INSERT INTO retirement_request_302 VALUES (:'retirement_request'::jsonb);
 DO $retirement$
 DECLARE
-  request jsonb := (SELECT r.request FROM retirement_request_301 r);
+  request jsonb := (SELECT r.request FROM retirement_request_302 r);
   prior jsonb;
   observed jsonb;
   retained_inventories_before text;
@@ -39,7 +39,7 @@ DECLARE
   had_inventory_check boolean := false;
   had_inventory_type_check boolean := false;
 BEGIN
-  IF request->>'kind' IS DISTINCT FROM 'retire-character-generations-301'
+  IF request->>'kind' IS DISTINCT FROM 'retire-character-generations-302'
     OR request->>'schemaVersion' IS DISTINCT FROM '1'
     OR coalesce(request->>'backupHash','') !~ '^sha256:[0-9a-f]{64}$'
     OR coalesce(request->>'archiveRestoreReportHash','') !~ '^sha256:[0-9a-f]{64}$'
@@ -49,7 +49,7 @@ BEGIN
     OR jsonb_typeof(request->'preimages') IS DISTINCT FROM 'object' THEN
     RAISE EXCEPTION 'Exact verified retirement request required';
   END IF;
-  SELECT description::jsonb INTO prior FROM public.schema_migrations WHERE version = '301_retire_legacy_characters';
+  SELECT description::jsonb INTO prior FROM public.schema_migrations WHERE version = '302_retire_legacy_characters';
   IF FOUND THEN
     IF prior->>'kind' IS DISTINCT FROM 'retired-character-generations-receipt'
       OR prior->'request' IS DISTINCT FROM request THEN
@@ -156,7 +156,7 @@ BEGIN
   IF retained_inventories_before IS DISTINCT FROM retained_inventories_after OR retained_items_before IS DISTINCT FROM retained_items_after THEN
     RAISE EXCEPTION 'Shared inventories or items changed unexpectedly';
   END IF;
-  INSERT INTO public.schema_migrations(version,description,executed_at) VALUES ('301_retire_legacy_characters',
+  INSERT INTO public.schema_migrations(version,description,executed_at) VALUES ('302_retire_legacy_characters',
     jsonb_build_object('kind','retired-character-generations-receipt','request',request,'retainedInventoriesHash',retained_inventories_after,'retainedItemsHash',retained_items_after)::text,now());
 END;
 $retirement$;

@@ -74,7 +74,9 @@ func explicitRetirementFixture(t *testing.T) (*sql.DB, ReleaseRetirementExecutio
 	}
 	_, err = db.Exec(`CREATE TABLE characters(id integer PRIMARY KEY,user_id integer,payload jsonb);INSERT INTO characters VALUES(10,1,'{"old":1}');
 	CREATE TABLE characters_v2(id integer PRIMARY KEY,user_id integer,payload jsonb);INSERT INTO characters_v2 VALUES(20,2,'{"old":2,"different":[2,3]}');
-	CREATE TABLE characters_v3(id integer PRIMARY KEY,payload jsonb);INSERT INTO characters_v3 VALUES(30,'{"current":true}');
+	ALTER TABLE characters_v3 ADD COLUMN payload jsonb;
+	INSERT INTO characters_v3(id,payload,deleted_at) VALUES('33333333-3333-4333-8333-333333333333','{"current":true}',NULL),('44444444-4444-4444-8444-444444444444','{"deleted":true}','2026-10-01T00:00:00Z');
+	INSERT INTO roguelike_runs(id,user_id,deleted_at) VALUES(1,'55555555-5555-4555-8555-555555555555',NULL),(2,'55555555-5555-4555-8555-555555555555','2026-10-02T00:00:00Z');
 	CREATE TABLE inventories(id integer PRIMARY KEY,type varchar,user_id integer,group_id integer,character_id integer,payload jsonb);
 	INSERT INTO inventories VALUES(1,'character',1,NULL,10,'{"retired":1}'),(2,'character',NULL,NULL,20,'{"retired":2}'),(3,'personal',1,NULL,NULL,'{"keep":true}');
 	CREATE TABLE inventory_items(id integer PRIMARY KEY,inventory_id integer REFERENCES inventories(id) ON DELETE CASCADE,payload jsonb);
@@ -94,7 +96,7 @@ func explicitRetirementFixture(t *testing.T) (*sql.DB, ReleaseRetirementExecutio
 	if err = json.Unmarshal(raw, &r.Preimages); err != nil {
 		t.Fatal(err)
 	}
-	return db, ReleaseRetirementExecutionRequest{SchemaVersion: 1, Kind: "execute-character-retirement-301", ReleaseID: "owned-explicit-retirement", ExpectedCurrent: ordinary.Target, SQLSourceHash: RetirementMigrationIdentity().Checksum, ExpectedAdditiveSchemaProofHash: expansion.SchemaProofHash, Retirement: r}
+	return db, ReleaseRetirementExecutionRequest{SchemaVersion: 1, Kind: "execute-character-retirement-302", ReleaseID: "owned-explicit-retirement", ExpectedCurrent: ordinary.Target, SQLSourceHash: RetirementMigrationIdentity().Checksum, ExpectedAdditiveSchemaProofHash: expansion.SchemaProofHash, Retirement: r}
 }
 
 func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
@@ -116,7 +118,15 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 				t.Fatal(err)
 			}
 			m := NewMigrator(db)
+			const lifecycleSnapshot = `SELECT jsonb_build_object('v3',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM characters_v3 t),'runs',(SELECT jsonb_agg(to_jsonb(t) ORDER BY id) FROM roguelike_runs t))::text`
+			var lifecycleBefore, lifecycleAfter string
+			if snapshotErr := db.QueryRow(lifecycleSnapshot).Scan(&lifecycleBefore); snapshotErr != nil {
+				t.Fatal(snapshotErr)
+			}
 			first, err := m.RunReleaseRetirement(context.Background(), request)
+			if snapshotErr := db.QueryRow(lifecycleSnapshot).Scan(&lifecycleAfter); snapshotErr != nil || lifecycleAfter != lifecycleBefore {
+				t.Fatal("retirement changed current or deleted V3 characters and runs", snapshotErr)
+			}
 			if name != "valid-repeat-and-later-gameplay" {
 				if err == nil {
 					t.Fatal("drift accepted")
@@ -141,7 +151,7 @@ func TestExplicitRetirementAtomicExecutionRetryAndReconciliation(t *testing.T) {
 				}
 				return
 			}
-			if err != nil || !reflect.DeepEqual(first.Applied, []string{retirement301Version}) || len(first.Inspection.Applied) != 0 {
+			if err != nil || !reflect.DeepEqual(first.Applied, []string{retirement302Version}) || len(first.Inspection.Applied) != 0 {
 				t.Fatal("explicit execution not observed", err)
 			}
 			second, err := m.RunReleaseRetirement(context.Background(), request)

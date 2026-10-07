@@ -12,16 +12,16 @@ import (
 	"time"
 )
 
-const retirement301Version = "301_retire_legacy_characters"
+const retirement302Version = "302_retire_legacy_characters"
 
 // This is the single reviewed SQL source. Only the separate explicit retirement
 // command can execute it; startup and the additive executor never register it.
 //
-//go:embed data/retire-legacy-characters-301.sql
-var retirement301Source []byte
+//go:embed data/retire-legacy-characters-302.sql
+var retirement302Source []byte
 
 func RetirementMigrationIdentity() MigrationIdentity {
-	return MigrationIdentity{ID: retirement301Version, Checksum: hashBytes(retirement301Source)}
+	return MigrationIdentity{ID: retirement302Version, Checksum: hashBytes(retirement302Source)}
 }
 
 type RetirementPreimage struct {
@@ -67,7 +67,7 @@ type retirementReceipt struct {
 }
 
 func validRetirementRequest(request RetirementRequest) bool {
-	if request.SchemaVersion != 1 || request.Kind != "retire-character-generations-301" ||
+	if request.SchemaVersion != 1 || request.Kind != "retire-character-generations-302" ||
 		!validIdentityHash(request.BackupHash) || !validIdentityHash(request.ArchiveRestoreReportHash) || !validIdentityHash(request.AcceptedRollbackPairHash) || len(request.Preimages) != 4 {
 		return false
 	}
@@ -94,19 +94,19 @@ func decodeRetirementReceipt(raw []byte) (retirementReceipt, error) {
 // separately validate the actual backup/archive/reader-pair artifacts; hashes
 // here bind that accepted request and do not assert their external existence.
 func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request ReleaseRetirementInspectionRequest) (result ReleaseRetirementInspectionResult, runErr error) {
-	if request.SchemaVersion != 1 || request.Kind != "inspect-character-retirement-301" || request.ReleaseID == "" ||
+	if request.SchemaVersion != 1 || request.Kind != "inspect-character-retirement-302" || request.ReleaseID == "" ||
 		request.SQLSourceHash != RetirementMigrationIdentity().Checksum || !validIdentityHash(request.ExpectedAdditiveSchemaProofHash) || !validIdentityHash(request.ReceiptHash) || !validRetirementRequest(request.Retirement) {
 		return result, errors.New("invalid retirement inspection request")
 	}
 	identities, err := identityMap(request.ExpectedCurrent)
-	if err != nil || identities[retirement301Version] != request.SQLSourceHash {
+	if err != nil || identities[retirement302Version] != request.SQLSourceHash {
 		return result, errors.New("exact retirement migration identity required")
 	}
-	// Validate the complete ordinary registry with 301 removed. This retains
+	// Validate the complete ordinary registry with 302 removed. This retains
 	// historical ID-only provenance and rejects every other unknown migration.
 	var ordinary []MigrationIdentity
 	for _, row := range request.ExpectedCurrent {
-		if row.ID != retirement301Version {
+		if row.ID != retirement302Version {
 			ordinary = append(ordinary, row)
 		}
 	}
@@ -143,7 +143,7 @@ func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request Release
 		return result, errors.New("retirement ledger differs from accepted migration set")
 	}
 	var raw []byte
-	if err = tx.QueryRowContext(ctx, "SELECT description FROM schema_migrations WHERE version=$1", retirement301Version).Scan(&raw); err != nil || hashBytes(raw) != request.ReceiptHash {
+	if err = tx.QueryRowContext(ctx, "SELECT description FROM schema_migrations WHERE version=$1", retirement302Version).Scan(&raw); err != nil || hashBytes(raw) != request.ReceiptHash {
 		return result, errors.New("retirement receipt differs from accepted observation")
 	}
 	receipt, err := decodeRetirementReceipt(raw)
@@ -158,7 +158,9 @@ func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request Release
 	if err != nil || hashBytes(additiveProof) != request.ExpectedAdditiveSchemaProofHash {
 		return result, errors.New("retained additive schema differs from accepted proof")
 	}
-	readersSafe, err := oldReadersSafe(ctx, tx)
+	// Preserve the conservative pre-expansion reader observation. Current
+	// writer compatibility is proved separately against the accepted image pair.
+	readersSafe, err := oldReadersSafe(ctx, tx, false)
 	if err != nil {
 		return result, errors.New("retained old-reader observation failed")
 	}
@@ -194,4 +196,4 @@ func (m *Migrator) InspectReleaseRetirement(ctx context.Context, request Release
 
 // Used by metadata consumers to distinguish support from executable startup
 // migrations. This identity never appears in registryVersions/GetAllMigrations.
-func RetirementSupportedMigrationIDs() []string { return []string{retirement301Version} }
+func RetirementSupportedMigrationIDs() []string { return []string{retirement302Version} }

@@ -29,7 +29,7 @@ test('actual deployment store retains the execution observation through restart 
 });
 for(const [name,change]of Object.entries({
   'unknown outcome':f=>{f.execution.status='failed_or_unknown';},
-  'wrong operation kind':f=>{f.request.kind='inspect-character-retirement-301';},
+  'wrong operation kind':f=>{f.request.kind='inspect-character-retirement-302';},
   'empty prior ledger':f=>{f.request.expectedCurrent=[];},
   'already retired baseline':f=>{f.request.expectedCurrent.push(f.execution.result.request.expectedCurrent.at(-1));},
   'extra execution request field':f=>{f.request.databaseURL='PRIVATE_CANARY';},

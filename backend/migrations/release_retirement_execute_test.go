@@ -7,7 +7,7 @@ import (
 )
 
 func TestExplicitRetirementRejectsUnboundRequestsBeforeConnecting(t *testing.T) {
-	request := ReleaseRetirementExecutionRequest{SchemaVersion: 1, Kind: "execute-character-retirement-301", ReleaseID: "owned-explicit-retirement",
+	request := ReleaseRetirementExecutionRequest{SchemaVersion: 1, Kind: "execute-character-retirement-302", ReleaseID: "owned-explicit-retirement",
 		SQLSourceHash: RetirementMigrationIdentity().Checksum, ExpectedAdditiveSchemaProofHash: "sha256:" + strings.Repeat("c", 64), Retirement: testRetirementRequest()}
 	// Empty registry is deliberately not a valid complete baseline. Every
 	// variant must fail validation without touching the nil database.

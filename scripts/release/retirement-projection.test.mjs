@@ -18,7 +18,7 @@ function fixture(t){
  const f=retirementStateUnitFixture(),root=mkdtempSync(path.join(tmpdir(),'retirement-projection-'));
  t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('retirement-projection-'));rmSync(root,{recursive:true,force:true});});
  const active={...structuredClone(f.active),database:retirementDatabaseStateFromInspection(f,f.inspection)},stamp='2026-10-06T00:00:00Z';
- const operation={schemaVersion:1,kind:'character-retirement-observation-301',releaseId:f.request.releaseId,status:'succeeded',previous:f.active,desired:active,transitionHash:evidenceHash({previous:f.active,desired:active}),createdAt:stamp,updatedAt:stamp};
+ const operation={schemaVersion:1,kind:'character-retirement-observation-302',releaseId:f.request.releaseId,status:'succeeded',previous:f.active,desired:active,transitionHash:evidenceHash({previous:f.active,desired:active}),createdAt:stamp,updatedAt:stamp};
  const store=createDeploymentStore(root);store.writeActive(active);store.writeOperation(operation);
  const request={repository:'fixture/project',runId:42,attempt:2,controlCommit:'c'.repeat(40),sourceCommit:active.manifest.releaseCommit};
  return {...f,root,store,active,operation,request,manifest:active.manifest};
