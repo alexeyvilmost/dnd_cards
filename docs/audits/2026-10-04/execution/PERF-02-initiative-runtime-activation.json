@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "status": "locally_prepared_initiative_options_activation_pending_next_release",
+  "recordedAt": "2026-10-07T03:37:50.594Z",
+  "scope": "One explicit backend runtime flag in versioned production Compose; host not changed.",
+  "sourceComposeHash": "sha256:74aa25c5a1849d3e570b14c7fa0ed7a99faae7650f651d6b140d2630288eb212",
+  "previousComposeHash": "sha256:bae2f1d35a70de3ec43062c233c7d3969d007416dd7e5f3e2d10eab72255fde6",
+  "configuration": {
+    "before": {
+      "RULES_CATALOG_BATCH_ENABLED": "1",
+      "RULES_WORKER_MIRRORS_ENABLED": "1",
+      "RULES_PREPARATION_CACHE_ENABLED": "0",
+      "RULES_EQUIPMENT_INTENT_ENABLED": "0",
+      "RULES_INITIATIVE_OPTIONS_ENABLED": "0",
+      "RULES_CATALOG_PREFETCH_ENABLED": "0",
+      "RULES_PERFORMANCE_ENABLED": "0",
+      "DB_COMPACT_RECEIPTS": "1",
+      "DB_FROZEN_CATALOGS": "0",
+      "IMAGE_JOBS_ENABLED": "1",
+      "RULES_WORKER_MAX_INFLIGHT": "4"
+    },
+    "after": {
+      "RULES_CATALOG_BATCH_ENABLED": "1",
+      "RULES_WORKER_MIRRORS_ENABLED": "1",
+      "RULES_PREPARATION_CACHE_ENABLED": "0",
+      "RULES_EQUIPMENT_INTENT_ENABLED": "0",
+      "RULES_INITIATIVE_OPTIONS_ENABLED": "1",
+      "RULES_CATALOG_PREFETCH_ENABLED": "0",
+      "RULES_PERFORMANCE_ENABLED": "0",
+      "DB_COMPACT_RECEIPTS": "1",
+      "DB_FROZEN_CATALOGS": "0",
+      "IMAGE_JOBS_ENABLED": "1",
+      "RULES_WORKER_MAX_INFLIGHT": "4"
+    },
+    "onlyResolvedChange": "backend.environment.RULES_INITIATIVE_OPTIONS_ENABLED=0 -> 1",
+    "actualDockerComposeParsing": "passed",
+    "receipt": "outputs/operations/initiative-compose-configuration-2026-10-07T03-34-28.272Z/receipt.json",
+    "receiptHash": "sha256:010fa7205c66d2caf323f5079d89c02fdd3d7e2ca1b9567845edd8114f7b0097"
+  },
+  "applicationVerification": {
+    "evidence": "docs/audits/2026-10-04/execution/PERF-02-integrated-initiative-20261007.json",
+    "sourceCommit": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+    "upstreamMain": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+    "sourceHashes": {
+      "frontend/src/hooks/useSoloCombatBootstrap.ts": "sha256:34e8d54c779723796d7cd98e1570b293f95697ee5f90cad745ca90d8c32928dc",
+      "frontend/src/pages/SoloCombatPage.tsx": "sha256:5b674549103a1d78a6797304aa76017603db2ab18b418db344b4f3a1427c6a39",
+      "frontend/src/roguelike/initiativeOptions.ts": "sha256:f035ebf02d4eca61df3a2be44bc686f58008baf0480c37971f3d34f4a02c60a6",
+      "backend/roguelike_initiative_options.go": "sha256:779c22b47ef59f3c9e669d4db37bb54f0a1fa035bd2537d3132ee9a00e48ed0f",
+      "backend/roguelike_worker_controller.go": "sha256:40f16558c15f439631a92deb7ef4473a6165e5f099bc7b8fc2d032a3c795e4f6",
+      "frontend/worker/server.mjs": "sha256:b5e0b3df6bc216ac9b60d3092ee6413851e126011d59de1abb265435c49cb034"
+    },
+    "browserCases": 4,
+    "pageErrors": 0,
+    "duplicateBrowserParticipantBuilds": 0,
+    "resourceCostAndExactRetry": "passed",
+    "partyReloadAndSourceSheets": "passed"
+  },
+  "existingReleaseContracts": {
+    "selectedFiles": [
+      "scripts/release/retained-runtime.test.mjs",
+      "scripts/release/retained-ui-runtime.test.mjs",
+      "scripts/release/docker-deployment.test.mjs",
+      "scripts/release/ui-runtime-binding.test.mjs",
+      "scripts/release/writer-runtime-profile.test.mjs"
+    ],
+    "tests": 27,
+    "passed": 27,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Node contract tests with fixture adapters; no actual production rollback."
+  },
+  "productionChanges": 0,
+  "productionFlagChanged": false,
+  "paidProviderRequests": 0,
+  "rollback": {
+    "mechanism": "Canonical application rollback to retained predecessor compose.runtime.json preserves its OFF environment; never restore the database.",
+    "actualRollbackPending": true
+  },
+  "remaining": [
+    "Wait for accepted Main301 release and its content repair; no competing push or host operation.",
+    "Revalidate actual predecessor runtime settings after that release.",
+    "Run canonical exact-commit publication, fresh backup and candidate gates before host activation.",
+    "Independently verify effective ON environment and exact component identities after deployment."
+  ],
+  "limits": [
+    "No new current-production latency or Linux OCI initiative execution claim.",
+    "Earlier native timing comparison remains separately scoped to source C with its documented median/tail tradeoff.",
+    "Preparation cache, equipment intent, prefetch and frozen catalog settings stay as observed."
+  ]
+}

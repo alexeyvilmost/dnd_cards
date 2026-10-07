@@ -15,6 +15,7 @@ services:
       RELEASE_ID: ${BACKEND_RELEASE_ID:-${RELEASE_ID:?Validated launch identity is required}}
       RULES_WORKER_URL: http://rules-worker:8090
       RULES_WORKER_MAX_INFLIGHT: ${RULES_WORKER_MAX_INFLIGHT:-4}
+      RULES_INITIATIVE_OPTIONS_ENABLED: "1"
       TRUSTED_PROXY_CIDRS: 172.20.0.0/24
       # Expansion rollout must keep old readers compatible until a separately
       # reviewed writer-enable release changes this explicit policy.

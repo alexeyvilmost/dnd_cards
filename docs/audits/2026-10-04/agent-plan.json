@@ -1347,6 +1347,14 @@
           "lifecycle301Recorded": true,
           "productionFlagChanged": false,
           "remaining": "Verified runtime configuration activation and rollback; no fresh latency claim."
+        },
+        "initiativeRuntimeActivation": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-02-initiative-runtime-activation.json",
+          "status": "locally_prepared_initiative_options_activation_pending_next_release",
+          "composeHash": "sha256:74aa25c5a1849d3e570b14c7fa0ed7a99faae7650f651d6b140d2630288eb212",
+          "actualComposeParsing": "passed",
+          "releaseContractsPassed": 27,
+          "productionChanges": 0
         }
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
