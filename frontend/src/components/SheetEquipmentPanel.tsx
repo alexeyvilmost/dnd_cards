@@ -130,7 +130,8 @@ function CharacterEquipmentPanel({
     const ids = new Set<string>();
     for (const row of character.inventory_items ?? []) ids.add(row.card_id);
     for (const id of Object.values(character.equipment ?? {})) if (id) ids.add(id);
-    return [...ids];
+    // Hydration depends on membership, not inventory or equipment slot order.
+    return [...ids].sort();
   }, [character.inventory_items, character.equipment]);
 
   useEffect(() => {

@@ -45,7 +45,20 @@ it('keeps visible entries when an unavailable inventory item rejects the strict 
  const batch=vi.spyOn(cardsApi,'getDisplayCardsByIds').mockRejectedValue(new Error('cards unavailable'));
  const detail=vi.spyOn(cardsApi,'getCard').mockImplementation(async id=>{if(id===visible.id)return visible;throw Error('unavailable');});
  await render({body:'unavailable-item'},[{card_id:visible.id,qty:1},{card_id:'unavailable-item',qty:1}]);await showEmpty();
- expect(batch).toHaveBeenCalledExactlyOnceWith(['visible-item','unavailable-item']);
+ expect(batch).toHaveBeenCalledExactlyOnceWith(['unavailable-item','visible-item']);
  expect(detail.mock.calls.map(([id])=>id).sort()).toEqual(['unavailable-item','visible-item']);
  expect(host.querySelector('[aria-label="Доступный предмет"]')).not.toBeNull();expect(host.querySelector('[aria-label="Тело: занято"]')).not.toBeNull();
+});
+
+it('keeps hydrated details through inventory reordering and reloads a changed membership',async()=>{
+ const cards:Card[]=['a','b','c'].map(id=>({id,name:'Предмет '+id,type:'ring',description:'',rarity:'common',weight:1,properties:[],card_number:id,is_template:'false',created_at:character.created_at,updated_at:character.updated_at}));
+ const batch=vi.spyOn(cardsApi,'getDisplayCardsByIds').mockImplementation(async ids=>ids.map(id=>cards.find(card=>card.id===id)!));
+ await render({},[{card_id:'a',qty:1},{card_id:'b',qty:1}]);
+ expect(batch).toHaveBeenCalledExactlyOnceWith(['a','b']);
+ await render({},[{card_id:'b',qty:2},{card_id:'a',qty:1}]);
+ expect(batch).toHaveBeenCalledTimes(1);
+ for(const id of ['a','b'])expect(host.querySelector('[aria-label="Предмет '+id+'"]')).not.toBeNull();
+ await render({},[{card_id:'c',qty:1},{card_id:'b',qty:2},{card_id:'a',qty:1}]);
+ expect(batch).toHaveBeenCalledTimes(2);expect(batch).toHaveBeenLastCalledWith(['a','b','c']);
+ expect(host.querySelector('[aria-label="Предмет c"]')).not.toBeNull();
 });
