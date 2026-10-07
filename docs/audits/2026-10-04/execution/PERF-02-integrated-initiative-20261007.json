@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "status": "current_integrated_initiative_choice_verified_local",
+  "observedAt": "2026-10-07T03:28:02.486Z",
+  "sourceCommit": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+  "upstreamMain": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+  "sourceSnapshot": "80d25f78a2d6e5e325ead8a43d522bbef3817c886e3cdf3402b845e8bc1ad6d3",
+  "sourceFiles": 4589,
+  "sourceHashes": {
+    "frontend/src/hooks/useSoloCombatBootstrap.ts": "sha256:34e8d54c779723796d7cd98e1570b293f95697ee5f90cad745ca90d8c32928dc",
+    "frontend/src/pages/SoloCombatPage.tsx": "sha256:5b674549103a1d78a6797304aa76017603db2ab18b418db344b4f3a1427c6a39",
+    "frontend/src/roguelike/initiativeOptions.ts": "sha256:f035ebf02d4eca61df3a2be44bc686f58008baf0480c37971f3d34f4a02c60a6",
+    "backend/roguelike_initiative_options.go": "sha256:779c22b47ef59f3c9e669d4db37bb54f0a1fa035bd2537d3132ee9a00e48ed0f",
+    "backend/roguelike_worker_controller.go": "sha256:40f16558c15f439631a92deb7ef4473a6165e5f099bc7b8fc2d032a3c795e4f6",
+    "frontend/worker/server.mjs": "sha256:b5e0b3df6bc216ac9b60d3092ee6413851e126011d59de1abb265435c49cb034"
+  },
+  "scope": "current integrated d8e1e966 source with upstream Main955; native Windows owned synthetic fixtures, not production latency or Linux OCI",
+  "backendBinaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+  "rulesArtifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+  "uiManifestHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+  "nodeVersion": "v24.21.0",
+  "goRuntime": "go1.25.12",
+  "flags": {
+    "DB_COMPACT_RECEIPTS": "1",
+    "DB_FROZEN_CATALOGS": "0",
+    "RULES_WORKER_MIRRORS_ENABLED": "1",
+    "RULES_CATALOG_BATCH_ENABLED": "1",
+    "RULES_PREPARATION_CACHE_ENABLED": "0",
+    "RULES_CATALOG_PREFETCH_ENABLED": "0",
+    "RULES_EQUIPMENT_INTENT_ENABLED": "0",
+    "RULES_INITIATIVE_OPTIONS_ENABLED": "1"
+  },
+  "localLifecycle301Recorded": true,
+  "build": {
+    "backend": "passed",
+    "worker": "passed",
+    "frontendTypecheck": "passed",
+    "productionUIBuild": "passed",
+    "integrationSourceStartup": "passed",
+    "cleanup": {
+      "status": "stopped",
+      "cleanupErrors": [],
+      "sourceRun": "test_cf34c19e71e2ca3954898af4"
+    }
+  },
+  "cases": [
+    {
+      "variant": "alpha",
+      "resource": "initiative_alpha",
+      "faces": 4,
+      "partySize": 1,
+      "display": "row",
+      "resourceBefore": 2,
+      "resourceAfter": 1,
+      "canonicalPreview": true,
+      "offerReadOnly": true,
+      "unownedRejected": true,
+      "exactRetry": true,
+      "reloadStable": true,
+      "partyRowsInvariant": true,
+      "sourceUnchanged": true,
+      "browserBuilderCalls": 0,
+      "initializeCommands": 1
+    },
+    {
+      "variant": "beta",
+      "resource": "initiative_beta",
+      "faces": 6,
+      "partySize": 1,
+      "display": "icon",
+      "resourceBefore": 2,
+      "resourceAfter": 1,
+      "canonicalPreview": true,
+      "offerReadOnly": true,
+      "unownedRejected": true,
+      "exactRetry": true,
+      "reloadStable": true,
+      "partyRowsInvariant": true,
+      "sourceUnchanged": true,
+      "browserBuilderCalls": 0,
+      "initializeCommands": 1
+    },
+    {
+      "variant": "alpha",
+      "resource": "initiative_alpha",
+      "faces": 4,
+      "partySize": 2,
+      "display": "icon",
+      "resourceBefore": 2,
+      "resourceAfter": 1,
+      "canonicalPreview": true,
+      "offerReadOnly": true,
+      "unownedRejected": true,
+      "exactRetry": true,
+      "reloadStable": true,
+      "partyRowsInvariant": true,
+      "sourceUnchanged": true,
+      "browserBuilderCalls": 0,
+      "initializeCommands": 1
+    },
+    {
+      "variant": "beta",
+      "resource": "initiative_beta",
+      "faces": 6,
+      "partySize": 6,
+      "display": "row",
+      "resourceBefore": 2,
+      "resourceAfter": 1,
+      "canonicalPreview": true,
+      "offerReadOnly": true,
+      "unownedRejected": true,
+      "exactRetry": true,
+      "reloadStable": true,
+      "partyRowsInvariant": true,
+      "sourceUnchanged": true,
+      "browserBuilderCalls": 0,
+      "initializeCommands": 1
+    }
+  ],
+  "pageErrors": 0,
+  "cleanup": {
+    "status": "stopped",
+    "errors": [],
+    "ownedChildrenExited": true
+  },
+  "allVerificationSourcesUnchanged": true,
+  "productionChanges": 0,
+  "productionFlagChanged": false,
+  "paidProviderRequests": 0,
+  "evidence": {
+    "browser": {
+      "path": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/runs/test_1fd5ceb9f870eed76f37b371/initiative-choice-browser.json",
+      "hash": "sha256:4f3b6b465c2e82ea8ae42aa8c8b1decd9f0ead11ad088bffa9bfa66ac852bd54"
+    },
+    "sourceBuild": {
+      "path": "outputs/testing/integrated-initiative-20261007/source.json",
+      "hash": "sha256:5441722efc0b5bfe2096be2d0989ad7facfef23db0042b2689257e8b2fa9a8d2"
+    },
+    "driver": {
+      "path": "outputs/testing/integrated-initiative-choice-browser-20261007.mjs",
+      "hash": "sha256:47735a59e2bb674cb0aade49cb69a204e7769d1d75fb3cf166b88075f5b7e3e2"
+    }
+  },
+  "limits": [
+    "Four real correctness scenarios, not a new latency measurement or exhaustive action coverage.",
+    "Current native source build; no claim of Linux OCI execution or production activation.",
+    "Earlier source-C timing series remains historical; no current production speedup claimed.",
+    "Current production initiative-options flag remains OFF; verified configuration activation and rollback remain pending."
+  ]
+}

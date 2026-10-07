@@ -1336,7 +1336,18 @@
         "nextAcceptance": [
           "Bind default options configuration/rollback to actual verified runtime; retain prefetch OFF."
         ],
-        "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json"
+        "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
+        "currentIntegratedChoice": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-02-integrated-initiative-20261007.json",
+          "sourceCommit": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+          "upstreamMain": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+          "browserCases": 4,
+          "pageErrors": 0,
+          "cleanupErrors": 0,
+          "lifecycle301Recorded": true,
+          "productionFlagChanged": false,
+          "remaining": "Verified runtime configuration activation and rollback; no fresh latency claim."
+        }
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "latest_execution_result": {
