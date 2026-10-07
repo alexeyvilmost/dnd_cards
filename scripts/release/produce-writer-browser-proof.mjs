@@ -36,7 +36,8 @@ export async function cleanupWriterBrowserCase(browser,adapter){
 }
 // Low-level execution may be used for a local non-deployable rehearsal without
 // inventing GitHub run IDs. Only the guarded publisher below adds provenance.
-export async function executeWriterBrowserPair({candidate,active,publicDump,imageRoles,roleLaunches,repositoryRoot,directory,postgresImage,browserFactory}){
+export const writerPreviewRoles=Object.freeze(['previous','candidate']);
+export async function executeWriterBrowserPair({candidate,active,publicDump,imageRoles,roleLaunches,repositoryRoot,directory,postgresImage,browserFactory,onPhase=()=>{}}){
  validatePublicWriterImageRoles(imageRoles,{candidate,active});decodePublicWriterDump(publicDump.dump);decodePublicWriterRules(publicDump.ruleData,publicDump.sourceFiles);validatePublicWriterAccounts(publicDump.accounts);
  directory=path.resolve(directory);assert.equal(await realpath(path.dirname(directory)),path.dirname(directory));await mkdir(directory,{mode:0o700});
  const binding={compositionFingerprint:compositionFingerprint(candidate.manifest),activeHash:evidenceHash(active),runId:randomUUID(),writerPolicy:writerPolicy(candidate.manifest),
@@ -52,19 +53,26 @@ export async function executeWriterBrowserPair({candidate,active,publicDump,imag
    adapter=await createCompactOciAdapter({directory:path.join(directory,'case-'+index),dump:{schemaVersion:1,kind:'owned-integration-dump',runId:publicDump.dump.runId,registryPath:publicDump.local.registryPath,dumpFile:publicDump.local.dumpFile,sha256:publicDump.dump.sha256,bytes:publicDump.dump.bytes},imageRoles:records(imageRoles),roleLaunches,postgresImage,imageProtocol:true});
    // Profile the actual manifest policies before the deliberate isolated format
    // probes. Only writer flags may differ in the later ON/OFF browser execution.
-   for(const role of ['candidate','previous']){
+   // Observe the predecessor ledger before the additive candidate upgrade.
+   // The later browser probe still runs the predecessor on the expanded schema.
+   for(const role of writerPreviewRoles){
     const manifest=role==='candidate'?candidate.manifest:active.manifest;
+    onPhase(`browser-case-${index}-preview-${role}-start`);
     const preview=await adapter.start({role,...writerPolicy(manifest),releaseId:manifest.releaseId});assertObserved(preview,imageRoles,role,role);
-    const applied=JSON.parse(await adapter.query("SELECT coalesce(json_agg(version ORDER BY version),'[]'::json) FROM schema_migrations;"));assert.deepEqual(applied,[...manifest.migrationSet.map(row=>row.id)].sort(),'Public fixture did not reach the exact candidate migration ledger');
+    onPhase(`browser-case-${index}-preview-${role}-ledger`);
+    const applied=JSON.parse(await adapter.query("SELECT coalesce(json_agg(version ORDER BY version),'[]'::json) FROM schema_migrations;"));assert.deepEqual(applied,[...manifest.migrationSet.map(row=>row.id)].sort(),'Public fixture did not reach the exact preview migration ledger');
     if(binding.executionProfile[role])same(preview.executionProfile,binding.executionProfile[role]);else binding.executionProfile[role]=preview.executionProfile;
     await adapter.stopApplications();
    }
+   onPhase(`browser-case-${index}-candidate-start`);
    const before=await adapter.start({role:'candidate',frontendRole,...probePolicy,releaseId:candidate.manifest.releaseId});assertObserved(before,imageRoles,'candidate',frontendRole);
    if(executionProfile.candidate)same(before.executionProfile,executionProfile.candidate);else executionProfile.candidate=before.executionProfile;
    let surface=await adapter.startBrowserSurface({role:frontendRole,releaseId:(frontendRole==='candidate'?candidate.manifest:active.manifest).releaseId});
+   onPhase(`browser-case-${index}-browser-launch`);
    browser=await (browserFactory??prepareWriterBrowser)({repositoryRoot,directory:path.join(directory,'browser-'+index),adapter,surface});
    if(browser.origin)surface={...surface,origin:browser.origin};
    if(browserRuntime)same(browser.runtime,browserRuntime);else browserRuntime=browser.runtime;
+   onPhase(`browser-case-${index}-browser-probe`);
    observations.push(await probeImageJobBrowser({adapter,accounts:publicDump.accounts,id:frontendRole+'-ui',surface,releaseIds:{candidate:candidate.manifest.releaseId,previous:active.manifest.releaseId},repositoryRoot,browserConfiguration:browser,frontendRole}));
    const after=await adapter.observe();assertObserved(after,imageRoles,'previous',frontendRole);
    if(executionProfile.previous)same(after.executionProfile,executionProfile.previous);else executionProfile.previous=after.executionProfile;
@@ -85,7 +93,7 @@ export async function produceHostedWriterFixture({candidate,active,repositoryRoo
  onPhase('public-dump');
  const publicDump=await producePublicWriterDump({repositoryRoot,sourceCommit:provenance.sourceCommit});
  onPhase('browser-pair');
- const actual=await executeWriterBrowserPair({candidate,active,publicDump,imageRoles,roleLaunches,repositoryRoot,directory:path.join(directory,'browser-proof'),postgresImage});
+ const actual=await executeWriterBrowserPair({candidate,active,publicDump,imageRoles,roleLaunches,repositoryRoot,directory:path.join(directory,'browser-proof'),postgresImage,onPhase});
  onPhase('fixture-assembly');
  assert.equal(evidenceHash({candidate,active}),inputHash);same(hostedWriterProvenance(candidate,environment),provenance);
  const browserProof={schemaVersion:1,kind:'writer-browser-oci-proof',status:'passed',execution:'docker',binding:actual.binding,trace:actual.trace,provenance,cleanup:actual.cleanup,executionProfile:actual.executionProfile,browserRuntime:actual.browserRuntime};
