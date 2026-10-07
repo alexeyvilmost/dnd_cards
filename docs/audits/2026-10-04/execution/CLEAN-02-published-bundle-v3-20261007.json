@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "taskId": "CLEAN-02",
-  "status": "local_published_executor_graph_verified_production_integration_open",
-  "recordedAt": "2026-10-07T07:42:34.837Z",
+  "status": "local_published_graph_native_bound_execution_verified_production_integration_open",
+  "recordedAt": "2026-10-07T07:54:44.832Z",
   "sourceHashes": {
     "scripts/release/retirement-artifacts.mjs": "sha256:21363b0b56e95ad8d64194d00cbdc33b9bd79e781ce6c1180ec4b0909523a64f",
     "scripts/release/retirement-artifacts.test.mjs": "sha256:b7df65360c91fd27fff6698606a36c8b01b097b4069907d5b7dc6348e340c950"
@@ -46,6 +46,33 @@
   "limits": [
     "This validates the actual 05085/D229 local proof graph, not the next production source pair.",
     "Only the executor summary is stored by the original reader report; full command metadata/receipt bytes are not independently reconstructed.",
-    "Current-pair browser acceptance, post307 fresh capture/proofs and production host authorization remain separate."
-  ]
+    "Current-pair browser acceptance, post307 fresh capture/proofs and production host authorization remain separate.",
+    "Native execution binds the real graph on a separate full snapshot. Production deletion still needs a fresh snapshot after307 and catalog acceptance, current-pair browser acceptance and the host controller."
+  ],
+  "nativeExecution": {
+    "directory": "outputs/operations/first-capture-private-cfe9/published_bundle302_native_2026-10-07T07-49-51.146Z",
+    "receiptHash": "sha256:4718cb349ac06858ae38a304dbe319572ed193dc8cc9df0fe58c0d20aeb6f3c0",
+    "sourceCommit": "39e481c7a675cb9cbc82ef7ae61e7de79de05067",
+    "archivedSourceFiles": 786,
+    "sourceBytesVerified": true,
+    "programExecuted": true,
+    "firstApplied": true,
+    "repeatApplied": false,
+    "identicalOriginalReceipt": true,
+    "priorMigrationRowsPreserved": 306,
+    "productionRetainedTablesChecked": 92,
+    "checks": [
+      "complete-source-restored-with-exact306-ledger",
+      "all92-production-retained-tables-preserved-with-real-reader-hash",
+      "exact-repeat-preserves-original306-ledger-and-receipt"
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "sourceDumpUnchanged": true,
+    "bundleUnchanged": true,
+    "syntheticExternalProofHashes": false,
+    "productionChanges": 0
+  }
 }

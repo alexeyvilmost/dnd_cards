@@ -3651,10 +3651,11 @@
         },
         "publishedExecutorLocalBundle": {
           "record": "docs/audits/2026-10-04/execution/CLEAN-02-published-bundle-v3-20261007.json",
-          "status": "local_published_executor_graph_verified_production_integration_open",
+          "status": "local_published_graph_native_bound_execution_verified_production_integration_open",
           "productionReady": false,
           "productionChanges": 0,
-          "post307FreshProofRequired": true
+          "post307FreshProofRequired": true,
+          "postCatalogFreshProofRequired": true
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
