@@ -975,7 +975,7 @@
         4,
         8
       ],
-      "status": "maintained_original303_local_passed_mandatory_ci_pending",
+      "status": "maintained_original303_linux_ci_passed_main_delivery_pending",
       "steps": [
         "Сформировать расширенный manifest всех актуальных offline suites и отдельный ручной перечень historical certification suites. Общие replay/authorization/migration contracts не переносить в legacy только из-за старого имени или включения в прежний coverage pipeline.",
         "Добавить сценарии melee/ranged/caster, разные уровни и multiclass, reactions/saving throws/damage/effects/death/movement, геометрию крупных существ и area delivery, party, camp/shop/loot/journey, короткий/долгий отдых и подготовку. Новые механики проверять второй сущностью на том же примитиве.",
@@ -1102,6 +1102,18 @@
           "originalConditionsPassed": 1656,
           "upgradeAndRepeatPassed": true,
           "freshInstallAcceptance": false
+        },
+        "independentLinuxHistoricalProfile": {
+          "record": "docs/audits/2026-10-04/execution/TEST-05-linux-historical-profile-20261007.json",
+          "status": "passed",
+          "sourceCommit": "072c1726775a1d6043ef89be97279468abb53f6b",
+          "run": 37631316140,
+          "migrations": 303,
+          "repeatTables": 98,
+          "repeatRows": 24592,
+          "cleanup": "stopped",
+          "actualMainCI": false,
+          "mayAuthorizeProductionRelease": false
         }
       },
       "previous_status": "supported_matrix_ci_verified_historical_fresh_open",
@@ -3211,14 +3223,13 @@
           "productionDatabaseChanges": 0
         },
         "currentBackupRetention": {
-          "record": "docs/audits/2026-10-04/execution/DB-04-final-storage-retention-20261007.json",
-          "status": "actual_two_backups_and_obsolete_rehearsal_cleanup_verified",
+          "record": "docs/audits/2026-10-04/execution/CI-35-5c45-production-and-storage-20261007.json",
+          "status": "actual_two_current307_backups_and_restore_baseline_verified",
           "retainedBackups": 2,
           "currentSnapshotSchema": 307,
-          "currentSnapshotRestoreDrill": false,
+          "currentSnapshotRestoreDrill": true,
           "predecessorRestoreDrill": true,
-          "diskFreeBytes": 27468419072,
-          "latestPhysicalFilesDeletedBytes": 8479419155,
+          "diskFreeBytes": 26468847616,
           "productionDatabaseChanges": 0
         }
       },
@@ -4030,21 +4041,22 @@
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
     "schemaVersion": 1,
-    "status": "production_904_accepted_selective_delivery_and_fresh_ci_open",
-    "recordedAt": "2026-10-07T11:39:28.169Z",
-    "applicationSourceCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
-    "deploymentControlCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
-    "releaseId": "candidate-904ec8cbc809-a768c0d1c312",
-    "manifestHash": "sha256:60730ddfad25772daf6ac80d9e2663467465cc61784901cd27fe81707411a4f7",
-    "actualCIRun": 37604014477,
-    "actualPublicationRun": 37605917505,
-    "actualDeploymentRun": 37607081765,
+    "status": "production_5c45_accepted_selective_and_retirement_open",
+    "recordedAt": "2026-10-07T14:15:00.100Z",
+    "applicationSourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "deploymentControlCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "releaseId": "candidate-5c45a5203768-45d8944e7af3",
+    "manifestHash": "sha256:9027e54f8527ff58d43b520d88e513d637fbad5eccf0ae742748fe6de0b26f10",
+    "actualCIRun": 37620880147,
+    "actualPublicationRun": 37622911622,
+    "actualDeploymentRun": 37623876785,
     "actualCoordinatorRun": null,
     "productionDatabaseRestored": false,
     "all29Complete": false,
-    "record": "outputs/presentation/release-904ec8cbc809-acceptance.json",
-    "diskRetentionRecord": "docs/audits/2026-10-04/execution/DB-04-final-storage-retention-20261007.json",
-    "localIntegrationRecord": "docs/audits/2026-10-04/execution/INTEGRATION-main-local-20261007.json"
+    "record": "docs/audits/2026-10-04/execution/CI-35-5c45-production-and-storage-20261007.json",
+    "diskRetentionRecord": "docs/audits/2026-10-04/execution/CI-35-5c45-production-and-storage-20261007.json",
+    "localIntegrationRecord": "docs/audits/2026-10-04/execution/INTEGRATION-main-local-20261007.json",
+    "actualDeploymentAttempt": 2
   },
   "execution_history": [
     {

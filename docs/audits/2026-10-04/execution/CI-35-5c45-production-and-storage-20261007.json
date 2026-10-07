@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "kind": "independent-full-release-and-two-backup-retention",
+  "observedAt": "2026-10-07T14:15:00.100Z",
+  "sourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+  "manifestHash": "sha256:9027e54f8527ff58d43b520d88e513d637fbad5eccf0ae742748fe6de0b26f10",
+  "projectionHash": "sha256:c1769119bb63dac97f66a09e703cc9d3b17551112c25a5e565f038696e26e561",
+  "deployment": {
+    "runId": 37623876785,
+    "runAttempt": 2,
+    "controlCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "sourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "rawRunHash": "sha256:1ec64ca050d95595ce9869db45505d2a212072de5ef2e30edb2d1dfecf5bea8f"
+  },
+  "predecessor": {
+    "runId": 37607081765,
+    "runAttempt": 1,
+    "controlCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+    "sourceCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+    "rawRunHash": "sha256:f164fcb7e7b5ad8726025b91578bdf7e95c84131b080e9c9d664343aa36bcf6b"
+  },
+  "allThreeImagesAndSourcesVerified": true,
+  "protectedExecutionProfileVerified": true,
+  "migrations": 307,
+  "migrationSetUnchanged": true,
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "paidProviderRequests": 0,
+  "productionDatabaseRestored": false,
+  "productionDatabaseChanges": 0,
+  "retainedBackups": [
+    {
+      "directory": "/opt/bagofholding/backups/capture-37623876785-2",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:028c986fa57994943c42db6e15c0012402fe4f2019c51973e7ca55b7fb69e6c1",
+        "bytes": 1005036747
+      },
+      "captureHash": "sha256:7c06b7166c314461e22df6a8cdfef728b05edffa0290fd4cdb53ed0828efc3f7",
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37623876785-2",
+      "allFilesVerified": true
+    },
+    {
+      "directory": "/opt/bagofholding/backups/capture-37623876785-1",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:a8ccd7d0396e75750fc5af67bc5c50f4ce6e9acf75bea0754bb7daaf354974c5",
+        "bytes": 1005036747
+      },
+      "captureHash": "sha256:bb74229e2095c2faab555fe5becae8abde151fc41fde3290a38c18b7029c98a6",
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37623876785-1",
+      "allFilesVerified": true
+    }
+  ],
+  "protectedRestoreBaselineVerified": true,
+  "obsoleteBackupFilesDeletedBytes": 1968105968,
+  "finishedRehearsalCopiesDeletedBytes": 1989724765,
+  "netFreeSpaceClaimedFromGrossDeletes": false,
+  "disk": {
+    "total": 50884108288,
+    "used": 24355545088,
+    "available": 26468847616
+  },
+  "requests": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/build-info.json",
+      "status": 200
+    }
+  ],
+  "persistentDeployIdentityRetained": true,
+  "all29Complete": false,
+  "selectiveProductionVerified": false,
+  "productionRetirement302Executed": false,
+  "evidence": [
+    {
+      "file": "outputs/operations/5c45-deployment-37623876785-2/deployed-release/independent-live-verification.json",
+      "sha256": "sha256:65cc3bb388959b557149fe2d22e2842b1658c94a53c8d5cd57b652fb0e8c146c"
+    },
+    {
+      "file": "outputs/operations/two-current-backups-attempt2-20261007-result.json",
+      "sha256": "sha256:5b5636e4920e0854fa601bfdd1a3f4667b82c3ed5e5404e81694c9f056c0bc99"
+    },
+    {
+      "file": "outputs/operations/finished-5c45-attempt2-history-copy-20261007-result.json",
+      "sha256": "sha256:56026e78800ab1e6d116261fb3716c1f5ae8bb3756b6e771844a2951c5c7cab1"
+    },
+    {
+      "file": "outputs/operations/finished-904-predecessor-history-copy-20261007-result.json",
+      "sha256": "sha256:693c5256f7107030eb26cf05533bab497589d21dfb933c648cb51b65d00d0849"
+    },
+    {
+      "file": "outputs/operations/retention-final-observation-1791382500134.json",
+      "sha256": "sha256:5cbfee3bee26fa209132dd04b90b4ca8a0c0f398932424b6f8daa0b2bc2cc520"
+    }
+  ]
+}
