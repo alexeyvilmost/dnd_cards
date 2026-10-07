@@ -1,0 +1,355 @@
+{
+  "schemaVersion": 3,
+  "kind": "reviewed-followon-pre-cutover-refusal-audit",
+  "status": "passed",
+  "observedAt": "2026-10-07T02:43:36.646Z",
+  "repository": "alexeyvilmost/dnd_cards",
+  "failed": {
+    "id": 37561092098,
+    "attempt": 2,
+    "event": "workflow_run",
+    "controlCommit": "a0c4db750744ec3c1d3687683c0161751f98162c",
+    "completedAt": "2026-10-07T02:33:08Z"
+  },
+  "baseline": {
+    "id": 37540642524,
+    "attempt": 3,
+    "controlCommit": "4ac64458449959fd905cb7b0498f1ea41c82c087",
+    "releaseId": "candidate-4ac644584499-6e46df9c9c05",
+    "manifestHash": "sha256:30b95ff1119c686d5ba3870febfe967fb590645ec6145704e25c82f0216c178c",
+    "activeHash": "sha256:8bd549f141d734d18905911fb3ac76e373a746f0941a2fac140b8320410c94ff"
+  },
+  "candidateManifestHash": "sha256:a6213a79f72e3165fdd92d373ef1bface8b8595de1d3106088a2dad7c5f026eb",
+  "failedReleaseId": "candidate-a0c4db750744-8b1afc2791d5",
+  "hostConfigHash": "sha256:a6c48b4d8f22bf3242674c0854f2454c3c6b9c3e466a2d54c9e2954696aaead7",
+  "transferHash": "sha256:3ee9277d9d81d9655c5a3a8e720f84758f0e6455270bc6a41bf09839ae49434c",
+  "rehearsalHash": "sha256:fea6591a9fcd58996036947ce4c0affd3730f7ea5af4bd6e337c8955302a5555",
+  "rehearsalRunId": "0207ac22-9ca6-412f-9205-f1e84741c943",
+  "rehearsalCompletedAt": "2026-10-07T02:33:06.536Z",
+  "rehearsalFailure": {
+    "stage": "start",
+    "completedChecks": [],
+    "inputHash": "sha256:b8aab53f2e68135994fd91b6e7b9d62bc10d94aa9b7e092d3b5f71159ac956cd",
+    "captureHash": "sha256:23ddfa8ddcfa9611d562161b8a6baaec60b1f7e2ca6737d7eeb2e2b5686f44d7",
+    "cleanupResourceCount": 15
+  },
+  "phaseHashes": [
+    {
+      "file": "phase-01.json",
+      "sha256": "sha256:9b0685aca40e9d7602c41f28948498bd697c0e1aa91f9c711f8a640b844a4f25"
+    },
+    {
+      "file": "phase-02.json",
+      "sha256": "sha256:b1e8bccf72c672c2c699c6c53017281475de9938c6181118118557e5d2655206"
+    },
+    {
+      "file": "phase-03.json",
+      "sha256": "sha256:6f3439083fe135a7e91b6a9ac1b1f9e2e3557d32b0323b631af480d468b5d989"
+    },
+    {
+      "file": "phase-04.json",
+      "sha256": "sha256:d34a9fc3981050d910280db639a3ef5897636d9dd984cc7ec10d5960aeae2629"
+    },
+    {
+      "file": "phase-05.json",
+      "sha256": "sha256:dcf25296fdd10a71516b4330a6d61aa79ffd41a65443f528ccde8c7a4f9d9054"
+    },
+    {
+      "file": "phase-06.json",
+      "sha256": "sha256:13a8a5ec4a78fddfa7585bcb22ebf3f71be4de23ee0bc2eaa4dec4fda53e7c0c"
+    }
+  ],
+  "retained": [
+    {
+      "file": "state.json",
+      "sha256": "sha256:d1cfdb9e47dd4e398744a7d8b84cadfb992802b29957563c11c24a6719cb3321"
+    },
+    {
+      "file": "compose.env",
+      "sha256": "sha256:4f449aabb6526dc0a28385450d79753c90e7ea0518182f8b342fd20e332b7397"
+    },
+    {
+      "file": "compose.prod.yml",
+      "sha256": "sha256:bae2f1d35a70de3ec43062c233c7d3969d007416dd7e5f3e2d10eab72255fde6"
+    },
+    {
+      "file": "Caddyfile",
+      "sha256": "sha256:12a29ac3af7d73614c3e3d7fdf58e0f35dbeab10c9b23704e15de9da43c2cb99"
+    },
+    {
+      "file": "compose.runtime.json",
+      "sha256": "sha256:5f1245e90b4badfec632f1938f05e9c37fe34b0e7a3e00343235266002995ca7"
+    }
+  ],
+  "operations": [
+    {
+      "file": "candidate-4ac644584499-6e46df9c9c05.json",
+      "sha256": "sha256:f52aaabcecba28ffb361cdc59130b8f1e5525327aaad165af263738a6a6e3b09"
+    },
+    {
+      "file": "candidate-93265633db10-deb958c1c9a7.json",
+      "sha256": "sha256:ba31d7fd0f8fdeba6d7c9378d4898453938ce60a0b7e242ada4a0df5034879bc"
+    },
+    {
+      "file": "candidate-ab94ada2bbf8-1f3a396e803c.json",
+      "sha256": "sha256:4bc6b9c0b2cd948e6321e96546b232d8e6f572b01286bc2a10b05d52d034153b"
+    },
+    {
+      "file": "candidate-f05abed68215-847b49a2fabc.json",
+      "sha256": "sha256:82b50ee22197566c413d05d83f7c692c80668e879d547e93a6a773dca76143f0"
+    },
+    {
+      "file": "candidate-f383c905e062-8a315ebc6db8.json",
+      "sha256": "sha256:d03cd01b8e0dfc3557b754d916cc8f836d1eb00c949ea3288b30b0728b1a75d8"
+    },
+    {
+      "file": "candidate-fdca59c3f2a0-4369ffcce44e.json",
+      "sha256": "sha256:1820aa608bd34dea207310cf4d5e3e55e760c82018e8dee737f24eb66b4bd644"
+    },
+    {
+      "file": "candidate-fed0195f3f05-1a608a4b3dd4.json",
+      "sha256": "sha256:5e7e7e68f98ccb92d800d97183286eff46cdb568e0cbfb820e2dbc0a453aa9af"
+    },
+    {
+      "file": "cleanup-closed-c-derived-20261007.json",
+      "sha256": "sha256:c512f4cae8895d920cebaa4ff4a475dde318952eef4c3856642563e67ce6c79f"
+    },
+    {
+      "file": "cleanup-closed-d-derived-20261007.json",
+      "sha256": "sha256:152906aa7efe80fe563a17101348cc70d38ba105944a96fefa17deb7b07083f1"
+    },
+    {
+      "file": "cleanup-closed-d2-derived-20261007.json",
+      "sha256": "sha256:365fb2bc387900cc637d6b2a420e7c0344f3dff2df988dab884a4a39ed6d6630"
+    },
+    {
+      "file": "cleanup-closed-d3-derived-20261007.json",
+      "sha256": "sha256:95142c34a6808d2880fab562c5f5396f38841fb74ba3e75c3030c348ec13f81b"
+    },
+    {
+      "file": "closed-control-cache-20261007/metadata.json",
+      "sha256": "sha256:ea6a2932907a73cb3506972387b1f8783f675914eefcda4c51f9f16e31bb7163"
+    },
+    {
+      "file": "closed-control-cache-20261007/retirement.json",
+      "sha256": "sha256:87379e5d3e0652bfc2c95c32a7dcb5f6bdfcc30458c08bc6529b133b7d89d44c"
+    },
+    {
+      "file": "closed-control-extracts-lifecycle-20261007/archive.json",
+      "sha256": "sha256:b7c36757c1ce0a651a9b30c32eaa0d7f09188fbc927afa36b5fc057d630f773e"
+    },
+    {
+      "file": "closed-control-extracts-lifecycle-20261007/before.json",
+      "sha256": "sha256:462f5db823eb2104c2acd4c5fc24a3108593bdb2c1dab1c105bf2c6d2961b540"
+    },
+    {
+      "file": "closed-control-extracts-lifecycle-20261007/cleanup.json",
+      "sha256": "sha256:ad4a74499913f4b594ec9913590853b468974e690290cd67fe21606f9b2b922b"
+    },
+    {
+      "file": "closed-control-extracts-lifecycle-20261007/local-verified.json",
+      "sha256": "sha256:3808ca0b75b029aec9b40a436e01b767ca06e413e04cd689808b43a60754d35d"
+    },
+    {
+      "file": "cold-frontend-cache-20261007/intent.json",
+      "sha256": "sha256:5bc9b44a2f87b84c1d8c821b70cc9fe1c2d899893d6ed266e3ecd49aec10e64f"
+    },
+    {
+      "file": "cold-frontend-cache-20261007/preserved.json",
+      "sha256": "sha256:4d6962e2d63438f9bb24e577a4b576b487bf2177b08c802fffe0128536fa60f8"
+    },
+    {
+      "file": "cold-frontend-cache-20261007/retirement.json",
+      "sha256": "sha256:8c49cad891112e657c024f2d844a8a1ab194e596fd1c524ab2608453d9a86539"
+    },
+    {
+      "file": "intermediate-cache-20261007/intent.json",
+      "sha256": "sha256:81241694d1d454fc576a47935d60f82daf49847cfc4dea79fb8d9495de3fb7ac"
+    },
+    {
+      "file": "intermediate-cache-20261007/preserved.json",
+      "sha256": "sha256:d7dcae83108d17d40c5d8964872c96196ce2a16740c862eac4bd53a053b80dd8"
+    },
+    {
+      "file": "intermediate-cache-20261007/retirement.json",
+      "sha256": "sha256:61f797144108b56c8c4d43ea0d2bd66698dc3199b133ae46f96fb20eedcdf207"
+    },
+    {
+      "file": "legacy-app-cache-20261007/intent.json",
+      "sha256": "sha256:c3f4c453911f8d2cf2a15ba72f00b0a0e9b0f3b1407996e9e4eba1d5eca3d302"
+    },
+    {
+      "file": "legacy-app-cache-20261007/preserved.json",
+      "sha256": "sha256:3daae5e5a358ba046d833fd72632868a3237770f40cd3b93e4b63a46f100ca79"
+    },
+    {
+      "file": "legacy-app-cache-20261007/retirement.json",
+      "sha256": "sha256:98b33d5ebc769b5ff1f229319e0f9d2b6eb296bfebd7e0573c5512e46e0b4626"
+    },
+    {
+      "file": "legacy-build-cache-20261007/metadata.json",
+      "sha256": "sha256:d4f6694f5da2e932e6a9a2da797531ea771e0e4f3767be0aec0a4e7df93b7e18"
+    },
+    {
+      "file": "legacy-build-cache-20261007/retirement.json",
+      "sha256": "sha256:00fbc53fc49edb286be386af4d37ebd7866f0b6bcdb2f32fc772683d6eb8b9a9"
+    },
+    {
+      "file": "lifecycle-unused-tools-20261007/intent.json",
+      "sha256": "sha256:8fc5366005833938c0a9101b505f2705812f9403b13798e34ad1a2834cd211e2"
+    },
+    {
+      "file": "lifecycle-unused-tools-20261007/preserved.json",
+      "sha256": "sha256:c9c2415755692467b45d822ad2f3bbb66cb89cd956d35673b68888257466096f"
+    },
+    {
+      "file": "lifecycle-unused-tools-20261007/retirement.json",
+      "sha256": "sha256:f6dedf593467fb45414dacbe11f0a609b1b18bec630d82e01c79885b5325b8e5"
+    }
+  ],
+  "services": {
+    "backend": {
+      "healthy": true,
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+      "containerId": "f62935385e2535ce2d9e48cb165dd3e1d76a72f6aed505d913fac9a935a093b8",
+      "identity": {
+        "apiProtocolVersion": 1,
+        "component": "backend",
+        "goRuntime": "go1.25.14",
+        "identitySchemaVersion": 1,
+        "inputFingerprint": "sha256:70c68bf463ba3f03fee3ba3a2db56fa0da468b53751651e7cbd9c4b4f8733671",
+        "provenance": "baked",
+        "readerCapabilities": [
+          "receipt-v1",
+          "receipt-v2",
+          "image-job-v1"
+        ],
+        "releaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+        "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "source_commit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "status": "ok"
+      }
+    },
+    "rulesWorker": {
+      "healthy": true,
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+      "containerId": "abb4d3bbd03064cd4326e263b1a6e1e41036b7be17e9cb3a12b4f0a1f04120a5",
+      "identity": {
+        "status": "ok",
+        "identitySchemaVersion": 1,
+        "component": "rulesWorker",
+        "provenance": "baked",
+        "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "source_commit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "inputFingerprint": "sha256:57ccc9ba57f732aa91538ee3bfbaa9bc002a243b426399d0803e47cd1f9fa701",
+        "apiProtocolVersion": 1,
+        "workerProtocolVersion": 1,
+        "supportedWorldSchemaVersions": [
+          5
+        ],
+        "capabilities": [
+          "pinned-artifact-routing",
+          "pending-decision-pass-through"
+        ],
+        "workerRuntime": {
+          "name": "node",
+          "version": "24.21.0"
+        },
+        "artifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+        "releaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e"
+      }
+    },
+    "frontend": {
+      "healthy": true,
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:6bbc0720efe3414f4b35dcb1c3950a2391cd3455458c2119bb93e083dcfb4285",
+      "containerId": "36c1ed4c81e9e7791369ae4ecddd0abdc528664a556351878310d4dca0024df3",
+      "identity": {
+        "identitySchemaVersion": 1,
+        "component": "frontend",
+        "provenance": "baked",
+        "sourceCommit": "4ac64458449959fd905cb7b0498f1ea41c82c087",
+        "source_commit": "4ac64458449959fd905cb7b0498f1ea41c82c087",
+        "inputFingerprint": "sha256:c2fea0f5970b6ed81647347bb8f827605ca41b3f4731a75635012d27dc3b6520",
+        "apiProtocolVersion": 1,
+        "readerCapabilities": [
+          "image-job-v1"
+        ],
+        "releaseCommit": "4ac64458449959fd905cb7b0498f1ea41c82c087",
+        "releaseId": "candidate-4ac644584499-6e46df9c9c05"
+      }
+    }
+  },
+  "protectedRuntime": {
+    "backend": {
+      "containerId": "f62935385e2535ce2d9e48cb165dd3e1d76a72f6aed505d913fac9a935a093b8",
+      "identity": {
+        "apiProtocolVersion": 1,
+        "component": "backend",
+        "goRuntime": "go1.25.14",
+        "identitySchemaVersion": 1,
+        "inputFingerprint": "sha256:70c68bf463ba3f03fee3ba3a2db56fa0da468b53751651e7cbd9c4b4f8733671",
+        "provenance": "baked",
+        "readerCapabilities": [
+          "receipt-v1",
+          "receipt-v2",
+          "image-job-v1"
+        ],
+        "releaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+        "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "source_commit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "status": "ok"
+      },
+      "configurationHash": "sha256:65b409ba62048cfc457aeb4999b4ee2af1c1ca6eba40786c011e60fb227852ec",
+      "mountsHash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "databaseBindingHash": "sha256:df6712f20d121b60ecef85b158bd9854f15ea5d400b90e54d055f19338a5132b"
+    },
+    "rulesWorker": {
+      "containerId": "abb4d3bbd03064cd4326e263b1a6e1e41036b7be17e9cb3a12b4f0a1f04120a5",
+      "identity": {
+        "status": "ok",
+        "identitySchemaVersion": 1,
+        "component": "rulesWorker",
+        "provenance": "baked",
+        "sourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "source_commit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "inputFingerprint": "sha256:57ccc9ba57f732aa91538ee3bfbaa9bc002a243b426399d0803e47cd1f9fa701",
+        "apiProtocolVersion": 1,
+        "workerProtocolVersion": 1,
+        "supportedWorldSchemaVersions": [
+          5
+        ],
+        "capabilities": [
+          "pinned-artifact-routing",
+          "pending-decision-pass-through"
+        ],
+        "workerRuntime": {
+          "name": "node",
+          "version": "24.21.0"
+        },
+        "artifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+        "releaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e"
+      },
+      "configurationHash": "sha256:89791a1b8f21140d330a8d918c7be43e56060b0e1668a86aff5b3f01079d1295",
+      "mountsHash": "sha256:81b880df6e5ef716d5a3b6c33f7384685b1d2602183326c6fa83a11690f5f9b6",
+      "databaseBindingHash": "sha256:df6712f20d121b60ecef85b158bd9854f15ea5d400b90e54d055f19338a5132b"
+    }
+  },
+  "databaseBindingHash": "sha256:df6712f20d121b60ecef85b158bd9854f15ea5d400b90e54d055f19338a5132b",
+  "routingSecurityHash": "sha256:2cb2cee55d072d822a6926af54da11a8b498fcf32a136293541897ecc7f975c4",
+  "cleanup": {
+    "remainingOwnedResources": 0,
+    "validatorStopped": true,
+    "dockerAuthRemoved": true,
+    "deploymentJournalCreated": false,
+    "deployLockPresent": false,
+    "operatorApplicationMutations": 0
+  },
+  "readOnly": true,
+  "sqlQueries": 0,
+  "serviceReplacements": 0,
+  "providerRequests": 0
+}

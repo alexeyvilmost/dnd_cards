@@ -9,7 +9,7 @@ const date=s=>typeof s==='string'&&Number.isFinite(Date.parse(s))&&new Date(s).t
 const fields=['schemaVersion','kind','status','observedAt','repository','failed','baseline','candidateManifestHash','failedReleaseId','hostConfigHash','transferHash','rehearsalHash','rehearsalRunId','rehearsalCompletedAt','phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash','cleanup','readOnly','sqlQueries','serviceReplacements','providerRequests'];
 export const completedRestoreRefusalKind='reviewed-followon-completed-restore-refusal-audit';
 export function isCompletedRestoreRefusal(proof){return proof?.kind===completedRestoreRefusalKind;}
-export function isDetailedRehearsalRefusal(proof){return proof?.schemaVersion===2&&!isCompletedRestoreRefusal(proof);}
+export function isDetailedRehearsalRefusal(proof){return [2,3].includes(proof?.schemaVersion)&&!isCompletedRestoreRefusal(proof);}
 function validateRehearsalFailure(failure){
  assert.deepEqual(Object.keys(failure??{}).sort(),['stage','completedChecks','inputHash','captureHash','cleanupResourceCount'].sort());
  const stages=[...candidateRehearsalStages,'writer-compatibility'],index=stages.indexOf(failure.stage);
@@ -53,32 +53,33 @@ export function reviewedRefusalPhaseScripts(proof){
 }
 export function validateReviewedDeploymentRefusal(proof){
  const completed=isCompletedRestoreRefusal(proof),detailed=isDetailedRehearsalRefusal(proof),expectedFields=completed?[...fields.filter(f=>!['rehearsalHash','rehearsalRunId','rehearsalCompletedAt'].includes(f)),'expiry']:detailed?[...fields,'rehearsalFailure']:fields;
- assert.deepEqual(Object.keys(proof??{}).sort(),[...expectedFields].sort());assert.equal(proof.schemaVersion,detailed?2:1);assert.equal(proof.kind,completed?completedRestoreRefusalKind:'reviewed-followon-pre-cutover-refusal-audit');assert.equal(proof.status,'passed');
+ const rerun=proof?.schemaVersion===3;
+ assert.deepEqual(Object.keys(proof??{}).sort(),[...expectedFields].sort());assert.equal(proof.schemaVersion,detailed?(rerun?3:2):1);assert.equal(proof.kind,completed?completedRestoreRefusalKind:'reviewed-followon-pre-cutover-refusal-audit');assert.equal(proof.status,'passed');
  if(detailed)validateRehearsalFailure(proof.rehearsalFailure);
  assert.match(proof.repository,/^[\w.-]+\/[\w.-]+$/);assert.ok(date(proof.observedAt));
- assert.deepEqual(Object.keys(proof.failed).sort(),['id','attempt','controlCommit','completedAt'].sort());assert.ok(positive(proof.failed.id));assert.equal(proof.failed.attempt,1);assert.match(proof.failed.controlCommit,sha);assert.ok(Number.isFinite(Date.parse(proof.failed.completedAt)));assert.ok(Date.parse(proof.failed.completedAt)<=Date.parse(proof.observedAt));
- assert.deepEqual(Object.keys(proof.baseline).sort(),['id','attempt','controlCommit','releaseId','manifestHash','activeHash'].sort());assert.ok(positive(proof.baseline.id)&&proof.baseline.id!==proof.failed.id);assert.equal(proof.baseline.attempt,1);assert.match(proof.baseline.controlCommit,sha);assert.match(proof.baseline.releaseId,/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/);
+ assert.deepEqual(Object.keys(proof.failed).sort(),['id','attempt','controlCommit','completedAt',...(rerun?['event']:[])].sort());assert.ok(positive(proof.failed.id));if(rerun){assert.ok(positive(proof.failed.attempt));assert.ok(['workflow_dispatch','workflow_run'].includes(proof.failed.event));}else assert.equal(proof.failed.attempt,1);assert.match(proof.failed.controlCommit,sha);assert.ok(Number.isFinite(Date.parse(proof.failed.completedAt)));assert.ok(Date.parse(proof.failed.completedAt)<=Date.parse(proof.observedAt));
+ assert.deepEqual(Object.keys(proof.baseline).sort(),['id','attempt','controlCommit','releaseId','manifestHash','activeHash'].sort());assert.ok(positive(proof.baseline.id)&&proof.baseline.id!==proof.failed.id);if(rerun)assert.ok(positive(proof.baseline.attempt));else assert.equal(proof.baseline.attempt,1);assert.match(proof.baseline.controlCommit,sha);assert.match(proof.baseline.releaseId,/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/);
  for(const key of ['manifestHash','activeHash'])assert.match(proof.baseline[key],hash);
  for(const key of ['candidateManifestHash','hostConfigHash','transferHash',...(completed?[]:['rehearsalHash']),'databaseBindingHash','routingSecurityHash'])assert.match(proof[key],hash);
  assert.match(proof.failedReleaseId,/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/);assert.notEqual(proof.failedReleaseId,proof.baseline.releaseId);
  if(completed)validateExpiry(proof);else{assert.match(proof.rehearsalRunId,/^[a-f0-9-]{36}$/);assert.ok(date(proof.rehearsalCompletedAt)&&Date.parse(proof.rehearsalCompletedAt)<=Date.parse(proof.failed.completedAt));}
  assert.deepEqual(proof.phaseHashes.map(r=>r.file),reviewedRefusalPhaseScripts(proof).map((_,i)=>'phase-'+String(i+1).padStart(2,'0')+'.json'));
  assert.deepEqual(proof.retained.map(r=>r.file),['state.json','compose.env','compose.prod.yml','Caddyfile','compose.runtime.json']);
- for(const rows of [proof.phaseHashes,proof.retained,proof.operations]){assert.ok(Array.isArray(rows)&&new Set(rows.map(r=>r.file)).size===rows.length);for(const r of rows){assert.deepEqual(Object.keys(r).sort(),['file','sha256']);assert.match(r.file,/^[A-Za-z0-9_.-]+$/);assert.match(r.sha256,hash);}}
+ for(const rows of [proof.phaseHashes,proof.retained,proof.operations]){assert.ok(Array.isArray(rows)&&new Set(rows.map(r=>r.file)).size===rows.length);for(const r of rows){assert.deepEqual(Object.keys(r).sort(),['file','sha256']);if(rerun&&rows===proof.operations){assert.ok(typeof r.file==='string'&&r.file.length<=512);assert.ok(r.file.split('/').every(p=>/^[A-Za-z0-9_.-]+$/.test(p)&&p!=='.'&&p!=='..'));}else assert.match(r.file,/^[A-Za-z0-9_.-]+$/);assert.match(r.sha256,hash);}}
  assert.deepEqual(Object.keys(proof.services).sort(),['backend','frontend','rulesWorker']);for(const row of Object.values(proof.services)){assert.equal(row.healthy,true);assert.match(row.containerId,/^[a-f0-9]{64}$/);assert.match(row.imageDigest,/^[^\s@]+@sha256:[a-f0-9]{64}$/);assert.equal(row.identity?.provenance,'baked');assert.match(row.identity.sourceCommit,sha);}
  assert.deepEqual(Object.keys(proof.protectedRuntime).sort(),['backend','rulesWorker']);for(const row of Object.values(proof.protectedRuntime)){assert.match(row.containerId,/^[a-f0-9]{64}$/);for(const key of ['configurationHash','mountsHash','databaseBindingHash'])assert.match(row[key],hash);}
  assert.deepEqual(proof.cleanup,{remainingOwnedResources:0,validatorStopped:true,dockerAuthRemoved:true,deploymentJournalCreated:false,deployLockPresent:false,operatorApplicationMutations:0});assert.equal(proof.readOnly,true);for(const key of ['sqlQueries','serviceReplacements','providerRequests'])assert.equal(proof[key],0);
  return proof;
 }
 export function loadReviewedDeploymentRefusal({id,attempt,repository,controlRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'../..')}){
- assert.ok(positive(id)&&positive(attempt));if(attempt!==1)return null;const root=path.resolve(controlRoot),directory=path.join(root,'infra','reviewed-deployment-refusals'),file=path.join(directory,`${id}-${attempt}.json`);
+ assert.ok(positive(id)&&positive(attempt));const root=path.resolve(controlRoot),directory=path.join(root,'infra','reviewed-deployment-refusals'),file=path.join(directory,`${id}-${attempt}.json`);
  if(!existsSync(file))return null;
  assert.equal(realpathSync(directory),directory);assert.equal(realpathSync(file),file);const stat=lstatSync(file);assert.ok(stat.isFile()&&!stat.isSymbolicLink()&&stat.size>0&&stat.size<=65536);
  const proof=validateReviewedDeploymentRefusal(JSON.parse(readFileSync(file,'utf8')));assert.equal(proof.repository,repository);assert.equal(proof.failed.id,id);assert.equal(proof.failed.attempt,attempt);return proof;
 }
 export function assertReviewedRefusalRun(proof,{identity,job,now}){
  validateReviewedDeploymentRefusal(proof);assert.ok(Date.parse(proof.observedAt)<=now);
- assert.equal(identity.id,proof.failed.id);assert.equal(identity.runAttempt,proof.failed.attempt);assert.equal(identity.controlCommit,proof.failed.controlCommit);assert.equal(identity.repository,proof.repository);assert.equal(identity.event,'workflow_dispatch');assert.equal(identity.conclusion,'failure');assert.equal(job.conclusion,'failure');assert.equal(job.completed_at,proof.failed.completedAt);
+ assert.equal(identity.id,proof.failed.id);assert.equal(identity.runAttempt,proof.failed.attempt);assert.equal(identity.controlCommit,proof.failed.controlCommit);assert.equal(identity.repository,proof.repository);assert.equal(identity.event,proof.failed.event??'workflow_dispatch');assert.equal(identity.conclusion,'failure');assert.equal(job.conclusion,'failure');assert.equal(job.completed_at,proof.failed.completedAt);
  return proof;
 }
 export function assertReviewedRefusalBaseline(proof,run,manifest){

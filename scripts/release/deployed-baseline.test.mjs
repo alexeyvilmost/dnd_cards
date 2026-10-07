@@ -40,11 +40,12 @@ function fixture(runs = [run(9), run(8)]) {
   };
   return {runs, jobs, artifacts, get, requested, select: () => selectLatestDeployedRun(get, {repository, now})};
 }
-function reviewedFixture(t,{completedRestore=false,detailed=false}={}){
+function reviewedFixture(t,{completedRestore=false,detailed=false,rerun=false}={}){
  const f=fixture([run(9,{event:'workflow_dispatch',conclusion:'failure'}),run(8)]);f.jobs.set(9,[job(9,'failure')]);
  const name=completedRestore?'37420370284':detailed?'37428679118':'37405297914';
  const proof=JSON.parse(readFileSync(new URL('../../infra/reviewed-deployment-refusals/'+name+'-1.json',import.meta.url),'utf8'));Object.assign(proof,{repository,observedAt:at(9,120000)});if(completedRestore){proof.expiry.capturedAt=at(9,-31*60000);proof.expiry.restoreReportWrittenAt=at(9,59000);}else proof.rehearsalCompletedAt=at(9,59000);Object.assign(proof.failed,{id:9,controlCommit:control,completedAt:at(9,60000)});Object.assign(proof.baseline,{id:8,controlCommit:control});
- const root=mkdtempSync(path.join(tmpdir(),'baseline-reviewed-'));t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('baseline-reviewed-'));rmSync(root,{recursive:true,force:true});});const directory=path.join(root,'infra','reviewed-deployment-refusals');mkdirSync(directory,{recursive:true});const file=path.join(directory,'9-1.json');writeFileSync(file,JSON.stringify(proof));
+ if(rerun){assert.equal(detailed,true);proof.schemaVersion=3;proof.failed.attempt=2;proof.failed.event='workflow_run';proof.baseline.attempt=3;Object.assign(f.runs[0],{run_attempt:2,event:'workflow_run'});f.jobs.set(9,[job(9,'failure',{run_attempt:2})]);f.runs[1].run_attempt=3;f.jobs.set(8,[job(8,'success',{run_attempt:3})]);}
+ const root=mkdtempSync(path.join(tmpdir(),'baseline-reviewed-'));t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('baseline-reviewed-'));rmSync(root,{recursive:true,force:true});});const directory=path.join(root,'infra','reviewed-deployment-refusals');mkdirSync(directory,{recursive:true});const file=path.join(directory,`9-${proof.failed.attempt}.json`);writeFileSync(file,JSON.stringify(proof));
  return {...f,proof,file,select:()=>selectLatestDeployedRun(f.get,{repository,now,controlRoot:root})};
 }
 test('individually reviewed rehearsal refusal retains genuine predecessor and never becomes a successful baseline',async t=>{
@@ -61,6 +62,10 @@ test('version2 historical refusal remains failed and selects only the individual
  const f=reviewedFixture(t,{detailed:true}),selected=await f.select();assert.equal(selected.id,8);assert.deepEqual(selected.reviewedRefusals,[f.proof]);
  assert.equal(f.proof.rehearsalFailure.stage,'historical-replay');assert.ok(!f.requested.some(r=>r.startsWith('actions/runs/9/artifacts')));
  f.proof.rehearsalFailure.completedChecks.reverse();writeFileSync(f.file,JSON.stringify(f.proof));await assert.rejects(f.select());
+});
+test('version3 automatic failed attempt2 selects only its genuine successful baseline attempt3',async t=>{
+ const f=reviewedFixture(t,{detailed:true,rerun:true}),selected=await f.select();assert.equal(selected.id,8);assert.equal(selected.runAttempt,3);assert.deepEqual(selected.reviewedRefusals,[f.proof]);assert.ok(!f.requested.some(r=>r.startsWith('actions/runs/9/artifacts')));
+ f.runs[0].event='workflow_dispatch';await assert.rejects(f.select());f.runs[0].event='workflow_run';f.runs[0].run_attempt=3;f.jobs.set(9,[job(9,'failure',{run_attempt:3})]);await assert.rejects(f.select(),/recovery/);
 });
 test('reviewed refusal cannot conceal a newer unreviewed failure or select a different healthy baseline',async t=>{
  const f=reviewedFixture(t);f.runs.unshift(run(10,{conclusion:'failure'}));f.jobs.set(10,[job(10,'failure')]);await assert.rejects(f.select(),/recovery/);
