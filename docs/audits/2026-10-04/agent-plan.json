@@ -1246,7 +1246,13 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "displayCardBatch": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-01-display-card-batch-20261007.json",
+          "status": "additive_display_batch_verified_local_frontend_consumer_pending",
+          "frontendConsumerPending": true,
+          "productionChanges": 0
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },

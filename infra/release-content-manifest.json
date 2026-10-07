@@ -392,8 +392,8 @@
     },
     {
       "path": "backend/main.go",
-      "sha256": "sha256:82b9990a866dccd3de3214148a46eed45b3617e8f276524d76cd8fdad675a940",
-      "bytes": 25761
+      "sha256": "sha256:31de4e86eff1f1d6e34d6ab88ac8ade15dd90d16883eeb3454a359dad09922ac",
+      "bytes": 25862
     },
     {
       "path": "backend/middleware.go",

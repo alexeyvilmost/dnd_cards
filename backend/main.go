@@ -210,6 +210,7 @@ func main() {
 		})
 		api.GET("/cards", OptionalAuthMiddleware(authService), cardController.GetCards)
 		api.GET("/cards/runtime/resolve", OptionalAuthMiddleware(authService), cardController.ResolveRuntimeCards)
+		api.GET("/cards/resolve", OptionalAuthMiddleware(authService), cardController.ResolveRuntimeCards)
 		api.GET("/cards/:id", OptionalAuthMiddleware(authService), cardController.GetCard)
 		api.GET("/cards/:id/battle-stats", OptionalAuthMiddleware(authService), cardController.GetCardBattleStats)
 		api.POST("/cards/battle-stats", OptionalAuthMiddleware(authService), cardController.GetBatchCardBattleStats)

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "status": "additive_display_batch_verified_local_frontend_consumer_pending",
+  "recordedAt": "2026-10-07T05:52:08.172Z",
+  "route": "GET /api/cards/resolve?ids=...",
+  "implementation": "Reuse ResolveRuntimeCards strict bounded exact-ID visibility and CardResponse projection; shallow display route uses unchanged EntityReferenceResponseMiddleware, while deep runtime route stays undecorated.",
+  "sources": {
+    "backend/main.go": "sha256:31de4e86eff1f1d6e34d6ab88ac8ade15dd90d16883eeb3454a359dad09922ac",
+    "backend/entity_references_test.go": "sha256:7b0d911ca0854e8a7cef1fd3269c486557457644a3dd0ba895f3002cd206f4d1",
+    "backend/card_runtime_catalog.go": "sha256:6732481fe613ce22f367ca8ddbd7de6efb5d12d5d4cbdd288e8d556811e1d9fb",
+    "backend/entity_references.go": "sha256:213851dcb3874e0d2d44f425ae8f7558cdf376a9a16f5e2ba6ff1dcd1c1253c5"
+  },
+  "verification": {
+    "runId": "test_78cd36d23bcd4928dba90179",
+    "reportHash": "sha256:24c17a71be9c43d47dc963f6aa20d59ce17b9418d42bf2abc7b175917f2e19f0",
+    "requiredParentTests": 7,
+    "passedIncludingSubtests": 15,
+    "displayChecks": [
+      "Owner/admin display batch JSON equals individual canonical card detail including references/referenced_by.",
+      "Repeated IDs are deduplicated while requested order is preserved.",
+      "Owner mixed visible/private selection returns 404 without partial entity disclosure.",
+      "Current resolver284, existing entity preview/privacy/persistence and equipment races/replay remain passing."
+    ],
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "sourceSnapshot": "93b9cac7807a3cc5352f6241cca248af1e48eef2fd93aad6dabb1d684d174170"
+  },
+  "frontendChanged": false,
+  "productionChanged": false,
+  "paidProviderRequests": 0,
+  "next": [
+    "Use this display route in SheetEquipmentPanel with bounded batches; do not replace previews with undecorated runtime cards.",
+    "Keep display fallback semantics for unavailable entries, fresh rights and identity-isolated pending reads.",
+    "Verify actual browser request count and normal preview/equipment behavior before a genuine separate frontend release."
+  ]
+}

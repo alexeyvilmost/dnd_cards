@@ -38,6 +38,7 @@ func TestEntityReferencesHTTPMetadataPreviewPersistenceAndPrivacy(t *testing.T) 
 			}
 		}
 	}
+	installOwnedItemAccess(t, f.db)
 	effect, otherEffect := uuid.New(), uuid.New()
 	for i, id := range []uuid.UUID{effect, otherEffect} {
 		row := Effect{ID: id, Name: []string{"Granted", "Hidden grant"}[i], CardNumber: id.String(), Author: f.owner.ID.String(), Description: "test", Rarity: RarityCommon, EffectType: EffectType("passive")}
@@ -69,6 +70,9 @@ func TestEntityReferencesHTTPMetadataPreviewPersistenceAndPrivacy(t *testing.T) 
 	api.Use(EntityReferenceResponseMiddleware(f.db))
 	registerEntityReferenceRoutes(api, f.auth, f.db)
 	ec, ac := NewEffectController(f.db), NewActionController(f.db)
+	cc := &CardController{db: f.db}
+	api.GET("/cards/resolve", OptionalAuthMiddleware(f.auth), cc.ResolveRuntimeCards)
+	api.GET("/cards/:id", OptionalAuthMiddleware(f.auth), cc.GetCard)
 	api.GET("/effects", OptionalAuthMiddleware(f.auth), ec.GetEffects)
 	api.GET("/effects/:id", OptionalAuthMiddleware(f.auth), ec.GetEffect)
 	api.PUT("/actions/:id", ContentEntityMutation(f.auth, f.db, "actions", false), ac.UpdateAction)
@@ -89,6 +93,28 @@ func TestEntityReferencesHTTPMetadataPreviewPersistenceAndPrivacy(t *testing.T) 
 		return body
 	}
 	owner, admin := f.token(t, f.owner), f.token(t, f.other)
+	// Display batching must retain the canonical detail fields and reference
+	// previews. The deeper runtime hydration route deliberately has no metadata.
+	for _, identity := range []string{owner, admin} {
+		queryIDs := publicCard.String()
+		if identity == admin {
+			queryIDs += "," + privateCard.String()
+		}
+		batched := get("/api/cards/resolve?ids="+queryIDs+","+publicCard.String(), identity)["cards"].([]any)
+		for _, raw := range batched {
+			row := raw.(map[string]any)
+			detail := get("/api/cards/"+row["id"].(string), identity)
+			if !reflect.DeepEqual(row, detail) {
+				t.Fatal("display batch differs from canonical detail or reference metadata")
+			}
+		}
+		if len(batched[0].(map[string]any)["references"].([]any)) != 1 {
+			t.Fatal("display batch lost canonical reference preview")
+		}
+	}
+	if response := performCharacterV3Request(t, router, "GET", "/api/cards/resolve?ids="+publicCard.String()+","+privateCard.String(), owner, nil); response.Code != 404 || strings.Contains(response.Body.String(), "Visible card") || strings.Contains(response.Body.String(), "Secret card") {
+		t.Fatal("display batch disclosed a partial private selection")
+	}
 	body := get("/api/effects/"+effect.String(), owner)
 	if len(body["referenced_by"].([]any)) != 5 {
 		t.Fatalf("levels and different origins missing: %+v", body["referenced_by"])
