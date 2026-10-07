@@ -23,8 +23,8 @@
         "nextAcceptance": []
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -46,8 +46,8 @@
         "nextAcceptance": []
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -76,8 +76,8 @@
       "historical_acceptance_scope": "Operational four-lane CI/local orchestration now owns separate DB/process/build resources; aggregation enforces exact once global assignment, current source/manifest, same artifact/UI and stopped cleanup. Partial shard reports are release-ineligible.56 targeted checks and private build/no-shared-write proof passed. The complete fresh sharded run remains pending root source freeze.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -100,8 +100,8 @@
       },
       "historical_acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries.",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -182,8 +182,8 @@
         "freshHistoricalBoundary": "ordinary143 passed;all67primary-before-sources closed;schedule101/118/121 live guards and144-current not yet executed"
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -211,8 +211,8 @@
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -261,8 +261,8 @@
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": [
         "PERF-HOST"
@@ -414,8 +414,8 @@
         "Batch remains OFF after 160 measured actual UI runs; stable overall initialization improvement is unproven"
       ],
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": [
         "Verified runtime activation and rollback of the read-only initiative-options path; production flag currently OFF."
@@ -449,8 +449,8 @@
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": []
     },
@@ -498,8 +498,8 @@
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -527,8 +527,8 @@
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -557,8 +557,8 @@
       "historical_acceptance_scope": "Typed exhaustive routers now cover 44 commands and 15 saved decisions; cohesive attack/damage continuations extracted without a second rules owner. Exact immutable before/after executable replay84 and targeted100 plus TypeScript passed; the full combined suite on the latest source remains pending.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -581,8 +581,8 @@
       },
       "historical_acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются.",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -604,8 +604,8 @@
         "nextAcceptance": []
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -635,19 +635,17 @@
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "REL-03",
       "title": "Manifest релиза и достоверная идентификация компонентов",
-      "status": "full_automatic_production_verified_selective_production_open",
+      "status": "full_and_frontend_only_production_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "OCI-SELECTIVE"
-      ],
+      "remaining_gates": [],
       "latest_evidence_note": "Статус pending_oci устарел: настоящий локальный registry build/publish/pull/reuse9/9 и collector health/history/migration8+7 выполнены. Это сохранённые local-only fixtures, не CI-attested текущий production candidate.",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/REL-04-local-registry-current.json",
@@ -656,7 +654,7 @@
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
       "previous_status": "first_healthy_adoption_verified_followon_delivery_pending",
       "latest_execution_result": {
         "demonstrated": [
@@ -669,12 +667,22 @@
           "Future writer/selective/automatic/reconcile acceptance is still pending.",
           "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
-        "nextAcceptance": [
-          "Fresh exact-source CI and actual hosted mixed OCI checks after committing the local collector fix.",
-          "Genuine frontend-only production delivery with backend/worker container IDs unchanged."
-        ],
+        "nextAcceptance": [],
         "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
-        "currentRemainingGate": "OCI-SELECTIVE"
+        "currentRemainingGate": "OCI-SELECTIVE",
+        "latestSelectiveEvidence": {
+          "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+          "status": "passed",
+          "productionAccepted": true,
+          "actualCI": 37676615503,
+          "actualPublication": 37677249209,
+          "actualDeployment": 37678313787
+        },
+        "productionAcceptance": "verified-for-full-and-genuine-frontend-only-delivery",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+          "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
+        }
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_observed": {
@@ -683,8 +691,8 @@
         "firstHealthyDeployment": false
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+        "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
       },
       "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
       "latestLocalMixedVerification": {
@@ -741,8 +749,8 @@
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": [
         "REL-ENABLE"
@@ -751,12 +759,10 @@
     {
       "id": "REL-05",
       "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
-      "status": "full_automatic_production_verified_selective_production_open",
+      "status": "full_and_frontend_only_production_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "OCI-SELECTIVE"
-      ],
+      "remaining_gates": [],
       "previous_status": "healthy_predecessor_verified_ci19_passed_metadata_reader_repair_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "latest_evidence_note": "Local OCI collector действительно passed8/8 плюс7/7 additive matrix с stopped cleanup; полная legacy-adapter adoption/rollback и production first adoption пока не подтверждены этой квитанцией.",
@@ -767,7 +773,7 @@
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
       "latest_execution_result": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
@@ -779,12 +785,22 @@
           "Future writer/selective/automatic/reconcile acceptance is still pending.",
           "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
-        "nextAcceptance": [
-          "Fresh exact-source CI and actual hosted mixed OCI checks after committing the local collector fix.",
-          "Genuine frontend-only production delivery with backend/worker container IDs unchanged."
-        ],
+        "nextAcceptance": [],
         "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
-        "currentRemainingGate": "OCI-SELECTIVE"
+        "currentRemainingGate": "OCI-SELECTIVE",
+        "latestSelectiveEvidence": {
+          "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+          "status": "passed",
+          "productionAccepted": true,
+          "actualCI": 37676615503,
+          "actualPublication": 37677249209,
+          "actualDeployment": 37678313787
+        },
+        "productionAcceptance": "verified-for-full-and-genuine-frontend-only-delivery",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+          "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
+        }
       },
       "latest_observed": {
         "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
@@ -799,8 +815,8 @@
         }
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+        "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
       },
       "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
       "latestLocalMixedVerification": {
@@ -922,8 +938,8 @@
         "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -950,8 +966,8 @@
       },
       "historical_acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД.",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -979,8 +995,8 @@
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": []
     },
@@ -1011,8 +1027,8 @@
       },
       "historical_acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF.",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": [
         "REL-ENABLE"
@@ -1065,8 +1081,8 @@
       "historical_acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -1093,8 +1109,8 @@
       },
       "historical_acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено.",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -1126,8 +1142,8 @@
         "firstHealthyDeployment": false
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": [
         "APPLICATION-CUTOVER"
@@ -1160,8 +1176,8 @@
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": []
     },
@@ -1185,8 +1201,8 @@
       },
       "historical_acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены.",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -1237,8 +1253,8 @@
         }
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
@@ -1265,8 +1281,8 @@
       },
       "historical_acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты.",
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       },
       "previous_remaining_gates_20261007": []
     }
@@ -1281,7 +1297,7 @@
     "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim.",
     "CI10/all3publication passed; second actual manual deploy refused beforecapture root0755. Exact root0700 repair verified, originallive4549 healthy/noapplicationmutations. Both old failures remain actual; reviewed-chain source/fullCI/newfreshadoption pending."
   ],
-  "updated_at": "2026-10-07T17:37:30.170Z",
+  "updated_at": "2026-10-07T20:02:43.394Z",
   "work_status": "full-production-accepted-selective-local-permission-fix-verified",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
@@ -2645,20 +2661,26 @@
   ],
   "execution_current": {
     "schemaVersion": 1,
-    "status": "full-production-accepted-selective-local-permission-fix-verified",
-    "recordedAt": "2026-10-07T17:37:30.170Z",
-    "applicationSourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
-    "actualCIRun": 37646729627,
-    "actualPublicationRun": 37648754267,
-    "actualDeploymentRun": 37649818547,
+    "status": "full-and-genuine-frontend-only-production-accepted-retirement-open",
+    "recordedAt": "2026-10-07T20:02:43.394Z",
+    "applicationSourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36",
+    "componentSources": {
+      "frontend": "24c5213260f1940d63595ab4844153a075e6ef36",
+      "backend": "e122021329176074169fe8ca33aed7ead5ba7000",
+      "rulesWorker": "e122021329176074169fe8ca33aed7ead5ba7000"
+    },
+    "actualCIRun": 37676615503,
+    "actualPublicationRun": 37677249209,
+    "actualDeploymentRun": 37678313787,
     "actualDeploymentAttempt": 1,
-    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-    "selectiveRefusalRecord": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+    "manifestHash": "sha256:fc3b032f3bfd7808cba793dae6ee2fa67ecbb7338073af3daa7176130cdcea46",
+    "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+    "protectedFullReleaseRecord": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
     "productionDatabaseRestored": false,
     "all29Complete": false,
     "remaining": [
-      "Genuine selective production acceptance after the fixed owned collector passes hosted verification.",
-      "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+      "Explicit physical legacy-character retirement with current v4/controller proof and recorded baseline",
+      "Final requirement-by-requirement completion audit"
     ]
   },
   "backup_storage_scope": {
@@ -3528,16 +3550,11 @@
     }
   },
   "current_storage": {
-    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-    "observedAt": "2026-10-07T16:53:32.296Z",
-    "fullServerBackups": 2,
-    "disk": {
-      "total": 50884108288,
-      "used": 25205776384,
-      "available": 25618616320
-    },
-    "sameHostBackupsAcceptedByOwner": true,
-    "externalDurability": false
+    "observedAt": "2026-10-07T19:42:56.203Z",
+    "usedBytes": 26423623680,
+    "availableBytes": 24400769024,
+    "fullServerCopies": 2,
+    "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json"
   },
   "latest_local_selective_verification": {
     "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
@@ -3576,5 +3593,56 @@
       "actualCauseForThisRun": "Live logs unavailable until terminal; do not infer exact failed host from status alone."
     },
     "productionChanges": 0
-  }
+  },
+  "execution_current_history": [
+    {
+      "recordedAt": "2026-10-07T19:45:40.842Z",
+      "superseded": {
+        "schemaVersion": 1,
+        "status": "full-production-accepted-selective-local-permission-fix-verified",
+        "recordedAt": "2026-10-07T17:37:30.170Z",
+        "applicationSourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+        "actualCIRun": 37646729627,
+        "actualPublicationRun": 37648754267,
+        "actualDeploymentRun": 37649818547,
+        "actualDeploymentAttempt": 1,
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "selectiveRefusalRecord": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+        "productionDatabaseRestored": false,
+        "all29Complete": false,
+        "remaining": [
+          "Genuine selective production acceptance after the fixed owned collector passes hosted verification.",
+          "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+        ]
+      }
+    },
+    {
+      "recordedAt": "2026-10-07T20:02:43.394Z",
+      "superseded": {
+        "schemaVersion": 1,
+        "status": "full-production-e122-accepted-selective24c-in-ci-retirement-open",
+        "recordedAt": "2026-10-07T19:45:40.842Z",
+        "applicationSourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000",
+        "deploymentControlCommit": "e122021329176074169fe8ca33aed7ead5ba7000",
+        "actualCIRun": 37666531361,
+        "actualPublicationRun": 37668882984,
+        "actualDeploymentRun": 37669897771,
+        "actualDeploymentAttempt": 1,
+        "manifestHash": "sha256:f1e5648ea8781a876b991e1f41229c7c237eb4896c7297c4bf59844b6a451d31",
+        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+        "productionDatabaseRestored": false,
+        "all29Complete": false,
+        "selectiveCandidate": {
+          "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36",
+          "actualCIRun": 37676615503,
+          "status": "in-progress-not-production-accepted"
+        },
+        "remaining": [
+          "Actual frontend-only release of 24c5213260f1940d63595ab4844153a075e6ef36",
+          "Production physical retirement 302 with full controller and durable record",
+          "Final audit of all 29 original requirements"
+        ]
+      }
+    }
+  ]
 }

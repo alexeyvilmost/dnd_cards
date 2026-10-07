@@ -1,4 +1,5 @@
 name: Deploy validated immutable composition
+run-name: ${{ inputs.retirement_operation_id && format('Record retirement {0}', inputs.retirement_operation_id) || github.workflow }}
 
 # Prepared only. Both tracked policy and repository variables default disabled.
 on:
@@ -6,7 +7,11 @@ on:
     inputs:
       release_run_id:
         description: 'Successful release.yml run containing verified immutable candidate images'
-        required: true
+        required: false
+        type: string
+      retirement_operation_id:
+        description: 'Record an already succeeded retirement302 operation; does not execute SQL or replace applications'
+        required: false
         type: string
       adopt_legacy:
         description: 'First transition from the separately inspected legacy deployment; requires exact backup and rollback rehearsal'
@@ -34,9 +39,9 @@ jobs:
       contents: read
       actions: read
     outputs:
-      source_sha: ${{ steps.candidate.outputs.source_sha }}
+      source_sha: ${{ steps.candidate.outputs.source_sha || steps.record.outputs.source_sha }}
       deployment_mode: ${{ steps.identity.outputs.deployment_mode }}
-      candidate_available: ${{ steps.freshness.outputs.candidate_available }}
+      candidate_available: ${{ steps.freshness.outputs.candidate_available || steps.record.outputs.candidate_available }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
@@ -54,9 +59,18 @@ jobs:
           DEPLOY_SHA: ${{ github.sha }}
           UPSTREAM_CONCLUSION: ${{ github.event.workflow_run.conclusion || '' }}
           RELEASE_RUN: ${{ inputs.release_run_id || github.event.workflow_run.id }}
+          RETIREMENT_OPERATION_ID: ${{ inputs.retirement_operation_id || '' }}
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           node control/scripts/release/deployment-handoff.mjs policy control/infra/deployment-policy.json
+          if [ -n "$RETIREMENT_OPERATION_ID" ]; then
+            test "$DEPLOY_EVENT" = workflow_dispatch
+            test "$ADOPT_LEGACY" = false
+            test -z "$RELEASE_RUN"
+            echo 'deployment_mode=record-retirement' >> "$GITHUB_OUTPUT"
+            echo 'candidate_available=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           echo "deployment_mode=$(node control/scripts/release/deployment-handoff.mjs mode)" >> "$GITHUB_OUTPUT"
           node control/scripts/release/release-publication.mjs "$RELEASE_RUN" "$GITHUB_REPOSITORY" verified-release-run.json >> "$GITHUB_OUTPUT"
       - if: steps.identity.outputs.candidate_available == 'true'
@@ -75,12 +89,12 @@ jobs:
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
           cp verified-release-run.json candidate/verified-release-run.json
       - id: latest
-        if: steps.identity.outputs.candidate_available == 'true'
+        if: steps.identity.outputs.candidate_available == 'true' || steps.identity.outputs.deployment_mode == 'record-retirement'
         name: Re-read latest actual deployment before scheduling the host job
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node control/scripts/release/convergence-cli.mjs discover latest-deployment.json >> "$GITHUB_OUTPUT"
-      - if: steps.identity.outputs.candidate_available == 'true' && steps.latest.outputs.artifact_id != ''
+      - if: (steps.identity.outputs.candidate_available == 'true' || steps.identity.outputs.deployment_mode == 'record-retirement') && steps.latest.outputs.artifact_id != ''
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           artifact-ids: ${{ steps.latest.outputs.artifact_id }}
@@ -88,6 +102,22 @@ jobs:
           path: current-baseline
           merge-multiple: true
           github-token: ${{ github.token }}
+      - id: record
+        if: steps.identity.outputs.deployment_mode == 'record-retirement'
+        name: Bind manual record to the latest actual application manifest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PRODUCTION_DEPLOY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+          ADOPT_LEGACY: ${{ inputs.adopt_legacy && 'true' || 'false' }}
+          RETIREMENT_OPERATION_ID: ${{ inputs.retirement_operation_id }}
+        run: node control/scripts/release/retirement-record-ci.mjs "$RETIREMENT_OPERATION_ID" current-baseline latest-deployment.json record-request.json >> "$GITHUB_OUTPUT"
+      - if: steps.record.outputs.candidate_available == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: validated-retirement-input
+          path: record-request.json
+          if-no-files-found: error
+          retention-days: 7
       - id: freshness
         if: steps.identity.outputs.candidate_available == 'true'
         name: Skip superseded automatic candidates without attempting a cutover
@@ -131,10 +161,17 @@ jobs:
         with:
           node-version: '24.19.0'
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: needs.prepare.outputs.deployment_mode != 'record-retirement'
         with:
           name: validated-deployment-input
           path: candidate
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        if: needs.prepare.outputs.deployment_mode == 'record-retirement'
+        with:
+          name: validated-retirement-input
+          path: retirement-input
       - name: Transfer exact control and candidate; run verified host gates over SSH
+        if: needs.prepare.outputs.deployment_mode != 'record-retirement'
         env:
           DEPLOY_MODE: ${{ needs.prepare.outputs.deployment_mode }}
           GITHUB_TOKEN: ${{ github.token }}
@@ -150,6 +187,21 @@ jobs:
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
         run: node control/scripts/release/ssh-deploy.mjs control candidate deployed-release
+      - name: Record the existing succeeded retirement over authenticated SSH
+        if: needs.prepare.outputs.deployment_mode == 'record-retirement'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.prepare.outputs.source_sha }}
+          PRODUCTION_DEPLOY_ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+          DEPLOY_HOST_CONFIG_FILE: ${{ vars.DEPLOY_HOST_CONFIG_FILE }}
+          DEPLOY_SSH_HOST: ${{ vars.DEPLOY_SSH_HOST }}
+          DEPLOY_SSH_USER: ${{ vars.DEPLOY_SSH_USER }}
+          DEPLOY_SSH_PORT: ${{ vars.DEPLOY_SSH_PORT }}
+          DEPLOY_SSH_ATTEMPT_ROOT: ${{ vars.DEPLOY_SSH_ATTEMPT_ROOT }}
+          DEPLOY_SSH_NODE: ${{ vars.DEPLOY_SSH_NODE }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: node control/scripts/release/ssh-retirement-record.mjs control retirement-input/record-request.json deployed-release
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: deployed-release

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-frontend-only-production-acceptance",
+  "status": "passed",
+  "recordedAt": "2026-10-07T20:02:20.537Z",
+  "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36",
+  "predecessorSourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000",
+  "ci": {
+    "id": 37676615503,
+    "attempt": 1,
+    "status": "success",
+    "checks": 10,
+    "workload": 166,
+    "workflowIntervalMs": 300000,
+    "evidence": "outputs/operations/24c521-ci-37676615503-1/independent-verification.json"
+  },
+  "publication": {
+    "id": 37677249209,
+    "attempt": 1,
+    "status": "success",
+    "hostedMixedChecks": 12,
+    "proofHash": "sha256:897c845268025971bdd1821ce9f392f4fa36c1e671b4028ce7216a2f1e8edaa9",
+    "cleanup": {
+      "status": "stopped",
+      "errors": [],
+      "retainedImages": true
+    },
+    "evidence": "outputs/operations/24c521-publication-37677249209-1/independent-mixed-verification.json"
+  },
+  "deployment": {
+    "runId": 37678313787,
+    "runAttempt": 1,
+    "controlCommit": "24c5213260f1940d63595ab4844153a075e6ef36",
+    "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36",
+    "rawRunHash": "sha256:2339c2ca44181793af9fd956d0fe0ec55d13307b6d4dc7d1af8087a35d7aa7be",
+    "status": "success",
+    "independentVerification": "outputs/operations/24c521-deployment-37678313787-1/deployed-release/independent-live-verification.json",
+    "verifiedAt": "2026-10-07T20:01:43.237Z"
+  },
+  "manifestHash": "sha256:fc3b032f3bfd7808cba793dae6ee2fa67ecbb7338073af3daa7176130cdcea46",
+  "operation": {
+    "status": "succeeded",
+    "kind": "frontend-only",
+    "touched": [
+      "frontend"
+    ],
+    "operationHash": "sha256:145ab9dfbb39985b4e97d52d1bc8effa237136ad94f29744fbc91a9842560dc6",
+    "databaseSnapshot": "not-created",
+    "databaseReferenceInventory": "not_executed",
+    "createdAt": "2026-10-07T19:59:47.453Z",
+    "updatedAt": "2026-10-07T20:00:08.369Z"
+  },
+  "unchangedBackendWorkerContainersVerified": true,
+  "components": {
+    "backend": {
+      "containerId": "b14e4ebcd963858840b3779919761ae0a43c3f219229270d954d2ad1cfe064bb",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:7d511ec98c5499c7af22e92a799b0b11e607db1d167f9acbe48ea4a61f36413d"
+    },
+    "frontend": {
+      "containerId": "aa766fdc7b109a27ba7cc7a4ae6ac836b78a0b585108665b642f5d0387854c85",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:fa9312ce23339d702b6099ca37c949d4e528ea4b9497b6aa0019061a22febf32"
+    },
+    "rulesWorker": {
+      "containerId": "296d068df6205ac8b122e5b3bce2b2f2e0458a4955ca2f20b79a33635556fca5",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:06963974ee5822174b1ffb3bfdba170821a8cadfe3ff3f4d30d4300df507c56e"
+    }
+  },
+  "migrations": 307,
+  "originalFullAnchorPreserved": true,
+  "fullAnchorHash": "sha256:ccc659a40aa0aadc99dfb7c1cea96867c54c97cd78bdd3b88c0a2cb8b0b47dfc",
+  "actualWorkflowIntervalMs": 1022000,
+  "actualWorkflowIntervalMinutes": 17.033333333333335,
+  "paidProviderRequests": 0,
+  "productionDatabaseRestored": false,
+  "fullServerBackupCountUnchanged": 2,
+  "oneReadOnlyArtifactDownloadNetworkRetry": {
+    "record": "outputs/operations/24c521-artifact-download-retry-readonly-intent-20261007.json",
+    "deploymentRetried": false
+  },
+  "completedTaskGates": [
+    "REL-03 actual mixed production acceptance",
+    "REL-05 genuine frontend-only delivery"
+  ],
+  "all29Complete": false,
+  "remaining": [
+    "Explicit physical legacy-character retirement with current v4/controller proof and recorded baseline",
+    "Final requirement-by-requirement completion audit"
+  ]
+}

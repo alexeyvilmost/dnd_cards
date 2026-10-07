@@ -19,7 +19,7 @@ export function reconciliationEnabled(variables,policy){
 }
 export async function readConvergenceBaseline(get,repository){return selectLatestDeployedRun(get,{repository});}
 
-export async function preflightAutomaticDeployment({eventName,candidate,releaseRun,latest,manifest,receipt,repository,get}){
+export async function preflightAutomaticDeployment({eventName,candidate,releaseRun,latest,manifest,receipt,retirementObservation,repository,get}){
   verifyCandidateProvenance(candidate,releaseRun);
   if(!['workflow_run','workflow_dispatch'].includes(eventName))throw Error('Unsupported deployment request');
   // Historical immutable manual candidates may predate embedded build plans.
@@ -30,7 +30,7 @@ export async function preflightAutomaticDeployment({eventName,candidate,releaseR
     ||plan.repository!==repository||plan.releaseRunId!==releaseRun.id||plan.controlCommit!==releaseRun.controlCommit
     ||candidate.manifest.previousReleaseId!==(plan.previousManifest?.releaseId??null))throw Error('Candidate build plan provenance mismatch');
   if(!latest&&plan.previousManifest)throw Error('Previously deployed baseline is unavailable; inspect history');
-  if(latest){verifyBaseline(manifest,receipt,latest);}else if(manifest||receipt)throw Error('Unexpected baseline receipt');
+  if(latest){verifyBaseline(manifest,receipt,latest,retirementObservation);}else if(manifest||receipt||retirementObservation!==undefined)throw Error('Unexpected baseline receipt');
   if(!same(latest,await readConvergenceBaseline(get,repository)))throw Error('Deployment baseline changed during preflight');
   const head=(await get('commits/main')).sha;if(!sha.test(head??''))throw Error('Invalid main identity');
   if(head!==plan.candidate)return {status:'superseded',candidateAvailable:false,reason:'newer-main-source'};
@@ -67,7 +67,7 @@ export function validateReconciliationRequest(request){
   if(request.key!==key)throw Error('Reconciliation request key mismatch');return request;
 }
 const claimName=request=>`reconcile-claim-${request.key.slice(7)}`;
-export async function planReconciliation({event,eventName,repository,controlCommit,runId,runAttempt,variables,policy,latest,manifest,receipt,get}){
+export async function planReconciliation({event,eventName,repository,controlCommit,runId,runAttempt,variables,policy,latest,manifest,receipt,retirementObservation,get}){
   if(!reconciliationEnabled(variables,policy))return {status:'disabled'};
   if(eventName!=='workflow_run'||event?.repository?.full_name!==repository||!sha.test(controlCommit??''))throw Error('Trusted main deployment event required');
   const upstream=event.workflow_run;
@@ -82,7 +82,7 @@ export async function planReconciliation({event,eventName,repository,controlComm
   if(!same(fresh,latest))throw Error('Downloaded deployment evidence changed');
   if(!latest||latest.id!==upstream.id||latest.runAttempt!==upstream.run_attempt)return {status:'superseded',reason:'newer-actual-deployment'};
   if(latest.controlCommit!==upstream.head_sha)throw Error('Deployment event identity mismatch');
-  verifyBaseline(manifest,receipt,latest);
+  verifyBaseline(manifest,receipt,latest,retirementObservation);
   const title=`Reconcile deployed ${latest.id}/${latest.runAttempt}`;
   if(current.display_title!==title)throw Error('Coordinator is not bound to triggering deployment');
   const history=await pages(get,'actions/workflows/reconcile.yml/runs?branch=main&event=workflow_run','workflow_runs');
