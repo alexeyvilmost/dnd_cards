@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "local_published_executor_graph_verified_production_integration_open",
+  "recordedAt": "2026-10-07T07:42:34.837Z",
+  "sourceHashes": {
+    "scripts/release/retirement-artifacts.mjs": "sha256:21363b0b56e95ad8d64194d00cbdc33b9bd79e781ce6c1180ec4b0909523a64f",
+    "scripts/release/retirement-artifacts.test.mjs": "sha256:b7df65360c91fd27fff6698606a36c8b01b097b4069907d5b7dc6348e340c950"
+  },
+  "localTests": {
+    "artifactGraphCases": 58,
+    "allRetirementContractCases": 198,
+    "failed": 0,
+    "skipped": 0,
+    "logHash": "sha256:c6794fbf2ec8496e1866684aacd92129ab80f030206ae8d5f014aa6c4ff4c5a2"
+  },
+  "proof": {
+    "directory": "outputs/operations/first-capture-private-cfe9/published_retirement302_bundle_2026-10-07T07-41-18.097Z",
+    "receiptHash": "sha256:73afc664c33cd6bd059841e4bc7aad6c5533ca354fa26597d79d3c506645d708",
+    "bundleHash": "sha256:8f647f49b496799a21d51b02730f678077c2b765be99a61a9c0a714f9271378f",
+    "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+    "previousSource": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+    "candidateSource": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+    "publishedExecutor": {
+      "status": "passed",
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+      "inputFingerprint": "sha256:cbb5bcbc6aeebe4baeab7a593ebf4ac569f158cb07dc872dc856aa8ea830db01",
+      "localDiagnosticBinary": false,
+      "publishedExecutor": true,
+      "receiptHash": "sha256:2fa9aa22b5216863d4b942db6d60df620228798ce3d6e322d6820aa85a6c28ce",
+      "repeatApplied": 0,
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:25c9f06622f03cbf488828e227630a0009d26405c5b4ac4f6815f64cc6a93293"
+    },
+    "snapshotMigrationCount": 306,
+    "verifiedMigrationCount": 306,
+    "retainedTableCount": 93,
+    "readerPairHash": "sha256:49c1535fe1f430a6b610ebe5d1d679ece53b73e121ac1a2279556957f97dd8b5",
+    "programPrepared": true,
+    "programExecuted": false,
+    "originalFilesUnchanged": true
+  },
+  "productionExecutionSupported": false,
+  "productionReady": false,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "limits": [
+    "This validates the actual 05085/D229 local proof graph, not the next production source pair.",
+    "Only the executor summary is stored by the original reader report; full command metadata/receipt bytes are not independently reconstructed.",
+    "Current-pair browser acceptance, post307 fresh capture/proofs and production host authorization remain separate."
+  ]
+}

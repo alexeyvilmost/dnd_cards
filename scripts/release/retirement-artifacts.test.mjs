@@ -69,7 +69,7 @@ test('an explicitly bound native lifecycle expansion preserves the original snap
  assert.deepEqual(f.values.active,before);assert.deepEqual(plan.snapshotMigrations,['001']);assert.deepEqual(plan.expectedCurrentMigrations,['001','301_character_lifecycle']);assert.equal(plan.productionExecutionSupported,false);assert.equal(plan.localExpansionArtifactHash,f.bundle.artifacts.lifecycleExpansion.sha256);assert(Object.isFrozen(plan.localLifecycleExpansionIdentity));await localRetirementProgram(plan);
 });
 for(const [name,mutate]of [
- ['unknown bundle version',f=>{f.bundle.schemaVersion=3;}],
+ ['unknown bundle version',f=>{f.bundle.schemaVersion=4;}],
  ['unbound expansion in the old bundle format',f=>{f.bundle.schemaVersion=1;f.removeExpansionArtifact=true;}],
  ['missing expansion artifact',f=>{f.removeExpansionArtifact=true;}],
  ['changed lifecycle checksum',f=>{f.values.lifecycleExpansion.identity.checksum=h('0');}],
@@ -85,3 +85,37 @@ for(const [name,mutate]of [
 ])test('local expansion refuses '+name,async t=>{const f=await expandedFixture(t);mutate(f);await f.saveExpansion();if(f.removeExpansionArtifact){delete f.bundle.artifacts.lifecycleExpansion;await f.saveBundle();}await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);});
 test('changing the separately hashed expansion after verification prevents SQL preparation',async t=>{const f=await expandedFixture(t),plan=await verifyLocalRetirementArtifacts(f.directory);await writeFile(path.join(f.directory,f.bundle.artifacts.lifecycleExpansion.path),'{}');await assert.rejects(localRetirementProgram(plan));});
 test('the original direct path accepts a genuinely current lifecycle ledger without a claimed local expansion',async t=>{const f=await fixture(t),identity={id:'301_character_lifecycle',checksum:hash(await readFile(new URL('../../backend/migrations/character_lifecycle_301.go',import.meta.url)))};f.values.active.manifest.migrationSet.push(identity);f.values.candidate.manifest.migrationSet.push(identity);f.values.candidate.provenance.manifestHash=evidenceHash(f.values.candidate.manifest);f.values.retirementProof.priorMigrationCount=2;for(const kind of ['active','candidate','retirementProof'])await f.save(kind);await f.saveBundle();const plan=await verifyLocalRetirementArtifacts(f.directory);assert.deepEqual(plan.snapshotMigrations,plan.expectedCurrentMigrations);assert.equal(plan.localExpansionArtifactHash,undefined);});
+
+async function publishedFixture(t){
+ const f=await fixture(t),backend=f.values.candidate.manifest.components.backend;
+ f.bundle.schemaVersion=3;
+ Object.assign(f.values.readerPair,{publishedCandidateSourcePair:{previous:f.values.active.manifest.releaseCommit,candidate:f.values.candidate.manifest.releaseCommit},publishedExecutorImage:backend.imageDigest,
+  actualLinuxExecutor302:{status:'passed',sourceCommit:backend.sourceCommit,inputFingerprint:backend.inputFingerprint,localDiagnosticBinary:false,publishedExecutor:true,receiptHash:h('e'),repeatApplied:0}});
+ f.savePublished=async()=>{for(const kind of ['readerPair','candidate','active','retirementProof'])await f.save(kind);await f.saveBundle();};
+ await f.savePublished();return f;
+}
+test('published local proof binds a reused backend to its own source rather than composition source',async t=>{
+ const f=await publishedFixture(t),plan=await verifyLocalRetirementArtifacts(f.directory);
+ assert.notEqual(plan.candidateSource,plan.publishedExecutor.sourceCommit);
+ assert.equal(plan.publishedExecutor.sourceCommit,f.values.candidate.manifest.components.backend.sourceCommit);
+ assert(Object.isFrozen(plan.publishedExecutor));assert.equal(plan.productionExecutionSupported,false);assert.equal(plan.productionReady,false);
+ assert.deepEqual(plan.snapshotMigrations,plan.expectedCurrentMigrations);await localRetirementProgram(plan);
+});
+for(const [name,mutate]of [
+ ['missing source pair',f=>{delete f.values.readerPair.publishedCandidateSourcePair;}],
+ ['previous source substituted',f=>{f.values.readerPair.publishedCandidateSourcePair.previous='c'.repeat(40);}],
+ ['candidate source substituted',f=>{f.values.readerPair.publishedCandidateSourcePair.candidate='c'.repeat(40);}],
+ ['extra source pair fields',f=>{f.values.readerPair.publishedCandidateSourcePair.verified=true;}],
+ ['missing published executor',f=>{delete f.values.readerPair.actualLinuxExecutor302;}],
+ ['native overlay advertised as published',f=>{f.values.readerPair.actualLinuxExecutor302.localDiagnosticBinary=true;}],
+ ['unpublished executor',f=>{f.values.readerPair.actualLinuxExecutor302.publishedExecutor=false;}],
+ ['failed executor',f=>{f.values.readerPair.actualLinuxExecutor302.status='failed';}],
+ ['composition source substituted for reused backend',f=>{f.values.readerPair.actualLinuxExecutor302.sourceCommit=f.values.candidate.manifest.releaseCommit;}],
+ ['another backend input',f=>{f.values.readerPair.actualLinuxExecutor302.inputFingerprint=h('f');}],
+ ['another published image',f=>{f.values.readerPair.publishedExecutorImage='example.test/backend@'+h('f');}],
+ ['unbound receipt',f=>{f.values.readerPair.actualLinuxExecutor302.receiptHash='verified';}],
+ ['repeat executes retirement again',f=>{f.values.readerPair.actualLinuxExecutor302.repeatApplied=1;}],
+ ['unknown executor fields',f=>{f.values.readerPair.actualLinuxExecutor302.productionReady=true;}],
+ ['new ordinary schema without a fresh proof',f=>{f.values.candidate.manifest.migrationSet.push({id:'307_catalog_presentation',checksum:h('f')});f.values.candidate.provenance.manifestHash=evidenceHash(f.values.candidate.manifest);}],
+])test('published local proof refuses '+name,async t=>{const f=await publishedFixture(t);mutate(f);await f.savePublished();await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);});
+test('published version cannot reinterpret the local lifecycle expansion fixture',async t=>{const f=await expandedFixture(t);f.bundle.schemaVersion=3;await f.saveBundle();await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);});

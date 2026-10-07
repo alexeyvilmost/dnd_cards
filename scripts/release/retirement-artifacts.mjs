@@ -38,12 +38,25 @@ function localExpansion(raw,pair,expansion,baseline){
  assert.equal(linux.localDiagnosticBinary,true);assert.equal(linux.publishedExecutor,false);assert.equal(linux.repeatApplied,0);assert(hashPattern.test(linux.receiptHash));
  return target;
 }
+function publishedExecutor(pair,candidate,active,currentMigrationSet){
+ assert.deepEqual(Object.keys(pair.publishedCandidateSourcePair).sort(),['candidate','previous']);
+ assert.deepEqual(pair.publishedCandidateSourcePair,{previous:active.manifest.releaseCommit,candidate:candidate.manifest.releaseCommit});
+ const backend=candidate.manifest.components.backend,linux=pair.actualLinuxExecutor302;
+ assert.deepEqual(Object.keys(linux).sort(),['inputFingerprint','localDiagnosticBinary','publishedExecutor','receiptHash','repeatApplied','sourceCommit','status']);
+ assert.equal(linux.status,'passed');assert.equal(linux.localDiagnosticBinary,false);assert.equal(linux.publishedExecutor,true);
+ assert.equal(linux.sourceCommit,backend.sourceCommit);assert.equal(linux.inputFingerprint,backend.inputFingerprint);
+ assert.equal(pair.publishedExecutorImage,backend.imageDigest);assert(hashPattern.test(linux.receiptHash));assert.equal(linux.repeatApplied,0);
+ // The local published-reader proof must describe the captured schema. A new
+ // ordinary migration needs a fresh capture and reader pair, not this report.
+ assert.deepEqual(orderedMigrations(candidate.manifest.migrationSet),orderedMigrations(currentMigrationSet));
+ return {...structuredClone(linux),imageDigest:backend.imageDigest};
+}
 
 export async function verifyLocalRetirementArtifacts(directory){
  try{
   const bytes=await readFile(backupFile(directory,'retirement-bundle.json'));
   assert(bytes.length<=1024*1024);const bundle=JSON.parse(bytes);
-  assert([1,2].includes(bundle.schemaVersion));assert.equal(bundle.kind,'local-retirement-artifact-bundle');assert.equal(bundle.profileId,retirementProfile.id);
+  assert([1,2,3].includes(bundle.schemaVersion));assert.equal(bundle.kind,'local-retirement-artifact-bundle');assert.equal(bundle.profileId,retirementProfile.id);
   assert.equal(bundle.mode,retirementProfile.mode);assert.equal(bundle.fingerprintTimezone,'UTC');assert.equal(bundle.productionReady,false);
   const kinds=bundle.schemaVersion===2?[...artifactKinds,'lifecycleExpansion']:artifactKinds;
   assert.deepEqual(Object.keys(bundle.artifacts).sort(),[...kinds].sort());
@@ -75,6 +88,7 @@ export async function verifyLocalRetirementArtifacts(directory){
   let currentMigrationSet=snapshotMigrationSet;
   if(bundle.schemaVersion===2)currentMigrationSet=localExpansion(raw,pair,values.lifecycleExpansion,snapshotMigrationSet);
   else {assert.equal(raw.localLifecycleExpansion,undefined);assert.equal(pair.localLifecycleExpansionIdentity,undefined);assert.equal(raw.priorMigrationCount,snapshotMigrationSet.length);}
+  const published=bundle.schemaVersion===3?publishedExecutor(pair,candidate,active,currentMigrationSet):undefined;
   const expectedCurrentMigrations=currentMigrationSet.map(row=>row.id).sort();
   for(const c of pair.checks.filter(c=>c.id==='image-contract')){
    const manifest=c.generation==='candidate'?candidate.manifest:active.manifest;
@@ -83,7 +97,7 @@ export async function verifyLocalRetirementArtifacts(directory){
   }
   assert.equal(hash(await readFile(backupFile(directory,'retirement-bundle.json'))),hash(bytes));
   const request={schemaVersion:1,kind:'retire-character-generations-302',backupHash:raw.sourceDumpHash,archiveRestoreReportHash:raw.archiveRestoreReportHash,acceptedRollbackPairHash:bundle.artifacts.readerPair.sha256,preimages:structuredClone(raw.preimages)};
-  const plan=frozen({schemaVersion:1,kind:'verified-local-retirement-plan',profileId:retirementProfile.id,migrationId:retirementProfile.migrationId,mode:retirementProfile.mode,productionReady:false,productionExecutionSupported:false,bundleHash:hash(bytes),sqlSourceHash:raw.sqlSourceHash,request,candidateSource:candidate.manifest.releaseCommit,previousSource:active.manifest.releaseCommit,expectedCurrentMigrations,snapshotMigrations:snapshotMigrationSet.map(row=>row.id).sort(),...(bundle.schemaVersion===2?{localLifecycleExpansionIdentity:structuredClone(lifecycleIdentity),localExpansionArtifactHash:bundle.artifacts.lifecycleExpansion.sha256}:{}),retainedFingerprints:structuredClone(values.retainedBefore),retainedTables:raw.retainedTableCount});
+  const plan=frozen({schemaVersion:1,kind:'verified-local-retirement-plan',profileId:retirementProfile.id,migrationId:retirementProfile.migrationId,mode:retirementProfile.mode,productionReady:false,productionExecutionSupported:false,bundleHash:hash(bytes),sqlSourceHash:raw.sqlSourceHash,request,candidateSource:candidate.manifest.releaseCommit,previousSource:active.manifest.releaseCommit,expectedCurrentMigrations,snapshotMigrations:snapshotMigrationSet.map(row=>row.id).sort(),...(bundle.schemaVersion===2?{localLifecycleExpansionIdentity:structuredClone(lifecycleIdentity),localExpansionArtifactHash:bundle.artifacts.lifecycleExpansion.sha256}:{}),...(published?{publishedExecutor:published}:{}),retainedFingerprints:structuredClone(values.retainedBefore),retainedTables:raw.retainedTableCount});
   verifiedPlans.set(plan,{directory,files,kinds:[...kinds],bundle:structuredClone(bundle),source:Buffer.from(source),request:structuredClone(request)});return plan;
  }catch{throw Error('Local retirement artifact verification refused');}
 }
