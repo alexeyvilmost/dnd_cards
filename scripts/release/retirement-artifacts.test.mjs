@@ -69,7 +69,7 @@ test('an explicitly bound native lifecycle expansion preserves the original snap
  assert.deepEqual(f.values.active,before);assert.deepEqual(plan.snapshotMigrations,['001']);assert.deepEqual(plan.expectedCurrentMigrations,['001','301_character_lifecycle']);assert.equal(plan.productionExecutionSupported,false);assert.equal(plan.localExpansionArtifactHash,f.bundle.artifacts.lifecycleExpansion.sha256);assert(Object.isFrozen(plan.localLifecycleExpansionIdentity));await localRetirementProgram(plan);
 });
 for(const [name,mutate]of [
- ['unknown bundle version',f=>{f.bundle.schemaVersion=4;}],
+ ['unknown bundle version',f=>{f.bundle.schemaVersion=5;}],
  ['unbound expansion in the old bundle format',f=>{f.bundle.schemaVersion=1;f.removeExpansionArtifact=true;}],
  ['missing expansion artifact',f=>{f.removeExpansionArtifact=true;}],
  ['changed lifecycle checksum',f=>{f.values.lifecycleExpansion.identity.checksum=h('0');}],
@@ -119,3 +119,85 @@ for(const [name,mutate]of [
  ['new ordinary schema without a fresh proof',f=>{f.values.candidate.manifest.migrationSet.push({id:'307_catalog_presentation',checksum:h('f')});f.values.candidate.provenance.manifestHash=evidenceHash(f.values.candidate.manifest);}],
 ])test('published local proof refuses '+name,async t=>{const f=await publishedFixture(t);mutate(f);await f.savePublished();await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);});
 test('published version cannot reinterpret the local lifecycle expansion fixture',async t=>{const f=await expandedFixture(t);f.bundle.schemaVersion=3;await f.saveBundle();await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);});
+
+async function capturedCurrentFixture(t,id='307_catalog_presentation'){
+ const f=await publishedFixture(t);
+ f.bundle.schemaVersion=4;
+ f.values.candidate.manifest.migrationSet.push({id,checksum:h('f')});
+ f.values.candidate.provenance.manifestHash=evidenceHash(f.values.candidate.manifest);
+ const manifest=f.values.candidate.manifest;
+ f.values.capturedActive={schemaVersion:1,status:'active',manifest:structuredClone(manifest),instances:Object.fromEntries(Object.keys(manifest.components).map(k=>[k,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]))};
+ f.values.retirementProof.priorMigrationCount=manifest.migrationSet.length;
+ f.saveCaptured=async()=>{
+  await f.save('capturedActive');
+  f.values.capture={schemaVersion:1,kind:'candidate-capture',status:'captured',createdAt:'2026-10-04T10:00:00Z',activeHash:evidenceHash(f.values.capturedActive),releaseManifestHash:evidenceHash(f.values.capturedActive.manifest),files:[
+   {path:'database.dump',category:'database',sha256:f.bundle.artifacts.dump.sha256,bytes:f.bundle.artifacts.dump.bytes},
+   {path:'active.json',category:'deployment-state',sha256:f.bundle.artifacts.capturedActive.sha256,bytes:f.bundle.artifacts.capturedActive.bytes},
+  ],sourceReleases:[]};
+  await f.save('capture');
+  const capturedHash=evidenceHash(f.values.capturedActive);
+  f.values.retirementProof.capturedActiveHash=capturedHash;
+  f.values.readerPair.capturedActiveHash=capturedHash;
+  f.values.readerPair.capturedMigrationSetHash=evidenceHash(f.values.capturedActive.database?.migrationSet??f.values.capturedActive.manifest.migrationSet);
+  f.values.readerPair.captureHash=f.bundle.artifacts.capture.sha256;
+  for(const kind of ['readerPair','candidate','active','retirementProof','capturedActive'])await f.save(kind);
+  await f.saveBundle();
+ };
+ await f.saveCaptured();return f;
+}
+for(const id of ['301_character_lifecycle','307_catalog_presentation'])test('fresh current capture remains distinct from earlier rollback readers after '+id,async t=>{
+ const f=await capturedCurrentFixture(t,id),plan=await verifyLocalRetirementArtifacts(f.directory);
+ assert.equal(plan.previousSource,f.values.active.manifest.releaseCommit);
+ assert.equal(plan.capturedSource,f.values.candidate.manifest.releaseCommit);
+ assert.notEqual(plan.previousSource,plan.capturedSource);
+ assert.deepEqual(plan.snapshotMigrations,['001',id]);assert.deepEqual(plan.expectedCurrentMigrations,plan.snapshotMigrations);
+ assert.equal(plan.capturedActiveHash,evidenceHash(f.values.capturedActive));
+ assert.equal(plan.request.acceptedRollbackPairHash,f.bundle.artifacts.readerPair.sha256);
+ assert.equal(plan.productionReady,false);assert.equal(plan.productionExecutionSupported,false);
+ await localRetirementProgram(plan);
+});
+for(const [name,mutate]of [
+ ['old dump ledger count',f=>{f.values.retirementProof.priorMigrationCount=1;}],
+ ['different captured composition',f=>{f.values.capturedActive.manifest.contentManifestHash=h('0');}],
+ ['missing current migration',f=>{f.values.capturedActive.manifest.migrationSet.pop();}],
+ ['changed historical migration checksum',f=>{f.values.active.manifest.migrationSet[0].checksum=h('0');}],
+ ['missing published executor',f=>{delete f.values.readerPair.actualLinuxExecutor302;}],
+ ['diagnostic overlay',f=>{f.values.readerPair.actualLinuxExecutor302.localDiagnosticBinary=true;}],
+ ['repeat executes again',f=>{f.values.readerPair.actualLinuxExecutor302.repeatApplied=1;}],
+])test('fresh captured composition refuses '+name,async t=>{
+ const f=await capturedCurrentFixture(t);mutate(f);await f.saveCaptured();await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);
+});
+for(const field of ['capturedActiveHash','capturedMigrationSetHash','captureHash'])test('reader proof must bind '+field+' to actual captured bytes',async t=>{
+ const f=await capturedCurrentFixture(t);f.values.readerPair[field]=h('0');await f.save('readerPair');await f.saveBundle();
+ await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);
+});
+test('fresh snapshot cannot be advertised through an earlier bundle version',async t=>{
+ const f=await capturedCurrentFixture(t);f.bundle.schemaVersion=3;await f.saveBundle();await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);
+});
+test('changed captured state after verification refuses executable preparation',async t=>{
+ const f=await capturedCurrentFixture(t),plan=await verifyLocalRetirementArtifacts(f.directory);
+ await writeFile(path.join(f.directory,f.bundle.artifacts.capturedActive.path),'{}');await assert.rejects(localRetirementProgram(plan));
+});
+test('accepted rehearsal evidence remains hashed separately from exact published composition',async t=>{
+ const f=await capturedCurrentFixture(t);
+ f.values.capturedActive.manifest.validationEvidence.push({...f.values.capturedActive.manifest.validationEvidence[0],gate:'image-contract',reportHash:h('0')});
+ await f.saveCaptured();const plan=await verifyLocalRetirementArtifacts(f.directory);
+ assert.equal(plan.capturedActiveHash,evidenceHash(f.values.capturedActive));assert.equal(plan.productionReady,false);
+});
+test('equal component fingerprints cannot disguise a different captured release identity',async t=>{
+ const f=await capturedCurrentFixture(t);f.values.capturedActive.manifest.releaseCommit='c'.repeat(40);
+ await f.saveCaptured();await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);
+});
+for(const [name,mutate]of [
+ ['different source deployment',f=>{f.values.capture.activeHash=h('0');}],
+ ['different source manifest',f=>{f.values.capture.releaseManifestHash=h('0');}],
+ ['different database bytes',f=>{f.values.capture.files[0].sha256=h('0');}],
+ ['different captured state bytes',f=>{f.values.capture.files[1].sha256=h('0');}],
+ ['different database length',f=>{f.values.capture.files[0].bytes++;}],
+ ['multiple source dumps',f=>{f.values.capture.files.push({...f.values.capture.files[0],path:'other.dump'});}],
+ ['missing captured state',f=>{f.values.capture.files.pop();}],
+])test('capture manifest refuses '+name,async t=>{
+ const f=await capturedCurrentFixture(t);mutate(f);await f.save('capture');
+ f.values.readerPair.captureHash=f.bundle.artifacts.capture.sha256;await f.save('readerPair');await f.saveBundle();
+ await assert.rejects(verifyLocalRetirementArtifacts(f.directory),/verification refused/);
+});

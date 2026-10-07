@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-retirement-current-capture-contract-v4",
+  "recordedAt": "2026-10-07T09:30:46.301Z",
+  "status": "local-contracts-passed",
+  "productionReady": false,
+  "productionChanges": 0,
+  "formats": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "newFormat": {
+    "version": 4,
+    "additionalArtifacts": [
+      "capturedActive",
+      "capture"
+    ],
+    "scope": "Current snapshot is independent of previous rollback readers; local proof only."
+  },
+  "verification": {
+    "receipt": "outputs/operations/retirement-v4-linux-tooling-2026-10-07T09-30-19.335Z/receipt.json",
+    "receiptHash": "sha256:aa97c858b2824833b807cd697dbb33dc0aeb89859e359684622657a4009f90c6",
+    "platform": "actual-pinned-linux-container",
+    "files": 11,
+    "counts": {
+      "tests": 262,
+      "passed": 262,
+      "failed": 0,
+      "skipped": 0
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "sourceHashes": {
+      "scripts/release/retirement-artifacts.test.mjs": "sha256:c6bc7eed9b5e54bd65290b4bbfbd3146b3b0c532114ca13faff03f8e488cf1fa",
+      "scripts/release/retirement-build-baseline.test.mjs": "sha256:01e69b68a25d7f0f006b88405019058b1c42f2482e03f6517f9c28d575446424",
+      "scripts/release/retirement-command.test.mjs": "sha256:aeff585552c4afa68f3bfefe39a2b3981638bfec73168674a6ae05fae8e1b007",
+      "scripts/release/retirement-controller.test.mjs": "sha256:381bfbee619dc8e1768a97ce5000df8e08276da337556e08aa508f189b1e3dfb",
+      "scripts/release/retirement-execution-result.test.mjs": "sha256:59335647955d5bf592e0256d4279ff86bf89d28c553e91801076e7b6d7909813",
+      "scripts/release/retirement-outcome-journal.test.mjs": "sha256:bd87ac511be1173c90ee23c42251ffa47cc834a7d4301796dd2b01c745a8c9dc",
+      "scripts/release/retirement-projection.test.mjs": "sha256:5512360fb626631267054433b9bb6ee14d889a5091b9b0d2693f715bf79d3da3",
+      "scripts/release/retirement-registry.test.mjs": "sha256:21b6ad0393a1643d7b7311d12db12e20b8529aa23d33f978cda54d76bb998342",
+      "scripts/release/retirement-state.test.mjs": "sha256:b11254b34ae3247cc17f3897bf7422aa6f0f279777911b6899d19af740273e03",
+      "scripts/testing/shards.test.mjs": "sha256:5be2756fa2add1187808850e898ca878df76bab251a71bf1a7ff663a066a2526",
+      "scripts/testing/suites.test.mjs": "sha256:1013cd77f5a9d63b43a230f32d4cf214edac5375f56089316c1f90a71743b165",
+      "scripts/release/retirement-controller.mjs": "sha256:71e4ff1f91d67d6215b2d5319659df4438fe1239ad8cf5028c07a8c537bd156b",
+      "scripts/testing/suites.mjs": "sha256:899880286efb86e5384cbdca387630e881a18ca03dcd20cb1689645ad57fa1f6",
+      "scripts/testing/shards.mjs": "sha256:85d4c6aeb9e6397761fbc614d5f7b00b6a962a1222c1797ddbd6d85614984744",
+      "scripts/release/retirement-command.mjs": "sha256:7c6f7b4bd1df43b947830aa7be83632df200aa9b70f9366ef1818bca6f7524b7",
+      "tests/suites.json": "sha256:7a0ae7d8af154f19ff283441e49a7a2930e275685ba414450ac06b01aefb07ce",
+      "scripts/release/retirement-intent.mjs": "sha256:00d81eece9093333479aee89054a044509c7fca4cdc4fa8f44e631bd30f6dad3",
+      "scripts/release/retirement-outcome-journal.mjs": "sha256:f83ae66a08499d82ee49831927ad24af7e76eb98131d182865f09d1d959c3324",
+      "scripts/release/retirement-execution-result.mjs": "sha256:0824ce00976235a5cd47a24ee04c5afa75dc09e98586d57ad3b15083b86b9c75",
+      "scripts/release/deploy-state.mjs": "sha256:99f76f885644f8d0963095859e1d1ba53c9542ba8ba9c3bc6c288de278d6d7bb",
+      "backend/migrations/data/retire-legacy-characters-302.sql": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+      "backend/migrations/character_lifecycle_301.go": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5",
+      "scripts/release/retirement-artifacts.mjs": "sha256:3448bb9ca7319e4087be4ecce43b02628ef41c18b149c0f0aa3cddc9d47fb502",
+      "scripts/release/retirement-native-local.mjs": "sha256:f41f69b456d984b2e63ff4d906946e4b5be24f37c371e5da771118edcb51b999"
+    }
+  },
+  "invariants": [
+    "Original capture binds database and state bytes, lengths, active hash and release manifest hash.",
+    "Published candidate equals captured composition including release identities, except separately hashed assembly validationEvidence.",
+    "Rollback readers retain every original migration identity.",
+    "Published executor uses actual backend source, fingerprint, image and receipt; diagnostic overlays and repeated apply are refused.",
+    "Old bundle versions cannot reinterpret a newer snapshot, and post-verification byte changes refuse SQL preparation."
+  ],
+  "limitations": [
+    "Synthetic artifact fixtures verify acceptance/refusal contracts; they do not prove a new application image or PostgreSQL execution.",
+    "Actual post307 snapshot, archive restoration, exact image API/browser/rollback checks and a separate production artifact verifier remain required.",
+    "No production-ready flag, production SQL, paid provider request, deployment or main mutation was performed."
+  ]
+}

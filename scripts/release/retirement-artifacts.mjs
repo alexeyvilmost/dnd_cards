@@ -56,9 +56,9 @@ export async function verifyLocalRetirementArtifacts(directory){
  try{
   const bytes=await readFile(backupFile(directory,'retirement-bundle.json'));
   assert(bytes.length<=1024*1024);const bundle=JSON.parse(bytes);
-  assert([1,2,3].includes(bundle.schemaVersion));assert.equal(bundle.kind,'local-retirement-artifact-bundle');assert.equal(bundle.profileId,retirementProfile.id);
+  assert([1,2,3,4].includes(bundle.schemaVersion));assert.equal(bundle.kind,'local-retirement-artifact-bundle');assert.equal(bundle.profileId,retirementProfile.id);
   assert.equal(bundle.mode,retirementProfile.mode);assert.equal(bundle.fingerprintTimezone,'UTC');assert.equal(bundle.productionReady,false);
-  const kinds=bundle.schemaVersion===2?[...artifactKinds,'lifecycleExpansion']:artifactKinds;
+  const kinds=bundle.schemaVersion===2?[...artifactKinds,'lifecycleExpansion']:bundle.schemaVersion===4?[...artifactKinds,'capturedActive','capture']:artifactKinds;
   assert.deepEqual(Object.keys(bundle.artifacts).sort(),[...kinds].sort());
   const paths=new Set(),files={},values={};
   for(const kind of kinds){
@@ -84,11 +84,42 @@ export async function verifyLocalRetirementArtifacts(directory){
   const candidate=values.candidate,active=values.active;validateManifest(candidate.manifest);validateActive(active);
   assert.equal(candidate.status,'candidate-only');assert.equal(candidate.deployable,false);assert.equal(candidate.provenance.manifestHash,evidenceHash(candidate.manifest));assert.equal(candidate.provenance.sourceCommit,candidate.manifest.releaseCommit);
   assert.equal(candidate.manifest.previousReleaseId,active.manifest.releaseId);
-  const snapshotMigrationSet=active.database?.migrationSet??active.manifest.migrationSet;
+  // A fresh snapshot after an ordinary expansion belongs to the installed
+  // composition, while rollback readers may come from its predecessor. Keep
+  // those identities separate; the old format must not reinterpret old bytes.
+  let capturedActive=active;
+  if(bundle.schemaVersion===4){
+   capturedActive=values.capturedActive;validateActive(capturedActive);
+   const capture=values.capture;
+   assert.equal(capture.schemaVersion,1);assert.equal(capture.kind,'candidate-capture');assert.equal(capture.status,'captured');
+   assert(Number.isFinite(Date.parse(capture.createdAt)));
+   assert.equal(capture.activeHash,evidenceHash(capturedActive));
+   assert.equal(capture.releaseManifestHash,evidenceHash(capturedActive.manifest));
+   assert(Array.isArray(capture.files));
+   const dumpFiles=capture.files.filter(row=>row.category==='database'),stateFiles=capture.files.filter(row=>row.category==='deployment-state');
+   assert.equal(dumpFiles.length,1);assert.equal(stateFiles.length,1);
+   for(const [row,kind]of [[dumpFiles[0],'dump'],[stateFiles[0],'capturedActive']]){
+    assert.equal(row.sha256,bundle.artifacts[kind].sha256);assert.equal(row.bytes,bundle.artifacts[kind].bytes);
+   }
+   assert.equal(pair.captureHash,bundle.artifacts.capture.sha256);
+   // assemble-bundle adds the accepted rehearsal evidence to the published
+   // candidate. Every identity/compatibility field must still match exactly.
+   const {validationEvidence:capturedEvidence,...capturedComposition}=capturedActive.manifest;
+   const {validationEvidence:candidateEvidence,...candidateComposition}=candidate.manifest;
+   assert.equal(evidenceHash(capturedComposition),evidenceHash(candidateComposition));
+   assert.equal(raw.capturedActiveHash,evidenceHash(capturedActive));
+   assert.equal(pair.capturedActiveHash,evidenceHash(capturedActive));
+   const current=capturedActive.database?.migrationSet??capturedActive.manifest.migrationSet;
+   assert.equal(pair.capturedMigrationSetHash,evidenceHash(current));
+   // Every migration expected by the old readers remains installed with its
+   // original identity. This never proves compatibility by dropping a checksum.
+   for(const row of active.manifest.migrationSet)assert(current.some(item=>evidenceHash(item)===evidenceHash(row)));
+  }
+  const snapshotMigrationSet=capturedActive.database?.migrationSet??capturedActive.manifest.migrationSet;
   let currentMigrationSet=snapshotMigrationSet;
   if(bundle.schemaVersion===2)currentMigrationSet=localExpansion(raw,pair,values.lifecycleExpansion,snapshotMigrationSet);
   else {assert.equal(raw.localLifecycleExpansion,undefined);assert.equal(pair.localLifecycleExpansionIdentity,undefined);assert.equal(raw.priorMigrationCount,snapshotMigrationSet.length);}
-  const published=bundle.schemaVersion===3?publishedExecutor(pair,candidate,active,currentMigrationSet):undefined;
+  const published=bundle.schemaVersion>=3?publishedExecutor(pair,candidate,active,currentMigrationSet):undefined;
   const expectedCurrentMigrations=currentMigrationSet.map(row=>row.id).sort();
   for(const c of pair.checks.filter(c=>c.id==='image-contract')){
    const manifest=c.generation==='candidate'?candidate.manifest:active.manifest;
@@ -97,7 +128,7 @@ export async function verifyLocalRetirementArtifacts(directory){
   }
   assert.equal(hash(await readFile(backupFile(directory,'retirement-bundle.json'))),hash(bytes));
   const request={schemaVersion:1,kind:'retire-character-generations-302',backupHash:raw.sourceDumpHash,archiveRestoreReportHash:raw.archiveRestoreReportHash,acceptedRollbackPairHash:bundle.artifacts.readerPair.sha256,preimages:structuredClone(raw.preimages)};
-  const plan=frozen({schemaVersion:1,kind:'verified-local-retirement-plan',profileId:retirementProfile.id,migrationId:retirementProfile.migrationId,mode:retirementProfile.mode,productionReady:false,productionExecutionSupported:false,bundleHash:hash(bytes),sqlSourceHash:raw.sqlSourceHash,request,candidateSource:candidate.manifest.releaseCommit,previousSource:active.manifest.releaseCommit,expectedCurrentMigrations,snapshotMigrations:snapshotMigrationSet.map(row=>row.id).sort(),...(bundle.schemaVersion===2?{localLifecycleExpansionIdentity:structuredClone(lifecycleIdentity),localExpansionArtifactHash:bundle.artifacts.lifecycleExpansion.sha256}:{}),...(published?{publishedExecutor:published}:{}),retainedFingerprints:structuredClone(values.retainedBefore),retainedTables:raw.retainedTableCount});
+  const plan=frozen({schemaVersion:1,kind:'verified-local-retirement-plan',profileId:retirementProfile.id,migrationId:retirementProfile.migrationId,mode:retirementProfile.mode,productionReady:false,productionExecutionSupported:false,bundleHash:hash(bytes),sqlSourceHash:raw.sqlSourceHash,request,candidateSource:candidate.manifest.releaseCommit,previousSource:active.manifest.releaseCommit,expectedCurrentMigrations,snapshotMigrations:snapshotMigrationSet.map(row=>row.id).sort(),...(bundle.schemaVersion===4?{capturedSource:capturedActive.manifest.releaseCommit,capturedActiveHash:evidenceHash(capturedActive)}:{}),...(bundle.schemaVersion===2?{localLifecycleExpansionIdentity:structuredClone(lifecycleIdentity),localExpansionArtifactHash:bundle.artifacts.lifecycleExpansion.sha256}:{}),...(published?{publishedExecutor:published}:{}),retainedFingerprints:structuredClone(values.retainedBefore),retainedTables:raw.retainedTableCount});
   verifiedPlans.set(plan,{directory,files,kinds:[...kinds],bundle:structuredClone(bundle),source:Buffer.from(source),request:structuredClone(request)});return plan;
  }catch{throw Error('Local retirement artifact verification refused');}
 }
