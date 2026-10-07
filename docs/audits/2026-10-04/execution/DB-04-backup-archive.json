@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "status": "locally-verified-backup-archive-preparation",
+  "observedAt": "2026-10-07T00:45:11.448Z",
+  "baseCommit": "37b2c4175674d9cbe2e223509b8efb6b0a6c0361",
+  "sourceHashes": {
+    "scripts/database/backup-archive.mjs": "aa4926092aecfdd2407ef7fc79dec3112e6d9c80f1cca8b4234f930818c0e1d5",
+    "scripts/database/backup-archive.test.mjs": "4c12f41cd9cd8f8d086c97cdf8d8e07eff0888934740b7e2188d8e8807edcd4c",
+    "tests/suites.json": "ab55bc343ae33fbb2c58bf8d284226728731ed4e62f621e237782e2af800c774"
+  },
+  "archive": {
+    "format": "backup-chunks-v1",
+    "manifestHash": "18049c198b4bd2609631a1cb9a5914927df9f07a4b49c21eebccf9c7bd091ed6",
+    "files": 3,
+    "originalBytes": 2257172120,
+    "fileBytes": 776803113,
+    "uniqueChunks": 2285,
+    "potentialLogicalReductionBytes": 1480369007,
+    "potentialLogicalReductionPercent": 65.58511838255383,
+    "physicalProductionReclaimedBytes": 0
+  },
+  "restore": [
+    {
+      "bytes": 752375071,
+      "sha256": "5bd528e7014620cc9104a4a5a7d48cdb5d86ef415c299aaee715f2695cce73ef",
+      "sourceUnchanged": true
+    },
+    {
+      "bytes": 752381994,
+      "sha256": "345d154a1aaf6706c6a5c9b3625864a3bae5d8533d3fd5b160751b3773ff86d9",
+      "sourceUnchanged": true
+    },
+    {
+      "bytes": 752415055,
+      "sha256": "48bbea95435a2b26185c2e0443edcef0f9407debf806a7171f6ad877298c03a3",
+      "sourceUnchanged": true
+    }
+  ],
+  "verification": {
+    "windows": {
+      "required": 11,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    "linuxDocker": {
+      "required": 11,
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    "mandatoryManifestAndShards": {
+      "required": 41,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    "credentialScan": "passed",
+    "elapsedMs": 72271
+  },
+  "productionChanges": 0,
+  "originalFilesDeleted": 0,
+  "workingDatabaseRestored": false,
+  "privateEvidence": "outputs/operations/backup-archive-measurement-20261007/summary.json",
+  "limits": [
+    "Files were reconstructed and independently rehashed; no pg_restore was run in this measurement.",
+    "Only three closed Sept29 dumps were measured; this does not estimate all backups or future database growth.",
+    "No production archive replacement, automatic retention, schedule, deletion or storage configuration enabled.",
+    "Other files of full release captures, executable rules and historical/media references remain required."
+  ]
+}

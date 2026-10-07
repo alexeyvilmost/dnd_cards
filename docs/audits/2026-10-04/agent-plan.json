@@ -2946,7 +2946,15 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "backupArchivePreparation": {
+          "evidence": "docs/audits/2026-10-04/execution/DB-04-backup-archive.json",
+          "status": "local_lossless_roundtrip_verified_no_production_archive_replacement",
+          "originalBytes": 2257172120,
+          "archiveFileBytes": 776803113,
+          "potentialLogicalReductionBytes": 1480369007,
+          "physicalProductionReclaimedBytes": 0
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },

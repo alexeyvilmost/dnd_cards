@@ -53,6 +53,7 @@
         "scripts/release/migration-rehearsal.test.mjs",
         "scripts/security/check-no-known-credentials.test.mjs",
         "scripts/database/storage-report.test.mjs",
+        "scripts/database/backup-archive.test.mjs",
         "scripts/testing/suites.test.mjs",
         "scripts/testing/runtime.test.mjs",
         "scripts/testing/go-test-list.test.mjs",
