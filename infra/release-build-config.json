@@ -11,8 +11,12 @@
   "buildkitImage": "moby/buildkit@sha256:cec9f139f45e93c5c69c60f8b07cfad9f43f4ef6b6a6cd917527fea5ff2e3dea",
   "frontendApiUrl": "",
   "frontendMediaVariants": false,
-  "writerPolicy": {"compactReceipts": true, "imageJobs": true, "frozenCatalogs": false},
-  "contentManifestHash": "sha256:cc7b8a35fac552dff5ef59e3d4b1c8d8da5f5e61a28ffb9bcf1d7bc2b91843d6",
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "contentManifestHash": "sha256:d28e25b45750c618327986ab1349e67fc0808a85007dac02b23ffa3b987eaaee",
   "migrationSet": [
     {
       "id": "001_create_image_library",
