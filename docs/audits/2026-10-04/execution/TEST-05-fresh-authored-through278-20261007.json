@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-source-composed-fresh-chain-through278",
+  "recordedAt": "2026-10-07T10:27:46.293Z",
+  "status": "original278-executed-279-original-guard-refused",
+  "sourceCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+  "freshInstallAcceptance": false,
+  "fullHistoricalChainAccepted": false,
+  "originalFullSnapshot": false,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "evidence": {
+    "fresh": {
+      "path": "outputs/testing/test05-historical-source-audit/fresh102_5642981e1611e885a2ba/report.json",
+      "sha256": "sha256:703293a91ad79745bee3b88598515af315fa886e27055e90933b484ec14f3604"
+    },
+    "source": {
+      "path": "outputs/operations/authentic-pre278-composition-1791368542610/receipt.json",
+      "sha256": "sha256:e41f30f10e2a167e28780bb2489444756ed817e795ba2978f2aaf3440776aee8"
+    },
+    "fixture": {
+      "path": "outputs/operations/authentic-pre278-composition-1791368542610/public-source-fixture.json",
+      "sha256": "sha256:c4c4403390b8e87cfadb60df5ae543462e47b84df9489bea639395276008152f"
+    }
+  },
+  "registered": {
+    "count": 303,
+    "hash": "4500b30b199be9c57b1fadacf7b13a20eea07c1ad2d037dbd2e242cda7bd0d06"
+  },
+  "authoredBootstrap": {
+    "sourceIdentitiesBound": 19,
+    "sourceResourcesInserted": 6,
+    "allGameplayAndHistoricalTablesEmpty": true,
+    "historyCanaryRefused": true,
+    "allNonTargetPublicRowsExact": true,
+    "originalMigrationLedgerExact": true
+  },
+  "sourceRecovery": {
+    "nonInsertConditions": 1605,
+    "distinctEntities": 1575,
+    "unresolved": [],
+    "requiredPublicInsertFields": [
+      {
+        "source": "outputs/entity-references-277/before.dump",
+        "sourceHash": "sha256:e551a4ea03c71ac1c561ace45be35c21183655054ae42d2fa033edc5383b8623",
+        "fields": {
+          "cards": [
+            "name",
+            "description",
+            "rarity",
+            "card_number"
+          ],
+          "feats": [
+            "name",
+            "description",
+            "card_number"
+          ],
+          "spells": [
+            "name",
+            "description",
+            "card_number"
+          ],
+          "actions": [
+            "name",
+            "description",
+            "card_number",
+            "action_type"
+          ],
+          "effects": [
+            "name",
+            "description",
+            "card_number",
+            "effect_type"
+          ],
+          "resources": [
+            "resource_id",
+            "name"
+          ]
+        },
+        "sourceUnchanged": true,
+        "cleanup": {
+          "status": "stopped"
+        }
+      },
+      {
+        "source": "outputs/prod-refresh-20260928T0220.dump",
+        "sourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+        "fields": {
+          "cards": [
+            "name",
+            "description",
+            "rarity",
+            "card_number"
+          ],
+          "feats": [
+            "name",
+            "description",
+            "card_number"
+          ],
+          "spells": [
+            "name",
+            "description",
+            "card_number"
+          ],
+          "actions": [
+            "name",
+            "description",
+            "card_number",
+            "action_type"
+          ],
+          "effects": [
+            "name",
+            "description",
+            "card_number",
+            "effect_type"
+          ],
+          "resources": [
+            "resource_id",
+            "name"
+          ]
+        },
+        "sourceUnchanged": true,
+        "cleanup": {
+          "status": "stopped"
+        }
+      }
+    ]
+  },
+  "pre278": {
+    "before": {
+      "targets": 1656,
+      "passed": 1054,
+      "failed": 602
+    },
+    "after": {
+      "targets": 1656,
+      "passed": 1656,
+      "failed": 0
+    },
+    "inserted": 109,
+    "updated": 479,
+    "originalManifestsChanged": false,
+    "allExistingHistoryAndOtherTableRowsExact": true,
+    "allOriginalLedgerRowsExact": true,
+    "manualStatusesAssignedByHydration": false
+  },
+  "original278": {
+    "executed": true,
+    "ledgerBoundary": "278_catalog_mechanics_audit",
+    "originalGuardsPassed": 1656,
+    "repeatAcceptance": false
+  },
+  "refusal279": {
+    "originalGuard": "active item count changed",
+    "expected": 886,
+    "actual": 902,
+    "guardChanged": false,
+    "ordinaryMigrationNotAccepted": true
+  },
+  "checks": {
+    "sourceACL": true,
+    "childACL": true,
+    "sourceHashBefore": true,
+    "isolation": true,
+    "authenticClosedSource": true,
+    "sourceHashAfter": true,
+    "sourceCodeUnchanged": true
+  },
+  "cleanup": {
+    "status": "stopped",
+    "resources": [
+      {
+        "kind": "container",
+        "status": "stopped"
+      },
+      {
+        "kind": "volume",
+        "status": "stopped"
+      }
+    ],
+    "remaining": {
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    }
+  },
+  "failedAttemptsPreserved": [
+    "fresh102_d8603f42e6c7704d2edc/report.json",
+    "fresh102_457ec7ae19e33129bf7e/report.json"
+  ],
+  "next": [
+    "Recover authentic pre279 card membership and field sources from local historical dumps.",
+    "Explain the16 additional active items; adjust only explicit empty bootstrap fixture inputs before any gameplay/history exists.",
+    "Keep original279 manifests and cardinality guard unchanged; compare all actual preconditions before execution.",
+    "Run remaining unchanged migrations and exact full-table repeat; only terminal acceptance may complete TEST-05."
+  ]
+}
