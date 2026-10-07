@@ -3415,10 +3415,12 @@
         },
         "retirement302ImagePair": {
           "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-image-pair.json",
-          "status": "actual_c_d_image_checks_partial_rollback_startup_failed_retry_running",
+          "status": "actual_c_d_local_image_reader_and_rollback_checks_passed",
+          "localImageRollbackChecksPassed": true,
           "rollbackAccepted": false,
           "productionChanges": 0,
-          "productionReady": false
+          "productionReady": false,
+          "browserStatus": "running"
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
