@@ -301,6 +301,37 @@ async function runPersistedSheetWeaponAttack(
     .getByRole('button', { name: 'Ослабляющее', exact: true })).toBeVisible();
 }
 
+test('serves exact display and runtime card batches through the isolated API fixture', async ({ page }) => {
+  const isolatedApi = await installForgeApiFixture(page);
+  const cards = isolatedApi.getCatalogRows('cards').slice(0, 2);
+  expect(cards).toHaveLength(2);
+  const ids = cards.map(card => String(card.id));
+  await page.goto('/rules-lab');
+  const get = (path: string) => page.evaluate(async (url) => {
+    const response = await fetch(url);
+    return { status: response.status, body: await response.json() as JsonRecord };
+  }, path);
+  const details = await Promise.all(ids.map(id => get(`/api/cards/${id}`)));
+  expect(details.map(detail => detail.status)).toEqual([200, 200]);
+
+  for (const endpoint of ['/api/cards/resolve', '/api/cards/runtime/resolve']) {
+    const batch = await get(`${endpoint}?ids=${ids[0]},${ids[1]},${ids[0]}`);
+    expect(batch.status).toBe(200);
+    expect(batch.body.cards).toEqual(details.map(detail => detail.body));
+    for (const query of [
+      '', '?ids=', '?ids=resolve', `?ids=${ids[0]}&ids=${ids[1]}`,
+      `?ids=${Array.from({ length: 129 }, () => ids[0]).join(',')}`,
+    ]) {
+      const invalid = await get(`${endpoint}${query}`);
+      expect(invalid).toEqual({ status: 400, body: { code: 'invalid_card_ids' } });
+    }
+    const missingId = '00000000-0000-0000-0000-000000000001';
+    expect(isolatedApi.getCatalogRows('cards').some(card => card.id === missingId)).toBe(false);
+    const unavailable = await get(`${endpoint}?ids=${ids[0]},${missingId}`);
+    expect(unavailable).toEqual({ status: 404, body: { code: 'cards_unavailable' } });
+  }
+});
+
 test('creates two exact compiled-root characters before running their canonical two-PC world', async ({ page }) => {
   test.slow();
   const browserErrors = captureBrowserErrors(page);

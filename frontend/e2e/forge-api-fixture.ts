@@ -500,8 +500,13 @@ export async function installForgeApiFixture(
       return;
     }
 
-    if (segments[1] === 'cards' && segments[2] === 'runtime' && segments[3] === 'resolve'
-      && segments.length === 4 && request.method() === 'GET') {
+    // Both production routes use the same bounded card projection. Match the
+    // display route before generic /cards/:id so `resolve` is not treated as ID.
+    const isCardBatch = segments[1] === 'cards' && (
+      (segments.length === 3 && segments[2] === 'resolve')
+      || (segments.length === 4 && segments[2] === 'runtime' && segments[3] === 'resolve')
+    );
+    if (isCardBatch && request.method() === 'GET') {
       const values = url.searchParams.getAll('ids');
       const rawIds = values.length === 1 ? values[0].split(',') : [];
       if (!rawIds.length || rawIds.length > 128 || rawIds.some(id => (
