@@ -65,5 +65,39 @@
   "remaining": [
     "Integrate the actual host CLI dispatch/inspection with the durable intent and accepted current evidence.",
     "Publish the exact executor, verify the then-current old/new application pair on a fresh backup, and perform separately verified production retirement."
-  ]
+  ],
+  "projectionIntegration": {
+    "status": "format2_original_intent_verified_through_next_build_baseline",
+    "recordedAt": "2026-10-07T02:42:03.019Z",
+    "windows": {
+      "allRelatedTests": 179,
+      "passed": 179,
+      "failed": 0,
+      "skipped": 0,
+      "precheckedFiles": 12
+    },
+    "linux": {
+      "scope": "projection contract and actual CLI filesystem boundaries",
+      "tests": 6,
+      "passed": 6,
+      "skipped": 0,
+      "receipt": "outputs/operations/retirement-projection-linux-2026-10-07T02-41-21.815Z/receipt.json",
+      "receiptHash": "sha256:c5fc795861ab1dde72d6cb98a63fe2f53e647e902929ed2dcde8641877312efa",
+      "sourceHashes": {
+        "scripts/release/retirement-projection.test.mjs": "sha256:5512360fb626631267054433b9bb6ee14d889a5091b9b0d2693f715bf79d3da3",
+        "scripts/release/retirement-intent.mjs": "sha256:fad74b2a7da6401a88a20e894c17f6a7590a7f8a6c017882c4053ab740eded14",
+        "scripts/release/retirement-outcome-journal.mjs": "sha256:f83ae66a08499d82ee49831927ad24af7e76eb98131d182865f09d1d959c3324",
+        "scripts/release/retirement-execution-result.mjs": "sha256:0824ce00976235a5cd47a24ee04c5afa75dc09e98586d57ad3b15083b86b9c75",
+        "scripts/release/deploy-state.mjs": "sha256:99f76f885644f8d0963095859e1d1ba53c9542ba8ba9c3bc6c288de278d6d7bb",
+        "backend/migrations/data/retire-legacy-characters-302.sql": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+        "backend/migrations/character_lifecycle_301.go": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    "runtimeChanges": 0,
+    "productionChanges": 0
+  }
 }

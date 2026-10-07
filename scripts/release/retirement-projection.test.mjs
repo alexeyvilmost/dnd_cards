@@ -14,6 +14,7 @@ import {evidenceHash} from './validate-manifest.mjs';
 import {projectRetirementObservation,validateRetirementProjection,retirementBaselineReceipt,main} from './retirement-projection.mjs';
 import {verifiedRetirementBaseline,readRetirementBaselineArtifact} from './retirement-baseline.mjs';
 import {verifyBaseline} from './ci-release.mjs';
+import {prepareRetirementExecutionIntent,markRetirementExecutionOutcomeUnknown} from './retirement-intent.mjs';
 function fixture(t){
  const f=retirementStateUnitFixture(),root=mkdtempSync(path.join(tmpdir(),'retirement-projection-'));
  t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('retirement-projection-'));rmSync(root,{recursive:true,force:true});});
@@ -32,6 +33,28 @@ test('current succeeded store projects original manifest and separate installed 
  assert.deepEqual(verifiedRetirementBaseline(f.manifest,receipt,run,p),f.active);assert.equal(verifyBaseline(f.manifest,receipt,run,p),f.manifest);
  assert.deepEqual(readFileSync(path.join(f.root,'active.json')),before);assert.equal(existsSync(path.join(f.root,'deploy.lock')),false);
  assert.equal(verifiedRetirementBaseline(f.manifest,{...receipt,retirementObservationHash:undefined},run,undefined),null);
+});
+test('format2 retains the durable original intent through projection and the next build baseline',async t=>{
+ const f=fixture(t),root=path.join(f.root,'intent-store');mkdirSync(root,{mode:0o700});
+ const store=createDeploymentStore(root);store.writeActive(f.operation.previous);
+ const request=structuredClone(f.active.database.request);delete request.receiptHash;
+ request.kind='execute-character-retirement-302';request.expectedCurrent=structuredClone(f.operation.previous.database.migrationSet);
+ const prepared=await prepareRetirementExecutionIntent({store,executorManifest:f.executorManifest,approvalHash:f.approvalHash,request});
+ const intent=await markRetirementExecutionOutcomeUnknown({store,releaseId:request.releaseId,intentHash:prepared.intentHash});
+ const operation={...f.operation,schemaVersion:2,createdAt:intent.createdAt,executionIntent:intent};
+ store.writeActive(f.active);store.writeOperation(operation);
+ const p=projectRetirementObservation({...f,store,operation}),receipt=retirementBaselineReceipt(p);
+ assert.deepEqual(p.operation.executionIntent,intent);assert.deepEqual(p.active.manifest,f.manifest);
+ const run={repository:f.request.repository,id:42,runAttempt:2,controlCommit:f.request.controlCommit};
+ assert.deepEqual(verifiedRetirementBaseline(f.manifest,receipt,run,p),f.active);
+ assert.deepEqual(verifyBaseline(f.manifest,receipt,run,p),f.manifest);
+ const before=readFileSync(path.join(root,'active.json'));
+ for(const change of [x=>delete x.operation.executionIntent,x=>x.operation.executionIntent.private='PRIVATE_CANARY',x=>x.operation.executionIntent.approvalHash='sha256:'+'f'.repeat(64)]){
+  const altered=structuredClone(p);change(altered);
+  if(altered.operation.executionIntent){const i=altered.operation.executionIntent;i.intentHash=evidenceHash({previous:i.previous,executorManifest:i.executorManifest,approvalHash:i.approvalHash,request:i.request});}
+  rehash(altered);assert.throws(()=>verifyBaseline(f.manifest,{...receipt,retirementObservationHash:evidenceHash(altered)},run,altered));
+ }
+ assert.deepEqual(readFileSync(path.join(root,'active.json')),before);
 });
 test('missing, unattested and coherently altered workflow records cannot enter baseline',t=>{
  const f=fixture(t),p=projectRetirementObservation(f),receipt=retirementBaselineReceipt(p),run={repository:f.request.repository,id:42,runAttempt:2,controlCommit:f.request.controlCommit};
