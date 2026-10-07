@@ -3420,7 +3420,8 @@
           "rollbackAccepted": false,
           "productionChanges": 0,
           "productionReady": false,
-          "browserStatus": "running"
+          "browserStatus": "real_previous_and_candidate_rendered_browser_checks_passed_with_exact_local_oci_cache",
+          "localBrowserChecksPassed": true
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"

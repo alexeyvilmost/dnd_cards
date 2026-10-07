@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "taskId": "CLEAN-02",
   "status": "actual_c_d_local_image_reader_and_rollback_checks_passed",
-  "recordedAt": "2026-10-07T01:39:30.488Z",
+  "recordedAt": "2026-10-07T01:54:03.726Z",
   "acceptedSourcePair": {
     "previous": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
     "candidate": "4ac64458449959fd905cb7b0498f1ea41c82c087"
@@ -110,9 +110,12 @@
   "productionDatabaseRestored": false,
   "paidProviderRequests": 0,
   "limits": [
-    "Passed API checks are not rendered browser proof.",
-    "C/D share their backend and worker sources; they are two accepted application compositions, not two different backend implementations.",
-    "Future production deletion must revalidate the then-current accepted application pair and a fresh backup."
+    "The old and new UI were rendered with real immutable OCI images; the final return to the previous composition checked pending continuation and duplicate command through API.",
+    "C/D share their backend and worker; this does not certify two different backend implementations.",
+    "Application OCI images came from an exact verified existing local cache. Registry download availability is not proven; the failed initial pull remains recorded.",
+    "C/D are historical compositions once another production release is accepted; fresh current-pair and backup validation is still required before production deletion.",
+    "The generic local artifact verifier currently requires the active ledger count: C/D have305 entries, while these native/Linux proofs explicitly add lifecycle301 to306 before retirement302. This transition must be represented explicitly or replaced by a genuinely accepted301 snapshot; counts/manifests are not rewritten.",
+    "Production host executor/approval integration is not yet supported by this local302 profile."
   ],
   "previousAttempt": {
     "helper": "outputs/operations/verify-retired-character-image-readers302-v4-20261007.mjs",
@@ -129,11 +132,231 @@
   },
   "localImageRollbackChecksPassed": true,
   "browser": {
-    "status": "running",
-    "privateDirectory": "outputs/operations/first-capture-private-cfe9/retired_browser302_2026-10-07T01-38-51.906Z",
-    "helper": "outputs/operations/verify-retired-character-browser302-v1-20261007.mjs",
-    "toolSession": 76574,
+    "status": "real_previous_and_candidate_rendered_browser_checks_passed_with_exact_local_oci_cache",
+    "failedAttempt": {
+      "privateDirectory": "outputs/operations/first-capture-private-cfe9/retired_browser302_2026-10-07T01-38-51.906Z",
+      "receiptHash": "sha256:390b36c6900b0f72d699df4ba0837b2f3f4419b506fbf6ea67b64457a8f4623c",
+      "status": "failed_before_any_application_or_browser_check",
+      "actualLinuxExecutor302": {
+        "status": "passed",
+        "sourceCommit": "57f6c2682a46fc75c6ed5724176d1cedd45f96eb",
+        "localDiagnosticBinary": true,
+        "publishedExecutor": false,
+        "receiptHash": "sha256:9aae90c532cd4ad7e005f2e9d02a963d97a2325075da733123ca98099a471699",
+        "repeatApplied": 0
+      },
+      "commandFailure": {
+        "operation": "pull",
+        "subcommand": null,
+        "imageDigestHash": "sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+        "diagnostic": {
+          "reason": "process-exit",
+          "durationMs": 22344,
+          "stdoutBytes": 0,
+          "stderrBytes": 294,
+          "exitCode": 1,
+          "signal": null
+        }
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "resourceCount": 4
+      },
+      "underlyingRegistryError": "Not classified; raw stderr was intentionally not captured."
+    },
+    "retry": {
+      "privateDirectory": "outputs/operations/first-capture-private-cfe9/retired_browser302_2026-10-07T01-44-48.743Z",
+      "helper": "outputs/operations/verify-retired-character-browser302-v2-cache-20261007.mjs",
+      "toolSession": 84712,
+      "status": "passed",
+      "policy": "Only the exact known application RepoDigests with a valid engine image ID can use the already downloaded OCI cache. Each subsequent actual image-contract remains required. No fallback for unknown images and no claim of registry availability.",
+      "receiptHash": "sha256:d6e1f43c6cfb35c92c1fb31e0d5637ca4039d4546e4321a363c29402b1d7b45c",
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "resourceCount": 18
+      }
+    },
+    "registryAvailabilityProven": false,
     "productionChanges": 0,
-    "paidProviderRequests": 0
-  }
+    "paidProviderRequests": 0,
+    "actualLinuxExecutor302": {
+      "status": "passed",
+      "sourceCommit": "57f6c2682a46fc75c6ed5724176d1cedd45f96eb",
+      "localDiagnosticBinary": true,
+      "publishedExecutor": false,
+      "receiptHash": "sha256:9aae90c532cd4ad7e005f2e9d02a963d97a2325075da733123ca98099a471699",
+      "repeatApplied": 0
+    },
+    "checks": [
+      {
+        "id": "image-contract",
+        "generation": "previous",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "generation": "previous",
+        "status": "passed"
+      },
+      {
+        "id": "v3-paper-personal-inventory-equipment-and-exact-retry",
+        "generation": "previous",
+        "status": "passed"
+      },
+      {
+        "id": "actual-browser",
+        "generation": "previous",
+        "status": "passed"
+      },
+      {
+        "id": "image-contract",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "v3-paper-personal-inventory-equipment-and-exact-retry",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "actual-browser",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "pending-decision",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "image-contract",
+        "generation": "rollback",
+        "status": "passed"
+      },
+      {
+        "id": "pending-decision",
+        "generation": "rollback",
+        "status": "passed"
+      },
+      {
+        "id": "duplicate-command",
+        "generation": "rollback",
+        "status": "passed"
+      },
+      {
+        "id": "all-original-ledger-rows-and-retirement-receipt-unchanged-after-three-startups",
+        "status": "passed"
+      }
+    ],
+    "renderedScenarios": [
+      {
+        "generation": "previous",
+        "status": "passed",
+        "browserVersion": "151.0.7922.34",
+        "checks": {
+          "api-routing": "passed",
+          "character": "passed",
+          "equipment": "passed",
+          "paper": "passed",
+          "json-export": "passed",
+          "pdf-export": "passed",
+          "inventory": "passed",
+          "combat": "passed"
+        }
+      },
+      {
+        "generation": "candidate",
+        "status": "passed",
+        "browserVersion": "151.0.7922.34",
+        "checks": {
+          "api-routing": "passed",
+          "character": "passed",
+          "equipment": "passed",
+          "paper": "passed",
+          "json-export": "passed",
+          "pdf-export": "passed",
+          "inventory": "passed",
+          "combat": "passed"
+        }
+      }
+    ],
+    "localPinnedImageCache": {
+      "registryAvailabilityProven": false,
+      "policy": "verify-exact-existing-repodigest-and-engine-id-before-every-app-start",
+      "observations": [
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "engineImageId": "sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:1ab2a5e29cee27f97cefa66d5e60c8be35f88e69dd2b83478112e41aa7ef7ae3",
+          "engineImageId": "sha256:1ab2a5e29cee27f97cefa66d5e60c8be35f88e69dd2b83478112e41aa7ef7ae3",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "engineImageId": "sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "engineImageId": "sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:1ab2a5e29cee27f97cefa66d5e60c8be35f88e69dd2b83478112e41aa7ef7ae3",
+          "engineImageId": "sha256:1ab2a5e29cee27f97cefa66d5e60c8be35f88e69dd2b83478112e41aa7ef7ae3",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "engineImageId": "sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "engineImageId": "sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:6bbc0720efe3414f4b35dcb1c3950a2391cd3455458c2119bb93e083dcfb4285",
+          "engineImageId": "sha256:6bbc0720efe3414f4b35dcb1c3950a2391cd3455458c2119bb93e083dcfb4285",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "engineImageId": "sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "engineImageId": "sha256:664def6ca60755875eef517ed5e838a132adaad1b1f6b50d779bee2295b8ff68",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:1ab2a5e29cee27f97cefa66d5e60c8be35f88e69dd2b83478112e41aa7ef7ae3",
+          "engineImageId": "sha256:1ab2a5e29cee27f97cefa66d5e60c8be35f88e69dd2b83478112e41aa7ef7ae3",
+          "status": "verified-existing-immutable-oci"
+        },
+        {
+          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "engineImageId": "sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+          "status": "verified-existing-immutable-oci"
+        }
+      ]
+    },
+    "completedAt": "2026-10-07T01:53:32.601Z",
+    "sourceDumpUnchanged": true,
+    "sqlSourceUnchanged": true,
+    "helperSourceUnchanged": true
+  },
+  "localBrowserChecksPassed": true
 }
