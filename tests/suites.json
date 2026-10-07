@@ -25,6 +25,7 @@
         "scripts/release/plan-components.test.mjs",
         "scripts/testing/guards.test.mjs",
         "scripts/testing/catalog-snapshot.test.mjs",
+        "scripts/testing/historical-catalog-source.test.mjs",
         "scripts/testing/acceptance-context.test.mjs",
         "scripts/testing/movement-encounter-fixture.test.mjs",
         "scripts/testing/ui-server.test.mjs",

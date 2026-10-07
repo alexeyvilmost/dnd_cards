@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "kind": "checked-in-public-historical-source-package-ordinary-chain-proof",
+  "status": "public-source-package-and-local-full-chain-passed",
+  "recordedAt": "2026-10-07T11:27:03.283Z",
+  "applicationSourceCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+  "productionChanges": 0,
+  "freshInstallAcceptance": false,
+  "standardMigrationProfileIntegrated": false,
+  "sourcePackage": {
+    "manifestPath": "scripts/testing/fixtures/historical-catalog/manifest.json",
+    "manifestHash": "sha256:ecd833e983374f5c9c5da614c2cd7179817453f9ca505723719b661d35012aa2",
+    "datasets": {
+      "pre278": {
+        "file": "pre278.json.gz",
+        "bytes": 482515,
+        "sha256": "sha256:55ce0cf47f258ba5ffea28d4e65a3e24f682c0a18edfe28e0e6b82defe835b35",
+        "jsonBytes": 2973500,
+        "jsonSha256": "sha256:76254e4dd7563754b674e9c40dcf75af5613fee48b4fb3ae6e92cecc2f2e5d2a",
+        "rows": 1575,
+        "originalSourceSha256": "sha256:c4c4403390b8e87cfadb60df5ae543462e47b84df9489bea639395276008152f"
+      },
+      "pre279": {
+        "file": "pre279.json.gz",
+        "bytes": 833845,
+        "sha256": "sha256:8b687b6bdf6e25d583cdbc51b3f56affaa9aa02511560f0733e16ab126418dbd",
+        "jsonBytes": 4824378,
+        "jsonSha256": "sha256:98d53e57ee9234e8626540cdfd83de1acca18a94c8698e3eb06569726a11f203",
+        "rows": 2374,
+        "originalSourceSha256": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c"
+      },
+      "caster296": {
+        "file": "caster296.json.gz",
+        "bytes": 16723,
+        "sha256": "sha256:381cf249b3df3265886e13982ba2f2538b66b40566f6a1a1ba9382f68947a275",
+        "jsonBytes": 67322,
+        "jsonSha256": "sha256:92d7b44c4005653b8e8a49ba0d32a4613557f3a60ae828d6d5ad9411c08b82e8",
+        "rows": 42,
+        "originalSourceSha256": "sha256:58a00175b718d3057503eb26a9d1c27e323009817cabcb1be7f720492b82c04e"
+      },
+      "cardMembership": {
+        "file": "cardMembership.json.gz",
+        "bytes": 36944,
+        "sha256": "sha256:7ecae4bae91dd9b10c5cc261e3fb94f138df74366f5ed0d7538fc5e389278e63",
+        "jsonBytes": 131586,
+        "jsonSha256": "sha256:c28900f7676d7053a36c72d52214169edca7d5ea6316f1d81c3ae10054482e26",
+        "rows": 1011,
+        "originalSourceSha256": "sha256:16a4f31db1b0af729c0f37fb3222a4c8842e12a1a84e50cdbca3dfd9056f36ee"
+      }
+    },
+    "totalCompressedBytes": 1370027,
+    "privateDumpsIncluded": false,
+    "supportOrCertificatesIncluded": false,
+    "identityUnionDerivedWithoutDuplicateDataset": true
+  },
+  "sourceFieldValidation": {
+    "pre278": {
+      "originalNonInsertGuards": 1605,
+      "remainingOriginalPreimageFieldsExact": true,
+      "retainedValuesEqualActualSource": true
+    },
+    "pre279": {
+      "originalNonInsertGuards": 2374,
+      "remainingOriginalPreimageFieldsExact": true,
+      "retainedValuesEqualActualSource": true
+    },
+    "caster296": {
+      "originalGuards": 42,
+      "sourceFieldsExact": true
+    }
+  },
+  "localChecks": {
+    "requiredNodeTests": 41,
+    "passed": 41,
+    "failed": 0,
+    "skipped": 0,
+    "newSourceContractTests": 9
+  },
+  "ordinaryChain": {
+    "report": "outputs/testing/test05-historical-source-audit/fresh102_a20ccb282665f37743b3/report.json",
+    "reportHash": "sha256:1e4b1f3a36831bc9e079aeba9db6754b59f55ec685e6f2d39591eba23ab983b1",
+    "registered": 303,
+    "boundary": "307_catalog_presentation",
+    "final": {
+      "ledgerRows": 303,
+      "ledgerIdsHash": "4500b30b199be9c57b1fadacf7b13a20eea07c1ad2d037dbd2e242cda7bd0d06",
+      "beforeRepeat": {
+        "ledgerRows": 303,
+        "ledgerHash": "c9cba1c2f3ea1303ccb07d1f6d1ec3aa796155bfa92efaf393ae3fb79de1be0e",
+        "spellRows": 510,
+        "spellAllHash": "5c1a414c9c6a12f7ff4b067deeae3bf8eac5b5588b351263d792e58463d1a361",
+        "spellNonSupportHash": "20b038930b57b4a7e2b6a52fbb3ea193e8f7f4826f46c8725bda6a2d9ce966b4"
+      },
+      "allTablesBeforeRepeat": {
+        "tableCount": 97,
+        "rowCount": 24591,
+        "hash": "e8d7554299b1f4a8631bddafe48396205d8384f9b2650c149475c9dad18de9af"
+      },
+      "revocations": [
+        {
+          "migration": "102",
+          "rows": 1,
+          "preimagesExact": true
+        },
+        {
+          "migration": "103",
+          "rows": 1,
+          "preimagesExact": true
+        },
+        {
+          "migration": "119",
+          "rows": 1,
+          "preimagesExact": true
+        }
+      ],
+      "manual": {
+        "targetRows": 4,
+        "noAutomaticVerified": true,
+        "allUnlocked": true
+      },
+      "afterRepeat": {
+        "ledgerRows": 303,
+        "ledgerHash": "c9cba1c2f3ea1303ccb07d1f6d1ec3aa796155bfa92efaf393ae3fb79de1be0e",
+        "spellRows": 510,
+        "spellAllHash": "5c1a414c9c6a12f7ff4b067deeae3bf8eac5b5588b351263d792e58463d1a361",
+        "spellNonSupportHash": "20b038930b57b4a7e2b6a52fbb3ea193e8f7f4826f46c8725bda6a2d9ce966b4"
+      },
+      "allTablesAfterRepeat": {
+        "tableCount": 97,
+        "rowCount": 24591,
+        "hash": "e8d7554299b1f4a8631bddafe48396205d8384f9b2650c149475c9dad18de9af"
+      }
+    },
+    "checks": {
+      "sourceACL": true,
+      "childACL": true,
+      "sourceHashBefore": true,
+      "isolation": true,
+      "authenticClosedSource": true,
+      "repeatAllPublicRowsExact": true,
+      "repeatNoLedgerOrSpellChanges": true,
+      "sourceHashAfter": true,
+      "sourceCodeUnchanged": true
+    },
+    "cleanup": {
+      "status": "stopped",
+      "resources": [
+        {
+          "kind": "container",
+          "status": "stopped"
+        },
+        {
+          "kind": "volume",
+          "status": "stopped"
+        }
+      ],
+      "remaining": {
+        "containers": 0,
+        "volumes": 0,
+        "networks": 0
+      }
+    }
+  },
+  "limitations": [
+    "Native caller and staged orchestration remain in ignored local outputs",
+    "Actual legacy certification revocations still come from a protected authentic archive; they are deliberately excluded from the public package",
+    "Mandatory reproducible fresh migration profile and CI remain open; public-source unit tests alone do not close TEST-05"
+  ]
+}
