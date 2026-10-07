@@ -4,12 +4,15 @@
 import {evidenceHash} from './validate-manifest.mjs';
 import {validateActive,assertObserved} from './deploy-state.mjs';
 import {databaseStateFromRetirementExecution,stateWithDatabase,databaseMigrationSet} from './migration-transition.mjs';
+import {validateRetirementExecutionIntent,assertRetirementExecutionIntentBinding} from './retirement-intent.mjs';
+import {retirementInspectionRequestForExecution} from './retirement-execution-result.mjs';
 
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const kind='character-retirement-observation-302';
 export function validateRetirementOutcomeJournal(operation){
-  if(operation?.schemaVersion!==1||operation.kind!==kind||!['retirement_observed','recovery_required','succeeded'].includes(operation.status)
-    ||!same(Object.keys(operation).sort(),['schemaVersion','kind','releaseId','status','previous','desired','transitionHash','createdAt','updatedAt'].sort()))throw Error('Exact retirement observation journal required');
+  const keys=['schemaVersion','kind','releaseId','status','previous','desired','transitionHash','createdAt','updatedAt',...(operation?.schemaVersion===2?['executionIntent']:[])];
+  if(![1,2].includes(operation?.schemaVersion)||operation.kind!==kind||!['retirement_observed','recovery_required','succeeded'].includes(operation.status)
+    ||!same(Object.keys(operation).sort(),keys.sort()))throw Error('Exact retirement observation journal required');
   validateActive(operation.previous);validateActive(operation.desired);
   if(operation.transitionHash!==evidenceHash({previous:operation.previous,desired:operation.desired}))throw Error('Retirement observation transition bytes changed');
   const database=operation.desired.database;
@@ -19,6 +22,12 @@ export function validateRetirementOutcomeJournal(operation){
     if(!same(operation.previous.database,database))throw Error('Retirement journal changed an already recorded observation');
   }else if(!same(database.baselineMigrationSet,databaseMigrationSet(operation.previous))
     ||database.request.expectedAdditiveSchemaProofHash!==operation.previous.database?.schemaProofHash)throw Error('Retirement journal changed the prior database proof');
+  if(operation.schemaVersion===2){
+    const intent=validateRetirementExecutionIntent(operation.executionIntent);
+    if(intent.status!=='retirement_outcome_unknown'||intent.releaseId!==operation.releaseId||!same(intent.previous,operation.previous)
+      ||intent.approvalHash!==database.approvalHash||intent.executorManifest.components.backend.imageDigest!==database.executorImageDigest
+      ||!same(retirementInspectionRequestForExecution(intent.request,database.request.receiptHash),database.request))throw Error('Retirement outcome changed its original execution intent');
+  }
   for(const date of [operation.createdAt,operation.updatedAt])if(typeof date!=='string'||!Number.isFinite(Date.parse(date)))throw Error('Retirement journal timestamp required');
   return operation;
 }
@@ -44,15 +53,20 @@ export async function recordRetirementExecutionOutcome({store,executorManifest,a
   const unlock=store.lock();
   try{
     const active=store.active(),existing=store.operation(request.releaseId);
-    if(existing){
+    let executionIntent;
+    if(existing?.kind==='character-retirement-intent-302'){
+      assertRetirementExecutionIntentBinding(existing,{active,executorManifest,approvalHash,request});
+      if(existing.status!=='retirement_outcome_unknown')throw Error('Retirement execution uncertainty must be persisted before command outcome');
+      executionIntent=structuredClone(existing);
+    }else if(existing){
       validateRetirementOutcomeJournal(existing);
       const database=databaseStateFromRetirementExecution({active:existing.previous,executorManifest,approvalHash,request},receipt);
       if(!same(database,existing.desired.database))throw Error('Another retirement outcome cannot replace the journal');
       return await finish({store,operation:existing,observe});
     }
-    if(store.pending().length)throw Error('Another operation requires reconciliation');
+    if(store.pending().some(item=>item.releaseId!==request.releaseId))throw Error('Another operation requires reconciliation');
     const database=databaseStateFromRetirementExecution({active,executorManifest,approvalHash,request},receipt);
-    const now=new Date().toISOString(),desired=stateWithDatabase(active,database),operation={schemaVersion:1,kind,releaseId:request.releaseId,status:'retirement_observed',previous:active,desired,transitionHash:evidenceHash({previous:active,desired}),createdAt:now,updatedAt:now};
+    const now=new Date().toISOString(),desired=stateWithDatabase(active,database),operation={schemaVersion:executionIntent?2:1,kind,releaseId:request.releaseId,status:'retirement_observed',previous:active,desired,transitionHash:evidenceHash({previous:active,desired}),createdAt:executionIntent?.createdAt??now,updatedAt:now,...executionIntent?{executionIntent}:{}};
     validateRetirementOutcomeJournal(operation);store.writeOperation(operation);
     return await finish({store,operation,observe});
   }finally{unlock();}

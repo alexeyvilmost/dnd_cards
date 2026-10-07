@@ -11,6 +11,7 @@ const executionKeys=['schemaVersion','kind','releaseId','expectedCurrent','sqlSo
 function inspectionRequest(request,receiptHash){
   return {...structuredClone(request),kind:'inspect-character-retirement-302',expectedCurrent:[...structuredClone(request.expectedCurrent),{id:retirementMigrationId,checksum:retirementSQLHash}],receiptHash};
 }
+export {inspectionRequest as retirementInspectionRequestForExecution};
 export function validateRetirementExecutionRequest(request){
   exact(request,executionKeys);
   if(request.kind!=='execute-character-retirement-302'||!Array.isArray(request.expectedCurrent)||!request.expectedCurrent.length||request.expectedCurrent.some(row=>row.id===retirementMigrationId))throw Error('Explicit retirement requires the complete prior migration set');

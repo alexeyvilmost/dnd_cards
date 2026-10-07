@@ -129,7 +129,7 @@ export async function deploy({store, adapter, candidate, bundle, beforePrepare})
     if(beforePrepare)await beforePrepare(active); // lock held; before the first journal or application mutation
     const existing = store.operation(candidate.releaseId);
     if (existing) {
-      if(existing.kind==='character-retirement-observation-302')throw Error('Retirement observation requires its separate reconciliation path');
+      if(['character-retirement-observation-302','character-retirement-intent-302'].includes(existing.kind))throw Error('Retirement observation requires its separate reconciliation path');
       if (existing.plan.candidateHash !== evidenceHash(candidate)) throw Error('Release ID collision');
       if (existing.status === 'succeeded' && same(active.manifest, candidate)) {
         assertObserved(active, await adapter.observe(active)); return {...existing, repeated: true};
@@ -202,7 +202,7 @@ export async function recover({store, adapter, releaseId, rollback = false}) {
   const unlock = store.lock();
   try {
     const operation = store.operation(releaseId);
-    if(operation?.kind==='character-retirement-observation-302')throw Error('Retirement observation requires its separate reconciliation path');
+    if(['character-retirement-observation-302','character-retirement-intent-302'].includes(operation?.kind))throw Error('Retirement observation requires its separate reconciliation path');
     if (!operation) throw Error('No operation to inspect');
     const plan = operation.plan;
     const active=store.active();

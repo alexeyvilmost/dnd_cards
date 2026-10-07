@@ -3438,6 +3438,16 @@
             "skipped": 0,
             "productionChanges": 0
           }
+        },
+        "retirement302PreExecutionIntent": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-intent.json",
+          "status": "local_durable_preexecution_intent_and_unknown_outcome_verified",
+          "windowsPassed": 178,
+          "linuxPassed": 178,
+          "newCases": 15,
+          "actualAbruptChildExits": 2,
+          "productionReady": false,
+          "productionChanges": 0
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"

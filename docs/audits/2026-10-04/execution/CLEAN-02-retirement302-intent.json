@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "local_durable_preexecution_intent_and_unknown_outcome_verified",
+  "recordedAt": "2026-10-07T02:28:52.264Z",
+  "sourceHashes": {
+    "scripts/release/produce-writer-browser-proof.test.mjs": "sha256:d1941cb522df68974ca270fa9f2fd1b228db81aa567833a8ce28433b6be041a7",
+    "scripts/release/rehearsal-scenarios.test.mjs": "sha256:f6ee12e26064a063411cbe5ac978ef9e1a760dc7adcd412cf3c8eaa86791fa2b",
+    "scripts/release/retirement-artifacts.test.mjs": "sha256:740871df724a3152a75e177d9cbe88c736a045283596759f9d7928480f9f87cc",
+    "scripts/release/retirement-build-baseline.test.mjs": "sha256:01e69b68a25d7f0f006b88405019058b1c42f2482e03f6517f9c28d575446424",
+    "scripts/release/retirement-execution-result.test.mjs": "sha256:59335647955d5bf592e0256d4279ff86bf89d28c553e91801076e7b6d7909813",
+    "scripts/release/retirement-outcome-journal.test.mjs": "sha256:bd87ac511be1173c90ee23c42251ffa47cc834a7d4301796dd2b01c745a8c9dc",
+    "scripts/release/retirement-projection.test.mjs": "sha256:38e88467175c45a29497b3ed263535a6c6b974375fb037fca5cc96130745029a",
+    "scripts/release/retirement-registry.test.mjs": "sha256:21b6ad0393a1643d7b7311d12db12e20b8529aa23d33f978cda54d76bb998342",
+    "scripts/release/retirement-state.test.mjs": "sha256:b11254b34ae3247cc17f3897bf7422aa6f0f279777911b6899d19af740273e03",
+    "scripts/release/validate-manifest.test.mjs": "sha256:df37c3e8c269aba8f44a0f48a08202a03713b6f7f5878b68a5da391726f3468b",
+    "scripts/release/writer-fixture-cli.test.mjs": "sha256:33fb7b17817c1d30ce464b3cdc06c7f7d6069b346927718f5a1b540014e48c3c",
+    "scripts/release/writer-runtime-profile.test.mjs": "sha256:9ba6f993de18d3b03ea5516de56312278a606e4dd5ceb07bf4dd247fe3bf0f67",
+    "scripts/release/retirement-intent.mjs": "sha256:fad74b2a7da6401a88a20e894c17f6a7590a7f8a6c017882c4053ab740eded14",
+    "scripts/release/retirement-outcome-journal.mjs": "sha256:f83ae66a08499d82ee49831927ad24af7e76eb98131d182865f09d1d959c3324",
+    "scripts/release/retirement-execution-result.mjs": "sha256:0824ce00976235a5cd47a24ee04c5afa75dc09e98586d57ad3b15083b86b9c75",
+    "scripts/release/deploy-state.mjs": "sha256:99f76f885644f8d0963095859e1d1ba53c9542ba8ba9c3bc6c288de278d6d7bb",
+    "backend/migrations/data/retire-legacy-characters-302.sql": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+    "backend/migrations/character_lifecycle_301.go": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
+  },
+  "windows": {
+    "tests": 178,
+    "passed": 178,
+    "failed": 0,
+    "skipped": 0,
+    "precheckedFiles": 12
+  },
+  "linux": {
+    "receipt": "outputs/operations/retirement-intent-linux-2026-10-07T02-23-28.819Z/receipt.json",
+    "receiptHash": "sha256:6f9d980f5932ba3abeec3b21bd661d58bff3251498dbbc5e146352d4bfb782ae",
+    "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+    "engineImageId": "sha256:a4b4a603b6c0e10ec6bb0072ba7252818d6fe95667650f7813ae2cae7d44eb1b",
+    "counts": {
+      "tests": 178,
+      "passed": 178,
+      "failed": 0,
+      "skipped": 0
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "network": "none",
+    "readOnlySource": true
+  },
+  "newTests": 15,
+  "actualAbruptChildExitTests": 2,
+  "protocol": [
+    "Persist the immutable request, previous application and database state, exact executor manifest and approval hash under the shared store lock before dispatch.",
+    "Persist outcome_unknown before the separate explicit CLI command. This module never sends that command.",
+    "Reject changed requests or baselines and block ordinary deployment/recovery while the retirement intent is pending.",
+    "Promote the same intent to journal schemaVersion2 only after the existing exact-result validator accepts the receipt; retain the full original intent.",
+    "Historical schemaVersion1 journals remain unchanged. Read-only reconciliation never invokes execution."
+  ],
+  "scope": "Synthetic retirement metadata, real filesystem persistence and actual terminated child processes. No SQL or production application execution in these tests.",
+  "productionExecutionSupported": false,
+  "productionReady": false,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "remaining": [
+    "Integrate the actual host CLI dispatch/inspection with the durable intent and accepted current evidence.",
+    "Publish the exact executor, verify the then-current old/new application pair on a fresh backup, and perform separately verified production retirement."
+  ]
+}
