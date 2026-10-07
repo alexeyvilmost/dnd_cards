@@ -205,7 +205,7 @@
     {
       "id": "PERF-02",
       "title": "Короткая транзакция экипировки и единая подготовка начала боя",
-      "status": "current_source_browser_measured_default_activation_pending",
+      "status": "production_runtime_activation_independently_verified",
       "evidence": "docs/audits/2026-10-04/execution/PERF-02.md",
       "remaining_gates": [
         "Verified runtime activation and rollback of the read-only initiative-options path; production flag currently OFF."
@@ -235,21 +235,97 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
+      "current_verification": "docs/audits/2026-10-04/execution/PERF-02-D229-production-activation-20261007.json",
       "latest_execution_result": {
-        "record": "docs/audits/2026-10-04/execution/PERF-02-initiative-choice-20261007.json",
-        "status": "locally-verified-frontend-offer-preview",
         "demonstrated": [
-          "Current-source 90 measured browser runs recorded separately; duplicate participant builder30->0 with the documented median/tail tradeoff.",
+          "Seven private canonical CPU/real HTTP experiments, exact retry/reload, source stability and owned cleanup measured.",
+          "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance.",
+          "Current source-C sequential native 30x3 browser comparison: duplicate participant builder30->0; observed full-battle p95 improved with approximately equal median; explicit options-delay and prefetch SQL regressions recorded.",
           "Real local browser confirmed two data-defined action/cost variants, canonical row/icon preview, 1/2/6-member parties, unchanged read-only offers, rejected foreign action and exactly-once cost/retry/reload across all party rows."
         ],
         "limitations": [
-          "Production initiative-options flag remains OFF; local correctness is not production activation or universal latency improvement. Existing action background GET remains."
+          "D229 production activation is independently verified; prior local latency comparisons do not constitute a fresh target-host latency acceptance."
         ],
         "nextAcceptance": [
-          "Bind default options configuration/rollback to actual verified runtime; retain prefetch OFF."
+          "Retain explicit cache/prefetch OFF and preserved historical artifacts; frontend-only a161 has a separate acceptance."
         ],
-        "sourceBaseCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d"
+        "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
+        "currentIntegratedChoice": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-02-integrated-initiative-20261007.json",
+          "sourceCommit": "d8e1e966a7691ce42a36343333f12a2fe6d7abff",
+          "upstreamMain": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+          "browserCases": 4,
+          "pageErrors": 0,
+          "cleanupErrors": 0,
+          "lifecycle301Recorded": true,
+          "productionFlagChanged": false,
+          "remaining": "Verified runtime configuration activation and rollback; no fresh latency claim."
+        },
+        "initiativeRuntimeActivation": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-02-initiative-runtime-activation.json",
+          "status": "locally_prepared_initiative_options_activation_pending_next_release",
+          "composeHash": "sha256:74aa25c5a1849d3e570b14c7fa0ed7a99faae7650f651d6b140d2630288eb212",
+          "actualComposeParsing": "passed",
+          "releaseContractsPassed": 27,
+          "productionChanges": 0
+        },
+        "currentIntegratedLatency": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-02-integrated-initiative-timing-20261007.json",
+          "status": "current_integrated_initiative_latency_observed_local",
+          "off": {
+            "measuredSamples": 30,
+            "initiativeMs": {
+              "p50": 2025,
+              "p95": 2122.9000000059605
+            },
+            "battleMs": {
+              "p50": 2396.7000000178814,
+              "p95": 2679.5999999940395
+            },
+            "duplicateBrowserParticipantBuilds": 30
+          },
+          "on": {
+            "measuredSamples": 30,
+            "initiativeMs": {
+              "p50": 210.69999998807907,
+              "p95": 435.5
+            },
+            "battleMs": {
+              "p50": 365.69999998807907,
+              "p95": 865.2000000178814
+            },
+            "duplicateBrowserParticipantBuilds": 0
+          },
+          "productionFlagChanged": false
+        },
+        "currentEquipmentBrowser20261007": {
+          "status": "measured_no_general_enablement_gain",
+          "source": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+          "report": "docs/audits/2026-10-04/execution/PERF-02-equipment-current-source-20261007.json",
+          "commands": 372,
+          "equipmentIntentActivated": false,
+          "sortedUIExperimentReverted": true
+        },
+        "referenceQueryOptimization": {
+          "evidence": "docs/audits/2026-10-04/execution/PERF-02-reference-query-20261007.json",
+          "status": "canonical_reference_query_optimized_locally_measured_equipment_activation_prepared",
+          "browserCommands": 496,
+          "newBrowserCommands": 248,
+          "authorityRequiredParentTests": 7,
+          "equipmentIntentProductionActivated": false,
+          "productionChanges": 0
+        },
+        "productionRuntimeActivation": {
+          "record": "docs/audits/2026-10-04/execution/PERF-02-D229-production-activation-20261007.json",
+          "status": "production_application_and_runtime_activation_independently_verified",
+          "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+          "deploymentRun": 37581756410,
+          "deploymentAttempt": 2,
+          "initiativeActivationVerified": true,
+          "equipmentIntentActivationVerified": true,
+          "protectedExecutionProfileVerified": true,
+          "productionLatencyComparison": false
+        }
       },
       "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",

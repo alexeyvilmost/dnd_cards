@@ -1290,7 +1290,7 @@
         3,
         6
       ],
-      "status": "reference_query_optimized_measured_equipment_activation_prepared",
+      "status": "production_runtime_activation_independently_verified",
       "steps": [
         "Сначала описать existing equip pipeline и выделить условную ветку: worker под lock нужен при изменении resource projection; не утверждать, что любой equip использует её. Сохранить existing pending command/retry/replayed receipt semantics.",
         "Добавить authoritative intent path equip/unequip. Загрузить разрешённый saved character/run и immutable catalog inputs, выполнить общий canonical preparation/стоимость вне write transaction. Браузер не задаёт авторитетные resource maps.",
@@ -1347,10 +1347,10 @@
           "Real local browser confirmed two data-defined action/cost variants, canonical row/icon preview, 1/2/6-member parties, unchanged read-only offers, rejected foreign action and exactly-once cost/retry/reload across all party rows."
         ],
         "limitations": [
-          "Production initiative-options flag remains OFF; local correctness is not production activation or universal latency improvement. Existing action background GET remains."
+          "D229 production activation is independently verified; prior local latency comparisons do not constitute a fresh target-host latency acceptance."
         ],
         "nextAcceptance": [
-          "Bind default options configuration/rollback to actual verified runtime; retain prefetch OFF."
+          "Retain explicit cache/prefetch OFF and preserved historical artifacts; frontend-only a161 has a separate acceptance."
         ],
         "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
         "currentIntegratedChoice": {
@@ -1419,13 +1419,15 @@
           "productionChanges": 0
         },
         "productionRuntimeActivation": {
-          "record": "docs/audits/2026-10-04/execution/PERF-02-production-runtime-discrepancy-20261007.json",
-          "status": "application_accepted_runtime_activation_pending_next_canonical_deployment",
-          "acceptedApplicationCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
-          "actualInitiativeEnabled": false,
-          "actualEquipmentIntentEnabled": false,
-          "preparedTemplateSource": "d2295bf1a06f65bc0c666697ccd04e542816e963",
-          "productionActivationVerified": false
+          "record": "docs/audits/2026-10-04/execution/PERF-02-D229-production-activation-20261007.json",
+          "status": "production_application_and_runtime_activation_independently_verified",
+          "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+          "deploymentRun": 37581756410,
+          "deploymentAttempt": 2,
+          "initiativeActivationVerified": true,
+          "equipmentIntentActivationVerified": true,
+          "protectedExecutionProfileVerified": true,
+          "productionLatencyComparison": false
         }
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
@@ -2373,7 +2375,14 @@
         ],
         "productionAcceptance": "verified-for-full-automatic-delivery",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+        "latestProductionRuntimeActivation": {
+          "record": "docs/audits/2026-10-04/execution/PERF-02-D229-production-activation-20261007.json",
+          "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+          "deploymentRun": 37581756410,
+          "attempt": 2,
+          "status": "independently_verified"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
     },
@@ -3628,6 +3637,17 @@
           "linuxTargetedPassed": 46,
           "productionReady": false,
           "productionChanges": 0
+        },
+        "retirement302CurrentPublishedPair": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-current-published-pair-20261007.json",
+          "status": "current_full_row_archive_and_published_oci_retirement_readers_locally_verified",
+          "sourceCapture": "37581756410/2",
+          "actualFullRowArchiveRestore": true,
+          "publishedImageApiChecks": 11,
+          "currentPublishedPairBrowserProof": false,
+          "productionReady": false,
+          "productionChanges": 0,
+          "requiresFreshProofAfter307": true
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"

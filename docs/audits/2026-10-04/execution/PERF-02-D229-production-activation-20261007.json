@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "status": "production_application_and_runtime_activation_independently_verified",
+  "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+  "verifiedAt": "2026-10-07T07:12:17.132Z",
+  "deployment": {
+    "run": 37581756410,
+    "attempt": 2,
+    "conclusion": "success",
+    "artifact": 11466363373,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37581756410"
+  },
+  "manifestHash": "sha256:07425447d37cf5ee1ad07fd798bb7fbef4cdca170c32873ad906df22cb84adf4",
+  "projectionHash": "sha256:8c95834c77b70d163b91bf3a43affa5db59f6ce18bc18c9338a2a1dd0f9faa14",
+  "protectedAnchorHash": "sha256:3b8bc774e83cb5c1349c8383f17a3bc4367d99043816429091eac130cd4a5384",
+  "components": {
+    "backend": {
+      "containerId": "3fb713de9ac92970a7d67ede94b6a4e4c33a6d55392b8429db02c9200f68cefe",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:25c9f06622f03cbf488828e227630a0009d26405c5b4ac4f6815f64cc6a93293",
+      "health": "healthy",
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963"
+    },
+    "frontend": {
+      "containerId": "955ac1189ef0216168afd8dada278627465b57ba2b15d0e22236502b622a3360",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:51c10473b74abb833dfe5ee40a62bcbbbdc309126c6cc3d1538c0cb4bcef662b",
+      "health": "healthy",
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963"
+    },
+    "rulesWorker": {
+      "containerId": "2c7e0e530461a3759ee05102a815914a3f924c6fcc525b7479c57594ea972050",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:6da838ac8fa71b0eed8aedc57004e72f8a15e9ed49b5930f0ded2834e3bbc4ef",
+      "health": "healthy",
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963"
+    }
+  },
+  "flags": {
+    "RULES_INITIATIVE_OPTIONS_ENABLED": "1",
+    "RULES_EQUIPMENT_INTENT_ENABLED": "1",
+    "RULES_PREPARATION_CACHE_ENABLED": "0",
+    "RULES_CATALOG_PREFETCH_ENABLED": "0",
+    "RULES_CATALOG_BATCH_ENABLED": "1",
+    "RULES_WORKER_MIRRORS_ENABLED": "1",
+    "DB_COMPACT_RECEIPTS": "1",
+    "DB_FROZEN_CATALOGS": "0",
+    "IMAGE_JOBS_ENABLED": "1"
+  },
+  "workerArtifactHash": "sha256:cc8555d452b5ee8d93affcd5609c4195d0c0b443b2c5312785466a943ea40730",
+  "migrationVersions": 306,
+  "initiativeActivationVerified": true,
+  "equipmentIntentActivationVerified": true,
+  "protectedExecutionProfileVerified": true,
+  "independentVerificationFileHash": "sha256:70d04eade09b166ffd1be6217ea6f80462eb5c37ceacb5e8a38282efa7c70719",
+  "actualRunFileHash": "sha256:e32432ee30883537cbef8b33074358b2b082cb28006f2768078b6b692a1ae7e2",
+  "applicationRollbackDatabaseRestore": false,
+  "paidProviderRequests": 0,
+  "limitations": [
+    "Activation and health are proven; no new production latency comparison was performed.",
+    "Frontend consumer a161 is a separate release and is not accepted by this D229 evidence.",
+    "Retirement302 was not executed on production."
+  ]
+}

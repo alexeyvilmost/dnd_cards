@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "status": "actual_ci_requires_full_verification_frontend_image_only_build",
+  "observedAt": "2026-10-07T07:16:49.123Z",
+  "sourceCommit": "a1614e16ff33e0a013bb7a6ce79a7d2dfae9f5d7",
+  "ciRun": 37585930719,
+  "attempt": 1,
+  "planningArtifact": 11465584619,
+  "planningFileHash": "sha256:99962f7007842031b1152aecf117299f610a0b97d35c71c791d5d3b8375cc976",
+  "eligibility": {
+    "kind": "full",
+    "requiredTier": "extended",
+    "reason": "unsafe-or-worker-input-path"
+  },
+  "matrix": [
+    {
+      "component": "backend",
+      "operation": "reuse",
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+      "inputFingerprint": "sha256:cbb5bcbc6aeebe4baeab7a593ebf4ac569f158cb07dc872dc856aa8ea830db01"
+    },
+    {
+      "component": "frontend",
+      "operation": "build",
+      "sourceCommit": "a1614e16ff33e0a013bb7a6ce79a7d2dfae9f5d7",
+      "inputFingerprint": "sha256:83e06efdda20956c4822a06318379348d36b1db8c116fdfa578b1edca1c6590e"
+    },
+    {
+      "component": "rulesWorker",
+      "operation": "reuse",
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+      "inputFingerprint": "sha256:a3715930855ef1eef93dee93204332c3cc9ed2d9b602d9d3fcbb98371210db49"
+    }
+  ],
+  "reason": "Conservative uiPathKind excludes executable API/cache adapters and JSON audit records; component selection alone does not prove frontend-proof-reuse eligibility.",
+  "correction": "Earlier local frontend/backend/worker component selection is valid for build scope only. A161 is not evidence of the lightweight frontend-only deployment protocol.",
+  "noGatesBypassed": true,
+  "productionAccepted": false,
+  "lightweightSelectiveAccepted": false
+}

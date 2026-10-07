@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "status": "current_full_row_archive_and_published_oci_retirement_readers_locally_verified",
+  "recordedAt": "2026-10-07T07:19:27.378Z",
+  "sourceCapture": "37581756410/2",
+  "sourceDumpHash": "sha256:7ac1c8ddaa9b4eb48447be170e5c497d87890afb5abd839dde2f2b3723c470f0",
+  "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+  "native": {
+    "receiptFileHash": "sha256:25791a3639aa629e732c745b00e17f7cf16ac4874b763c89ad1c1d81f4c68438",
+    "archiveRestoreReportHash": "sha256:0f6e808750a347af690cf6385a35ec035dada66335ebd8afffdc7b30b28802be",
+    "privateArchiveHash": "sha256:452b5d553bbfc21e57d64a2db261778d0273452a17ab3c7f884756ec0be554ee",
+    "preimages": {
+      "characters": {
+        "rows": 21,
+        "sha256": "sha256:f10d69e39e0744c2da4584c7eea24bf3dd21b97adcc32577096742a3146512cb"
+      },
+      "characters_v2": {
+        "rows": 12,
+        "sha256": "sha256:80c03f34e26870967c54ba99819dbffce6ddb4d9fe8a99eee1b7771ec142fd80"
+      },
+      "retired_items": {
+        "rows": 45,
+        "sha256": "sha256:c5e72cef3262a4569e3b256689ae0c87b0d211736ff411170d89822d796b99eb"
+      },
+      "retired_inventories": {
+        "rows": 10,
+        "sha256": "sha256:47147d9d71d5677e1b4d0c4f0d8e47dbe2a53114650c3dc3f0119fc7e49e7001"
+      }
+    },
+    "checks": [
+      "complete-source-restored-on-owned-native-postgres",
+      "exact-retired-row-archive-created-under-private-acl",
+      "actual-private-archive-restored-with-identical-full-row-preimages",
+      "all-retained-table-row-fingerprints-preserved-during-archive-restore",
+      "all-existing-migration-ledger-rows-retained-exactly",
+      "real-owned-retirement-preserves-all-retained-table-full-row-fingerprints",
+      "same-request-retry-retains-identical-journal-receipt"
+    ],
+    "originalRetainedProductionTables": 92,
+    "ownedMarkerTables": 1,
+    "priorMigrationCount": 306,
+    "actualArchiveRestoreProven": true,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "publishedOci": {
+    "receiptFileHash": "sha256:49c1535fe1f430a6b610ebe5d1d679ece53b73e121ac1a2279556957f97dd8b5",
+    "sourcePair": {
+      "previous": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+      "candidate": "d2295bf1a06f65bc0c666697ccd04e542816e963"
+    },
+    "executorImage": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:25c9f06622f03cbf488828e227630a0009d26405c5b4ac4f6815f64cc6a93293",
+    "executor": {
+      "status": "passed",
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+      "inputFingerprint": "sha256:cbb5bcbc6aeebe4baeab7a593ebf4ac569f158cb07dc872dc856aa8ea830db01",
+      "localDiagnosticBinary": false,
+      "publishedExecutor": true,
+      "receiptHash": "sha256:2fa9aa22b5216863d4b942db6d60df620228798ce3d6e322d6820aa85a6c28ce",
+      "repeatApplied": 0
+    },
+    "checks": [
+      {
+        "id": "image-contract",
+        "generation": "previous",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "generation": "previous",
+        "status": "passed"
+      },
+      {
+        "id": "v3-paper-personal-inventory-equipment-and-exact-retry",
+        "generation": "previous",
+        "status": "passed",
+        "apiOnly": true
+      },
+      {
+        "id": "image-contract",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "full-candidate-health",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "v3-paper-personal-inventory-equipment-and-exact-retry",
+        "generation": "candidate",
+        "status": "passed",
+        "apiOnly": true
+      },
+      {
+        "id": "pending-decision",
+        "generation": "candidate",
+        "status": "passed"
+      },
+      {
+        "id": "image-contract",
+        "generation": "rollback",
+        "status": "passed"
+      },
+      {
+        "id": "pending-decision",
+        "generation": "rollback",
+        "status": "passed"
+      },
+      {
+        "id": "duplicate-command",
+        "generation": "rollback",
+        "status": "passed"
+      },
+      {
+        "id": "all-original-ledger-rows-and-retirement-receipt-unchanged-after-three-startups",
+        "status": "passed"
+      }
+    ],
+    "previousCanonicalEquipmentSource": {
+      "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+      "sourceTree": "76330c0aaa8916095b223b262065901b791c9b88",
+      "dataTrees": {
+        "utils": "255b4ae61e220dc327b498f01f14ed15d59947c2",
+        "charges": "5419efaa63e54ea54f361fa4f81d08c4a923b05f"
+      },
+      "bundleHash": "sha256:3ebb54cf3f217a4fb1da7b765cd410e2fa6b4800dcd008ce4b73893c3f4d5bea",
+      "directory": "D:\\CodexScratch\\retirement-previous-canonical-2dba77b9-0f24-4f42-b888-bf32c1a5ff20",
+      "canonicalOperations": [
+        "prepareRoguelikeCombatParticipant",
+        "prepareSheetEquipmentCommand"
+      ],
+      "syntheticEngine": false
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": [],
+      "resourceCount": 18
+    }
+  },
+  "observedFailures": [
+    {
+      "kind": "native_restore",
+      "reason": "C-drive WAL allocation exhausted disk",
+      "correction": "Repeat with the same source/SQL/assertions and an owned data directory on D; stopped original resources and preserved failed receipt."
+    },
+    {
+      "kind": "published_previous_api_scenario",
+      "reason": "Old generation equipment intent flag is OFF; test incorrectly called the new identity-only endpoint.",
+      "correction": "Use exact previous source canonical preparation and original runtime-command API; preserve equip/unequip exact-retry assertions and actual generation flags."
+    }
+  ],
+  "localOnly": true,
+  "productionReady": false,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "limitations": [
+    "The current published pair exercises real APIs and retained CJS, not a newly rendered browser proof. Prior different-pair browser results are retained separately.",
+    "Retirement request uses an explicitly synthetic local rollback-pair binding; it does not authorize production DDL.",
+    "The host external-artifact verifier/entrypoint remains pending.",
+    "Production migration307 is coordinated first; retirement302 then requires a new actual capture and proof for that exact schema/source pair."
+  ]
+}
