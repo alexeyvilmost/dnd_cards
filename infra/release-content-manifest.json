@@ -72,8 +72,8 @@
     },
     {
       "path": "backend/build_info.go",
-      "sha256": "sha256:6a76292cd35478ea4377060e55930b310b42504fcac1648ddf1624cb879b61c0",
-      "bytes": 2942
+      "sha256": "sha256:52253ae1b285b2b572cca18eb87d15289f55dd204264a448e5610d65c36989de",
+      "bytes": 3136
     },
     {
       "path": "backend/canonical_json.go",
@@ -771,6 +771,11 @@
       "bytes": 8335155
     },
     {
+      "path": "backend/migrations/data/retire-legacy-characters-302.sql",
+      "sha256": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+      "bytes": 12553
+    },
+    {
       "path": "backend/migrations/deduplicate_goliath_ancestry.go",
       "sha256": "sha256:03a2c1c9e2ed598513b259498d21b67698422c6fbddaf16e23ebbcce0c43c769",
       "bytes": 3242
@@ -1189,6 +1194,16 @@
       "path": "backend/migrations/release_additive.go",
       "sha256": "sha256:77e8220a1d41f8bc67ec6b917c78ddce5cda0e7b0c3c87143e46f752e56ac786",
       "bytes": 14952
+    },
+    {
+      "path": "backend/migrations/release_retirement.go",
+      "sha256": "sha256:4b005eda783bb7db1f24aa773c60d0a4170ba91a68d4bb7640d87cabaead5149",
+      "bytes": 10890
+    },
+    {
+      "path": "backend/migrations/release_retirement_execute.go",
+      "sha256": "sha256:4ccc09c08b38561d3ff9a0da9154ccb8bb84e505923bbebf3931eb2bf4159bc5",
+      "bytes": 10826
     },
     {
       "path": "backend/migrations/release_schema_proof.go",
@@ -1762,8 +1777,8 @@
     },
     {
       "path": "backend/release_migration_command.go",
-      "sha256": "sha256:005525edd43e349e6ea47484865867de27c276cbc24cfd582f63bfde9a5fba58",
-      "bytes": 2625
+      "sha256": "sha256:f7bc439ebf794eda0ec5c4136c3500c1f02c2bc36980a99d9275a06584f9f1af",
+      "bytes": 4341
     },
     {
       "path": "backend/resource_controller.go",
