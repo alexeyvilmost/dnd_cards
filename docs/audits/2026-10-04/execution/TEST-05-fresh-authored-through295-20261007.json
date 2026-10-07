@@ -1,0 +1,792 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-authored-source-chain-through295-and-independent296-source",
+  "recordedAt": "2026-10-07T10:59:57.350Z",
+  "status": "original-chain-through295-296-original-guard-refused-source-recovered",
+  "sourceCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+  "freshInstallAcceptance": false,
+  "fullHistoricalChainAccepted": false,
+  "originalFullSnapshot": false,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "evidence": {
+    "fresh": {
+      "path": "outputs/testing/test05-historical-source-audit/fresh102_1decedbac26efc5a4071/report.json",
+      "sha256": "sha256:52c9a0ccd1bb1a974a799a46615fb77d54fd35fb9d9b03dbef857497097c1e17",
+      "bytes": 1116761
+    },
+    "pre279": {
+      "path": "outputs/operations/source-composed278-native-1791369055391/receipt.json",
+      "sha256": "sha256:e5ca9660bc9a108a53571a9a55f90515c03056eb3650818ff2976fdd970dd835",
+      "bytes": 1443135
+    },
+    "fixture279": {
+      "path": "outputs/operations/source-composed278-native-1791369055391/public-pre279-source.json",
+      "sha256": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c",
+      "bytes": 6908246
+    },
+    "caster296": {
+      "path": "outputs/operations/authentic-caster296-1791370475567/receipt.json",
+      "sha256": "sha256:df076c75df3e1f68e056e0f603ca43d8c95f18668d59404858305b470e14ff79",
+      "bytes": 13789
+    },
+    "fixture296": {
+      "path": "outputs/operations/authentic-caster296-1791370475567/public-caster-source.json",
+      "sha256": "sha256:58a00175b718d3057503eb26a9d1c27e323009817cabcb1be7f720492b82c04e",
+      "bytes": 104871
+    }
+  },
+  "registered": {
+    "count": 303,
+    "hash": "4500b30b199be9c57b1fadacf7b13a20eea07c1ad2d037dbd2e242cda7bd0d06"
+  },
+  "bootstrap": {
+    "boundIdentities": 34,
+    "sourceResources": 28,
+    "identityBinding": {
+      "schemaVersion": 1,
+      "nonTargetBefore": {
+        "tableCount": 26,
+        "rowCount": 90,
+        "hash": "8cc4e6594d3882cbb1020bffee4e99bcd0516a2e9cd3e492196a3396fcda1858"
+      },
+      "nonTargetAfter": {
+        "tableCount": 26,
+        "rowCount": 90,
+        "hash": "8cc4e6594d3882cbb1020bffee4e99bcd0516a2e9cd3e492196a3396fcda1858"
+      },
+      "allNonTargetPublicRowsExact": true,
+      "targetFieldsExceptIdAndTimestampExact": true,
+      "kind": "authentic-authored-catalog-identities-bound-before-historical-artifacts",
+      "boundary": "082_character_system_metadata",
+      "fixtureHash": "sha256:964b45cd142a3729af4fbd68db83d6ad35f4e7dd0eb1485c2fb022e9ed573c52",
+      "bindings": [
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "action_basic_unarmed",
+          "previousId": "375ab590-dbb7-47ab-8214-bf382fb6be8d",
+          "sourceId": "442ba733-5af0-4680-a411-05e15adc8a4d",
+          "rowHash": "a7be57b4dac46df836e243d4bd9874fb06a058991b51ca32445f7ca36c8e0f41"
+        },
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "action_basic_weapon",
+          "previousId": "ef8871ca-5d1a-430d-bcf6-f440386b346b",
+          "sourceId": "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+          "rowHash": "8edd02ef5e1784231ec689e4b878f36ed19f45c943477d9b4df7cf4e6c2a39df"
+        },
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "action_basic_weapon_ranged",
+          "previousId": "a0619096-cee8-4deb-af64-60b28319c794",
+          "sourceId": "10800000-0000-4000-8000-000000000001",
+          "rowHash": "33277de90b686d39c8d04b2ec63edbd93cf00be53e82361fd211a4f78c82ebc4"
+        },
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "ACT-second-wind",
+          "previousId": "59abcb21-cf4b-44f9-b5cf-de91c410462f",
+          "sourceId": "1cd19d26-3011-4859-9430-c8787fe99ba7",
+          "rowHash": "6b2dc440093a9f14fe1b6e96a7768fc685dd11b60cd848cd6a1f9a7a7c8c90f7"
+        },
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "action_basic_disengage",
+          "previousId": "75cf25b4-9705-4081-be69-70d9a4a13940",
+          "sourceId": "a62f30c3-bf2b-419d-b823-e9e819683e07",
+          "rowHash": "d1dae638025d8d96298538df8f97645c016fb3ad4df24f5e81a825dd339dca3c"
+        },
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "action_basic_dash",
+          "previousId": "5d6a0324-7c3e-43c6-aa28-5f2356549a9f",
+          "sourceId": "63cbe0ad-f230-4156-9c10-af2242a59964",
+          "rowHash": "1c181f8bab81414bc27b9bffb9a9915718a4a1e44d334201a57818941ec2f83e"
+        },
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "action_basic_dodge",
+          "previousId": "aefe09e1-80a3-4902-a6be-6d48c3e15c8d",
+          "sourceId": "b0085bf7-130a-41c9-956d-54a093a1df99",
+          "rowHash": "abd935c8c26c05374ec44d1635a0a9d4cb5ad77c3e09c6205320084a6526a141"
+        },
+        {
+          "kind": "action",
+          "table": "actions",
+          "reference": "action_basic_offhand",
+          "previousId": "0817f8fb-6d57-49db-82a0-f34cf8985c4f",
+          "sourceId": "6812f780-de8a-4509-9253-b4be711a9212",
+          "rowHash": "9f3392f821a88d25cbeb5b4bdd1a0ed0d5079392b81b7a05b276291cbe84998b"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-frightened",
+          "previousId": "b2779c95-69cb-4263-92bd-f0cb082a841c",
+          "sourceId": "291c69ad-c87b-41b1-8728-b83f8fec9810",
+          "rowHash": "05e40fab26e1d119ed10f86c08593340a08fe5a81af57c7eb535a16fc33db0b4"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "EFF-tough",
+          "previousId": "e625a4b5-6f1d-46a3-8c37-229b0091c4e3",
+          "sourceId": "2c2ce7ae-e22a-40e7-829c-746d786fd7fd",
+          "rowHash": "a34e73302e63f70db517662b6916d8323c48613a8bd24f8664e6fb8057ff1951"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-incapacitated",
+          "previousId": "833be94b-7dda-4062-8b66-67e60344a1f1",
+          "sourceId": "4561ee6d-aa86-49d1-8f84-2aab23bd2d9a",
+          "rowHash": "a519ce0937918eeb6ab0e5e2ad8bcfb9375883f55241c3d991c16e1074187d38"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-deafened",
+          "previousId": "3e18a52b-e802-400a-85c3-12d53b9c5714",
+          "sourceId": "5f6ff775-a9a5-4294-acfa-99939288697f",
+          "rowHash": "1b30cd342848c764980f54f4616577f550a0559abcea80c8c6422be819b8630b"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-invisible",
+          "previousId": "f64cb4fd-e55d-42a1-8d70-c717e3409c29",
+          "sourceId": "a33608fe-4378-465d-a81a-85920104ffc4",
+          "rowHash": "ffeddfbbcb89db852e10b16b5b0e997c02c0d6243500a0c3ddb065b78ed6f14f"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-restrained",
+          "previousId": "94412c6f-b520-468e-8152-5ec0bd2baeb5",
+          "sourceId": "a9ec9210-3c51-4cd4-b1c5-0f2761fb6108",
+          "rowHash": "ec0d8d74b9b0aa6a02cec41aca643ab330c9f53b21231e27322557fc88321ebb"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-poisoned",
+          "previousId": "ef2c03a4-84c1-4c84-9d20-9150e73e1e33",
+          "sourceId": "b22482db-5254-4528-b873-ecf41fc13c30",
+          "rowHash": "3b35be2dcc15502976c359a15a05d11a9632940b77bd35ff627b7680eb3c396d"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "EFF-savage-attacker",
+          "previousId": "9f12f6d2-af78-420b-b284-f0e6de5f88ec",
+          "sourceId": "b402d2ae-2b63-438d-a74d-5bd7770749ca",
+          "rowHash": "5d9293a5caca755ef47499f0288ee5212543110135992515b56288e0f8e19ce6"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "EFF-alert",
+          "previousId": "9f6c8194-7c39-40d5-b04a-19d9e2e742da",
+          "sourceId": "b906d245-c982-4e60-a5b3-85f915d530e9",
+          "rowHash": "66794d4fbc6be4c300cb5fe0f0dab732a212512d1841cbd32189c35cc9116185"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "EFF-skilled",
+          "previousId": "cb7a8e29-14bf-44f7-9dae-1a89d327ba7d",
+          "sourceId": "bfa97845-1f04-4057-9890-3503320b30c7",
+          "rowHash": "c3d91ada6693da536a9fe65fb317d38263a96859935abd19bb1d8c99e79fcd18"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-blinded",
+          "previousId": "74eaead3-341c-4a2d-9f4f-fb0b3c2bef40",
+          "sourceId": "d10dd048-8fb8-4321-8bbe-08dd61dd82a7",
+          "rowHash": "17d2621890ce17d09e0d45b9ce4a0a7ff5b364e4b2a9560f3e29af0dbbb66a2f"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-prone",
+          "previousId": "a10681d3-a092-4df0-9e21-e987535dfada",
+          "sourceId": "d7222978-b165-427c-b890-179db45a789f",
+          "rowHash": "561b11c44b4ceeedfeb3a598e99f85ae034fcce0b9080b24608c3d815f9bd217"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-charmed",
+          "previousId": "e7084e29-9d87-490c-9460-802f79276ae0",
+          "sourceId": "ed7cc8d3-1af0-4af7-af13-046341f21491",
+          "rowHash": "8903d4757efd919c8f990b36a75fdf34a2c8e37bb784c11ea6c26beb4a7a9e46"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-paralyzed",
+          "previousId": "facc228d-3a73-45a4-b5b8-ef8a02323b1a",
+          "sourceId": "74457eba-0f39-4f6d-90ce-ed84d3b9cda4",
+          "rowHash": "e1ff768f0a8b608859d3fbd4e31d85cf147ca21aeb5216cbdebdec74099239f4"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-grappled",
+          "previousId": "492c7be7-63ef-4b7f-ac7b-2d85a732b7d6",
+          "sourceId": "851ae69b-faf3-4204-91b8-ae8e451f3718",
+          "rowHash": "1b89744066c25fd5d3ab0073a56a7f0c6a989e379d6d016b79d73fd3fc461664"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-stunned",
+          "previousId": "d26d6672-6ccc-4e75-9b7c-731f8229c2fa",
+          "sourceId": "bdcc16f4-532f-46cd-900d-b662f8e3976f",
+          "rowHash": "079d7bf4202b158126f0cd66cba8f7fbbd7952f91704742a808ce36be01bde56"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "COND-unconscious",
+          "previousId": "c3833ddd-c142-4bcc-9497-178c4d14bf7c",
+          "sourceId": "d0302e53-474e-407b-a1b5-bed7eb289d78",
+          "rowHash": "86066e69df79dea80ba17ea879e9df74ad0962933e2be4c18e5bccaa7970b982"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "EFF-fighting-style",
+          "previousId": "4fe90ac1-ebae-4d67-b114-c24cabe20525",
+          "sourceId": "39be6236-7db8-46c7-a3ab-c84bc51918da",
+          "rowHash": "8e4c0f7e7d617bd67de0cdee44f54fc2ff02281273550e235c5f965e0577da53"
+        },
+        {
+          "kind": "effect",
+          "table": "effects",
+          "reference": "EFF-wizard-spellcasting",
+          "previousId": "c17fe2d9-de0b-42fb-b2de-12bd8eb0c99c",
+          "sourceId": "bcb05701-70ac-4b48-8e60-4cf46f6ea544",
+          "rowHash": "659b0c8583a855e4d8fcb2f8cd4a8a672ff22ec24d0b4850730ec19442650bdf"
+        },
+        {
+          "kind": "resource",
+          "table": "resources",
+          "reference": "bonus_action",
+          "previousId": "49f258af-7b2e-4cd3-bd06-4788b21f03f6",
+          "sourceId": "50eb86ec-16f8-4f34-8205-00d8dfdcf295",
+          "rowHash": "73fa062204cd2020a7c7da4e06db560e56a8933cca4fb199a598eb32b3384cbc"
+        },
+        {
+          "kind": "resource",
+          "table": "resources",
+          "reference": "reaction",
+          "previousId": "73089b99-4618-45fb-8f81-e3f12df29353",
+          "sourceId": "886a7068-056c-4845-a709-a41840d311ab",
+          "rowHash": "51dfb11a297a78a3f03eb4e8644fea43201e9d71ce7788769a066bc5af8645cd"
+        },
+        {
+          "kind": "resource",
+          "table": "resources",
+          "reference": "heroic_inspiration",
+          "previousId": "2b87fb7c-7085-4806-ba59-9c8c42b8cd03",
+          "sourceId": "b7195f49-a2b3-4e1c-8a8c-6c2b0eb43ffb",
+          "rowHash": "a2bfed27ba8f199169918917bfc3a8d317003a546b6b0886ece667cac2a6f9ed"
+        },
+        {
+          "kind": "resource",
+          "table": "resources",
+          "reference": "action",
+          "previousId": "84a6dd62-a28b-47f1-bf29-be0b31f425cc",
+          "sourceId": "baf68322-2778-45ba-ad5d-96a1c7220337",
+          "rowHash": "10e137990d120142d9e5dd7b963328e40f8346e6bc7aad2a48b79d11e1d4c541"
+        },
+        {
+          "kind": "resource",
+          "table": "resources",
+          "reference": "free_action",
+          "previousId": "09c41116-de5e-429e-89c7-54f26e8670b5",
+          "sourceId": "1ec3887a-1e70-421d-9962-84c897b35da9",
+          "rowHash": "10efdfb942c57a51849607864c649bf0b560bb4596152f873143f223fe447755"
+        },
+        {
+          "kind": "resource",
+          "table": "resources",
+          "reference": "main_action",
+          "previousId": "d4993b25-00ca-4764-876e-d73068530844",
+          "sourceId": "6f751e80-29a8-4132-818b-d360f2cab6c1",
+          "rowHash": "1b5aa5e6723ff238cd968ca141f0f3b078e86e477547466400e5a7a22647ac5d"
+        },
+        {
+          "kind": "resource",
+          "table": "resources",
+          "reference": "rage_charge",
+          "previousId": "97c59732-642f-4457-aacd-f11e10e5bbd2",
+          "sourceId": "b0f7617d-12d3-4e26-98bc-0687810f8242",
+          "rowHash": "1b01a501e561518b03a3aa709462dfcc182806b971b3f004cd9e0d250becda0e"
+        }
+      ],
+      "insertedSourceResources": [
+        {
+          "id": "274a64ea-7905-4084-a83d-124cf33ea37e",
+          "reference": "luck_points",
+          "provenance": {
+            "source": "outputs/entity-references-277/before.dump",
+            "sourceHash": "sha256:e551a4ea03c71ac1c561ace45be35c21183655054ae42d2fa033edc5383b8623",
+            "sourcePublicProjectionHash": "sha256:de94bff017b4c228b411dca1effcddaf47b7315669083d907216457cdbeacfc5",
+            "sourceBoundary": "277_partial_narrative_review"
+          }
+        },
+        {
+          "id": "5e5a4387-56f1-47cb-a0db-3130d86c7825",
+          "reference": "mage_slayer_protected_mind",
+          "provenance": {
+            "source": "outputs/entity-references-277/before.dump",
+            "sourceHash": "sha256:e551a4ea03c71ac1c561ace45be35c21183655054ae42d2fa033edc5383b8623",
+            "sourcePublicProjectionHash": "sha256:73e2e10992e6fdb002d9cf2fca7e5bedeceaa1d6c5cad97cb01476d5fc8ab586",
+            "sourceBoundary": "277_partial_narrative_review"
+          }
+        },
+        {
+          "id": "65b92b45-72b4-4f20-82ce-9dc4c8dbaff7",
+          "reference": "inspiring_leader_rest",
+          "provenance": {
+            "source": "outputs/entity-references-277/before.dump",
+            "sourceHash": "sha256:e551a4ea03c71ac1c561ace45be35c21183655054ae42d2fa033edc5383b8623",
+            "sourcePublicProjectionHash": "sha256:de3f7967d4b9a075845799b7a3b7c663636689d239f0c997743a486f0c98053a",
+            "sourceBoundary": "277_partial_narrative_review"
+          }
+        },
+        {
+          "id": "6e807e67-2714-4277-9685-55455bf0c226",
+          "reference": "chef_treat",
+          "provenance": {
+            "source": "outputs/entity-references-277/before.dump",
+            "sourceHash": "sha256:e551a4ea03c71ac1c561ace45be35c21183655054ae42d2fa033edc5383b8623",
+            "sourcePublicProjectionHash": "sha256:808e6d504d875d0b51d4bd368db1c4943e25114eac58f5d59d3fcc1a694ce9b9",
+            "sourceBoundary": "277_partial_narrative_review"
+          }
+        },
+        {
+          "id": "ad8aefac-f675-41ad-9f6b-3c6420f1adc4",
+          "reference": "ritual_caster_quick_ritual",
+          "provenance": {
+            "source": "outputs/entity-references-277/before.dump",
+            "sourceHash": "sha256:e551a4ea03c71ac1c561ace45be35c21183655054ae42d2fa033edc5383b8623",
+            "sourcePublicProjectionHash": "sha256:89b686211c79af53f02700286674299d63c9d30cda43f8133b167f8cd28bd526",
+            "sourceBoundary": "277_partial_narrative_review"
+          }
+        },
+        {
+          "id": "da34c4bb-c252-46ad-b958-4c599cb741f9",
+          "reference": "poisoner_dose",
+          "provenance": {
+            "source": "outputs/entity-references-277/before.dump",
+            "sourceHash": "sha256:e551a4ea03c71ac1c561ace45be35c21183655054ae42d2fa033edc5383b8623",
+            "sourcePublicProjectionHash": "sha256:ecf6afde17e7127375ecd0258bb473d12b18ea1f17a9a0a3bd05bab3fd16a52b",
+            "sourceBoundary": "277_partial_narrative_review"
+          }
+        },
+        {
+          "id": "048d05df-8039-45f2-8c27-a4063646faec",
+          "reference": "spell_slot_2",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:cc8cdab0612a2ce85974ce3757a97b782ef52a1ec9e7d8bb209f02b19fd64f65",
+            "sourcePublicProjectionHash": "sha256:1aea50e4f11bf088e6a07bd2be22bddd240df596fa26257aab4cc4e2105ec3c3"
+          }
+        },
+        {
+          "id": "1455b71d-2f9c-4710-97f7-922822eb8157",
+          "reference": "focus",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:ca420aebb067831e51ce67b7906e97bc992375369352d28891445b1b2d63f227",
+            "sourcePublicProjectionHash": "sha256:5e2e03fc09e34769b729aff55e6475c3ebdaa5cbde7e3eb00b80d75d66226d7c"
+          }
+        },
+        {
+          "id": "161d921a-44d0-4de0-849e-87810be3281d",
+          "reference": "spell_slot_4",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:b21376a57d3b22d3ee8b284a42078f55e6b9dda0653d1130848342384b047ecb",
+            "sourcePublicProjectionHash": "sha256:cd4c1857b8c4fca0e317ce6409846bc58c8e5212dd5744077c2c3bb7ac614469"
+          }
+        },
+        {
+          "id": "17e944aa-9355-4b95-93ca-b0ff1adcce8e",
+          "reference": "channel_divinity",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:eb6d75c5969710b0e4cb7441f9638a9dbf7786585fc110dd53b6e23630e55463",
+            "sourcePublicProjectionHash": "sha256:b82d3bb37508950c51e7c87d9b4ec20646a9281988fbbe49f198dc921cb52e59"
+          }
+        },
+        {
+          "id": "1b2dfe51-e204-4aa8-9842-771df0d70840",
+          "reference": "psi_warrior_energy_die",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:8cc1d4602b215012100fbbc4098eb1aabaac2338e49b23cbd7ce83ad97064895",
+            "sourcePublicProjectionHash": "sha256:764fe4a631f843eaa34095dce23192c6d505ae318254caf9a082b3ef19c7835a"
+          }
+        },
+        {
+          "id": "26d4665c-ae7c-4661-bf06-a204f8df6030",
+          "reference": "spell_slot_1",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:7fb1d5b2c92991e55fd2bce17bbfba7d6ea263cacb560bdbc17250079c46db58",
+            "sourcePublicProjectionHash": "sha256:84df40c454309d9192d9cafd614c6c1e950cff668751cd8120017dcd830dcc30"
+          }
+        },
+        {
+          "id": "29a9182a-4fae-4a6e-b471-f67d3d207a22",
+          "reference": "moxie",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:7de5343e217e310ed7cc35338b1894cb84d6120ca8d51abcb40b55c96a918831",
+            "sourcePublicProjectionHash": "sha256:e64e7bf55d528dab842d728f7b973b84644adf9bb95b3c528a88c2e6276f9ff4"
+          }
+        },
+        {
+          "id": "2dc989f7-85d2-4de2-a7e5-10363331cbaa",
+          "reference": "psi_warrior_telekinetic_movement",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:bcbff821f917732e5befd083f69bfc6416d0a42107ee731cebc89920548e23ba",
+            "sourcePublicProjectionHash": "sha256:ed002066d7300405568113abc422c27fd6c3083dd35514912bf2d81781f1c000"
+          }
+        },
+        {
+          "id": "31d1e6d8-8954-4cef-88a8-a47004680a48",
+          "reference": "spell_slot_6",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:d64563ce8de1e3d82fb55927fa2cf377799412feeebc3fd231d359845877db5e",
+            "sourcePublicProjectionHash": "sha256:3547d8363289f1c2f5dbe7a4cbf141ba934828c4ea1eff8ce35f49d9bf4f36a6"
+          }
+        },
+        {
+          "id": "38676e04-5d29-4cd9-9718-0997e42fd61b",
+          "reference": "granters_reaction",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:21698dc130336bf1578ef425174a840d714debb97cbe1807c502d96b683890ab",
+            "sourcePublicProjectionHash": "sha256:f2272a31601a7812749c1fd4124c9339de477670e007c9c68ce1c950884ac4c8"
+          }
+        },
+        {
+          "id": "3e4a83df-5b66-49f4-86bb-43c8247f397a",
+          "reference": "bardic_inspiration",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:cbad9e8387e9b319d6729ccf97ec700be756ab73848c083cc5f539b380c4d93a",
+            "sourcePublicProjectionHash": "sha256:ee1f68a1ff240f3422e266f196a66080363845bbe772d7c4ae3e9623760cef22"
+          }
+        },
+        {
+          "id": "611d7543-b25f-4605-8a09-5404d3f049a3",
+          "reference": "spell_slot_9",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:e1761240f8503c6f72e8f4e06eee8427cd6ae6e5754722945e2ba5df8741954e",
+            "sourcePublicProjectionHash": "sha256:6bd0897a27c759ce71ea0b79ac0eb3ee3d5b7b0b4bde52ff99c3e26baed6ed7c"
+          }
+        },
+        {
+          "id": "6fcea2a0-9fe7-45ca-bab2-f2eaa2694912",
+          "reference": "freeuse-spells",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:c968884871c9c31f816287ee9c139925686798e85e5238310aa4b3589e675a7e",
+            "sourcePublicProjectionHash": "sha256:c590bbc92be895cdec50ddca2d6f6f5914e858fa850d5c002f17157eb9298eab"
+          }
+        },
+        {
+          "id": "9464314c-ef52-4676-ac57-e3a8ee19c46c",
+          "reference": "wild_shape",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:5b3776c39e1b673d1794418ac0731413915d6778629798f1a7444c3fd70d6739",
+            "sourcePublicProjectionHash": "sha256:9235aca49fc992439d8410d36415bf12efc433bb19ed38b06049a69416073b11"
+          }
+        },
+        {
+          "id": "9daf51d3-0c8d-4843-bd9f-d6c0b1bfb336",
+          "reference": "spell_slot_3",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:39c0625588b9fd7086cb0a7105fdee18a18b16be9ec708eea0d94dbd40d034ea",
+            "sourcePublicProjectionHash": "sha256:c95f3472079b67ee5fce25d5f681768ca5c830cc795b06cf4491880c3cb000e6"
+          }
+        },
+        {
+          "id": "bccb8ae9-8ef5-415c-9c9b-49e96d341114",
+          "reference": "spell_slot_8",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:5247c7ab783006f43c69818e46cf0dae1e6416140685e8d95874a343997f03a1",
+            "sourcePublicProjectionHash": "sha256:30c5888e09295943634dbd00690af626d9d18281012d6417591e0f1f1d5408be"
+          }
+        },
+        {
+          "id": "c3097869-83e9-4a8c-b2b8-8c7f62d0d287",
+          "reference": "spell_slot_7",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:8f1aeb0793178bc923ae6261260f3feab52d37e64cd9f17bb36c678da529e713",
+            "sourcePublicProjectionHash": "sha256:0d590ba20f4c39e15104c27f457330aec07c00c70dc78257e0a31da17f83272b"
+          }
+        },
+        {
+          "id": "d36ace16-ecbc-4615-8727-e792cde23a06",
+          "reference": "superiority_die",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:421383fec36072ab303ba2e0159f40271ff7d50338f2e9cc3531011de14cfe93",
+            "sourcePublicProjectionHash": "sha256:852a881e96e5f856752efba9fa3b5bb25db83150ac55380e3dc9bc29bc75c1cb"
+          }
+        },
+        {
+          "id": "d9ec5c7f-cdf6-4bbd-a2e4-e41caab9a346",
+          "reference": "spell_slot_5",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:1daa26c9c7671171030327020f482cef6d22b51e6232745a617aec3c99c7fcda",
+            "sourcePublicProjectionHash": "sha256:7741816ff451e5f0c8da03b4bf3a228b13f2d03eeb7e1502227a2c80befc5bd6"
+          }
+        },
+        {
+          "id": "e0cb148c-4611-4eb4-b0aa-152edab3f953",
+          "reference": "sorcery_points",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:f4b83f65ddbbc56f4f02c35612a737a5ce083b18608ae564ccd12e545af88283",
+            "sourcePublicProjectionHash": "sha256:d3c85e30496680dabc4b20acf49b53e92bc8d281d33aba3e229c28715b968f8f"
+          }
+        },
+        {
+          "id": "e1b17f8c-6205-4a48-8239-e2bb32ec876f",
+          "reference": "giant_legacy",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:e530b76b2037b8c104dc1c1a5f4c19422877fa9a6b7465c611021ae1cd58638b",
+            "sourcePublicProjectionHash": "sha256:c7cc96362595b540fb556fadc852f9462d507ede6b06d993dfdd69543000c6ee"
+          }
+        },
+        {
+          "id": "e77c9e46-40a5-482e-bcde-4b4902b53261",
+          "reference": "magic_recovery_charge",
+          "provenance": {
+            "originalSourceHash": "sha256:69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+            "sourceBoundary": "278_catalog_mechanics_audit",
+            "actualRowHash": "sha256:125a1b0079af7c8e389b6e0f1b526b4aa6acdee9dbfe98c7c072d27f9e886cf2",
+            "sourcePublicProjectionHash": "sha256:4b1372ba26fceac31e4344e82e235f7a0e5ae7b3f17d3f623c70330e3ab58cb3"
+          }
+        }
+      ],
+      "before": {
+        "tableCount": 26,
+        "rowCount": 124,
+        "hash": "b86e37b8c787c55bace474043743f9f544550fb604f1c185ed8ce135b851387d"
+      },
+      "after": {
+        "tableCount": 26,
+        "rowCount": 152,
+        "hash": "eda09e3762f4f04c6b6bcef19d3ba86d7c51e756f12aa62a7d58c189b2b692ff"
+      },
+      "originalMigrationLedgerExact": true,
+      "allGameplayAndHistoricalTablesEmpty": true,
+      "existingCatalogUuidReferencesAbsent": true,
+      "originalFullSnapshot": false,
+      "productionChanges": 0,
+      "freshInstallAcceptance": false
+    },
+    "lateIdentitySource": {
+      "kind": "authentic-public-late-identity-inputs-at-empty082",
+      "identitySourceHash": "sha256:964b45cd142a3729af4fbd68db83d6ad35f4e7dd0eb1485c2fb022e9ed573c52",
+      "priorRefusalReportHash": "sha256:a45135905ad49cc1e181509517b2610deba165bc78291927ae0d96e4951b492b",
+      "rows": [
+        {
+          "id": "58af20d9-f80a-42dd-8e9d-844740fcffe1",
+          "reference": "ACT-goliath-large-form",
+          "identitySource": {
+            "path": "outputs/operations/source-composed278-native-1791369055391/public-pre279-source.json",
+            "sha256": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c"
+          },
+          "publicFieldsHash": "sha256:994abe303322f38daebadb200a6bf3b71fa335657dd1c0c8fda60419d4c7e6f0"
+        },
+        {
+          "id": "7517b42e-4417-407f-a16c-5fa0c9e81282",
+          "reference": "ACT-goliath-stone",
+          "identitySource": {
+            "path": "outputs/operations/source-composed278-native-1791369055391/public-pre279-source.json",
+            "sha256": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c"
+          },
+          "publicFieldsHash": "sha256:d4eb73d1f68e7a296c610905844d8195bc0f8da3e37e614b3d7507e1285ba100"
+        }
+      ],
+      "allOtherPublicRowsExact": true,
+      "originalMigrationLedgerExact": true,
+      "allGameplayAndHistoricalTablesEmpty": true,
+      "manualStatusesAssigned": false,
+      "productionChanges": 0,
+      "originalFullSnapshot": false
+    }
+  },
+  "pre278": {
+    "schemaVersion": 1,
+    "kind": "authentic-composed-public-catalog-fields-at277",
+    "fixtureHash": "sha256:c4c4403390b8e87cfadb60df5ae543462e47b84df9489bea639395276008152f",
+    "originalFullSnapshot": false,
+    "before": {
+      "targets": 1656,
+      "passed": 1054,
+      "failed": 602
+    },
+    "after": {
+      "targets": 1656,
+      "passed": 1656,
+      "failed": 0
+    },
+    "distinctEntities": 588,
+    "inserted": 109,
+    "updated": 479,
+    "nonTargetBefore": {
+      "tableCount": 68,
+      "rowCount": 6374,
+      "hash": "a1511ffc888e132f540f32da463de5374e8f34d42adcf002e605ee190fcebd1c"
+    },
+    "nonTargetAfter": {
+      "tableCount": 68,
+      "rowCount": 6374,
+      "hash": "a1511ffc888e132f540f32da463de5374e8f34d42adcf002e605ee190fcebd1c"
+    },
+    "allExistingHistoryAndOtherTableRowsExact": true,
+    "ledgerBefore": "9deb72768a5aa47268a6a9abcf71fadbc601969cd5b5c84634bb0dca14106d12",
+    "ledgerAfter": "9deb72768a5aa47268a6a9abcf71fadbc601969cd5b5c84634bb0dca14106d12",
+    "allOriginalLedgerRowsExact": true,
+    "manualStatusesAssignedByHydration": false,
+    "originalManifestsChanged": false,
+    "productionChanges": 0
+  },
+  "pre279": {
+    "schemaVersion": 1,
+    "kind": "authentic-public-source279-fields-at278",
+    "fixtureHash": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c",
+    "originalFullSnapshot": false,
+    "before": {
+      "targets": 2564,
+      "passed": 1914,
+      "failed": 650
+    },
+    "after": {
+      "targets": 2564,
+      "passed": 2564,
+      "failed": 0
+    },
+    "distinctEntities": 650,
+    "inserted": 35,
+    "updated": 615,
+    "nonTargetBefore": {
+      "tableCount": 70,
+      "rowCount": 7820,
+      "hash": "17ff0b1813379ec33235d4211c073b974d32edbc8b2d6a311a14a5205af73746"
+    },
+    "nonTargetAfter": {
+      "tableCount": 70,
+      "rowCount": 7820,
+      "hash": "17ff0b1813379ec33235d4211c073b974d32edbc8b2d6a311a14a5205af73746"
+    },
+    "allExistingHistoryAndOtherTableRowsExact": true,
+    "ledgerBefore": "4c0c0ddcc023cd3efa8047cdd9cd996fe01b8603f759af50e3835e25f9c444db",
+    "ledgerAfter": "4c0c0ddcc023cd3efa8047cdd9cd996fe01b8603f759af50e3835e25f9c444db",
+    "allOriginalLedgerRowsExact": true,
+    "manualStatusesAssignedByHydration": false,
+    "originalManifestsChanged": false,
+    "productionChanges": 0
+  },
+  "originalChainBoundary": "295_stable_spell_grant_references",
+  "originalRefusal": {
+    "stage": "296_explicit_spell_grant_abilities",
+    "reference": "CLASS-rogue"
+  },
+  "independentCasterSource": {
+    "boundary": "297_retain_generic_spell_free_uses",
+    "sourceDumpHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+    "manifestHash": "sha256:310047ba934a9fed8bba48476eee4491670be698fe07bf9391762664d7580add",
+    "targets": 42,
+    "exactRows": 42,
+    "unresolved": [],
+    "privateInputRows": 0,
+    "sourceUnchanged": true,
+    "cleanup": {
+      "status": "stopped"
+    }
+  },
+  "sourceAndIsolationChecks": {
+    "sourceACL": true,
+    "childACL": true,
+    "sourceHashBefore": true,
+    "isolation": true,
+    "authenticClosedSource": true,
+    "sourceHashAfter": true,
+    "sourceCodeUnchanged": true
+  },
+  "cleanup": {
+    "status": "stopped",
+    "resources": [
+      {
+        "kind": "container",
+        "status": "stopped"
+      },
+      {
+        "kind": "volume",
+        "status": "stopped"
+      }
+    ],
+    "remaining": {
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    }
+  },
+  "remaining": [
+    "Apply independently recovered caster public fields only in owned fixture with full row and ledger invariants",
+    "Execute unchanged 296–307 and validate exact registered ledger",
+    "Validate authentic preserved revocations and manual support policy against original review authority",
+    "Repeat unchanged full migrator and compare all public rows",
+    "Integrate reproducible supported installer test and source provenance; ignored ad hoc fixture is not installer acceptance"
+  ]
+}
