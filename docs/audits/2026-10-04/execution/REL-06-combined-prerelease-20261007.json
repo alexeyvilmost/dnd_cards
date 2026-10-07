@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "status": "local_risk_scoped_checks_passed_exact_hosted_extended_and_production_open",
+  "sourceCommit": "243fa469b10e112e888f75ecadbae0a14dbc08df",
+  "sourceSnapshot": {
+    "sha256": "edeac55ada69b847218930486c69cc20f17a73f8b3a7c921aaaed66a55945031",
+    "files": 4606
+  },
+  "recordedAt": "2026-10-07T08:22:15.337Z",
+  "integration": {
+    "catalogSource": "211cb209b7ee9a1ce1d56e851b56170ddb1f7af0",
+    "includedOptimizationCommits": [
+      "28e099be",
+      "9c1b7076",
+      "b4732dce",
+      "c7c3afb0",
+      "0997d4d5",
+      "39e481c7",
+      "269dbcea"
+    ],
+    "browserFixtureFix": "ee7b585e26ee6970ee627e04bb821637cb8d5668",
+    "conflicts": 0,
+    "readOnlyCatalogReview": "Main verified 11 relevant Git blobs match source211; additive schema and separate catalog CAS/receipt preserved",
+    "schema307Checksum": "sha256:a529597dac046426d532e18f68a083963dc1c120fdb6efd5c464e7f16226a0c1"
+  },
+  "checks": [
+    {
+      "id": "linux-selection-security",
+      "tests": 804,
+      "skipped": 0,
+      "receipt": "C:/Projects/dnd_cards/outputs/testing/combined-linux-security-1791361103229/receipt.json",
+      "receiptHash": "sha256:2d4fde102512688072102bc1270d853672c30b4a47f5b77d4bcf209e2081b0c8"
+    },
+    {
+      "id": "all-selected-core-vitest",
+      "tests": 312,
+      "skipped": 0,
+      "receipt": "C:/Projects/dnd_cards/outputs/testing/combined-vitest-1791361179396/receipt.json",
+      "receiptHash": "sha256:4cc96650106e21ba5514fa6aae63cf21edb26a13a29a9aab421d052ca368f8b9"
+    },
+    {
+      "id": "native-source-reference-inventory",
+      "tests": 1,
+      "skipped": 0,
+      "receipt": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/runs/test_6c08219ec5aea49e0dec2277/typed-reference-inventory.json",
+      "receiptHash": "sha256:b2ea1ccff25f116d85c42a89974e06951fb4b9548d9c526f7ed386b9a447ac68"
+    },
+    {
+      "id": "worker-and-database-node",
+      "tests": 21,
+      "passed": 21,
+      "skipped": 0
+    },
+    {
+      "id": "go-backend",
+      "required": 100,
+      "passed": 100,
+      "discovery": {
+        "attempts": 1
+      }
+    },
+    {
+      "id": "go-migrations",
+      "required": 16,
+      "passed": 16,
+      "discovery": {
+        "attempts": 1
+      }
+    },
+    {
+      "id": "local-api-spine",
+      "exit_code": 0,
+      "contract": "Actual API/worker/PostgreSQL: template copy, run, initialize, exact retry, reload and source isolation"
+    },
+    {
+      "id": "local-browser-flows",
+      "tests": 12,
+      "passed": 12,
+      "skipped": 0,
+      "projects": [
+        ""
+      ]
+    }
+  ],
+  "backendReceipt": {
+    "file": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/combined-243fa469-core-backend-20261007/report.json",
+    "sha256": "sha256:466510bd178e9135cec60ef47728b5ebcf9d0a4be9b44b84045cb02eea537ad1",
+    "durationMs": 219771
+  },
+  "flowsReceipt": {
+    "file": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/combined-243fa469-core-flows-20261007/report.json",
+    "sha256": "sha256:6eca32098a859b3d79c381e991d433ea7a68646f23730189785325f5784351ca",
+    "durationMs": 159400
+  },
+  "uiBuilds": [
+    {
+      "reused": false,
+      "isolatedBuild": true,
+      "reactProfile": false,
+      "directory": "C:\\Users\\alexe\\.codex\\worktrees\\wave-dedup\\dnd_cards\\outputs\\testing\\runs\\test_46c66e4dd8bd86f086ac71c2\\ui-dist",
+      "indexHash": "8a80d07c74e9e545d329c678b38e8b5c6b710281e79646a2adcd02836f3bebcc",
+      "manifestHash": "ce4ef36fc20be114b37687c2fa80e6377a7048a42f58f9db37a3c440692e730e",
+      "files": 634,
+      "bytes": 171987246
+    },
+    {
+      "reused": false,
+      "isolatedBuild": true,
+      "reactProfile": false,
+      "directory": "C:\\Users\\alexe\\.codex\\worktrees\\wave-dedup\\dnd_cards\\outputs\\testing\\runs\\test_5467ea72961b2d95e3b92667\\ui-dist",
+      "indexHash": "8a80d07c74e9e545d329c678b38e8b5c6b710281e79646a2adcd02836f3bebcc",
+      "manifestHash": "ce4ef36fc20be114b37687c2fa80e6377a7048a42f58f9db37a3c440692e730e",
+      "files": 634,
+      "bytes": 171987246
+    }
+  ],
+  "preservedFailures": [
+    {
+      "file": "C:/Users/alexe/.codex/worktrees/wave-dedup/dnd_cards/outputs/testing/combined-243fa469-core-20261007/report.json",
+      "reason": "800 Windows passes, 10 mandatory Linux-only skips; no successful core claim"
+    },
+    {
+      "file": "C:/Projects/dnd_cards/outputs/testing/combined-linux-preflight-1791360972652/receipt.json",
+      "reason": "809 Linux passes, 1 owned PostgreSQL test failed because this Node-only image has no initdb; full Linux preflight not accepted"
+    }
+  ],
+  "limitations": [
+    "These independent local scopes are not a successful complete core shard aggregate or a hosted Linux extended suite.",
+    "No application release, schema307, catalog apply or physical retirement302 acceptance is implied.",
+    "Root/main and TimeWeb are not advanced by this local integration."
+  ],
+  "productionChanges": 0,
+  "paidProviderCalls": 0
+}
