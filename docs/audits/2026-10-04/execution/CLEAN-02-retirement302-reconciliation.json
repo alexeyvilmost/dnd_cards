@@ -72,5 +72,58 @@
     "Bind the actual published executor and accepted current backup/archive/image evidence to the host controller.",
     "Dispatch and reconcile the saved intent through the shared host operation journal; do not execute an unsupported reconciliation flag on an older image.",
     "Verify the then-current image pair and fresh source before production retirement."
-  ]
+  ],
+  "implementationSourceCommit": "d16057b7f4849e35410a582b63fd0f6e13c22429",
+  "currentMainIntegration": {
+    "mergeCommit": "0a655f427d4dfc5f1102a2d6cfc5760a79af87dc",
+    "mainSource": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+    "upstreamFiles": 8,
+    "goSQLAndNativeSourceUnchanged": true,
+    "windows": {
+      "tests": 235,
+      "passed": 230,
+      "failed": 0,
+      "skipped": 5
+    },
+    "linux": {
+      "receipt": "outputs/operations/retirement-integration-linux-2026-10-07T03-02-08.485Z/receipt.json",
+      "receiptHash": "sha256:5109b4d0896282ea6f72fbe1f9c2daea9b74236275830b8254355e23e710a6c4",
+      "counts": {
+        "tests": 235,
+        "passed": 235,
+        "failed": 0,
+        "skipped": 0
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "sourceHashes": {
+        "scripts/release/deployed-baseline.test.mjs": "sha256:8b5146c01cb3a28f102049a6b2c3a508052e9dfaf83d4462c724f4f91e36287c",
+        "scripts/release/migration-rehearsal.test.mjs": "sha256:2528d528f4e4d9e3c48ad7edfa3c5b43b9d15e393a829ff2f614bc144f0d4e29",
+        "scripts/release/produce-writer-browser-proof.test.mjs": "sha256:d1941cb522df68974ca270fa9f2fd1b228db81aa567833a8ce28433b6be041a7",
+        "scripts/release/rehearsal-scenarios.test.mjs": "sha256:f6ee12e26064a063411cbe5ac978ef9e1a760dc7adcd412cf3c8eaa86791fa2b",
+        "scripts/release/retirement-artifacts.test.mjs": "sha256:740871df724a3152a75e177d9cbe88c736a045283596759f9d7928480f9f87cc",
+        "scripts/release/retirement-build-baseline.test.mjs": "sha256:01e69b68a25d7f0f006b88405019058b1c42f2482e03f6517f9c28d575446424",
+        "scripts/release/retirement-execution-result.test.mjs": "sha256:59335647955d5bf592e0256d4279ff86bf89d28c553e91801076e7b6d7909813",
+        "scripts/release/retirement-outcome-journal.test.mjs": "sha256:bd87ac511be1173c90ee23c42251ffa47cc834a7d4301796dd2b01c745a8c9dc",
+        "scripts/release/retirement-projection.test.mjs": "sha256:5512360fb626631267054433b9bb6ee14d889a5091b9b0d2693f715bf79d3da3",
+        "scripts/release/retirement-registry.test.mjs": "sha256:21b6ad0393a1643d7b7311d12db12e20b8529aa23d33f978cda54d76bb998342",
+        "scripts/release/retirement-state.test.mjs": "sha256:b11254b34ae3247cc17f3897bf7422aa6f0f279777911b6899d19af740273e03",
+        "scripts/release/reviewed-deployment-refusal.test.mjs": "sha256:76ba2e4de29a382b12ed8d1bf29f0877e33abed16db3b594872c3208645ea3e8",
+        "scripts/release/validate-manifest.test.mjs": "sha256:df37c3e8c269aba8f44a0f48a08202a03713b6f7f5878b68a5da391726f3468b",
+        "scripts/release/writer-fixture-cli.test.mjs": "sha256:33fb7b17817c1d30ce464b3cdc06c7f7d6069b346927718f5a1b540014e48c3c",
+        "scripts/release/writer-runtime-profile.test.mjs": "sha256:9ba6f993de18d3b03ea5516de56312278a606e4dd5ceb07bf4dd247fe3bf0f67",
+        "scripts/release/retirement-intent.mjs": "sha256:fad74b2a7da6401a88a20e894c17f6a7590a7f8a6c017882c4053ab740eded14",
+        "scripts/release/retirement-outcome-journal.mjs": "sha256:f83ae66a08499d82ee49831927ad24af7e76eb98131d182865f09d1d959c3324",
+        "scripts/release/retirement-execution-result.mjs": "sha256:0824ce00976235a5cd47a24ee04c5afa75dc09e98586d57ad3b15083b86b9c75",
+        "scripts/release/deploy-state.mjs": "sha256:99f76f885644f8d0963095859e1d1ba53c9542ba8ba9c3bc6c288de278d6d7bb",
+        "backend/migrations/data/retire-legacy-characters-302.sql": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+        "backend/migrations/character_lifecycle_301.go": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
+      },
+      "network": "none",
+      "readOnlySource": true
+    },
+    "scope": "Metadata/filesystem/simulated adapter contracts. Does not claim Linux Go execution or current production deployment."
+  }
 }

@@ -3462,7 +3462,14 @@
           "passedCases": 38,
           "skipped": 0,
           "productionChanges": 0,
-          "productionReady": false
+          "productionReady": false,
+          "currentMainIntegration": {
+            "mergeCommit": "0a655f427d4dfc5f1102a2d6cfc5760a79af87dc",
+            "mainSource": "95546ec37f35d28aa11bb51cd675f618c38d4b6e",
+            "linuxContractsPassed": 235,
+            "skipped": 0,
+            "productionChanges": 0
+          }
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
