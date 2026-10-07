@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "kind": "accepted-local-source-composed-ordinary-historical-migration-chain",
+  "recordedAt": "2026-10-07T11:11:16.789Z",
+  "status": "all-registered-original-migrations-and-exact-repeat-passed",
+  "sourceCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+  "ordinaryHistoricalChainAccepted": true,
+  "freshInstallAcceptance": false,
+  "standardMigrationProfileIntegrated": false,
+  "originalFullSnapshot": false,
+  "originalCertificationWorkflowReplayed": false,
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "evidence": [
+    {
+      "path": "outputs/testing/test05-historical-source-audit/fresh102_0f7c31eeba132593a070/report.json",
+      "sha256": "sha256:82a24021ad4c55ce848c3a263c4f2a93c6fb13102c19f7d8a32e27acf098fc6f",
+      "bytes": 1167304
+    },
+    {
+      "path": "outputs/operations/authentic-pre278-composition-1791368542610/receipt.json",
+      "sha256": "sha256:e41f30f10e2a167e28780bb2489444756ed817e795ba2978f2aaf3440776aee8",
+      "bytes": 5115
+    },
+    {
+      "path": "outputs/operations/source-composed278-native-1791369055391/receipt.json",
+      "sha256": "sha256:e5ca9660bc9a108a53571a9a55f90515c03056eb3650818ff2976fdd970dd835",
+      "bytes": 1443135
+    },
+    {
+      "path": "outputs/operations/authentic-caster296-1791370475567/receipt.json",
+      "sha256": "sha256:df076c75df3e1f68e056e0f603ca43d8c95f18668d59404858305b470e14ff79",
+      "bytes": 13789
+    }
+  ],
+  "registered": {
+    "count": 303,
+    "hash": "4500b30b199be9c57b1fadacf7b13a20eea07c1ad2d037dbd2e242cda7bd0d06",
+    "boundary": "307_catalog_presentation"
+  },
+  "sourceDump": {
+    "path": "C:\\Projects\\dnd_cards\\outputs\\operations\\first-capture-private-cfe9\\database.dump",
+    "sha256": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+    "bytes": 958580611
+  },
+  "sourceInventoryHash": "sha256:db566a401b118990b893ee43818e78e9de7ff203822177147bac875380c1c5cb",
+  "fixturePreparation": {
+    "sourceIdentitiesBound": 34,
+    "sourceResourcesInserted": 28,
+    "historyCanaryRefused": true,
+    "identityBindingBeforeHistory": true,
+    "allNonTargetBootstrapRowsExact": true,
+    "originalBootstrapLedgerExact": true,
+    "retiredCardLifecycle": {
+      "kind": "authentic-retired-card-lifecycle-bound-at-empty082",
+      "sourceMembershipHash": "sha256:16a4f31db1b0af729c0f37fb3222a4c8842e12a1a84e50cdbca3dfd9056f36ee",
+      "bindings": [
+        {
+          "previousId": "9fbbd22b-687d-412d-90fd-1858105670a9",
+          "sourceId": "cb6650a8-489f-4edb-a4f3-77e32f8c2317",
+          "reference": "MVP-LONGSWORD",
+          "sourceDeletedAt": "2026-07-09T17:08:57.914855+00:00",
+          "rowHash": "f56e50dcfab30a0ea7a624dcfdc3752a28e55e345f845c4dac58139c8394af17"
+        },
+        {
+          "previousId": "28a3b51b-9035-4a84-b177-2a891131ea1c",
+          "sourceId": "d650a76f-068c-4956-96db-56e5c50bd6c5",
+          "reference": "MVP-SHIELD",
+          "sourceDeletedAt": "2026-07-09T17:09:11.418577+00:00",
+          "rowHash": "95721b5afc8815ab7c5dfa300428d1b2a3ce14a46c058abb0da013fab10930da"
+        }
+      ],
+      "allOtherPublicRowsExact": true,
+      "originalMigrationLedgerExact": true,
+      "allGameplayAndHistoricalTablesEmpty": true,
+      "existingJsonReferencesAbsent": true,
+      "productionChanges": 0
+    },
+    "latePublicIdentities": {
+      "kind": "authentic-public-late-identity-inputs-at-empty082",
+      "identitySourceHash": "sha256:964b45cd142a3729af4fbd68db83d6ad35f4e7dd0eb1485c2fb022e9ed573c52",
+      "priorRefusalReportHash": "sha256:a45135905ad49cc1e181509517b2610deba165bc78291927ae0d96e4951b492b",
+      "rows": [
+        {
+          "id": "58af20d9-f80a-42dd-8e9d-844740fcffe1",
+          "reference": "ACT-goliath-large-form",
+          "identitySource": {
+            "path": "outputs/operations/source-composed278-native-1791369055391/public-pre279-source.json",
+            "sha256": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c"
+          },
+          "publicFieldsHash": "sha256:994abe303322f38daebadb200a6bf3b71fa335657dd1c0c8fda60419d4c7e6f0"
+        },
+        {
+          "id": "7517b42e-4417-407f-a16c-5fa0c9e81282",
+          "reference": "ACT-goliath-stone",
+          "identitySource": {
+            "path": "outputs/operations/source-composed278-native-1791369055391/public-pre279-source.json",
+            "sha256": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c"
+          },
+          "publicFieldsHash": "sha256:d4eb73d1f68e7a296c610905844d8195bc0f8da3e37e614b3d7507e1285ba100"
+        }
+      ],
+      "allOtherPublicRowsExact": true,
+      "originalMigrationLedgerExact": true,
+      "allGameplayAndHistoricalTablesEmpty": true,
+      "manualStatusesAssigned": false,
+      "productionChanges": 0,
+      "originalFullSnapshot": false
+    }
+  },
+  "source278": {
+    "before": {
+      "targets": 1656,
+      "passed": 1054,
+      "failed": 602
+    },
+    "after": {
+      "targets": 1656,
+      "passed": 1656,
+      "failed": 0
+    },
+    "inserted": 109,
+    "updated": 479,
+    "fixtureHash": "sha256:c4c4403390b8e87cfadb60df5ae543462e47b84df9489bea639395276008152f",
+    "historyAndAllOtherRowsExact": true,
+    "ledgerExact": true
+  },
+  "source279": {
+    "before": {
+      "targets": 2564,
+      "passed": 1914,
+      "failed": 650
+    },
+    "after": {
+      "targets": 2564,
+      "passed": 2564,
+      "failed": 0
+    },
+    "inserted": 35,
+    "updated": 615,
+    "fixtureHash": "sha256:3f5382dab681079045f0ec14af2889d5de562626e5e7ead7066f473c05eab55c",
+    "historyAndAllOtherRowsExact": true,
+    "ledgerExact": true
+  },
+  "source296": {
+    "fixtureHash": "sha256:58a00175b718d3057503eb26a9d1c27e323009817cabcb1be7f720492b82c04e",
+    "sourceDumpHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+    "sourceBoundary": "297_retain_generic_spell_free_uses",
+    "before": {
+      "targets": 42,
+      "passed": 41,
+      "failed": 1
+    },
+    "after": {
+      "targets": 42,
+      "passed": 42,
+      "failed": 0
+    },
+    "updated": 1,
+    "changedFields": [
+      {
+        "table": "classes",
+        "id": "aa30f40a-88e5-4a0a-a79e-f3f5119bfa41",
+        "reference": "CLASS-rogue",
+        "fields": [
+          "level_progression"
+        ]
+      }
+    ],
+    "referenceRowsBefore": 19,
+    "referenceRowsAfter": 20,
+    "referenceProjectionMatchesOriginalExtractor": true,
+    "allUnrelatedReferenceRowsExact": true,
+    "allExistingHistoryAndOtherNonDerivedRowsExact": true,
+    "allOtherTargetFieldsExact": true,
+    "allOriginalLedgerRowsExact": true,
+    "manualStatusesAssignedByHydration": false
+  },
+  "final": {
+    "ledgerRows": 303,
+    "ledgerIdsHash": "4500b30b199be9c57b1fadacf7b13a20eea07c1ad2d037dbd2e242cda7bd0d06",
+    "beforeRepeat": {
+      "ledgerRows": 303,
+      "ledgerHash": "bdb4ed868a35d8cbaca7a3ef4738cb7dab08d58867bb8bf44de1a63fda01a488",
+      "spellRows": 510,
+      "spellAllHash": "bbb8c26769dbe34c42b48c4fccace00e918c12239897b65c34957076ac85a7e3",
+      "spellNonSupportHash": "9e7ec14fa4699ae67305368f6bb75907e9efff04ac778cd800c241cc66542af4"
+    },
+    "allTablesBeforeRepeat": {
+      "tableCount": 97,
+      "rowCount": 24591,
+      "hash": "0637544c56f6b2396e91f6723ee14aef29a9454734198e52d7a62827f14e602f"
+    },
+    "revocations": [
+      {
+        "migration": "102",
+        "rows": 1,
+        "preimagesExact": true
+      },
+      {
+        "migration": "103",
+        "rows": 1,
+        "preimagesExact": true
+      },
+      {
+        "migration": "119",
+        "rows": 1,
+        "preimagesExact": true
+      }
+    ],
+    "manual": {
+      "targetRows": 4,
+      "noAutomaticVerified": true,
+      "allUnlocked": true
+    },
+    "afterRepeat": {
+      "ledgerRows": 303,
+      "ledgerHash": "bdb4ed868a35d8cbaca7a3ef4738cb7dab08d58867bb8bf44de1a63fda01a488",
+      "spellRows": 510,
+      "spellAllHash": "bbb8c26769dbe34c42b48c4fccace00e918c12239897b65c34957076ac85a7e3",
+      "spellNonSupportHash": "9e7ec14fa4699ae67305368f6bb75907e9efff04ac778cd800c241cc66542af4"
+    },
+    "allTablesAfterRepeat": {
+      "tableCount": 97,
+      "rowCount": 24591,
+      "hash": "0637544c56f6b2396e91f6723ee14aef29a9454734198e52d7a62827f14e602f"
+    }
+  },
+  "checks": {
+    "sourceACL": true,
+    "childACL": true,
+    "sourceHashBefore": true,
+    "isolation": true,
+    "authenticClosedSource": true,
+    "repeatAllPublicRowsExact": true,
+    "repeatNoLedgerOrSpellChanges": true,
+    "sourceHashAfter": true,
+    "sourceCodeUnchanged": true
+  },
+  "cleanup": {
+    "status": "stopped",
+    "resources": [
+      {
+        "kind": "container",
+        "status": "stopped"
+      },
+      {
+        "kind": "volume",
+        "status": "stopped"
+      }
+    ],
+    "remaining": {
+      "containers": 0,
+      "volumes": 0,
+      "networks": 0
+    }
+  },
+  "limitations": [
+    "Original mechanics-20260929 full snapshot not found; authoritative public inputs are explicitly composed from unchanged genuine dumps and archived preimages",
+    "Source-composed fixture differs from replay of the original certificate issuing workflow",
+    "Runner and provenance recipes remain in ignored local outputs and are not yet a maintained installer or blocking CI profile",
+    "This local proof neither accepts the concurrent production release nor permits restoring an old snapshot over live writes"
+  ],
+  "nextSteps": [
+    "Package authentic source provenance and deterministic public test inputs in maintained testing code without placing private dumps or credentials in Git",
+    "Integrate a supported fresh-install scenario and upgrade matrix into mandatory migration profile with no skipped or zero tests",
+    "Retain unchanged original guards and hash all historical/non-target rows; verify derived target references using the canonical database extractor",
+    "Run the integrated profile locally and in CI before marking TEST-05 complete"
+  ]
+}
