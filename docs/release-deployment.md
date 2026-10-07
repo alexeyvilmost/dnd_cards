@@ -44,6 +44,14 @@ extended CI. Новый migration baseline готовят каноничной �
 применяют предложенную конфигурацию обычным проверенным commit/CI. Старый
 frontend anchor не даёт разрешения на выборочную выкатку после изменения схемы.
 
+Публичный writer fixture после записанного удаления V1/V2 готовит 302 отдельно
+на своём изолированном PostgreSQL через `retire-empty-writer-fixture.mjs`.
+Нужны живой owned adapter, точный checksum и пустые старые таблицы; перед SQL
+проверяются настоящий snapshot/restore, прежний журнал и все сохраняемые строки.
+Synthetic binding этого стенда не является production approval. Startup-реестр
+не выполняет 302; рабочая БД не восстанавливается. Browser preview предыдущего
+приложения сравнивается с установленным database baseline, нового — с manifest.
+
 Текущая принятая версия и выполняющиеся попытки указаны в [реестре выполнения](audits/2026-10-04/execution/README.md). Исторический отказ выборочной публикации E089 и границы локальной проверки сохранены в [отдельном отчёте](audits/2026-10-04/execution/REL-05-E089-selective-refusal-20261007.md).
 
 Историческая запись до CI32: CI31 frontend-only прошёл, но публикация отказала при запуске отдельного стенда; selective delivery не была принята. [Доказательства и границы](audits/2026-10-04/execution/CI-31-selective-publication-refusal.md).

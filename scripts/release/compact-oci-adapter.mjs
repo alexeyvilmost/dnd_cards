@@ -11,6 +11,11 @@ import {safeExecutionEnvironment} from './ui-execution-profile.mjs';
 const hashPattern=/^sha256:[a-f0-9]{64}$/;
 const hash=async file=>{const h=createHash('sha256');for await(const bytes of createReadStream(file))h.update(bytes);return 'sha256:'+h.digest('hex');};
 const read=async p=>JSON.parse(await readFile(p,'utf8'));
+const ownedAdapters=new WeakSet();
+export async function assertOwnedCompactAdapter(adapter){
+ if(!ownedAdapters.has(adapter))throw Error('Live owned compact adapter required');
+ await adapter.assertOwned();
+}
 async function regular(file){const s=await lstat(file);if(!s.isFile()||s.isSymbolicLink()||path.resolve(file)!==await realpath(file))throw Error('Real regular input file required');return s;}
 export async function validateOwnedDump(proof){
  if(proof?.schemaVersion!==1||proof.kind!=='owned-integration-dump'||!/^test_[a-f0-9]{24}$/.test(proof.runId??'')||!hashPattern.test(proof.sha256??''))throw Error('Owned integration dump proof required');
@@ -197,5 +202,6 @@ export async function createCompactOciAdapter({directory,dump,backend,worker,fro
   if(!browserRelay)browserRelay=await startOwnedBrowserRelay(async input=>{await ownedResource('container',names.proxy);return JSON.parse(await docker(['exec','-i',names.proxy,'node','--input-type=module','-e',ownedBrowserForwardProgram],{input:JSON.stringify(input)}));});
   return {origin:browserRelay.origin,image:frontend.image??frontend.imageId,identity:(await http('http://frontend:3000/build-info.json')).body};
  }
- return {execution:'docker',owner,names,directory,start,stopApplications,startBrowserSurface,observe,query,dumpDatabase,restoreDatabase,artifactClosure,imageControl:body=>imageRequest('control',{method:'POST',body}),imageStats:()=>imageRequest('stats'),request:(route,options)=>{if(typeof route!=='string'||!route.startsWith('/')||route.startsWith('//')||/[\r\n]/.test(route))throw Error('Owned API path required');return http('http://backend:8080/api'+route,options);},workerCalls:async()=>{const r=await http('http://127.0.0.1:8091/__owned_counter');if(r.status!==200||!Number.isSafeInteger(r.body.posts)||r.body.posts<0)throw Error('Actual proxy counter invalid');return r.body.posts;},assertOwned:async()=>{if(!ready)await initialize();await assertNetwork();assert.deepEqual(JSON.parse(await query('SELECT json_agg(run_id ORDER BY run_id) FROM test_run_ownership;')),[ownedDump.runId]);},cleanup};
+ const adapter={execution:'docker',owner,names,directory,start,stopApplications,startBrowserSurface,observe,query,dumpDatabase,restoreDatabase,artifactClosure,imageControl:body=>imageRequest('control',{method:'POST',body}),imageStats:()=>imageRequest('stats'),request:(route,options)=>{if(typeof route!=='string'||!route.startsWith('/')||route.startsWith('//')||/[\r\n]/.test(route))throw Error('Owned API path required');return http('http://backend:8080/api'+route,options);},workerCalls:async()=>{const r=await http('http://127.0.0.1:8091/__owned_counter');if(r.status!==200||!Number.isSafeInteger(r.body.posts)||r.body.posts<0)throw Error('Actual proxy counter invalid');return r.body.posts;},assertOwned:async()=>{if(!ready)await initialize();await assertNetwork();assert.deepEqual(JSON.parse(await query('SELECT json_agg(run_id ORDER BY run_id) FROM test_run_ownership;')),[ownedDump.runId]);},cleanup};
+ ownedAdapters.add(adapter);return adapter;
 }

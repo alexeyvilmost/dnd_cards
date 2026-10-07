@@ -1058,14 +1058,11 @@
           "Only if a real candidate exists: obtain workload/ownership/reference proof and exact backup-bound plan before destructive operation; report logical/reusable/physical space separately."
         ],
         "finalStorageRetention": {
-          "record": "docs/audits/2026-10-04/execution/CI-35-5c45-production-and-storage-20261007.json",
-          "status": "actual_two_current307_backups_and_restore_baseline_verified",
+          "record": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
+          "status": "two_actual_backups_verified_with_protected_pre35_restore",
           "retainedBackups": 2,
-          "currentSnapshotSchema": 307,
-          "currentSnapshotRestoreDrill": true,
-          "predecessorRestoreDrill": true,
-          "diskFreeBytes": 26468847616,
-          "productionDatabaseChanges": 0
+          "diskFreeBytes": 28342177792,
+          "workingDatabaseChanges": 0
         },
         "currentBackupRetention": {
           "record": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
@@ -1116,7 +1113,7 @@
     {
       "id": "AI-02",
       "title": "Единый сервис генерации и хранения изображений",
-      "status": "proxy_backend_deployed_live_configuration_verified_ui_generation_pending",
+      "status": "implemented_deployed_generation_owner_confirmed",
       "evidence": "docs/audits/2026-10-04/execution/AI-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -1133,7 +1130,10 @@
         "nextAcceptance": [],
         "previous_nextAcceptance_20261007": [
           "Verify intended application flow on accepted release with explicit request identity and no blind paid retry."
-        ]
+        ],
+        "ownerConfirmationRecord": "docs/audits/2026-10-04/execution/AI-02-owner-confirmation.json",
+        "extraPaidLocalGenerationSkipped": true,
+        "automatedPaidProductionGenerationClaimed": false
       },
       "historical_acceptance_scope": "Единый provider→storage→entity путь проверен локально. TimeWeb provider ImagesPOST подтверждён отдельно: один PNG1024x1024/200 без retries. Production endpoint нового backend ожидаетвыкатки.",
       "latest_observed": {
@@ -1208,10 +1208,10 @@
     {
       "id": "CLEAN-02",
       "title": "Постепенно убрать старые продуктовые ветки",
-      "status": "v1_v2_code_removed_ci_verified_db_retained",
+      "status": "v1_v2_code_and_tables_removed_production_verified",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-02.md",
       "remaining_gates": [
-        "LEGACY-DB-RETIREMENT"
+        "POST-RETIREMENT-RELEASE-INTEGRATION"
       ],
       "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
@@ -1230,7 +1230,15 @@
         ],
         "nextAcceptance": [
           "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
-        ]
+        ],
+        "productionRetirement": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-installed35-production-retirement-20261008.json",
+          "status": "succeeded_and_independently_verified",
+          "operationId": "retirement302-installed35-20261008",
+          "actualManualRecordRun": 37693544430,
+          "schemaVersions": 308,
+          "productionDatabaseRestored": false
+        }
       },
       "historical_acceptance_scope": "Explicitly authorized V1/V2 code/support removal completed with native PG11 and fresh UI/worker13 checks. Current V3, paper, runs, shared inventories and historical DB rows preserved; physical retired-storage removal requires verified backup/migration separately. Fresh full suite pending.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
@@ -2661,27 +2669,34 @@
   ],
   "execution_current": {
     "schemaVersion": 1,
-    "status": "full-and-genuine-frontend-only-production-accepted-retirement-open",
-    "recordedAt": "2026-10-07T20:02:43.394Z",
-    "applicationSourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36",
+    "status": "production_35a9_accepted_legacy_retirement_succeeded_postretirement_release_integration_open",
+    "recordedAt": "2026-10-07T22:04:55.686Z",
+    "applicationSourceCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
     "componentSources": {
-      "frontend": "24c5213260f1940d63595ab4844153a075e6ef36",
-      "backend": "e122021329176074169fe8ca33aed7ead5ba7000",
-      "rulesWorker": "e122021329176074169fe8ca33aed7ead5ba7000"
+      "frontend": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+      "backend": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+      "rulesWorker": "35a9bdf09e6f9bdabd1492028a788c20eeda8201"
     },
-    "actualCIRun": 37676615503,
-    "actualPublicationRun": 37677249209,
-    "actualDeploymentRun": 37678313787,
+    "actualCIRun": 37681583257,
+    "actualPublicationRun": 37684028510,
+    "actualDeploymentRun": 37685268475,
     "actualDeploymentAttempt": 1,
-    "manifestHash": "sha256:fc3b032f3bfd7808cba793dae6ee2fa67ecbb7338073af3daa7176130cdcea46",
-    "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
-    "protectedFullReleaseRecord": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+    "manifestHash": "sha256:adf6ad3fecf4f84f26956aef98a354ac168ee77114261e640a452210cd44fb55",
+    "record": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
+    "protectedFullReleaseRecord": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
     "productionDatabaseRestored": false,
     "all29Complete": false,
     "remaining": [
-      "Explicit physical legacy-character retirement with current v4/controller proof and recorded baseline",
-      "Final requirement-by-requirement completion audit"
-    ]
+      "Post-retirement exact-source CI/publication/full delivery and refreshed recovery anchor",
+      "Final requirement-by-requirement original29 completion audit"
+    ],
+    "deploymentControlCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+    "releaseId": "candidate-35a9bdf09e6f-519d79a360f1",
+    "diskRetentionRecord": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
+    "databaseSchemaVersions": 308,
+    "retirementRecord": "docs/audits/2026-10-04/execution/CLEAN-02-installed35-production-retirement-20261008.json",
+    "actualRetirementRecordRun": 37693544430,
+    "localFollowonVerification": "docs/audits/2026-10-04/execution/REL-postretirement-fixture-20261008.json"
   },
   "backup_storage_scope": {
     "schemaVersion": 1,

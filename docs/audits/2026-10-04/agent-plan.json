@@ -3381,14 +3381,11 @@
           "productionDatabaseChanges": 0
         },
         "currentBackupRetention": {
-          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
-          "fullServerBackups": 2,
-          "productionDatabaseChanges": 0,
-          "physicalDisk": {
-            "total": 50884108288,
-            "used": 25205776384,
-            "available": 25618616320
-          }
+          "record": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
+          "status": "two_actual_backups_verified_with_protected_pre35_restore",
+          "retainedBackups": 2,
+          "diskFreeBytes": 28342177792,
+          "workingDatabaseChanges": 0
         },
         "latestVerifiedRelease": {
           "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
@@ -3828,7 +3825,7 @@
         2,
         5
       ],
-      "status": "v1_v2_code_removed_ci_verified_db_retained",
+      "status": "v1_v2_code_and_tables_removed_production_verified",
       "steps": [
         "Составить route/API/data dependency map и измерение использования без личного содержания. Название старого каталога не доказывает неиспользуемость.",
         "Сохранить четыре основных раздела и Профиль/Настройки/Экспорт/Инициативу; сохранить обслуживающие библиотеку редакторы, ShopDetail, inventory mechanics и шаблоны для weapon mastery.",
@@ -3871,10 +3868,10 @@
           "Later explicit user request superseded gradual deprecation: obsolete V1/V2 routes/controllers/models/client/export removed, current V3 CharacterSheetV2 and shared inventory/paper/run mechanics retained; legacy inventory kind rejects rather than falls through."
         ],
         "limitations": [
-          "V1/V2 code, routes and API support are removed. Legacy tables remain. Current and rollback releases are V3-only; physical production retirement has not been executed."
+          "The post-retirement build baseline and public writer fixture must be integrated before accepting the next full deployment."
         ],
         "nextAcceptance": [
-          "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+          "Complete the post-retirement exact-source CI/publication/full-anchor integration and final original29 audit."
         ],
         "evidence": [
           "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.md",
@@ -4033,7 +4030,18 @@
         },
         "previousLimitations20261007": [
           "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
-        ]
+        ],
+        "previousPhysicalRetirementLimitations": [
+          "V1/V2 code, routes and API support are removed. Legacy tables remain. Current and rollback releases are V3-only; physical production retirement has not been executed."
+        ],
+        "productionRetirement": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-installed35-production-retirement-20261008.json",
+          "status": "succeeded_and_independently_verified",
+          "operationId": "retirement302-installed35-20261008",
+          "actualManualRecordRun": 37693544430,
+          "schemaVersions": 308,
+          "productionDatabaseRestored": false
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -4243,27 +4251,34 @@
   "remaining_verification": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "execution_current": {
     "schemaVersion": 1,
-    "status": "full-and-genuine-frontend-only-production-accepted-retirement-open",
-    "recordedAt": "2026-10-07T20:02:43.394Z",
-    "applicationSourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36",
+    "status": "production_35a9_accepted_legacy_retirement_succeeded_postretirement_release_integration_open",
+    "recordedAt": "2026-10-07T22:04:55.686Z",
+    "applicationSourceCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
     "componentSources": {
-      "frontend": "24c5213260f1940d63595ab4844153a075e6ef36",
-      "backend": "e122021329176074169fe8ca33aed7ead5ba7000",
-      "rulesWorker": "e122021329176074169fe8ca33aed7ead5ba7000"
+      "frontend": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+      "backend": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+      "rulesWorker": "35a9bdf09e6f9bdabd1492028a788c20eeda8201"
     },
-    "actualCIRun": 37676615503,
-    "actualPublicationRun": 37677249209,
-    "actualDeploymentRun": 37678313787,
+    "actualCIRun": 37681583257,
+    "actualPublicationRun": 37684028510,
+    "actualDeploymentRun": 37685268475,
     "actualDeploymentAttempt": 1,
-    "manifestHash": "sha256:fc3b032f3bfd7808cba793dae6ee2fa67ecbb7338073af3daa7176130cdcea46",
-    "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
-    "protectedFullReleaseRecord": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
+    "manifestHash": "sha256:adf6ad3fecf4f84f26956aef98a354ac168ee77114261e640a452210cd44fb55",
+    "record": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
+    "protectedFullReleaseRecord": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
     "productionDatabaseRestored": false,
     "all29Complete": false,
     "remaining": [
-      "Explicit physical legacy-character retirement with current v4/controller proof and recorded baseline",
-      "Final requirement-by-requirement completion audit"
-    ]
+      "Post-retirement exact-source CI/publication/full delivery and refreshed recovery anchor",
+      "Final requirement-by-requirement original29 completion audit"
+    ],
+    "deploymentControlCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+    "releaseId": "candidate-35a9bdf09e6f-519d79a360f1",
+    "diskRetentionRecord": "docs/audits/2026-10-04/execution/35A9-full-release-and-storage-20261008.json",
+    "databaseSchemaVersions": 308,
+    "retirementRecord": "docs/audits/2026-10-04/execution/CLEAN-02-installed35-production-retirement-20261008.json",
+    "actualRetirementRecordRun": 37693544430,
+    "localFollowonVerification": "docs/audits/2026-10-04/execution/REL-postretirement-fixture-20261008.json"
   },
   "execution_history": [
     {

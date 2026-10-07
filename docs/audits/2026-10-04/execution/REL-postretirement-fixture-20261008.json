@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "status": "locally-verified-awaiting-exact-commit-ci-publication-and-delivery",
+  "verifiedAt": "2026-10-07T22:16:52.438Z",
+  "production": {
+    "applicationCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+    "migrationCount": 308,
+    "recordWorkflow": {
+      "runId": 37693544430,
+      "attempt": 1,
+      "status": "success"
+    }
+  },
+  "changes": [
+    "preserve-real-mixed-predecessor-identities",
+    "adopt-recorded308-build-baseline",
+    "prepare-empty-public-writer-fixture-with-canonical302-on-owned-db-only"
+  ],
+  "buildBaselineProposal": {
+    "schemaVersion": 1,
+    "kind": "retirement-build-baseline",
+    "status": "review-required",
+    "activeHash": "sha256:e751b1cc181f93cbe9e162ad9ddf4d445b441b7b28a526ef3e194efbffb31e38",
+    "inputConfigHash": "sha256:9f909b086fe1abc6807527ac25dcb677bcd0f6b4bd99704e402c8da86f92d1c6",
+    "outputConfigHash": "sha256:cc653beb552e8c8f71ed355a90c1a3cfd56a6728ad531cf1fe2cb1bb3eb65c96",
+    "retirementReceiptHash": "sha256:1879eae80956cba58e5f02872059a85cac0d5e15036da3049f7bee3c25a1a788",
+    "retirementSchemaProofHash": "sha256:fb0c15ab9435cf8ac273eab9431d7bac68c5336580c59bbfdefb46545b71c35c",
+    "retirementApprovalHash": "sha256:4108e545cf1af8bcd3cbd083fb6a9e4e112a20edc21e240203245fe5e272cdec",
+    "executorImageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:bc12c832e56a06e797e46fbd0fae0ecc332284e89ed944cc46954f78134eeda6",
+    "changed": true,
+    "databaseChanges": 0
+  },
+  "localTests": {
+    "windowsRelease": {
+      "tests": 861,
+      "passed": 851,
+      "failed": 0,
+      "skipped": 10,
+      "skipReason": "Linux-only contracts"
+    },
+    "linuxFocused": {
+      "tests": 74,
+      "passed": 74,
+      "skipped": 0
+    }
+  },
+  "browserProof": {
+    "schemaVersion": 1,
+    "status": "passed",
+    "verifiedAt": "2026-10-07T22:16:02.399Z",
+    "scope": "local-only-public308-fixture-on-real35-images",
+    "productionReady": false,
+    "productionChanges": 0,
+    "sourceHashes": {
+      "scripts/release/compact-oci-adapter.mjs": "sha256:cae3cb0206ebfe539733d9c9ec7bad1e36e0e032c59bf53c936e5a36b3ff8890",
+      "scripts/release/retire-empty-writer-fixture.mjs": "sha256:15f8c5c90f3ba3336309c9e9e77229a90f484b96296abda14a817b3d64de534d",
+      "scripts/release/produce-writer-browser-proof.mjs": "sha256:3383d14d5c4921922cab80ff4688aa76af73dfef05ffd72cce96f569bcbae89f",
+      "scripts/release/writer-fixture-package.mjs": "sha256:22154218f4a84853f0299668f041ca0db5beae1ee64aec60aeb76edf782b6e78",
+      "scripts/release/docker-rehearsal.mjs": "sha256:c1755a2c55491245e0931accaab72ea5be02942d8b6b36eb588202966c94fc64"
+    },
+    "browserRuntime": {
+      "kind": "playwright-bundled-chromium",
+      "playwrightVersion": "1.62.1",
+      "browserRevision": "1234",
+      "browserVersion": "151.0.7922.34",
+      "executableSHA256": "sha256:0b20b130e7edd9dd51873be867761295fe0cfad490c2b9a64f95bd3cfc08fa71",
+      "runnerOS": "linux",
+      "architecture": "x64"
+    },
+    "ownedExecutions": 2,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "linuxFocusedTests": {
+      "tests": 74,
+      "passed": 74,
+      "skipped": 0
+    },
+    "originalTransferFailurePreserved": true,
+    "evidence": "outputs/testing/postretirement-public-browser-1791411165067/verified-evidence-r3"
+  },
+  "originalPlan": {
+    "tasks": 29,
+    "requirementsHash": "9da575744fc909bb1dc3c76afb52277bf7a474008abf0638a41349502122cc6d",
+    "allComplete": false
+  },
+  "remaining": [
+    "exact-reviewed-commit-and-push",
+    "actual-extended-ci",
+    "actual-immutable-publication",
+    "actual-full-timeweb-delivery-and-independent-readonly-health",
+    "final-original29-audit"
+  ],
+  "productionChangesDuringLocalVerification": 0
+}

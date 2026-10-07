@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-production-retirement-302",
+  "status": "passed",
+  "operationId": "retirement302-installed35-20261008",
+  "completedAt": "2026-10-07T22:01:45.582Z",
+  "applicationSourceCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+  "activeHash": "sha256:e751b1cc181f93cbe9e162ad9ddf4d445b441b7b28a526ef3e194efbffb31e38",
+  "operationHash": "sha256:edfa0cb94290421d77bab52fa583b67e5d3e0e7bd9ae8a004a0c11ff0dd23e6e",
+  "schemaVersions": 308,
+  "previousLedgerRowsExactlyPreserved": 307,
+  "previousLedgerFingerprint": "sha256:d2af61260b4c593d15116bd936add9b9b12adce3f799778ced619c9bf0991dd6",
+  "retiredRows": {
+    "characters": 21,
+    "characters_v2": 12,
+    "retired_items": 45,
+    "retired_inventories": 10
+  },
+  "archive": {
+    "privatePCDirectory": "D:/TimeWebBackups/dnd_cards/installed35-retirement-20261008/archive-proof",
+    "sha256": "sha256:388b935a5582fef43b235cf90a54b5301d81b08010089f985aa285f6cd7e55ed",
+    "restoreReportHash": "sha256:a0ef051267b1cd999c8359ef303d4b90e09df272e16de382e26b3219394ef865",
+    "actualArchiveRestored": true
+  },
+  "retainedTableFingerprintsLocallyPreserved": 95,
+  "actualPublishedReaderChecks": 11,
+  "actualBrowserChecks": 24,
+  "historicalGenerationsVerified": 2,
+  "actualPublishedRollbackStartupVerified": true,
+  "ownedTestCleanup": "stopped",
+  "applicationContainersUnchanged": true,
+  "paidProviderRequests": 0,
+  "productionDatabaseRestored": false,
+  "automaticMigration": false,
+  "independentEdgeRequests": [
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 992
+    },
+    {
+      "path": "/api/health",
+      "status": 200,
+      "bytes": 537
+    },
+    {
+      "path": "/build-info.json",
+      "status": 200,
+      "bytes": 452
+    }
+  ],
+  "actualManualRecord": {
+    "run": 37693544430,
+    "attempt": 1,
+    "artifact": 11514920482,
+    "conclusion": "success",
+    "scope": "recorded-retirement-only",
+    "databaseChanges": 0
+  },
+  "actualFullServerBackups": 2,
+  "privatePCBackupsRoot": "D:/TimeWebBackups/dnd_cards",
+  "disk": {
+    "total": 50884108288,
+    "used": 22500978688,
+    "available": 28323414016
+  },
+  "all29Complete": false,
+  "remainingIntegration": [
+    "Commit the locally verified mixed-predecessor identity fix and reviewed 308 build baseline.",
+    "The next hosted public writer fixture must explicitly bootstrap its disposable 302 schema before requiring a 308 ledger; do not weaken that ledger assertion or fake a 302 entry.",
+    "Complete the next exact-source CI/publication/full delivery and refresh the post-retirement full anchor.",
+    "Audit all original 29 requirements against final code and actual evidence."
+  ],
+  "evidence": [
+    {
+      "file": "outputs/operations/35a9-retirement-record-37693544430-1/independent-baseline-verification.json",
+      "sha256": "sha256:2de472a965be17c3d36ecb5c6de4db320ec7ac675a050737b47740564c9b5c35"
+    },
+    {
+      "file": "outputs/operations/storage-retention-inventory-1791410695799.json",
+      "sha256": "sha256:f9e2d94a254ea362d4af40bc36af7e852bdfa4f03ffcdfaf57d9aee0fcac54a9"
+    }
+  ],
+  "privateEvidenceHashes": {
+    "host-execution-result.json": "sha256:ded5efbe59dac46b81c243ccf92386dfc487d67124429980a4e0f77462c00f3b",
+    "host-verification.json": "sha256:b24d8611d0c92932f58c9d703793c3764f05b22c1d42be4cdc4ef8db5e497950",
+    "independent-production-verification.json": "sha256:86c91ae45c1f9c668a541980b5d867753b499bd66e4756df3416c90e02997310",
+    "edge-verification.json": "sha256:ad305fc87e1de3658894583db02bc115ca28c90794548b1bd519db315688772a",
+    "archive-proof/receipt.json": "sha256:b4da92e6b2ec7e32de0bc7111718b473f1781494756f3ac998d97792c779c446",
+    "readers-proof/receipt.json": "sha256:7a72471c0f7576394f5d07bc23d360ca53720eca568cd5cf185843c6953c3d2f",
+    "verified-v4-bundle/retirement-bundle.json": "sha256:d70ea7fd3adc34c3225c7d8b00abbbf414ad3a775e32f92f76a250620999c40e",
+    "proposed-build-baseline.json": "sha256:c59878be49674fdce3eb6ffbee26ccc1b7fa6a5fae946e0ad21e59644c351faf"
+  }
+}
