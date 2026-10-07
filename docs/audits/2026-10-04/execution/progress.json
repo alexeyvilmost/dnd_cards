@@ -91,7 +91,7 @@
     {
       "id": "TEST-05",
       "title": "Добавить расширенную регрессию, replay/migration matrix и контроль производительности",
-      "status": "supported_matrix_ci15_verified_historical_fresh278_open",
+      "status": "supported_matrix_ci38_verified_historical_sources_local_passed_fresh_ci_open",
       "evidence": "docs/audits/2026-10-04/execution/TEST-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
@@ -119,7 +119,16 @@
         "nextAcceptance": [
           "Obtain authentic pre278 source snapshot; do not hydrate target before-fields from final values or copy certificates."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json"
+        "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json",
+        "foundPre278Source": {
+          "record": "docs/audits/2026-10-04/execution/TEST-05-found-pre278-source-20261007.json",
+          "status": "original_conditions_and_native277_278_repeat_verified",
+          "sourceHash": "sha256:df0de6041e1db92003fab293977b9879287a73b3b89c391289e5c431a891f724",
+          "originalConditionsPassed": 1656,
+          "upgradeAndRepeatPassed": true,
+          "freshInstallAcceptance": false
+        },
+        "currentRemainingGate": "Integrate the maintained fresh migration profile and its mandatory CI gate using verified public historical inputs; the actual pre278 source has now been found and its upgrade/repeat accepted."
       },
       "historical_acceptance_scope": "All17 persisted Solo continuation/queue fields have positive durable API coverage:220 accepted cases,440 exact retries across reload/restart, and2 separate fail-closed boundary cases. The immutable corpus has222 entries;224 unit checks pass. Actual owned stack stopped. These targeteds do not substitute for the final combined suite. Historical fresh001/pre102 provenance and Linux race are independent remaining gates; supported297/298/299 upgrade receipts stay unchanged.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
@@ -849,7 +858,18 @@
         ],
         "nextAcceptance": [
           "Only if a real candidate exists: obtain workload/ownership/reference proof and exact backup-bound plan before destructive operation; report logical/reusable/physical space separately."
-        ]
+        ],
+        "finalStorageRetention": {
+          "record": "docs/audits/2026-10-04/execution/DB-04-final-storage-retention-20261007.json",
+          "status": "actual_two_backups_and_obsolete_rehearsal_cleanup_verified",
+          "retainedBackups": 2,
+          "currentSnapshotSchema": 307,
+          "currentSnapshotRestoreDrill": false,
+          "predecessorRestoreDrill": true,
+          "diskFreeBytes": 27468419072,
+          "latestPhysicalFilesDeletedBytes": 8479419155,
+          "productionDatabaseChanges": 0
+        }
       },
       "historical_acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
@@ -2688,19 +2708,21 @@
   ],
   "execution_current": {
     "schemaVersion": 1,
-    "status": "full-automatic-main-production-delivered-selective-open",
-    "recordedAt": "2026-10-06T21:34:40.483Z",
-    "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
-    "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
-    "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
-    "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
-    "actualCIRun": 37525609296,
-    "actualPublicationRun": 37527905823,
-    "actualDeploymentRun": 37528869764,
-    "actualCoordinatorRun": 37533666035,
+    "status": "production_904_accepted_selective_delivery_and_fresh_ci_open",
+    "recordedAt": "2026-10-07T11:39:28.169Z",
+    "applicationSourceCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+    "deploymentControlCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+    "releaseId": "candidate-904ec8cbc809-a768c0d1c312",
+    "manifestHash": "sha256:60730ddfad25772daf6ac80d9e2663467465cc61784901cd27fe81707411a4f7",
+    "actualCIRun": 37604014477,
+    "actualPublicationRun": 37605917505,
+    "actualDeploymentRun": 37607081765,
+    "actualCoordinatorRun": null,
     "productionDatabaseRestored": false,
     "all29Complete": false,
-    "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+    "record": "outputs/presentation/release-904ec8cbc809-acceptance.json",
+    "diskRetentionRecord": "docs/audits/2026-10-04/execution/DB-04-final-storage-retention-20261007.json",
+    "localIntegrationRecord": "docs/audits/2026-10-04/execution/INTEGRATION-main-local-20261007.json"
   },
   "backup_storage_scope": {
     "schemaVersion": 1,

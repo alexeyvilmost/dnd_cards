@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-original-pre278-backup-found-on-user-pc",
+  "status": "original_conditions_and_native277_278_repeat_verified",
+  "recordedAt": "2026-10-07T11:43:34.220Z",
+  "source": {
+    "path": "C:/Users/alexe/.codex/worktrees/catalog-review-status/dnd_cards/backups/catalog-mechanics-20260929.dump",
+    "bytes": 749675864,
+    "modifiedAt": "2026-09-28T21:44:22.200Z",
+    "sha256": "sha256:df0de6041e1db92003fab293977b9879287a73b3b89c391289e5c431a891f724",
+    "boundary": "276_reusable_run_sources",
+    "fullBackupFound": true,
+    "originalExportFolderFound": false
+  },
+  "preservedCopy": {
+    "schemaVersion": 1,
+    "status": "verified",
+    "copiedAt": "2026-10-07T11:42:52.8092852Z",
+    "source": "C:\\Users\\alexe\\.codex\\worktrees\\catalog-review-status\\dnd_cards\\backups\\catalog-mechanics-20260929.dump",
+    "destination": "D:\\TimeWebBackups\\dnd_cards\\historical-source-20260929\\catalog-mechanics-20260929.dump",
+    "bytes": 749675864,
+    "sha256": "sha256:df0de6041e1db92003fab293977b9879287a73b3b89c391289e5c431a891f724",
+    "currentUserOnlyAcl": true,
+    "productionChanges": 0
+  },
+  "originalConditions": {
+    "targets": 1656,
+    "passed": 1656,
+    "failed": 0,
+    "sourceHydrated": false,
+    "preimagesChanged": false,
+    "manifestFiles": [
+      {
+        "file": "feats.json",
+        "sha256": "sha256:09470686d0ddb946a38e6e2f398ae51d45ee6fd2b0758a5a9b32b012d68d4a42"
+      },
+      {
+        "file": "item-influences.json",
+        "sha256": "sha256:daa4e647bcb959cdfb5188ffb3c2ed1d3bcd0bf167aa5dd8104bc941d3ca9cec"
+      },
+      {
+        "file": "items.json",
+        "sha256": "sha256:e1b352e4f009f3cd330a7944ba0c1bc9d40e325eed31e33914bc952159997857"
+      },
+      {
+        "file": "spells.json",
+        "sha256": "sha256:4bb1192d1cbfb578741c993661ccab959ec0048eff68e093d919e4e4dba4b281"
+      }
+    ]
+  },
+  "localMigration": {
+    "applied": [
+      "277_partial_narrative_review",
+      "278_catalog_mechanics_audit"
+    ],
+    "boundary": "278_catalog_mechanics_audit",
+    "repeat": {
+      "applied": [
+        "278_catalog_mechanics_audit"
+      ],
+      "repeat": true
+    },
+    "repeatedTables": 71,
+    "repeatAllTablesBefore": "sha256:fe82fa6ab175db5f066b4f73fa2e2493b63bc178ff8ea83780d2fe7009241159",
+    "repeatAllTablesAfter": "sha256:fe82fa6ab175db5f066b4f73fa2e2493b63bc178ff8ea83780d2fe7009241159",
+    "boundedCallerHash": "sha256:3294daa6c274d80e135844e92ba83d9356c16308c4c9d5c25eb4c347a7a66275",
+    "privateGameplayRows": 0,
+    "privateGameplayTablesChecked": 46,
+    "unexpectedPrivateRowRejected": true,
+    "cleanup": {
+      "status": "stopped"
+    }
+  },
+  "evidence": {
+    "file": "outputs/operations/newly-found-mechanics-snapshot-1791373224866/receipt.json",
+    "sha256": "sha256:70efc9c7d020c12c425676a574018b3084d9870d25a78dee90942ad1684c8d5c"
+  },
+  "sourceUnchanged": true,
+  "productionChanges": 0,
+  "privateDumpCommitted": false,
+  "freshInstallAcceptance": false,
+  "remaining": [
+    "Integrate a reproducible maintained fresh migration profile and its CI gate; this genuine upgrade/repeat probe does not certify that gate.",
+    "Keep prior source-composed full303 migration receipts as historical evidence; this discovery does not retroactively change the sources of those runs."
+  ]
+}

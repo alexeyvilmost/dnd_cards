@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-integrated-main-mandatory-security-acceptance",
+  "status": "passed",
+  "completedAt": "2026-10-07T12:02:36.891Z",
+  "sourceCommit": "5738d69507f4373ec342fa2dd10e6c8e96ab102a",
+  "uncommittedOverlay": [
+    "docs/audits/2026-10-04/agent-plan.json",
+    "docs/audits/2026-10-04/execution/README.md",
+    "docs/audits/2026-10-04/execution/progress.json",
+    "scripts/testing/fixtures/historical-catalog/README.md",
+    "scripts/testing/historical-catalog-source.test.mjs",
+    "docs/audits/2026-10-04/execution/DB-04-final-storage-retention-20261007.json",
+    "docs/audits/2026-10-04/execution/DB-04-final-storage-retention-20261007.md",
+    "docs/audits/2026-10-04/execution/TEST-05-found-pre278-source-20261007.json",
+    "docs/audits/2026-10-04/execution/TEST-05-found-pre278-source-20261007.md"
+  ],
+  "fixtureGitCommit": "0873155001e596fc303a833d5df9cd740d3b1880",
+  "fixtureIsProductionCommit": false,
+  "imageDigest": "sha256:8cc57e76a0c57777601a09b9e07869edc0baefd2f65d4cb653db711fd4be8f9d",
+  "files": 104,
+  "counts": {
+    "tests": 846,
+    "passed": 846,
+    "skipped": 0
+  },
+  "network": "none",
+  "readOnlySource": true,
+  "writableOwnedTestOutputs": "/workspace/outputs/testing",
+  "isolatedLinuxDependencies": "/workspace/frontend/node_modules",
+  "dependencySource": "Pinned local tooling image; copied only inside disposable executable tmpfs for esbuild",
+  "historicalGitSource": "Actual aec0f3205d4bfeee02a6e2b2fcf2132eed4002d5 fetched from the user repository, with original bytes",
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "sourceUnchanged": true,
+  "productionChanges": 0,
+  "hostedCIRun": null,
+  "receipt": {
+    "file": "outputs/operations/integrated-security-linux-1791374509917.json",
+    "sha256": "sha256:2c76eaaf8a254c623fd80526d41603fca0b26a308397b6d70ae8c6e761ddabea"
+  },
+  "scope": "Real local Linux tests of all104 mandatory selection-security files after integration; no new application deployment or production retirement execution claimed."
+}

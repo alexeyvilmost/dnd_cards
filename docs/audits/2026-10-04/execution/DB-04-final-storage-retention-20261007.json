@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-timeweb-disk-cleanup-and-two-backup-retention",
+  "status": "passed",
+  "observedAt": "2026-10-07T11:39:28.169Z",
+  "productionCommit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+  "disk": {
+    "total": 50884108288,
+    "used": 23355973632,
+    "available": 27468419072
+  },
+  "latestOperations": {
+    "obsoleteProductionDumps": {
+      "files": 2,
+      "physicalFilesDeletedBytes": 1966234326
+    },
+    "obsoleteRehearsalDumps": {
+      "files": 5,
+      "physicalFilesDeletedBytes": 4917915709
+    },
+    "redundantControlArchives": {
+      "files": 5,
+      "physicalFilesDeletedBytes": 1595269120
+    },
+    "physicalFilesDeletedBytes": 8479419155,
+    "netFreeSpaceClaimedFromGrossDeletes": false
+  },
+  "retainedProductionBackups": [
+    {
+      "directory": "/opt/bagofholding/backups/capture-current307-20261007-1122",
+      "bytes": 984988805,
+      "sha256": "sha256:4e2bd4bb86d0172662b4b81d6be65e6b86724f440a4df60703f1cee4e3d7ea29",
+      "captureHash": "sha256:71e7f0db4bc73679890aa297eb2c54114b285259a07c14f0a092771f082873e0",
+      "files": 46,
+      "currentDatabaseSnapshot": true,
+      "sourceSchema": 307,
+      "restoreDrillPerformed": false
+    },
+    {
+      "directory": "/opt/bagofholding/backups/capture-37607081765-1",
+      "bytes": 983117163,
+      "sha256": "sha256:9a344172fb7d19dee733fc0b117f635ea70c01b8ad08c152572354dc78891da8",
+      "captureHash": "sha256:4375fefc55c513ab05c46a73bfc8ac5e128f0b1cd062b567e37de07920458916",
+      "files": 45,
+      "currentDatabaseSnapshot": false,
+      "sourceSchema": 306,
+      "restoreDrillPerformed": true
+    }
+  ],
+  "pcCopies": [
+    {
+      "directory": "D:/TimeWebBackups/dnd_cards/capture-current307-20261007-1122",
+      "files": 46,
+      "allFilesVerified": true
+    },
+    {
+      "directory": "D:/TimeWebBackups/dnd_cards/capture-37591020353-1",
+      "files": 45,
+      "allFilesVerified": true
+    },
+    {
+      "directory": "C:/Projects/dnd_cards/outputs/operations/preserved-three-legacy-backups-20261007",
+      "databaseFiles": 3,
+      "allFilesVerified": true
+    }
+  ],
+  "currentRehearsalPreserved": true,
+  "unpackedSourceControlsPreserved": true,
+  "originalReportsPreserved": true,
+  "productionDatabaseChanges": 0,
+  "productionDatabaseRestored": false,
+  "serviceReplacements": 0,
+  "containers": [
+    "bagofholding-frontend-1 Up 23 minutes (healthy)",
+    "bagofholding-backend-1 Up 23 minutes (healthy)",
+    "bagofholding-rules-worker-1 Up 23 minutes (healthy)",
+    "bagofholding-image-egress-image-egress-1 Up 2 days (healthy)",
+    "bagofholding-caddy-1 Up 3 weeks"
+  ],
+  "evidence": [
+    {
+      "file": "outputs/operations/retention-904-current-20261007-result.json",
+      "sha256": "sha256:a143be92395449c92770797fb21198ed986565077e88e06f65d57581944ce7f8"
+    },
+    {
+      "file": "outputs/operations/obsolete-rehearsal-copy-cleanup-20261007-result.json",
+      "sha256": "sha256:0b0f421e1ceab2f3668f6520ac61c5b47337fd5da380f69927269d3d2b2d6b09"
+    },
+    {
+      "file": "outputs/operations/retention-final-observation-1791373168112.json",
+      "sha256": "sha256:395e86b2603c0194da6973743720034f090ddefb3f470d937b7ec70370aaa81e"
+    }
+  ],
+  "limitations": [
+    "The current307 capture has verified bytes but has not yet completed its own full restore drill. The retained predecessor capture has its accepted restore drill.",
+    "One current full-history rehearsal dump and small synthetic rehearsal fixtures remain separate from actual production backups.",
+    "Off-server backups are on this PC; no independent remote storage was provisioned."
+  ]
+}

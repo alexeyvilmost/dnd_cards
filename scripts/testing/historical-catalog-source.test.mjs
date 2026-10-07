@@ -24,7 +24,7 @@ test('source projection drops private metadata without substituting remaining va
 });
 test('nested credentials are rejected instead of silently exported',()=>{
  const original=structuredClone(source.pre278.rows[0]);original.row.mechanics={api_key:'secret'};assert.throws(()=>projectHistoricalCatalogEntity(original),/Private metadata/);
- original.row.mechanics={formula:'postgresql://someone:secret@127.0.0.1/db'};assert.throws(()=>projectHistoricalCatalogEntity(original),/Credentials/);
+ original.row.mechanics={formula:'postgresql://user:password@127.0.0.1/db'};assert.throws(()=>projectHistoricalCatalogEntity(original),/Credentials/);
 });
 test('missing rows, duplicate identities and unexpected entity kinds refuse a dataset',()=>{
  const data=structuredClone(source.pre278);data.rows.pop();assert.throws(()=>validateHistoricalCatalogDataset(data,'pre278'));
