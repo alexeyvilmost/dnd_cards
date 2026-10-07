@@ -135,11 +135,14 @@ export async function verifyLocalRetirementArtifacts(directory){
 
 // Only same-process verified plans can become SQL. Execution/target ownership
 // belongs to the separate native-test executor, never to a serialized JSON flag.
-export async function localRetirementProgram(plan){
+export async function recheckLocalRetirementArtifacts(plan){
  const proof=verifiedPlans.get(plan);if(!proof)throw Error('Live verified local retirement plan required');
  assert.equal(hash(await readFile(backupFile(proof.directory,'retirement-bundle.json'))),plan.bundleHash);
  for(const kind of proof.kinds)assert.equal(await checksum(backupFile(proof.directory,proof.bundle.artifacts[kind].path)),proof.bundle.artifacts[kind].sha256);
  if(plan.localLifecycleExpansionIdentity)assert.equal(hash(await readFile(lifecycleSourceUrl)),plan.localLifecycleExpansionIdentity.checksum);
  assert.equal(hash(await readFile(new URL('../../backend/migrations/data/retire-legacy-characters-302.sql',import.meta.url))),plan.sqlSourceHash);
+}
+export async function localRetirementProgram(plan){
+ await recheckLocalRetirementArtifacts(plan);const proof=verifiedPlans.get(plan);
  return proof.source.toString('utf8').replace(":'retirement_request'","'"+JSON.stringify(proof.request).replaceAll("'","''")+"'");
 }

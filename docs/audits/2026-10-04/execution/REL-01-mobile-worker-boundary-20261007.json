@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "taskId": "REL-01",
+  "status": "locally_verified_boundary_correction",
+  "recordedAt": "2026-10-07T15:45:06.277Z",
+  "observedCI": {
+    "run": 37644653946,
+    "source": "9dfd755522fdab6fdd55e4f801bdd866fe899883",
+    "eligibility": "full",
+    "reason": "backend-or-worker-not-exact-reuse",
+    "backend": "reuse",
+    "frontend": "build",
+    "worker": "build"
+  },
+  "rootCause": "frontend/src/mobile was included in both shared-runtime classification and actual worker Docker context",
+  "changedFiles": [
+    "scripts/release/component-dependencies.json",
+    "infra/Dockerfile.rules-worker.dockerignore"
+  ],
+  "targetedPlannerAndInventoryTests": 80,
+  "headlessDeterminismAndMigrationTests": 45,
+  "actualCanonicalBuilds": {
+    "schemaVersion": 1,
+    "status": "passed",
+    "verifiedAt": "2026-10-07T15:37:03.961Z",
+    "actualCanonicalWorkerBuilds": 2,
+    "artifactBefore": "sha256:f760d912ffa35773b3d22f570074ed96672982e77e5aa3acbd725cba5de24fef",
+    "artifactAfter": "sha256:f760d912ffa35773b3d22f570074ed96672982e77e5aa3acbd725cba5de24fef",
+    "artifactByteIdentical": true,
+    "inputGraphUnchanged": true,
+    "actualWorkerInputs": 275,
+    "mobileImports": 0,
+    "productionArtifactHash": "sha256:c59096195e4f748cfeaedfebb06af5cd916e1e7e4037a27cb0e589b91d9578ca",
+    "matchesProductionArtifact": false,
+    "productionChanges": 0,
+    "productionReady": false
+  },
+  "productionAcceptance": false,
+  "productionChanges": 0,
+  "remaining": "A full accepted release establishes the corrected worker fingerprint; genuine frontend-only release remains a separate required acceptance."
+}

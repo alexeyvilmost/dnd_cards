@@ -125,6 +125,8 @@
         "scripts/release/retirement-execution-result.test.mjs",
         "scripts/release/retirement-outcome-journal.test.mjs",
         "scripts/release/retirement-projection.test.mjs",
+        "scripts/release/retirement-production-artifacts.test.mjs",
+        "scripts/release/retirement-rehearsal-input.test.mjs",
         "scripts/release/retirement-registry.test.mjs",
         "scripts/release/retirement-state.test.mjs",
         "scripts/testing/historical-revocation-source.test.mjs"
