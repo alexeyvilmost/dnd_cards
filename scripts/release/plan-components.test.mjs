@@ -41,6 +41,7 @@ for (const [name, file, expected] of cases) test(`component boundary: ${name}`, 
 test('worker graph rejects a newly imported source declared UI-only', () => {
   assert.doesNotThrow(() => assertWorkerInputsCovered(['frontend/src/engine/cost.ts', 'backend/animationpresentation/catalog.json']));
   assert.throws(() => assertWorkerInputsCovered(['frontend/src/pages/LibraryPage.tsx']), /missing worker dependency/);
+  assert.throws(() => assertWorkerInputsCovered(['frontend/src/mobile/MobileCharacterSheet.tsx']), /missing worker dependency/);
 });
 
 test('invalid repository paths and unknown manifest versions fail closed', t => {
@@ -88,6 +89,15 @@ function fixture(t) {
   };
   return {dir, repo, git, write, checkpoint, base, deployed};
 }
+
+test('two mobile screen edits select frontend while an actual worker import still fails the boundary', t => {
+  const f=fixture(t),screens=['frontend/src/mobile/MobileCharacterSheet.tsx','frontend/src/mobile/MobileLibrary.tsx'];
+  for(const file of screens)f.write(file,'previous screen');const base=f.checkpoint();
+  for(const file of screens)f.write(file,'updated screen');const candidate=f.checkpoint();
+  const plan=createPlan({repo:f.repo,mode:'ci',base,candidate});
+  assert.deepEqual(plan.changed_files,screens);assert.deepEqual(plan.components,{frontend:true,backend:false,worker:false,infrastructure:false});
+  assert.throws(()=>assertWorkerInputsCovered(screens),/missing worker dependency/);
+});
 
 test('local plan includes staged, unstaged, untracked, deleted and both sides of a rename', t => {
   const f = fixture(t);
