@@ -1,6 +1,15 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {createCanonicalPendingScenario,createRehearsalAccount,authorizeNativeRehearsal,authorizeDockerRehearsal} from './rehearsal-scenarios.mjs';
+import {createCanonicalPendingScenario,createRehearsalAccount,authorizeNativeRehearsal,authorizeDockerRehearsal,rehearsalRequestFailure} from './rehearsal-scenarios.mjs';
+
+test('rehearsal failures identify the operation without account IDs or private response fields',()=>{
+  const failure=rehearsalRequestFailure(409,'/roguelike/runs/12345678-1234-1234-1234-123456789abc/commands','POST',
+    {type:'combat_intent',payload:{intent:{type:'approach_action'},token:'private-token'}},
+    {code:'combat_worker_rejected',error:'private detail',state:{entropy:'private seed'}});
+  assert.equal(failure.message,'Owned canonical API returned HTTP 409: POST /roguelike/runs/:id/commands (combat_intent, approach_action, combat_worker_rejected)');
+  assert.equal(rehearsalRequestFailure(422,'/auth/login','POST',{type:'private token'}, {code:'private response'}).message,
+    'Owned canonical API returned HTTP 422: POST /auth/login');
+});
 
 test('arbitrary HTTP callbacks and serialized/lookalike capabilities cannot register users',async()=>{
   let calls=0;const request=async()=>{calls++;throw Error('Must not access network');};
