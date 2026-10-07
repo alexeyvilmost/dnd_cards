@@ -171,6 +171,8 @@
         "frontend/src/character/sheetAtomicWorldCommit.integration.test.ts",
         "frontend/src/character/sheetRuntimeCommand.test.ts",
         "frontend/src/hooks/useCombatCommandDispatch.test.tsx",
+        "frontend/src/roguelike/combatRulesUpgrade.test.ts",
+        "frontend/src/roguelike/conditionActionWorker.integration.test.ts",
         "frontend/src/hooks/useSoloCombatBootstrap.test.tsx",
         "frontend/src/hooks/useSoloCombatPersistence.test.tsx",
         "frontend/src/rules-core/commandDispatch.test.ts"
@@ -282,6 +284,7 @@
         "TestTrustedRestUsesCanonicalResourceMaximaAndRejectsOverflow",
         "TestLegacyRestPatchCannotSupplyMaxima",
         "TestCombatJournal",
+        "TestCombatRulesUpgrade",
         "TestRunItemSale",
         "TestConcurrentRunSale",
         "TestGeneratedImage",

@@ -1,7 +1,8 @@
 import {workerTestBuild} from '../../scripts/testing/worker-test-build.mjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile, mkdtemp, rm} from 'node:fs/promises';
+import {readFile, writeFile, mkdtemp, rm} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {createRequire} from 'node:module';
@@ -14,6 +15,48 @@ const currentInput = async () => withContainerCatalog(
   JSON.parse(await readFile(new URL('../src/roguelike/pinnedFighter.fixture.json', import.meta.url), 'utf8')),
   JSON.parse(await readFile(new URL('../../officials/canon/prod-snapshot/cards.json', import.meta.url), 'utf8')),
 );
+
+test('explicit HTTP rules upgrade preserves the frame, retains both artifacts and starts a replayable segment', async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), 'combat-upgrade-'));
+  const token = 'private-local-upgrade-token-32-characters';
+  const artifactFile = new URL('artifact.cjs', workerTestBuild()), artifact = createRequire(import.meta.url)(fileURLToPath(artifactFile));
+  const legacy = 'exports.retainedVersion = 1;', oldHash = `sha256:${createHash('sha256').update(legacy).digest('hex')}`;
+  await writeFile(path.join(directory, `${oldHash.slice(7)}.cjs`), legacy);
+  let server;
+  try {
+    server = await createRulesWorker({artifactFile, artifactsDirectory: directory, token});
+    await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+    const url = `http://127.0.0.1:${server.address().port}`;
+    const post = async (route, body, expected = 200) => {
+      const response = await fetch(url+route, {method:'POST',headers:{authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      assert.equal(response.status, expected); return response.json();
+    };
+    const input = await currentInput();
+    Object.assign(input, {seed:'explicit-upgrade', roster:[{monster_id:'enemy',quantity:1}], monsters:{version:1,effects:[],actions:[],monsters:[{
+      id:'enemy',name:'Enemy',slug:'enemy',size:'medium',creature_type:'humanoid',armor_class:10,max_hp:20,speed:30,initiative_bonus:0,proficiency_bonus:2,
+      abilities:{str:10,dex:10,con:10,int:10,wis:10,cha:10},action_ids:[],effect_ids:[],ai:{strategy:'tactical'},
+    }]}});
+    const initialized = await post('/initialize', {input}); assert.equal(initialized.status, 'ready');
+    const before = {...initialized.envelope, artifactHash:oldHash}, serialized = JSON.stringify(before);
+    const after = await post('/upgrade', {artifactHash:oldHash,envelope:before,targetHash:oldHash});
+    assert.deepEqual(after.envelope, {...before,artifactHash:initialized.envelope.artifactHash});
+    assert.deepEqual(after.randomValues, []); assert.equal(after.patch, undefined);
+    assert.equal(after.trace.beforeHash,snapshotHash(before)); assert.equal(after.trace.afterHash,snapshotHash(after.envelope));
+    const record = {schemaVersion:1,type:'upgrade_combat_rules',artifactHash:after.envelope.artifactHash,baseline:after.envelope,baselinePosition:'after',previousBaseline:before,...after.trace};
+    assert.deepEqual(replayCombatRecords([record],artifact).envelope,after.envelope);
+    const corrupt = structuredClone(record); corrupt.previousBaseline.entropy.cursor++;
+    assert.throws(() => replayCombatRecords([corrupt],artifact), /Preceding frame hash mismatch/);
+    assert.equal(JSON.stringify(before),serialized);
+    await post('/upgrade',{artifactHash:after.envelope.artifactHash,envelope:after.envelope},409);
+    const pending = structuredClone(before); pending.state.pendingTriggeredAction={event:'hit',sourceActorId:input.character.id,sourceActionId:'attack',targetIds:[],optionActionIds:[]};
+    await post('/upgrade',{artifactHash:oldHash,envelope:pending},422);
+    await post('/upgrade',{artifactHash:`sha256:${'f'.repeat(64)}`,envelope:before},409);
+    assert.equal(await readFile(path.join(directory, `${oldHash.slice(7)}.cjs`),'utf8'),legacy);
+  } finally {
+    if (server?.listening) {server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
+    assert.equal(path.dirname(directory),tmpdir());assert.ok(path.basename(directory).startsWith('combat-upgrade-'));await rm(directory,{recursive:true,force:true});
+  }
+});
 
 test('journey HTTP preserves a held check across worker restart and uses the retained artifact for consequences', async () => {
   const directory = await mkdtemp(path.join(tmpdir(), 'journey-worker-'));

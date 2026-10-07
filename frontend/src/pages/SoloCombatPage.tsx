@@ -194,6 +194,17 @@ export default function SoloCombatPage({laboratory = false}: {laboratory?: boole
   const applyIntent = useCombatCommandDispatch({sessionKey: `${id ?? ''}:${roguelikeRunId ?? ''}`, runRef: trustedRunRef, presentationBlockedRef,
     applyLocal: apply, onAccepted: acceptCombatRun, setBusy, setError});
 
+  const upgradeCombatRules = async () => {
+    const run = trustedRunRef.current;
+    if (!run || busy) return;
+    const selection = await choiceDialog.request([{id: 'upgrade_rules', count: 1, source: 'explicit', context: 'in_play',
+      origin: {kind: 'other', id: 'combat-rules-upgrade', name: 'Правила боя'},
+      prompt: 'Обновить движок для будущих действий этого боя? Прошлые броски, хиты, ресурсы и каталог останутся прежними. Обновление будет сохранено в журнале.',
+      items: [{id: 'confirm', name: 'Обновить правила'}]}], 'Обновление правил боя');
+    if (selection?.upgrade_rules?.[0] !== 'confirm') return;
+    if (trustedRunRef.current?.id === run.id) await applyIntent.upgrade();
+  };
+
   const heldDecision = persistedRollPresentation(state?.pendingD20Interrupt);
   const rollInfluencePolicies=decisionPolicyToggles('roll_influence');
   const influenceOfferVisible = decisionOfferVisible(rollInfluencePolicies,
@@ -504,7 +515,7 @@ export default function SoloCombatPage({laboratory = false}: {laboratory?: boole
         </div>
         <div className="combat-topbar__right"><div className="combat-round">Раунд {displayState.world.scene.mode === 'encounter' ? displayState.world.scene.round : 1}<b>{busy ? 'Сохраняем…' : `Ход: ${combatActorDisplayName(displayActor)}`}</b></div><div className="combat-topbar__actions"><button type="button" className="combat-settings-button" onClick={() => setSettingsOpen(true)} aria-label="Настройки боя"><SlidersHorizontal size={16} /></button><WorkspaceExpandButton className="combat-settings-button" iconOnly /></div></div>
       </header>
-      {error && <div className="combat-error" role="alert"><span>{error}</span><button type="button" onClick={() => setError(null)}><X size={16} /></button></div>}
+      {error && <div className="combat-error" role="alert"><span>{error}</span>{roguelikeRunId && <button type="button" disabled={busy} onClick={() => void upgradeCombatRules()}>Обновить правила этого боя</button>}<button type="button" aria-label="Закрыть сообщение" onClick={() => setError(null)}><X size={16} /></button></div>}
       <section className={`combat-stage${logHidden ? ' is-log-hidden' : ''}`}>
         <div className={`combat-map-wrap${secondaryActionId && state.pendingTriggeredAction ? ' is-selecting-secondary' : ''}`}>
           <TacticalBattleMap

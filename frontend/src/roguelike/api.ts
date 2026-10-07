@@ -104,6 +104,7 @@ export type RoguelikeCommandType =
   | 'enter_room' | 'leave_room' | 'resume_room' | 'claim_stash' | 'event_choice' | 'event_roll' | 'event_resolve' | 'event_continue'
   | 'initialize_combat'
   | 'combat_intent'
+  | 'upgrade_combat_rules'
   | 'start_encounter'
   | 'complete_encounter'
   | 'buy'

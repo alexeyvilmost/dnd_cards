@@ -3,7 +3,7 @@ import {createWorld,type ActorState} from '../rules-core/domain';
 import {registerConditions,resetConditionsToOfflineFixture} from '../engine/conditions';
 import {conditionGrantedActions} from '../engine/conditionActions';
 import type {SoloCombatState} from '../solo-combat/types';
-import {stepRoguelikeCombat,type RoguelikeCombatEnvelope,type RoguelikeCombatIntent} from './combatWorker';
+import {stepRoguelikeCombat,upgradeRoguelikeCombatRules,type RoguelikeCombatEnvelope,type RoguelikeCombatIntent} from './combatWorker';
 
 const hash=`sha256:${'c'.repeat(64)}`;
 const envelope=(condition='prone'):RoguelikeCombatEnvelope=>{
@@ -18,6 +18,31 @@ const envelope=(condition='prone'):RoguelikeCombatEnvelope=>{
     movementRemainingFt:{hero:31},boardRevision:0,combatAreas:{},catalogActions:[],playerActionIds:[],certifiedPlayerActionIds:[],actionPresentation:{}} as unknown as SoloCombatState;
   return{schemaVersion:1,artifactHash:hash,entropy:{seed:'condition-command-replay',cursor:17},state};
 };
+
+describe('explicit combat rules version boundary', () => {
+  it.each(['prone', 'incapacitated', 'stunned'])('retains exact %s state and entropy without executing a turn', condition => {
+    const before = envelope(condition), saved = JSON.stringify(before), target = `sha256:${'d'.repeat(64)}`;
+    const result = upgradeRoguelikeCombatRules(JSON.parse(saved), target);
+    expect(result.randomValues).toEqual([]);
+    expect(result.envelope).toEqual({...before, artifactHash: target});
+    expect(JSON.stringify(before)).toBe(saved);
+  });
+  it.each(['same-version', 'invalid-version', 'pending', 'movement', 'enemy-turn', 'finished', 'old-world', 'invalid-world', 'entropy'])('rejects %s without altering the saved frame', mode => {
+    const before = envelope(); let target = `sha256:${'d'.repeat(64)}`;
+    if (mode === 'same-version') target = hash;
+    if (mode === 'invalid-version') target = 'unknown';
+    if (mode === 'pending') before.state.pendingTriggeredAction = {event:'hit',sourceActorId:'hero',sourceActionId:'attack',targetIds:[],optionActionIds:[]};
+    if (mode === 'movement') before.state.pendingMovementStep = {} as NonNullable<SoloCombatState['pendingMovementStep']>;
+    if (mode === 'enemy-turn' && before.state.world.scene.mode === 'encounter') before.state.world.scene.activeIndex = 1;
+    if (mode === 'finished') before.state.outcome = 'victory';
+    if (mode === 'old-world') (before.state.world as unknown as {schemaVersion:number}).schemaVersion = 4;
+    if (mode === 'invalid-world') before.state.world.actors.hero.id = 'wrong-key';
+    if (mode === 'entropy') before.entropy.cursor = -1;
+    const saved = JSON.stringify(before);
+    expect(() => upgradeRoguelikeCombatRules(before, target)).toThrow();
+    expect(JSON.stringify(before)).toBe(saved);
+  });
+});
 
 describe('authoritative worker condition actions at turn start',()=>{
   afterEach(()=>resetConditionsToOfflineFixture('condition worker test finished'));

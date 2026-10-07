@@ -30,17 +30,17 @@ identities. Замена вызывает `compose up --no-deps --no-build --pul
 
 ## Миграции, backup и сохранение истории
 
-Поддерживаются **no-schema-change** и явная expansion allowlist 298–300. Host
+Поддерживаются **no-schema-change** и явная expansion allowlist 298–301. Host
 adapter читает реальные IDs из schema_migrations и сравнивает их со встроенным
 `backend --migration-info`. CLI выполняется до env/DB startup: исторические
 checksums=unavailable, а additiveMigrations содержит SHA-256 встроенных исходников
-только 298–300. Историческая таблица не хранит исходные checksums; их нельзя
+только 298–301. Историческая таблица не хранит исходные checksums; их нельзя
 вывести из номера миграции.
 Нужен отдельный inspected transition baseline с исходными доказательствами.
 Legacy adapter выдаёт non-deployable inspection, не разрешение на замену.
 
 Любая другая новая миграция или изменение уже принятого checksum блокирует rollout.
-Для 298–300 требуется exact-candidate additive rehearsal report с семью сценариями
+Для 298–301 требуется exact-candidate additive rehearsal report с семью сценариями
 из `migrationScenarios`, прежним/целевым migrationSet и backward compatibility.
 One-off `--migrate-release` получает JSON через stdin, DATABASE_URL только через
 окружение; candidate sourceCommit/inputFingerprint должны совпасть с baked binary.
@@ -58,6 +58,16 @@ RLS и persistence новых таблиц. Изменённый immutable trigg
 `active.json.database` и operation journal сохраняют фактически принятую схему
 отдельно от app manifest; immutable release directories содержат только состав
 приложения. После app rollback новая схема и executor image остаются учтены.
+
+Для `301_character_lifecycle` предусмотрен только точный переход с уже принятых
+неизменённых 298/299/300: два nullable `deleted_at` и два проверяемых индекса.
+Существующие compact receipts/image jobs writers могут оставаться включёнными
+только при совпадении прежних writer flags, протоколов и migration identities,
+свежем exact-image approval и проверках прежнего и нового readers/writers,
+pending/retry/jobs/rollback на полном восстановлении. Иные expansion-переходы
+сохраняют прежнее требование выключенных writers. Legacy wire-name
+`additive-298-300` сохранён, список executors явный. Проверяется вся прежняя
+история; исключаются только новые nullable столбцы, отсутствовавшие до 301.
 Recovery завершённой старой операции не может перезаписать более новый release.
 Compose expansion profile явно выключает DB_COMPACT_RECEIPTS, DB_FROZEN_CATALOGS
 и IMAGE_JOBS_ENABLED, actual backend environment проверяется; дополнительно перед

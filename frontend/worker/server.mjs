@@ -194,7 +194,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
     if (request.method === 'GET' && request.url === '/health') return send(200, {status: 'ok', ...identity});
     const suppliedAuth = Buffer.from(request.headers.authorization || '');
     if (suppliedAuth.length !== expectedAuth.length || !timingSafeEqual(suppliedAuth, expectedAuth)) return send(401, {error: 'unauthorized'});
-    if (request.method !== 'POST' || !['/initialize', '/transition', '/rest', '/camp-action', '/camp-inventory', '/equipment', '/initiative-options', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
+    if (request.method !== 'POST' || !['/initialize', '/transition', '/upgrade', '/rest', '/camp-action', '/camp-inventory', '/equipment', '/initiative-options', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
     try {
       let size = 0;
       const chunks = [];
@@ -210,6 +210,17 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const hash = body.artifactHash || artifactHash;
       if (measured) metrics.worker_artifact_cache_hit = Number(cache.has(hash));
       const artifact = await timedAsync('worker_artifact_load_ms', () => cache.load(hash));
+      if (request.url === '/upgrade') {
+        // Retain and verify the old executable too. The caller cannot choose a
+        // target version: only this server's verified current artifact is used.
+        if (body.envelope?.artifactHash !== hash) throw new Error('Несовместимая версия правил боя');
+        if (hash === artifactHash) return send(409, {error: 'rules_already_current'});
+        const current = await timedAsync('worker_artifact_load_ms', () => cache.load(artifactHash));
+        if (typeof current.upgradeRoguelikeCombatRules !== 'function') return send(409, {error: 'upgrade_unavailable'});
+        const result = timed('worker_execute_ms', () => current.upgradeRoguelikeCombatRules(body.envelope, artifactHash));
+        return send(200, {...result, artifactHash,
+          trace: {beforeHash: snapshotHash(body.envelope), afterHash: snapshotHash(result.envelope), runtimeRevision: body.envelope.state.runtimeRevision}});
+      }
       if (request.url === '/initiative-options') {
         if (typeof artifact.prepareInitiativeOptions !== 'function') return send(409, {error: 'initiative_options_unavailable'});
         const result = await timedAsync('worker_execute_ms', () => artifact.prepareInitiativeOptions(body.input));

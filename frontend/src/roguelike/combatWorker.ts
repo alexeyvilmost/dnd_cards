@@ -5,6 +5,7 @@ import {bindCombatWorldInputFacts} from '../solo-combat/worldInput';
 import {boardDimensions, terrainSight} from '../solo-combat/boardGeometry';
 import type { DecisionResponse } from '../rules-core/domain';
 import { canonicalSha256Sync } from '../rules-core/determinism';
+import {migrateWorldState} from '../rules-core/worldMigration';
 import {executeConditionAction} from '../solo-combat/engine';
 import {
   declineAdditionalMovement, isTriggeredCombatAction, resumePendingMovement, activeActor, activateCombatBoon, advanceTurn, autoResolveSystemDecisions,
@@ -64,6 +65,27 @@ function hasDecision(state: SoloCombatState): boolean {
   if(state.pendingDeathSave)return true;
   return Boolean(state.pendingAdditionalMovement || state.world.pendingResolution || state.pendingD20Interrupt || state.pendingInterception
     || state.pendingTriggeredAction || state.pendingTurnStartGrappleDamage || state.pendingAlertSwapActorIds?.length);
+}
+
+/** Explicit version boundary, never a gameplay step. Retain the exact saved
+ * world, catalog, log and entropy; validation must not normalize that snapshot. */
+export function upgradeRoguelikeCombatRules(envelope: RoguelikeCombatEnvelope, targetHash: string) {
+  if (envelope.schemaVersion !== 1 || !/^sha256:[a-f0-9]{64}$/.test(envelope.artifactHash)
+    || !/^sha256:[a-f0-9]{64}$/.test(targetHash) || envelope.artifactHash === targetHash) {
+    throw new Error('Несовместимая версия правил боя');
+  }
+  if (!envelope.entropy.seed || !Number.isSafeInteger(envelope.entropy.cursor) || envelope.entropy.cursor < 0) {
+    throw new Error('Повреждён поток случайности боя');
+  }
+  const state = envelope.state;
+  if (state.schemaVersion !== 1 || state.world.schemaVersion !== 5) throw new Error('Несовместимая версия правил боя');
+  migrateWorldState(structuredClone(state.world)); // Validate only, preserve saved bytes/values.
+  if (state.outcome !== 'active' || hasDecision(state) || state.playerMovement
+    || state.pendingMovementStep || state.pendingReachEntry
+    || !isPlayerControlledCombatActor(state, activeActor(state).id)) {
+    throw new Error('Сначала завершите текущее решение или дождитесь своего хода');
+  }
+  return {envelope: {...structuredClone(envelope), artifactHash: targetHash}, randomValues: [] as number[]};
 }
 
 export function createRoguelikeCombatRandom(seed: string, initialCursor: number) {
