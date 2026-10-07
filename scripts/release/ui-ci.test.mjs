@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {mkdirSync,writeFileSync,readFileSync,rmSync} from 'node:fs';import path from 'node:path';
-import {loadPublishedUIPlanning} from './ui-ci.mjs';import {prepareDispatchedBuild} from './ui-release-plan.mjs';
+import {loadPublishedUIPlanning,githubReader} from './ui-ci.mjs';import {githubMetadataDiagnostic} from './github-metadata.mjs';import {prepareDispatchedBuild} from './ui-release-plan.mjs';
 import {selectLatestDeployedRun} from './deployed-baseline.mjs';import {assembleCandidateManifest} from './ci-release.mjs';
 import {createUIProofProjection} from './ui-proof-projection.mjs';import {runtimeCompatibilityHash} from './ui-release-policy.mjs';import {safeExecutionEnvironment} from './ui-execution-profile.mjs';
 import {evidenceHash} from './validate-manifest.mjs';import {fixture,recordsFor,publishedFor} from './ui-planning-unit-fixture.mjs';import {uiFixture} from './ui-release-unit-fixture.mjs';
@@ -64,4 +64,32 @@ test('exact retirement artifact forces extended planning despite an existing fro
  for(const [name,value] of Object.entries({'manifest.json':s.active.manifest,'deployment.json':retirementBaselineReceipt(p),'retirement-observation.json':p}))writeFileSync(path.join(f.baselineDirectory,name),JSON.stringify(value));
  const planning=await loadPublishedUIPlanning(f.options());assert.deepEqual(planning,{eligibility:{kind:'full',requiredTier:'extended',reason:'recorded-character-retirement'}});
  rmSync(path.join(f.baselineDirectory,'retirement-observation.json'));await assert.rejects(loadPublishedUIPlanning(f.options()),/Exact retirement artifact/);
+});
+
+
+test('workflow predecessor lookup survives a temporary HTTP 500 using actual fresh GET metadata',async t=>{
+ const f=await setup(t),requests=[],waits=[],diagnostics=[];let failed=false;
+ const get=githubReader('fixture/project','private-unit-workflow-token',{wait:async ms=>waits.push(ms),onDiagnostic:row=>diagnostics.push(row),request:async(url,options)=>{
+  requests.push({url,method:options.method,redirect:options.redirect});
+  if(!failed){failed=true;return new Response('private-unit-workflow-token',{status:500});}
+  const route=url.slice('https://api.github.com/repos/fixture/project/'.length);return Response.json(await f.get(route));
+ }});
+ assert.deepEqual(await selectLatestDeployedRun(get,{repository:'fixture/project'}),f.run);assert.deepEqual(waits,[1000]);assert.equal(diagnostics.length,1);assert.equal(diagnostics[0].operation,'workflow-github-metadata');assert.equal(diagnostics[0].status,500);
+ assert.ok(requests.every(row=>row.method==='GET'&&row.redirect==='error'));assert.equal(requests[0].url,requests[1].url);assert.ok(!JSON.stringify(diagnostics).includes('private-unit-workflow-token'));
+});
+test('latest main GET retries are bounded and successful metadata is fetched again for freshness',async()=>{
+ const requests=[],waits=[];let calls=0;const get=githubReader('fixture/project','private-unit-workflow-token',{wait:async ms=>waits.push(ms),request:async(url,options)=>{
+  requests.push({url,method:options.method});calls++;if(calls===1)return new Response('',{status:502});return Response.json({sha:String(calls).repeat(40)});
+ }});
+ assert.deepEqual(await get('commits/main'),{sha:'2'.repeat(40)});assert.deepEqual(await get('commits/main'),{sha:'3'.repeat(40)});assert.equal(calls,3);assert.deepEqual(waits,[1000]);assert.ok(requests.every(row=>row.method==='GET'&&row.url.endsWith('/commits/main')));
+ let failures=0;const unavailable=githubReader('fixture/project','private-unit-workflow-token',{wait:async()=>{},request:async()=>{failures++;return new Response('private-unit-workflow-token',{status:500});}});
+ await assert.rejects(unavailable('commits/main'),error=>{const diagnostic=githubMetadataDiagnostic(error);assert.equal(diagnostic.attempt,3);assert.equal(diagnostic.status,500);assert.ok(!String(error).includes('private-unit-workflow-token'));return true;});assert.equal(failures,3);
+});
+test('workflow metadata denies invalid routes, authorization failures and malformed successful JSON without retrying writes',async()=>{
+ let calls=0;const get=githubReader('fixture/project','private-unit-workflow-token',{request:async()=>{calls++;return Response.json({});}});
+ for(const route of ['https://elsewhere.invalid','actions/../commits/main','commits/other','actions/runs/1#secret','pulls/1'])await assert.rejects(get(route),/Invalid metadata route/);assert.equal(calls,0);
+ for(const response of [()=>new Response('private-unit-workflow-token',{status:403}),()=>new Response('not JSON',{status:200})]){
+  let reads=0;const denied=githubReader('fixture/project','private-unit-workflow-token',{wait:async()=>{throw Error('No retry allowed');},request:async()=>{reads++;return response();}});
+  await assert.rejects(denied('actions/runs/12'),error=>{const diagnostic=githubMetadataDiagnostic(error);assert.equal(diagnostic.attempt,1);assert.ok(!String(error).includes('private-unit-workflow-token'));return true;});assert.equal(reads,1);
+ }
 });

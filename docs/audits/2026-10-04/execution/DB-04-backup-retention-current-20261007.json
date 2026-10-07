@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "status": "authorized_cleanup_completed",
+  "observedAt": "2026-10-07T06:40:08.335Z",
+  "removedDumps": 31,
+  "physicalFilesDeletedBytes": 27807261079,
+  "disk": {
+    "total": 50884108288,
+    "used": 26190454784,
+    "available": 24633937920
+  },
+  "retainedProductionBackups": [
+    {
+      "bytes": 982883486,
+      "path": "/opt/bagofholding/backups/capture-37573584439-2/database.dump"
+    },
+    {
+      "bytes": 983117163,
+      "path": "/opt/bagofholding/backups/capture-37581756410-2/database.dump"
+    }
+  ],
+  "preservedLocalCopies": [
+    {
+      "file": "C:\\Projects\\dnd_cards\\outputs\\operations\\preserved-three-legacy-backups-20261007\\pre-48e99137a973ce4a38cb247df0ffe9123ee061b1-20260929T144039Z.dump",
+      "bytes": 752375071,
+      "sha256": "5bd528e7014620cc9104a4a5a7d48cdb5d86ef415c299aaee715f2695cce73ef"
+    },
+    {
+      "file": "C:\\Projects\\dnd_cards\\outputs\\operations\\preserved-three-legacy-backups-20261007\\pre-4102e5ff86012a14a510dc180688a4859ff3ea4b-20260929T194641Z.dump",
+      "bytes": 752381994,
+      "sha256": "345d154a1aaf6706c6a5c9b3625864a3bae5d8533d3fd5b160751b3773ff86d9"
+    },
+    {
+      "file": "C:\\Projects\\dnd_cards\\outputs\\operations\\preserved-three-legacy-backups-20261007\\pre-5ef4df7803c26e276e3f6aab2796c275b206be67-20260929T231847Z.dump",
+      "bytes": 752415055,
+      "sha256": "48bbea95435a2b26185c2e0443edcef0f9407debf806a7171f6ad877298c03a3"
+    }
+  ],
+  "productionDatabaseChanges": 0,
+  "evidence": [
+    "outputs/operations/retention-d229-20261007-result.json",
+    "outputs/operations/d229-backup-37581756410-2-independent.json",
+    "outputs/operations/05085-backup-37573584439-2-independent.json",
+    "outputs/operations/retention-final-summary-1791355222291.json",
+    "outputs/operations/retention-final-observation-1791355208227.json"
+  ],
+  "limitations": [
+    "Disk availability changes while the already running release rehearsal creates and removes its own temporary resources; retained historical metadata and derived evidence are not full production backups."
+  ]
+}

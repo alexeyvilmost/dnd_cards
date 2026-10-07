@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "status": "shared_get_metadata_transport_locally_verified_production_pending",
+  "recordedAt": "2026-10-07T06:42:51.994Z",
+  "actualTrigger": {
+    "deploymentRun": 37581756410,
+    "attempt": 1,
+    "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+    "result": "failure",
+    "httpStatus": 500,
+    "failedStage": "prepare/preflight",
+    "failureLogHash": "sha256:533fb0af635b7f18fabbcc9eb0b3e0ab606cb10b6a78137ce3515f64e52b3bf1",
+    "hostDeployJob": "skipped"
+  },
+  "implementation": {
+    "getOnly": true,
+    "maxAttempts": 3,
+    "requestTimeoutMs": 15000,
+    "maxQuotaWaitSeconds": 10,
+    "successfulResponsesCached": false,
+    "postRetryAdded": false,
+    "permissionDenialRetried": false,
+    "diagnosticsExposeTokenOrBody": false,
+    "source": [
+      {
+        "file": "scripts/release/github-metadata.mjs",
+        "sha256": "sha256:7c4f06444e1d0eb46e516113a7e9b188169e700ca0c0597271dc5ad93a1f754a"
+      },
+      {
+        "file": "scripts/release/ui-ci.mjs",
+        "sha256": "sha256:ea6fbafb56254c63dc9b2f19f39ac147c836ad140cde90f1ccf2eff352b2d0f2"
+      },
+      {
+        "file": "scripts/release/writer-fixture-cli.mjs",
+        "sha256": "sha256:6f50e9c326607cbc7ef0877fb503267cbc4da08a3007c28d13b0b4f6c604c73c"
+      },
+      {
+        "file": "scripts/release/ui-ci.test.mjs",
+        "sha256": "sha256:93be8b311d976cbd01898aed4a9bcfbfb5243aa2d8fa0e15553c271f470dc105"
+      }
+    ]
+  },
+  "verification": {
+    "requiredTests": 89,
+    "passed": 89,
+    "failed": 0,
+    "skipped": 0,
+    "cancelled": 0,
+    "testLog": "outputs/testing/github-metadata-shared-final-20261007.log",
+    "testLogHash": "sha256:2209bf9add554b06a1297fe453874ba0c1d48c07e2d006a3de7cdced8b2a121f",
+    "credentialScan": "passed",
+    "dumpScan": "passed"
+  },
+  "productionChanges": 0,
+  "remaining": "Publish this separate release-tooling change through the full required CI/publication gates after accepting the genuine frontend-only release; no success is claimed for the currently running deployment."
+}

@@ -2579,7 +2579,14 @@
         "nextAcceptance": [],
         "limitations": [
           "Off-host backups remain deferred by owner. No production DB restore performed."
-        ]
+        ],
+        "sharedGithubMetadata": {
+          "record": "docs/audits/2026-10-04/execution/REL-06-shared-github-metadata-20261007.json",
+          "status": "shared_get_metadata_transport_locally_verified_production_pending",
+          "passed": 89,
+          "skipped": 0,
+          "productionChanges": 0
+        }
       },
       "previous_status": "full_host_restore_and_healthy_adoption_verified",
       "latest_execution_result": {
@@ -2933,7 +2940,15 @@
           "measured_rejection"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "currentConfiguration100": {
+          "record": "docs/audits/2026-10-04/execution/DB-03-current-configuration100-20261007.json",
+          "status": "current_configuration_local_p95_no_observed_regression_target_acceptance_pending",
+          "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+          "productionFrozenWriterEnabled": false,
+          "physicalReductionBytes": 4472832,
+          "targetHostLatencyAcceptancePending": true
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -3059,6 +3074,14 @@
           "reclaimedFilesystemBytes": 25841242112,
           "retainedProductionBackups": 2,
           "localPreservedOriginals": 3,
+          "productionDatabaseChanges": 0
+        },
+        "currentBackupRetention": {
+          "record": "docs/audits/2026-10-04/execution/DB-04-backup-retention-current-20261007.json",
+          "removedDumps": 31,
+          "physicalFilesDeletedBytes": 27807261079,
+          "retainedBackups": 2,
+          "localCopies": 3,
           "productionDatabaseChanges": 0
         }
       },

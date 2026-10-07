@@ -8,13 +8,11 @@ import {prepareFrontendVerification} from './ui-release-planning.mjs';import {as
 import {components,inventory,ignorePolicy} from './measure-local.mjs';import {evidenceHash} from './validate-manifest.mjs';
 import {catalogTests} from '../testing/suites.mjs';
 import {readRetirementBaselineArtifact} from './retirement-baseline.mjs';
+import {createGithubMetadataReader} from './github-metadata.mjs';
 const read=file=>JSON.parse(readFileSync(file,'utf8'));
 const save=(file,value)=>{mkdirSync(path.dirname(file),{recursive:true});writeFileSync(file,JSON.stringify(value,null,2)+'\n',{flag:'wx'});};
-export function githubReader(repository,token){
-  if(!/^[\w.-]+\/[\w.-]+$/.test(repository??'')||!token)throw Error('Read-only GitHub identity required');
-  return async route=>{if(!/^[a-zA-Z0-9_./?=&-]+$/.test(route)||route.includes('..'))throw Error('Invalid metadata route');
-    const response=await fetch(`https://api.github.com/repos/${repository}/${route}`,{headers:{Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},signal:AbortSignal.timeout(15000)});
-    if(!response.ok)throw Error(`Read-only workflow metadata unavailable (${response.status})`);return response.json();};
+export function githubReader(repository,token,transport){
+  return createGithubMetadataReader({repository,token,allowCommitHead:true,operation:'workflow-github-metadata'},transport);
 }
 export async function loadPublishedUIPlanning({get,repository,run,baselineDirectory,repo,candidate,config}){
   if(!run)return {eligibility:{kind:'full',requiredTier:'extended',reason:'no-deployed-baseline'}};

@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "status": "current_configuration_local_p95_no_observed_regression_target_acceptance_pending",
+  "recordedAt": "2026-10-07T06:34:17.470Z",
+  "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+  "sourceSnapshot": "e9f6cfbfad8c96ffd0a3d53c4ed652dd642654b8e20af03c0d3425e588e473b4",
+  "sourceUnchanged": true,
+  "binaryHash": "sha256:892ea5010e10533cef96afac2768f78772fb44c3a0e783671147a1b2ef807fd2",
+  "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+  "flags": {
+    "initiativeOptions": true,
+    "equipmentIntent": true,
+    "catalogBatch": true,
+    "preparationCache": false,
+    "workerMirrors": true,
+    "compactReceipts": true,
+    "catalogPrefetch": false,
+    "frozenCatalogs": "OFF/ON"
+  },
+  "method": {
+    "pairs": 100,
+    "warmupPairs": 5,
+    "restoredIdenticalInput": true,
+    "alternatingArmOrder": true,
+    "quantile": "Nearest order statistic: sorted[ceil(p*n)-1], same as the historical paired100 driver",
+    "bootstrap": "paired bootstrap of matched run indices; 3000 deterministic resamples",
+    "backgroundLocalWorkExcluded": false
+  },
+  "verification": {
+    "acceptedCommands": 420,
+    "exactRetries": 420,
+    "reloadSourceChecks": 210,
+    "cleanup": [
+      {
+        "runId": "test_cf6a5ca384795fbbd0428a0c",
+        "status": "stopped",
+        "errors": []
+      },
+      {
+        "runId": "test_28aa2c1177eb458769798a3c",
+        "status": "stopped",
+        "errors": []
+      },
+      {
+        "runId": "test_ed4433b0c1502b99dea67980",
+        "status": "stopped",
+        "errors": []
+      }
+    ],
+    "paidProviderRequests": 0,
+    "productionChanges": 0
+  },
+  "arms": [
+    {
+      "enabled": false,
+      "summary": {
+        "initialize": {
+          "n": 100,
+          "mean": 99.40558800000159,
+          "median": 94.84509999997681,
+          "p95": 120.45979999998235,
+          "min": 82.57300000000396,
+          "max": 157.67269999999553,
+          "stddev": 13.853358677255088
+        },
+        "continue": {
+          "n": 100,
+          "mean": 81.3499399999989,
+          "median": 79.02150000000256,
+          "p95": 96.59870000000228,
+          "min": 68.20640000002459,
+          "max": 129.0209999999788,
+          "stddev": 9.047273932431814
+        }
+      },
+      "storage": {
+        "references": 0,
+        "catalogs": 0,
+        "inlineLogicalBytes": 8228640,
+        "immutableLogicalBytes": 0,
+        "runAndCatalogRelationBytes": 11517952
+      }
+    },
+    {
+      "enabled": true,
+      "summary": {
+        "initialize": {
+          "n": 100,
+          "mean": 99.52734999999927,
+          "median": 92.66320000000997,
+          "p95": 120.40659999998752,
+          "min": 85.08129999999073,
+          "max": 141.02539999998407,
+          "stddev": 12.890261760538753
+        },
+        "continue": {
+          "n": 100,
+          "mean": 81.58775999999881,
+          "median": 80.59590000001481,
+          "p95": 91.8530000000028,
+          "min": 70.4157000000123,
+          "max": 96.27330000000075,
+          "stddev": 5.584303175052453
+        }
+      },
+      "storage": {
+        "references": 105,
+        "catalogs": 1,
+        "inlineLogicalBytes": 210,
+        "immutableLogicalBytes": 78368,
+        "runAndCatalogRelationBytes": 7045120
+      }
+    }
+  ],
+  "comparison": {
+    "initialize": {
+      "method": "paired bootstrap of matched run indices; 3000 deterministic resamples",
+      "p95Ratio": 0.9995583588882363,
+      "p95Ratio95CI": [
+        0.9113380441863771,
+        1.0329414607806158
+      ],
+      "pairedDifference": {
+        "n": 100,
+        "mean": 0.12176199999768869,
+        "median": 0.6722999999765307,
+        "p95": 28.886599999968894,
+        "min": -70.92470000000321,
+        "max": 57.27119999998831,
+        "stddev": 20.277201639162424
+      }
+    },
+    "continue": {
+      "method": "paired bootstrap of matched run indices; 3000 deterministic resamples",
+      "p95Ratio": 0.9508720096647328,
+      "p95Ratio95CI": [
+        0.8623933668182071,
+        1.026307145729948
+      ],
+      "pairedDifference": {
+        "n": 100,
+        "mean": 0.23781999999991968,
+        "median": 1.1119999999937136,
+        "p95": 13.645900000003166,
+        "min": -50.62289999998757,
+        "max": 19.42949999999837,
+        "stddev": 9.548739634903024
+      }
+    }
+  },
+  "physicalReduction": {
+    "bytes": 4472832,
+    "percent": 38.83357041251778
+  },
+  "rawEvidence": {
+    "sha256": "sha256:5eaa959ef948555b9957a4082174515aa7e5ad8d682d777e48bde2572bd8b49c",
+    "driverSha256": "sha256:9e0a32c3854822eb0fb55ef45dd47d6917165605e8b5c0109e4d1836faecb294",
+    "restoreArmSha256": "sha256:c4b5fd936f1af83366678e980d2285a049a5363dcbbe9b80aa9770cbc7358e56"
+  },
+  "decision": {
+    "productionFrozenWriterEnabled": false,
+    "observedP95PointEstimatesNonRegressing": true,
+    "statisticalNonRegressionProven": false,
+    "targetHostLatencyAcceptancePending": true,
+    "reason": "Initialization p95 is nearly identical; bootstrap upper bound still permits 3.29% regression. Continue median/mean slightly increase. Current storage reduction is real locally, but this is not target-host or production OCI evidence."
+  },
+  "limitations": [
+    "The historical negative series used a different binary/artifact and preparation cache ON; this series uses the current D229 code and intended cache OFF. It is not a causal comparison of one isolated code edit.",
+    "Independent actual crypto entropy per arm; no cross-arm final state equality claimed.",
+    "One canonical line fighter per run; no universal party-size, mobile or production SLA claim.",
+    "Native Windows CJS hash differs from the production Linux-built artifact; no production performance acceptance.",
+    "Existing pinned catalogs/history are not rewritten or bulk migrated."
+  ]
+}
