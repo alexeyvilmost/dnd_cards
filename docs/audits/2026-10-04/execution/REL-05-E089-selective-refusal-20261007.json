@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "status": "hosted_selective_publication_refused_twice_local_mixed_passed",
+  "recordedAt": "2026-10-07T09:06:22.520Z",
+  "sourceCommit": "e08996859e794a34c5fca5e9832194e53655073d",
+  "actualCI": {
+    "id": 37595567424,
+    "attempt": 1,
+    "status": "success",
+    "suite": "core",
+    "selectedKind": "frontend-only"
+  },
+  "publication": {
+    "id": 37596102106,
+    "attempts": [
+      {
+        "attempt": 1,
+        "status": "failure",
+        "job": 112710645246,
+        "failureArtifact": 11471140610
+      },
+      {
+        "attempt": 2,
+        "status": "failure",
+        "job": 112713399149,
+        "failureArtifact": 11472105058
+      }
+    ],
+    "stage": "start",
+    "startupStage": "initial-observation",
+    "checksExecuted": 0,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "cause": "Not established; no raw diagnostic leaked",
+    "furtherBlindRetries": false
+  },
+  "localMixed": {
+    "status": "passed",
+    "actualChecks": 12,
+    "images": "Actual published/reused E089 images from immutable plan and records",
+    "instrumentation": "Private exception capture only; assertions and fixture unchanged",
+    "localDiagnosticOnly": true,
+    "ciAuthorization": false,
+    "deploymentAuthorization": false,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "evidence": {
+      "file": "outputs/testing/e089-mixed-diagnosis-20261007/evidence/report.json",
+      "sha256": "sha256:268eb1343ca391b7ca033dd24f21b5588535122689c5842ddc44ee7650f3d473"
+    }
+  },
+  "production": {
+    "releaseCommit": "ee7b585e26ee6970ee627e04bb821637cb8d5668",
+    "selectiveE089Accepted": false,
+    "mutations": 0,
+    "databaseRestored": false
+  },
+  "combinedIntegration": {
+    "base": "c14a2a28c7d2fb168ea5debe254d0667654d6829",
+    "testedSource": "9be4bcf407dc1d086504c4dd6584c3eb076dbecb",
+    "tree": "43253647231ab5544fae16c5ac9a0bd6241a0a99",
+    "exactTreeEqual": true,
+    "verificationInputs": 4606,
+    "rawInputBytesMatch": true,
+    "requirementsUnchanged": true
+  },
+  "next": "Full combined release with schema307 and finite read-only observation diagnostics. Require actual extended CI/publication/rehearsal. Real selective production acceptance remains open."
+}

@@ -1,6 +1,6 @@
 # Выкатка по manifest и сохранение истории
 
-Текущий статус: fdca59c3 выкачена и независимо проверена; автоматическая цепочка CI32 → публикация → TimeWeb → сверка main прошла. БД и прежний коммит f383c905 сохранены. Реальная frontend-only выкатка остаётся отдельной проверкой. [Доказательства](audits/2026-10-04/execution/CI-32-automatic-main-delivery.md).
+Текущий статус: EE7 (`ee7b585e`) выкачена и независимо принята. E089 actual core CI выбрал frontend-only, но обе попытки публикации отказали на initial-observation; selective production acceptance пока открыта. Локальный прогон тех же images выполнил 12 mixed checks. [Фактические доказательства и границы](audits/2026-10-04/execution/REL-05-E089-selective-refusal-20261007.md).
 
 Историческая запись до CI32: CI31 frontend-only прошёл, но публикация отказала при запуске отдельного стенда; selective delivery не была принята. [Доказательства и границы](audits/2026-10-04/execution/CI-31-selective-publication-refusal.md).
 

@@ -23,3 +23,13 @@ test('arbitrary diagnostic fields cannot enter the published failure report',asy
   const f=setup();f.adapter.check=async()=>{throw Object.assign(Error('private error'),{code:'private-code',exitCode:'private',rehearsalStage:'private-stage'});};
   await assert.rejects(executeFrontendChecks(f.adapter,{}),error=>{assert.deepEqual(error.evidence.failure,{stage:'image-contract',code:'rehearsal-step-failed'});assert.doesNotMatch(JSON.stringify(error.evidence),/private/);return true;});
 });
+test('mixed startup preserves only finite read-only observation codes',async()=>{
+  for(const [code,expected]of [['ui-observation-backend-binding','ui-observation-backend-binding'],['ui-observation-private-token','rehearsal-step-failed']]){
+    const f=setup();f.adapter.start=async()=>{throw Object.assign(Error('password=private'),{code,rehearsalStage:'initial-observation'});};
+    await assert.rejects(executeFrontendChecks(f.adapter,{}),error=>{
+      assert.deepEqual(error.evidence.failure,{stage:'start',startupStage:'initial-observation',code:expected});
+      assert.equal(error.evidence.cleanup.status,'stopped');assert.equal(error.evidence.authorization,'not-produced');
+      assert.doesNotMatch(JSON.stringify(error.evidence),/private|password/);return true;
+    });
+  }
+});

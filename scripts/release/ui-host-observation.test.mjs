@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from 'node:fs';import path from 'node:path';import {tmpdir} from 'node:os';import {createHash} from 'node:crypto';
-import {observeUIHost} from './ui-host-observation.mjs';import {uiFixture,h} from './ui-release-unit-fixture.mjs';import {checksum} from './backup-manifest.mjs';
+import {observeUIHost,isUIObservationFailureCode} from './ui-host-observation.mjs';import {uiFixture,h} from './ui-release-unit-fixture.mjs';import {checksum} from './backup-manifest.mjs';
 import {assertUnchangedRunningRuntime} from './ui-preservation.mjs';
 function unitDatabaseEnvironment(username,password,database='owned'){
  const value=new URL('postgres://database/'+database+'?sslmode=disable');value.username=username;value.password=password;return 'DATABASE_URL='+value.href;
@@ -38,4 +38,19 @@ test('unrelated valid directory cannot stand in for actual worker artifact store
 });
 test('wrong health/image/compose or corrupt executable refuses actual closure',async t=>{
   for(const change of [f=>{f.containers['1'.repeat(64)].State.Health.Status='unhealthy';},f=>{f.containers['2'.repeat(64)].Image=h('f');},f=>{writeFileSync(f.config.composeFile,'changed');},f=>{writeFileSync(path.join(f.config.artifactDirectory,'0'.repeat(64)+'.cjs'),'corrupt');}]){const f=await setup(t);change(f);await assert.rejects(observeUIHost(f.config,f.active,{run:f.run}));}
+});
+test('initial observation reports bounded image and mount phases while preserving refusals',async t=>{
+  for(const [change,code]of [
+    [f=>{f.containers['2'.repeat(64)].Image=h('f');},'ui-observation-rulesWorker-image'],
+    [f=>{f.containers['3'.repeat(64)].Mounts[0].RW=true;},'ui-observation-frontend-mount'],
+  ]){const f=await setup(t);change(f);await assert.rejects(observeUIHost(f.config,f.active,{run:f.run}),error=>{
+    assert.equal(error.code,code);assert.equal(isUIObservationFailureCode(error.code),true);return true;
+  });}
+});
+test('Docker exceptions containing private data expose only the observation phase',async t=>{
+  const f=await setup(t),run=args=>{if(args[0]==='exec'&&args[1]==='1'.repeat(64))throw Object.assign(Error('password=private DSN payload'),{stderr:'private environment'});return f.run(args);};
+  await assert.rejects(observeUIHost(f.config,f.active,{run}),error=>{
+    assert.equal(error.code,'ui-observation-backend-health');assert.equal(error.message,'Read-only UI observation failed');assert.equal(error.cause,undefined);
+    assert.doesNotMatch(error.stack+JSON.stringify(error),/private|password|DSN|payload|environment/);return true;
+  });
 });

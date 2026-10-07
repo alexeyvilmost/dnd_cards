@@ -6340,5 +6340,14 @@
     "migrations": 306,
     "databaseRestored": false,
     "goalComplete": false
+  },
+  "latestSelectivePublicationRefusal": {
+    "sourceCommit": "e08996859e794a34c5fca5e9832194e53655073d",
+    "status": "hosted_selective_publication_refused_twice_local_mixed_passed",
+    "report": "docs/audits/2026-10-04/execution/REL-05-E089-selective-refusal-20261007.json",
+    "actualPublicationRun": 37596102106,
+    "attempts": 2,
+    "productionAccepted": false,
+    "goalComplete": false
   }
 }

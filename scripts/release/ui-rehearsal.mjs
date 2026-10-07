@@ -2,13 +2,14 @@ import {randomUUID} from 'node:crypto';import {evidenceHash,compositionFingerpri
 import {frontendRehearsalChecks,verifyOriginalFullAnchor,assertFrontendOnlyReleaseReady} from './ui-release-receipt.mjs';
 import {assertFrontendEligibility} from './ui-release-policy.mjs';import {verifyFrontendCIReport} from './ui-release-planning.mjs';
 import {assertImmutablePreservation,assertUnchangedRunningRuntime} from './ui-preservation.mjs';
+import {isUIObservationFailureCode} from './ui-host-observation.mjs';
 const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 const startupStages=new Set(['postgres-start','catalog-seed','application-start','initial-observation','original-ui','frontend-prepare','frontend-replace']);
 const failureCodes=new Set(['docker-step-failed','ETIMEDOUT','ENOBUFS','mixed-startup-failed']);
 // Keep only bounded control metadata. Raw errors may contain commands, fixture
 // credentials or provider responses and must never become a public report.
 function safeFailure(error,stage){
-  return {stage,...(startupStages.has(error?.rehearsalStage)?{startupStage:error.rehearsalStage}:{}),code:failureCodes.has(error?.code)?error.code:'rehearsal-step-failed',...(Number.isInteger(error?.exitCode)&&error.exitCode>=0&&error.exitCode<=255?{exitCode:error.exitCode}:{})};
+  return {stage,...(startupStages.has(error?.rehearsalStage)?{startupStage:error.rehearsalStage}:{}),code:failureCodes.has(error?.code)||isUIObservationFailureCode(error?.code)?error.code:'rehearsal-step-failed',...(Number.isInteger(error?.exitCode)&&error.exitCode>=0&&error.exitCode<=255?{exitCode:error.exitCode}:{})};
 }
 // Actual-driver seam also used by a local-only OCI drill. It does not create a
 // CI authorization or an original full anchor. No missing driver can be skipped.
