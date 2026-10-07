@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
 import {laughterTargetingPatch,targetingRepairSQL} from './repair-laughter-targeting-20261007.mjs';
+import {resolveTool} from '../testing/runtime.mjs';
 
 const dsn=process.env.CANONICAL_RUNTIME_TEST_DSN;
 test('targeted repair commits once and rolls back preimage, trigger and historical conflicts', ()=>{
@@ -13,7 +14,7 @@ test('targeted repair commits once and rolls back preimage, trigger and historic
   PGPASSWORD:decodeURIComponent(uri.password),PGDATABASE:decodeURIComponent(uri.pathname.slice(1))};
  const schema='targeting_repair_'+randomUUID().replaceAll('-','');
  function run(sql,expectFailure=false){
-  const response=spawnSync(process.env.PSQL_BIN||'psql',['-X','-q','-At','-v','ON_ERROR_STOP=1','-f','-'],
+  const response=spawnSync(resolveTool('psql',process.env.PSQL_BIN),['-X','-q','-At','-v','ON_ERROR_STOP=1','-f','-'],
    {input:sql,env,encoding:'utf8',timeout:30000});
   if(expectFailure)assert.notEqual(response.status,0,'Unsafe repair unexpectedly committed');
   else assert.equal(response.status,0,'Local repair fixture/query failed');

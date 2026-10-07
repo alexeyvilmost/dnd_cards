@@ -251,7 +251,7 @@ func TestSupportedBaselineUpgradeMatrix(t *testing.T) {
 			target = append(target, migration.Version)
 		}
 		sort.Strings(target)
-		tail := []string{"298_compact_command_receipts", "299_frozen_combat_catalogs", "300_image_jobs"}
+		tail := []string{"298_compact_command_receipts", "299_frozen_combat_catalogs", "300_image_jobs", "301_character_lifecycle"}
 		expectedTarget := append(append([]string{}, input.Versions...), tail...)
 		sort.Strings(expectedTarget)
 		// The checked-in schema ledger retains four retired identifiers. They

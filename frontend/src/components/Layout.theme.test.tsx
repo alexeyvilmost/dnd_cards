@@ -34,9 +34,10 @@ it('uses shared chrome and marks Monsters as part of the Library', async () => {
 it('keeps main navigation and restores additional sections through the saved preference', async () => {
   auth.user = { username: 'Local player' };
   await render('/library');
-  for (const path of ['/library', '/characters-forge', '/paper-sheet', '/roguelike', '/account', '/settings', '/export', '/initiative']) {
+  for (const path of ['/library', '/characters-forge', '/roguelike', '/account', '/settings', '/export', '/initiative']) {
     expect(node.querySelector(`nav a[href="${path}"]`)).not.toBeNull();
   }
+  expect(node.querySelector('nav a[href="/paper-sheet"]')).toBeNull();
   for (const path of ['/groups', '/inventory', '/templates']) expect(node.querySelector(`a[href="${path}"]`)).toBeNull();
   await act(async () => setSetting('showAdditionalSections', true));
   for (const path of ['/groups', '/inventory', '/templates']) expect(node.querySelector(`nav a[href="${path}"]`)).not.toBeNull();
