@@ -1,0 +1,246 @@
+{
+  "schemaVersion": 1,
+  "status": "frontend_consumer_verified_local_request_reduction_production_pending",
+  "recordedAt": "2026-10-07T06:15:03.650Z",
+  "backendCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+  "scope": "Native Windows real browser/API/worker/PostgreSQL, sequential control and two UI arms, identical backend binary/worker/fixture/flags; not production OCI or WAN latency",
+  "semantics": {
+    "canonicalDisplayReferences": true,
+    "runtimeProjectionRemainsSeparate": true,
+    "identityScoped": true,
+    "pendingOnly": true,
+    "completedItemTtlMs": 0,
+    "sameSessionRightsRevocationFreshRead": true,
+    "strictBulkPrivateSiblingFailure": true,
+    "individualPublicSiblingRechecksItsOwnRights": true,
+    "olderBackendFallback": true,
+    "partialEquipmentDisplayPreserved": true
+  },
+  "verification": {
+    "vitest": {
+      "passed": 33,
+      "failed": 0,
+      "skipped": 0,
+      "sha256": "sha256:fa02c4724d22eaaf648b3eebdc7767d2930614e77ad2f4b938b8e369e30429f9"
+    },
+    "productionBuild": {
+      "passed": true,
+      "includesTypeScript": true,
+      "logSha256": "sha256:9138b501056b0136ccce096de70836490b9f4da2e121f6ab5222633260cd213a"
+    },
+    "scopedEslint": {
+      "passed": true,
+      "files": 5
+    },
+    "liveTypecheck": {
+      "passed": true
+    }
+  },
+  "arms": [
+    {
+      "name": "control",
+      "runId": "test_54b583d6fc19990c526c4a33",
+      "rawReportSha256": "sha256:33a53468290c9db7acb12ae744ff6d433d69ad03e87d8a2213cf53eaa39630f7",
+      "backendHash": "sha256:459fb3b251f9613556b5f646d916937449bf157cd377f6ca6cabe7dde8a654dc",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiHash": "8ef6196ca4de35c0b6d6b56094e2eb2621c62331adb5daec0363c61dd4dc7463",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "commandsIncludingWarmup": 124,
+      "measurements": 120,
+      "sourceUnchanged": true,
+      "pageErrors": 0,
+      "cleanupErrors": 0,
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 96.4,
+            "p95": 129.35
+          },
+          "apiRequests": {
+            "p50": 16,
+            "p95": 16.55
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 95.45,
+            "p95": 112.52
+          },
+          "apiRequests": {
+            "p50": 16,
+            "p95": 16.55
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 90.1,
+            "p95": 98.42
+          },
+          "apiRequests": {
+            "p50": 16,
+            "p95": 17
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 90.7,
+            "p95": 102.53
+          },
+          "apiRequests": {
+            "p50": 16,
+            "p95": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialUnshared",
+      "runId": "test_78cb36b948cfae0a265f08e2",
+      "rawReportSha256": "sha256:09fb1f6f04a57326183018d65d87ccdea8eaacdc85ff9ceea1aacb0143bd13fb",
+      "backendHash": "sha256:459fb3b251f9613556b5f646d916937449bf157cd377f6ca6cabe7dde8a654dc",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiHash": "e79b1ecbce0a3b943ff0db341cf7ee77754b5724acde6f23bddf0a29e83db446",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "commandsIncludingWarmup": 124,
+      "measurements": 120,
+      "sourceUnchanged": true,
+      "pageErrors": 0,
+      "cleanupErrors": 0,
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 92.45,
+            "p95": 118.62
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 17
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 95.8,
+            "p95": 126.54
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 17
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 91.5,
+            "p95": 106.73
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 17
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 91.1,
+            "p95": 109.08
+          },
+          "apiRequests": {
+            "p50": 17,
+            "p95": 17
+          }
+        }
+      ]
+    },
+    {
+      "name": "sharedPending",
+      "runId": "test_5e68f5d8b7433be5a1247dd5",
+      "rawReportSha256": "sha256:1c9c5cd0a0da3e898141101d66f16d1615e2ab3f6b7df37aa8e332ba655038bd",
+      "backendHash": "sha256:459fb3b251f9613556b5f646d916937449bf157cd377f6ca6cabe7dde8a654dc",
+      "artifactHash": "sha256:4e6c19cc9dc1d32d69833613f2c688fbc5ecab5ac3328749a8eb64fee7ef7dfa",
+      "uiHash": "519a2ae8792c2336bbb935766cc626f8952d1618734b5974bd096451716b657c",
+      "fixtureHash": "sha256:3aee439bab09520f91cee9f2ef6478708babbb45203665eadc0c73d5fafad0f3",
+      "commandsIncludingWarmup": 124,
+      "measurements": 120,
+      "sourceUnchanged": true,
+      "pageErrors": 0,
+      "cleanupErrors": 0,
+      "scenarios": [
+        {
+          "scenario": "equipment_ordinary_equip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 97.85,
+            "p95": 132.73
+          },
+          "apiRequests": {
+            "p50": 5,
+            "p95": 6
+          }
+        },
+        {
+          "scenario": "equipment_ordinary_unequip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 96.9,
+            "p95": 114.07
+          },
+          "apiRequests": {
+            "p50": 5,
+            "p95": 5
+          }
+        },
+        {
+          "scenario": "equipment_resource_equip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 91.6,
+            "p95": 107.22
+          },
+          "apiRequests": {
+            "p50": 5,
+            "p95": 6
+          }
+        },
+        {
+          "scenario": "equipment_resource_unequip",
+          "measured": 30,
+          "clickToReadyMs": {
+            "p50": 90.75,
+            "p95": 105.57
+          },
+          "apiRequests": {
+            "p50": 5,
+            "p95": 5.55
+          }
+        }
+      ]
+    }
+  ],
+  "conclusion": {
+    "apiRequestsMedianBefore": 16,
+    "apiRequestsMedianAfter": 5,
+    "medianRequestReductionPercent": 68.75,
+    "latencyImprovementProven": false,
+    "firstIterationRejectedAsBenefit": "Independent batch added a request (16 to 17) because canonical readers already shared pending individual requests; corrected by using the same pending identity-scoped keys.",
+    "limitations": [
+      "Local click-to-ready medians are similar; p95 increased in this sequential run. No universal latency improvement claim.",
+      "Reduced request count is measured, but WAN and target-host latency have not been measured.",
+      "This UI has not been published or deployed yet."
+    ]
+  },
+  "productionChanges": 0
+}

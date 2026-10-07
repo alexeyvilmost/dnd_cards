@@ -5,7 +5,7 @@ import {clientPerformanceEnabled, emitClientPerformance, numericServerPerformanc
 import { bustPrefix } from './apiCache';
 import {createCatalogMutationScope} from './catalogMutationScope';
 import { readPersistedAuthToken, signalUnauthorized } from './authSession';
-import { cachedCatalogRead as cached, cachedItemRead } from './ownedItemCache';
+import { cachedCatalogRead as cached, cachedItemRead, cachedItemBatch } from './ownedItemCache';
 import { shouldAttachAuthToken } from './authPolicy';
 import { imageAPIError } from './imageErrors';
 import {
@@ -187,23 +187,22 @@ apiClient.interceptors.response.use(
   }
 );
 
-export const cardsApi = {
-  // Canonical runtime hydration reads current visibility for an explicit set;
-  // it must not reuse a warm catalog after same-session grant revocation.
-  getCardsByIds: async (ids: readonly string[]): Promise<Card[]> => {
+// Both batch projections recheck current visibility. Display reads also include
+// canonical reference metadata; runtime reads stay free of derived metadata.
+async function readExactCards(route: string, ids: readonly string[], fallback = (id: string) => cardsApi.getCard(id)): Promise<Card[]> {
     const unique = [...new Set(ids)];
     if (!unique.length) return [];
     if (unique.length > 128) throw new Error('Слишком много предметов в одном запросе');
     const canonicalIds = [...unique].sort();
-    const rows = await cachedItemRead(`/api/cards/runtime/resolve?ids=${canonicalIds.join(',')}`, async () => {
+    const rows = await cachedItemRead(`${route}?ids=${canonicalIds.join(',')}`, async () => {
       let loaded: Card[];
       try {
-        loaded = (await apiClient.get<{cards: Card[]}>('/api/cards/runtime/resolve', {params: {ids: canonicalIds.join(',')}})).data.cards;
+        loaded = (await apiClient.get<{cards: Card[]}>(route, {params: {ids: canonicalIds.join(',')}})).data.cards;
       } catch (error) {
         // Older backend versions have no additive route. Missing/private rows on
         // the new endpoint have their own code and must not trigger a fallback.
         if (!(error instanceof ApiRequestError) || error.status !== 404 || error.code) throw error;
-        loaded = await Promise.all(canonicalIds.map(id => cardsApi.getCard(id)));
+        loaded = await Promise.all(canonicalIds.map(fallback));
       }
       const expected = new Set(canonicalIds);
       if (!Array.isArray(loaded) || loaded.some(row => !row?.id || !expected.delete(row.id)) || expected.size) {
@@ -215,6 +214,19 @@ export const cardsApi = {
     // its requested order. Completed private reads are never retained.
     const byId = new Map(rows.map(row => [row.id, row]));
     return unique.map(id => byId.get(id)!);
+}
+
+export const cardsApi = {
+  getCardsByIds: (ids: readonly string[]): Promise<Card[]> => readExactCards('/api/cards/runtime/resolve', ids),
+  getDisplayCardsByIds: (ids: readonly string[]): Promise<Card[]> => {
+    const unique = [...new Set(ids)];
+    if (unique.length > 128) return Promise.reject(Error('Слишком много предметов в одном запросе'));
+    return cachedItemBatch(unique.map(id => `/api/cards/${id}`), paths => readExactCards(
+      '/api/cards/resolve', paths.map(path => path.slice('/api/cards/'.length)),
+      // This group already owns the individual pending keys; direct fallback
+      // avoids waiting on itself when an older backend lacks the batch route.
+      async id => (await apiClient.get<Card>(`/api/cards/${id}`)).data,
+    ));
   },
   // Runtime-only additions; CardLibrary must continue to use the public list.
   getMyItemCatalog: async (params: { page: number; limit: number; fields: 'list' }): Promise<CardsResponse> => {

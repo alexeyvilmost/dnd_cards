@@ -136,13 +136,18 @@ function CharacterEquipmentPanel({
   useEffect(() => {
     let stale = false;
     (async () => {
-      // B5: карты грузим параллельно (раньше — for-await по одной).
-      const entries = await Promise.all(
-        cardIds.map((id) =>
-          cardsApi.getCard(id).then((card) => [id, card] as const).catch(() => null),
-        ),
-      );
-      if (!stale) setCards(new Map(entries.filter((e): e is readonly [string, Card] => !!e)));
+      const batches: Promise<Card[]>[] = [];
+      for (let offset = 0; offset < cardIds.length; offset += 128) {
+        const ids = cardIds.slice(offset, offset + 128);
+        batches.push(cardsApi.getDisplayCardsByIds(ids).catch(async () => {
+          // Preserve partial display when an entry is unavailable. Each detail
+          // request still checks current rights; unavailable entries stay absent.
+          const rows = await Promise.all(ids.map(id => cardsApi.getCard(id).catch(() => null)));
+          return rows.filter((card): card is Card => card !== null);
+        }));
+      }
+      const loaded = (await Promise.all(batches)).flat();
+      if (!stale) setCards(new Map(loaded.map(card => [card.id, card])));
     })();
     return () => { stale = true; };
   }, [cardIds.join('|')]);

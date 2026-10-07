@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "status": "application_accepted_runtime_activation_pending_next_canonical_deployment",
+  "recordedAt": "2026-10-07T06:13:43.866Z",
+  "acceptedApplication": {
+    "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+    "deploymentRun": 37573584439,
+    "deploymentAttempt": 2,
+    "verifiedAt": "2026-10-07T06:02:18.141Z",
+    "manifestHash": "sha256:99570d6d16425ffbac5e37e12f6ac54d53e95c2e7e2b2bdf874b92ea0d982b35",
+    "projectionHash": "sha256:3d21e7b624c5c798580edad27a8ff2905acac121f82ae669b83d6a1c3a4d262e",
+    "components": {
+      "backend": {
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:8558b43bcfe2aff7a171baaf8fc0c4c6b2b01f91558090269c9c98420ec480a2",
+        "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+        "health": "healthy"
+      },
+      "frontend": {
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:5646226b551fbbfec504e84eeccb9fea562fa324e986917c41fe0e1043dd4a89",
+        "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+        "health": "healthy"
+      },
+      "rulesWorker": {
+        "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:87019815731a14b2e1bbd2fafd22f9f663f7d223fd6688602005329c2e800150",
+        "sourceCommit": "05085d44cb8f2cd0a9966dc3f48160663dd9ecc5",
+        "health": "healthy"
+      }
+    },
+    "workerArtifactHash": "sha256:cc8555d452b5ee8d93affcd5609c4195d0c0b443b2c5312785466a943ea40730",
+    "actualFlags": {
+      "RULES_INITIATIVE_OPTIONS_ENABLED": "0",
+      "RULES_EQUIPMENT_INTENT_ENABLED": "0",
+      "RULES_PREPARATION_CACHE_ENABLED": "0",
+      "RULES_CATALOG_PREFETCH_ENABLED": "0",
+      "RULES_CATALOG_BATCH_ENABLED": "1",
+      "RULES_WORKER_MIRRORS_ENABLED": "1",
+      "DB_COMPACT_RECEIPTS": "1",
+      "DB_FROZEN_CATALOGS": "0",
+      "IMAGE_JOBS_ENABLED": "1"
+    },
+    "initiativeActivationVerified": false,
+    "equipmentActivationVerified": false
+  },
+  "cause": "Host config pinned an older protected compose template. Versioned source flags alone did not update the actual execution profile.",
+  "nextDeploymentPreparation": {
+    "schemaVersion": 1,
+    "status": "installed-for-next-canonical-deployment",
+    "completedAt": "2026-10-07T06:03:59.283Z",
+    "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+    "composeFile": "/opt/bagofholding/deploy-tools/profile-d2295bf1a06f-runtime/compose.prod.yml",
+    "composeHash": "sha256:53d41a24846099fce3235df61c9c59c3c38e9b5fed645bae20fbabcc2b48495c",
+    "previousConfigBackup": "/opt/bagofholding/deploy-tools/host-config.before-runtime-d2295bf1a06f.json",
+    "oldConfigHash": "sha256:a6c48b4d8f22bf3242674c0854f2454c3c6b9c3e466a2d54c9e2954696aaead7",
+    "newConfigHash": "sha256:1069294c06a1acfca814654f3fbc22b7645e62284c1a1363bd66b61938a8c8a6",
+    "actualDockerComposeParsing": "passed",
+    "onlyResolvedChanges": [
+      "RULES_INITIATIVE_OPTIONS_ENABLED:0->1",
+      "RULES_EQUIPMENT_INTENT_ENABLED:0->1"
+    ],
+    "currentApplicationRestarted": false,
+    "productionDatabaseChanges": 0,
+    "persistentDeployIdentityRetained": true
+  },
+  "limitations": [
+    "The healthy accepted application deployment does not prove initiative/equipment activation.",
+    "The next deployment must independently prove actual running flags and protected anchor execution profile.",
+    "The old immutable launch template remains available for application rollback; production DB restore is not authorized as application rollback."
+  ],
+  "productionDatabaseChangesByTemplateInstallation": 0,
+  "paidProviderRequests": 0
+}
