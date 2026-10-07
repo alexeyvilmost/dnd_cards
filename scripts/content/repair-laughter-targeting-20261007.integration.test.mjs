@@ -5,7 +5,8 @@ import {randomUUID} from 'node:crypto';
 import {laughterTargetingPatch,targetingRepairSQL} from './repair-laughter-targeting-20261007.mjs';
 
 const dsn=process.env.CANONICAL_RUNTIME_TEST_DSN;
-test('targeted repair commits once and rolls back preimage, trigger and historical conflicts', {skip:!dsn},()=>{
+test('targeted repair commits once and rolls back preimage, trigger and historical conflicts', ()=>{
+ assert.ok(dsn,'The owned integration PostgreSQL fixture is required');
  const uri=new URL(dsn);
  assert.ok(['127.0.0.1','localhost','postgres'].includes(uri.hostname),'Use an isolated local/CI PostgreSQL service');
  const env={...process.env,PGHOST:uri.hostname,PGPORT:uri.port||'5432',PGUSER:decodeURIComponent(uri.username),
