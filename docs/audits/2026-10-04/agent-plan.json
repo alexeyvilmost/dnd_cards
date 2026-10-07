@@ -3526,6 +3526,16 @@
             "skipped": 0,
             "productionChanges": 0
           }
+        },
+        "retirement302CommandTransport": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-retirement302-command.json",
+          "status": "retirement_command_capability_boundary_locally_verified",
+          "windowsPassed": 209,
+          "linuxPassed": 209,
+          "skipped": 0,
+          "newBoundaryCases": 15,
+          "productionChanges": 0,
+          "productionReady": false
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "status": "retirement_command_capability_boundary_locally_verified",
+  "recordedAt": "2026-10-07T04:13:56.496Z",
+  "implementation": "scripts/release/retirement-command.mjs",
+  "implementationHash": "sha256:fa1bcb6b950d15178df98269956f5d9cc129547f5a765a45fa6fc398cac855fe",
+  "scope": [
+    "Checks exact baked source/input identity, SQL checksum, capability protocol and ordinary migration registry before explicit execute/reconcile/inspect transport.",
+    "Uses existing execution/inspection result validators; read-only reconciliation must report applied=[].",
+    "Snapshots accepted request and immutable executor image before metadata I/O.",
+    "Registers all8 retirement metadata/command suites in mandatory selection-security."
+  ],
+  "checks": {
+    "newSyntheticBoundaryCases": 15,
+    "windowsRelatedPassed": 209,
+    "windowsRelatedSkipped": 0,
+    "actualLinux": {
+      "receipt": "outputs/operations/retirement-command-linux-tooling-2026-10-07T04-12-47.738Z/receipt.json",
+      "evidenceHash": "sha256:097f575bf80aa56ec88f457069189f66fe8db1e2668d85821fe97483803fe327",
+      "counts": {
+        "tests": 209,
+        "passed": 209,
+        "failed": 0,
+        "skipped": 0
+      },
+      "image": "sha256:8cc57e76a0c57777601a09b9e07869edc0baefd2f65d4cb653db711fd4be8f9d",
+      "network": "none",
+      "readOnlySource": true,
+      "sourceUnchanged": true,
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      }
+    },
+    "actualNativeNegative": {
+      "receipt": "outputs/operations/retirement-command-native-20261007.json",
+      "evidenceHash": "sha256:7608a4a33f9ba3e047d3ef48d73447287a20c806a6b4f234c4b67ddbaf1fac51",
+      "binaryHash": "sha256:bc8ecdd918b5c96e07c7cb993dd121b4b7b8fa379a8c14aa15e1330ce71d7f7b",
+      "unbakedMetadataRefused": true,
+      "retirementCommandSent": false,
+      "databaseMutations": 0
+    }
+  },
+  "failedEnvironmentAttempts": [
+    {
+      "receipt": "outputs/operations/retirement-command-linux-diagnostics-2026-10-07T04-09-51.333Z/receipt.json",
+      "status": "failed",
+      "tests": 209,
+      "failed": 5,
+      "reason": "Minimal runtime lacked Git and js-yaml; test requirements retained.",
+      "cleanupStopped": true
+    },
+    {
+      "receipt": "outputs/operations/retirement-command-linux-ci-diagnostics-2026-10-07T04-11-26.874Z/receipt.json",
+      "status": "failed",
+      "reason": "Cached dependency image also lacked Git; initialization refused.",
+      "cleanupStopped": true
+    }
+  ],
+  "productionChanges": 0,
+  "paidProviderRequests": 0,
+  "productionReady": false,
+  "limitations": [
+    "The actual native check is negative: the existing development binary has unverified provenance; no accepted native SQL operation was executed by this transport.",
+    "Synthetic boundary tests are not backup/archive/reader acceptance.",
+    "The local Linux tooling image is a test carrier, not the published production executor.",
+    "Host artifact acceptance, durable intent controller wiring and guarded production dispatch remain to be completed."
+  ]
+}
