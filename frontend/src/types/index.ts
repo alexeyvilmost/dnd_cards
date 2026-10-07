@@ -605,6 +605,7 @@ export interface CreateConceptRequest {
 export type UpdateConceptRequest = Partial<CreateConceptRequest>;
 
 export interface Action extends EntityReferences {
+  is_narrative?: boolean;
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -643,6 +644,7 @@ export interface Action extends EntityReferences {
 }
 
 export interface CreateActionRequest {
+  is_narrative?: boolean;
   name: string;
   name_en?: string | null;
   description: string;
@@ -677,6 +679,7 @@ export interface CreateActionRequest {
 }
 
 export interface UpdateActionRequest {
+  is_narrative?: boolean;
   name?: string;
   name_en?: string | null;
   description?: string;
@@ -759,6 +762,7 @@ export type PassiveEffectType =
   | 'condition';
 
 export interface PassiveEffect extends EntityReferences {
+  is_technical?: boolean;
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -797,6 +801,7 @@ export interface PassiveEffect extends EntityReferences {
 }
 
 export interface CreatePassiveEffectRequest {
+  is_technical?: boolean;
   name: string;
   name_en?: string | null;
   description: string;
@@ -829,6 +834,7 @@ export interface CreatePassiveEffectRequest {
 }
 
 export interface UpdatePassiveEffectRequest {
+  is_technical?: boolean;
   name?: string;
   name_en?: string | null;
   description?: string;
@@ -893,6 +899,7 @@ export interface SpellDamageEntry {
 }
 
 export interface Spell extends EntityReferences {
+  is_narrative?: boolean;
   support?: EntitySupportCertification | null;
   id: string;
   name: string;
@@ -933,6 +940,7 @@ export interface Spell extends EntityReferences {
 }
 
 export interface CreateSpellRequest {
+  is_narrative?: boolean;
   name: string;
   name_en?: string | null;
   description: string;
@@ -969,6 +977,7 @@ export interface CreateSpellRequest {
 }
 
 export interface UpdateSpellRequest {
+  is_narrative?: boolean;
   name?: string;
   name_en?: string | null;
   description?: string;

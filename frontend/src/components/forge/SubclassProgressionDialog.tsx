@@ -19,7 +19,7 @@ export default function SubclassProgressionDialog({subclasses, className, unlock
   selectedId?: string;
   onClose: () => void;
 }) {
-  const {entityDisplay} = useSiteSettings();
+  const {entityDisplay,hideTechnicalAbilities} = useSiteSettings();
   const [columns, setColumns] = useState<SubclassProgressionColumn[] | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -65,7 +65,7 @@ export default function SubclassProgressionDialog({subclasses, className, unlock
             {columns.map(column=>{
               const abilities=subclassAbilitiesAtLevel(column,level,unlockLevel);
               return <td key={column.subclass.id} className={selectedId===column.subclass.id?'is-selected':undefined}>
-                <ForgeAbilityDisplay mode={entityDisplay.effects} entries={abilities.effects.map(({effect,origin},index)=>({key:`${effect.id}:${index}`,name:effect.name,imageUrl:effect.image_url,effect,sourceLabel:origin.name}))}/>
+                <ForgeAbilityDisplay mode={entityDisplay.effects} entries={abilities.effects.filter(({effect})=>!hideTechnicalAbilities||!effect.is_technical).map(({effect,origin},index)=>({key:`${effect.id}:${index}`,name:effect.name,imageUrl:effect.image_url,effect,sourceLabel:origin.name}))}/>
                 <ForgeAbilityDisplay mode={entityDisplay.actions} entries={abilities.actions.map(({action,origin})=>({key:action.id,name:action.name,imageUrl:action.image_url,action,sourceLabel:origin.name}))}/>
                 {!abilities.effects.length&&!abilities.actions.length&&<span className="subclass-comparison-empty" aria-label="Нет новых способностей">—</span>}
               </td>;

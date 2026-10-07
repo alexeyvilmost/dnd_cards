@@ -1,3 +1,4 @@
+import {getSettings} from '../settings';
 import type { AssembledCharacter } from '../character/assemble';
 import { emptyDraft, type CharacterDraft } from '../character/types';
 import { draftClassLevels, normalizedSubclassIds, totalClassLevel } from '../character/multiclass';
@@ -165,12 +166,12 @@ export function paperIdentityDraft(doc: PaperSheetDocument, calculations = calcu
 export function projectPaperIdentityFeatures(assembly: AssembledCharacter, key: string, includeBuildSelections = false): PaperIdentityFeatures {
   const seen = new Set<string>();
   const abilities: PaperIdentityFeatures['abilities'] = [];
-  const append = (type: 'effect' | 'action', entity: { id: string; name: string }, origin: { kind: string }) => {
+  const append = (type: 'effect' | 'action', entity: { id: string; name: string; is_technical?: boolean }, origin: { kind: string }) => {
     if (!includeBuildSelections && origin.kind !== 'race' && origin.kind !== 'class') return;
     const reference = `${type}:${entity.id}`;
     if (seen.has(reference)) return;
     seen.add(reference);
-    abilities.push({ type, id: entity.id, name: entity.name });
+    abilities.push({ type, id: entity.id, name: entity.name, ...(entity.is_technical ? {isTechnical: true} : {}) });
   };
   for (const { effect, origin } of assembly.effects) append('effect', effect, origin);
   for (const { action, origin } of assembly.actions) append('action', action, origin);
@@ -193,5 +194,5 @@ export function paperIdentityEntries(doc: PaperSheetDocument, section: 'features
     const entity = parsePaperEntityToken(match[0]);
     return entity ? [`${entity.type}:${entity.id}`] : [];
   }));
-  return (section === 'features' ? snapshot.abilities : snapshot.traits).filter(entity => !explicit.has(`${entity.type}:${entity.id}`));
+  return (section === 'features' ? snapshot.abilities : snapshot.traits).filter(entity => !explicit.has(`${entity.type}:${entity.id}`) && (!getSettings().hideTechnicalAbilities || !entity.isTechnical));
 }

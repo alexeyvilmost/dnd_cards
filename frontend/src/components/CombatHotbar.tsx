@@ -402,7 +402,7 @@ export default function CombatHotbar({
 }) {
   const [selectedResourceId, setSelectedResourceId] = useState<string | null>(null);
   const [itemsSelected, setItemsSelected] = useState(false);
-  const {entityDisplay} = useSiteSettings();
+  const {entityDisplay, hideNarrativeCombatActions, hideUnavailableActions} = useSiteSettings();
   const [passivesOpen, setPassivesOpen] = useState(false);
   useEffect(() => { setSelectedResourceId(null); setItemsSelected(false); setPassivesOpen(false); }, [actorId]);
   const resourceOptions = useResourceOptions();
@@ -423,7 +423,9 @@ export default function CombatHotbar({
   const actions = playerActionIdsFor(state, actorId).flatMap((id) => {
     const action = state.catalogActions.find((candidate) => candidate.id === id);
     return action && isCombatHotbarAction(action) && combatHotbarActionHasSource(state, actorId, action) ? [action] : [];
-  }).map((action) => projectCombatHotbarAction(state, action, actorId));
+  }).map((action) => projectCombatHotbarAction(state, action, actorId))
+    .filter(action => (!hideNarrativeCombatActions || !(state.actionPresentation?.[action.id]?.actionRef?.is_narrative || state.actionPresentation?.[action.id]?.spellRef?.is_narrative))
+      && (!hideUnavailableActions || combatActionAvailability(state, action, actorId).enabled));
   const passiveToggles = actorPassiveToggles(actor, state.catalogActions, state.actionPresentation, actions);
   const passiveCount = passiveToggles.length;
   const freeuseActionIds = combatFreeuseActionIds(actions, actor.runtime.maxResources, actor.spellcastingAccess);
@@ -456,7 +458,7 @@ export default function CombatHotbar({
     setSelectedResourceId(current => current === key ? null : key);
   };
   const grouped = !selectedResourceId && !itemsSelected;
-  const conditionActions = grouped ? conditionGrantedActions(actor.runtime) : [];
+  const conditionActions = grouped ? conditionGrantedActions(actor.runtime).filter(action => !hideUnavailableActions || canUseConditionAction(state, actorId, action.id)) : [];
   const actionGroups = grouped
     ? COMBAT_HOTBAR_GROUPS.map(group => ({ ...group,
       actions: visibleActions.filter(action => combatHotbarActionGroup(state, actorId, action) === group.id),

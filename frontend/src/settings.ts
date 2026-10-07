@@ -16,6 +16,10 @@ export type ItemPreviewStyle = 'card' | 'interface';
 export type CombatRollMode = 'standard' | 'fast' | 'skip' | 'field';
 
 export interface SiteSettings {
+  hideNarrativeCombatActions: boolean;
+  showDetailedPreview: boolean;
+  hideTechnicalAbilities: boolean;
+  hideUnavailableActions: boolean;
   audioEnabled: boolean;
   audioMaster: number;
   audioMusic: number;
@@ -57,6 +61,10 @@ export function combatRollModeFor(settings: Pick<SiteSettings, 'combatRollMode' 
 const EVENT = 'site-settings-changed';
 
 const DEFAULTS: SiteSettings = {
+  hideNarrativeCombatActions: true,
+  showDetailedPreview: false,
+  hideTechnicalAbilities: true,
+  hideUnavailableActions: true,
   audioEnabled: true,
   audioMaster: .65,
   audioMusic: .3,
@@ -97,6 +105,9 @@ export function getSettings(): SiteSettings {
     if (!['standard', 'fast', 'skip', 'field'].includes(merged.combatRollMode)) merged.combatRollMode = DEFAULTS.combatRollMode;
     for (const key of ['audioMaster','audioMusic','audioEffects','audioUI'] as const) {
       merged[key] = typeof merged[key] === 'number' && Number.isFinite(merged[key]) ? Math.max(0,Math.min(1,merged[key])) : DEFAULTS[key];
+    }
+    for (const key of ['hideNarrativeCombatActions', 'showDetailedPreview', 'hideTechnicalAbilities', 'hideUnavailableActions'] as const) {
+      if (typeof merged[key] !== 'boolean') merged[key] = DEFAULTS[key];
     }
     if (typeof merged.showReviewStatus !== 'boolean') merged.showReviewStatus = false;
     if (typeof merged.showAdditionalSections !== 'boolean') merged.showAdditionalSections = false;

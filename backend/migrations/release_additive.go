@@ -20,7 +20,7 @@ type additiveExecer interface {
 // Only these reviewed, reentrant expansions can be run before cutover. The
 // historical Migrator.Run API and historical migration implementations remain.
 //
-//go:embed compact_receipts_298.go frozen_catalogs_299.go image_jobs_300.go character_lifecycle_301.go
+//go:embed compact_receipts_298.go frozen_catalogs_299.go image_jobs_300.go character_lifecycle_301.go catalog_presentation_schema_307.sql catalog_presentation_schema_307.go
 var additiveSources embed.FS
 
 type MigrationIdentity struct {
@@ -61,6 +61,7 @@ func additiveRegistry() []additiveMigration {
 		{frozenCatalogs299Version, "frozen_catalogs_299.go", addFrozenCatalogs299On},
 		{"300_image_jobs", "image_jobs_300.go", addImageJobs300On},
 		{"301_character_lifecycle", "character_lifecycle_301.go", addCharacterLifecycle301On},
+		{"307_catalog_presentation", "catalog_presentation_schema_307.sql", addCatalogPresentation307On},
 	}
 }
 func hashBytes(bytes []byte) string {
@@ -73,6 +74,13 @@ func AdditiveMigrationIdentities() []MigrationIdentity {
 		source, err := additiveSources.ReadFile(migration.source)
 		if err != nil {
 			panic(err)
+		}
+		if migration.id == "307_catalog_presentation" {
+			executor, err := additiveSources.ReadFile("catalog_presentation_schema_307.go")
+			if err != nil {
+				panic(err)
+			}
+			source = append(append(executor, []byte("\n--embedded-ddl--\n")...), source...)
 		}
 		result = append(result, MigrationIdentity{ID: migration.id, Checksum: hashBytes(source)})
 	}
@@ -336,7 +344,7 @@ func (m *Migrator) releaseAdditive(ctx context.Context, request ReleaseMigration
 	if !reflect.DeepEqual(result.ObservedVersions, sortedIdentityIDs(target)) {
 		return result, errors.New("post-migration registry mismatch")
 	}
-	result.RollbackReadersSafe, err = oldReadersSafe(ctx, tx, lifecycleRetainsWriterFormats(before, target))
+	result.RollbackReadersSafe, err = oldReadersSafe(ctx, tx, (lifecycleRetainsWriterFormats(before, target) || presentationRetainsWriterFormats(before, target)))
 	if err != nil {
 		return result, err
 	}
@@ -390,4 +398,25 @@ func oldReadersSafe(ctx context.Context, tx *sql.Tx, existingWriterFormats bool)
 	 AND NOT EXISTS(SELECT 1 FROM roguelike_runs WHERE combat_catalog_ref IS NOT NULL)
 	 AND NOT EXISTS(SELECT 1 FROM image_jobs WHERE state IN ('queued','running','unknown'))`).Scan(&safe)
 	return safe, err
+}
+
+func presentationRetainsWriterFormats(before, target map[string]string) bool {
+	if len(target) != len(before)+1 || before["307_catalog_presentation"] != "" {
+		return false
+	}
+	for id, identity := range before {
+		if target[id] != identity {
+			return false
+		}
+	}
+	for _, identity := range AdditiveMigrationIdentities() {
+		if identity.ID == "307_catalog_presentation" {
+			if target[identity.ID] != identity.Checksum {
+				return false
+			}
+		} else if before[identity.ID] != identity.Checksum {
+			return false
+		}
+	}
+	return true
 }

@@ -6,6 +6,10 @@ export function oldColumns(table,baselineIds){
  if(table==='roguelike_runs'&&!baselineIds.includes('299_frozen_combat_catalogs'))added.push('combat_catalog_ref');
  if(['roguelike_command_receipts','character_runtime_commands'].includes(table)&&!baselineIds.includes('298_compact_command_receipts'))added.push('response_version','response_payload','response_sha256','response_length');
  if(['characters_v3','roguelike_runs'].includes(table)&&!baselineIds.includes('301_character_lifecycle'))added.push('deleted_at');
+ if(!baselineIds.includes('307_catalog_presentation')){
+  if(['actions','spells'].includes(table))added.push('is_narrative');
+  if(table==='effects')added.push('is_technical');
+ }
  return added;
 }
 export function historyQuery(tables,baselineIds,{project=false,parallel=false}={}){

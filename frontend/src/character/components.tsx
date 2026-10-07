@@ -2,6 +2,7 @@ export { ChoiceResolver } from './ChoiceResolver';
 export { optionsForChoice, choiceOptionIdByReference, featForChoiceOption } from './choiceOptions';
 export type { ChoiceOption } from './choiceOptions';
 import { useEffect, useRef, type ReactNode } from 'react';
+import {useSiteSettings} from '../settings';
 import { labelOf, SKILLS } from '../mechanics/registries';
 import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
 import type { AssembledCharacter } from './assemble';
@@ -378,6 +379,7 @@ export function SummaryPanel({
   /** Итоговые правила (с числовыми модификаторами эффектов) — приоритетны над derived. */
   ruleState?: CharacterRuleState;
 }) {
+  const {hideTechnicalAbilities}=useSiteSettings();
   const race = assembled?.race;
   const klass = assembled?.klass;
   const background = assembled?.background;
@@ -388,7 +390,7 @@ export function SummaryPanel({
     )?.name
     ?? (draft.lineageId && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(draft.lineageId) ? draft.lineageId : undefined);
 
-  const effectsByOrigin = (kind: string) => (assembled?.effects || []).filter((e) => e.origin.kind === kind);
+  const effectsByOrigin = (kind: string) => (assembled?.effects || []).filter((e) => e.origin.kind === kind && (!hideTechnicalAbilities || !e.effect.is_technical));
   const actionsByOrigin = (kind: string) => (assembled?.actions || []).filter((a) => a.origin.kind === kind);
 
   return (
@@ -474,7 +476,7 @@ export function SummaryPanel({
       <hr className="sum-divider" />
 
       {feats.map((f) => {
-        const featEffects = (assembled?.effects || []).filter((e) => e.origin.kind === 'feat' && e.origin.id === f.id);
+        const featEffects = (assembled?.effects || []).filter((e) => e.origin.kind === 'feat' && e.origin.id === f.id && (!hideTechnicalAbilities || !e.effect.is_technical));
         const featActions = (assembled?.actions || []).filter((a) => a.origin.kind === 'feat' && a.origin.id === f.id);
         return (
           <div key={f.id} className="sum-field">

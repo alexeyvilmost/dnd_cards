@@ -83,6 +83,7 @@ const ActionCreator = () => {
           setSelectedResources(resourcesArray);
           
           reset({
+            is_narrative: action.is_narrative ?? false,
             name: action.name,
             name_en: action.name_en || '',
             description: action.description,
@@ -218,6 +219,7 @@ const ActionCreator = () => {
         // Обновление существующего действия
         
         const updateData: UpdateActionRequest = {
+          is_narrative: data.is_narrative,
           name: data.name,
           name_en: data.name_en?.trim() || null,
           description: data.description,
@@ -357,6 +359,7 @@ const ActionCreator = () => {
                     />
                     {/* Скрытый инпут — регистрация правила required для react-hook-form (значением рулит FormattedTextarea). */}
                     <input type="hidden" {...register('description', { required: 'Описание обязательно' })} />
+                <label className="flex items-start gap-3 py-3"><input type="checkbox" {...register('is_narrative')} /><span>Нарративное действие<small className="block text-gray-600">Бытовое или информационное действие без применения в текущем бою. По умолчанию скрыто на боевом хотбаре.</small></span></label>
                     {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
                   </div>
 

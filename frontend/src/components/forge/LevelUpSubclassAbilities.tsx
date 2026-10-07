@@ -9,13 +9,13 @@ export default function LevelUpSubclassAbilities({assembled, subclassId, classLe
   classLevel: number;
   loading?: boolean;
 }) {
-  const {entityDisplay} = useSiteSettings();
+  const {entityDisplay,hideTechnicalAbilities} = useSiteSettings();
   const abilities = availableSubclassAbilities(assembled, subclassId, classLevel);
   const detail = (level?: number) => level === classLevel ? 'Новая способность' : level ? `${level}-й уровень класса` : undefined;
   return <div className="levelup-subclass-abilities" aria-busy={loading || undefined}>
     <h4>Способности к {classLevel}-му уровню класса</h4>
     {loading ? <p className="forge-note">Загрузка способностей…</p> : <>
-      <ForgeAbilityDisplay mode={entityDisplay.effects} entries={abilities.effects.map(({effect, origin}, index)=>({
+      <ForgeAbilityDisplay mode={entityDisplay.effects} entries={abilities.effects.filter(({effect})=>!hideTechnicalAbilities||!effect.is_technical).map(({effect, origin}, index)=>({
         key:`${effect.id}:${index}`,name:effect.name,imageUrl:effect.image_url,effect,sourceLabel:origin.name,detail:detail(origin.progressionLevel),
       }))}/>
       <ForgeAbilityDisplay mode={entityDisplay.actions} entries={abilities.actions.map(({action, origin})=>({

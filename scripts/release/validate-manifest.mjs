@@ -81,6 +81,16 @@ export function lifecycleWriterExpansion(candidate,previous) {
     && baseline.every(row=>target.some(other=>json(other)===json(row)))
     && target.some(row=>json(row)===json(lifecycleMigrationIdentity));
 }
+export const presentationMigrationIdentity = Object.freeze({id:'307_catalog_presentation',checksum:"sha256:a529597dac046426d532e18f68a083963dc1c120fdb6efd5c464e7f16226a0c1"});
+export function presentationWriterExpansion(candidate,previous) {
+ if(!candidate || !previous || json(writerPolicy(candidate))!==json(writerPolicy(previous)))return false;
+ const baseline=previous.migrationSet,target=candidate.migrationSet;
+ return Array.isArray(baseline)&&Array.isArray(target)&&target.length===baseline.length+1
+  && !baseline.some(row=>row.id===presentationMigrationIdentity.id)
+  && ['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle'].every(id=>baseline.some(row=>row.id===id&&hashPattern.test(row.checksum)))
+  && baseline.every(row=>target.some(other=>json(other)===json(row)))
+  && target.some(row=>json(row)===json(presentationMigrationIdentity));
+}
 export function validateWriterTransition(candidate, previous, retirementActive) {
   const policy=writerPolicy(candidate);
   if(previous)writerPolicy(previous);
@@ -88,7 +98,7 @@ export function validateWriterTransition(candidate, previous, retirementActive) 
   if(policy.compactReceipts || policy.imageJobs) {
     if(!previous || candidate.previousReleaseId!==previous.releaseId) throw Error('Enabled writers require a verified manifest predecessor; legacy adoption is forbidden');
     for(const key of ['apiProtocolVersion','workerProtocolVersion','supportedWorldSchemaVersions']) if(json(candidate[key])!==json(previous[key])) throw Error('Enabled writer policy requires the same schema and migration identities');
-    if(json(candidate.migrationSet)!==json(previous.migrationSet)&&!lifecycleWriterExpansion(candidate,previous)){
+    if(json(candidate.migrationSet)!==json(previous.migrationSet)&&!lifecycleWriterExpansion(candidate,previous)&&!presentationWriterExpansion(candidate,previous)){
       if(!retirementActive||json(retirementActive.manifest)!==json(previous))throw Error('Enabled writer policy requires the same schema and migration identities');
       const database=validateRetirementDatabaseState(retirementActive);
       if(json(database.baselineMigrationSet)!==json(previous.migrationSet)||json(database.migrationSet)!==json(candidate.migrationSet))throw Error('Writer transition must declare exactly the already recorded retirement');
@@ -109,7 +119,7 @@ export function validateManifest(manifest) {
   }
   return manifest;
 }
-export const additiveMigrationIDs=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle']);
+export const additiveMigrationIDs=new Set(['298_compact_command_receipts','299_frozen_combat_catalogs','300_image_jobs','301_character_lifecycle','307_catalog_presentation']);
 export function validateMigrationSet(rows){
   checkSchema(rows,{type:'array',items:{$ref:'#/$defs/migrationIdentity'}});
   if(new Set(rows.map(row=>row.id)).size!==rows.length)throw Error('Duplicate migration ID');

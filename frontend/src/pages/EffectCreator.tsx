@@ -74,6 +74,7 @@ const EffectCreator = () => {
           // Заполняем форму данными эффекта
           
           reset({
+            is_technical: effect.is_technical ?? false,
             name: effect.name,
             name_en: effect.name_en || '',
             description: effect.description,
@@ -184,6 +185,7 @@ const EffectCreator = () => {
         // Обновление существующего эффекта
         
         const updateData: UpdatePassiveEffectRequest = {
+          is_technical: data.is_technical,
           name: data.name,
           name_en: data.name_en?.trim() || null,
           description: data.description,
@@ -329,6 +331,7 @@ const EffectCreator = () => {
                   placeholder="Описание эффекта (разметка, иконки, цвета, ссылки на сущности)"
                 />
                 <input type="hidden" {...register('description', { required: 'Описание обязательно' })} />
+                <label className="flex items-start gap-3 py-3"><input type="checkbox" {...register('is_technical')} /><span>Техническая способность<small className="block text-gray-600">Служебная выдача или изменение параметров. По умолчанию скрыта в списках способностей и бумажном листе.</small></span></label>
                 {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
               </div>
 

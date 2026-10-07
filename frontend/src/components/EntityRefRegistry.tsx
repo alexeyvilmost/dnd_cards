@@ -170,6 +170,7 @@ export function useEntityRef(type: EntityRefType, id: string): EntityRefState {
 
   useEffect(() => {
     let alive = true;
+    if (!id.trim()) { setState({ entity: null, loading: false, error: false }); return; }
     const c = cache.get(key);
     if (c?.status === 'ok' && c.data && (c.expires ?? 0) > Date.now()) {
       setState({ entity: c.data, loading: false, error: false });

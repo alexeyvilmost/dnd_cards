@@ -29,6 +29,7 @@ export interface PaperIdentity {
   subclassId?: string;
 }
 export interface PaperIdentityFeature {
+  isTechnical?: boolean;
   type: 'action' | 'effect' | 'feat';
   id: string;
   name: string;
@@ -478,7 +479,7 @@ function validateDocument(value: unknown): PaperSheetDocument {
         if (!['action', 'effect', 'feat'].includes(String(entry.type))) throw new Error(`Некорректный тип сущности «${label}».`);
         const id = stringValue(entry.id, `${label}: ID`, 200);
         if (!/^[\w-]+$/.test(id)) throw new Error(`Некорректный ID сущности «${label}».`);
-        return { type: entry.type as PaperIdentityFeature['type'], id, name: stringValue(entry.name, `${label}: название`, 2_000) };
+        return { type: entry.type as PaperIdentityFeature['type'], ...(entry.isTechnical === true ? {isTechnical: true} : {}), id, name: stringValue(entry.name, `${label}: название`, 2_000) };
       });
     };
     document.identityFeatures = {

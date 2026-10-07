@@ -1,3 +1,5 @@
+import {useEntityRef} from '../components/EntityRefRegistry';
+import type {PassiveEffect} from '../types';
 import { Fragment, useEffect, useState } from 'react';
 import { useSiteSettings } from '../settings';
 import SheetActionLine from '../components/SheetActionLine';
@@ -9,6 +11,22 @@ import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
 import EntitySquareCard from '../components/forge/EntitySquareCard';
 import FeatPreview from '../components/FeatPreview';
 import { optionsForChoice, choiceOptionIdByReference, featForChoiceOption } from './choiceOptions';
+
+
+function EffectChoiceOption({reference, name, selected, disabledReason, onSelect, mode}: {
+  reference: string; name: string; selected: boolean; disabledReason?: string;
+  onSelect: () => void; mode: 'icon' | 'row';
+}) {
+  const {entity, loading, error} = useEntityRef('effect', reference);
+  const effect = entity as PassiveEffect | null;
+  return <div className="choice-effect-option">
+    <ForgeAbilityLine name={effect?.name ?? name} imageUrl={effect?.image_url} effect={effect ?? undefined}
+      variant={mode} selected={selected} disabled={Boolean(disabledReason) || loading || error}
+      disabledReason={disabledReason ?? (loading ? 'Загрузка способности…' : error ? 'Не удалось загрузить способность' : undefined)}
+      onActivate={onSelect}/>
+    {mode === 'icon' && <span className="choice-effect-option__name">{effect?.name ?? name}</span>}
+  </div>;
+}
 
 export function ChoiceResolver({
   choice, value, onChange, unavailableOptions = {}, feats, groupSpellLevels = false,
@@ -56,6 +74,12 @@ export function ChoiceResolver({
     });
     return () => { stale = true; };
   }, [actionReferences]);
+  const effectReference = (id: string) => {
+    const item = choice.items?.find(item => item.id === id);
+    const grant = item?.grants?.find(grant => grant.kind === 'grant_effect' && typeof grant.value === 'string');
+    return item?.previewEffectId ?? (choice.source === 'effect' ? item?.value ?? id : grant?.value as string | undefined);
+  };
+  const hasEffectChoices = options.length > 0 && options.every(option => Boolean(effectReference(option.id)));
   const recommendedIds = new Set((choice.recommended ?? []).flatMap((reference) => {
     const optionId = choiceOptionIdByReference(options, reference);
     return optionId ? [optionId] : [];
@@ -98,7 +122,13 @@ export function ChoiceResolver({
         {value.length > 0 && <p>{options.filter(option=>value.includes(option.id)).map(option=>option.label).join(' · ')}</p>}
         {masteryOpen && <SheetWeaponMasteryDialog choices={[choice]} resolved={{[choice.id]:value}}
           unavailableOptions={unavailableOptions} initialShowAll onChange={(_id,next)=>onChange(next)} onClose={()=>setMasteryOpen(false)}/>}
-      </> : spellReferences!=='[]'||choice.items?.some(item=>item.previewSpell) ? (
+      </> : hasEffectChoices ? (
+        <div className={entityDisplay.effects === 'icon' ? 'choice-effect-options cs-action-tiles' : 'choice-effect-options'}>
+          {options.map(option => <EffectChoiceOption key={option.id} reference={effectReference(option.id)!}
+            name={option.label} mode={entityDisplay.effects} selected={value.includes(option.id)}
+            disabledReason={!value.includes(option.id) ? unavailableOptions[option.id] : undefined} onSelect={() => toggle(option.id)}/>)}
+        </div>
+      ) : spellReferences!=='[]' ||choice.items?.some(item=>item.previewSpell) ? (
         <div className={entityDisplay.spells === 'icon' ? 'cs-action-tiles choice-spell-entities' : 'choice-spell-entities'}>
           {spellOptions.map((option, index) => {
             const spell = previewSpell(option.id);

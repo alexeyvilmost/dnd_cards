@@ -30,6 +30,9 @@ func (sc *SpellController) GetSpells(c *gin.Context) {
 
 	light := wantsListView(c)
 	query := sc.db.Model(&Spell{})
+	if value := c.Query("is_narrative"); value == "true" || value == "false" {
+		query = query.Where("is_narrative = ?", value == "true")
+	}
 	query = entityTagFilter(query, c, "spell", "spells")
 	if light {
 		query = query.Omit("ImageURL", "DetailedDescription", "ImageGenerationPrompt", "Mechanics")
@@ -258,6 +261,7 @@ func (sc *SpellController) CreateSpell(c *gin.Context) {
 	}
 
 	spell := Spell{
+		IsNarrative:         req.IsNarrative,
 		Name:                req.Name,
 		NameEn:              req.NameEn,
 		Description:         req.Description,
@@ -424,6 +428,9 @@ func (sc *SpellController) UpdateSpell(c *gin.Context) {
 	}
 	if req.UpcastDescription != nil {
 		spell.UpcastDescription = req.UpcastDescription
+	}
+	if req.IsNarrative != nil {
+		spell.IsNarrative = req.IsNarrative
 	}
 	if req.Mechanics != nil {
 		if len(*req.Mechanics) == 0 {

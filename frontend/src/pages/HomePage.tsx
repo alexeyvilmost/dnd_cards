@@ -26,14 +26,20 @@ export default function HomePage() {
         <div className="home-tile-content"><span className="home-tile-kicker"><BookOpen size={17} /> ЗНАНИЯ И СОКРОВИЩА</span>
           <h2 id="home-library-title"><Link to="/library">Библиотека <ArrowUpRight /></Link></h2>
           <p>Всё, что может встретиться за игровым столом.</p>
-          <div className="home-catalog-links">
+
+        </div>
+        <nav className="home-bookshelf" aria-label="Книги библиотеки">
+          <img src="/images/home/bookshelf.png" alt="" className="home-bookshelf__art" />
+          <div className="home-bookshelf__books">
             {[
               ['Предметы', '/library'], ['Заклинания', '/library?type=spells'],
+              ['Действия', '/library?type=actions'], ['Эффекты', '/library?type=effects'],
               ['Черты', '/library?type=feats'], ['Виды', '/library?type=races'],
-              ['Классы', '/library?type=classes'], ['Монстры', '/monsters'],
-            ].map(([label, path]) => <Link key={path} to={path}>{label}<ArrowUpRight size={13} /></Link>)}
+              ['Классы', '/library?type=classes'], ['Предыстории', '/library?type=backgrounds'],
+              ['Монстры', '/monsters'], ['Ресурсы', '/library?type=resources'], ['Понятия', '/library?type=concepts'],
+            ].map(([label,path]) => <Link key={path} to={path} className="home-book"><span>{label}</span></Link>)}
           </div>
-        </div>
+        </nav>
       </section>
       <section className="home-tile home-tile-interactive" aria-labelledby="home-characters-title">
         <img className="home-tile-art" src="/images/home/interactive.jpg" alt="" loading="lazy" />

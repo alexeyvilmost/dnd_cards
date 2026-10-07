@@ -48,6 +48,7 @@ export type PendingChoice = {
     previewCard?: Card;
     previewSpell?: Spell;
     previewAction?:Action;
+    previewEffectId?: string;
     /** Optional payload reference when it intentionally differs from id. */
     value?: string;
     /** Data-owned prerequisite evaluated against the originating class. */
@@ -180,6 +181,7 @@ function choiceToPending(
     items: items.map((it) => ({
       id: String(it.id),
       name: String(it.name),
+      ...(typeof it.preview_effect_id === 'string' ? {previewEffectId: it.preview_effect_id} : {}),
       ...(typeof it.value === 'string' && it.value ? { value: it.value } : {}),
       ...(Number.isSafeInteger(Number(it.minimum_class_level))
         && Number(it.minimum_class_level) >= 1
@@ -287,6 +289,8 @@ export function collectChoices(
   choiceRecommendations?: ChoiceRecommendations,
 ): PendingChoice[] {
   if (!mechanics || typeof mechanics !== 'object') return [];
+  if (Array.isArray(mechanics.action_variant_ids) && mechanics.action_variant_ids.length > 0
+    || Array.isArray(mechanics.spell_variant_ids) && mechanics.spell_variant_ids.length > 0) return [];
   const effects = (mechanics as Dict).effects;
   if (!Array.isArray(effects)) return [];
   const out: PendingChoice[] = [];

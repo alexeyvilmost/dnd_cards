@@ -1311,3 +1311,13 @@
   .sheet-header-btn-label { display: none; }
   .sheet-header-btn { padding: 7px 9px; }
 }
+
+.choice-effect-options{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}.choice-effect-option{display:flex;flex-direction:column;gap:8px;align-items:center;max-width:170px}.choice-effect-option__name{font-size:12px;line-height:1.4;text-align:center;color:var(--forge-ink)}
+
+.forge-selected-entity{display:grid;grid-template-columns:140px minmax(0,1fr);gap:32px;align-items:start;text-align:left;padding:12px 8px}
+.forge-selected-entity__card{display:flex;flex-direction:column;align-items:center;gap:14px;z-index:1}.forge-selected-entity__change{width:100%;min-height:38px}
+.forge-selected-entity__story{animation:forge-story-reveal .32s ease both;animation-delay:.12s;line-height:1.65;color:var(--forge-ink);max-width:65ch}.forge-selected-entity__story h3{font:500 27px/1.2 Georgia,serif;color:var(--forge-gold);margin:0 0 16px}
+@keyframes forge-story-reveal{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+@media(max-width:580px){.forge-selected-entity{grid-template-columns:110px minmax(0,1fr);gap:18px;padding:6px 0}.forge-selected-entity__story h3{font-size:22px}.forge-selected-entity__story{font-size:14px}}
+@media(max-width:360px){.forge-selected-entity{grid-template-columns:1fr}.forge-selected-entity__card{justify-self:center}.forge-selected-entity__story{text-align:left}}
+@media(prefers-reduced-motion:reduce){.forge-selected-entity__story{animation:none}}

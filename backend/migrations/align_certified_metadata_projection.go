@@ -66,6 +66,10 @@ func quotedTextArray(fields []string) string {
 // certification. Presentation metadata can evolve while identity, mechanics,
 // and every undeclared structural field still invalidate stale evidence.
 func alignCertifiedMetadataProjection(db *sql.DB) error {
+	return alignCertifiedMetadataProjectionOn(db)
+}
+
+func alignCertifiedMetadataProjectionOn(db additiveExecer) error {
 	metadataFields, err := certifiedMutableMetadataFields()
 	if err != nil {
 		return err

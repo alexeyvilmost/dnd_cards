@@ -1,3 +1,5 @@
+import LibraryEntityFilters from '../components/library/LibraryEntityFilters';
+import {entityFilterQuery, relevantEntityFilters} from '../components/library/entityFilterDefinitions';
 import ReviewStatusCorner from '../components/ReviewStatusCorner';
 import { useLibraryCatalogPage, type LibraryPageRequest } from '../components/library/useLibraryCatalogPage';
 import { LibraryReviewStatusFilter, LibraryReviewStatusSummary, filterReviewStatuses, parseReviewStatuses } from '../components/library/LibraryReviewStatus';
@@ -16,7 +18,7 @@ import LibrarySectionHero from '../components/library/LibrarySectionHero';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { cardsApi, effectsApi, actionsApi, spellsApi, featsApi, backgroundsApi, racesApi, classesApi, resourcesApi, variablesApi, conceptsApi } from '../api/client';
 import type { Card, PassiveEffect, Action, Spell, Feat, Background, Race, CharacterClass, ResourceDefinition, Variable, Concept } from '../types';
-import { RARITY_OPTIONS, PROPERTIES_OPTIONS, PASSIVE_EFFECT_TYPE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
+import { PROPERTIES_OPTIONS, PASSIVE_EFFECT_TYPE_OPTIONS, getSpellLevelLabel, SPELL_SCHOOL_OPTIONS, SPELL_CLASS_OPTIONS, FEAT_CATEGORY_OPTIONS, ABILITY_OPTIONS } from '../types';
 import CardPreview from '../components/CardPreview';
 import EffectPreview from '../components/EffectPreview';
 import ActionPreview from '../components/ActionPreview';
@@ -178,6 +180,7 @@ const CardLibrary = () => {
   const [rawResources, setResources] = useState<ResourceDefinition[]>([]);
   const [rawVariables, setVariables] = useState<Variable[]>([]);
   const [rawConcepts, setConcepts] = useState<Concept[]>([]);
+  const [entityFilters, setEntityFilters] = useState(initialFilters.entityFilters ?? {});
   const [search, setSearch] = useState(initialFilters.search);
   const [tagFilter,setTagFilter]=useState(initialFilters.tag??'');
   const [tagRevision,setTagRevision]=useState(0);
@@ -408,10 +411,10 @@ const CardLibrary = () => {
       page,
       limit
     };
+    Object.assign(params, entityFilterQuery('actions', entityFilters));
 
     if (tagFilter) params.tag = tagFilter;
     if (search) params.search = search;
-    if (rarityFilter) params.rarity = rarityFilter;
 
     const response = await actionsApi.getActions({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
     return { ...response, rows: response.actions };
@@ -423,10 +426,10 @@ const CardLibrary = () => {
       page,
       limit
     };
+    Object.assign(params, entityFilterQuery('effects', entityFilters));
 
     if (tagFilter) params.tag = tagFilter;
     if (search) params.search = search;
-    if (rarityFilter) params.rarity = rarityFilter;
     if (effectTypeFilter) params.effect_type = effectTypeFilter;
     if (referenceState) params.reference_state = referenceState;
     if (referenceType) params.reference_type = referenceType;
@@ -441,6 +444,7 @@ const CardLibrary = () => {
 
   const requestSpells: LibraryPageRequest<Spell> = async (page, limit) => {
     const params: Record<string, string | number | boolean> = { page, limit };
+    Object.assign(params,entityFilterQuery('spells',entityFilters));
     if (tagFilter) params.tag = tagFilter;
     if (search) params.search = search;
     if (spellLevel !== '') params.level = Number(spellLevel);
@@ -481,6 +485,7 @@ const CardLibrary = () => {
 
   const requestRaces: LibraryPageRequest<Race> = async (page, limit) => {
     const params: Record<string, string | number | boolean> = { page, limit };
+    Object.assign(params, entityFilterQuery('races', entityFilters));
     if (tagFilter) params.tag = tagFilter;
     if (search) params.search = search;
     const response = await racesApi.getRaces({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
@@ -490,6 +495,7 @@ const CardLibrary = () => {
 
   const requestClasses: LibraryPageRequest<CharacterClass> = async (page, limit) => {
     const params: Record<string, string | number | boolean> = { page, limit };
+    Object.assign(params, entityFilterQuery('classes', entityFilters));
     if (tagFilter) params.tag = tagFilter;
     if (search) params.search = search;
     const response = await classesApi.getClasses({ ...params, page, ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
@@ -505,7 +511,7 @@ const CardLibrary = () => {
   const loadResources = (page = 1, append = false) => catalogPage.load(requestResources, setResources, page, append);
 
   const requestVariables: LibraryPageRequest<Variable> = async (page, limit) => {
-    const response = await variablesApi.getVariables({  tag: tagFilter || undefined, search, page, limit,
+    const response = await variablesApi.getVariables({ ...entityFilterQuery('variables', entityFilters), tag: tagFilter || undefined, search, page, limit,
       ...(showReviewStatus ? { review_status: activeReviewStatuses.join(','), review_summary: true } : {}) });
     return { ...response, rows: response.variables };
   };
@@ -541,11 +547,12 @@ const CardLibrary = () => {
     }
     if (contentType !== 'passives') void catalogLoaders[contentType](1, false);
     return catalogPage.invalidate;
-  }, [token, showReviewStatus, activeReviewStatuses, contentType, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, referenceState, referenceType, referenceId, referenceLevel, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
+  }, [token, showReviewStatus, activeReviewStatuses, contentType, entityFilters, search, tagFilter, tagRevision, rarityFilter, effectTypeFilter, referenceState, referenceType, referenceId, referenceLevel, propertiesFilter, templateTypeFilter, slotFilter, armorTypeFilter, resourceCategoryFilter, sortBy, spellLevel, spellClass, spellSubclass, spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable, featAbility, bgAbility, bgSkill]);
 
   const currentFilters = useMemo(
     () => ({
       contentType,
+      entityFilters,
       search,
       tag:tagFilter,
       statuses: reviewStatuses.join(','),
@@ -576,6 +583,7 @@ const CardLibrary = () => {
     }),
     [
       contentType,
+      entityFilters,
       search,
       tagFilter,
       reviewStatuses,
@@ -649,6 +657,7 @@ const CardLibrary = () => {
     const parsed = parseLibrarySearchParams(searchParams);
     skipFilterUrlSync.current = true;
     setContentType(parsed.contentType);
+    setEntityFilters(parsed.entityFilters ?? {});
     setSearch(parsed.search);
     setTagFilter(parsed.tag??"");
     setRarityFilter(parsed.rarity);
@@ -1022,7 +1031,8 @@ const CardLibrary = () => {
   const createTarget = createTargetByType[contentType];
 
   const handleContentTypeChange = (next: LibraryContentType) => {
-    if (next !== 'cards') setRarityFilter(value => value.split(',')[0] ?? '');
+    if (next !== 'cards') setRarityFilter('');
+    setEntityFilters({});
     setContentType(next);
     // Выбранный вручную режим держим между вкладками; «Интерфейс» есть только у предметов,
     // поэтому при уходе на другой тип сбрасываем его в «Список».
@@ -1031,12 +1041,17 @@ const CardLibrary = () => {
   // Счётчик активных фильтров — бейдж на кнопке «Фильтры». (Тип шаблона и
   // сортировка всегда заданы, поэтому в счётчик не входят.)
   const activeFilterCount = [
-    rarityFilter, effectTypeFilter, referenceState, referenceType, referenceId, referenceLevel, propertiesFilter, slotFilter,
-    armorTypeFilter, resourceCategoryFilter, spellLevel, spellClass, spellSubclass,
-    spellSchool, spellConcentration, spellRitual, featCategory, featRepeatable,
-    featAbility, bgAbility, bgSkill, tagFilter, showReviewStatus && reviewStatuses.length > 0,
+    tagFilter, showReviewStatus && reviewStatuses.length > 0,
+    ...Object.values(relevantEntityFilters(contentType, entityFilters)),
+    ...(contentType === 'cards' ? [rarityFilter,propertiesFilter,slotFilter,armorTypeFilter] : []),
+    ...(contentType === 'effects' ? [effectTypeFilter,referenceState,referenceType,referenceId,referenceLevel] : []),
+    ...(contentType === 'spells' ? [spellLevel,spellClass,spellSubclass,spellSchool,spellConcentration,spellRitual] : []),
+    ...(contentType === 'feats' ? [featCategory,featRepeatable,featAbility] : []),
+    ...(contentType === 'backgrounds' ? [bgAbility,bgSkill] : []),
+    ...(contentType === 'resources' ? [resourceCategoryFilter] : []),
   ].filter(Boolean).length;
   const resetFilters = () => {
+    setEntityFilters({});
     setTagFilter('');
     setRarityFilter('');
     setEffectTypeFilter('');
@@ -1152,25 +1167,7 @@ const CardLibrary = () => {
             <LibraryTagControl value={tagFilter} onChange={setTagFilter}/>
             {/* Фильтр по редкости - не для заклинаний */}
             {contentType === 'cards' && <LibraryRarityFilter value={rarityFilter} onChange={setRarityFilter} />}
-            {contentType !== 'cards' && contentType !== 'spells' && contentType !== 'resources' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Редкость
-                </label>
-                <select
-                  value={rarityFilter}
-                  onChange={(e) => setRarityFilter(e.target.value)}
-                  className="input-field"
-                >
-                  <option value="">Все редкости</option>
-                  {RARITY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <LibraryEntityFilters type={contentType} values={entityFilters} onChange={setEntityFilters}/>
 
             {contentType === 'resources' && (
               <div>
@@ -1428,19 +1425,17 @@ const CardLibrary = () => {
             )}
 
             {/* Сортировка */}
-            {contentType !== 'resources' && (
+            {contentType === 'cards' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Сортировка
               </label>
               <select
-                value={contentType === 'effects' || contentType === 'feats' ? groupedSortBy : sortBy}
+                value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="input-field"
               >
-                {(contentType === 'effects' || contentType === 'feats') && <option value="name_asc">По названию (А–Я)</option>}
                 <option value="created_desc">По дате добавления (новые)</option>
-                {contentType !== 'effects' && contentType !== 'feats' && <>
                 <option value="created_asc">По дате добавления (старые)</option>
                 <option value="updated_desc">По дате изменения (новые)</option>
                 <option value="updated_asc">По дате изменения (старые)</option>
@@ -1448,7 +1443,6 @@ const CardLibrary = () => {
                 <option value="rarity_desc">По редкости (артефакты)</option>
                 <option value="price_asc">По стоимости (дешевые)</option>
                 <option value="price_desc">По стоимости (дорогие)</option>
-                </>}
               </select>
             </div>
             )}

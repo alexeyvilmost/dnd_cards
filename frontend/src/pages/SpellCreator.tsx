@@ -31,6 +31,7 @@ import { formatEntityEditorError } from '../utils/entityEditorError';
 import LockedMechanicsViewer from '../components/LockedMechanicsViewer';
 
 type ScalarForm = {
+  is_narrative: boolean;
   name: string;
   name_en: string;
   card_number: string;
@@ -114,6 +115,7 @@ const SpellCreator = () => {
           setLockedEntity(locked);
           reset({
             name: spell.name,
+            is_narrative: !!spell.is_narrative,
             name_en: spell.name_en || '',
             card_number: asTemplate ? '' : (spell.card_number || ''),
             level: spell.level ?? 0,
@@ -227,6 +229,7 @@ const SpellCreator = () => {
 
     const payload: CreateSpellRequest & UpdateSpellRequest = {
       name: data.name,
+      is_narrative: !!data.is_narrative,
       name_en: data.name_en?.trim() || null,
       description: data.description,
       detailed_description: data.detailed_description || null,
@@ -594,8 +597,9 @@ const SpellCreator = () => {
                       {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
                     </div>
                     <div>
-                      <label className={labelCls}>Повышение уровня / Усиление заговора</label>
-                      <FormattedTextarea
+                      <label className="flex items-center gap-2 mb-4"><input type="checkbox" {...register('is_narrative')} />Нарративное в бою</label>
+                        <label className={labelCls}>Повышение уровня / Усиление заговора</label>
+                        <FormattedTextarea
                         value={fd.upcast_description || ''}
                         onChange={(v) => setValue('upcast_description', v)}
                         rows={3}

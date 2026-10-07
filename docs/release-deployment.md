@@ -64,10 +64,21 @@ RLS и persistence новых таблиц. Изменённый immutable trigg
 Существующие compact receipts/image jobs writers могут оставаться включёнными
 только при совпадении прежних writer flags, протоколов и migration identities,
 свежем exact-image approval и проверках прежнего и нового readers/writers,
-pending/retry/jobs/rollback на полном восстановлении. Иные expansion-переходы
+pending/retry/jobs/rollback на полном восстановлении. Для `307_catalog_presentation`
+также разрешён точный переход с установленной 301 и неизменёнными 298/299/300,
+writer flags и протоколами. Его checksum охватывает Go executor и отдельный SQL со всеми DDL:
+три metadata-столбца, две таблицы исходных данных/receipt и функции проекции.
+Schema proof проверяет их определения и защитные триггеры, history proof сравнивает
+все прежние столбцы всех прежних таблиц. Существующие строки этот executor не меняет.
+Свежие exact-image migration и writer proofs по-прежнему обязательны.
+Данные каталога применяются после cutover отдельной `--apply-catalog-presentation`
+с точными baked commit/fingerprint и хешем встроенного manifest: advisory lock,
+проверка установленной схемы, исходных сущностей, архив, изменения и receipt в
+одной транзакции. Повтор подтверждённого manifest сохраняет последующие изменения.
+Иные expansion-переходы
 сохраняют прежнее требование выключенных writers. Legacy wire-name
 `additive-298-300` сохранён, список executors явный. Проверяется вся прежняя
-история; исключаются только новые nullable столбцы, отсутствовавшие до 301.
+история; исключаются только новые столбцы, отсутствовавшие до соответствующей миграции.
 Recovery завершённой старой операции не может перезаписать более новый release.
 Compose expansion profile явно выключает DB_COMPACT_RECEIPTS, DB_FROZEN_CATALOGS
 и IMAGE_JOBS_ENABLED, actual backend environment проверяется; дополнительно перед

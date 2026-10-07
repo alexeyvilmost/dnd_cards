@@ -10,7 +10,8 @@ import CombatHotbar from './CombatHotbar';
 vi.mock('../utils/resources', async (importOriginal) => ({
   ...await importOriginal<typeof import('../utils/resources')>(), useResourceOptions: () => [],
 }));
-vi.mock('../settings', () => ({ useSiteSettings: () => ({ entityDisplay: { actions: 'icon' } }) }));
+const visibility=vi.hoisted(()=>({hideNarrativeCombatActions:false,hideUnavailableActions:false}));
+vi.mock('../settings', () => ({ useSiteSettings: () => ({ entityDisplay: { actions: 'icon' },...visibility }) }));
 vi.mock('./SheetResourceTile', () => ({
   sheetResourceTileOrder: () => 0,
   default: ({ resourceId, current, maximum, onSelect, selected }: { resourceId: string; current: number; maximum: number; onSelect: () => void; selected: boolean }) =>
@@ -55,8 +56,27 @@ const callbacks = () => ({ onAction: vi.fn(), onMove: vi.fn(), onConditionAction
 
 describe('compact combat hotbar controls', () => {
   let root: Root, container: HTMLDivElement;
-  beforeEach(() => { container = document.createElement('div'); document.body.append(container); root = createRoot(container); });
+  beforeEach(() => {visibility.hideNarrativeCombatActions=false;visibility.hideUnavailableActions=false; container = document.createElement('div'); document.body.append(container); root = createRoot(container); });
   afterEach(async () => { await act(async () => root.unmount()); container.remove(); });
+
+  it('hides narrative actions and spells using their metadata and unavailable actions using canonical costs',async()=>{
+    const canonical=state();
+    const presentation=canonical.actionPresentation!;
+    presentation['basic-action'].actionRef!.is_narrative=true;
+    presentation['basic-bonus_action']={spellRef:{id:'communication',name:'Связь',is_narrative:true}} as unknown as NonNullable<SoloCombatState['actionPresentation']>[string];
+    const handlers=callbacks();
+    const render=()=>act(async()=>root.render(<CombatHotbar state={canonical} actorId="hero" selectedActionId={null} movementMode={false} disabled={false} {...handlers}/>));
+    visibility.hideNarrativeCombatActions=true;
+    await render();
+    expect(container.querySelector('[data-action-id="basic-action"]')).toBeNull();
+    expect(container.querySelector('[data-action-id="basic-bonus_action"]')).toBeNull();
+    visibility.hideNarrativeCombatActions=false;
+    await render();expect(container.querySelector('[data-action-id="basic-action"]')).not.toBeNull();
+    canonical.world.actors.hero.runtime.resources.action=0;
+    visibility.hideUnavailableActions=true;
+    await render();expect(container.querySelector('[data-action-id="basic-action"]')).toBeNull();
+    expect(handlers.onAction).not.toHaveBeenCalled();
+  });
 
   it('opens canonical passive toggles from the utility panel while actions remain visible, without tabs', async () => {
     const handlers = callbacks();

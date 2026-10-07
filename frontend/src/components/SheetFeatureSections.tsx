@@ -21,10 +21,10 @@ const passiveIconShape = (mechanics: unknown): 'round' | 'square' => {
 
 /** One projection shared by sheet layouts; no parallel feat-name summary. */
 export default function SheetFeatureSections({assembled}: {assembled: Pick<AssembledCharacter, 'effects' | 'actions' | 'feats'>}) {
-  const {entityDisplay} = useSiteSettings();
+  const {entityDisplay, hideTechnicalAbilities} = useSiteSettings();
   const represented = new Set([...assembled.effects, ...assembled.actions].filter(row => row.origin.kind === 'feat').map(row => row.origin.id));
   return <div className="sheet-feature-sections">{FEATURE_SECTIONS.map(section => {
-    const effects = assembled.effects.filter(row => featureSection(row.origin, assembled.feats) === section.id);
+    const effects = assembled.effects.filter(row => featureSection(row.origin, assembled.feats) === section.id && (!hideTechnicalAbilities || !row.effect.is_technical));
     const actions = assembled.actions.filter(row => featureSection(row.origin, assembled.feats) === section.id);
     const feats = assembled.feats.filter(feat => !represented.has(feat.id)
       && (feat.category === 'fighting_style' ? 'class' : 'feat') === section.id);

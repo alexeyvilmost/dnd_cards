@@ -228,7 +228,8 @@ func effectFromContentMigrationRequest(request CreateEffectRequest) Effect {
 		author = "Admin"
 	}
 	return Effect{
-		Name: request.Name, NameEn: request.NameEn, Description: request.Description,
+		IsTechnical: request.IsTechnical,
+		Name:        request.Name, NameEn: request.NameEn, Description: request.Description,
 		DetailedDescription: request.DetailedDescription, ImageURL: request.ImageURL,
 		Rarity: request.Rarity, CardNumber: request.CardNumber, EffectType: request.EffectType,
 		ConditionDescription: request.ConditionDescription, Script: request.Script,
@@ -276,7 +277,8 @@ func actionFromContentMigrationRequest(request CreateActionRequest) Action {
 		author = "Admin"
 	}
 	return Action{
-		Name: request.Name, NameEn: request.NameEn, Description: request.Description,
+		IsNarrative: request.IsNarrative,
+		Name:        request.Name, NameEn: request.NameEn, Description: request.Description,
 		DetailedDescription: request.DetailedDescription, ImageURL: request.ImageURL,
 		Rarity: request.Rarity, CardNumber: request.CardNumber, Resource: resources,
 		Distance: request.Distance, Recharge: request.Recharge, RechargeCustom: request.RechargeCustom,

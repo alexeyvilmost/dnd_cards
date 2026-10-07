@@ -9,8 +9,8 @@ type Props = {
 };
 
 const ForgeOriginAbilities = ({ assembled, kind, fallbackImageUrl }: Props) => {
-  const { entityDisplay } = useSiteSettings();
-  const effects = (assembled.effects || []).filter((e) => e.origin.kind === kind);
+  const { entityDisplay, hideTechnicalAbilities } = useSiteSettings();
+  const effects = (assembled.effects || []).filter((e) => e.origin.kind === kind && (!hideTechnicalAbilities || !e.effect.is_technical));
   const actions = (assembled.actions || []).filter((a) => a.origin.kind === kind);
   if (!effects.length && !actions.length) return null;
 

@@ -16,7 +16,7 @@
     "imageJobs": true,
     "frozenCatalogs": false
   },
-  "contentManifestHash": "sha256:0cf097c3a6551604478c3a1207f841d81b9c24f167c68f74208a47556877cded",
+  "contentManifestHash": "sha256:a2317b686d270f2bc28e586fa4332eafd62c759287a44119b4c1b71f00f41295",
   "migrationSet": [
     {
       "id": "001_create_image_library",
@@ -1543,6 +1543,10 @@
     {
       "id": "301_character_lifecycle",
       "checksum": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
+    },
+    {
+      "id": "307_catalog_presentation",
+      "checksum": "sha256:a529597dac046426d532e18f68a083963dc1c120fdb6efd5c464e7f16226a0c1"
     }
   ]
 }

@@ -1,3 +1,4 @@
+import {ENTITY_FILTER_KEYS, relevantEntityFilters, type LibraryEntityFilters} from '../components/library/entityFilterDefinitions';
 export type LibraryContentType = 'cards' | 'effects' | 'passives' | 'actions' | 'spells' | 'feats' | 'backgrounds' | 'races' | 'classes' | 'resources' | 'variables' | 'concepts';
 // 'interface' — стат-блок в стиле превью заклинания; доступен только для предметов (type='cards').
 export type LibraryViewMode = 'grid' | 'list' | 'interface';
@@ -5,6 +6,7 @@ export type LibraryViewMode = 'grid' | 'list' | 'interface';
 export interface LibraryFilters {
   contentType: LibraryContentType;
   search: string;
+  entityFilters?: LibraryEntityFilters;
   tag?: string;
   statuses?: string;
   rarity: string;
@@ -39,15 +41,32 @@ const FILTER_KEYS = [
   'featCategory', 'repeatable', 'featAbility', 'backgroundAbility', 'backgroundSkill',
 ] as const;
 
+function relevantLibraryFilters(filters: LibraryFilters): LibraryFilters {
+  const scoped: Partial<Record<LibraryContentType, (keyof LibraryFilters)[]>> = {
+    cards:['rarity','properties','slot','armorType'],
+    effects:['effectType','referenceState','referenceType','referenceId','referenceLevel'],
+    spells:['spellLevel','spellClass','spellSubclass','spellSchool','spellConcentration','spellRitual'],
+    feats:['featCategory','featRepeatable','featAbility'],
+    backgrounds:['backgroundAbility','backgroundSkill'], resources:['resourceCategory'],
+  };
+  const result={...filters,entityFilters:relevantEntityFilters(filters.contentType,filters.entityFilters ?? {})};
+  for(const [type,fields] of Object.entries(scoped)) {
+    if(type!==filters.contentType) for(const field of fields) Object.assign(result,{[field]:''});
+  }
+  if(filters.contentType!=='cards') {result.templateType='cards';if(result.viewMode==='interface') result.viewMode='list';}
+  return result;
+}
+
 export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilters {
   const type = params.get('type');
   const view = params.get('view');
 
-  return {
+  return relevantLibraryFilters({
     contentType:
       type === 'effects' || type === 'passives' || type === 'actions' || type === 'spells' || type === 'feats' || type === 'backgrounds' || type === 'races' || type === 'classes' || type === 'resources' || type === 'variables' || type === 'concepts'
         ? type
         : 'cards',
+    entityFilters: Object.fromEntries(ENTITY_FILTER_KEYS.flatMap(key => params.get(key) ? [[key,params.get(key)!]] : [])),
     search: params.get('q') ?? '',
     tag: params.get('tag') ?? '',
     statuses: params.getAll('status').join(','),
@@ -75,28 +94,30 @@ export function parseLibrarySearchParams(params: URLSearchParams): LibraryFilter
     featAbility: params.get('featAbility') ?? '',
     backgroundAbility: params.get('backgroundAbility') ?? '',
     backgroundSkill: params.get('backgroundSkill') ?? '',
-  };
+  });
 }
 
 export function buildLibrarySearchParams(
   filters: LibraryFilters,
   existing?: URLSearchParams
 ): URLSearchParams {
+  filters=relevantLibraryFilters(filters);
   const params = new URLSearchParams(existing ?? undefined);
 
-  for (const key of FILTER_KEYS) {
+  for (const key of [...FILTER_KEYS, ...ENTITY_FILTER_KEYS]) {
     params.delete(key);
   }
 
   if (filters.contentType !== 'cards') {
     params.set('type', filters.contentType);
   }
+  for (const [key,value] of Object.entries(relevantEntityFilters(filters.contentType,filters.entityFilters ?? {}))) params.set(key,value);
   if (filters.search) {
     params.set('q', filters.search);
   }
   if (filters.statuses) params.set('status', filters.statuses);
   if (filters.tag) params.set('tag', filters.tag);
-  if (filters.rarity) {
+  if (filters.contentType === 'cards' && filters.rarity) {
     params.set('rarity', filters.rarity);
   }
   if (filters.effectType) {

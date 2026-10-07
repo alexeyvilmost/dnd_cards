@@ -1402,6 +1402,7 @@ func (s Script) Value() (driver.Value, error) {
 
 // Action - модель действия D&D
 type Action struct {
+	IsNarrative *bool `json:"is_narrative" gorm:"type:boolean;default:false"`
 	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
 	LegacyTags                   *Properties     `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID       `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
@@ -1451,6 +1452,7 @@ func (Action) TableName() string {
 
 // CreateActionRequest - запрос на создание действия
 type CreateActionRequest struct {
+	IsNarrative                  *bool            `json:"is_narrative"`
 	Name                         string           `json:"name" binding:"required"`
 	NameEn                       *string          `json:"name_en"`
 	Description                  string           `json:"description" binding:"required"`
@@ -1484,6 +1486,7 @@ type CreateActionRequest struct {
 
 // UpdateActionRequest - запрос на обновление действия
 type UpdateActionRequest struct {
+	IsNarrative                  *bool            `json:"is_narrative"`
 	Name                         string           `json:"name"`
 	NameEn                       *string          `json:"name_en"`
 	Description                  string           `json:"description"`
@@ -1516,6 +1519,7 @@ type UpdateActionRequest struct {
 
 // ActionResponse - ответ с действием
 type ActionResponse struct {
+	IsNarrative                  *bool            `json:"is_narrative"`
 	LegacyTags                   *Properties      `json:"tags"`
 	ID                           uuid.UUID        `json:"id"`
 	Name                         string           `json:"name"`
@@ -1555,8 +1559,9 @@ type ActionResponse struct {
 // ToActionResponse преобразует модель действия в API-ответ.
 func (a Action) ToActionResponse() ActionResponse {
 	return ActionResponse{
-		LegacyTags: a.LegacyTags,
-		ID:         a.ID, Name: a.Name, NameEn: a.NameEn, Description: a.Description, DetailedDescription: a.DetailedDescription,
+		IsNarrative: a.IsNarrative,
+		LegacyTags:  a.LegacyTags,
+		ID:          a.ID, Name: a.Name, NameEn: a.NameEn, Description: a.Description, DetailedDescription: a.DetailedDescription,
 		ImageURL: a.ImageURL, Rarity: a.Rarity, CardNumber: a.CardNumber,
 		Resources: a.Resource, Distance: a.Distance, Recharge: a.Recharge, RechargeCustom: a.RechargeCustom,
 		Script: a.Script, Mechanics: a.Mechanics, Support: a.Support, ActionType: a.ActionType, Type: a.Type,
@@ -1643,6 +1648,7 @@ const (
 
 // Effect - модель пассивного эффекта D&D
 type Effect struct {
+	IsTechnical *bool `json:"is_technical" gorm:"type:boolean;default:false"`
 	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
 	LegacyTags                   *Properties    `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                           uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
@@ -1691,6 +1697,7 @@ func (Effect) TableName() string {
 
 // CreateEffectRequest - запрос на создание эффекта
 type CreateEffectRequest struct {
+	IsTechnical                  *bool       `json:"is_technical"`
 	Name                         string      `json:"name" binding:"required"`
 	NameEn                       *string     `json:"name_en"`
 	Description                  string      `json:"description" binding:"required"`
@@ -1723,6 +1730,7 @@ type CreateEffectRequest struct {
 
 // UpdateEffectRequest - запрос на обновление эффекта
 type UpdateEffectRequest struct {
+	IsTechnical                  *bool       `json:"is_technical"`
 	Name                         string      `json:"name"`
 	NameEn                       *string     `json:"name_en"`
 	Description                  string      `json:"description"`
@@ -1754,6 +1762,7 @@ type UpdateEffectRequest struct {
 
 // EffectResponse - ответ с эффектом
 type EffectResponse struct {
+	IsTechnical                  *bool                 `json:"is_technical"`
 	LegacyTags                   *Properties           `json:"tags"`
 	ID                           uuid.UUID             `json:"id"`
 	Name                         string                `json:"name"`
@@ -1793,8 +1802,9 @@ type EffectResponse struct {
 // ToEffectResponse преобразует модель эффекта в API-ответ.
 func (e Effect) ToEffectResponse() EffectResponse {
 	return EffectResponse{
-		LegacyTags: e.LegacyTags,
-		ID:         e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
+		IsTechnical: e.IsTechnical,
+		LegacyTags:  e.LegacyTags,
+		ID:          e.ID, Name: e.Name, NameEn: e.NameEn, Description: e.Description, DetailedDescription: e.DetailedDescription,
 		ImageURL: e.ImageURL, Rarity: e.Rarity, CardNumber: e.CardNumber, EffectType: e.EffectType,
 		ConditionDescription: e.ConditionDescription, Script: e.Script, Mechanics: e.Mechanics, Support: e.Support,
 		Type: e.Type, Author: e.Author, Source: e.Source,
@@ -1884,6 +1894,7 @@ func (sd SpellDamage) Value() (driver.Value, error) {
 
 // Spell - модель заклинания D&D
 type Spell struct {
+	IsNarrative *bool `json:"is_narrative" gorm:"type:boolean;default:false"`
 	// Frozen wire snapshot for pre-258 certification hashes; never used as library tags.
 	LegacyTags            *Properties    `json:"tags" gorm:"column:legacy_tags;type:jsonb;->"`
 	ID                    uuid.UUID      `json:"id" gorm:"type:uuid;primary_key;default:gen_random_uuid()"`
@@ -1936,6 +1947,7 @@ func (Spell) TableName() string {
 
 // CreateSpellRequest - запрос на создание заклинания
 type CreateSpellRequest struct {
+	IsNarrative         *bool        `json:"is_narrative"`
 	Name                string       `json:"name" binding:"required"`
 	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description" binding:"required"`
@@ -1972,6 +1984,7 @@ type CreateSpellRequest struct {
 
 // UpdateSpellRequest - запрос на обновление заклинания
 type UpdateSpellRequest struct {
+	IsNarrative         *bool        `json:"is_narrative"`
 	Name                string       `json:"name"`
 	NameEn              *string      `json:"name_en"`
 	Description         string       `json:"description"`
@@ -2008,6 +2021,7 @@ type UpdateSpellRequest struct {
 
 // SpellResponse - ответ с заклинанием
 type SpellResponse struct {
+	IsNarrative         *bool        `json:"is_narrative"`
 	LegacyTags          *Properties  `json:"tags"`
 	ID                  uuid.UUID    `json:"id"`
 	Name                string       `json:"name"`
@@ -2050,6 +2064,7 @@ type SpellResponse struct {
 // ToSpellResponse преобразует модель заклинания в API-ответ.
 func (spell Spell) ToSpellResponse() SpellResponse {
 	return SpellResponse{
+		IsNarrative:         spell.IsNarrative,
 		LegacyTags:          spell.LegacyTags,
 		ID:                  spell.ID,
 		Name:                spell.Name,

@@ -1,3 +1,4 @@
+import {useSiteSettings} from '../../settings';
 import type {SheetAction} from '../../character/actionSheet';
 import type {CharacterContext, RuntimeState} from '../../mvp/contracts';
 import type {SheetCanonicalRuntime} from '../../character/sheetCanonicalWorld';
@@ -41,6 +42,16 @@ export default function SheetActionList({actions, allActions, spellsOnly, action
     return sourceActions.some((candidate) => isSpellActionPrepared(access, candidate.id));
   };
 
+  const {hideUnavailableActions} = useSiteSettings();
+  const availability = (action: SheetAction) => {
+    if (action.spellRef && canonicalBuild.runtime && !canonicalBuild.error && !spellIsPrepared(action)) {
+      return {disabled: true, reason: 'Заклинание не подготовлено'};
+    }
+    const reason = sheetTriggerOnlyReason(action.mechanics);
+    return reason ? {disabled: true, reason} : disabledInfo(action);
+  };
+  const visible = (action: SheetAction) => !hideUnavailableActions || !availability(action).disabled;
+
   const actionBlockActions = actions.filter((action) => {
     const projectedMechanics = projectQuickenedSpellCost(
       projectActionSurgeCost(
@@ -55,7 +66,7 @@ export default function SheetActionList({actions, allActions, spellsOnly, action
     // Reactions remain actor capabilities for canonical combat, but are never
     // manually activatable entries in the ordinary Action block.
     if (activation?.mode === 'reaction') return false;
-    return action.group !== 'spell' || spellIsPrepared(action);
+    return (action.group !== 'spell' || spellIsPrepared(action)) && visible(action);
   });
 
   const allGroups = sheetActionGroups(actionBlockActions);
@@ -63,7 +74,7 @@ export default function SheetActionList({actions, allActions, spellsOnly, action
   // поведение по клику/наведению, что и в блоке «Действия»).
   const spellLevelGroups: { key: string; label: string; items: SheetAction[] }[] = (() => {
     const m = new Map<number, SheetAction[]>();
-    for (const a of sheetSpellActionsForPresentation(allActions)) {
+    for (const a of sheetSpellActionsForPresentation(allActions).filter(visible)) {
       const lvl = a.spellRef?.level ?? a.level ?? 0;
       if (!m.has(lvl)) m.set(lvl, []);
       m.get(lvl)!.push(a);
@@ -79,18 +90,7 @@ export default function SheetActionList({actions, allActions, spellsOnly, action
               // their real reason in the hover card until canonical access is
               // available; only then can an actor-owned grant be called
               // unprepared.
-              const preparationBlocked = Boolean(
-                action.spellRef
-                && canonicalBuild.runtime
-                && !canonicalBuild.error
-                && !spellIsPrepared(action),
-              );
-              const triggerOnlyReason = sheetTriggerOnlyReason(action.mechanics);
-              const { disabled, reason } = preparationBlocked
-                ? { disabled: true, reason: 'Заклинание не подготовлено' }
-                : triggerOnlyReason
-                  ? { disabled: true, reason: triggerOnlyReason }
-                  : disabledInfo(action);
+              const { disabled, reason } = availability(action);
               const weaponPreview = weaponAttackPreview(action.mechanics, ctx, runtime.equipment, runtime, passives) ?? undefined;
               return (
                 <div key={action.id} data-action-id={action.id} style={actionsAsIcons ? { display: 'contents' } : undefined}>

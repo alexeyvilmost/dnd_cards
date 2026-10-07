@@ -12,7 +12,8 @@ it('offers three illustrated destinations and unified character categories', asy
  expect(node.querySelectorAll('.home-tile')).toHaveLength(3);
  expect(node.querySelectorAll('.home-tile-art')).toHaveLength(3);
  expect(node.querySelector('.home-tile-interactive [href="/characters-forge?tab=paper"]')).not.toBeNull();
- expect(node.querySelector('.home-catalog-links [href="/monsters"]')).not.toBeNull();
+ expect(node.querySelectorAll('.home-book')).toHaveLength(11);
+ expect(node.querySelector('.home-bookshelf [href="/monsters"]')).not.toBeNull();
  for (const path of ['/monsters','/encounters','/shop/new','/image-generator','/docs/engine']) expect(node.querySelector(`header a[href="${path}"]`)).toBeNull();
  expect(node.querySelector('header a[href="/initiative"]')).not.toBeNull();
  expect(node.querySelector('header a[href="/library"]')).not.toBeNull();

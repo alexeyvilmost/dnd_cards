@@ -10,8 +10,22 @@ describe('library URL filters', () => {
     });
     const parsed = parseLibrarySearchParams(source);
     const rebuilt = buildLibrarySearchParams(parsed);
+    expect(rebuilt.has('featCategory')).toBe(false);
+    expect(rebuilt.has('backgroundSkill')).toBe(false);
 
     expect(parseLibrarySearchParams(rebuilt)).toEqual(parsed);
+  });
+
+  it.each(['cards','actions','spells','effects','races','classes','backgrounds','feats','resources','variables','concepts','passives'])('scopes rarity and facets to %s', type => {
+    const parsed=parseLibrarySearchParams(new URLSearchParams({type,rarity:'rare',actionMode:'reaction',technical:'true',raceSize:'Средний',hitDie:'d8',narrative:'true'}));
+    const params=buildLibrarySearchParams(parsed);
+    expect(params.has('rarity')).toBe(type==='cards');
+    expect(params.has('actionMode')).toBe(type==='actions');
+    expect(params.has('technical')).toBe(type==='effects');
+    expect(params.has('raceSize')).toBe(type==='races');
+    expect(params.has('hitDie')).toBe(type==='classes');
+    expect(params.has('narrative')).toBe(type==='actions'||type==='spells');
+    expect(parseLibrarySearchParams(params)).toEqual(parsed);
   });
 
   it('removes stale specialized filters when they are cleared', () => {

@@ -329,7 +329,9 @@
       "package": "./migrations",
       "prefixes": [
         "TestManualContentReview",
-        "TestReleaseAdditive"
+        "TestReleaseAdditive",
+        "TestCatalogPresentation307",
+        "TestCatalogPresentationCommand"
       ],
       "database": "required",
       "contract": "Review mutation/reset policy without automatic certification",

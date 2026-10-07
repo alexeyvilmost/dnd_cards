@@ -1,3 +1,4 @@
+import { useSiteSettings } from '../settings';
 import React from 'react';
 import type { Feat } from '../types';
 import { getFeatCategoryLabel, getAbilityLabel } from '../types';
@@ -12,6 +13,7 @@ interface FeatPreviewProps {
 }
 
 const FeatPreview: React.FC<FeatPreviewProps> = ({ feat, className = '', disableHover = false, onClick }) => {
+  const { showDetailedPreview } = useSiteSettings();
   const subtype = [getFeatCategoryLabel(feat.category), feat.repeatable ? 'повторяемая' : '']
     .filter(Boolean)
     .join(' · ');
@@ -59,7 +61,7 @@ const FeatPreview: React.FC<FeatPreviewProps> = ({ feat, className = '', disable
         <FormattedText onDark text={feat.description || 'Описание черты'} emptyText="Описание черты" />
       </div>
 
-      {feat.detailed_description && (
+      {showDetailedPreview && feat.detailed_description && (
         <div className="bg3-extra">
           <FormattedText onDark text={feat.detailed_description} emptyText="" />
         </div>

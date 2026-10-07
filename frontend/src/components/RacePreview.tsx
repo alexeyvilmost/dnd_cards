@@ -1,3 +1,4 @@
+import { useSiteSettings } from '../settings';
 import React from 'react';
 import type { Race } from '../types';
 import { FormattedText } from '../utils/formattedText';
@@ -12,6 +13,7 @@ interface RacePreviewProps {
 }
 
 const RacePreview: React.FC<RacePreviewProps> = ({ race, parentRaceName, className = '', disableHover = false, onClick }) => {
+  const { showDetailedPreview } = useSiteSettings();
   const isSubrace = !!race.is_subrace;
   const subtype = isSubrace
     ? (parentRaceName ? `Подвид · ${parentRaceName}` : 'Подвид')
@@ -73,7 +75,7 @@ const RacePreview: React.FC<RacePreviewProps> = ({ race, parentRaceName, classNa
         </div>
       )}
 
-      {race.detailed_description && (
+      {showDetailedPreview && race.detailed_description && (
         <div className="bg3-extra">
           <FormattedText text={race.detailed_description} emptyText="" />
         </div>

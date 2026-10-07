@@ -43,8 +43,19 @@ function props(input = context()): SheetActionListProps {
 
 describe('shared sheet availability and canonical presentation', () => {
   let root: Root, host: HTMLDivElement;
-  beforeEach(() => {host = document.createElement('div'); document.body.append(host); root = createRoot(host);});
-  afterEach(async () => {await act(async () => root.unmount()); host.remove();});
+  beforeEach(() => {vi.stubGlobal('localStorage',{getItem:()=>JSON.stringify({hideUnavailableActions:false})});host = document.createElement('div'); document.body.append(host); root = createRoot(host);});
+  afterEach(async () => {await act(async () => root.unmount()); host.remove();vi.unstubAllGlobals();});
+
+  it('hides an unaffordable declaration by default, then restores it after its resource changes',async()=>{
+    vi.stubGlobal('localStorage',{getItem:()=>null});
+    const input=context(), view=props(input);
+    await act(async()=>root.render(<SheetActionList {...view}/>));
+    expect(host.querySelectorAll('[data-action-id]')).toHaveLength(1);
+    input.runtime.resources.charge=2;
+    await act(async()=>root.render(<SheetActionList {...view}/>));
+    expect(host.querySelectorAll('[data-action-id]')).toHaveLength(2);
+    expect(view.runAction).not.toHaveBeenCalled();
+  });
 
   it('reads two different declarations through the existing cost engine without spending or mutating them', () => {
     const input = context(), actions = [action('arbitrary-A', 1), action('unrelated-B', 2)];

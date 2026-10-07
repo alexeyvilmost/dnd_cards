@@ -27,6 +27,9 @@ func (cc *ClassController) GetClasses(c *gin.Context) {
 		query = query.Where("name ILIKE ? OR card_number = ?", "%"+search+"%", search)
 	}
 
+	if value := c.Query("hit_die"); value != "" {
+		query = query.Where("hit_die = ?", value)
+	}
 	if parent := c.Query("parent_class_id"); parent != "" {
 		query = query.Where("parent_class_id = ?", parent)
 	}

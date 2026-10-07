@@ -1,3 +1,4 @@
+import ForgeEntitySelection from '../components/forge/ForgeEntitySelection';
 import { previewAnchor } from '../utils/previewAnchor';
 import { useDeferredValue, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -1782,7 +1783,6 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFe
 function RaceSection({ races, draft, onSelect, assembled, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, ownChoices, subChoices, resolved, setResolved, ruleState, allFeats, activeFeats }: any) {
   const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
-  const subrace = (subraces as Race[]).find((r) => r.id === draft.lineageId);
   const subChoice = subChoices?.[0] as PendingChoice | undefined;
   const subChoiceItems = subChoice?.items ?? [];
   const hasEntitySubraces = race && (subraces as Race[]).length > 0;
@@ -1791,39 +1791,20 @@ function RaceSection({ races, draft, onSelect, assembled, subraces, subraceUnloc
   return (
     <div>
       <div className="forge-block forge-square-block">
-        <div className="forge-square-grid">
-          {topRaces.map((r: Race) => (
-            <EntitySquareCard
-              key={r.id}
-              name={r.name}
-              imageUrl={r.image_url}
-              selected={draft.raceId === r.id}
-              onClick={() => onSelect(r.id)}
-              preview={<RacePreview race={r} disableHover />}
-              supportEntity={r}
-            />
-          ))}
-          {topRaces.length === 0 && <p className="forge-note">Нет видов в базе.</p>}
-        </div>
+        <ForgeEntitySelection entities={topRaces as Race[]} selectedId={draft.raceId} onSelect={onSelect}
+          renderCard={(r, select) => <EntitySquareCard name={r.name} imageUrl={r.image_url} selected={draft.raceId === r.id}
+            onClick={select} preview={<RacePreview race={r} disableHover/>} supportEntity={r}/>}
+          >{r => r.traits?.length ? <ForgeTraitsBlock traits={r.traits}/> : null}</ForgeEntitySelection>
       </div>
 
       {/* Подвиды — сразу под основным видом */}
       {hasEntitySubraces && subraceUnlocked && (
         <div className="forge-block forge-square-block">
           <div className="forge-section-h forge-section-h--center">Подвид</div>
-          <div className="forge-square-grid">
-            {(subraces as Race[]).map((r) => (
-              <EntitySquareCard
-                key={r.id}
-                name={r.name}
-                imageUrl={r.image_url}
-                selected={draft.lineageId === r.id}
-                onClick={() => onPickSubrace(r.id)}
-                preview={<RacePreview race={r} disableHover />}
-                supportEntity={r}
-              />
-            ))}
-          </div>
+          <ForgeEntitySelection entities={subraces as Race[]} selectedId={draft.lineageId} onSelect={onPickSubrace}
+            renderCard={(r, select) => <EntitySquareCard name={r.name} imageUrl={r.image_url} selected={draft.lineageId === r.id}
+              onClick={select} preview={<RacePreview race={r} disableHover/>} supportEntity={r}/>}
+            >{r => r.traits?.length ? <ForgeTraitsBlock traits={r.traits}/> : null}</ForgeEntitySelection>
         </div>
       )}
       {hasEntitySubraces && !subraceUnlocked && (
@@ -1845,30 +1826,6 @@ function RaceSection({ races, draft, onSelect, assembled, subraces, subraceUnloc
               />
             ))}
           </div>
-        </div>
-      )}
-
-      {race && (
-        <div className="forge-block forge-desc-block">
-          <div className="forge-entity-name">{race.name}</div>
-          {race.description && (
-            <p className="forge-note"><FormattedText text={race.description} emptyText="" /></p>
-          )}
-          {race.traits && race.traits.length > 0 && (
-            <ForgeTraitsBlock traits={race.traits} />
-          )}
-        </div>
-      )}
-
-      {subrace && (
-        <div className="forge-block forge-desc-block">
-          <div className="forge-entity-name">{subrace.name}</div>
-          {subrace.description && (
-            <p className="forge-note"><FormattedText text={subrace.description} emptyText="" /></p>
-          )}
-          {subrace.traits && subrace.traits.length > 0 && (
-            <ForgeTraitsBlock traits={subrace.traits} />
-          )}
         </div>
       )}
 
@@ -1897,31 +1854,13 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
   return (
     <div>
       <div className="forge-block forge-square-block">
-        <div className="forge-square-grid">
-          {topClasses.map((c: CharacterClass) => (
-            <EntitySquareCard
-              key={c.id}
-              name={c.name}
-              imageUrl={c.image_url}
-              selected={draft.classId === c.id}
-              onClick={() => onSelect(c.id)}
-              preview={<ClassPreview characterClass={c} disableHover />}
-              supportEntity={c}
-            />
-          ))}
-          {topClasses.length === 0 && (
-            <p className="forge-note">
-              Классы ещё не добавлены в каталог.
-            </p>
-          )}
-        </div>
+        <ForgeEntitySelection entities={topClasses} selectedId={draft.classId} onSelect={onSelect}
+          renderCard={(c, select) => <EntitySquareCard name={c.name} imageUrl={c.image_url} selected={draft.classId === c.id}
+            onClick={select} preview={<ClassPreview characterClass={c} disableHover/>} supportEntity={c}/>}
+          >{c => c.hit_die ? <p className="forge-note">Кость хитов: {c.hit_die}</p> : null}</ForgeEntitySelection>
       </div>
       {klass && (
         <div className="forge-block forge-desc-block">
-          <div className="forge-entity-name">{klass.name}{klass.hit_die ? ` · кость хитов ${klass.hit_die}` : ''}</div>
-          {klass.description && (
-            <p className="forge-note"><FormattedText text={klass.description} emptyText="" /></p>
-          )}
           {equipVariants.length > 0 && (
             <div style={{ marginTop: 8 }}>
               <div className="forge-section-h">Стартовое снаряжение</div>

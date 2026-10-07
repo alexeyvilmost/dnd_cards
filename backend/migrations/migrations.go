@@ -1557,6 +1557,7 @@ CREATE INDEX IF NOT EXISTS idx_roguelike_combat_replay ON roguelike_combat_event
 		{Version: "301_character_lifecycle", Description: "Remove owned characters and runs from live collections while retaining historical identities", Up: addCharacterLifecycle301, Down: func(db *sql.DB) error {
 			return fmt.Errorf("Deleted identities and historical references must be retained")
 		}},
+		{Version: "307_catalog_presentation", Description: "Add presentation metadata columns and retained catalog application preimages without altering existing rows", Up: addCatalogPresentation307, Down: func(db *sql.DB) error { return fmt.Errorf("Presentation rollback requires retained source preimages") }},
 	}
 }
 

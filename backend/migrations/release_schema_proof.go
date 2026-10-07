@@ -26,6 +26,11 @@ func proofTables() []proofTable {
 		{"characters_v3", []string{"deleted_at"}, []string{}, true, false, []string{"idx_characters_v3_deleted_at"}},
 		{"frozen_combat_catalogs", nil, nil, true, true, nil},
 		{"image_jobs", nil, nil, true, true, nil},
+		{"actions", []string{"is_narrative"}, []string{}, false, false, nil},
+		{"spells", []string{"is_narrative"}, []string{}, false, false, nil},
+		{"effects", []string{"is_technical"}, []string{}, false, false, nil},
+		{"entity_presentation_307_audit", nil, nil, true, true, nil},
+		{"entity_presentation_307_receipt", nil, nil, true, true, nil},
 	}
 }
 
@@ -47,7 +52,7 @@ func verifyAdditiveSchema(ctx context.Context, tx *sql.Tx) ([]byte, error) {
 		return nil, err
 	}
 	if _, err = tx.ExecContext(ctx, "CREATE SCHEMA "+schema+"; SET LOCAL search_path="+schema+",pg_catalog;"+
-		"CREATE TABLE roguelike_command_receipts(response jsonb); CREATE TABLE character_runtime_commands(response jsonb); CREATE TABLE roguelike_runs(user_id uuid); CREATE TABLE characters_v3(id uuid);"); err != nil {
+		"CREATE TABLE roguelike_command_receipts(response jsonb); CREATE TABLE character_runtime_commands(response jsonb); CREATE TABLE roguelike_runs(user_id uuid); CREATE TABLE characters_v3(id uuid); CREATE TABLE actions(id uuid,mechanics jsonb,support jsonb); CREATE TABLE effects(id uuid,mechanics jsonb,support jsonb); CREATE TABLE spells(id uuid,mechanics jsonb,support jsonb);"); err != nil {
 		return nil, errors.New("cannot create transactional schema proof")
 	}
 	for _, migration := range additiveRegistry() {
@@ -113,6 +118,14 @@ func captureAdditiveSchema(ctx context.Context, tx *sql.Tx) (map[string]json.Raw
 			return nil, err
 		}
 	}
+	var functions, triggers []byte
+	if err := tx.QueryRowContext(ctx, `SELECT coalesce(jsonb_agg(jsonb_build_array(p.proname,p.prosrc,p.provolatile,p.prosecdef,p.proisstrict,p.proleakproof,p.proconfig,l.lanname,pg_get_function_identity_arguments(p.oid),format_type(p.prorettype,NULL)) ORDER BY p.proname),'[]')::text FROM pg_proc p JOIN pg_language l ON l.oid=p.prolang WHERE p.pronamespace=(SELECT oid FROM pg_namespace WHERE nspname=current_schema()) AND p.proname IN ('invalidate_content_support','protect_certified_content_mechanics')`).Scan(&functions); err != nil {
+		return nil, err
+	}
+	if err := tx.QueryRowContext(ctx, `SELECT coalesce(jsonb_agg(jsonb_build_array(c.relname,t.tgname,t.tgenabled,t.tgtype,pg_get_expr(t.tgqual,t.tgrelid),t.tgattr::text,encode(t.tgargs,'hex'),t.tgdeferrable,t.tginitdeferred,t.tgoldtable,t.tgnewtable,p.proname,p.pronamespace=c.relnamespace) ORDER BY c.relname,t.tgname),'[]')::text FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_proc p ON p.oid=t.tgfoid WHERE c.relnamespace=(SELECT oid FROM pg_namespace WHERE nspname=current_schema()) AND ((c.relname='actions' AND t.tgname='protect_actions_certified_mechanics') OR (c.relname='effects' AND t.tgname='protect_effects_certified_mechanics') OR (c.relname='spells' AND t.tgname='protect_spells_certified_mechanics'))`).Scan(&triggers); err != nil {
+		return nil, err
+	}
+	result["catalog_functions"], result["catalog_triggers"] = functions, triggers
 	return result, nil
 }
 func normalizeIndexSchema(definition, namespace string) string {

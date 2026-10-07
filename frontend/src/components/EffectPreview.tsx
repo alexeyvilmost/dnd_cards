@@ -30,7 +30,7 @@ interface EffectPreviewProps {
 
 const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', disableHover = false, onClick, sourceLabel, footer }: EffectPreviewProps) => {
   const resources = useResourceOptions();
-  const { playerMode } = useSiteSettings();
+  const { playerMode, showDetailedPreview } = useSiteSettings();
   const formulaCtx = useCharacterFormulaCtx();
   const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
@@ -128,7 +128,7 @@ const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', di
         <FormattedText onDark text={effect.description || 'Описание эффекта'} emptyText="Описание эффекта" />
       </div>
 
-      {effect.show_detailed_description && effect.detailed_description && (
+      {showDetailedPreview && effect.show_detailed_description && effect.detailed_description && (
         <div className="sp-upcast" style={detailStyle}>
           <FormattedText onDark text={effect.detailed_description} emptyText="" />
         </div>

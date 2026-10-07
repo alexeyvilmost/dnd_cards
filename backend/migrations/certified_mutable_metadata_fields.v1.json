@@ -21,6 +21,8 @@
     "text_font_size",
     "show_detailed_description",
     "detailed_description_alignment",
-    "detailed_description_font_size"
+    "detailed_description_font_size",
+    "is_narrative",
+    "is_technical"
   ]
 }

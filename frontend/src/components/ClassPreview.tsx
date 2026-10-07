@@ -1,3 +1,4 @@
+import { useSiteSettings } from '../settings';
 import React from 'react';
 import type { CharacterClass } from '../types';
 import { FormattedText } from '../utils/formattedText';
@@ -11,6 +12,7 @@ interface ClassPreviewProps {
 }
 
 const ClassPreview: React.FC<ClassPreviewProps> = ({ characterClass, className = '', disableHover = false, onClick }) => {
+  const { showDetailedPreview } = useSiteSettings();
   const progressionLevels = Object.keys(characterClass.level_progression || {})
     .filter((level) => {
       const entry = characterClass.level_progression?.[level];
@@ -55,7 +57,7 @@ const ClassPreview: React.FC<ClassPreviewProps> = ({ characterClass, className =
         </div>
       )}
 
-      {characterClass.detailed_description && (
+      {showDetailedPreview && characterClass.detailed_description && (
         <div className="bg3-extra">
           <FormattedText text={characterClass.detailed_description} emptyText="" />
         </div>

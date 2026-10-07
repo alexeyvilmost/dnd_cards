@@ -46,6 +46,7 @@ export default function SettingsPanel({initialPage='home',onTestDice}:{initialPa
     <div className="settings-panel__content site-scrollbar">
       {section('audio',<AudioSettings/>)}
       {section('combat',<>
+        {check('hideNarrativeCombatActions','Скрывать нарративные действия в бою','Убирать бытовые, информационные и другие действия и заклинания без пользы в текущем сражении.')}
         {check('combat3d','Монетки на поле','Объёмное поле на фоне страницы. Камера смотрит строго сверху; поле можно сдвигать и масштабировать.')}
         {[...decisionPolicyToggles('roll_influence'),...decisionPolicyToggles('turn_start')].map(policy=><label className="settings-panel-check" key={policy.id}>
           <input type="checkbox" checked={decisionPolicyEnabled(policy,preferences)} onChange={event=>setPreference(policy.id,event.target.checked)}/>
@@ -70,9 +71,12 @@ export default function SettingsPanel({initialPage='home',onTestDice}:{initialPa
           <input type="radio" name="item-preview" checked={settings.itemPreview===mode} onChange={()=>setSetting('itemPreview',mode)}/>{['Карточка','Интерфейс'][index]}
         </label>)}</fieldset>
         {check('showReviewStatus','Статус проверки','Цветные уголки, фильтр и статистика статусов в библиотеках; изменение статуса в детальном превью.')}
+        {check('showDetailedPreview','Показывать детальное описание в превью','Добавлять полное описание к карточке при наведении.')}
         {check('showOriginalNames','Оригинальные названия','Показывать английское название в превью и детальных окнах.')}
       </>)}
       {section('editing',<>
+        {check('hideTechnicalAbilities','Скрывать технические эффекты и способности','Убирать служебные выдачи заклинаний, черт и изменения параметров из списка способностей, включая бумажный лист.')}
+        {check('hideUnavailableActions','Скрывать недоступные действия','Показывать в листе и хотбаре только действия, доступные сейчас.')}
         {check('showAdditionalSections','Дополнительные разделы','Показывать в меню группы, отдельные инвентари и шаблоны карточек. Сохранённые данные доступны и по прежним ссылкам.')}
         {check('playerMode','Режим игрока','Скрывать технические поля механики, сохраняя боевые характеристики.')}
         {check('allowSheetEntityAdditions','Ручное добавление в лист','Разрешить добавление предметов, действий, эффектов, заклинаний и черт.')}

@@ -971,6 +971,14 @@ func (ac *ActionController) GetActions(c *gin.Context) {
 	}
 
 	// Фильтрация по редкости
+	if value := c.Query("is_narrative"); value == "true" {
+		query = query.Where("is_narrative = ?", true)
+	} else if value == "false" {
+		query = query.Where("is_narrative IS NOT TRUE")
+	}
+	if value := c.Query("activation_mode"); value != "" {
+		query = query.Where("mechanics->'activation'->>'mode' = ?", value)
+	}
 	if rarity := c.Query("rarity"); rarity != "" {
 		query = query.Where("rarity = ?", rarity)
 	}
@@ -1196,6 +1204,7 @@ func (ac *ActionController) CreateAction(c *gin.Context) {
 	// Создание действия
 	log.Printf("🔍 [CREATE_ACTION] Создание объекта Action")
 	action := Action{
+		IsNarrative:                  req.IsNarrative,
 		Name:                         req.Name,
 		NameEn:                       req.NameEn,
 		Description:                  req.Description,
@@ -1346,6 +1355,9 @@ func (ac *ActionController) UpdateAction(c *gin.Context) {
 	if req.RelatedActions != nil {
 		action.RelatedActions = req.RelatedActions
 	}
+	if req.IsNarrative != nil {
+		action.IsNarrative = req.IsNarrative
+	}
 	if req.IsExtended != nil {
 		action.IsExtended = req.IsExtended
 	}
@@ -1440,6 +1452,11 @@ func (ec *EffectController) GetEffects(c *gin.Context) {
 	}
 
 	// Фильтрация по редкости
+	if value := c.Query("is_technical"); value == "true" {
+		query = query.Where("is_technical = ?", true)
+	} else if value == "false" {
+		query = query.Where("is_technical IS NOT TRUE")
+	}
 	if rarity := c.Query("rarity"); rarity != "" {
 		query = query.Where("rarity = ?", rarity)
 	}
@@ -1620,6 +1637,7 @@ func (ec *EffectController) CreateEffect(c *gin.Context) {
 
 	// Создание эффекта
 	effect := Effect{
+		IsTechnical:                  req.IsTechnical,
 		Name:                         req.Name,
 		NameEn:                       req.NameEn,
 		Description:                  req.Description,
@@ -1757,6 +1775,9 @@ func (ec *EffectController) UpdateEffect(c *gin.Context) {
 	}
 	if req.Repeatable != nil {
 		effect.Repeatable = *req.Repeatable
+	}
+	if req.IsTechnical != nil {
+		effect.IsTechnical = req.IsTechnical
 	}
 	if req.IsExtended != nil {
 		effect.IsExtended = req.IsExtended

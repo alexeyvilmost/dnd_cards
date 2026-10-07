@@ -1,3 +1,4 @@
+import {useSiteSettings} from '../settings';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, FilePlus2, HelpCircle, LayoutGrid, Printer, Settings2, Upload } from 'lucide-react';
 import { cardsApi } from '../api/client';
@@ -62,6 +63,7 @@ function Proficiencies() {
 }
 
 function MainPage() {
+  useSiteSettings();
   const { doc, calculations } = usePaperSheet();
   const bottom = visibleBlocks(doc, ['attacks', 'traits']);
   const featuresVisible = blockVisible(doc, 'features');

@@ -21,6 +21,7 @@ func releaseFixtureOn(t *testing.T, db *sql.DB) (*sql.DB, ReleaseMigrationReques
 	CREATE TABLE character_runtime_commands(id integer PRIMARY KEY,response jsonb NOT NULL);
 	CREATE TABLE roguelike_runs(id integer PRIMARY KEY,user_id uuid NOT NULL);
 	CREATE TABLE characters_v3(id uuid PRIMARY KEY);
+	CREATE TABLE IF NOT EXISTS actions(id uuid,mechanics jsonb,support jsonb); CREATE TABLE IF NOT EXISTS effects(id uuid,mechanics jsonb,support jsonb); CREATE TABLE IF NOT EXISTS spells(id uuid,mechanics jsonb,support jsonb);
 	INSERT INTO roguelike_command_receipts VALUES(1,'{"past":"unchanged"}');INSERT INTO character_runtime_commands VALUES(1,'{"past":"unchanged"}');`)
 	if err != nil {
 		t.Fatal(err)
@@ -285,6 +286,86 @@ func TestReleaseAdditiveLifecycleRetainsExistingWriterFormatsOnly(t *testing.T) 
 			t.Fatal("incomplete writer-format baseline accepted")
 		}
 		before[id] = identity
+	}
+}
+
+func TestReleaseAdditivePresentationSchemaAndExistingWriterFormats(t *testing.T) {
+	db, request := releaseFixture(t)
+	m := NewMigrator(db)
+	if _, err := m.RunReleaseAdditive(context.Background(), request); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.Exec(`DELETE FROM schema_migrations WHERE version='307_catalog_presentation';
+ INSERT INTO actions(id,mechanics,support) VALUES('00000000-0000-4000-8000-000000000001','{"original":true}','{"status":"not_verified"}');
+ INSERT INTO roguelike_command_receipts(id,response,response_version,response_payload,response_sha256,response_length) VALUES(2,'{}',2,'x',repeat('a',64),1);`); err != nil {
+		t.Fatal(err)
+	}
+	request.ExpectedCurrent = nil
+	for _, identity := range request.Target {
+		if identity.ID != "307_catalog_presentation" {
+			request.ExpectedCurrent = append(request.ExpectedCurrent, identity)
+		}
+	}
+	for i := 0; i < 2; i++ {
+		result, err := m.RunReleaseAdditive(context.Background(), request)
+		if err != nil || !result.RollbackReadersSafe || len(result.Applied) != 1-i {
+			t.Fatalf("presentation expansion/repeat failed: %+v %v", result, err)
+		}
+	}
+	var original bool
+	if err := db.QueryRow(`SELECT mechanics='{"original":true}'::jsonb AND support='{"status":"not_verified"}'::jsonb AND NOT is_narrative FROM actions`).Scan(&original); err != nil || !original {
+		t.Fatal("DDL changed catalog rows", err)
+	}
+	before, target, err := validateReleaseMigrationRequest(request)
+	if err != nil || !presentationRetainsWriterFormats(before, target) {
+		t.Fatal("exact presentation transition rejected")
+	}
+	target["307_catalog_presentation"] = "sha256:" + strings.Repeat("f", 64)
+	if presentationRetainsWriterFormats(before, target) {
+		t.Fatal("unreviewed presentation checksum accepted")
+	}
+	for _, tamper := range []string{
+		`ALTER TABLE actions ALTER COLUMN is_narrative SET DEFAULT true`,
+		`ALTER TABLE entity_presentation_307_receipt ADD COLUMN unreviewed text`,
+		`CREATE OR REPLACE FUNCTION invalidate_content_support() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END; $$`,
+	} {
+		tx, err := db.Begin()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = tx.Exec(tamper); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = verifyAdditiveSchema(context.Background(), tx); err == nil {
+			t.Fatal("tampered presentation schema accepted")
+		}
+		tx.Rollback()
+	}
+}
+
+func TestCatalogPresentationCommandRequiresExactInstalledSchemaAndSources(t *testing.T) {
+	db, request := releaseFixture(t)
+	m := NewMigrator(db)
+	content := CatalogPresentationRequest{SchemaVersion: 1, ManifestHash: CatalogPresentationManifestHash()}
+	if err := m.ApplyCatalogPresentation(context.Background(), content); err == nil {
+		t.Fatal("content applied before schema")
+	}
+	if _, err := m.RunReleaseAdditive(context.Background(), request); err != nil {
+		t.Fatal(err)
+	}
+	wrong := content
+	wrong.ManifestHash = "sha256:" + strings.Repeat("f", 64)
+	if err := m.ApplyCatalogPresentation(context.Background(), wrong); err == nil {
+		t.Fatal("unbound content accepted")
+	}
+	// These synthetic catalog tables lack the reviewed source entities. No
+	// partial edits or success receipt may escape that failure.
+	if err := m.ApplyCatalogPresentation(context.Background(), content); err == nil {
+		t.Fatal("missing reviewed sources accepted")
+	}
+	var count int
+	if err := db.QueryRow(`SELECT count(*) FROM entity_presentation_307_receipt`).Scan(&count); err != nil || count != 0 {
+		t.Fatal("failed content application left a receipt", err)
 	}
 }
 

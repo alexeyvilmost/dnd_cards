@@ -1,3 +1,4 @@
+import { useSiteSettings } from '../settings';
 import ReviewStatusCorner from './ReviewStatusCorner';
 import type { Card } from '../types';
 import { FormattedText } from '../utils/formattedText';
@@ -16,12 +17,13 @@ interface CardPreviewProps {
 }
 
 const CardPreview = ({ card, className = '', disableHover = false, onClick }: CardPreviewProps) => {
+  const { showDetailedPreview } = useSiteSettings();
   // Для совместимости с одним свойством и массивом свойств
   const propertiesArray = (Array.isArray(card.properties) ? card.properties : (card.properties ? [card.properties] : []))
     .filter((property) => typeof property === 'string' && property.trim() !== '');
   const hasProperties = propertiesArray.length > 0;
   const hasDescription = Boolean(card.description?.trim());
-  const hasDetailedDescription = Boolean(card.show_detailed_description && card.detailed_description?.trim());
+  const hasDetailedDescription = Boolean(showDetailedPreview && card.show_detailed_description && card.detailed_description?.trim());
   const isExtended = Boolean(card.is_extended);
 
   // Функция для определения размера шрифта заголовка
@@ -153,7 +155,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
               {(hasProperties || hasDetailedDescription) && (
                 <div className="px-2 pt-0 pb-2 bg-gray-50 flex-1 min-h-[60px] relative overflow-hidden">
                   <div className="w-full">
-                    {card.show_detailed_description && card.detailed_description && card.detailed_description.trim() !== '' ? (
+                    {showDetailedPreview && card.show_detailed_description && card.detailed_description && card.detailed_description.trim() !== '' ? (
                       <div
                         className="text-xs font-fantasy whitespace-pre-wrap"
                         style={{

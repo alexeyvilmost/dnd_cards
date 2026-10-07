@@ -1,4 +1,4 @@
-import {writerPolicy,lifecycleWriterExpansion,lifecycleMigrationIdentity,evidenceHash} from './validate-manifest.mjs';
+import {writerPolicy,lifecycleWriterExpansion,lifecycleMigrationIdentity,presentationWriterExpansion,presentationMigrationIdentity,evidenceHash} from './validate-manifest.mjs';
 import {isLegacyBaseline} from './legacy-baseline.mjs';
 
 export const writerFlagNames = ['DB_COMPACT_RECEIPTS','DB_FROZEN_CATALOGS','IMAGE_JOBS_ENABLED'];
@@ -24,10 +24,11 @@ export function assertExpansionWritersOff(environment) {
 }
 export function assertMigrationWriterPolicy(environment,plan) {
   const previous=plan?.previous,candidate=plan?.desired?.manifest;
-  if(lifecycleWriterExpansion(candidate,previous?.manifest)) {
+  if(lifecycleWriterExpansion(candidate,previous?.manifest) || presentationWriterExpansion(candidate,previous?.manifest)) {
+    const identity=lifecycleWriterExpansion(candidate,previous?.manifest)?lifecycleMigrationIdentity:presentationMigrationIdentity;
     const migration=plan.migration;
     if(migration?.mode!=='additive-298-300' || !/^sha256:[a-f0-9]{64}$/.test(migration.approvalHash??'')
-      || evidenceHash(migration.added)!==evidenceHash([lifecycleMigrationIdentity])
+      || evidenceHash(migration.added)!==evidenceHash([identity])
       || evidenceHash(migration.baseline)!==evidenceHash(previous.manifest.migrationSet)
       || evidenceHash(migration.target)!==evidenceHash(candidate.migrationSet))throw Error('Exact approved lifecycle migration plan required');
     return assertRuntimeWriterPolicy(environment,previous);

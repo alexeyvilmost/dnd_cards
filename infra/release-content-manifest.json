@@ -72,8 +72,8 @@
     },
     {
       "path": "backend/build_info.go",
-      "sha256": "sha256:52253ae1b285b2b572cca18eb87d15289f55dd204264a448e5610d65c36989de",
-      "bytes": 3136
+      "sha256": "sha256:62eb42910feea6567c4b57aedc60b40dc96d178fea98666a8c7e89b0864028b9",
+      "bytes": 3217
     },
     {
       "path": "backend/canonical_json.go",
@@ -172,8 +172,8 @@
     },
     {
       "path": "backend/class_controller.go",
-      "sha256": "sha256:4e354dc3df07c8711f1e304ac1d643fc273f6fad4460ca9f8095ff86ec575bd2",
-      "bytes": 9649
+      "sha256": "sha256:191b23fdfda0cc44e2b5af32d933ce7489fdd4c7262a9e2dc9347d0b6849263c",
+      "bytes": 9743
     },
     {
       "path": "backend/class_equipment_integrity.go",
@@ -212,8 +212,8 @@
     },
     {
       "path": "backend/content_migration_controller.go",
-      "sha256": "sha256:f542216a740223588c2a78a662083d6bb9a552fff31381c213a7c35ad4e5482c",
-      "bytes": 39256
+      "sha256": "sha256:3a20476aba9c3714d6564d0d506ce73ed5a69bc95376ff743f2286457ec65360",
+      "bytes": 39342
     },
     {
       "path": "backend/content_migration_exact_update.go",
@@ -242,8 +242,8 @@
     },
     {
       "path": "backend/controller.go",
-      "sha256": "sha256:725ed23f6a242574509700f1ce8eba1f097fafdbb72a1d20de4d85f0665c3fdb",
-      "bytes": 63851
+      "sha256": "sha256:3923055a6c0fd9e247d30bf41df86fdfc4d41aa39198688d5c8d529ca6fdb9b0",
+      "bytes": 64592
     },
     {
       "path": "backend/cors_config.go",
@@ -437,8 +437,8 @@
     },
     {
       "path": "backend/migrations/align_certified_metadata_projection.go",
-      "sha256": "sha256:33a5b296da4b3a9f0974b84f26f983b063609450959d09fb96b79562756b110f",
-      "bytes": 4626
+      "sha256": "sha256:707c5fb955e32e7fe21fe9eb37c61ef9a01b278420591c349f28848afdc6895b",
+      "bytes": 4743
     },
     {
       "path": "backend/migrations/align_ranged_weapon_action_declaration.go",
@@ -656,14 +656,29 @@
       "bytes": 21043
     },
     {
+      "path": "backend/migrations/catalog_presentation_307.go",
+      "sha256": "sha256:5313f3cd2046b732461bfcd644aa2d157dfef4c00b8304eb5911a7975e7c26cc",
+      "bytes": 9942
+    },
+    {
+      "path": "backend/migrations/catalog_presentation_schema_307.go",
+      "sha256": "sha256:99f434204acfb4d59251b28abbfa6d413963c7cb3e06b1508a741670d1851574",
+      "bytes": 452
+    },
+    {
+      "path": "backend/migrations/catalog_presentation_schema_307.sql",
+      "sha256": "sha256:b1896ebd10744bc1808150fce6a4c6bc0a2ade2cebe5c8c9557ef1dfb5a24967",
+      "bytes": 4726
+    },
+    {
       "path": "backend/migrations/catalog_variants_280.go",
       "sha256": "sha256:e0ffa9b19f23afd83cbae7485be4fe23a9b83c99104f9da7ff3a8a0fc1a12d3f",
       "bytes": 997
     },
     {
       "path": "backend/migrations/certified_mutable_metadata_fields.v1.json",
-      "sha256": "sha256:1eac63df5ae3bdb8cc10c9d1db4212863ba31b4b67221a62dc2d8b8464dd45c4",
-      "bytes": 572
+      "sha256": "sha256:6e69203a9c419c28a26e30b7f71644eb88f10e507277f7d4aa467f73b058c56b",
+      "bytes": 612
     },
     {
       "path": "backend/migrations/certify_level_two_classes.go",
@@ -1067,8 +1082,8 @@
     },
     {
       "path": "backend/migrations/migrations.go",
-      "sha256": "sha256:90f4214cc9c56bd2146556fd064d711810894fcee4c544d57e500cd67891d1df",
-      "bytes": 231046
+      "sha256": "sha256:81872256f8352e4156e4a02447b752711dedcab540cedcc387a8473543c56b51",
+      "bytes": 231354
     },
     {
       "path": "backend/migrations/monster_weapon_loadouts_247.go",
@@ -1119,6 +1134,11 @@
       "path": "backend/migrations/passive_presentations_253.go",
       "sha256": "sha256:410f5da8848b48fdf59ac87d13be010aad33b2cdcd6b556478d52eb91a94e58b",
       "bytes": 1075
+    },
+    {
+      "path": "backend/migrations/presentation_catalog_307_manifest.json",
+      "sha256": "sha256:ce0cb53a2f2c054412755a5b1a5a9c50ff8cf7b8290dad2ba9442a06ec778a8e",
+      "bytes": 518010
     },
     {
       "path": "backend/migrations/psi_warrior_foundations_230.go",
@@ -1192,8 +1212,8 @@
     },
     {
       "path": "backend/migrations/release_additive.go",
-      "sha256": "sha256:77e8220a1d41f8bc67ec6b917c78ddce5cda0e7b0c3c87143e46f752e56ac786",
-      "bytes": 14952
+      "sha256": "sha256:bbb3c3bf2994e5484f61a9e3388032f90ff603b3b046919d197c4d692e1e50ab",
+      "bytes": 15973
     },
     {
       "path": "backend/migrations/release_retirement.go",
@@ -1207,8 +1227,8 @@
     },
     {
       "path": "backend/migrations/release_schema_proof.go",
-      "sha256": "sha256:b153e1bea15710867622e3c38beac92db307cc5632bba40475b815b1703a7a15",
-      "bytes": 6708
+      "sha256": "sha256:08208deef7e9a6fd99aa4a49d4b0c78f04bda09abf4ef7f4587e9e387d445a80",
+      "bytes": 8685
     },
     {
       "path": "backend/migrations/repair_active_action_targeting.go",
@@ -1662,8 +1682,8 @@
     },
     {
       "path": "backend/models.go",
-      "sha256": "sha256:57a14a5699a2437e98d7fa44a426f8dde722f569375a4ef2be37ee10804228ad",
-      "bytes": 101363
+      "sha256": "sha256:90f89ac7d585ef7c1fd11575e8a2440e4111dfe20d7ee4eeab7aff70d2e1c8ee",
+      "bytes": 102271
     },
     {
       "path": "backend/models_character_event.go",
@@ -1777,8 +1797,8 @@
     },
     {
       "path": "backend/release_migration_command.go",
-      "sha256": "sha256:f7bc439ebf794eda0ec5c4136c3500c1f02c2bc36980a99d9275a06584f9f1af",
-      "bytes": 4341
+      "sha256": "sha256:fe8e543b7afa28e29e7da4fb7a5cc555e89da00f432703c83c9924faa14b88ce",
+      "bytes": 4964
     },
     {
       "path": "backend/resource_controller.go",
@@ -1972,8 +1992,8 @@
     },
     {
       "path": "backend/spell_controller.go",
-      "sha256": "sha256:71502817ad8a686eb1f32bb76a051ae96f8b85c6d27cbd24b2b54d58f0531358",
-      "bytes": 15741
+      "sha256": "sha256:8948a76daed3c190f9dcd933fdccd0fb61917a998cd4ca6505a8db29bc3926ae",
+      "bytes": 15989
     },
     {
       "path": "backend/storage_catalog.go",

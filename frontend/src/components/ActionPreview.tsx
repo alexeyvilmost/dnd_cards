@@ -35,7 +35,7 @@ const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 const ActionPreview = ({ action, runtime, className = '', disableHover = false, onClick, resources: providedResources, sourceLabel, weaponAttackPreview: wp }: ActionPreviewProps) => {
   const loadedResources = useResourceOptions();
   const resources = providedResources || loadedResources;
-  const { playerMode } = useSiteSettings();
+  const { playerMode, showDetailedPreview } = useSiteSettings();
   const formulaCtx = useCharacterFormulaCtx();
   const mastery = findMastery(useMasteryEffects(), wp?.masteryId);
   const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
@@ -165,7 +165,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
         <FormattedText onDark text={action.description || 'Описание действия'} emptyText="Описание действия" />
       </div>
 
-      {action.show_detailed_description && action.detailed_description && (
+      {showDetailedPreview && action.show_detailed_description && action.detailed_description && (
         <div className="sp-upcast">
           <FormattedText onDark text={action.detailed_description} emptyText="" />
         </div>

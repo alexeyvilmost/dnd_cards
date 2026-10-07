@@ -11,6 +11,28 @@ import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
 import {retirementDatabaseStateFromInspection} from './retirement-state.mjs';
 import {writerCompatibilityRequirements} from './validate-manifest.mjs';
 import {retirementWriterBaseline} from './candidate-rehearsal.mjs';
+import {presentationWriterExpansion,presentationMigrationIdentity} from './validate-manifest.mjs';
+import {assertMigrationWriterPolicy} from './writer-environment.mjs';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+
+test('presentation expansion binds complete standalone DDL and retains writer proofs and history',()=>{
+ const sql=readFileSync(new URL('../../backend/migrations/catalog_presentation_schema_307.sql',import.meta.url),'utf8').replaceAll('\r\n','\n');
+ const executor=readFileSync(new URL('../../backend/migrations/catalog_presentation_schema_307.go',import.meta.url),'utf8').replaceAll('\r\n','\n');
+ assert.equal(presentationMigrationIdentity.checksum,'sha256:'+createHash('sha256').update(executor+'\n--embedded-ddl--\n'+sql).digest('hex'));
+ const f=pair(on,on),previous=structuredClone(f.active.manifest),candidate=structuredClone(f.candidate);
+ previous.migrationSet.push({...lifecycleMigrationIdentity});candidate.migrationSet=structuredClone(previous.migrationSet);candidate.migrationSet.push({...presentationMigrationIdentity});
+ assert.equal(presentationWriterExpansion(candidate,previous),true);
+ assert.deepEqual(validateWriterTransition(candidate,previous),on);
+ const plan={previous:{manifest:previous},desired:{manifest:candidate},migration:{mode:'additive-298-300',approvalHash:hash('a'),added:[presentationMigrationIdentity],baseline:previous.migrationSet,target:candidate.migrationSet}};
+ const env=['DB_COMPACT_RECEIPTS=1','DB_FROZEN_CATALOGS=0','IMAGE_JOBS_ENABLED=1'];
+ assertMigrationWriterPolicy(env,plan);
+ const badPlan=structuredClone(plan);badPlan.migration.added[0].checksum=hash('0');assert.throws(()=>assertMigrationWriterPolicy(env,badPlan));
+ for(const mutate of [m=>m.migrationSet.at(-1).checksum=hash('f'),m=>m.migrationSet.push({id:'308_unreviewed',checksum:hash('f')}),m=>m.migrationSet[0].checksum=hash('f'),m=>m.writerPolicy.imageJobs=false,m=>m.supportedWorldSchemaVersions=[6]]) {
+  const bad=structuredClone(candidate);mutate(bad);assert.throws(()=>validateWriterTransition(bad,previous));
+ }
+ assert.throws(()=>planDeployment(candidate,f.bundle,f.active),/evidence|rehearsal|fingerprint|previous|migration/i);
+});
 test('absent policy preserves historical fingerprint, eight-stage receipt and manifest bytes',()=>{
  const f=pair(off);delete f.candidate.writerPolicy;f.bundle.rehearsalReceipt.checks.pop();f.bundle.rehearsalReceipt.compositionFingerprint=compositionFingerprint(f.candidate);refresh(f.candidate,f.bundle);
  const bytes=JSON.stringify(f.candidate);

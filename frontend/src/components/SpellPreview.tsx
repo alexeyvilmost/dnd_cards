@@ -1,3 +1,4 @@
+import { useSiteSettings } from '../settings';
 import ReviewStatusCorner from './ReviewStatusCorner';
 import React from 'react';
 import type { Spell } from '../types';
@@ -41,6 +42,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   onClick,
   spellcasting,
 }) => {
+  const { showDetailedPreview } = useSiteSettings();
   const spellResourceOptions = useResourceOptions();
   const formulaCtx = useCharacterFormulaCtx();
   const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
@@ -187,8 +189,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         </div>
       )}
 
-      {/* Полное описание намеренно НЕ показываем в превью — оно живёт только
-          на вики-странице (/spell/:id), чтобы не пугать новичков объёмом. */}
+      {showDetailedPreview && spell.detailed_description && <div className="sp-upcast"><FormattedText onDark text={spell.detailed_description} emptyText="" /></div>}
 
       {spell.save_outcome && <div className="sp-saveline">{spell.save_outcome}</div>}
 

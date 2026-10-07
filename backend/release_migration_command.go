@@ -18,7 +18,7 @@ import (
 // Runs before .env, HTTP, image jobs or application constructors. The DSN stays
 // in the one-off container environment; the request contains no credentials.
 func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer) (bool, error) {
-	if len(args) == 0 || (args[0] != "--migrate-release" && args[0] != "--inspect-release-migrations" && args[0] != "--inspect-character-retirement" && args[0] != "--execute-character-retirement" && args[0] != "--reconcile-character-retirement") {
+	if len(args) == 0 || (args[0] != "--apply-catalog-presentation" && args[0] != "--migrate-release" && args[0] != "--inspect-release-migrations" && args[0] != "--inspect-character-retirement" && args[0] != "--execute-character-retirement" && args[0] != "--reconcile-character-retirement") {
 		return false, nil
 	}
 	if len(args) != 1 {
@@ -35,8 +35,11 @@ func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer
 	var request migrations.ReleaseMigrationRequest
 	var retirement migrations.ReleaseRetirementInspectionRequest
 	var execution migrations.ReleaseRetirementExecutionRequest
+	var catalog migrations.CatalogPresentationRequest
 	var decoded any = &request
-	if args[0] == "--inspect-character-retirement" {
+	if args[0] == "--apply-catalog-presentation" {
+		decoded = &catalog
+	} else if args[0] == "--inspect-character-retirement" {
 		decoded = &retirement
 	} else if args[0] == "--execute-character-retirement" || args[0] == "--reconcile-character-retirement" {
 		decoded = &execution
@@ -49,7 +52,9 @@ func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer
 		return true, errors.New("one bounded migration request required")
 	}
 	releaseID, sourceCommit, fingerprint := request.ReleaseID, request.CandidateSourceCommit, request.CandidateInputFingerprint
-	if args[0] == "--inspect-character-retirement" {
+	if args[0] == "--apply-catalog-presentation" {
+		releaseID, sourceCommit, fingerprint = catalog.ReleaseID, catalog.CandidateSourceCommit, catalog.CandidateInputFingerprint
+	} else if args[0] == "--inspect-character-retirement" {
 		releaseID, sourceCommit, fingerprint = retirement.ReleaseID, retirement.CandidateSourceCommit, retirement.CandidateInputFingerprint
 	} else if args[0] == "--execute-character-retirement" || args[0] == "--reconcile-character-retirement" {
 		releaseID, sourceCommit, fingerprint = execution.ReleaseID, execution.CandidateSourceCommit, execution.CandidateInputFingerprint
@@ -70,7 +75,10 @@ func runReleaseMigrationCommand(args []string, input io.Reader, output io.Writer
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	var result any
-	if args[0] == "--inspect-character-retirement" {
+	if args[0] == "--apply-catalog-presentation" {
+		err = migrations.NewMigrator(db).ApplyCatalogPresentation(ctx, catalog)
+		result = map[string]interface{}{"status": "verified", "manifestHash": migrations.CatalogPresentationManifestHash(), "releaseId": releaseID}
+	} else if args[0] == "--inspect-character-retirement" {
 		result, err = migrations.NewMigrator(db).InspectReleaseRetirement(ctx, retirement)
 	} else if args[0] == "--execute-character-retirement" {
 		result, err = migrations.NewMigrator(db).RunReleaseRetirement(ctx, execution)

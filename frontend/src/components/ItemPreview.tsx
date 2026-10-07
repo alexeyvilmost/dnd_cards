@@ -1,3 +1,4 @@
+import { useSiteSettings } from '../settings';
 import ReviewStatusCorner from './ReviewStatusCorner';
 import {cardPropertyList} from '../utils/cardProperties';
 import React from 'react';
@@ -52,6 +53,7 @@ const rarityGradient = (accent: string | undefined, rarity?: string | null): str
 type MetaEntry = { img?: string; imgStyle?: React.CSSProperties; emoji?: string; label: string };
 
 const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disableHover = false, onClick }) => {
+  const { showDetailedPreview } = useSiteSettings();
   const containerSum = useContainerTotals(card);
   const formulaCtx = useCharacterFormulaCtx();
   const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
@@ -156,6 +158,8 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
       {hasDescription && <div className="sp-desc">
         <FormattedText text={card.description} />
       </div>}
+
+      {showDetailedPreview && card.detailed_description && <div className="sp-upcast"><FormattedText onDark text={card.detailed_description} emptyText="" /></div>}
 
       {contents.length > 0 && (
         <div className="sp-classes">

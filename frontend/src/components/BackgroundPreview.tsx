@@ -1,3 +1,6 @@
+import { useEntityRef } from './EntityRefRegistry';
+import type { Feat } from '../types';
+import { useSiteSettings } from '../settings';
 import React from 'react';
 import type { Background } from '../types';
 import { getAbilityLabel } from '../types';
@@ -18,6 +21,8 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
   disableHover = false,
   onClick,
 }) => {
+  const { showDetailedPreview } = useSiteSettings();
+  const { entity: originFeat, error: featError } = useEntityRef('feat', background.origin_feat ?? '');
   const abilities = (background.ability_scores || []).map(getAbilityLabel).join(', ');
   const skills = (background.skill_proficiencies || []).join(', ');
 
@@ -43,7 +48,7 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
         {background.origin_feat && (
           <div className="bg3-srow">
             <span className="bg3-lbl">Черта:</span>
-            <span className="bg3-val">{background.origin_feat}</span>
+            <span className="bg3-val">{(originFeat as Feat | null)?.name ?? (featError ? 'Черта недоступна' : 'Загрузка черты…')}</span>
           </div>
         )}
         {skills && (
@@ -74,7 +79,7 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
         </div>
       )}
 
-      {background.detailed_description && (
+      {showDetailedPreview && background.detailed_description && (
         <div className="bg3-extra">
           <FormattedText text={background.detailed_description} emptyText="" />
         </div>
