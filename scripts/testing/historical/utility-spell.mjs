@@ -1,0 +1,45 @@
+import {spawnSync} from 'node:child_process';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {sha256Canonical} from '../../../scripts/content/certification-hash.mjs';
+
+const source={commit:'71751d6bbb48d18bc136e1c093a584d528a7e4ea',path:'scripts/content/data/mini-mvp-utility-cantrips.v1.json',blob:'4d857c3c7c2655ff4e3f6214034e642785379c1a',sha256:'ff8b12546b5fdb45924db781d24fbd06b5a00f6073f98f9fee0aa9688aca9d2d',mechanicsHash:'sha256:c2091205f9e919aa6a79d01c23f12b1ec7c32ff7976dfbcc4543e06180c89ff5'};
+const expectedBeforeHash='sha256:b76eb874aef0b1eaf2fa0f8b27f9d8e62996dd74d9a905de099cf20915e5518c';
+const literal=s=>`'${s.replaceAll("'","''")}'`;
+export async function hydrateMageHandPublicGit({query,root,fullDataSnapshot,observe=()=>{}}){
+ const git=(args)=>{const result=spawnSync('git',args,{cwd:root,encoding:'utf8',maxBuffer:2*1024**2,windowsHide:true});if(result.status!==0)throw Error('Pinned public Git source unavailable');return result.stdout;};
+ if(git(['rev-parse',`${source.commit}:${source.path}`]).trim()!==source.blob)throw Error('Historical Git blob mismatch');
+ const bytes=Buffer.from(git(['show',`${source.commit}:${source.path}`]));if(crypto.createHash('sha256').update(bytes).digest('hex')!==source.sha256)throw Error('Historical public source hash mismatch');
+ const rows=JSON.parse(bytes).filter(r=>r.card_number==='SPELL-0173');if(rows.length!==1||sha256Canonical(rows[0].mechanics)!==source.mechanicsHash)throw Error('Historical public mechanics mismatch');
+ const publicSpellsBytes=await fs.readFile(path.join(root,'officials/canon/prod-snapshot/spells.json'));
+ const publicClassesBytes=await fs.readFile(path.join(root,'officials/canon/prod-snapshot/classes.json'));
+ const publicSpell=JSON.parse(publicSpellsBytes).filter(s=>s.card_number==='SPELL-0173');
+ if(publicSpell.length!==1||sha256Canonical(publicSpell[0].mechanics)!==expectedBeforeHash)throw Error('Public baseline mechanics changed');
+ const labels=[...new Set(publicSpell[0].classes.map(s=>s.trim().toLowerCase()))];
+ const classes=JSON.parse(publicClassesBytes).filter(c=>!c.is_subclass);
+ const resolved=labels.map(label=>classes.filter(c=>c.name?.trim().toLowerCase()===label||c.name_en?.trim().toLowerCase()===label));
+ if(resolved.some(values=>values.length!==1))throw Error('Public class identities are ambiguous');
+ const classIDs=[...new Set(resolved.map(values=>values[0].card_number))].sort();
+ if(classIDs.length!==labels.length||JSON.stringify(classIDs)!==JSON.stringify(rows[0].mechanics.spell_class_list_ids))throw Error('Historical class-list projection differs');
+ const currentExpected=sha256Canonical({...publicSpell[0].mechanics,spell_class_list_ids:classIDs});
+ const projectionSource=await fs.readFile(path.join(root,'backend/migrations/normalize_live_happy_path_content.go'));
+ const currentProjection={migration:'107',sourceHash:`sha256:${crypto.createHash('sha256').update(projectionSource).digest('hex')}`,publicSpellsHash:`sha256:${crypto.createHash('sha256').update(publicSpellsBytes).digest('hex')}`,publicClassesHash:`sha256:${crypto.createHash('sha256').update(publicClassesBytes).digest('hex')}`,sourceMechanicsHash:expectedBeforeHash,projectedMechanicsHash:currentExpected,classCount:classIDs.length,classIDsMatchHistoricalTarget:true};
+ const guardPath='backend/migrations/repair_mage_hand_control_narrative.go', guard=await fs.readFile(path.join(root,guardPath),'utf8');
+ const id=guard.match(/mageHandEntityID\s*=\s*"([^"]+)"/)?.[1], oldNarrative=guard.match(/mageHandControlOldNarrative\s*=\s*"([^"]+)"/)?.[1];
+ if(!id||!oldNarrative||rows[0].mechanics.effects?.[0]?.result?.[0]?.kind!=='remote_manipulator'||rows[0].mechanics.effects?.[0]?.result?.[1]?.description!==oldNarrative)throw Error('Public source fails unchanged122 guard');
+ const boundary=(await query('fresh_chain','SELECT max(version) FROM schema_migrations;')).trim();if(!boundary.startsWith('121_'))throw Error('Public Git hydration requires exact121 boundary');
+ const current=JSON.parse(await query('fresh_chain',`SELECT jsonb_agg(jsonb_build_object('id',id,'card_number',card_number,'mechanics',mechanics,'support',support,'deleted',deleted_at IS NOT NULL,'row_hash',encode(sha256(convert_to(to_jsonb(t)::text,'UTF8')),'hex'))) FROM spells t WHERE id=${literal(id)}::uuid OR card_number='SPELL-0173';`));
+ observe({sourceResolved:true,boundary,currentRows:current?.length??0,exactIdentity:current?.length===1&&current[0].id===id&&current[0].card_number==='SPELL-0173',notDeleted:current?.length===1&&!current[0].deleted,unlocked:current?.length===1&&current[0].support?.mechanics_locked!==true,currentMechanicsHash:current?.length===1?sha256Canonical(current[0].mechanics):null,currentProjection});
+ if(current?.length!==1||current[0].id!==id||current[0].card_number!=='SPELL-0173'||current[0].deleted||current[0].support?.mechanics_locked===true||sha256Canonical(current[0].mechanics)!==currentExpected)throw Error('Public Git hydration current preimage drifted');
+ const nonTargetBefore=await fullDataSnapshot({table:'spells',ids:[id]});
+ const proof=JSON.parse(await query('fresh_chain',`BEGIN;
+ CREATE TEMP TABLE git_hydration_before AS SELECT id,to_jsonb(t) AS row FROM spells t;
+ CREATE TEMP TABLE git_ledger_before AS SELECT to_jsonb(m) AS row FROM schema_migrations m;
+ UPDATE spells SET mechanics=${literal(JSON.stringify(rows[0].mechanics))}::jsonb WHERE id=${literal(id)}::uuid AND card_number='SPELL-0173' AND deleted_at IS NULL AND encode(sha256(convert_to(to_jsonb(spells)::text,'UTF8')),'hex')=${literal(current[0].row_hash)};
+ SELECT json_build_object('changedRows',count(*),'onlyTargetRow',coalesce(bool_and(t.id=${literal(id)}::uuid),false),'onlyMechanicsInvalidationAndTimestamp',coalesce(bool_and((b.row-ARRAY['mechanics','support','updated_at'])=(to_jsonb(t)-ARRAY['mechanics','support','updated_at'])),false),'timestampFromTransaction',coalesce(bool_and(t.updated_at=transaction_timestamp() AND (b.row->>'updated_at')::timestamptz<=t.updated_at),false),'mechanicsExact',coalesce(bool_and(t.mechanics=${literal(JSON.stringify(rows[0].mechanics))}::jsonb),false),'supportInvalidatedNotPromoted',coalesce(bool_and(t.support IS NULL),false),'ledgerExact',NOT EXISTS ((SELECT row FROM git_ledger_before EXCEPT ALL SELECT to_jsonb(m) FROM schema_migrations m) UNION ALL (SELECT to_jsonb(m) FROM schema_migrations m EXCEPT ALL SELECT row FROM git_ledger_before)),'rowCountExact',(SELECT count(*) FROM spells)=(SELECT count(*) FROM git_hydration_before)) FROM spells t JOIN git_hydration_before b USING(id) WHERE b.row IS DISTINCT FROM to_jsonb(t);
+ COMMIT;`,{readOnly:false}));
+ const nonTargetAfter=await fullDataSnapshot({table:'spells',ids:[id]});
+ if(proof.changedRows!==1||Object.entries(proof).some(([key,value])=>key!=='changedRows'&&value!==true)||JSON.stringify(nonTargetBefore)!==JSON.stringify(nonTargetAfter))throw Error('Public Git hydration changed forbidden bytes');
+ return {migration:'122',boundary,kind:'public-Git-content-preimage',source,guard:{path:guardPath,sha256:`sha256:${crypto.createHash('sha256').update(guard).digest('hex')}`},currentRowHash:`sha256:${current[0].row_hash}`,currentProjection,proof,nonTargetBefore,nonTargetAfter,supportCopied:false,scope:'original-public-mechanics-only-not-certification'};
+}

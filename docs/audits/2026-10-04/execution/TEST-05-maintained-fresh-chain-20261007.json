@@ -1,0 +1,2508 @@
+{
+  "schemaVersion": 1,
+  "status": "maintained-full-original-chain-local-passed-ci-pending",
+  "observedAt": "2026-10-07T12:59:11.679Z",
+  "implementation": "scripts/testing/check-historical-fresh.mjs",
+  "mandatoryGate": "historical-fresh-chain",
+  "sourceCheckout": {
+    "baseCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "trackedChanges": true,
+    "exactInputHashesRecorded": true,
+    "locallyUncommittedImplementation": true,
+    "exactSourceFiles": [
+      {
+        "path": "backend/go.mod",
+        "sha256": "sha256:9c3b9a0d3f0a2715c437fa4c63d6f88d7df7990553a5190c4b7b14284514cd65",
+        "bytes": 2135
+      },
+      {
+        "path": "backend/go.sum",
+        "sha256": "sha256:2f629046563e727b44e5b6834fa4cf6eee2e2624550158325553d51239b8217d",
+        "bytes": 14976
+      },
+      {
+        "path": "backend/migrations/account_admin_status_268_test.go",
+        "sha256": "sha256:d5aea83094f433ddbefd1a94c1d76f6d60f27c1258d2fbb5657a8e0583c29261",
+        "bytes": 956
+      },
+      {
+        "path": "backend/migrations/account_admin_status_268.go",
+        "sha256": "sha256:15cfe2385594de244456c3eb92bc89a2c2123bfe0b453e72dbc73077d768cc27",
+        "bytes": 360
+      },
+      {
+        "path": "backend/migrations/add_attack_runtime_v4_test.go",
+        "sha256": "sha256:a91a2ff44957fa0a74bdbbac22bec4989714401a1f2b4a88b2fea88ae31f760b",
+        "bytes": 2433
+      },
+      {
+        "path": "backend/migrations/add_attack_runtime_v4.go",
+        "sha256": "sha256:1aed83bc3beec072c1d83c575629ca4bbcbd50eb44a92e96bc3e0c2659ecbd65",
+        "bytes": 2145
+      },
+      {
+        "path": "backend/migrations/add_character_class_levels_test.go",
+        "sha256": "sha256:a5844d48770ba56eb3e0439e5518bdbce72938ee42bf5014e55ac6b86daf1a24",
+        "bytes": 464
+      },
+      {
+        "path": "backend/migrations/add_character_class_levels.go",
+        "sha256": "sha256:5af6859ea6efcd3b7856c6d6b4694ddd631ec1eb24d0c910c8089f05178d1aa4",
+        "bytes": 3124
+      },
+      {
+        "path": "backend/migrations/add_character_runtime_commands_test.go",
+        "sha256": "sha256:03104dd1146fe87a1ed9675c4d041086f7fc1e0321eb6c8cc24eddbada367207",
+        "bytes": 3112
+      },
+      {
+        "path": "backend/migrations/add_character_runtime_commands.go",
+        "sha256": "sha256:eba976acb08ead4b94aaaaf872f3995796d885f1805f030075d49b755aa69e64",
+        "bytes": 1928
+      },
+      {
+        "path": "backend/migrations/add_content_migration_receipts_test.go",
+        "sha256": "sha256:ba0f6922c38c9d6b87b1b9c9c1f979a5f8164e4ba8efc8e11c4d973978fe7774",
+        "bytes": 3909
+      },
+      {
+        "path": "backend/migrations/add_content_migration_receipts.go",
+        "sha256": "sha256:4fd5f7c40195eed0e6f7d23df98e7ae16256ee30efe2d81b38b3cf4dc4400e05",
+        "bytes": 2587
+      },
+      {
+        "path": "backend/migrations/add_multiclass_subclasses_test.go",
+        "sha256": "sha256:19184b42847c843fed29454082a93854f94d2929629d5aebdb4df9dbb4721edd",
+        "bytes": 601
+      },
+      {
+        "path": "backend/migrations/add_multiclass_subclasses.go",
+        "sha256": "sha256:5dbd1cf4039f796bfc4d678819288b83e4ae5e56d1e7f14d467564db0e5b3a7e",
+        "bytes": 1152
+      },
+      {
+        "path": "backend/migrations/add_world_runtime_v5_test.go",
+        "sha256": "sha256:96c509bfbda10d473c1c25b65747cd6420139d6baf8ef7e37c614cdc9d669f03",
+        "bytes": 4470
+      },
+      {
+        "path": "backend/migrations/add_world_runtime_v5.go",
+        "sha256": "sha256:fae48ac4ceb2b2feac9a63dbfb7a237e46ea688a956a8989aebb48f26acd1a80",
+        "bytes": 36455
+      },
+      {
+        "path": "backend/migrations/align_certified_metadata_projection_test.go",
+        "sha256": "sha256:0ffd22949cbd2f0a639f7c351a1957a86d15fccb3e26ef5d3555c063c6a68aea",
+        "bytes": 7447
+      },
+      {
+        "path": "backend/migrations/align_certified_metadata_projection.go",
+        "sha256": "sha256:707c5fb955e32e7fe21fe9eb37c61ef9a01b278420591c349f28848afdc6895b",
+        "bytes": 4743
+      },
+      {
+        "path": "backend/migrations/align_ranged_weapon_action_declaration_test.go",
+        "sha256": "sha256:bbff01b106df4ad1443049f6d4ed0386f747319e16e0040a0b6b847cd30e0071",
+        "bytes": 2628
+      },
+      {
+        "path": "backend/migrations/align_ranged_weapon_action_declaration.go",
+        "sha256": "sha256:19b6cb9397450f024882ad5181a7adaba137cc57a608b1ef446e22b445e18953",
+        "bytes": 1549
+      },
+      {
+        "path": "backend/migrations/animation_286.go",
+        "sha256": "sha256:a5e88b4342e846f531e450e0ed3b62a5b3244624da55aa697fca9c919e6b663e",
+        "bytes": 1886
+      },
+      {
+        "path": "backend/migrations/animation_287_catalog_delta.json",
+        "sha256": "sha256:afa92e8c9337159675366afcfc877ce91b05358471315dfbaf43cd79b150e283",
+        "bytes": 56242
+      },
+      {
+        "path": "backend/migrations/animation_287_test.go",
+        "sha256": "sha256:6130844ace0c5094070a3235eaa2f3fa215ee42b18326d5a9b9a42b32057e7be",
+        "bytes": 3885
+      },
+      {
+        "path": "backend/migrations/animation_287.go",
+        "sha256": "sha256:d2200f2b201a18469014e448f12e27e2416391a124e21117ea5a6231120e77f7",
+        "bytes": 2775
+      },
+      {
+        "path": "backend/migrations/animation_288_force_delta.json",
+        "sha256": "sha256:baec5ac2b9e9100c99cbd133c61f2dd2fe87afd3368183dfad17b5766e664258",
+        "bytes": 12327
+      },
+      {
+        "path": "backend/migrations/animation_288_test.go",
+        "sha256": "sha256:d1624da9bee7f4c1638bff553d7eb7028a5392133157c6cfb3abf418893b36c2",
+        "bytes": 1707
+      },
+      {
+        "path": "backend/migrations/animation_288.go",
+        "sha256": "sha256:c5550fd5663151fea969f901bcaae8f56f8aff632bcebf6f3dc39595648b95a7",
+        "bytes": 1384
+      },
+      {
+        "path": "backend/migrations/animation_290_critical_profiles.json",
+        "sha256": "sha256:f7baff9cbfa36377d3f42347453d976a8f2dd9a3d7893bcb6d645f542526241c",
+        "bytes": 7289
+      },
+      {
+        "path": "backend/migrations/animation_290_test.go",
+        "sha256": "sha256:8af79ea294fcbdb8866a9c7fa1f8be739faa1286317e4eac2d828cceb85af56e",
+        "bytes": 1998
+      },
+      {
+        "path": "backend/migrations/animation_290.go",
+        "sha256": "sha256:579ce9256becc3168abb53e13bc2d980153316c312d73aa8ab1c501ddcb24535",
+        "bytes": 1336
+      },
+      {
+        "path": "backend/migrations/animation_292_critical_spell_profiles.json",
+        "sha256": "sha256:f2085aefe97888c4bf8b0dd8109232a0fd98849bbb67378ec1cc3e6d52d333c0",
+        "bytes": 13703
+      },
+      {
+        "path": "backend/migrations/animation_292_test.go",
+        "sha256": "sha256:a94dbcb08e64b0524ec59b50a715ff90939f32ac8adf6fc08e9c64fb4c5b26b7",
+        "bytes": 2180
+      },
+      {
+        "path": "backend/migrations/animation_292.go",
+        "sha256": "sha256:38ed42e1456b6450fc1b0943acf4b0174c6da843967a7424e8ab498b4e09163a",
+        "bytes": 1145
+      },
+      {
+        "path": "backend/migrations/apply_disengage_runtime_effect_test.go",
+        "sha256": "sha256:b318edf9ad6c6370b8ee90755d9b7a64f3d5d3923d98ee1bcab9abd82843472c",
+        "bytes": 2621
+      },
+      {
+        "path": "backend/migrations/apply_disengage_runtime_effect.go",
+        "sha256": "sha256:6e4d55eea2b3805cf10b3f1d064e1a21abf0b4c99ea5a23ebbafad5347ed9cbb",
+        "bytes": 1310
+      },
+      {
+        "path": "backend/migrations/archer_template_251.go",
+        "sha256": "sha256:5894b0a4d20c3eeb3a4486c2d187b3310aad17c1a68cee1c58411123314d721b",
+        "bytes": 708
+      },
+      {
+        "path": "backend/migrations/audio_260_seed.json",
+        "sha256": "sha256:5dee0dc43c557897fc21b7f542707c0045250bf4c022c2489a7d49449e35024f",
+        "bytes": 14137
+      },
+      {
+        "path": "backend/migrations/audio_260_test.go",
+        "sha256": "sha256:93a1326a403956b83ef6db304f215ccd39af84876a225d56c0aebb7725b2d970",
+        "bytes": 1163
+      },
+      {
+        "path": "backend/migrations/audio_260.go",
+        "sha256": "sha256:3b4b35c7076d3b7a3550e5293f56eef4f91a51ea8a0c01c4df7ecda45345b1e5",
+        "bytes": 1887
+      },
+      {
+        "path": "backend/migrations/audio_289_seed.json",
+        "sha256": "sha256:9c1a820dc34bd7dbb2d6dca26761b1e97b53516c7a11d3dd874e446f22aa8b20",
+        "bytes": 138650
+      },
+      {
+        "path": "backend/migrations/audio_289_test.go",
+        "sha256": "sha256:6c9e80fa7372ecc1c7f26a06a30d8195a9766923259479ebfd490eaa4ac8130f",
+        "bytes": 4669
+      },
+      {
+        "path": "backend/migrations/audio_289.go",
+        "sha256": "sha256:a6f232db1fd8e85e5f4537620aba7af28196debf29f107d0a8d061f4a8e32e8e",
+        "bytes": 3123
+      },
+      {
+        "path": "backend/migrations/audio_291_seed.json",
+        "sha256": "sha256:4c38ae6057bdf9868994992f6fefda1003713981d4aeb5da76d8724879d6d029",
+        "bytes": 6511
+      },
+      {
+        "path": "backend/migrations/audio_291_test.go",
+        "sha256": "sha256:1fc9f63d055ff58dd4f1872e3cf2bc9fc2e4ce7962a370d53d134031ebedfc1c",
+        "bytes": 6995
+      },
+      {
+        "path": "backend/migrations/audio_291.go",
+        "sha256": "sha256:d5d7e97f00a4c59e6350325301b4fcc52ceb4f9b50981c1ffc57103ab622e5e7",
+        "bytes": 3422
+      },
+      {
+        "path": "backend/migrations/baseline_upgrade_matrix_test.go",
+        "sha256": "sha256:ad75470cea9ed7499212422bf3658d9d6c3594df16b3c2dbe082c194635a0ae0",
+        "bytes": 15486
+      },
+      {
+        "path": "backend/migrations/battle_master_ambush_221.go",
+        "sha256": "sha256:f938b1c0c25e1cb8cfd71f749e87eebaad9d1bd95cf8e705fc8bc59f330fb513",
+        "bytes": 2961
+      },
+      {
+        "path": "backend/migrations/battle_master_bait_switch_226.go",
+        "sha256": "sha256:beae7a0e9bf5bdd91b01c3b568941b5ab2f997cda5abf8b7bfdb7c2e037cc012",
+        "bytes": 3371
+      },
+      {
+        "path": "backend/migrations/battle_master_checks_220.go",
+        "sha256": "sha256:2c199640a9360a9b10aa98a61dafa929b17ccb06cf3ea8f405ddca3adb39b13e",
+        "bytes": 3928
+      },
+      {
+        "path": "backend/migrations/battle_master_choices_214.go",
+        "sha256": "sha256:8ef30218f20f6e09d346daa4a940ee4e277f3b9d0cb766b1073557d1684f6218",
+        "bytes": 1461
+      },
+      {
+        "path": "backend/migrations/battle_master_commander_227.go",
+        "sha256": "sha256:3958f2f63bf5159d7153fff669d5b29aa09e2a9faeafae9556b669cdb330cf4b",
+        "bytes": 3066
+      },
+      {
+        "path": "backend/migrations/battle_master_disarming_229.go",
+        "sha256": "sha256:a4e0e14d6483606f16187857ed5da49e70cb8944b6e5b3f85262a0e364dcc90d",
+        "bytes": 3712
+      },
+      {
+        "path": "backend/migrations/battle_master_distracting_215.go",
+        "sha256": "sha256:cf7acf524fabff3eb8cfb85f2669413aa52f54943c3edeb6c89d771c3a7c109f",
+        "bytes": 2896
+      },
+      {
+        "path": "backend/migrations/battle_master_evasive_210.go",
+        "sha256": "sha256:22589bb84b81045436e31c118ca7349cd746d6480ce7f86f2c29bf7485bb835f",
+        "bytes": 3008
+      },
+      {
+        "path": "backend/migrations/battle_master_feint_219.go",
+        "sha256": "sha256:929bf3738778b781720f5ed48e6cb53158256a58a4fb24ccefbb6fc040d2dfc9",
+        "bytes": 3103
+      },
+      {
+        "path": "backend/migrations/battle_master_foundations_209.go",
+        "sha256": "sha256:e5cdf680283511a1b6d7b88443a38373b321bb8ccc399fd883ee2db69a9d9274",
+        "bytes": 3334
+      },
+      {
+        "path": "backend/migrations/battle_master_goading_213.go",
+        "sha256": "sha256:2a25c6441b88f55a22dd3e798a5e7f021e01714e304b6fc27d5e2e9ac28ce8b4",
+        "bytes": 2398
+      },
+      {
+        "path": "backend/migrations/battle_master_lunging_223.go",
+        "sha256": "sha256:083e6023d0f5dc09cc99e3dc4dc624a84efc8e313dd609b52963df55bc9b846f",
+        "bytes": 2747
+      },
+      {
+        "path": "backend/migrations/battle_master_maneuvering_228.go",
+        "sha256": "sha256:6b63ef1283bbd44a2f32d47a0be328de594e258770ee5edabbe2217bc3af9bcb",
+        "bytes": 2825
+      },
+      {
+        "path": "backend/migrations/battle_master_menacing_211.go",
+        "sha256": "sha256:67b7dfcecf81b6840a4e9f09fc8df692c05c5dd878dc2e5bf730ef10053848ed",
+        "bytes": 2188
+      },
+      {
+        "path": "backend/migrations/battle_master_parry_216.go",
+        "sha256": "sha256:2a2021d3101ddb7288c95635daf080c5a15e5981f7827ab245af522d6f34cda1",
+        "bytes": 2607
+      },
+      {
+        "path": "backend/migrations/battle_master_precision_222.go",
+        "sha256": "sha256:3cbb8c172735ec6bf6f16467896c04b63574688281a6ad7ddbaa8f36ff3bbeb2",
+        "bytes": 2518
+      },
+      {
+        "path": "backend/migrations/battle_master_pushing_218.go",
+        "sha256": "sha256:6bd10373a3d6e7140e69273165cb5f5f50660a137e65acef9655dbe0e9eafe51",
+        "bytes": 3477
+      },
+      {
+        "path": "backend/migrations/battle_master_rally_217.go",
+        "sha256": "sha256:97d7136a8235539a6d7cf07f3747ff2d49b8bacd37d5ce36c5b1375cbe26d403",
+        "bytes": 2491
+      },
+      {
+        "path": "backend/migrations/battle_master_riposte_225.go",
+        "sha256": "sha256:742195465779879f35e883901631ccd3ee436897b23ab9a39c5cf4a62a10a540",
+        "bytes": 2844
+      },
+      {
+        "path": "backend/migrations/battle_master_sweeping_224.go",
+        "sha256": "sha256:d8cae212923a1762452e3ac28919db88e4e2f3c80805bb95cd90efa5828b3515",
+        "bytes": 2878
+      },
+      {
+        "path": "backend/migrations/battle_master_trip_212.go",
+        "sha256": "sha256:59cb8ab491cc6510daa3363d9d28c742319a9a9560a8962c245d885578194e53",
+        "bytes": 2283
+      },
+      {
+        "path": "backend/migrations/bugbear_grab_248_test.go",
+        "sha256": "sha256:ecfa36fa954ba4a22f4425e3b8913ac939cbfb5fee413751d53ff336c1e3bbbc",
+        "bytes": 4081
+      },
+      {
+        "path": "backend/migrations/bugbear_grab_248.go",
+        "sha256": "sha256:701dbf125459b982a3d61c5fa664051f8d92851044ac01614ca4c97107b3c9ed",
+        "bytes": 3518
+      },
+      {
+        "path": "backend/migrations/card_price_contract_261_test.go",
+        "sha256": "sha256:a8d1bad6e55d3a870303eeb702cf0b4e89b8aad2251e145a29fce6ab9569c708",
+        "bytes": 1035
+      },
+      {
+        "path": "backend/migrations/card_price_contract_261.go",
+        "sha256": "sha256:32a62f8023c7c4fed665f11774b604d54ab491660174eec6fbd71a0996973934",
+        "bytes": 1150
+      },
+      {
+        "path": "backend/migrations/catalog_completion_279_test.go",
+        "sha256": "sha256:39b3a1187a4ac704745a747a923ff5f92ece7d988edc170243a0fc1aba41416f",
+        "bytes": 3906
+      },
+      {
+        "path": "backend/migrations/catalog_completion_279.go",
+        "sha256": "sha256:10c7d10b84d9625dcc75a973f2f13c1237c0478b1165368522389a378997cf62",
+        "bytes": 995
+      },
+      {
+        "path": "backend/migrations/catalog_mechanics_278_test.go",
+        "sha256": "sha256:6d2794b3522ffbf154b9678858e2684c7789787ee0069fd613c422b4d214b0b0",
+        "bytes": 11594
+      },
+      {
+        "path": "backend/migrations/catalog_mechanics_278.go",
+        "sha256": "sha256:683dc139ed609fe363a4d558d66d5869c521ac8c144e2cfc73dca50b240cd9c1",
+        "bytes": 21043
+      },
+      {
+        "path": "backend/migrations/catalog_presentation_307_test.go",
+        "sha256": "sha256:288496b807f277bfed093d0b91428bbb0869c98d8f6f7c2653addee89599f1c4",
+        "bytes": 8319
+      },
+      {
+        "path": "backend/migrations/catalog_presentation_307.go",
+        "sha256": "sha256:0518a18b73cd3d58239406822aafd0f923d122abb87b803a7185718221badca4",
+        "bytes": 10047
+      },
+      {
+        "path": "backend/migrations/catalog_presentation_schema_307.go",
+        "sha256": "sha256:99f434204acfb4d59251b28abbfa6d413963c7cb3e06b1508a741670d1851574",
+        "bytes": 452
+      },
+      {
+        "path": "backend/migrations/catalog_presentation_schema_307.sql",
+        "sha256": "sha256:d08a2d19671bad93ab78e5e1c0c56d7a71b25df6ac2847d6329af54941d53332",
+        "bytes": 2481
+      },
+      {
+        "path": "backend/migrations/catalog_variants_280_test.go",
+        "sha256": "sha256:7b0bf1897d9a7e027159ad3a22f9f15fa103dc725c69b93388cb13606b7023a1",
+        "bytes": 2358
+      },
+      {
+        "path": "backend/migrations/catalog_variants_280.go",
+        "sha256": "sha256:e0ffa9b19f23afd83cbae7485be4fe23a9b83c99104f9da7ff3a8a0fc1a12d3f",
+        "bytes": 997
+      },
+      {
+        "path": "backend/migrations/certified_mutable_metadata_fields.v1.json",
+        "sha256": "sha256:6e69203a9c419c28a26e30b7f71644eb88f10e507277f7d4aa467f73b058c56b",
+        "bytes": 612
+      },
+      {
+        "path": "backend/migrations/certify_level_two_classes_test.go",
+        "sha256": "sha256:bf9b39cdae83a244a68cebf4b602c9b0c7ef2b6b4c635992ebf6583dc9cd0fa9",
+        "bytes": 1318
+      },
+      {
+        "path": "backend/migrations/certify_level_two_classes.go",
+        "sha256": "sha256:4daafb449dc0b8825e7cecae5a2626bf55f1d2798710069cdbdd0915c3790bfe",
+        "bytes": 5399
+      },
+      {
+        "path": "backend/migrations/certify_micro_micro_content_test.go",
+        "sha256": "sha256:09850a238b8f774a84fd95ce7aa6e31f06316b9df04629fd8d78a6ee63fa30ab",
+        "bytes": 2576
+      },
+      {
+        "path": "backend/migrations/certify_micro_micro_content.go",
+        "sha256": "sha256:ae47b4a9b1427ab265ef318344293da22ff1e6441fec2cceb7aab83582952622",
+        "bytes": 12377
+      },
+      {
+        "path": "backend/migrations/certify_micro_micro_qa_fixes.go",
+        "sha256": "sha256:44f150570b7851e121b3bae764478c2dea0d86ebb847a1f40be8356a6b326ad8",
+        "bytes": 8400
+      },
+      {
+        "path": "backend/migrations/champion_critical_movement_208.go",
+        "sha256": "sha256:d3eb53f25ce4428632ea6a6ffb7fa1c4f32062cdebde4f4ccc0935e103bbad99",
+        "bytes": 2554
+      },
+      {
+        "path": "backend/migrations/character_event_idempotency.go",
+        "sha256": "sha256:f7e59d1a533a3932d416a5bfba96012ac81fe5d7f57b3387487d8677aca9975d",
+        "bytes": 865
+      },
+      {
+        "path": "backend/migrations/character_lifecycle_301.go",
+        "sha256": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5",
+        "bytes": 800
+      },
+      {
+        "path": "backend/migrations/character_templates_250_test.go",
+        "sha256": "sha256:aba50ab2d19d9eefe4d701e0c8347a913b5795809bd5a43dbb48d8838119c3ee",
+        "bytes": 3422
+      },
+      {
+        "path": "backend/migrations/character_templates_250.go",
+        "sha256": "sha256:7dcaf78faeae156325d0b8783c1f93560b85e3cc767fb6eb51c5ab508c293a3d",
+        "bytes": 1523
+      },
+      {
+        "path": "backend/migrations/clarify_general_feat_effect_cards_test.go",
+        "sha256": "sha256:53a8067cb419eb458ca235c2eb13474bac3d0f76ffb78e3a99ea154cbedea20b",
+        "bytes": 2042
+      },
+      {
+        "path": "backend/migrations/clarify_general_feat_effect_cards.go",
+        "sha256": "sha256:a2fd6cb2a637cbe79f603c0a2aa44606a0f3ed39c75888ea855b5f2f8e9a7f67",
+        "bytes": 3614
+      },
+      {
+        "path": "backend/migrations/combat_spell_repairs_293_manifest.json",
+        "sha256": "sha256:c814ab136833910476f9f96825df561609815096137767e133f95ea72ba096f3",
+        "bytes": 10208
+      },
+      {
+        "path": "backend/migrations/combat_spell_repairs_293_test.go",
+        "sha256": "sha256:d90edd2b1bedbb4fe7da7539e9f19675ce0a420ee262212cfdba5a816148b8bb",
+        "bytes": 12057
+      },
+      {
+        "path": "backend/migrations/combat_spell_repairs_293.go",
+        "sha256": "sha256:619e331237536d5a3e563ffc8352dc3cb85bce10048be6c31f239f8ab6cb57cd",
+        "bytes": 11562
+      },
+      {
+        "path": "backend/migrations/compact_receipts_298_test.go",
+        "sha256": "sha256:7ec7a0da40ef708aad5247c8394aacdad63145e326be82942fbffc4a12d98f1f",
+        "bytes": 1701
+      },
+      {
+        "path": "backend/migrations/compact_receipts_298.go",
+        "sha256": "sha256:0a789ad4f566b0c2806c806bfc8ee896b06ba9421e71c0090c64d6e00370f7a6",
+        "bytes": 1434
+      },
+      {
+        "path": "backend/migrations/content_entity_authorship_267.go",
+        "sha256": "sha256:80c7cf1d3f12e25f42d6f72e62d3c4625184d7864b2c0ad0fe458aa963d5ccdd",
+        "bytes": 1001
+      },
+      {
+        "path": "backend/migrations/create_canonical_runtime_integration_test.go",
+        "sha256": "sha256:0d20a8029e04f72e1ed801684e5d7cc841b9e2caad2e89568c52f0fafe315069",
+        "bytes": 32930
+      },
+      {
+        "path": "backend/migrations/create_canonical_runtime_test.go",
+        "sha256": "sha256:6fc8cfdd3c0b5ac4ed5349587180fd80369672735cb3bd0cc06e27c50f8bc0a9",
+        "bytes": 9036
+      },
+      {
+        "path": "backend/migrations/create_canonical_runtime.go",
+        "sha256": "sha256:eab07afd4680e61b00da596d3572b47bc8e83201fe37e0be373a27175dd27bac",
+        "bytes": 33964
+      },
+      {
+        "path": "backend/migrations/create_roguelike_runs_198.go",
+        "sha256": "sha256:c29c9526641126cc134f2e93c1e891e99623e8651f0c57ffce077656f171047f",
+        "bytes": 2849
+      },
+      {
+        "path": "backend/migrations/dash_movement_243_test.go",
+        "sha256": "sha256:0075b92734cacd6cadb9dd27f3e90eb574018167eb9c903b9effb571a399fdb5",
+        "bytes": 3216
+      },
+      {
+        "path": "backend/migrations/dash_movement_243.go",
+        "sha256": "sha256:3df973f014efed12046cad249de36e8e7525b177de577aff02359e39c7f89bc1",
+        "bytes": 1789
+      },
+      {
+        "path": "backend/migrations/data/catalog-audit-20260929/feats.json",
+        "sha256": "sha256:09470686d0ddb946a38e6e2f398ae51d45ee6fd2b0758a5a9b32b012d68d4a42",
+        "bytes": 722194
+      },
+      {
+        "path": "backend/migrations/data/catalog-audit-20260929/item-influences.json",
+        "sha256": "sha256:daa4e647bcb959cdfb5188ffb3c2ed1d3bcd0bf167aa5dd8104bc941d3ca9cec",
+        "bytes": 43852
+      },
+      {
+        "path": "backend/migrations/data/catalog-audit-20260929/items.json",
+        "sha256": "sha256:e1b352e4f009f3cd330a7944ba0c1bc9d40e325eed31e33914bc952159997857",
+        "bytes": 2459653
+      },
+      {
+        "path": "backend/migrations/data/catalog-audit-20260929/spells.json",
+        "sha256": "sha256:4bb1192d1cbfb578741c993661ccab959ec0048eff68e093d919e4e4dba4b281",
+        "bytes": 2540835
+      },
+      {
+        "path": "backend/migrations/data/catalog-variants-280/entities.json",
+        "sha256": "sha256:4f6715b2a967df24f1250116ab3e2e12491b133a6b2410671f91336e7e31a0bf",
+        "bytes": 1031172
+      },
+      {
+        "path": "backend/migrations/data/item-completion-279/items.json",
+        "sha256": "sha256:5ca094bf8ce05a0b1ceb5b904ffb10ea48fdb462326606d49aaf61e7edbf95d8",
+        "bytes": 8541256
+      },
+      {
+        "path": "backend/migrations/data/retire-legacy-characters-302.sql",
+        "sha256": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+        "bytes": 12553
+      },
+      {
+        "path": "backend/migrations/deduplicate_goliath_ancestry_test.go",
+        "sha256": "sha256:4ed63874d1577e23ebdfacf0095e9cc0119d59e56b2021952ad5508c33f77be0",
+        "bytes": 2915
+      },
+      {
+        "path": "backend/migrations/deduplicate_goliath_ancestry.go",
+        "sha256": "sha256:03a2c1c9e2ed598513b259498d21b67698422c6fbddaf16e23ebbcce0c43c769",
+        "bytes": 3242
+      },
+      {
+        "path": "backend/migrations/effect_classification_278_manifest.json",
+        "sha256": "sha256:e031dad90de0404c19ff7b9ac820c4c2a4b98075f13e43dbe5266cd3e9929d60",
+        "bytes": 252597
+      },
+      {
+        "path": "backend/migrations/effect_classification_278_test.go",
+        "sha256": "sha256:1f2744d228d3ae813c602531500ec172c7a1c7581e6a0c0a25170596a91b926b",
+        "bytes": 9399
+      },
+      {
+        "path": "backend/migrations/effect_classification_278.go",
+        "sha256": "sha256:32d3d59578aa8f80be6ce808deb7b813d401347659c91e08a61992cab358a4ad",
+        "bytes": 8715
+      },
+      {
+        "path": "backend/migrations/effect_classification_285_manifest.json",
+        "sha256": "sha256:63389e35b5fc157ed6fa0793fe08dbb354e7e3022d52a26d90d0314f044b93bc",
+        "bytes": 76380
+      },
+      {
+        "path": "backend/migrations/effect_classification_285_test.go",
+        "sha256": "sha256:3cd689963e46159622a75adbe53c35e5eebe7fad893de20b7d2ea29c70e6ca4b",
+        "bytes": 7443
+      },
+      {
+        "path": "backend/migrations/effect_classification_285.go",
+        "sha256": "sha256:a3cfc0b36cd77c182284eb7f58ec83eea94f68e1d702741671cfd1779022a8e4",
+        "bytes": 5884
+      },
+      {
+        "path": "backend/migrations/eldritch_knight_casting_236.go",
+        "sha256": "sha256:05115069c5da23f74b4b6543a2585c19b51e0df712efc11e8a405ccfb795f1bc",
+        "bytes": 1752
+      },
+      {
+        "path": "backend/migrations/eldritch_knight_replacement_237.go",
+        "sha256": "sha256:ef7da8becbf64e62fa8bb942c642c6f4af12e3663bed0c39df8a749238676f80",
+        "bytes": 480
+      },
+      {
+        "path": "backend/migrations/entity_reference_coverage_284_test.go",
+        "sha256": "sha256:973391672735368d2c012f836d00cfbbe1e512fffd9d630292557b81b479dab1",
+        "bytes": 11102
+      },
+      {
+        "path": "backend/migrations/entity_reference_coverage_284.go",
+        "sha256": "sha256:5f02202e3a8f362a69d2059dc11b1917c81bf93cdd02e00968a87c6af11d6922",
+        "bytes": 1437
+      },
+      {
+        "path": "backend/migrations/entity_reference_coverage_284.sql",
+        "sha256": "sha256:25f628dc3837689ece3fef8d18a03f275fcd022fbf9ac009d108a932cbcf7234",
+        "bytes": 13386
+      },
+      {
+        "path": "backend/migrations/entity_reference_levels_279_test.go",
+        "sha256": "sha256:44154bbe5c799ccb79187a90165475288e66fe2363509c7a21dd4e1bc1c348b1",
+        "bytes": 2552
+      },
+      {
+        "path": "backend/migrations/entity_reference_levels_279.go",
+        "sha256": "sha256:936df0a2f27d2ec8b68b29a207e0a9845466a7349bcd2dde15bf934349c26066",
+        "bytes": 916
+      },
+      {
+        "path": "backend/migrations/entity_reference_levels_279.sql",
+        "sha256": "sha256:0f0346702a53ce1e87b8c22f3750b3ad8daceab92b2adcd123899a6201e02a8f",
+        "bytes": 1445
+      },
+      {
+        "path": "backend/migrations/entity_reference_registry_test.go",
+        "sha256": "sha256:97ac25d29c37eecd314ed0beefe0ca77e7b1104af4f4a71367c764d0a07eaf96",
+        "bytes": 1195
+      },
+      {
+        "path": "backend/migrations/entity_references_277_test.go",
+        "sha256": "sha256:c689ea02c92405cd61494c57defadfaa6ea2aa6547b0658fcbc0688b82212e8e",
+        "bytes": 19989
+      },
+      {
+        "path": "backend/migrations/entity_references_277.go",
+        "sha256": "sha256:3e8fa49a6beb806f701b99e0d61f07635ebe104b0a31ae5c6e6a4cf897350e1d",
+        "bytes": 1519
+      },
+      {
+        "path": "backend/migrations/entity_references_277.sql",
+        "sha256": "sha256:043d613a7aea94aa2444b46b1dafb5573c50a5e5e921bcbd5d33247649694d83",
+        "bytes": 16222
+      },
+      {
+        "path": "backend/migrations/entity_tags_258_seed.json",
+        "sha256": "sha256:afe1bec1adfda75c829c2fc085a376a15e6e9fe22845689fc8d19870c92e1d51",
+        "bytes": 5842
+      },
+      {
+        "path": "backend/migrations/entity_tags_258_test.go",
+        "sha256": "sha256:93e130cc2c7d17fc165917b4356e4f1db2292f30cbfca8ba0d30395387260cfd",
+        "bytes": 1959
+      },
+      {
+        "path": "backend/migrations/entity_tags_258.go",
+        "sha256": "sha256:c836c8a51db34a607b54e21cae25602e03f9bc33bad9943bf0fb5cbb175cee29",
+        "bytes": 7345
+      },
+      {
+        "path": "backend/migrations/fighter_style_replacement_241_test.go",
+        "sha256": "sha256:83e7617aed510abdb0bb0c352808d5dd6348919205f793085466de659044373b",
+        "bytes": 2383
+      },
+      {
+        "path": "backend/migrations/fighter_style_replacement_241.go",
+        "sha256": "sha256:1590a94239c4c726da5c25d02859248feb296c0ec8369202ecc2a5a60f032059",
+        "bytes": 1474
+      },
+      {
+        "path": "backend/migrations/fighter_tactical_mind_242_test.go",
+        "sha256": "sha256:9f3d3aa8b025a20a6f937f9c2b261d52b2819d9f24e3bdf9b2c0582ad9049b91",
+        "bytes": 2907
+      },
+      {
+        "path": "backend/migrations/fighter_tactical_mind_242.go",
+        "sha256": "sha256:1ca13cdd31e78b73c54d23280b7010a97c6f3f3888355675d7d46cd3b74c82ee",
+        "bytes": 1296
+      },
+      {
+        "path": "backend/migrations/fighter_tactical_shift_207.go",
+        "sha256": "sha256:60b2f9181c393bb631a13c4e3be0060ed6ab37696ed4c422be8aef18e16848b6",
+        "bytes": 1055
+      },
+      {
+        "path": "backend/migrations/fill_runtime_effect_icons_test.go",
+        "sha256": "sha256:eb07d0ed02b0ded81640df9201cabed64bf8abec15bd5d7814ece34108b8f48a",
+        "bytes": 580
+      },
+      {
+        "path": "backend/migrations/fill_runtime_effect_icons.go",
+        "sha256": "sha256:10410561c42279e159d58be1973fae4ed9366b54ceaf0cf750eed8b0c739a390",
+        "bytes": 1357
+      },
+      {
+        "path": "backend/migrations/frozen_catalogs_299_test.go",
+        "sha256": "sha256:66e4808fdac4fb4127259ac488c41ed93196370d3fb53bd0f86df087eb02c0c5",
+        "bytes": 1630
+      },
+      {
+        "path": "backend/migrations/frozen_catalogs_299.go",
+        "sha256": "sha256:a0a915749feaa3c14f2568e77d7127fb00104e04762549933eb0130291fb9887",
+        "bytes": 1814
+      },
+      {
+        "path": "backend/migrations/generic_spell_freeuses_297_manifest.json",
+        "sha256": "sha256:2926f0264534669439bfd8219fea445274d373667bca8b8819d920f1d3fb64a5",
+        "bytes": 301506
+      },
+      {
+        "path": "backend/migrations/generic_spell_freeuses_297_test.go",
+        "sha256": "sha256:496c4dbd13a25a6e02cd6591b1ac43a254c2973b1d0470ea98a7a143a6d2acf1",
+        "bytes": 11294
+      },
+      {
+        "path": "backend/migrations/generic_spell_freeuses_297.go",
+        "sha256": "sha256:a43f488b3a85e2d879cc154c0295c77dd838b3f964e5aa6fab9f6f9f8ed21224",
+        "bytes": 10987
+      },
+      {
+        "path": "backend/migrations/giant_wolf_spider_movement_246_test.go",
+        "sha256": "sha256:582f1e2b71ab056d94b9fe9574ca751535c69d16fe84d58efdfc2609befc88be",
+        "bytes": 2903
+      },
+      {
+        "path": "backend/migrations/giant_wolf_spider_movement_246.go",
+        "sha256": "sha256:8fb7a2f36508a6be89654af37f43bf09f7665cf7561ae9dffd2eafc563f9f4a3",
+        "bytes": 1881
+      },
+      {
+        "path": "backend/migrations/glossary_257_test.go",
+        "sha256": "sha256:3b66a52e40eb65ce0282f389a209b1f7f3166fc0d0b0ec5c897cfe04671f32d0",
+        "bytes": 1481
+      },
+      {
+        "path": "backend/migrations/glossary_257.go",
+        "sha256": "sha256:0a77c9fcbbb575388794a842cce69da16e7aec09604d46e1f53bfc3d62bb5973",
+        "bytes": 1142
+      },
+      {
+        "path": "backend/migrations/glossary_257.json",
+        "sha256": "sha256:acdc754b7a834695103d635feab62863dbb2d7297e8e9228b9b4fa5c9b267d34",
+        "bytes": 153910
+      },
+      {
+        "path": "backend/migrations/goblin_nimble_escape_245_test.go",
+        "sha256": "sha256:c025705c1fe01b15bf3c7fd4efe845f18abdc652977f86ad140fe13ef8cd4d2b",
+        "bytes": 3011
+      },
+      {
+        "path": "backend/migrations/goblin_nimble_escape_245.go",
+        "sha256": "sha256:2aceca7527df5d1b7c729e7d41ffe7023d2fc56054f72ba929829f1f9d9f2a7d",
+        "bytes": 5409
+      },
+      {
+        "path": "backend/migrations/harden_canonical_transport_test.go",
+        "sha256": "sha256:808956a92ab9b5158f269dc747a8d470b94b658909bd262bdb4a12cf93fb3961",
+        "bytes": 8505
+      },
+      {
+        "path": "backend/migrations/harden_canonical_transport.go",
+        "sha256": "sha256:03e175bf57ce9bb322473e26f29228e072fc7e347e9bbe83a5da489140ebc7ce",
+        "bytes": 10818
+      },
+      {
+        "path": "backend/migrations/harden_level_five_runtime_test.go",
+        "sha256": "sha256:e6f7cfe090fd448fbeac8d066b37ad270b185842a9100e3a3999d34253724e9e",
+        "bytes": 5651
+      },
+      {
+        "path": "backend/migrations/harden_level_five_runtime.go",
+        "sha256": "sha256:1278b50c618a840f9a4bdb0a38f3ec3027daae45b29c4ebe30a660ee254a0f24",
+        "bytes": 9605
+      },
+      {
+        "path": "backend/migrations/hide_action_244_test.go",
+        "sha256": "sha256:155f03836b2d3297d45e3a1232f2749b91dc8cf75ccff00207c94899fbc07c35",
+        "bytes": 3536
+      },
+      {
+        "path": "backend/migrations/hide_action_244.go",
+        "sha256": "sha256:2a59a677ff0838d8b10cfc8b3fae3d896ac65d002ba22a51fc6743093159bd20",
+        "bytes": 4406
+      },
+      {
+        "path": "backend/migrations/image_jobs_300.go",
+        "sha256": "sha256:36a1c567eee001cfbdc67bf9fd3caea300419fa02d60393a9f2d51d5d002db69",
+        "bytes": 1130
+      },
+      {
+        "path": "backend/migrations/inherit_lineage_source_test.go",
+        "sha256": "sha256:1b828be0e358b59e92fea3c66f07f3f92233e8e291d8ef5af19a4f9a2fd4ccf2",
+        "bytes": 3184
+      },
+      {
+        "path": "backend/migrations/inherit_lineage_source.go",
+        "sha256": "sha256:4b3ca345660087b83ce3135965acec6fc93b448b010969fb9f9d27e108b53d90",
+        "bytes": 771
+      },
+      {
+        "path": "backend/migrations/item_source_classification_262_test.go",
+        "sha256": "sha256:fc6e659d949752c9b5181c27ab41bbb4138aaeca331e08c4c0ed4e7bdf2c2944",
+        "bytes": 11048
+      },
+      {
+        "path": "backend/migrations/item_source_classification_262.go",
+        "sha256": "sha256:bd6ba27d4fedf355d676560eb48b32a90450959ca99fa1c7bc57406436478ab1",
+        "bytes": 5534
+      },
+      {
+        "path": "backend/migrations/lock_certified_content_mechanics_test.go",
+        "sha256": "sha256:45ff3b97b0951f3cf666c7c401fb97f75b74937aa23bdbd74426d1e2cd47ca95",
+        "bytes": 3347
+      },
+      {
+        "path": "backend/migrations/lock_certified_content_mechanics.go",
+        "sha256": "sha256:c3a6bf9fbc84d08894e968dbb5734c878fa07a76405e83edc889b27067c92233",
+        "bytes": 2189
+      },
+      {
+        "path": "backend/migrations/manual_content_review_274_test.go",
+        "sha256": "sha256:5dec28e949a858af7f35333576c618a5af91b60df1b7174e75765800ab16ba10",
+        "bytes": 4167
+      },
+      {
+        "path": "backend/migrations/manual_content_review_274.go",
+        "sha256": "sha256:777222763c50246a0311402e79532fcfd70f9e54d62af7b820feb6e9730acb40",
+        "bytes": 3344
+      },
+      {
+        "path": "backend/migrations/manual_content_review_status_277_test.go",
+        "sha256": "sha256:34e515b46e35731747460117fae20747b5ca96dfce2cfc8de43899756ebb870e",
+        "bytes": 4584
+      },
+      {
+        "path": "backend/migrations/manual_content_review_status_277.go",
+        "sha256": "sha256:01e82872331a96073e21ba3e4b1a8276da450bac74a23439e6792123a73e70b7",
+        "bytes": 1386
+      },
+      {
+        "path": "backend/migrations/martial_classes_256_test.go",
+        "sha256": "sha256:591b7ebb44c3733fc2e2af2fec0839af37ad560204000f9774f81a98cbe4f1fd",
+        "bytes": 1318
+      },
+      {
+        "path": "backend/migrations/martial_classes_256.go",
+        "sha256": "sha256:fd121e06f9c6895717c3e735f97ec1287446b4490c869d944d5fcb4faf224a97",
+        "bytes": 7028
+      },
+      {
+        "path": "backend/migrations/materialize_base_equipment_2024_test.go",
+        "sha256": "sha256:030515e523d772e9b9f98973514d59c3953351116e16f808d7a24edc378d10b8",
+        "bytes": 4832
+      },
+      {
+        "path": "backend/migrations/materialize_base_equipment_2024.go",
+        "sha256": "sha256:19f9cea41cd669bc3e640da7ed4c5b6a59d5c806942cd93f74e45f77b319340c",
+        "bytes": 30641
+      },
+      {
+        "path": "backend/migrations/materialize_combat_areas_test.go",
+        "sha256": "sha256:9c04e3594a1dfb55eea975de62eeb98955b2a8a9fb3acdfeadab1e811dd70d75",
+        "bytes": 1051
+      },
+      {
+        "path": "backend/migrations/materialize_combat_areas.go",
+        "sha256": "sha256:2ada3853ea60b971dfef6ffa0f7ed505cafb8b1c6db4616efc58a7008f2ae41a",
+        "bytes": 10770
+      },
+      {
+        "path": "backend/migrations/materialize_condition_library_icons_test.go",
+        "sha256": "sha256:8395a7bfe04175f22188461e787ae53048d8e9cbc8d6d48ae308c097c0a7d8f4",
+        "bytes": 980
+      },
+      {
+        "path": "backend/migrations/materialize_condition_library_icons.go",
+        "sha256": "sha256:60dbe78da6e6395e55aa5891a38d53079de4c0f788d1720bc73adbc8c748064f",
+        "bytes": 2100
+      },
+      {
+        "path": "backend/migrations/materialize_d20_interrupts_184_test.go",
+        "sha256": "sha256:a686b2c45367efb28a060e6fb04377f0603516ca105b6d2983463a46ba2e43de",
+        "bytes": 2190
+      },
+      {
+        "path": "backend/migrations/materialize_d20_interrupts_184.go",
+        "sha256": "sha256:5e1a1153f735b5bd53051d4e0d44b7129bd8169aa09569b08b3b084fbab60aa7",
+        "bytes": 3805
+      },
+      {
+        "path": "backend/migrations/materialize_general_feat_signatures_test.go",
+        "sha256": "sha256:f4792309259e92b99fd638ec58422e0b398b891f8c2f34a815d84b51f482a5cb",
+        "bytes": 3780
+      },
+      {
+        "path": "backend/migrations/materialize_general_feat_signatures.go",
+        "sha256": "sha256:9d5f1beefc845de608c7d673bd5f020979e8097d4721fc9b617b96cbfdaf7fa6",
+        "bytes": 21206
+      },
+      {
+        "path": "backend/migrations/materialize_general_spell_feat_signatures_test.go",
+        "sha256": "sha256:84a60dd11f4cc9529fd73b1731ac96e5769fe4e5f676e17cbde16229960b77ab",
+        "bytes": 5159
+      },
+      {
+        "path": "backend/migrations/materialize_general_spell_feat_signatures.go",
+        "sha256": "sha256:98f496c97454d416095b13352cc1476114b0a75e2f4cf62e0fa5ebe2201be3eb",
+        "bytes": 22118
+      },
+      {
+        "path": "backend/migrations/materialize_level_five_progression_test.go",
+        "sha256": "sha256:96990c9d1949a4c1dadfe45f48b52d91f00e5264c7814abe8ae440412623fcad",
+        "bytes": 11076
+      },
+      {
+        "path": "backend/migrations/materialize_level_five_progression.go",
+        "sha256": "sha256:090fe6093c0462b3a712f57c2d21438ac577427d909ac37b80efd0ada01b0582",
+        "bytes": 53160
+      },
+      {
+        "path": "backend/migrations/materialize_level_five_spells_test.go",
+        "sha256": "sha256:ba902a719661dd071d4d5b28ffcd61f4a1530a9b1802c981664abf3122c4f514",
+        "bytes": 19229
+      },
+      {
+        "path": "backend/migrations/materialize_level_five_spells.go",
+        "sha256": "sha256:afa7e79ebe51702223c888ee2c9f4106b604d498b2441f9a8569deeb36ec5e39",
+        "bytes": 47969
+      },
+      {
+        "path": "backend/migrations/materialize_level_four_general_feats_test.go",
+        "sha256": "sha256:eea7389cc5035c52d5496c631fa739172fb1f90fc045044ac1eac31cb6f05548",
+        "bytes": 1592
+      },
+      {
+        "path": "backend/migrations/materialize_level_four_general_feats.go",
+        "sha256": "sha256:83dbbb149bbe9a00d59a1a65735d8cb59c30a3228e1b1fda723b5135b6bbb335",
+        "bytes": 7013
+      },
+      {
+        "path": "backend/migrations/materialize_level_three_core_test.go",
+        "sha256": "sha256:eba7e4087d3d83bed6212dfac77f84e7a903939d269a9964d2c59422743f22f3",
+        "bytes": 1811
+      },
+      {
+        "path": "backend/migrations/materialize_level_three_core.go",
+        "sha256": "sha256:2da40e3c2afb6af14ac28d3fa896b09ca8bb5d0e6270d540e1fd63a53f6968a0",
+        "bytes": 13004
+      },
+      {
+        "path": "backend/migrations/materialize_level_two_class_features_test.go",
+        "sha256": "sha256:fd7dfbb0b8cbd50094cdd42a9ca504a8dc4bd8a62d10734ba34c05e5300ae89d",
+        "bytes": 645
+      },
+      {
+        "path": "backend/migrations/materialize_level_two_class_features.go",
+        "sha256": "sha256:ec9b716a648026e29add799eb95cdc19b73f14506a7295a3fb007ff870a877f8",
+        "bytes": 33820
+      },
+      {
+        "path": "backend/migrations/materialize_mini_mvp_runtime_effects_test.go",
+        "sha256": "sha256:06212d639ad46fbc78f3fb77bf2dd8344c5d0961e952982dbeefefd5dadd5c1c",
+        "bytes": 3169
+      },
+      {
+        "path": "backend/migrations/materialize_mini_mvp_runtime_effects.go",
+        "sha256": "sha256:edaee7515bce5afcc2bcb4a67f07e4b1459f6bf5194d460ecf512c437a543ae7",
+        "bytes": 11969
+      },
+      {
+        "path": "backend/migrations/materialize_mobile_emanations_196_test.go",
+        "sha256": "sha256:ddeab27bc02896057fcc61ac6edbf782477ab6fc0fb97af3159d25d9017a675a",
+        "bytes": 1939
+      },
+      {
+        "path": "backend/migrations/materialize_mobile_emanations_196.go",
+        "sha256": "sha256:62df766901a00b6d12e6a368ad14eac2ed336d727d3c73f9d058874ac405d430",
+        "bytes": 4828
+      },
+      {
+        "path": "backend/migrations/materialize_owned_summons_195_test.go",
+        "sha256": "sha256:cb33a829d11ef9bc224856a1db013b701357152d2b66926a39661a7c3121ed36",
+        "bytes": 1716
+      },
+      {
+        "path": "backend/migrations/materialize_owned_summons_195.go",
+        "sha256": "sha256:e64cc293eafcc1ae251269a83adabd4543cefa7d2fe33dd891a70caad7539242",
+        "bytes": 3750
+      },
+      {
+        "path": "backend/migrations/materialize_polymorphed_condition_test.go",
+        "sha256": "sha256:fd8433670f57a781270482648403b85eed93694ade0e199b82b36f1df53fafe8",
+        "bytes": 1115
+      },
+      {
+        "path": "backend/migrations/materialize_polymorphed_condition.go",
+        "sha256": "sha256:4d7b749bd05fc16b8544ca0268b1531769ef104bfa91be42c7b83c05e4b93a6a",
+        "bytes": 4301
+      },
+      {
+        "path": "backend/migrations/materialize_remaining_level_five_general_feats_187_test.go",
+        "sha256": "sha256:4669ad8bec9cb7ca9538367b979420d99b7f489a9a726c8375401119a436a3e9",
+        "bytes": 3730
+      },
+      {
+        "path": "backend/migrations/materialize_remaining_level_five_general_feats_187.go",
+        "sha256": "sha256:d8162ac75fa3a6d81e4ab3dc18279a4200d0ce924f30dc70775ef04a6529a079",
+        "bytes": 7479
+      },
+      {
+        "path": "backend/migrations/materialize_roguelike_monsters_199_test.go",
+        "sha256": "sha256:6a52406310c22c8476c1a5ac7e8872164ada6045308d7e0c129312a18ecf36a3",
+        "bytes": 644
+      },
+      {
+        "path": "backend/migrations/materialize_roguelike_monsters_199.go",
+        "sha256": "sha256:ed715db7342830dbd3e0e4c567eb3dfb6d23c7b81d72005879fac40eeea4939f",
+        "bytes": 19664
+      },
+      {
+        "path": "backend/migrations/materialize_runtime_boons_and_acid_splash_area_test.go",
+        "sha256": "sha256:047efeab41ccec1e7893c9513b82570467ebe54e6a5c93f343a1b7d332cc0265",
+        "bytes": 1633
+      },
+      {
+        "path": "backend/migrations/materialize_runtime_boons_and_acid_splash_area.go",
+        "sha256": "sha256:bbcd7b12eb01c00107fbda26640c98bf7974fdc650fa10f08e12d326f8c249ed",
+        "bytes": 7542
+      },
+      {
+        "path": "backend/migrations/materialize_warlock_invocations_180_test.go",
+        "sha256": "sha256:0faea9f5d81be2da60e0111ad23c01f2b16d4e60b47a05769bc9180d0edb8512",
+        "bytes": 2314
+      },
+      {
+        "path": "backend/migrations/materialize_warlock_invocations_180.go",
+        "sha256": "sha256:9d15cc7262a0eced76f7ca933e2242a571f57e21d008f29da283d032d07dc71c",
+        "bytes": 9262
+      },
+      {
+        "path": "backend/migrations/materialize_wizard_memorize_spell_188_test.go",
+        "sha256": "sha256:02153ac9a3ecdd241250917c791103f1fe87c20c753cddc3be0ee9b7f297c7c7",
+        "bytes": 2056
+      },
+      {
+        "path": "backend/migrations/materialize_wizard_memorize_spell_188.go",
+        "sha256": "sha256:90d58ce705fb486e3513b45a20ad3f9afd3efc4641b92cc1c095a57b7a75571d",
+        "bytes": 1940
+      },
+      {
+        "path": "backend/migrations/merchant_copper_259_test.go",
+        "sha256": "sha256:99b2eacd73d0f2bf4173543dceb59665bc2a151d6d86ebbf0e49d4c6a6b749a9",
+        "bytes": 1986
+      },
+      {
+        "path": "backend/migrations/merchant_copper_259.go",
+        "sha256": "sha256:9de38a0577e7949be395110af9bf0c0e9a608feb55c95e5eece6a584b81205a2",
+        "bytes": 2267
+      },
+      {
+        "path": "backend/migrations/migration_lock_integration_test.go",
+        "sha256": "sha256:54e561d8bc520e99f3c491e779ab06b26d5bd9af22a49ebd1a70cf596e61a13e",
+        "bytes": 2017
+      },
+      {
+        "path": "backend/migrations/migration.go",
+        "sha256": "sha256:6f2918caca88354e6142e36957659a3d5b386b062e98fd082de265703a154589",
+        "bytes": 4351
+      },
+      {
+        "path": "backend/migrations/migrations.go",
+        "sha256": "sha256:81872256f8352e4156e4a02447b752711dedcab540cedcc387a8473543c56b51",
+        "bytes": 231354
+      },
+      {
+        "path": "backend/migrations/monster_weapon_loadouts_247_test.go",
+        "sha256": "sha256:8c255580f9c742de21e167eb62e8b0f0bcc5e5d0fd1a6b8bee790d8066848d9c",
+        "bytes": 4088
+      },
+      {
+        "path": "backend/migrations/monster_weapon_loadouts_247.go",
+        "sha256": "sha256:a0ea0d2df6ef4a4ba9ea558ff77a4dad58d50cbed0ed6eb66125f8e81a31ff81",
+        "bytes": 3987
+      },
+      {
+        "path": "backend/migrations/normalize_goliath_ancestry.go",
+        "sha256": "sha256:cf5a0542e01dd7c7fdf3a71c2b7a2492aa5670ff6f48dd4fe9c36dd2aed28ab1",
+        "bytes": 6912
+      },
+      {
+        "path": "backend/migrations/normalize_live_happy_path_content_test.go",
+        "sha256": "sha256:d7a555f8d19be971c189799c6fdb9fe99aea180fa644c04437d6e7579152815c",
+        "bytes": 5020
+      },
+      {
+        "path": "backend/migrations/normalize_live_happy_path_content.go",
+        "sha256": "sha256:945a716ed35b4031d9ef3961a83aa239d8ea01e18e1aadc68647169b77ebb6bb",
+        "bytes": 10213
+      },
+      {
+        "path": "backend/migrations/normalize_spell_targeting_ranges_test.go",
+        "sha256": "sha256:8c7b90200a6750174d1e4338b01af917e080205858bdaa4ac2e38553e96a5dea",
+        "bytes": 1584
+      },
+      {
+        "path": "backend/migrations/normalize_spell_targeting_ranges.go",
+        "sha256": "sha256:2c40c64f63ba736fd5703120267e4a7167847a39a2bab4e7f2cd642fc094a444",
+        "bytes": 4891
+      },
+      {
+        "path": "backend/migrations/oauth_263.go",
+        "sha256": "sha256:b1223b95e25110c402bfb6418148335e0159d1996589962ba4cfd612de0bc18b",
+        "bytes": 1927
+      },
+      {
+        "path": "backend/migrations/owned_item_grants_265_test.go",
+        "sha256": "sha256:0b1562636f4d92095f3a0fb9fde401c038aa85fdf99d7a069757623546c72728",
+        "bytes": 3662
+      },
+      {
+        "path": "backend/migrations/owned_item_grants_265.go",
+        "sha256": "sha256:a7476490a57283a638d014ffffc2221f4e9e8f836ef28e9052287f535609e23c",
+        "bytes": 2964
+      },
+      {
+        "path": "backend/migrations/paper_document_trash_266_test.go",
+        "sha256": "sha256:b6bb6439212a0d340c692207130afef250214c982427e14fc153b6822e9ec964",
+        "bytes": 914
+      },
+      {
+        "path": "backend/migrations/paper_document_trash_266.go",
+        "sha256": "sha256:edd9e9541c9052741a25648176284f5d12bd2f47f0540074d5be2f2ecae8833a",
+        "bytes": 484
+      },
+      {
+        "path": "backend/migrations/paper_documents_264.go",
+        "sha256": "sha256:34311e2a0ce693c87de9499c1f9cd26ea4e6d701ac93c781c518c828b5df1ed8",
+        "bytes": 792
+      },
+      {
+        "path": "backend/migrations/party_potion_targets_255.go",
+        "sha256": "sha256:ace2cedb6afe5848f6438b487862453e6280fec4d60e8aa13a79cc909f407071",
+        "bytes": 997
+      },
+      {
+        "path": "backend/migrations/passive_presentations_253.go",
+        "sha256": "sha256:410f5da8848b48fdf59ac87d13be010aad33b2cdcd6b556478d52eb91a94e58b",
+        "bytes": 1075
+      },
+      {
+        "path": "backend/migrations/postgres_integration_test.go",
+        "sha256": "sha256:fcfd4d2e46f55208270eefa9ff9788a9fce077c05c5032b7018a3a1e919b1d8c",
+        "bytes": 2052
+      },
+      {
+        "path": "backend/migrations/presentation_catalog_307_manifest.json",
+        "sha256": "sha256:ce0cb53a2f2c054412755a5b1a5a9c50ff8cf7b8290dad2ba9442a06ec778a8e",
+        "bytes": 518010
+      },
+      {
+        "path": "backend/migrations/psi_warrior_foundations_230.go",
+        "sha256": "sha256:81703c017b7862f1082c0ea50e26fd61129e663ba59ebc09f9bc42b25b6c0e26",
+        "bytes": 3432
+      },
+      {
+        "path": "backend/migrations/psi_warrior_hands_235.go",
+        "sha256": "sha256:b313b0cf97feb77aad5fb99f1e91cb9bf9148c60c577940b5ce1f56be17e0f74",
+        "bytes": 833
+      },
+      {
+        "path": "backend/migrations/psi_warrior_movement_233.go",
+        "sha256": "sha256:7f1ddcf688166a6cafe6521607185808dcd0b09183334d4985639fd2cbb39395",
+        "bytes": 4090
+      },
+      {
+        "path": "backend/migrations/psi_warrior_objects_234.go",
+        "sha256": "sha256:2b02009e62d8d5eb0b3749bd55695fb3878c371056eaed8621137ec792338b53",
+        "bytes": 1023
+      },
+      {
+        "path": "backend/migrations/psi_warrior_protective_field_232.go",
+        "sha256": "sha256:d760c6c30d3313484aca4051689985695ffb1c215bae4e21954a9d5dd71568a3",
+        "bytes": 2181
+      },
+      {
+        "path": "backend/migrations/psi_warrior_strike_231.go",
+        "sha256": "sha256:9716cb07cf9d649ed945d5a50a13a32d1362ee771200528479a3d5a0ac2ed0a4",
+        "bytes": 2291
+      },
+      {
+        "path": "backend/migrations/readable_catalog_270.go",
+        "sha256": "sha256:c0886d64d6190f5104ae6acddead46f6d9e19ff13663f6ea24fd549039174de9",
+        "bytes": 2581
+      },
+      {
+        "path": "backend/migrations/readable_catalog_270.json",
+        "sha256": "sha256:c7c75a8b7357a97f142d5157e59a05228a3172e921eb6f9779cb80c29bd02bf6",
+        "bytes": 2546745
+      },
+      {
+        "path": "backend/migrations/readable_catalog_271.go",
+        "sha256": "sha256:5b0ad0cd616747533cb0bebdc0844e652a94ad9ed93529a85b50021bdd34a304",
+        "bytes": 384
+      },
+      {
+        "path": "backend/migrations/readable_catalog_271.json",
+        "sha256": "sha256:e90807556ace87db3e6c2999e1dfe1c39a6094d8bc3c2e139215d0dbfcf744b3",
+        "bytes": 383370
+      },
+      {
+        "path": "backend/migrations/readable_catalog_272.go",
+        "sha256": "sha256:f45ff911e96f87fbc5c124be11557064a52741dd7d18395df0564369a96e86c1",
+        "bytes": 398
+      },
+      {
+        "path": "backend/migrations/readable_catalog_272.json",
+        "sha256": "sha256:c7ac7389113b1328528ccce11618321a03895581b1c35f238cbdc0da9925b78e",
+        "bytes": 244671
+      },
+      {
+        "path": "backend/migrations/reapply_level_two_runtime_contracts_test.go",
+        "sha256": "sha256:76b12b8c7a377a2d6c8d8e41911627a1ae1fe76b1a3889eee4038fe08393eda5",
+        "bytes": 1143
+      },
+      {
+        "path": "backend/migrations/reapply_level_two_runtime_contracts.go",
+        "sha256": "sha256:c1c77eda2f8bd7d327d25dd950dcd512b526e65f02750357db709bedd471f309",
+        "bytes": 667
+      },
+      {
+        "path": "backend/migrations/refresh_transitive_micro_micro_certifications.go",
+        "sha256": "sha256:72299a70edab96d12cab0c1275474955b9f0811503a94a75836e45da10e202a2",
+        "bytes": 2903
+      },
+      {
+        "path": "backend/migrations/release_additive_test.go",
+        "sha256": "sha256:fadd210ec9f315b96bb22db081d0406dd2033800cad889c3e8a4777a5bbbb9db",
+        "bytes": 19129
+      },
+      {
+        "path": "backend/migrations/release_additive.go",
+        "sha256": "sha256:bbb3c3bf2994e5484f61a9e3388032f90ff603b3b046919d197c4d692e1e50ab",
+        "bytes": 15973
+      },
+      {
+        "path": "backend/migrations/release_baseline_test.go",
+        "sha256": "sha256:9b9f81dee2e3e2d6dcf6556404ee62cf5c241a51fe8ea70bde43cf9df3988ff0",
+        "bytes": 3194
+      },
+      {
+        "path": "backend/migrations/release_legacy_test.go",
+        "sha256": "sha256:1abbdcb0e7582a790d19f4471ac62f46916f271011bf55c8e440a3263d269120",
+        "bytes": 7132
+      },
+      {
+        "path": "backend/migrations/release_retirement_execute_test.go",
+        "sha256": "sha256:659c30856c781241f2ee80c4ca35fb2da8d719053cb1a95502bf6cb7e85ba732",
+        "bytes": 1923
+      },
+      {
+        "path": "backend/migrations/release_retirement_execute.go",
+        "sha256": "sha256:4ccc09c08b38561d3ff9a0da9154ccb8bb84e505923bbebf3931eb2bf4159bc5",
+        "bytes": 10826
+      },
+      {
+        "path": "backend/migrations/release_retirement_execution_integration_test.go",
+        "sha256": "sha256:c562b03fac781640802c0acbf3dad1a29f91ee981cb4ae15904062522b799563",
+        "bytes": 14006
+      },
+      {
+        "path": "backend/migrations/release_retirement_test.go",
+        "sha256": "sha256:a4cf3f228fdfb8b7f8d7355af8714d416a4b71b3c9d313809cb26067715f0118",
+        "bytes": 7729
+      },
+      {
+        "path": "backend/migrations/release_retirement.go",
+        "sha256": "sha256:4b005eda783bb7db1f24aa773c60d0a4170ba91a68d4bb7640d87cabaead5149",
+        "bytes": 10890
+      },
+      {
+        "path": "backend/migrations/release_schema_proof.go",
+        "sha256": "sha256:08208deef7e9a6fd99aa4a49d4b0c78f04bda09abf4ef7f4587e9e387d445a80",
+        "bytes": 8685
+      },
+      {
+        "path": "backend/migrations/repair_active_action_targeting_test.go",
+        "sha256": "sha256:0cecf1be5ed15038c95d1eb53b139caa6d624316d568e58f4634d8e2dfc430c4",
+        "bytes": 7308
+      },
+      {
+        "path": "backend/migrations/repair_active_action_targeting.go",
+        "sha256": "sha256:e3debab15b6cbb152040d3a9f8c7e612a8f9a44d9279aadccbc51fd1a4349c1a",
+        "bytes": 9251
+      },
+      {
+        "path": "backend/migrations/repair_barbarian_rage_stacking_test.go",
+        "sha256": "sha256:93a5f0d35d2bd48b0bd863ddf9901fe8310b9fb3a650827f32b9ca8e6308a593",
+        "bytes": 2191
+      },
+      {
+        "path": "backend/migrations/repair_barbarian_rage_stacking.go",
+        "sha256": "sha256:a45c71c5fa7ce92451e95d3ef0daa0895d5863c6662cac0b4407a726cc0aef4a",
+        "bytes": 3213
+      },
+      {
+        "path": "backend/migrations/repair_bard_spellcasting_contract_test.go",
+        "sha256": "sha256:23ebdc03f1bde3664dd54382af757f54e3050fd13f2cc788e9e3f1976af17d89",
+        "bytes": 4228
+      },
+      {
+        "path": "backend/migrations/repair_bard_spellcasting_contract.go",
+        "sha256": "sha256:24a3b0f3ee4bcca256d26ad8d262b97800a8ade57ed6458a2cb005b25717f5ce",
+        "bytes": 7913
+      },
+      {
+        "path": "backend/migrations/repair_bardic_inspiration_boon_contract_test.go",
+        "sha256": "sha256:ab359e5b6a650f476f04cba2e7ff605034adeff503acdd90aed0ea945b559a18",
+        "bytes": 4162
+      },
+      {
+        "path": "backend/migrations/repair_bardic_inspiration_boon_contract.go",
+        "sha256": "sha256:a7302031eac73d433e53b46e5a0e90edc016d8ef0e8cba9480937dbb9e3659ac",
+        "bytes": 6997
+      },
+      {
+        "path": "backend/migrations/repair_base_equipment_descriptions.go",
+        "sha256": "sha256:211591e77aee9a8a4fe1389361d806c651375fec106f5a04e1f8923c88a111b0",
+        "bytes": 1649
+      },
+      {
+        "path": "backend/migrations/repair_base_equipment_healers_kit_ownership.go",
+        "sha256": "sha256:7f7b704c4bb208603ef4475698a15b4c38361d99033d1db3d5851788ad3b4f5f",
+        "bytes": 256
+      },
+      {
+        "path": "backend/migrations/repair_base_equipment_healers_kit_targeting.go",
+        "sha256": "sha256:a3f66ce4ddd2dee89ee4d73abcdf56fec228c24648356340f89559b4ee73799b",
+        "bytes": 256
+      },
+      {
+        "path": "backend/migrations/repair_base_equipment_runtime.go",
+        "sha256": "sha256:46c1f85a4a61aac6e3e2752a5d5a3abe7816d210f231516895a6f277496713b3",
+        "bytes": 1084
+      },
+      {
+        "path": "backend/migrations/repair_base_equipment_sheet_utilities.go",
+        "sha256": "sha256:f6a6f0f72ddf115860b4bc31e93ea96e84b17529b5f0743623b159b19da29526",
+        "bytes": 238
+      },
+      {
+        "path": "backend/migrations/repair_class_level_five_integrity_185_test.go",
+        "sha256": "sha256:68c496a90c855d25f2f74e49a5e7682f10fdc9d3f42653619353014ecd216edb",
+        "bytes": 3625
+      },
+      {
+        "path": "backend/migrations/repair_class_level_five_integrity_185.go",
+        "sha256": "sha256:62c8e52601f74987985eaf45389516b10303afb1a648f6e65fa52cb25cffc629",
+        "bytes": 9530
+      },
+      {
+        "path": "backend/migrations/repair_class_starting_equipment_references_test.go",
+        "sha256": "sha256:38cdffcb31e2da641d3d4b25921ccdb13f5cfe4935e0286587ff6d887a278d4c",
+        "bytes": 11306
+      },
+      {
+        "path": "backend/migrations/repair_class_starting_equipment_references.go",
+        "sha256": "sha256:3687a21c90f9f9b9a64f1cf68f15b9fc98ca1661ec2f18256edd8de69dc19822",
+        "bytes": 11096
+      },
+      {
+        "path": "backend/migrations/repair_cloud_goliath_teleport_test.go",
+        "sha256": "sha256:53920d97f970d37548bfeda5f6be1089ed5aa00083a51f8ba7ffbe6bd61b9125",
+        "bytes": 2366
+      },
+      {
+        "path": "backend/migrations/repair_cloud_goliath_teleport.go",
+        "sha256": "sha256:bdf9f8200f3067aeeb6a18f7906885e43bac45af94dc4ce445a59177d80fabdf",
+        "bytes": 3045
+      },
+      {
+        "path": "backend/migrations/repair_content_mechanics_test.go",
+        "sha256": "sha256:a9ff9623425665bbc0d316aac4a5e92356c0a889dd8de31314f268a03ef22c33",
+        "bytes": 1260
+      },
+      {
+        "path": "backend/migrations/repair_content_mechanics.go",
+        "sha256": "sha256:068eac09b25855c229f7afd87fa2baa5202734bc34cc093e1553d7d03228550c",
+        "bytes": 4914
+      },
+      {
+        "path": "backend/migrations/repair_crafter_in_play_choice_test.go",
+        "sha256": "sha256:7b4cb49393100bcc9e477037d062cbdf4299d54720cddd89f2ae2ed2150b5861",
+        "bytes": 1083
+      },
+      {
+        "path": "backend/migrations/repair_crafter_in_play_choice.go",
+        "sha256": "sha256:560f4b542340a3b0a57d363fdfa1b1710b8ef9c3cc74ac56f154d23d987fea13",
+        "bytes": 1469
+      },
+      {
+        "path": "backend/migrations/repair_draconic_sorcery_spell_ability_193_test.go",
+        "sha256": "sha256:86873478a07beb20c3a0087bbce2b272e6469dcef8d9674d0dbba7d0a839b6bb",
+        "bytes": 1183
+      },
+      {
+        "path": "backend/migrations/repair_draconic_sorcery_spell_ability_193.go",
+        "sha256": "sha256:0de9d5ea46ec0db4e0266b7b51a833588dcf665594699beaa1356138a2529d8d",
+        "bytes": 2539
+      },
+      {
+        "path": "backend/migrations/repair_fire_bolt_upcast_description_test.go",
+        "sha256": "sha256:4a1c6ba6e425b186eadaa4dc8524dc7f86e7a780de41e06f124d8235e83c0098",
+        "bytes": 3363
+      },
+      {
+        "path": "backend/migrations/repair_fire_bolt_upcast_description.go",
+        "sha256": "sha256:7a4bc946191afa10ad6a66cd349b2bf4ab171153984e34946abf6fc808947ddc",
+        "bytes": 5282
+      },
+      {
+        "path": "backend/migrations/repair_friends_mind_sliver_cantrips_test.go",
+        "sha256": "sha256:17b6704a5fbc8abaa24e766b288ad1ddd9eb2b912ab5211c9da18df79b731a22",
+        "bytes": 2810
+      },
+      {
+        "path": "backend/migrations/repair_friends_mind_sliver_cantrips.go",
+        "sha256": "sha256:2adc1845a65fb655c87cde1bd5abc29fabb803eb3df120c1fb300150fb509e55",
+        "bytes": 4547
+      },
+      {
+        "path": "backend/migrations/repair_general_feat_action_payloads_175_test.go",
+        "sha256": "sha256:5586c923efb93c2e22ae0e20d1ac77e869fec12dc031d38b569d021832caeab4",
+        "bytes": 244
+      },
+      {
+        "path": "backend/migrations/repair_general_feat_action_payloads_175.go",
+        "sha256": "sha256:d7d3106adb7e6ca73a2b146c202a806bebf7996d58a65d0d5adaabfca20ba883",
+        "bytes": 389
+      },
+      {
+        "path": "backend/migrations/repair_general_feat_choice_integrity_178_test.go",
+        "sha256": "sha256:f0bd8d8677fa1cfa43932900bd3007562eeac5312bad54e0c5b78b2d4e8292d2",
+        "bytes": 2501
+      },
+      {
+        "path": "backend/migrations/repair_general_feat_choice_integrity_178.go",
+        "sha256": "sha256:741178800263b22032aa7600b5cff59b9bfeede9c0cd186158ad6e0fe085983c",
+        "bytes": 5092
+      },
+      {
+        "path": "backend/migrations/repair_general_feat_runtime_integrity_182_test.go",
+        "sha256": "sha256:4eb040d9dbe64bc93f3dac8569751aa8f780bd95eaa6477d3de0d53f11c78bf8",
+        "bytes": 7206
+      },
+      {
+        "path": "backend/migrations/repair_general_feat_runtime_integrity_182.go",
+        "sha256": "sha256:23ae0c92a5c36bc448d389ddee9c9b25f6776e562572199a067743034741fee1",
+        "bytes": 23828
+      },
+      {
+        "path": "backend/migrations/repair_goliath_reaction_authority_test.go",
+        "sha256": "sha256:c7e0782c22ecef314d6f7f099053d71d703b7336c036394e1488e8a4c88fdfd2",
+        "bytes": 4589
+      },
+      {
+        "path": "backend/migrations/repair_goliath_reaction_authority.go",
+        "sha256": "sha256:e9b456138b2cd8b90fa1a2a281cdf95de9d159fa20e6ab012a591e1d72d8c7bf",
+        "bytes": 5411
+      },
+      {
+        "path": "backend/migrations/repair_goliath_stone_targeting_contract_test.go",
+        "sha256": "sha256:49b4bad628c056e0349e45b384df3999731757527c818797fa1b7424b36a8284",
+        "bytes": 2278
+      },
+      {
+        "path": "backend/migrations/repair_goliath_stone_targeting_contract.go",
+        "sha256": "sha256:bbb746cdc8fc55c538fe0910db6161e39d96f8cd3022c65cab26b580f57ac2d8",
+        "bytes": 2008
+      },
+      {
+        "path": "backend/migrations/repair_half_caster_spellcasting_contract_test.go",
+        "sha256": "sha256:3fcedfac737dc7235ca9c14414a6c78cdb1bdc910c15ac95d8e85f8f0d80633e",
+        "bytes": 10191
+      },
+      {
+        "path": "backend/migrations/repair_half_caster_spellcasting_contract.go",
+        "sha256": "sha256:fb0f207af4057c3d2dbe9ea429155c249d30a049e4a0dfa46f744c642e2ae078",
+        "bytes": 10009
+      },
+      {
+        "path": "backend/migrations/repair_help_action_advantage_test.go",
+        "sha256": "sha256:5de8dfa8134c0f0c7e741cb608b65da42c66ca34cd4b40b65ed37b7c524a15fe",
+        "bytes": 1008
+      },
+      {
+        "path": "backend/migrations/repair_help_action_advantage.go",
+        "sha256": "sha256:2199d70515e4e78cf138c4ea36336c49ca0e895c7f9da40084d5f40e2a0026a0",
+        "bytes": 2607
+      },
+      {
+        "path": "backend/migrations/repair_level_five_base_progression_179_test.go",
+        "sha256": "sha256:2a10f77601678a3112c0bd88498ef39ce0757b4a001d78a13cbcd79a398b8509",
+        "bytes": 3339
+      },
+      {
+        "path": "backend/migrations/repair_level_five_base_progression_179.go",
+        "sha256": "sha256:14c9c4d1cfc17a44b45d284a0fcc840c9d573f65fca8c9c3b9fecd3aed59ee07",
+        "bytes": 8968
+      },
+      {
+        "path": "backend/migrations/repair_level_five_spell_area_runtime_191_test.go",
+        "sha256": "sha256:cd433c5ad8540ce9e275682c5e38fa85fa2bf94061bccc6c2cac8f0e1e0d23f5",
+        "bytes": 1222
+      },
+      {
+        "path": "backend/migrations/repair_level_five_spell_area_runtime_191.go",
+        "sha256": "sha256:b2372e0750a87bfc342cec22b262098cf23bd53b25a83702cb16ecf75fe59061",
+        "bytes": 4190
+      },
+      {
+        "path": "backend/migrations/repair_level_five_spell_interactions_192_test.go",
+        "sha256": "sha256:5c77de46fa6eedf2a7a38187f12b8ba2f9a923778a5b912fc03c354f66788837",
+        "bytes": 4101
+      },
+      {
+        "path": "backend/migrations/repair_level_five_spell_interactions_192.go",
+        "sha256": "sha256:7b805ba7608b282e683056e3bc88fa6361480b28b60915b4931514c192315193",
+        "bytes": 9844
+      },
+      {
+        "path": "backend/migrations/repair_level_five_spell_targeting_186_test.go",
+        "sha256": "sha256:6e89b1fe652f413523bf73250f7075fa6c9994c6561690afb6cb9f86d251df3a",
+        "bytes": 9016
+      },
+      {
+        "path": "backend/migrations/repair_level_five_spell_targeting_186.go",
+        "sha256": "sha256:327a44ac9194aeb4b77e60c8b1e0b8b440836176b30012e3e0d814d061c584a7",
+        "bytes": 21034
+      },
+      {
+        "path": "backend/migrations/repair_level_five_strict_conditions_177_test.go",
+        "sha256": "sha256:f55d0092b95f406d5ed078882f578b5fb0efb1e1dfea78c8aa6756667e874978",
+        "bytes": 6047
+      },
+      {
+        "path": "backend/migrations/repair_level_five_strict_conditions_177.go",
+        "sha256": "sha256:7ad8ca6c64d76a3442f1b6b73f332e53476f5f9874d127fe5df8b6ba77d95d20",
+        "bytes": 8322
+      },
+      {
+        "path": "backend/migrations/repair_level_five_subclass_actions_181_test.go",
+        "sha256": "sha256:1260c647bc6541e95a96c406de75383398bdf5b8bd95372a4dd7d006b6d2f81e",
+        "bytes": 6620
+      },
+      {
+        "path": "backend/migrations/repair_level_five_subclass_actions_181.go",
+        "sha256": "sha256:6612a938453c09e8fd5590810841b527c879245f36387df4a0ad606bf7101b55",
+        "bytes": 21869
+      },
+      {
+        "path": "backend/migrations/repair_level_one_monk_runtime_contracts_test.go",
+        "sha256": "sha256:7db551f95042c490d573da7d48f46176854240bb161a6f0f867ab88667c31a9e",
+        "bytes": 3558
+      },
+      {
+        "path": "backend/migrations/repair_level_one_monk_runtime_contracts.go",
+        "sha256": "sha256:2fc68a65488548a6bc79561d3b884b68d9f6d16ab4700d0646948f2a206f20ad",
+        "bytes": 7836
+      },
+      {
+        "path": "backend/migrations/repair_level_one_species_runtime_contracts_test.go",
+        "sha256": "sha256:aae17596da2093a788ef084e94e7a536396d724edb55c8c9eb7570643824878d",
+        "bytes": 2684
+      },
+      {
+        "path": "backend/migrations/repair_level_one_species_runtime_contracts.go",
+        "sha256": "sha256:d8918d661bf4aed2d31f6691ee95bbaef6fcdc1bbea347a7ed9bc5db0264c711",
+        "bytes": 5603
+      },
+      {
+        "path": "backend/migrations/repair_level_two_actor_targeting.go",
+        "sha256": "sha256:37e33e8f61d90e57a476d6b52b5f90008dc8361bac5be9b132e40885903e1844",
+        "bytes": 1193
+      },
+      {
+        "path": "backend/migrations/repair_level_two_runtime_contracts_test.go",
+        "sha256": "sha256:975b6aaa610a355a027deed4be0ad0b875d0cb886b36f76232555905b6700a83",
+        "bytes": 1341
+      },
+      {
+        "path": "backend/migrations/repair_level_two_runtime_contracts.go",
+        "sha256": "sha256:c9d49e486d3d7391a9750cead598b564f3dabb8a64b00834700bb7d3c1528cfd",
+        "bytes": 30738
+      },
+      {
+        "path": "backend/migrations/repair_live_mvp_content_contracts_test.go",
+        "sha256": "sha256:6da3a2e5549f7cb5ab73843e97b039c43cd00b1bec1fca13b60b099026313a03",
+        "bytes": 5117
+      },
+      {
+        "path": "backend/migrations/repair_live_mvp_content_contracts.go",
+        "sha256": "sha256:fbc70fcf5cd9b694683117c2d9df5865edc681a3f2ac638ee5ca169e3dff9ed0",
+        "bytes": 4063
+      },
+      {
+        "path": "backend/migrations/repair_mage_hand_control_narrative_test.go",
+        "sha256": "sha256:9dbe2c38bddd4b66e334b599ab0caef9724dca8ad42b075f14b579902ebad458",
+        "bytes": 2581
+      },
+      {
+        "path": "backend/migrations/repair_mage_hand_control_narrative.go",
+        "sha256": "sha256:fe575706683784bd06cfb468e1736a7884647b5117bf3b81afd957d360bd2613",
+        "bytes": 4924
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_area_targeting_test.go",
+        "sha256": "sha256:3d22f865d60ccab53eed022c1eed5fafab3e3740c22fd5781532de733930bf3b",
+        "bytes": 1063
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_area_targeting.go",
+        "sha256": "sha256:c42a14bf008d3927fb6658ef4551d0b356847bf9860c00cf1ec4c317a36dba3b",
+        "bytes": 3696
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_base_styles_origin_runtime_test.go",
+        "sha256": "sha256:f033124e6114b9e3a22edbfb5d93401a01b423a6be1fcea562eda470b98de4c0",
+        "bytes": 1603
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_base_styles_origin_runtime.go",
+        "sha256": "sha256:90b094487d9af7c52247e07aeb8a8578ccc66be840981069481b0a1df44561d7",
+        "bytes": 20533
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_limited_action_uses_test.go",
+        "sha256": "sha256:5065157e0990debb63022a8192507e2dfdabefd2f42d7275a8736b086a68cade",
+        "bytes": 981
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_limited_action_uses.go",
+        "sha256": "sha256:917870349c03a3641999701a492e8bee7cbb5f86e3763bc38e682ed0c1173495",
+        "bytes": 1532
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_post_hit_spell_targets_test.go",
+        "sha256": "sha256:e447fd921a194054c41d37d5ae348b2a4bdd113963713ef7de60b205c4d4eff2",
+        "bytes": 2532
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_post_hit_spell_targets.go",
+        "sha256": "sha256:68ea307703df678368186ee3a9f2edc15f23da42de6e84812cdb845b5a96495e",
+        "bytes": 2448
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_ranged_post_hit_spell_ranges_test.go",
+        "sha256": "sha256:8cb2b64b925e8838c5155938630381ba3c0280be69e6fa9410097679b954e3d1",
+        "bytes": 2210
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_ranged_post_hit_spell_ranges.go",
+        "sha256": "sha256:ef4c21fe8606f501b580ac5343c0c01c256050565b6cccfba4c508c491f77c72",
+        "bytes": 2198
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_spell_clarity_test.go",
+        "sha256": "sha256:586c0a21694d738a21b2662c2d7f3350755e788d9513b0b7f2eacdf0de09ce79",
+        "bytes": 3615
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_spell_clarity.go",
+        "sha256": "sha256:262128514bed89ef5181d1d028d34fd491e98f521c2fd953706d73277f23c615",
+        "bytes": 6129
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_spell_trigger_timing_test.go",
+        "sha256": "sha256:34f975aea77afb934f4a738deefb01408709a74257fd2ffed90955e36e3a4ba2",
+        "bytes": 2434
+      },
+      {
+        "path": "backend/migrations/repair_mini_mvp_spell_trigger_timing.go",
+        "sha256": "sha256:4e0394b85569e7b60bfd4c6badf593f1df494d0b408c5d016c0fac393d932edc",
+        "bytes": 3707
+      },
+      {
+        "path": "backend/migrations/repair_missing_weapon_mastery_profiles_test.go",
+        "sha256": "sha256:509b3e380f52101f8f604afaa5bb712d0948cca53b70699964da20ee534d9e58",
+        "bytes": 2886
+      },
+      {
+        "path": "backend/migrations/repair_missing_weapon_mastery_profiles.go",
+        "sha256": "sha256:b54dca70e3512bdc8f1d9b1cc2e4ec5c3a48256006535fc048d64c0558160744",
+        "bytes": 4471
+      },
+      {
+        "path": "backend/migrations/repair_ranger_favored_enemy_2024_test.go",
+        "sha256": "sha256:f9e340bdb5d6db2eb4a63ec595368e53103d68d1596de0d71f4894c124cafef3",
+        "bytes": 889
+      },
+      {
+        "path": "backend/migrations/repair_ranger_favored_enemy_2024.go",
+        "sha256": "sha256:f05bdb02fc88946a3144fc471fa848620134a32808c3eb6015415625c1d95374",
+        "bytes": 1824
+      },
+      {
+        "path": "backend/migrations/repair_retired_starting_equipment_test.go",
+        "sha256": "sha256:540c1f04e0c8fba6c1772659a20ee2db59b9edaaa9e0fe4565d24362a3b6546c",
+        "bytes": 482
+      },
+      {
+        "path": "backend/migrations/repair_retired_starting_equipment.go",
+        "sha256": "sha256:665989fc0939fee29a5fd25865ec4f2bd1324a420e519df853c2055344d702a1",
+        "bytes": 3467
+      },
+      {
+        "path": "backend/migrations/repair_second_wind_scaling_197.go",
+        "sha256": "sha256:511b014fb8341a884f81ce6b8358e8a7fd35ee68b9359fa00d72c38d9a53ffbd",
+        "bytes": 2203
+      },
+      {
+        "path": "backend/migrations/repair_sleep_2024_lifecycle_test.go",
+        "sha256": "sha256:41b2a33e882f54bc299bc85868e306b6c1ab231774f809720ecf42d71b30cfaf",
+        "bytes": 1825
+      },
+      {
+        "path": "backend/migrations/repair_sleep_2024_lifecycle.go",
+        "sha256": "sha256:2a3a7f03b2ffa6f50be3144de69a21111053a60776dbb50de5d1ad2e8f939e41",
+        "bytes": 10263
+      },
+      {
+        "path": "backend/migrations/repair_sleep_spell_class_list_contract_test.go",
+        "sha256": "sha256:f2da20ff503725d95609e247930f4b002da5ab0f5117922ec0d2bf82d6447c64",
+        "bytes": 3597
+      },
+      {
+        "path": "backend/migrations/repair_sleep_spell_class_list_contract.go",
+        "sha256": "sha256:025be4e941f7bf0645bfcb3f017bac4dee30d50e64642a3a03c200d39c061e69",
+        "bytes": 6565
+      },
+      {
+        "path": "backend/migrations/repair_sorcerer_level_five_runtime_190_test.go",
+        "sha256": "sha256:35072939654daf3de0c37a9022542b3fa9909fbff1c46b43d3811531c47ab87f",
+        "bytes": 918
+      },
+      {
+        "path": "backend/migrations/repair_sorcerer_level_five_runtime_190.go",
+        "sha256": "sha256:bbed7fa62741c75a14f1a6c72b8b728fcf39fec06b5fbcbe714ff9692e727228",
+        "bytes": 5478
+      },
+      {
+        "path": "backend/migrations/repair_spear_weapon_profile_test.go",
+        "sha256": "sha256:fc205b8c99ba275e8fdfafcf573057af77dabd05830a76b70d52782406fadbe5",
+        "bytes": 2661
+      },
+      {
+        "path": "backend/migrations/repair_spear_weapon_profile.go",
+        "sha256": "sha256:098d9aefc5645ffebc1fa840cba405234555c172b13efc13ebc0286024638267",
+        "bytes": 4064
+      },
+      {
+        "path": "backend/migrations/repair_species_level_five_integrity_183_test.go",
+        "sha256": "sha256:e3f5548b86a49e76d594879887b6a4333d6d0acb71ab9a90da856d3d425219cb",
+        "bytes": 4857
+      },
+      {
+        "path": "backend/migrations/repair_species_level_five_integrity_183.go",
+        "sha256": "sha256:ec9182e6223c25c4fb3118b4fec7ef157dc845e74189db5656ed737566d3de05",
+        "bytes": 12114
+      },
+      {
+        "path": "backend/migrations/repair_species_levelled_spell_access_test.go",
+        "sha256": "sha256:c9969fca660c31e562a8bf5829fcaa935e5e28d1abb779ca88762509aebf7d7f",
+        "bytes": 3252
+      },
+      {
+        "path": "backend/migrations/repair_species_levelled_spell_access.go",
+        "sha256": "sha256:93dbc78b59dd800d40ca2e617086932e07d2e0401a38e693700aec1da3e83b4b",
+        "bytes": 6969
+      },
+      {
+        "path": "backend/migrations/repair_species_transformation_runtime_189_test.go",
+        "sha256": "sha256:08fbdb39486f6453b234a9221bb8f29ece3d94c939363c63d888afd5439982fc",
+        "bytes": 1075
+      },
+      {
+        "path": "backend/migrations/repair_species_transformation_runtime_189.go",
+        "sha256": "sha256:e5715343d43ba84a19002f0370dc8a4e233970b9379430cfdfbbe00dca88d5cd",
+        "bytes": 5347
+      },
+      {
+        "path": "backend/migrations/repair_spell_targeting_certifications_test.go",
+        "sha256": "sha256:758b54cb7f65278cf2e9e8bd757d4d6fd03d5ab18021e6a83bd1be3834ce5dcf",
+        "bytes": 971
+      },
+      {
+        "path": "backend/migrations/repair_spell_targeting_certifications.go",
+        "sha256": "sha256:13cb8a39176115c88280e161af653d0e4b7cf98d1016a98ff2022942410229fb",
+        "bytes": 5422
+      },
+      {
+        "path": "backend/migrations/repair_subclass_primary_runtime_194_test.go",
+        "sha256": "sha256:85712b2139415205b15ba223da845ec1cba4a2ee2e93a876102898ea16145afb",
+        "bytes": 1525
+      },
+      {
+        "path": "backend/migrations/repair_subclass_primary_runtime_194.go",
+        "sha256": "sha256:26ee8cebd972243cd06eeb0ed3c43be49875986605d1d262f2fe34a74b93615d",
+        "bytes": 4899
+      },
+      {
+        "path": "backend/migrations/repair_true_strike_cantrip_test.go",
+        "sha256": "sha256:5560e72670eb0d69c16d0e7fcea8690fed40a3bfbdc6714de50f0a8446a028fc",
+        "bytes": 2423
+      },
+      {
+        "path": "backend/migrations/repair_true_strike_cantrip.go",
+        "sha256": "sha256:6135e56d14ec1fadf7783c2bd71e9065736920fdca625d9c5a0367dd72b2f212",
+        "bytes": 3814
+      },
+      {
+        "path": "backend/migrations/repair_wild_companion_runtime_test.go",
+        "sha256": "sha256:0194fd3e13ff0d9fc5df03ff02419acc386a22225814c7c615e6aa6efb9439a9",
+        "bytes": 1328
+      },
+      {
+        "path": "backend/migrations/repair_wild_companion_runtime.go",
+        "sha256": "sha256:31df7abdebdff64e741bf2a8fa225cf90180d72207a7fa0770368e8c5e1d7ff2",
+        "bytes": 2019
+      },
+      {
+        "path": "backend/migrations/repair_wild_companion_targeting_test.go",
+        "sha256": "sha256:d8a9390458c65a72c3f7fbbf53bd9b3833b1c27e667d17a75d61afe6ccf7601b",
+        "bytes": 617
+      },
+      {
+        "path": "backend/migrations/repair_wild_companion_targeting.go",
+        "sha256": "sha256:1a7122100af0f769058b84962f15f453804b85f8ba6825468e77be5414aa5088",
+        "bytes": 1031
+      },
+      {
+        "path": "backend/migrations/repair_wizard_cantrip_growth_176_test.go",
+        "sha256": "sha256:2ba41dfcf44c865b6497720808148d7be006200d05c70df31610241275130ddc",
+        "bytes": 1281
+      },
+      {
+        "path": "backend/migrations/repair_wizard_cantrip_growth_176.go",
+        "sha256": "sha256:eb492c72d0e3e59c7988569ac1fb219971f6f2a30139a3906c0b67ddc41bec60",
+        "bytes": 1478
+      },
+      {
+        "path": "backend/migrations/repair_wizard_level_two_spellbook.go",
+        "sha256": "sha256:28e693ab9d8aa5b711760376211a29d13028449345f21b1eee5f681932059bea",
+        "bytes": 2532
+      },
+      {
+        "path": "backend/migrations/repair_wood_elf_speed_test.go",
+        "sha256": "sha256:ae1606e8e93c00b5e61f9bdd7f80bb2fb7ec71e53f22ed908af612e6c6ff73bb",
+        "bytes": 3184
+      },
+      {
+        "path": "backend/migrations/repair_wood_elf_speed.go",
+        "sha256": "sha256:3e75176a5fc97af1cb7bd6371bc88b31c79d3c4bb51a74096bd32b5fb417a3c9",
+        "bytes": 2829
+      },
+      {
+        "path": "backend/migrations/resource_declarations_294_test.go",
+        "sha256": "sha256:0865c9f8995f1c528ba07d158abe0eaa816af0d1e6c3037acdd782eaab733544",
+        "bytes": 12415
+      },
+      {
+        "path": "backend/migrations/resource_declarations_294.go",
+        "sha256": "sha256:8d747a63e035e57761798951258b241edcf79d9578341e491ea05a7e302bcab5",
+        "bytes": 15439
+      },
+      {
+        "path": "backend/migrations/resource_declarations_294.json",
+        "sha256": "sha256:8f4f93eecab686894b68fe75c6977b9c1278cef5c6e0b6d014737c72c5f97c5e",
+        "bytes": 22787
+      },
+      {
+        "path": "backend/migrations/restore_live_mvp_starting_equipment_test.go",
+        "sha256": "sha256:500c8ca2ae061e558e767cefd4cc349ff4c9df726a7157929f09beb70eee334f",
+        "bytes": 2171
+      },
+      {
+        "path": "backend/migrations/restore_live_mvp_starting_equipment.go",
+        "sha256": "sha256:b21e20f1643f4219353d955a8e1fd44d365a6c7e87638a6a3658321d3fc2a690",
+        "bytes": 1460
+      },
+      {
+        "path": "backend/migrations/reusable_run_sources_276.go",
+        "sha256": "sha256:3d85e074054e58348530c1d30cf5f734004751b55dbfe14509cf25eba49025f5",
+        "bytes": 342
+      },
+      {
+        "path": "backend/migrations/revoke_invalid_feather_fall_certification_test.go",
+        "sha256": "sha256:cec72e80538ba91486933f253957fce89bbbde4a7ed6d1b23385a8323f334a28",
+        "bytes": 4082
+      },
+      {
+        "path": "backend/migrations/revoke_invalid_feather_fall_certification.go",
+        "sha256": "sha256:0c02fb50536e77d0f9bc2e853db85fc3ecf1be52f99c4d3de393967434a83295",
+        "bytes": 5630
+      },
+      {
+        "path": "backend/migrations/revoke_invalid_mage_hand_certification_test.go",
+        "sha256": "sha256:efd3191e69e88ce1318ffedff4848efe1a062cfb4f93fd3f13b968b541166ff0",
+        "bytes": 3449
+      },
+      {
+        "path": "backend/migrations/revoke_invalid_mage_hand_certification.go",
+        "sha256": "sha256:8bd9da1434634982291b24ca7c98d66f722eeaf2083a6e472d8e0bf6f92d4c15",
+        "bytes": 4715
+      },
+      {
+        "path": "backend/migrations/roguelike_attack_ranges_201.go",
+        "sha256": "sha256:cc7ad1ddae2b51de865b537d092376757f36393104e711abfca5dfcf79786856",
+        "bytes": 3014
+      },
+      {
+        "path": "backend/migrations/roguelike_defenses_205.go",
+        "sha256": "sha256:df961ba81dd9de77fd83cea5298c14e759dc563ed1b10622bfd11d435754d01d",
+        "bytes": 1078
+      },
+      {
+        "path": "backend/migrations/roguelike_magic_weapons_240_test.go",
+        "sha256": "sha256:4025ae098be4004bb0aaa42a54d1a4e1b82f6f7c35450e80d6baa126d193a2ad",
+        "bytes": 3968
+      },
+      {
+        "path": "backend/migrations/roguelike_magic_weapons_240.go",
+        "sha256": "sha256:8a06db68279f5a9996bf8f4561003813a865c8411acf2a4d35a0df06d43ee86d",
+        "bytes": 3308
+      },
+      {
+        "path": "backend/migrations/roguelike_parry_204.go",
+        "sha256": "sha256:85a3c3e694db6549a96c7cdb8d241fdb7c9133b524ee4cf4edfff2882382e1bd",
+        "bytes": 2288
+      },
+      {
+        "path": "backend/migrations/roguelike_party_254.go",
+        "sha256": "sha256:8edf6bbcaeb1c5d9cddc352655ec5569670bff4c9ff226486b9e10711b82789e",
+        "bytes": 384
+      },
+      {
+        "path": "backend/migrations/roguelike_senses_skills_206.go",
+        "sha256": "sha256:daf3befff5c1b95ad174d47f9e6c7d64abd9a3657d6167190574ccf07c60bf03",
+        "bytes": 1644
+      },
+      {
+        "path": "backend/migrations/roguelike_shop_items_249_test.go",
+        "sha256": "sha256:7600067265e00a4ca2e427a342ff7108eaf6c68f6302e2f401fa9c1e6212627d",
+        "bytes": 3708
+      },
+      {
+        "path": "backend/migrations/roguelike_shop_items_249.go",
+        "sha256": "sha256:736ba8b870194ec86878ce4efa41c9728ead0e59a142a9b43f7ceef75e7b98fa",
+        "bytes": 5116
+      },
+      {
+        "path": "backend/migrations/roguelike_wolf_riders_200.go",
+        "sha256": "sha256:02e159407ae667d13f9770ae0935c12e2049af48f61169d16b0db20e95d6f189",
+        "bytes": 1756
+      },
+      {
+        "path": "backend/migrations/seed_forge_mvp.go",
+        "sha256": "sha256:6b139350581c8704f6732dd1642296512f67644cbd667ec68ec0545b5a0946e0",
+        "bytes": 11939
+      },
+      {
+        "path": "backend/migrations/seed_mvp_equipment.go",
+        "sha256": "sha256:db57861cc5f5320dc5b7ed11fac55cca7e4f818a44af5e22ca53a621d461c3c6",
+        "bytes": 2850
+      },
+      {
+        "path": "backend/migrations/seed_recommended_skill_choices_test.go",
+        "sha256": "sha256:89e7ffb2ab98af1f318e09ebb83f668a3a488e08772442b7c2d388de8f264d70",
+        "bytes": 3043
+      },
+      {
+        "path": "backend/migrations/seed_recommended_skill_choices.go",
+        "sha256": "sha256:778c2e6f9f8a25b5189ee5f873128b4b27036219f98cbdca00d5a343dea03994",
+        "bytes": 8614
+      },
+      {
+        "path": "backend/migrations/seed_recommended_spell_choices_test.go",
+        "sha256": "sha256:48436f5b93b186d8bf3b2d034bb3918479918706653932c238192392db5430b4",
+        "bytes": 3606
+      },
+      {
+        "path": "backend/migrations/seed_recommended_spell_choices.go",
+        "sha256": "sha256:0fff2a35454086d6ef06bfd0778245be840214f91d3969787107b92cf1945e80",
+        "bytes": 6190
+      },
+      {
+        "path": "backend/migrations/spell_grant_abilities_296_hash.go",
+        "sha256": "sha256:461460b144dc8f6ba3c70058193b7290f0c6a0206ddeb8c7b64b2ecc2439c39b",
+        "bytes": 3603
+      },
+      {
+        "path": "backend/migrations/spell_grant_abilities_296_manifest.json",
+        "sha256": "sha256:310047ba934a9fed8bba48476eee4491670be698fe07bf9391762664d7580add",
+        "bytes": 176651
+      },
+      {
+        "path": "backend/migrations/spell_grant_abilities_296_test.go",
+        "sha256": "sha256:b29a2ff1f63a798c511df2f0bf5d26dd7a30193d30316228fb5e2c23a256cb6b",
+        "bytes": 11167
+      },
+      {
+        "path": "backend/migrations/spell_grant_abilities_296.go",
+        "sha256": "sha256:6211014c23e95e1b509e2dd997068637070ce3983dea87bebff0a9a6fcb806c0",
+        "bytes": 13620
+      },
+      {
+        "path": "backend/migrations/spell_grant_refs_295_manifest.json",
+        "sha256": "sha256:0669ffc9e14d4116a200b8830e6f38b0e529ad2cc178afd29dbe1a2e05f92e24",
+        "bytes": 70486
+      },
+      {
+        "path": "backend/migrations/spell_grant_refs_295_test.go",
+        "sha256": "sha256:8fc3d7e59b3d8d92548f1ec8882568684d521b533591e3d35d315e1b8a2cb7d2",
+        "bytes": 8660
+      },
+      {
+        "path": "backend/migrations/spell_grant_refs_295.go",
+        "sha256": "sha256:4d4595994a0b67c7035ff2300688ac3980fd8f0df55fb5c7d0d1ae0c11cee16a",
+        "bytes": 10237
+      },
+      {
+        "path": "backend/migrations/split_weapon_actions_and_unlock_metadata.go",
+        "sha256": "sha256:00992f0ef4126ba237018cd3bc01bede505066a9c21aadf9c2a7186570972961",
+        "bytes": 6222
+      },
+      {
+        "path": "backend/migrations/suppress_true_strike_zero_damage_test.go",
+        "sha256": "sha256:ab6d7afb807828e249fe7ee77220d6d7abf28918a1bba420946b99002aebbd88",
+        "bytes": 2488
+      },
+      {
+        "path": "backend/migrations/suppress_true_strike_zero_damage.go",
+        "sha256": "sha256:de9ebb26e42c47882bfb68dd235699fb88c698ebd0e496a0a823529f97e8a747",
+        "bytes": 2655
+      },
+      {
+        "path": "backend/migrations/template_portraits_252.go",
+        "sha256": "sha256:8b963dde18f54b68ac3f3778bd9ad786d08dfc4c8268b29993e53f3e47e293b3",
+        "bytes": 3622
+      },
+      {
+        "path": "backend/migrations/ui_polish_252_test.go",
+        "sha256": "sha256:0a1e29587ebe58a63c082cbbe0953c24f2003ca04d6d21b19c27dbbda13e121e",
+        "bytes": 2902
+      },
+      {
+        "path": "backend/migrations/urvin_run_273_test.go",
+        "sha256": "sha256:d2fe675cd83e9b158f505898fbfe1f4f9454acaa2936171cc7f61ac856e126a2",
+        "bytes": 5679
+      },
+      {
+        "path": "backend/migrations/urvin_run_273.go",
+        "sha256": "sha256:e5bfa02e631304929d3406915050836f96e0ebf043756fd6597325979d96f4c0",
+        "bytes": 5399
+      },
+      {
+        "path": "backend/migrations/warrior_weapon_bond_238.go",
+        "sha256": "sha256:443d0165d5649c542753878b627f3cecc77083dfbe6a06a6ccacc60afbc9d09d",
+        "bytes": 994
+      },
+      {
+        "path": "database/add_foreign_keys.sql",
+        "sha256": "sha256:02e32743636540e3dcf90c3909a47aba06a30407ce7263134898224d9d0ba539",
+        "bytes": 384
+      },
+      {
+        "path": "database/migration_auth.sql",
+        "sha256": "sha256:840c89cf230b15f1cc4b55bc5bda576e21da30d0676a10e4722f7670d9585dd9",
+        "bytes": 5332
+      },
+      {
+        "path": "database/migration_characters.sql",
+        "sha256": "sha256:dce40aa07495de05d876c3024302e16118d85734992f90f52c406dad896956b8",
+        "bytes": 3241
+      },
+      {
+        "path": "database/migration_images.sql",
+        "sha256": "sha256:80d238cdbb0ffd44b70994e10cc3ae2ffcd22817870c7173a605731a260b5007",
+        "bytes": 3366
+      },
+      {
+        "path": "database/migration_is_extended.sql",
+        "sha256": "sha256:7c6348ff07321b17eccbe2f6625a2e6f43d27ae4a09a2cb82c954077f4e11d0f",
+        "bytes": 500
+      },
+      {
+        "path": "database/schema.sql",
+        "sha256": "sha256:4ffdb369dd7788f47a08a0bfbaa3c03f7f78a6a4452ace267c6704b27099147c",
+        "bytes": 7117
+      },
+      {
+        "path": "officials/canon/prod-snapshot/actions.json",
+        "sha256": "sha256:f3702a0dca6f4dc784f714cbded73a044185ecbba006b1fc759d6ffb3c530bd5",
+        "bytes": 864910
+      },
+      {
+        "path": "officials/canon/prod-snapshot/backgrounds.json",
+        "sha256": "sha256:b356a2abe7381d3109a18d98081b84e93c47e9ffdc4c59b3ae63c108b5fb7161",
+        "bytes": 366615
+      },
+      {
+        "path": "officials/canon/prod-snapshot/cards.json",
+        "sha256": "sha256:c110a67bbf2e3b5707a1e65abde62f5a84860da2f101704fd1aca4666e36ebd5",
+        "bytes": 1297422
+      },
+      {
+        "path": "officials/canon/prod-snapshot/classes.json",
+        "sha256": "sha256:2124cffa17579481185c30454bdd7139c52f9e48f45376417d05a1070a879cf7",
+        "bytes": 960686
+      },
+      {
+        "path": "officials/canon/prod-snapshot/effects.json",
+        "sha256": "sha256:0e4a5edd1dc7e536106aabf68b9a1c63cd1a824e65ac2754f02c87101af74523",
+        "bytes": 2922665
+      },
+      {
+        "path": "officials/canon/prod-snapshot/feats.json",
+        "sha256": "sha256:769295768512a3c490c41d3580284b56e4935b4077e0967006b5663fa04b83fa",
+        "bytes": 1753814
+      },
+      {
+        "path": "officials/canon/prod-snapshot/races.json",
+        "sha256": "sha256:6a34f538f03db6f5f2665dee1b840337f6b471e437457e7e1aef7bdf347d7e1c",
+        "bytes": 831868
+      },
+      {
+        "path": "officials/canon/prod-snapshot/resources.json",
+        "sha256": "sha256:ab1aa68dd3ef5f059c4176daff815c27c5ed5b481c767cd0ecae6970db0571d6",
+        "bytes": 428472
+      },
+      {
+        "path": "officials/canon/prod-snapshot/spells.json",
+        "sha256": "sha256:da763e12c75177ef0e85bcd5ca3157e3cfd8404eb51a0984855b13d71456e495",
+        "bytes": 1338080
+      },
+      {
+        "path": "officials/canon/prod-snapshot/variables.json",
+        "sha256": "sha256:c204da89f22044950548b51034dd799ade6944c700615e2e923fc77172b9c0a5",
+        "bytes": 2683
+      },
+      {
+        "path": "scripts/content/certification-hash.mjs",
+        "sha256": "sha256:2d89affe3e412649e9af6060370adacf06a098cec45dacf1c843aab45384b3b0",
+        "bytes": 5959
+      },
+      {
+        "path": "scripts/testing/check-historical-fresh.mjs",
+        "sha256": "sha256:c5ac2a36cd262532365a411017115c84b865011f4bea8e6805d252acd214876d",
+        "bytes": 25721
+      },
+      {
+        "path": "scripts/testing/fixtures.mjs",
+        "sha256": "sha256:36cfdcdfd83cd88d60745d25cdd17e37950678d86a57e26ac0a6adb6587223e6",
+        "bytes": 4241
+      },
+      {
+        "path": "scripts/testing/fixtures/historical-catalog/cardMembership.json.gz",
+        "sha256": "sha256:7ecae4bae91dd9b10c5cc261e3fb94f138df74366f5ed0d7538fc5e389278e63",
+        "bytes": 36944
+      },
+      {
+        "path": "scripts/testing/fixtures/historical-catalog/caster296.json.gz",
+        "sha256": "sha256:381cf249b3df3265886e13982ba2f2538b66b40566f6a1a1ba9382f68947a275",
+        "bytes": 16723
+      },
+      {
+        "path": "scripts/testing/fixtures/historical-catalog/manifest.json",
+        "sha256": "sha256:ecd833e983374f5c9c5da614c2cd7179817453f9ca505723719b661d35012aa2",
+        "bytes": 3128
+      },
+      {
+        "path": "scripts/testing/fixtures/historical-catalog/pre278.json.gz",
+        "sha256": "sha256:55ce0cf47f258ba5ffea28d4e65a3e24f682c0a18edfe28e0e6b82defe835b35",
+        "bytes": 482515
+      },
+      {
+        "path": "scripts/testing/fixtures/historical-catalog/pre279.json.gz",
+        "sha256": "sha256:8b687b6bdf6e25d583cdbc51b3f56affaa9aa02511560f0733e16ab126418dbd",
+        "bytes": 833845
+      },
+      {
+        "path": "scripts/testing/fixtures/historical-revocations/manifest.json",
+        "sha256": "sha256:a2270835660e18d83de5a505bd063f573db5d3e91423378e0583f05bb7f65cfe",
+        "bytes": 2255
+      },
+      {
+        "path": "scripts/testing/fixtures/historical-revocations/revocations.json.gz",
+        "sha256": "sha256:b75801a643f07a221134ed91baceb4484e87ac3fff77046c39e6b7d375d64fd4",
+        "bytes": 2381
+      },
+      {
+        "path": "scripts/testing/guards.mjs",
+        "sha256": "sha256:5cac30c54763154b501656d1d485969f1fd8d80029fecc65d6c0631b76a82fed",
+        "bytes": 3446
+      },
+      {
+        "path": "scripts/testing/historical-catalog-preconditions.mjs",
+        "sha256": "sha256:0fb5d4e8dbe122b301009826bc43a304b16e18ccaff47f4e1b99066e62494bff",
+        "bytes": 6107
+      },
+      {
+        "path": "scripts/testing/historical-catalog-source.mjs",
+        "sha256": "sha256:ab86068ced1246befb6d6cec988222ac8708648b981ab9e095a0f0502623e155",
+        "bytes": 6788
+      },
+      {
+        "path": "scripts/testing/historical-revocation-source.mjs",
+        "sha256": "sha256:24ab755386835008d3938b527e8eb01e502adc8dd3dcce555f364f3da0d52e39",
+        "bytes": 5006
+      },
+      {
+        "path": "scripts/testing/historical/authored-bootstrap-identity-bridge-sources-20261007.json",
+        "sha256": "sha256:63d143dd9e3dd089789fe413a906aca20d2f9e3bfaa19d6d23ff5ec6c0f7fff7",
+        "bytes": 1669
+      },
+      {
+        "path": "scripts/testing/historical/bind-identities.mjs",
+        "sha256": "sha256:9e0b960250a77542094cfa9d28e492324315f139e8875e30234cb898ae2fed98",
+        "bytes": 7663
+      },
+      {
+        "path": "scripts/testing/historical/card-lifecycle.mjs",
+        "sha256": "sha256:d97f631789bb5d47816d56670bed68c7124f9fb9d502e1c01ff7d20805b03627",
+        "bytes": 5499
+      },
+      {
+        "path": "scripts/testing/historical/caster296.mjs",
+        "sha256": "sha256:9e543135adadc203bec304207e785c0902ca640fc296bb080acde2a870e36899",
+        "bytes": 9036
+      },
+      {
+        "path": "scripts/testing/historical/catalog278.mjs",
+        "sha256": "sha256:4203fe7957745cc3bf2f3de1caf0c1a1644bc5e31c323d3384e85cbacd3658fe",
+        "bytes": 6001
+      },
+      {
+        "path": "scripts/testing/historical/catalog279.mjs",
+        "sha256": "sha256:b3eda2818660592c08ca74aba2c59246e145e8c143bf8cc588aabf86c0b0b8f7",
+        "bytes": 6411
+      },
+      {
+        "path": "scripts/testing/historical/early-action.mjs",
+        "sha256": "sha256:f76853f987f43a92d25ce5906094d4688784c2432d791feab2a08c5ba7a9ab14",
+        "bytes": 7423
+      },
+      {
+        "path": "scripts/testing/historical/early-conditions.mjs",
+        "sha256": "sha256:cf80cc1f96f814fa22a908bab95f98ce59e658cdbda4b1afb76e37ce0a9ddf20",
+        "bytes": 5999
+      },
+      {
+        "path": "scripts/testing/historical/early-mechanics.mjs",
+        "sha256": "sha256:3a8f6c1c16153df7d2d0a21962be0e36161d3c17a8d1711b91bd54657365b5fe",
+        "bytes": 11592
+      },
+      {
+        "path": "scripts/testing/historical/fresh-chain-caller.go",
+        "sha256": "sha256:70de7581adb41be53be4ee11dc1c0511d94c9d99a94bcaea7931b88a773e3b2d",
+        "bytes": 2025
+      },
+      {
+        "path": "scripts/testing/historical/healing-field.mjs",
+        "sha256": "sha256:97bb3c8ba62d2fc0e5d4c3c6a6cf3d3e202d943e738249d61f6848c3e1ecb4e3",
+        "bytes": 6580
+      },
+      {
+        "path": "scripts/testing/historical/identity-bridge.mjs",
+        "sha256": "sha256:065a33cb116c718e9bdd5212935f55bb8baa8f3cb4d0e528769e7a425f57e40b",
+        "bytes": 6979
+      },
+      {
+        "path": "scripts/testing/historical/identity-source.mjs",
+        "sha256": "sha256:f768131b11b49857b056659546e64dcc40678e4fc7073cf538c06c582ae5b9c9",
+        "bytes": 271
+      },
+      {
+        "path": "scripts/testing/historical/late-identities.mjs",
+        "sha256": "sha256:db9841b319d94fd31c53fcfcc26db8358ea9d9882085e07e80fd11663629e434",
+        "bytes": 4422
+      },
+      {
+        "path": "scripts/testing/historical/late-identities082.json",
+        "sha256": "sha256:ca3fc3b9d926bfd0cdcc51beb7685991df50a60dd7d8b2fb7407529892134161",
+        "bytes": 406
+      },
+      {
+        "path": "scripts/testing/historical/migration144-67-derivation.json",
+        "sha256": "sha256:91fc9aa8af717d382bf70a89943f0a1ea5d8ab7354ec00236fb2b88d50a5ae55",
+        "bytes": 250756
+      },
+      {
+        "path": "scripts/testing/historical/migration144-versioned-schedule.json",
+        "sha256": "sha256:2a7e3d90327d3025155623b823535f9e78d0d0c4d597335c76b7acf57a45e787",
+        "bytes": 138956
+      },
+      {
+        "path": "scripts/testing/historical/revocation.mjs",
+        "sha256": "sha256:47fd1cfbdc13c39d91ef9d1b0f4b24012703ad73924dd64004b07fcb092cb95b",
+        "bytes": 8959
+      },
+      {
+        "path": "scripts/testing/historical/seed-catalog.mjs",
+        "sha256": "sha256:c7d1bad1cc23363f39c5da6ba735f6927749c9dcd0621b894f3d71b62d35f6d6",
+        "bytes": 3640
+      },
+      {
+        "path": "scripts/testing/historical/utility-spell.mjs",
+        "sha256": "sha256:c7609b23a6dbca343bec2636ad9fa55cc2b78a2fa0403cf1136728138cbc53a7",
+        "bytes": 7320
+      },
+      {
+        "path": "scripts/testing/historical/wizard-source-recipe.json",
+        "sha256": "sha256:222c34608c2b25806212a3f0bdccc76016d347989101d5bc5637e271d04d56cf",
+        "bytes": 2434
+      },
+      {
+        "path": "scripts/testing/historical/wizard.mjs",
+        "sha256": "sha256:c371e0a609f0835dff118451f9462a4ac0dd16a20e574adf2c86f952cab3a6db",
+        "bytes": 8732
+      },
+      {
+        "path": "scripts/testing/postgres.mjs",
+        "sha256": "sha256:b8fd84a2d1731478574848b4325f17ed10b0ad9f5237bd494f64399028c6c178",
+        "bytes": 4497
+      },
+      {
+        "path": "scripts/testing/runtime.mjs",
+        "sha256": "sha256:08e0e0a016bc54c9dda5975ea4797fbd71d60c2526ac0c12949bbac4169d50b1",
+        "bytes": 3467
+      },
+      {
+        "path": "scripts/testing/stack.mjs",
+        "sha256": "sha256:bda0e758e767043d90cd3ae13c3d04c81b003f7eb08d9367e93f5a159bdeecf3",
+        "bytes": 17601
+      }
+    ]
+  },
+  "receipt": {
+    "file": "outputs/testing/historical-fresh-1791377757657/report.json",
+    "sha256": "sha256:2fa596735399c5e93e5a22e877f344231254df67b9eec146ed2f27a0dc761e46"
+  },
+  "firstAttempt": {
+    "status": "refused",
+    "stage": "source-schedule-118",
+    "receipt": "outputs/testing/historical-fresh-1791376774195/report.json",
+    "guardsRelaxed": false,
+    "cleanup": "stopped",
+    "cause": "Native plain C did not lower Cyrillic class labels; separately verified C vs built-in C.UTF-8 on two languages."
+  },
+  "runtime": {
+    "node": "v24.21.0",
+    "OS": "win32",
+    "postgres": "psql (PostgreSQL) 17.11"
+  },
+  "unicodeLocale": {
+    "provider": "b",
+    "locale": "C.UTF-8",
+    "russian": "волшебник",
+    "greek": "ωμεγα"
+  },
+  "originalMigrations": 303,
+  "final": {
+    "ledgerRows": 303,
+    "ledgerIdsHash": "4500b30b199be9c57b1fadacf7b13a20eea07c1ad2d037dbd2e242cda7bd0d06",
+    "beforeRepeat": {
+      "ledgerRows": 303,
+      "ledgerHash": "316c4159e7615df90990ef5d8b0eb7e1e8a1569d2ae290fee5e020d5d3553c39",
+      "spellRows": 510,
+      "spellAllHash": "38ef7d738d8aa6fc65cc27fb773057a1851777f6575f7d1ac9553822c0aae97f",
+      "spellNonSupportHash": "0c77091a20412589487469154fd0df83680a0cc5a6391e77a5b13a1d08539c63"
+    },
+    "allTablesBeforeRepeat": {
+      "tableCount": 98,
+      "rowCount": 24592,
+      "hash": "b228af588e760bfa297363becaba1794acb39f98c0e3b6abc39cbcf4a16dfcfd"
+    },
+    "revocations": [
+      {
+        "migration": "102",
+        "rows": 1,
+        "preimagesExact": true
+      },
+      {
+        "migration": "103",
+        "rows": 1,
+        "preimagesExact": true
+      },
+      {
+        "migration": "119",
+        "rows": 1,
+        "preimagesExact": true
+      }
+    ],
+    "manual": {
+      "targetRows": 4,
+      "noAutomaticVerified": true,
+      "allUnlocked": true
+    },
+    "afterRepeat": {
+      "ledgerRows": 303,
+      "ledgerHash": "316c4159e7615df90990ef5d8b0eb7e1e8a1569d2ae290fee5e020d5d3553c39",
+      "spellRows": 510,
+      "spellAllHash": "38ef7d738d8aa6fc65cc27fb773057a1851777f6575f7d1ac9553822c0aae97f",
+      "spellNonSupportHash": "0c77091a20412589487469154fd0df83680a0cc5a6391e77a5b13a1d08539c63"
+    },
+    "allTablesAfterRepeat": {
+      "tableCount": 98,
+      "rowCount": 24592,
+      "hash": "b228af588e760bfa297363becaba1794acb39f98c0e3b6abc39cbcf4a16dfcfd"
+    }
+  },
+  "checks": {
+    "allThreeArchivedPreimagesExact": true,
+    "repeatAllPublicRowsExact": true,
+    "repeatNoLedgerOrSpellChanges": true,
+    "sourceCodeUnchanged": true
+  },
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "archivedRevocationManifestHash": "sha256:a2270835660e18d83de5a505bd063f573db5d3e91423378e0583f05bb7f65cfe",
+  "sourceDumpHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+  "scope": {
+    "productionSQL": false,
+    "privateGameplaySnapshotImported": false,
+    "sourceCertificateReplay": false,
+    "revokedCertificationRehabilitated": false,
+    "applicationProcesses": 0,
+    "network": "owned-loopback"
+  },
+  "fixtures": {
+    "originalFullSnapshot": false,
+    "privateDumpRequired": false,
+    "explicitAuthoredPhaseInputs": true,
+    "migrationLedgerSeeded": false,
+    "productionBootstrapClaim": false,
+    "revokedInputsAreCurrentCertificates": false
+  },
+  "validation": {
+    "targetedTests": 68,
+    "passed": 68,
+    "failed": 0,
+    "skipped": 0,
+    "additionalMandatoryRoutingTestPassed": true,
+    "stagedDiffWhitespace": "passed",
+    "repositoryKnownCredentialAndDumpScans": "passed"
+  },
+  "fullHistoricalCI": false,
+  "remaining": "Commit reviewed public-only maintained profile after local checks; push only after the current 5c45 deployment is accepted, then require actual hosted extended CI.",
+  "sharedStackGate": {
+    "status": "passed",
+    "receipt": "outputs/operations/historical-gate-proof-20261007.json",
+    "sha256": "sha256:04d8860871c0bf72bdba076dfeea3330705ccb8b472b39da3510731d3e6d10f7",
+    "owner": "test_1077e73a2955a4f64b7ef2ea",
+    "originalMigrations": 303,
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "innerCleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  }
+}

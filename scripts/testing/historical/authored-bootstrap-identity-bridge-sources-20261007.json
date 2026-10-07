@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "kind": "authored-bootstrap-identity-bridge-source-descriptor",
+  "cards": [
+    "action_basic_weapon",
+    "action_basic_offhand",
+    "ACT-second-wind"
+  ],
+  "source": [
+    "backend/migrations/migrations.go",
+    "backend/migrations/seed_forge_mvp.go"
+  ],
+  "files": [
+    {
+      "commit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+      "path": "backend/migrations/migrations.go",
+      "blob": "facc9390e5ebde13d6fa703c3544756c57255b92",
+      "sha256": "7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+      "bytes": 230745
+    },
+    {
+      "commit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+      "path": "backend/migrations/seed_forge_mvp.go",
+      "blob": "34443353a44202964ba0490cc5e9b5d2b3d4b0b6",
+      "sha256": "6b139350581c8704f6732dd1642296512f67644cbd667ec68ec0545b5a0946e0",
+      "bytes": 11939
+    }
+  ],
+  "scope": {
+    "originalWriterReplay": false,
+    "originalSnapshot": false,
+    "UUIDRewritten": false,
+    "ledgerRewritten": false
+  },
+  "previousRefusal": "fresh102_83a2c6849f9f6e2b96d7/report.json",
+  "extensions": [
+    {
+      "commit": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+      "path": "backend/migrations/migrations.go",
+      "blob": "0efa372ab2532beb966ad56433cd74b0bef87762",
+      "sha256": "81872256f8352e4156e4a02447b752711dedcab540cedcc387a8473543c56b51",
+      "bytes": 231354,
+      "addedVersions": [
+        "301_character_lifecycle",
+        "307_catalog_presentation"
+      ],
+      "extensionHash": "5cead10e7489cf3bf4ab03dc56029554e48e8e3230c4e24909283cb0544087f7",
+      "originalWholeSourceRecoveredByRemovingExactReviewedExtension": true
+    }
+  ]
+}

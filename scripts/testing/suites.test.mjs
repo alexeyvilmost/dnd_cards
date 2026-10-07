@@ -82,6 +82,17 @@ test('full-stack Go cases are mandatory dedicated gates, not retired diagnostics
     assert.ok(!manifest.legacy_manual.flatMap(row=>row.go_cases??[]).some(row=>row.test===dedicated.test));
   }
 });
+test('ordinary extended workload requires the complete historical chain and authentic input guards', () => {
+  const {manifest}=readSuites();
+  const gate=manifest.extended_gates.find(row=>row.id==='historical-fresh-chain');
+  assert.equal(gate?.script,'scripts/performance/check-historical-fresh.mjs');
+  assert.equal(gate?.export,'checkHistoricalFresh');
+  const catalog=catalogTests(manifest);
+  const input=catalog.find(row=>row.file==='scripts/testing/historical-revocation-source.test.mjs');
+  assert.equal(input?.tier,'core');
+  assert.equal(input?.suite,'selection-security');
+  assert.ok(!manifest.legacy_manual.some(row=>row.patterns.some(pattern=>matches(gate.script,pattern))));
+});
 test('Vitest receipts reject missing files, zero tests and skipped assertions', () => {
   const file = 'frontend/src/api/imageErrors.test.ts';
   const report = {success:true, numTotalTests:1, numPassedTests:1, testResults:[{name:path.join(repositoryRoot,file), assertionResults:[{status:'passed'}]}]};

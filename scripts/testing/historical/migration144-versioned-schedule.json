@@ -1,0 +1,2817 @@
+{
+  "schemaVersion": 1,
+  "kind": "source-bound-pre144-schedule-proposal",
+  "status": "source-derivation-closed-runtime-preconditions-not-yet-observed",
+  "scope": {
+    "newSQL": false,
+    "retiredWriterExecuted": false,
+    "fullOriginalWriterReplay": false,
+    "originalProductionPre144Snapshot": false,
+    "emptySeedFreshInstall": false,
+    "ordinaryMigrationsUnchanged": true,
+    "ledgerEdited": false,
+    "certificationRewritten": false
+  },
+  "derivation": {
+    "path": "migration144-67-derivation.json",
+    "sha256": "sha256:91fc9aa8af717d382bf70a89943f0a1ea5d8ab7354ec00236fb2b88d50a5ae55"
+  },
+  "lastActual": {
+    "path": "fresh102_b82e912ada95f335d7a1/report.json",
+    "sha256": "sha256:120b00271c2c7e0f450803920408104ae8c298bd2fd8acaaff626b85edfa0c03",
+    "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+    "boundary": "143 applied / 144 refused 2 != 63",
+    "cleanup": "stopped"
+  },
+  "summary": {
+    "originalMemberships": 67,
+    "uniqueSourceEntities": 84,
+    "at101": 81,
+    "at101MechanicsChanges": 80,
+    "at101NoOpChecks": 1,
+    "at118": 2,
+    "at121Existing": 1,
+    "allSpecializedSourcesIncluded": 67,
+    "residualGeneric": 17,
+    "sourcePrimaryBeforeMissing": 0,
+    "sourceIdentityMissing": 0
+  },
+  "stages": [
+    {
+      "boundary": "101_pin_tactical_basic_action_targets",
+      "before": "genuine support hydration and unchanged102/103",
+      "rows": [
+        {
+          "table": "actions",
+          "id": "ae7b59a2-2eee-412f-aee6-6323b4c1fb4d",
+          "cardNumber": "action_basic_weapon",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:22f83f1ade7aa621bff43867b0fd2895b7fbd7b0e799570136e865c0656c85aa",
+          "afterHash": "sha256:09d2aaef8723afa01a13682238633b66094cab9cd4d216f0b3adb02096a28a0a",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/0"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "6812f780-de8a-4509-9253-b4be711a9212",
+          "cardNumber": "action_basic_offhand",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:0e195356d2d33954adcbaef833e4e95b78f8c32ec30a54483e28b2168bc9c54a",
+          "afterHash": "sha256:27982f81cb014e4719087bcdb3c47ab032afb2249be0a749a35b9ef8dd5c0f03",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/1"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "3ea9a83b-20f6-4fa7-b2d7-011f1942a7bb",
+          "cardNumber": "ACT-breath-acid",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:22a1ad3d815cf023db5779655cced35d20baf3b24f1e0ac7aa3f5b02b984a876",
+          "afterHash": "sha256:250bee13eb71afe971ac068fb8ab3349573e19db73fc5109fb4acb9e0836a46f",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "b7f8278d-b902-42c7-ad04-3a8f694542e1",
+          "cardNumber": "ACT-breath-cold",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:3d2878e5d4e66e2f694b47d341088dc3c8d101d5e065a2e81b7a8f95b74d06fd",
+          "afterHash": "sha256:fc01a8ff943d822acae01626d57ae89cb27e766f2d0347cf65469ed358f79875",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/3"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "17e13187-d809-4357-a467-4116b30eb359",
+          "cardNumber": "ACT-breath-fire",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:68a45fc5d7faaf7409e5f3b75962f7a561847fa0d7454e6c8244edac46dda8bb",
+          "afterHash": "sha256:e5d3e2a6d026a6964d99a8ad27735a33297f2e21e4344d3b2a64c161257f5542",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/4"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "a227f2bf-6e88-45f7-83f9-44a709aa6f2b",
+          "cardNumber": "ACT-breath-lightning",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:59c380a5a49f99145eb7befa631f6860f141ae9602b5571c40811c532493b6b9",
+          "afterHash": "sha256:8860f1e276a1ff0ef22401e686f47673402f58ca271962daab302402f9785191",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/5"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "523934b2-926d-491d-b209-58ba1a8f66e3",
+          "cardNumber": "ACT-breath-poison",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:1b0d281a8bb4f313aab14d3008a9e0db08438f291a7cef8df5dd3f0da6511ce6",
+          "afterHash": "sha256:951383a4779497d470bc1fdb60104a60d96ccb5d05d1d4ed7a2427da2ae9f679",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/6"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "a86819e4-ab9e-4a74-bdde-957e7e3e9f1f",
+          "cardNumber": "ACTION-0001",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:f35c196f2c8eaa0f5512e35ebe8fd42a4be07a8a697993ca8dde95b5970df776",
+          "afterHash": "sha256:bb24b802e9d150839b3683e31004ddc052e60b49a484ee92fb1dbbaa313e3806",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/7"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "actions",
+          "id": "1cd19d26-3011-4859-9430-c8787fe99ba7",
+          "cardNumber": "ACT-second-wind",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:78897fea68d53d69f43f624abdf707345310153e5c4b0b0151e158d6a7e72282",
+          "afterHash": "sha256:88a5fb846a3a138db9e29c6e7833c71250b1113a09d36eb0ea3c2fd43a7073b5",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/actions/8"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "50626b5a-33c5-46e0-af0e-50599f4306a0",
+          "cardNumber": "fire_bolt",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:6d7800085d42177f57610fcd92cc487183fcb43210423aeae417d9a53f645a1d",
+          "afterHash": "sha256:22cdeacb972b3ce3a2dfbd47989811bf6ea959a1de4f4ea1dd9197ecadf06631",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/0"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "8cddf152-e406-4c7a-8d34-cc8bcbfc0dfa",
+          "cardNumber": "SPELL-0286",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:16748e509a5c43303a25b115479a1b9cb48734e4195716c199c2b32d5bf3ec3f",
+          "afterHash": "sha256:64728050ceb31e63943d4f0857fb4ef4c7742f21ed3ad6720f86f8db9b90e98e",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/1"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "e300a1f2-91ae-4c82-9904-057f93a013ba",
+          "cardNumber": "chill_touch",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:9920af100855ea515c4fd63e4d6e54300303e1cf00680f50b10ee3c9017825b8",
+          "afterHash": "sha256:1875cc47253eee66d6f1d22fc6f527fde775e047125df354a6d04116e23c61ec",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "b2c5ebf4-facc-4521-948f-55b30746bfa5",
+          "cardNumber": "dancing_lights",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:3555d259d12152e9364e7681715ade1c9521aa0b80a052020adafecd94554c41",
+          "afterHash": "sha256:d55c293c466c8dbea56ca944da5e89ca670bdd0f6ae015cd4e31af07fd07cd3b",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/3"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "25d868ad-0714-4fce-b5b2-2931dd5646bc",
+          "cardNumber": "detect_magic",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:e07ff3747b07631e29d2419790f917d479b343268bf62865da63d58630839a07",
+          "afterHash": "sha256:ceca1914dd51f657c064b6c0d77b1097b9f931da435cdc2a4513e2f35273e090",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/4"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "3c68b9a7-d143-4b39-b06c-3d78e3276117",
+          "cardNumber": "druidcraft",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:81ad5b092bc3b6e225b9e923e0bfc954018455d56bf98a0d93fe1b82d3174a1f",
+          "afterHash": "sha256:6d9f536a6955d451610326c192372c1c7c942e4fe81cd3eac5739e6a589ff8d1",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/5"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "1e9cb7db-f4dc-4215-ad57-0e3407b78913",
+          "cardNumber": "light",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:19d3624ac25af91e4b1dcac48bf23e97ee9b00d937925ab40646edbaed04b790",
+          "afterHash": "sha256:d86e8ab49b008889da800b248f16e0813305c988f7e4565c521052a9e97fe261",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/6"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "5b79a37b-e7a9-482a-9efc-46b57e3a79de",
+          "cardNumber": "mending",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:6a120a1828cf5bcbda90c091f49d5ff885d573d45a93662eee0226dda7c937d2",
+          "afterHash": "sha256:f52b5f915b85d5fd979339716f712ab471c46146a5771e749cd67299508c776f",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/7"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "dc59ce91-4e89-4f1d-89a5-e25650f3a6b7",
+          "cardNumber": "minor_illusion",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:e6a42792b2601e09150181d6c5d9b3ed32460c0ea5809534a53b8b6c025237c4",
+          "afterHash": "sha256:85c692cff6bd644f93154a8bcb94981fdef68b30caab53a0400ad999ff242920",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/8"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "7d0c00e7-0cfa-4f3f-8650-aac70150538c",
+          "cardNumber": "poison_spray",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:961e17975b06b99022f36270686297046970b5700e4b22c99de174de2e0397e7",
+          "afterHash": "sha256:e812f661980acf8fa4e757292c682d1b541aeb3c2f3e3585dc6a020dd3d90bf0",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/9"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "e47e71cb-f44e-402e-91af-e6fad63982dc",
+          "cardNumber": "prestidigitation",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:9c89636f7394f617ea70668e4d91d355850c9adc4553269287ee202ae986cf66",
+          "afterHash": "sha256:725be91e70430740d3b95c83648dd459266d78274cf7caef91c4080a0d97f037",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/10"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "33c69e7d-7524-421a-9d68-521e1b7fb57a",
+          "cardNumber": "SPELL-0163",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:80bc1f775bc03dd2ea768fbff4566f3d5f20ca6a50ecbc132a9512817a42a1b1",
+          "afterHash": "sha256:62f0561076079171a9e5faa4a93cba8873a2e27df3a627a17b1f46cc0bd14b07",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/11"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "34518f38-b737-4a91-88ac-d5858d2d04a0",
+          "cardNumber": "SPELL-0171",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:85f7b50f9b0bfa3abeb11515250dd0ae2e9e177870cffcc2348ea33445caacff",
+          "afterHash": "sha256:98b8ce93edf888581d2d7fd6fcb2b8785618e246265d5f70195e26828b764efd",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/12"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "938a86fd-e0bf-4845-b4b3-acfe2fed2b59",
+          "cardNumber": "SPELL-0174",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:065f31e219f3d19cedca1be8abb88b98ccb9150251ab7618aaedef8b22f22d5e",
+          "afterHash": "sha256:3c3c2b830789fd44283de38118abaa4cfadb8d51c603b46809d0d3515a67c990",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/13"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "f55f58e8-a6f9-4c97-ab6f-8e7f385591d0",
+          "cardNumber": "SPELL-0189",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:a76a45145ff03e4bbd445504cd3bf4c5405133fa0e319d18c3a861daa82652bf",
+          "afterHash": "sha256:c8ad0a4af2b81438e76ef29f078149658acc84bd43dff59fed7d2191bc246e73",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/14"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "db6433bf-f779-4b65-8766-0feffefd1930",
+          "cardNumber": "SPELL-0190",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:5fb3f1978b7d1fc54f268b29bce29fef893bb27811d2daa75e75ca476c92071c",
+          "afterHash": "sha256:bdebd5398991e05bcc5ac004299f01cc61c648b0c866eb3a9321bb3915cf6962",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/15"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+          "cardNumber": "SPELL-0214",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:e750fb73ed3208bf779a0e2f7b3703f4c267aba7815d29c02bc48f02e5d5bbc2",
+          "afterHash": "sha256:20357799aba7b06244adb1a504169595cbeaf114bf82f5b942b34d7b3f6c23f2",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/16"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "ebe432dd-c124-4f79-a39b-db14ca2ed741",
+          "cardNumber": "SPELL-0218",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:82e502501707e4c36bd6e5afaac03c458f043e5d0aa580d2bf005d655bb4b37d",
+          "afterHash": "sha256:c81640e38ae08181a4bec892ecb33a4052a141a78b2fbf7fc64d5131be37166b",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/17"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "851027a9-0b6a-49d1-9f61-5eef831bf297",
+          "cardNumber": "SPELL-0229",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:f549be9260e7d37b0d76c689dedfdb3dc8c7f283032ed87c1889cb5fae0b4e06",
+          "afterHash": "sha256:caa477db8c50d2cd912120c4ccfc3305c19c5ed63070bcaee065c50767b935af",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/18"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "70dcdadd-7e66-43f0-81b1-1fd1d346d9b7",
+          "cardNumber": "SPELL-0230",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:7e61b1e035b9d76f6eff781c30dd800d51ce650e6182e2369a0c283035a6e97b",
+          "afterHash": "sha256:ea1ce22be12a6a1a465b9b8d3d8d313abc4d45004d673f5f055f3ab145ac42ea",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/19"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "a8bb857d-cfaf-49d4-9f95-04a71a997a03",
+          "cardNumber": "SPELL-0236",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:1d25ad5ce191a848ac30270cf4b468982051e7beab4763d27107965e12784b8e",
+          "afterHash": "sha256:f2718034f5994734cd522380211e9a24e32f32ea2039ce24e4cba6637650efab",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/20"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "aa2adb3d-101b-4e70-97f1-69dc9f0debf8",
+          "cardNumber": "SPELL-0241",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:d946d9e2449dafd393459fe7e369ef38d08fddef669018a2b68ba5abe8f1c4fc",
+          "afterHash": "sha256:4dbdf56990d847f9dd9191ad660a433c7c8c9db022e590ed9934fd5c6b7ca8fe",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/21"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "732c2287-dd4d-46cd-9315-67447549abfa",
+          "cardNumber": "SPELL-0242",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:1ed61237bb19fff2944046fa1ae452ec555380d2d1b88a7bc758ba6d5d38edb4",
+          "afterHash": "sha256:8951f4bfc553fce26d0dec4ee714df9c65b587a40e3b205207019e3f8925d2c2",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/22"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "677a3abf-5fc7-472f-b789-418dcba6dd88",
+          "cardNumber": "SPELL-0252",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:806954a58702e40e0d0655e08626f395ab4f532d584eaf5ce939a7da0b9509ca",
+          "afterHash": "sha256:b1193aec90adf824083a40abfcb0f7a43265fdac42f3de77f44b4b62d32a5969",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/23"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "f3098f61-1ea7-4816-9819-1903388cfe06",
+          "cardNumber": "false_life",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:f2f1d4584f0225f270f8c22268f980ce7da522744a59a7698a103ec07f19c943",
+          "afterHash": "sha256:192d32aeba6a8dab7c0c7dd3d643d93819f0b047e4322001a7ffc5119cba57ec",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/24"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "d87f4507-849f-450b-b328-0198cb011587",
+          "cardNumber": "SPELL-0317",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:6056a815cd271e76de6874479758af8be6174c26db174c19d7b1bb918feaf29a",
+          "afterHash": "sha256:3ca41667edf7bdcaf24d6ab0ec16698c0869501ea647669d11a5575cd186077a",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+            "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+            "sha256": "sha256:f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+            "bytes": 284784,
+            "pointer": "/mechanicsPatches/spells/25"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "85b05dba-9662-43a2-afb9-050ce2bf6136",
+          "cardNumber": "SPELL-0201",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:250d839c870d791c5a4f77dfb5507322da89ab761298504411703756fd1cbc63",
+          "afterHash": "sha256:4bdf5d6d15afadabf29a3291e4b0f7a33fe50f0b2c223b1e584da7d5e1f0b591",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-control-spells.v1.json",
+            "blob": "270f5fc6bac6cf454d42f11b112c75404af9f3ff",
+            "sha256": "sha256:016d1cd22545a3bb764bc2dfb89c156e5af9852f0a3d53c7ce8c4010ecd95d1b",
+            "bytes": 8361,
+            "pointer": "/0"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "a931ec6f-40ad-4f5d-beb4-4893f3c66c08",
+          "cardNumber": "SPELL-0272",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:0f3237ac3af7d14fb401c03d2d65e710c66fb8da814ede6ef790b607b8a3ea59",
+          "afterHash": "sha256:6e51151b4f5c36503b7f9c392fa6c94fcaa83cbf7c80a845309706b5498e106f",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-control-spells.v1.json",
+            "blob": "270f5fc6bac6cf454d42f11b112c75404af9f3ff",
+            "sha256": "sha256:016d1cd22545a3bb764bc2dfb89c156e5af9852f0a3d53c7ce8c4010ecd95d1b",
+            "bytes": 8361,
+            "pointer": "/1"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "52d5507e-4350-4dcb-a5fd-c4a11bd91b67",
+          "cardNumber": "SPELL-0306",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:1b202c32188da273f09567d760be54a6e2f3d43db54d717d1bff3d324c9e01f7",
+          "afterHash": "sha256:c1956f0a79607658381fe731efd4411074097e4dcd1506740afa378b1c7ca5af",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-control-spells.v1.json",
+            "blob": "270f5fc6bac6cf454d42f11b112c75404af9f3ff",
+            "sha256": "sha256:016d1cd22545a3bb764bc2dfb89c156e5af9852f0a3d53c7ce8c4010ecd95d1b",
+            "bytes": 8361,
+            "pointer": "/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "d6a193e8-0204-4277-9a6a-75a86c2d15cd",
+          "cardNumber": "SPELL-0179",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:bc9251e18ded3368c83348c34caaba791c8ee24bc5637ef3650d86b35e900e04",
+          "afterHash": "sha256:bc21662d783802bcc213f858ceb389c14bfec84a389526622cbaef0f413482b8",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-ongoing-spells.v1.json",
+            "blob": "e1770deced0819b734810517387e7f3ae91fbb20",
+            "sha256": "sha256:956ad3124367fe7b7929c0a3be811a2f343878adb1dca0cf708229bd55e5503b",
+            "bytes": 5205,
+            "pointer": "/0"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "a4491a9d-8a2d-4212-abc1-c92d3f0b85ed",
+          "cardNumber": "SPELL-0181",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:5679cd3aff8a480873fadeefb0295729ab205ad59c4333ed3cccb69e9f632630",
+          "afterHash": "sha256:410a70ba2aed346f4bc3e78f86879d33834ad79b08bfe7badd59f155c28ad16a",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-ongoing-spells.v1.json",
+            "blob": "e1770deced0819b734810517387e7f3ae91fbb20",
+            "sha256": "sha256:956ad3124367fe7b7929c0a3be811a2f343878adb1dca0cf708229bd55e5503b",
+            "bytes": 5205,
+            "pointer": "/1"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "b132a28e-f6c9-4832-924b-1a680390e7fb",
+          "cardNumber": "faerie_fire",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:86d9ace03b3be9830598ba5cee784cbef5f0975ba7f91e886870b56fd7213ca2",
+          "afterHash": "sha256:13ba7c759db861cacaaebb0f6791338647fab74c1e8303108d6ab1f16a03112f",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-ongoing-spells.v1.json",
+            "blob": "e1770deced0819b734810517387e7f3ae91fbb20",
+            "sha256": "sha256:956ad3124367fe7b7929c0a3be811a2f343878adb1dca0cf708229bd55e5503b",
+            "bytes": 5205,
+            "pointer": "/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "a66ca78f-af5f-4310-85c3-01c300e06581",
+          "cardNumber": "SPELL-0165",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:0b7f4a8747c0b16f26fc1742087ca0559046855866d7e1f1b7da22934ac16251",
+          "afterHash": "sha256:96c4ed34c2dc3920ffd395886abbc16800ba375bff979854c7c36842486b1035",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-spell-primitives.v1.json",
+            "blob": "e02045238376c02371edd3aa2674f5a6ffc69dd8",
+            "sha256": "sha256:6cbf0641b8dc5274e648cb4f9945d254337757ac87f8ceeb37da651c5ce87c99",
+            "bytes": 10624,
+            "pointer": "/1"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "8c2702cd-4cfa-4c02-919a-178bd2196ca4",
+          "cardNumber": "SPELL-0223",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:0eaa810287d157ea260b9dba43d080cfbae60f73bfcddeb7ebb7880eb9e2b007",
+          "afterHash": "sha256:34f5ff70c9878d9280eb6aa68777b3390c16267b4ed28d89464f3f0803b06764",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-spell-primitives.v1.json",
+            "blob": "e02045238376c02371edd3aa2674f5a6ffc69dd8",
+            "sha256": "sha256:6cbf0641b8dc5274e648cb4f9945d254337757ac87f8ceeb37da651c5ce87c99",
+            "bytes": 10624,
+            "pointer": "/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "d7218ea6-2062-4ef3-8680-c8f9c657fda9",
+          "cardNumber": "SPELL-0267",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:ab9b4711ed30d427304b1c68664550ffb20b976e00cd46f33dcb9e3040c3e87e",
+          "afterHash": "sha256:5c34e6ca75962f5a992b4f6cb2c85f2ec2cde2078387d458b4b2ca23ebdba6ac",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-spell-primitives.v1.json",
+            "blob": "e02045238376c02371edd3aa2674f5a6ffc69dd8",
+            "sha256": "sha256:6cbf0641b8dc5274e648cb4f9945d254337757ac87f8ceeb37da651c5ce87c99",
+            "bytes": 10624,
+            "pointer": "/3"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "b6cb9612-8dea-4949-bbd5-595bd5501beb",
+          "cardNumber": "SPELL-0287",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:8d2538cf1f3d811d1b11204e0b20a785772903ac7a0d230d6e5a466f5f30a8fa",
+          "afterHash": "sha256:e665f9da83cd0f86fbe9af4a6e7efd49b6cbac4f7d1317d17872fcccf9cf0473",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-spell-primitives.v1.json",
+            "blob": "e02045238376c02371edd3aa2674f5a6ffc69dd8",
+            "sha256": "sha256:6cbf0641b8dc5274e648cb4f9945d254337757ac87f8ceeb37da651c5ce87c99",
+            "bytes": 10624,
+            "pointer": "/4"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "bd99466f-46ab-4af5-a41d-b2b804b9f1e3",
+          "cardNumber": "SPELL-0295",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:73df533593e808b9c403e813479c3273cf856ce5b48d8e2c946fe87edaa2a545",
+          "afterHash": "sha256:7ffcc93cc0dc885cc5e2ea8dbb1f862021d5bfb3db7235db13d159db25516f7f",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-traversal-spells.v1.json",
+            "blob": "04f8a4212fc71fa4ffde59464801d6aed237c2f6",
+            "sha256": "sha256:c8e62b00a7e7247f9f94122c261d40cdd31e83180031cf3d7525fc3be2fbe596",
+            "bytes": 20366,
+            "pointer": "/0"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "0cee5f3c-e943-46dd-96bc-ced618b90454",
+          "cardNumber": "SPELL-0274",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:33d55577b40c644afa623245c28c2f95f60431bdd2cda57e4e0ae388eb5b0fd1",
+          "afterHash": "sha256:9bd08cafb678cdc10364b12c61df08b19baac8c9d3a4cceffe02f8c9241bc4cf",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-traversal-spells.v1.json",
+            "blob": "04f8a4212fc71fa4ffde59464801d6aed237c2f6",
+            "sha256": "sha256:c8e62b00a7e7247f9f94122c261d40cdd31e83180031cf3d7525fc3be2fbe596",
+            "bytes": 20366,
+            "pointer": "/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "d3a05e09-7f80-44ea-be21-dfdd3408d528",
+          "cardNumber": "SPELL-0194",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:a72c9f6c14bfe707e3c4a05819732f7298d1986c4154e698a2fe699350a7b185",
+          "afterHash": "sha256:7a948f3f7add5e74fb26f2fb5d609aeff4c6f023010ab5b8ee3286d5f8166195",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-cantrips.v1.json",
+            "blob": "82c2206f48a7738bdd1ca4c69cce7ce93b405966",
+            "sha256": "sha256:f09683f6357c8703a3141ee694c2b39096d8525830a5f02d3a47b4cef606715b",
+            "bytes": 9670,
+            "pointer": "/1"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "35d36558-8a47-49a1-9099-387bee37b8a2",
+          "cardNumber": "SPELL-0294",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:fa83baf45de04b0b233832b605e0c3fe697eba9b7ed2d7bdf259af9a3e7796cf",
+          "afterHash": "sha256:0539bc2f3b2c5741c7a8bd39dac99c3e3d7e84a14c894391e3e4a6fd91f39e2f",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-cantrips.v1.json",
+            "blob": "82c2206f48a7738bdd1ca4c69cce7ce93b405966",
+            "sha256": "sha256:f09683f6357c8703a3141ee694c2b39096d8525830a5f02d3a47b4cef606715b",
+            "bytes": 9670,
+            "pointer": "/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "b84d904f-4768-4a05-8803-7a0d0da28a00",
+          "cardNumber": "SPELL-0298",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:46b9090348d7506ef79ad4f61e92457e4e9cf8f41a038febc7ecda9b544a24c8",
+          "afterHash": "sha256:750cf4ae75b9a0f8d5759ac22aaa104c5c35002e1300b66a485590c626f05695",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-cantrips.v1.json",
+            "blob": "82c2206f48a7738bdd1ca4c69cce7ce93b405966",
+            "sha256": "sha256:f09683f6357c8703a3141ee694c2b39096d8525830a5f02d3a47b4cef606715b",
+            "bytes": 9670,
+            "pointer": "/3"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "d3177c17-b0c9-4691-a2ba-5ef24a28c1aa",
+          "cardNumber": "SPELL-0312",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:df3f2b4b0297ce70ce32ddced62eede1245b2203dad3d87afe8e2e76c989c0ef",
+          "afterHash": "sha256:9e3df2e03f2583f98d3a4995f281cc1968083182e346ab0d00c7962137aebbd6",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-cantrips.v1.json",
+            "blob": "82c2206f48a7738bdd1ca4c69cce7ce93b405966",
+            "sha256": "sha256:f09683f6357c8703a3141ee694c2b39096d8525830a5f02d3a47b4cef606715b",
+            "bytes": 9670,
+            "pointer": "/4"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "1fd05ad1-e78b-40cf-914b-aa1dca54e7f1",
+          "cardNumber": "SPELL-0161",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:913bffa939d36965cf795bc3d446beece2a9813d06b1b63f0024e3e913f1d814",
+          "afterHash": "sha256:ba59551ba3f65c502e09c314d61c595e60cf2c4f2e31717d11d65e1bde33673d",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/0"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "4291b817-6869-4f87-afae-5bd1a37aee3f",
+          "cardNumber": "SPELL-0188",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:3fc2e4d21af25cbd83ff11c9926962e05de309e6f0fdd71a0189d0fcfa3c4c3e",
+          "afterHash": "sha256:a2eb20bf004c4be5bcac47f52f6ea0fe069fcbaaefbe569840646206b32cf62c",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/1"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "befe393c-7463-40df-a888-d74f1e6e186c",
+          "cardNumber": "SPELL-0206",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:c6677bc6be6d5ca21c8037ff24db25825224e197046737872ac7ac6f93d64134",
+          "afterHash": "sha256:99b1e024ec5135f00ac4d315f909451b5ef7bdd5406cebf183d5fb79386c41ee",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/2"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "5a8cc8b7-8f5c-49d7-a66d-ba31a273c65c",
+          "cardNumber": "SPELL-0222",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:5237649e188c76d3147080d74b02bb6fec3cdfbc47fe5cb90ca4695c3e7b1032",
+          "afterHash": "sha256:9ff0f69b3f482cdd3fbfa466f1c26fcae2dc8789906adec5e1beec955f977140",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/3"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "13018914-f220-48c5-8aff-902b1fbfff73",
+          "cardNumber": "SPELL-0232",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:f9510a849449b7fcddcf28bd6742a083adefb1e6c7067c450edbb330b5b31fd2",
+          "afterHash": "sha256:11e23e5ffdf3e2f5982ba4d0d25dafd1f972eb991c614bb087a83716f0e1f8ee",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/4"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "c6f10945-84d5-422f-bb70-98177142d90e",
+          "cardNumber": "SPELL-0237",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:1ffd01bd16795752bf3552de7a9a4c0d272f7585577e5cf72a969053aefa542d",
+          "afterHash": "sha256:6c5897aa371dfe7fd7bfea385fb148c3617d4ce447955f4a04185cee1771be7e",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/5"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "8e26c8a3-c545-4524-98d5-35acc5d29ca5",
+          "cardNumber": "SPELL-0245",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:f619c9a78996203db254882de4cef9c269b7a2abcd262cab65101de55438f792",
+          "afterHash": "sha256:8697179eadcddc1ebd24b173a253ecd66bfce05d56fe509997929e9e63108e50",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/6"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "3b1316f0-02e7-496b-8146-602f4bd8284a",
+          "cardNumber": "SPELL-0256",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:c5b1c0a8e7ebcfaeca7f4c54a8c06b6047d7cd69ec7001bdcf28a00e7ff0ff9a",
+          "afterHash": "sha256:899fed63d9d382a4bc9fd7270b7bbc9faa4aa61258c862480d8a2cecb2c7ceb7",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/7"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "bf6dbc16-d7bc-4abd-9a85-f204858b9396",
+          "cardNumber": "SPELL-0265",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:5b1365f18226d03aba076c4d38d42264afb26e3e3ba834f2205daf1e7e317379",
+          "afterHash": "sha256:1234ca203e9bdd68fcac41667e457473685624ec91fa7c28c04aeb313a2f36aa",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/8"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "b6254e87-7bd3-4aaa-b937-5b793926128b",
+          "cardNumber": "SPELL-0277",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:2b5498945034c1bc02c5cb79172b953acb4c682b5c851bad0c7263d122e6aa78",
+          "afterHash": "sha256:c42f619571daf653e05f5157e46f577cbe3f9c522bb471c092037bbdc15f5749",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/9"
+          },
+          "nameRepair": {
+            "kind": "exact-public-unique-id-card-plus-original-name-repair",
+            "id": "b6254e87-7bd3-4aaa-b937-5b793926128b",
+            "cardNumber": "SPELL-0277",
+            "nameMatched": true,
+            "initialNameHash": "sha256:09d2c9c6fa472b92c5aa1be0963d2b4ceb7a46f3b15447ef5cb79294d4b36cc2",
+            "expectedNameHash": "sha256:6945c797d29853f5673878ecc72b67f49d12d99f1deee4e9558a5fa54644e30e",
+            "transformation": {
+              "commit": "125a6eb950d5e648e3d4dbc53a60d6da2a3af650",
+              "path": "scripts/content/repair-mini-mvp-structural-data.mjs",
+              "blob": "de54291d62b9cb2d59f18843367490efe3f4a13d",
+              "sha256": "sha256:ef99a8ac772ca86bf0c5543b1e48c2dfc357f03a472cfe9985fb0a5c8758e13a",
+              "bytes": 10769
+            },
+            "identityFix": {
+              "commit": "3749a66e0b4c9e82d4ec0401c2af6d4d2322e826",
+              "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+              "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+              "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+              "bytes": 17070
+            }
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "ac198b93-04d7-4633-831e-b0050330cccf",
+          "cardNumber": "SPELL-0288",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:dbe67ededa255a3174e9cef3de7d38c44e17040bea55223c821369957a58d9df",
+          "afterHash": "sha256:c3b52646e35c319188e54e03cb98aedcd2abc3498bfaae6cd7fec20411286d3d",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/10"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "2ac56edb-1620-4cf1-9533-77f590b08afd",
+          "cardNumber": "SPELL-0296",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:c9dcc98d7f18c3d67db0a37f192cfdbcc0a553c43cf6fd457a5504115157424f",
+          "afterHash": "sha256:dd89b914f20bd36739ec944f756f570ff93f18d054bad27c37357d5f6b3463f5",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/11"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "d4a2b512-06fc-420f-ae35-1c4867d0e04e",
+          "cardNumber": "SPELL-0303",
+          "kind": "specialized-original-data",
+          "beforeHash": "sha256:b29c34c91ec0da22d46654f92e95db4e99e2597c595900af9f662e917b1c8ab6",
+          "afterHash": "sha256:3d7703eef0ed5d01c4d5485bae7bc8380694b9b5a1ff4589bfa2bec08227b7ae",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-utility-level1-spells.v1.json",
+            "blob": "9a911d682ef55876832c05de2378e7d3321c4b89",
+            "sha256": "sha256:f4df809f42b211434c27975c0c07d445f4dacf5b93652792614130ad65ff4003",
+            "bytes": 17070,
+            "pointer": "/12"
+          },
+          "originalHashMembership": true,
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "742c2f7b-b72a-444c-8868-efbe8cd74c70",
+          "cardNumber": "SPELL-0482",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:a53f710aefb91de6e60371a9826b0b5d26371465b49a3d43a95f12c72c9451cc",
+          "afterHash": "sha256:eece5ae4cd27ed333ce69e553ae5e5b469c57cf25c7a359d2b92154d5fc7c0d1",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "3b0ac4ac-73bb-4525-83fa-9f4a9a14c430",
+          "cardNumber": "SPELL-0166",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:2bc150356f45b8ea6226ce30e68f7622dccddd879d9a26cbd3166fea7852130b",
+          "afterHash": "sha256:de953f20eaf777bf73ad2355b3d5687210e8f87895cb209a92d93731b2136c99",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "5da8fe39-f54d-4ffb-a958-4ed6d9cafaa2",
+          "cardNumber": "SPELL-0192",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:bdf187bcc374f084b23130002bcf43f5d74fe6dab24025edfda9249c1a63706f",
+          "afterHash": "sha256:ea5f57e89d42354cec1d2312eaefab9c5e54cb24a7dc8e493459c12873b6e161",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "73d4195c-5da4-444d-a0c1-19572df641b2",
+          "cardNumber": "SPELL-0202",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:74b8a3aa69568891394c7545cdb7a7978055d51eac7634e2d008495348316a0e",
+          "afterHash": "sha256:ed0741d877d47f1f23ad86f07832587241b265e6213d83f1d381776b37884fda",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "7f7d92ed-0d5c-4567-990b-3395247b9266",
+          "cardNumber": "SPELL-0204",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:425eca2031f1eb1e21a40e2f39bc35f9c00b3361d15028157f8ce7e525b1fc05",
+          "afterHash": "sha256:fa731223c87f007a8557af4edb3861786774ca0ffa3ccaec46f5c73e581b5665",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "bdeda1c3-6574-4946-8b91-5faf0f76072c",
+          "cardNumber": "SPELL-0205",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:3615aa9612bfc9548b79c81875c08e793d16b37444b1e3490abc42b09f3c0750",
+          "afterHash": "sha256:dc046076e8d1e0c23ffa9980060874fd0e0f921e52a9afe5dbeb8df2cbb61288",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "f5d4b18f-6212-47e7-ae0b-8dda2f84d4c2",
+          "cardNumber": "SPELL-0224",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:c224db75396c8c8006fb9aae7103fe2295ec27fd31b2a76cbad5a27ea13beb81",
+          "afterHash": "sha256:e6c2005631a6a43aebc8ad329ed0e001c33078b69f316cead717becc18a8375b",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "0f0eca67-f241-4f1a-b01b-37c6f16adea2",
+          "cardNumber": "SPELL-0226",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:764ef613ea8bf7aa121c0db946422b2af68b5ed9ff1d850b2954865e03cee9e6",
+          "afterHash": "sha256:764ef613ea8bf7aa121c0db946422b2af68b5ed9ff1d850b2954865e03cee9e6",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": false
+        },
+        {
+          "table": "spells",
+          "id": "a9a0d114-ad46-435e-a3c9-128b305b8a5d",
+          "cardNumber": "SPELL-0260",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:cb2cf9a9515b1e4d992e8bb89f0fbcb8501521e1b776e071a71ec1a2cfd2c660",
+          "afterHash": "sha256:a3142ae216ebb3a866ad85fe4f1a635f67655fab2953c316e179a188165df537",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "13e456fc-cf29-4c46-8aeb-c282a9cbcd5f",
+          "cardNumber": "SPELL-0280",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:41b663899555dfce6154353f1aa0e90ddb07296db9dee2b9a19ed003acaca155",
+          "afterHash": "sha256:1a3f5c150e0d0b45514a8b75c858e8da6dc50e6904ad28093dc45a1f36b4f1bb",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+          "cardNumber": "SPELL-0281",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:e1716c88faa2510e01e9bfefb320adac9c0cb8a48f2bc9532ffc379d69e2b594",
+          "afterHash": "sha256:cdafee5d0cb0583c2e31d28356465a5b40b2cb629485a347fc354a70c8de0608",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "78eb6e5c-5d2a-42ad-8e6e-6bf3be3f96c0",
+          "cardNumber": "SPELL-0291",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:78eb934bc2fcec2c1700b38713fbcb7293436d1d78d275463ccde6144c6208d3",
+          "afterHash": "sha256:31401414d4c38b4381bf5da7b76106fb8f31ec9fec705569d76058c19ebf9843",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "ba23242c-eb9c-46a6-ba01-ebdc3b5b9618",
+          "cardNumber": "SPELL-0297",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:93b7dd38689a451cd00409a9a3f4b1c2a8ddea0d645fa783e718562c90e7dd2d",
+          "afterHash": "sha256:42ad420e72777a570a867aaaf8a789f08f8cf3db8669386c234d8366398cff5d",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "1c966901-b84a-435c-8950-1da774d72210",
+          "cardNumber": "SPELL-0300",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:970d29364663678c963bab48b823b2c900f612cb283a3aea51bd6512c86e545d",
+          "afterHash": "sha256:3baa6389eec0e6098e5cd8264ac7068c3cc8a105bb22b7967bf7c966cbeaa52d",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "9c7cec56-53ed-43f1-8ba7-67d768cf28de",
+          "cardNumber": "SPELL-0315",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:06d1a9a929d7922e8ab3fb8eacfb3435fb91a0d87032d17c60bd8ac7c4bd468a",
+          "afterHash": "sha256:691c405fc760f18ec3aa480c538d30b29bae0bb6f5c5b164abea36458bca61a5",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "8b708d7b-097e-4624-8a41-c8c8e00f044c",
+          "cardNumber": "thaumaturgy",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:8735998cf879b073bee3602ae24deed668b090e12e9394cda4eea9426f41f9c9",
+          "afterHash": "sha256:d60e63d0b7300a97c0f32bf930e4ee332044a5294bded5a519b391042031c5a1",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        },
+        {
+          "table": "spells",
+          "id": "30530b80-5db9-4fd9-bae8-1cb092c05730",
+          "cardNumber": "SPELL-0319",
+          "kind": "complete-generic-domain-minus-complete-specialized-domain",
+          "beforeHash": "sha256:bc3ed5f03d1ca8a16765967c5c2a0a17c5aeb660233caeec53168826439622ea",
+          "afterHash": "sha256:1e8c90b4c65cf7dfee2f272e7e6c6678e68d23d4e34028b97fb3cd831db0193b",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/cantrips-2024.mjs",
+            "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+            "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+            "bytes": 22940
+          },
+          "originalHashMembership": null,
+          "guardOrigin": "new exact public preimage guard for this owned composition; never claimed as an original generic-writer guard",
+          "mechanicsChangeRequired": true
+        }
+      ]
+    },
+    {
+      "boundary": "118_repair_bard_spellcasting_contract",
+      "before": "genuine119 hydration and unchanged119 onward",
+      "rows": [
+        {
+          "table": "spells",
+          "id": "33e73716-4d61-4669-b9d4-b0e2f6fcc63f",
+          "cardNumber": "SPELL-0253",
+          "kind": "specialized-original-data-after-required-historical-guard",
+          "beforeHash": "sha256:6a46a0b6a9e9e802b10ccd4036a8f7ebc57bbf6ce9f96371d7299127eca3cb67",
+          "originalPrimaryBeforeHash": "sha256:13777891bde3f0cecd2065f219b05ff38ab20e3ef2352fb35c5e01211ccc75ed",
+          "originalHashMembership": false,
+          "afterHash": "sha256:3a0d485c9be1957da2f2d31872344b53793e9fbed340a2bbe6cc9c34afa8ed06",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-traversal-spells.v1.json",
+            "blob": "04f8a4212fc71fa4ffde59464801d6aed237c2f6",
+            "sha256": "sha256:c8e62b00a7e7247f9f94122c261d40cdd31e83180031cf3d7525fc3be2fbe596",
+            "bytes": 20366,
+            "pointer": "/1"
+          },
+          "beforeTransformation": {
+            "kind": "unchanged107-class-projection",
+            "source": "backend/migrations/normalize_live_happy_path_content.go",
+            "classIds": [
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ]
+          },
+          "supportPolicy": "require the actual unlocked unreviewed post-revocation state; preserve normal invalidation, never copy authored support or promote certification"
+        },
+        {
+          "table": "spells",
+          "id": "92bcd9dd-2b4f-4264-9d8f-ba16722051e0",
+          "cardNumber": "ray_of_sickness",
+          "kind": "specialized-original-data-after-required-historical-guard",
+          "beforeHash": "sha256:b9e04b442b54606748f2efe15480b2336209a030656381aa3f9f1e5d8230d40f",
+          "originalPrimaryBeforeHash": "sha256:b9e04b442b54606748f2efe15480b2336209a030656381aa3f9f1e5d8230d40f",
+          "originalHashMembership": true,
+          "afterHash": "sha256:d27fe97a96f31e5e6c8a26fed5ed76c203b9985c974b997ad39b540c960a20fa",
+          "source": {
+            "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+            "path": "scripts/content/data/mini-mvp-level1-spell-primitives.v1.json",
+            "blob": "e02045238376c02371edd3aa2674f5a6ffc69dd8",
+            "sha256": "sha256:6cbf0641b8dc5274e648cb4f9945d254337757ac87f8ceeb37da651c5ce87c99",
+            "bytes": 10624,
+            "pointer": "/0"
+          },
+          "beforeTransformation": {
+            "kind": "unchanged107-class-projection",
+            "source": "backend/migrations/normalize_live_happy_path_content.go",
+            "classIds": [
+              "CLASS-sorcerer",
+              "CLASS-wizard"
+            ]
+          },
+          "supportPolicy": "require the actual unlocked unreviewed post-revocation state; preserve normal invalidation, never copy authored support or promote certification"
+        }
+      ]
+    },
+    {
+      "boundary": "121_repair_spear_weapon_profile",
+      "before": "unchanged122 onward",
+      "rows": [
+        {
+          "table": "spells",
+          "id": "70e35366-5446-49ff-b0b9-759dbbff347e",
+          "cardNumber": "SPELL-0173",
+          "kind": "retain-already-proven-71751-hydration-and-ordinary122",
+          "originalDataHash": "sha256:c2091205f9e919aa6a79d01c23f12b1ec7c32ff7976dfbcc4543e06180c89ff5",
+          "afterUnchanged122Hash": "sha256:5cebd64f4ac2689f88d97882544e0aedf6b242f13a4b1ebcc8ce177002f75956",
+          "latestAuthoredAfterHash": "sha256:5cebd64f4ac2689f88d97882544e0aedf6b242f13a4b1ebcc8ce177002f75956",
+          "equality": true,
+          "changesToExistingHydrator": false
+        }
+      ]
+    }
+  ],
+  "pre101Mutations": [
+    {
+      "version": "086_repair_content_mechanics",
+      "domain": "effects only",
+      "affectedScheduledRows": []
+    },
+    {
+      "version": "088_normalize_spell_targeting_ranges",
+      "table": "spells",
+      "ids": [
+        "SPELL-0230",
+        "SPELL-0163",
+        "SPELL-0311"
+      ],
+      "range": [
+        "Касание",
+        "30 футов",
+        "60 футов"
+      ],
+      "affectedScheduledRows": [
+        "SPELL-0163",
+        "SPELL-0230"
+      ],
+      "intersectionsAreExactNoOps": true
+    },
+    {
+      "version": "097_repair_live_mvp_content_contracts",
+      "table": "actions",
+      "ids": [
+        "aasimar_healing_hands",
+        "ACT-aasimar-revelation",
+        "ACTION-0002"
+      ],
+      "affectedScheduledRows": []
+    },
+    {
+      "version": "099_apply_disengage_runtime_effect",
+      "table": "actions",
+      "ids": [
+        "action_basic_disengage"
+      ],
+      "affectedScheduledRows": []
+    },
+    {
+      "version": "101_pin_tactical_basic_action_targets",
+      "table": "actions",
+      "ids": [
+        "action_basic_dash",
+        "action_basic_disengage",
+        "action_basic_dodge"
+      ],
+      "affectedScheduledRows": []
+    }
+  ],
+  "ordinary097Through143": [
+    {
+      "version": "097_repair_live_mvp_content_contracts",
+      "path": "backend/migrations/repair_live_mvp_content_contracts.go",
+      "sha256": "sha256:fbc70fcf5cd9b694683117c2d9df5865edc681a3f2ac638ee5ca169e3dff9ed0",
+      "bytes": 4063,
+      "impact": "Adds self_uses to selected self actions and repairs effects/class links. Does not supply missing spell declarations; action costs must survive.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "1a642d800c821ecef9503bf994e1a276113eed97",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:fbc70fcf5cd9b694683117c2d9df5865edc681a3f2ac638ee5ca169e3dff9ed0"
+      }
+    },
+    {
+      "version": "098_restore_live_mvp_starting_equipment",
+      "path": "backend/migrations/restore_live_mvp_starting_equipment.go",
+      "sha256": "sha256:b21e20f1643f4219353d955a8e1fd44d365a6c7e87638a6a3658321d3fc2a690",
+      "bytes": 1460,
+      "impact": "Starting equipment only; no authored durable spell payload source.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "56e0076d094baca81dd88a163706c37f16fc78e4",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:b21e20f1643f4219353d955a8e1fd44d365a6c7e87638a6a3658321d3fc2a690"
+      }
+    },
+    {
+      "version": "099_apply_disengage_runtime_effect",
+      "path": "backend/migrations/apply_disengage_runtime_effect.go",
+      "sha256": "sha256:6e4d55eea2b3805cf10b3f1d064e1a21abf0b4c99ea5a23ebbafad5347ed9cbb",
+      "bytes": 1310,
+      "impact": "Disengage self modifier; self context is outside144 target predicate.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "0c748b75fe833175c64b63e6fb2fbfc671feefc6",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:6e4d55eea2b3805cf10b3f1d064e1a21abf0b4c99ea5a23ebbafad5347ed9cbb"
+      }
+    },
+    {
+      "version": "100_create_data_driven_monsters",
+      "path": "backend/migrations/migrations.go",
+      "sha256": "sha256:7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+      "bytes": 230745,
+      "impact": "Monster data; not a144 source table.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "8ca316c7569780342fd23f5f6e3c614407f8bb54",
+      "actualSourceHashMatches": false,
+      "implementationEquivalence": {
+        "kind": "exact-top-level-function-bytes",
+        "function": "createDataDrivenMonsters",
+        "sha256": "sha256:86c805a5f799717996aaae079a89069206f5b8ed88b76f54097614e29cdaad00",
+        "originalContainerHash": "sha256:a323d6fae0cacb1233b9099ca9b034ab87b1da3999dc6195363970c9cb9fa50c",
+        "actualContainerHash": "sha256:7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+        "reason": "registry file gained later migration entries; these two complete top-level functions have identical bytes"
+      }
+    },
+    {
+      "version": "101_pin_tactical_basic_action_targets",
+      "path": "backend/migrations/migrations.go",
+      "sha256": "sha256:7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+      "bytes": 230745,
+      "impact": "Tactical basic-action targeting; preserve normal targeting contract.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "8ca316c7569780342fd23f5f6e3c614407f8bb54",
+      "actualSourceHashMatches": false,
+      "implementationEquivalence": {
+        "kind": "exact-top-level-function-bytes",
+        "function": "pinTacticalBasicActionTargets",
+        "sha256": "sha256:6c6328fabc73fb950fa72bfc5585d904d56802153b8bc91f930b2238eb381bf3",
+        "originalContainerHash": "sha256:a323d6fae0cacb1233b9099ca9b034ab87b1da3999dc6195363970c9cb9fa50c",
+        "actualContainerHash": "sha256:7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+        "reason": "registry file gained later migration entries; these two complete top-level functions have identical bytes"
+      }
+    },
+    {
+      "version": "102_revoke_invalid_feather_fall_certification",
+      "path": "backend/migrations/revoke_invalid_feather_fall_certification.go",
+      "sha256": "sha256:0c02fb50536e77d0f9bc2e853db85fc3ecf1be52f99c4d3de393967434a83295",
+      "bytes": 5630,
+      "impact": "Records/revokes exact Feather Fall support; must not reinstate old certification.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "a90962d0873521ec0bde78ea3cce7ee5de2671c7",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:0c02fb50536e77d0f9bc2e853db85fc3ecf1be52f99c4d3de393967434a83295"
+      }
+    },
+    {
+      "version": "103_revoke_invalid_mage_hand_certification",
+      "path": "backend/migrations/revoke_invalid_mage_hand_certification.go",
+      "sha256": "sha256:8bd9da1434634982291b24ca7c98d66f722eeaf2083a6e472d8e0bf6f92d4c15",
+      "bytes": 4715,
+      "impact": "Records/revokes exact Mage Hand support; must not reinstate old certification.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "92de5ce23867ae635a2425c2f44193d4e5531c7c",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:8bd9da1434634982291b24ca7c98d66f722eeaf2083a6e472d8e0bf6f92d4c15"
+      }
+    },
+    {
+      "version": "104_seed_recommended_skill_choices",
+      "path": "backend/migrations/seed_recommended_skill_choices.go",
+      "sha256": "sha256:778c2e6f9f8a25b5189ee5f873128b4b27036219f98cbdca00d5a343dea03994",
+      "bytes": 8614,
+      "impact": "Recommended class skill choices; not a144 source table.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "27c6d3a97cfc1a670dc1d62bfd0c6feb5beafdd2",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:778c2e6f9f8a25b5189ee5f873128b4b27036219f98cbdca00d5a343dea03994"
+      }
+    },
+    {
+      "version": "105_repair_active_action_targeting",
+      "path": "backend/migrations/repair_active_action_targeting.go",
+      "sha256": "sha256:e3debab15b6cbb152040d3a9f8c7e612a8f9a44d9279aadccbc51fd1a4349c1a",
+      "bytes": 9251,
+      "impact": "Explicit action targeting; changing whole action mechanics later could erase it.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "e17ac2abf50c570f421af9c3ec9d11f986db8790",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:e3debab15b6cbb152040d3a9f8c7e612a8f9a44d9279aadccbc51fd1a4349c1a"
+      }
+    },
+    {
+      "version": "106_repair_preserved_locked_action_targeting",
+      "path": "backend/migrations/repair_active_action_targeting.go",
+      "sha256": "sha256:e3debab15b6cbb152040d3a9f8c7e612a8f9a44d9279aadccbc51fd1a4349c1a",
+      "bytes": 9251,
+      "impact": "Preserved locked action targeting repair; its reviewed preimage remains authoritative.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "e17ac2abf50c570f421af9c3ec9d11f986db8790",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:e3debab15b6cbb152040d3a9f8c7e612a8f9a44d9279aadccbc51fd1a4349c1a"
+      }
+    },
+    {
+      "version": "107_normalize_live_happy_path_content",
+      "path": "backend/migrations/normalize_live_happy_path_content.go",
+      "sha256": "sha256:945a716ed35b4031d9ef3961a83aa239d8ea01e18e1aadc68647169b77ebb6bb",
+      "bytes": 10213,
+      "impact": "Stable spell_class_list_ids from live localized class data; a generic source lacking this field would erase the executed projection.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "1d1c5ef2e09f327040d20ab0c223f2a80e8ed17a",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:945a716ed35b4031d9ef3961a83aa239d8ea01e18e1aadc68647169b77ebb6bb"
+      }
+    },
+    {
+      "version": "108_split_weapon_actions_and_unlock_metadata",
+      "path": "backend/migrations/split_weapon_actions_and_unlock_metadata.go",
+      "sha256": "sha256:00992f0ef4126ba237018cd3bc01bede505066a9c21aadf9c2a7186570972961",
+      "bytes": 6222,
+      "impact": "Weapon action split/declaration and metadata locks; ranged basic action contains no durable target payload.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "c2059641beaaeb41e1a1f71b3cb4d71ea77a611b",
+      "actualSourceHashMatches": false,
+      "implementationEquivalence": {
+        "kind": "existing-current-policy-revision-not-historical-byte-equivalence",
+        "originalContainerHash": "sha256:44ca5caea7f8c111ee45651d85578da8c17b2e74408f55c200b3356262b5024d",
+        "actualContainerHash": "sha256:00992f0ef4126ba237018cd3bc01bede505066a9c21aadf9c2a7186570972961",
+        "actualCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "reason": "Guard generator now uses versioned mutable-metadata projection; mechanics row writes are unchanged. Hydration must require OLD unlocked, where both versions return NEW."
+      }
+    },
+    {
+      "version": "109_normalize_goliath_ancestry",
+      "path": "backend/migrations/normalize_goliath_ancestry.go",
+      "sha256": "sha256:cf5a0542e01dd7c7fdf3a71c2b7a2492aa5670ff6f48dd4fe9c36dd2aed28ab1",
+      "bytes": 6912,
+      "impact": "Replaces Goliath ancestry mechanics. Frost preserves one materialization path but changes its duration/type; preserve109 payload bytes.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "f9467a98413004826ce4f3807205b22e0497ea1f",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:cf5a0542e01dd7c7fdf3a71c2b7a2492aa5670ff6f48dd4fe9c36dd2aed28ab1"
+      }
+    },
+    {
+      "version": "110_deduplicate_goliath_ancestry",
+      "path": "backend/migrations/deduplicate_goliath_ancestry.go",
+      "sha256": "sha256:03a2c1c9e2ed598513b259498d21b67698422c6fbddaf16e23ebbcce0c43c769",
+      "bytes": 3242,
+      "impact": "Canonical lineage references/deduplication; no new144 target payload.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "ad2b61ae4a511fb33d43db620606dd29c7f63d84",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:03a2c1c9e2ed598513b259498d21b67698422c6fbddaf16e23ebbcce0c43c769"
+      }
+    },
+    {
+      "version": "111_align_ranged_weapon_action_declaration",
+      "path": "backend/migrations/align_ranged_weapon_action_declaration.go",
+      "sha256": "sha256:19b6cb9397450f024882ad5181a7adaba137cc57a608b1ef446e22b445e18953",
+      "bytes": 1549,
+      "impact": "Ranged weapon-action declaration; preserve the executed action contract.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "da8be9fced33826c1874a3fa6a2e510f3b37494a",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:19b6cb9397450f024882ad5181a7adaba137cc57a608b1ef446e22b445e18953"
+      }
+    },
+    {
+      "version": "112_inherit_lineage_source",
+      "path": "backend/migrations/inherit_lineage_source.go",
+      "sha256": "sha256:4b3ca345660087b83ce3135965acec6fc93b448b010969fb9f9d27e108b53d90",
+      "bytes": 771,
+      "impact": "Lineage source metadata only.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "d9d62209086a5d8857807136307182942f456ac7",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:4b3ca345660087b83ce3135965acec6fc93b448b010969fb9f9d27e108b53d90"
+      }
+    },
+    {
+      "version": "113_repair_goliath_reaction_authority",
+      "path": "backend/migrations/repair_goliath_reaction_authority.go",
+      "sha256": "sha256:e9b456138b2cd8b90fa1a2a281cdf95de9d159fa20e6ab012a591e1d72d8c7bf",
+      "bytes": 5411,
+      "impact": "Stone reaction authority/identity and reduce_damage action; no duration-bearing target payload.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "6af5e59d05cb143b8d5e59e0cf474cc75437ce04",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:e9b456138b2cd8b90fa1a2a281cdf95de9d159fa20e6ab012a591e1d72d8c7bf"
+      }
+    },
+    {
+      "version": "114_repair_class_starting_equipment_references",
+      "path": "backend/migrations/repair_class_starting_equipment_references.go",
+      "sha256": "sha256:3687a21c90f9f9b9a64f1cf68f15b9fc98ca1661ec2f18256edd8de69dc19822",
+      "bytes": 11096,
+      "impact": "Starting equipment references only.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "eafd3b13430719b3b8d00c72341b5769690f6aa9",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:3687a21c90f9f9b9a64f1cf68f15b9fc98ca1661ec2f18256edd8de69dc19822"
+      }
+    },
+    {
+      "version": "115_repair_goliath_stone_targeting_contract",
+      "path": "backend/migrations/repair_goliath_stone_targeting_contract.go",
+      "sha256": "sha256:bbb746cdc8fc55c538fe0910db6161e39d96f8cd3022c65cab26b580f57ac2d8",
+      "bytes": 2008,
+      "impact": "Stone self-targeting contract; no target durable modifier.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "56b51c75da1b28f302dc8ac1f24aaad0c2f85543",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:bbb746cdc8fc55c538fe0910db6161e39d96f8cd3022c65cab26b580f57ac2d8"
+      }
+    },
+    {
+      "version": "116_repair_half_caster_spellcasting_contract",
+      "path": "backend/migrations/repair_half_caster_spellcasting_contract.go",
+      "sha256": "sha256:fb0f207af4057c3d2dbe9ea429155c249d30a049e4a0dfa46f744c642e2ae078",
+      "bytes": 10009,
+      "impact": "Half-caster spellcasting effect contract/revocation; effects is outside144 source scan.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "aa430ceff8ea141583048e6187eee927b1aa8a06",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:fb0f207af4057c3d2dbe9ea429155c249d30a049e4a0dfa46f744c642e2ae078"
+      }
+    },
+    {
+      "version": "117_align_certified_metadata_projection",
+      "path": "backend/migrations/align_certified_metadata_projection.go",
+      "sha256": "sha256:33a5b296da4b3a9f0974b84f26f983b063609450959d09fb96b79562756b110f",
+      "bytes": 4626,
+      "impact": "Certification metadata projection only; not permission to restore old support.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "2d160c9542a160ba9f06ec6e2bca7c76a395c131",
+      "actualSourceHashMatches": false,
+      "implementationEquivalence": {
+        "kind": "existing-current-policy-revision-not-historical-byte-equivalence",
+        "originalContainerHash": "sha256:e4ee896d3c13a5f0f8640e4c099e20bc8f0311099b29cdf64ef684766de524e2",
+        "actualContainerHash": "sha256:33a5b296da4b3a9f0974b84f26f983b063609450959d09fb96b79562756b110f",
+        "actualCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "reason": "Adds exported metadata reader and reinstalls current guard after support-invalidation projection; no new historical mechanics data. Both old and current bytes are retained; no historical-equivalence claim."
+      }
+    },
+    {
+      "version": "118_repair_bard_spellcasting_contract",
+      "path": "backend/migrations/repair_bard_spellcasting_contract.go",
+      "sha256": "sha256:24a3b0f3ee4bcca256d26ad8d262b97800a8ade57ed6458a2cb005b25717f5ce",
+      "bytes": 7913,
+      "impact": "Bard spellcasting effect contract/revocation; effects is outside144 source scan.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "4bae33afb7daa83c05b0001cddb6d1cc6553b63c",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:24a3b0f3ee4bcca256d26ad8d262b97800a8ade57ed6458a2cb005b25717f5ce"
+      }
+    },
+    {
+      "version": "119_repair_sleep_spell_class_list_contract",
+      "path": "backend/migrations/repair_sleep_spell_class_list_contract.go",
+      "sha256": "sha256:025be4e941f7bf0645bfcb3f017bac4dee30d50e64642a3a03c200d39c061e69",
+      "bytes": 6565,
+      "impact": "Sleep class-list repair with preserved revocation; preserve canonical class IDs.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "42f0757263ad687db906eca4dd5e9a99fde201c5",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:025be4e941f7bf0645bfcb3f017bac4dee30d50e64642a3a03c200d39c061e69"
+      }
+    },
+    {
+      "version": "120_repair_bardic_inspiration_boon_contract",
+      "path": "backend/migrations/repair_bardic_inspiration_boon_contract.go",
+      "sha256": "sha256:a7302031eac73d433e53b46e5a0e90edc016d8ef0e8cba9480937dbb9e3659ac",
+      "bytes": 6997,
+      "impact": "Bardic Inspiration boon contract, later superseded by140 grant; do not copy an older source over it.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "d9f52aac03ddf481c1be6fca6c487d8ad3ff1818",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:a7302031eac73d433e53b46e5a0e90edc016d8ef0e8cba9480937dbb9e3659ac"
+      }
+    },
+    {
+      "version": "121_repair_spear_weapon_profile",
+      "path": "backend/migrations/repair_spear_weapon_profile.go",
+      "sha256": "sha256:098d9aefc5645ffebc1fa840cba405234555c172b13efc13ebc0286024638267",
+      "bytes": 4064,
+      "impact": "Spear weapon-profile repair; cards is outside144 source scan.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "02f1b4e4b5a61c3b7ad695b2a1d03c029b745c17",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:098d9aefc5645ffebc1fa840cba405234555c172b13efc13ebc0286024638267"
+      }
+    },
+    {
+      "version": "122_repair_mage_hand_control_narrative",
+      "path": "backend/migrations/repair_mage_hand_control_narrative.go",
+      "sha256": "sha256:fe575706683784bd06cfb468e1736a7884647b5117bf3b81afd957d360bd2613",
+      "bytes": 4924,
+      "impact": "Mage Hand remote-manipulator narrative repair; preserve the reviewed new narrative.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "672272ae042cc9062922e8e4e96ae3ad5338c1b3",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:fe575706683784bd06cfb468e1736a7884647b5117bf3b81afd957d360bd2613"
+      }
+    },
+    {
+      "version": "123_repair_sleep_2024_lifecycle",
+      "path": "backend/migrations/repair_sleep_2024_lifecycle.go",
+      "sha256": "sha256:2a3a7f03b2ffa6f50be3144de69a21111053a60776dbb50de5d1ad2e8f939e41",
+      "bytes": 10263,
+      "impact": "Replaces Sleep and Help mechanics. Sleep duration belongs to kind=condition, excluded by144; older control-spell source must not overwrite123.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "417ce85f23793fe1d9a04160021c0782bd8090ab",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:2a3a7f03b2ffa6f50be3144de69a21111053a60776dbb50de5d1ad2e8f939e41"
+      }
+    },
+    {
+      "version": "124_repair_fire_bolt_upcast_description",
+      "path": "backend/migrations/repair_fire_bolt_upcast_description.go",
+      "sha256": "sha256:7a4bc946191afa10ad6a66cd349b2bf4ab171153984e34946abf6fc808947ddc",
+      "bytes": 5282,
+      "impact": "Two distinct migrations: Fire Bolt description and base styles/origin actions. Preserve descriptions, action declarations and stable created identities.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "45e5fab8ce6aefe95e52900fd6c1362b5e455185",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:7a4bc946191afa10ad6a66cd349b2bf4ab171153984e34946abf6fc808947ddc"
+      }
+    },
+    {
+      "version": "124_repair_mini_mvp_base_styles_origin_runtime",
+      "path": "backend/migrations/repair_mini_mvp_base_styles_origin_runtime.go",
+      "sha256": "sha256:90b094487d9af7c52247e07aeb8a8578ccc66be840981069481b0a1df44561d7",
+      "bytes": 20533,
+      "impact": "Two distinct migrations: Fire Bolt description and base styles/origin actions. Preserve descriptions, action declarations and stable created identities.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "1d9dc756d08b45091299358ddba5e8b769588155",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:90b094487d9af7c52247e07aeb8a8578ccc66be840981069481b0a1df44561d7"
+      }
+    },
+    {
+      "version": "125_repair_mini_mvp_limited_action_uses",
+      "path": "backend/migrations/repair_mini_mvp_limited_action_uses.go",
+      "sha256": "sha256:917870349c03a3641999701a492e8bee7cbb5f86e3763bc38e682ed0c1173495",
+      "bytes": 1532,
+      "impact": "Exact self_uses costs on three limited actions; whole older mechanics cannot replace those costs.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "ba5e9aaf1a8fa67d0c5c4aa7c78a7491b7e0c6e7",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:917870349c03a3641999701a492e8bee7cbb5f86e3763bc38e682ed0c1173495"
+      }
+    },
+    {
+      "version": "126_repair_crafter_in_play_choice",
+      "path": "backend/migrations/repair_crafter_in_play_choice.go",
+      "sha256": "sha256:560f4b542340a3b0a57d363fdfa1b1710b8ef9c3cc74ac56f154d23d987fea13",
+      "bytes": 1469,
+      "impact": "Crafter in-play choice; choice semantics must survive.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "cbd7912f3d825c0203e522f213dc2c59a623763e",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:560f4b542340a3b0a57d363fdfa1b1710b8ef9c3cc74ac56f154d23d987fea13"
+      }
+    },
+    {
+      "version": "127_repair_missing_weapon_mastery_profiles",
+      "path": "backend/migrations/repair_missing_weapon_mastery_profiles.go",
+      "sha256": "sha256:b54dca70e3512bdc8f1d9b1cc2e4ec5c3a48256006535fc048d64c0558160744",
+      "bytes": 4471,
+      "impact": "Weapon mastery profiles on cards; outside144 source scan.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "f08c48de7f9ce1518ced95d8cbc73892817f916a",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:b54dca70e3512bdc8f1d9b1cc2e4ec5c3a48256006535fc048d64c0558160744"
+      }
+    },
+    {
+      "version": "128_repair_level_one_species_runtime_contracts",
+      "path": "backend/migrations/repair_level_one_species_runtime_contracts.go",
+      "sha256": "sha256:d8918d661bf4aed2d31f6691ee95bbaef6fcdc1bbea347a7ed9bc5db0264c711",
+      "bytes": 5603,
+      "impact": "Healing scalar prof d4→prof_bonus d4 and forest-gnome grant label; no missing144 durable target payload supplied.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "cc8f5af0f961e350f4fc2011336ad0dc853ba319",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:d8918d661bf4aed2d31f6691ee95bbaef6fcdc1bbea347a7ed9bc5db0264c711"
+      }
+    },
+    {
+      "version": "129_repair_level_one_monk_runtime_contracts",
+      "path": "backend/migrations/repair_level_one_monk_runtime_contracts.go",
+      "sha256": "sha256:2fc68a65488548a6bc79561d3b884b68d9f6d16ab4700d0646948f2a206f20ad",
+      "bytes": 7836,
+      "impact": "Monk follow-up hit/miss actions have damage, no duration payload; preserve action identities and costs.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "1d31c4d940898ac7ebcfbd371cc1866cabb00da3",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:2fc68a65488548a6bc79561d3b884b68d9f6d16ab4700d0646948f2a206f20ad"
+      }
+    },
+    {
+      "version": "130_repair_barbarian_rage_stacking",
+      "path": "backend/migrations/repair_barbarian_rage_stacking.go",
+      "sha256": "sha256:a45c71c5fa7ce92451e95d3ef0daa0895d5863c6662cac0b4407a726cc0aef4a",
+      "bytes": 3213,
+      "impact": "Rage self effects gain stack IDs; target-context predicate does not count these as the missing spell payloads.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "c7f89ca6a78a8a190c8bf21bdbf7df4799b440b5",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:a45c71c5fa7ce92451e95d3ef0daa0895d5863c6662cac0b4407a726cc0aef4a"
+      }
+    },
+    {
+      "version": "131_repair_wood_elf_speed",
+      "path": "backend/migrations/repair_wood_elf_speed.go",
+      "sha256": "sha256:3e75176a5fc97af1cb7bd6371bc88b31c79d3c4bb51a74096bd32b5fb417a3c9",
+      "bytes": 2829,
+      "impact": "Wood-elf speed source declaration; effects outside144 source scan.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "e2b5752015097248eaf5f02e649bcd2b43f20689",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:3e75176a5fc97af1cb7bd6371bc88b31c79d3c4bb51a74096bd32b5fb417a3c9"
+      }
+    },
+    {
+      "version": "132_repair_cloud_goliath_teleport",
+      "path": "backend/migrations/repair_cloud_goliath_teleport.go",
+      "sha256": "sha256:bdf9f8200f3067aeeb6a18f7906885e43bac45af94dc4ce445a59177d80fabdf",
+      "bytes": 3045,
+      "impact": "Cloud-goliath teleport mode; movement payload has no duration object.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "444a85f4cfe9a76a3b0b73c996d2637c2531f88a",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:bdf9f8200f3067aeeb6a18f7906885e43bac45af94dc4ce445a59177d80fabdf"
+      }
+    },
+    {
+      "version": "133_repair_friends_mind_sliver_cantrips",
+      "path": "backend/migrations/repair_friends_mind_sliver_cantrips.go",
+      "sha256": "sha256:2adc1845a65fb655c87cde1bd5abc29fabb803eb3df120c1fb300150fb509e55",
+      "bytes": 4547,
+      "impact": "Canonical Friends and Mind Sliver replacement. Friends condition excluded; Mind Sliver supplies one durable on_fail modifier with bytes different from generic cantrip data.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "baa9a177bf9be0d968d66543d43de88d45247d72",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:2adc1845a65fb655c87cde1bd5abc29fabb803eb3df120c1fb300150fb509e55"
+      }
+    },
+    {
+      "version": "134_repair_true_strike_cantrip",
+      "path": "backend/migrations/repair_true_strike_cantrip.go",
+      "sha256": "sha256:6135e56d14ec1fadf7783c2bd71e9065736920fdca625d9c5a0367dd72b2f212",
+      "bytes": 3814,
+      "impact": "Canonical True Strike replacement; damage choices have no duration object. Generic35 source cannot overwrite this whole declaration.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "51a5c56fd4d612c3eb1aa1ea83fdc8b74a9bf116",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:6135e56d14ec1fadf7783c2bd71e9065736920fdca625d9c5a0367dd72b2f212"
+      }
+    },
+    {
+      "version": "135_suppress_true_strike_zero_damage",
+      "path": "backend/migrations/suppress_true_strike_zero_damage.go",
+      "sha256": "sha256:de9ebb26e42c47882bfb68dd235699fb88c698ebd0e496a0a823529f97e8a747",
+      "bytes": 2655,
+      "impact": "True Strike zero-scaling suppression; preserve the executed nested damage condition.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "da83bc6d3216985600e4b658b34ab41b6bcf5212",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:de9ebb26e42c47882bfb68dd235699fb88c698ebd0e496a0a823529f97e8a747"
+      }
+    },
+    {
+      "version": "136_repair_mini_mvp_spell_clarity",
+      "path": "backend/migrations/repair_mini_mvp_spell_clarity.go",
+      "sha256": "sha256:262128514bed89ef5181d1d028d34fd491e98f521c2fd953706d73277f23c615",
+      "bytes": 6129,
+      "impact": "Spell class IDs, descriptions, removal of Shield-of-Faith result index2, Chromatic Orb choice. Must transform authored input before143; not blanket count-neutral for arbitrary old input.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "f297b4056a93662e30dada11015fdc99d319ab3e",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:262128514bed89ef5181d1d028d34fd491e98f521c2fd953706d73277f23c615"
+      }
+    },
+    {
+      "version": "137_repair_mini_mvp_spell_trigger_timing",
+      "path": "backend/migrations/repair_mini_mvp_spell_trigger_timing.go",
+      "sha256": "sha256:4e0394b85569e7b60bfd4c6badf593f1df494d0b408c5d016c0fac393d932edc",
+      "bytes": 3707,
+      "impact": "Activation modes/triggers for reaction and post-hit spells; generic full mechanics would erase timing.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "61a3f8e89d9baacaac52faeec447cee889372b47",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:4e0394b85569e7b60bfd4c6badf593f1df494d0b408c5d016c0fac393d932edc"
+      }
+    },
+    {
+      "version": "138_repair_mini_mvp_post_hit_spell_targets",
+      "path": "backend/migrations/repair_mini_mvp_post_hit_spell_targets.go",
+      "sha256": "sha256:68ea307703df678368186ee3a9f2edc15f23da42de6e84812cdb845b5a96495e",
+      "bytes": 2448,
+      "impact": "Post-hit spell top-level targeting; does not itself create target payload nodes.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "057426df13cff3d8556ec669ef514df7b3771e99",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:68ea307703df678368186ee3a9f2edc15f23da42de6e84812cdb845b5a96495e"
+      }
+    },
+    {
+      "version": "139_repair_mini_mvp_ranged_post_hit_spell_ranges",
+      "path": "backend/migrations/repair_mini_mvp_ranged_post_hit_spell_ranges.go",
+      "sha256": "sha256:ef4c21fe8606f501b580ac5343c0c01c256050565b6cccfba4c508c491f77c72",
+      "bytes": 2198,
+      "impact": "Ranged post-hit targeting range; preserve the executed range.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "b7f738f8b502b141759f3ccbe65ccb0ec67896b7",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:ef4c21fe8606f501b580ac5343c0c01c256050565b6cccfba4c508c491f77c72"
+      }
+    },
+    {
+      "version": "140_materialize_runtime_boons_and_acid_splash_area",
+      "path": "backend/migrations/materialize_runtime_boons_and_acid_splash_area.go",
+      "sha256": "sha256:bbcd7b12eb01c00107fbda26640c98bf7974fdc650fa10f08e12d326f8c249ed",
+      "bytes": 7542,
+      "impact": "Bardic boon becomes a grant_effect to an effects row, which is outside144 sources; Acid Splash area targeting changes.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "8f3abce3ccc80a5c36ae6589c8aa9f5ab413669d",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:bbcd7b12eb01c00107fbda26640c98bf7974fdc650fa10f08e12d326f8c249ed"
+      }
+    },
+    {
+      "version": "141_materialize_polymorphed_condition",
+      "path": "backend/migrations/materialize_polymorphed_condition.go",
+      "sha256": "sha256:4d7b749bd05fc16b8544ca0268b1531769ef104bfa91be42c7b83c05e4b93a6a",
+      "bytes": 4301,
+      "impact": "Materialized polymorphed condition library identity; condition/effects domain does not supply missing target modifiers.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "32c89dfd92c5a3d92adf8943360e858a1245bc3e",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:4d7b749bd05fc16b8544ca0268b1531769ef104bfa91be42c7b83c05e4b93a6a"
+      }
+    },
+    {
+      "version": "142_repair_mini_mvp_area_targeting",
+      "path": "backend/migrations/repair_mini_mvp_area_targeting.go",
+      "sha256": "sha256:c42a14bf008d3927fb6658ef4551d0b356847bf9860c00cf1ec4c317a36dba3b",
+      "bytes": 3696,
+      "impact": "Top-level area targeting and area metadata; not new durable payload nodes.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "e4404636cb24ac0a5002119ac044898a71a290a1",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:c42a14bf008d3927fb6658ef4551d0b356847bf9860c00cf1ec4c317a36dba3b"
+      }
+    },
+    {
+      "version": "143_materialize_condition_library_icons",
+      "path": "backend/migrations/materialize_condition_library_icons.go",
+      "sha256": "sha256:60dbe78da6e6395e55aa5891a38d53079de4c0f788d1720bc73adbc8c748064f",
+      "bytes": 2100,
+      "impact": "Two condition image-library values; does not fill missing action/spell mechanics.",
+      "evidence": "static source review; not a new migration execution",
+      "originalBlob": "01125bdc2bbccfc7a9c8ea40a620309428218401",
+      "actualSourceHashMatches": true,
+      "implementationEquivalence": {
+        "kind": "whole-file-exact",
+        "sha256": "sha256:60dbe78da6e6395e55aa5891a38d53079de4c0f788d1720bc73adbc8c748064f"
+      }
+    }
+  ],
+  "existingPayloads": [
+    {
+      "table": "actions",
+      "id": "7ee8be70-2ae7-4519-a237-6de14c0bef1c",
+      "cardNumber": "ACT-goliath-frost",
+      "migration": "109",
+      "path": "mechanics.effects[0].result[1]",
+      "payloadHash": "sha256:43c827925a9f800bf6716f0c3798df4cb56c88931aee9f4a70097ba4ebb09b87",
+      "authoredPayloadHash": "sha256:9d8325d7ea60754ad776dd92dc00b9ab3af2f75abe09f90992e223c93717709c",
+      "payloadBytesIdentical": false,
+      "effectKey": "sha256:6499f0dafa08184d013926ae251af285656904b01e1e69196bc8a2f47a01ea95",
+      "overlapsOriginal61": true,
+      "overlapsExpanded63": true,
+      "requiredPreservation": "never hydrate this row; retain ordinary109"
+    },
+    {
+      "table": "spells",
+      "id": "c3fc969b-ba03-443f-a222-46f6b9a53bd6",
+      "cardNumber": "SPELL-0281",
+      "migration": "133",
+      "path": "mechanics.effects[0].on_fail[1]",
+      "payloadHash": "sha256:887c1232ec22c55a421b97f6829f9de4a5a652be29c1c5f87ba0019630964098",
+      "authoredPayloadHash": "sha256:0a8e269dcb2f80401008aef3e08b626f473b6b63e4d83ce373d239d2a6011ead",
+      "payloadBytesIdentical": false,
+      "effectKey": "sha256:178e5d1ea0aff2a19bb839c11dfc37709e21f73488449554f7b64b700cfe2e8a",
+      "overlapsOriginal61": false,
+      "overlapsExpanded63": true,
+      "requiredPreservation": "generic row may be hydrated only at101; ordinary133 fully supersedes it before144"
+    }
+  ],
+  "remainingAcceptance": [
+    "Read-only independent review of this complete source/schedule closure, especially generic residual precedence and support invalidation behavior.",
+    "Owned actual exact before-row checks at101/118/121 and per-step non-target rows/ledger/timestamps; any discrepancy refuses before UPDATE.",
+    "Unchanged144 must independently discover exactly63 without a supplied list; complete ordinary suffix then exact no-op repeat and cleanup."
+  ],
+  "sourceFiles": [
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "officials/canon/prod-snapshot/actions.json",
+      "blob": "725633a242be828ef024085e1a37a24439da3885",
+      "sha256": "sha256:f3702a0dca6f4dc784f714cbded73a044185ecbba006b1fc759d6ffb3c530bd5",
+      "bytes": 864910
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "officials/canon/prod-snapshot/spells.json",
+      "blob": "284e238108b44a14ba52a9036a3ae35b9820ceaa",
+      "sha256": "sha256:da763e12c75177ef0e85bcd5ca3157e3cfd8404eb51a0984855b13d71456e495",
+      "bytes": 1338080
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "officials/canon/prod-snapshot/classes.json",
+      "blob": "2b23cd6d4ec027dc862df54205ee8967cf02637b",
+      "sha256": "sha256:2124cffa17579481185c30454bdd7139c52f9e48f45376417d05a1070a879cf7",
+      "bytes": 960686
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "scripts/content/cantrips-2024.mjs",
+      "blob": "39e4ad90720ec822f86600420dfb6f1f67764b5f",
+      "sha256": "sha256:4c077b85000deee1b4003c0df3fd2dfcd5be90a0d3a3dc65f61410dc8201c940",
+      "bytes": 22940
+    },
+    {
+      "commit": "71751d6bbb48d18bc136e1c093a584d528a7e4ea",
+      "path": "scripts/content/data/mini-mvp-utility-cantrips.v1.json",
+      "blob": "4d857c3c7c2655ff4e3f6214034e642785379c1a",
+      "sha256": "sha256:ff8b12546b5fdb45924db781d24fbd06b5a00f6073f98f9fee0aa9688aca9d2d",
+      "bytes": 9600
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mage_hand_control_narrative.go",
+      "blob": "672272ae042cc9062922e8e4e96ae3ad5338c1b3",
+      "sha256": "sha256:fe575706683784bd06cfb468e1736a7884647b5117bf3b81afd957d360bd2613",
+      "bytes": 4924
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_live_mvp_content_contracts.go",
+      "blob": "1a642d800c821ecef9503bf994e1a276113eed97",
+      "sha256": "sha256:fbc70fcf5cd9b694683117c2d9df5865edc681a3f2ac638ee5ca169e3dff9ed0",
+      "bytes": 4063
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/restore_live_mvp_starting_equipment.go",
+      "blob": "56e0076d094baca81dd88a163706c37f16fc78e4",
+      "sha256": "sha256:b21e20f1643f4219353d955a8e1fd44d365a6c7e87638a6a3658321d3fc2a690",
+      "bytes": 1460
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/apply_disengage_runtime_effect.go",
+      "blob": "0c748b75fe833175c64b63e6fb2fbfc671feefc6",
+      "sha256": "sha256:6e4d55eea2b3805cf10b3f1d064e1a21abf0b4c99ea5a23ebbafad5347ed9cbb",
+      "bytes": 1310
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/migrations.go",
+      "blob": "8ca316c7569780342fd23f5f6e3c614407f8bb54",
+      "sha256": "sha256:a323d6fae0cacb1233b9099ca9b034ab87b1da3999dc6195363970c9cb9fa50c",
+      "bytes": 191067
+    },
+    {
+      "commit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "path": "backend/migrations/migrations.go",
+      "blob": "facc9390e5ebde13d6fa703c3544756c57255b92",
+      "sha256": "sha256:7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+      "bytes": 230745
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/revoke_invalid_feather_fall_certification.go",
+      "blob": "a90962d0873521ec0bde78ea3cce7ee5de2671c7",
+      "sha256": "sha256:0c02fb50536e77d0f9bc2e853db85fc3ecf1be52f99c4d3de393967434a83295",
+      "bytes": 5630
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/revoke_invalid_mage_hand_certification.go",
+      "blob": "92de5ce23867ae635a2425c2f44193d4e5531c7c",
+      "sha256": "sha256:8bd9da1434634982291b24ca7c98d66f722eeaf2083a6e472d8e0bf6f92d4c15",
+      "bytes": 4715
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/seed_recommended_skill_choices.go",
+      "blob": "27c6d3a97cfc1a670dc1d62bfd0c6feb5beafdd2",
+      "sha256": "sha256:778c2e6f9f8a25b5189ee5f873128b4b27036219f98cbdca00d5a343dea03994",
+      "bytes": 8614
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_active_action_targeting.go",
+      "blob": "e17ac2abf50c570f421af9c3ec9d11f986db8790",
+      "sha256": "sha256:e3debab15b6cbb152040d3a9f8c7e612a8f9a44d9279aadccbc51fd1a4349c1a",
+      "bytes": 9251
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/normalize_live_happy_path_content.go",
+      "blob": "1d1c5ef2e09f327040d20ab0c223f2a80e8ed17a",
+      "sha256": "sha256:945a716ed35b4031d9ef3961a83aa239d8ea01e18e1aadc68647169b77ebb6bb",
+      "bytes": 10213
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/split_weapon_actions_and_unlock_metadata.go",
+      "blob": "c2059641beaaeb41e1a1f71b3cb4d71ea77a611b",
+      "sha256": "sha256:44ca5caea7f8c111ee45651d85578da8c17b2e74408f55c200b3356262b5024d",
+      "bytes": 5532
+    },
+    {
+      "commit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "path": "backend/migrations/split_weapon_actions_and_unlock_metadata.go",
+      "blob": "786e9566dc0f7bf266a14da3478fff5c2d667776",
+      "sha256": "sha256:00992f0ef4126ba237018cd3bc01bede505066a9c21aadf9c2a7186570972961",
+      "bytes": 6222
+    },
+    {
+      "commit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "path": "backend/migrations/certified_mutable_metadata_fields.v1.json",
+      "blob": "b17074e4e53724bcec7f2525bc49922e0d0b0b8f",
+      "sha256": "sha256:1eac63df5ae3bdb8cc10c9d1db4212863ba31b4b67221a62dc2d8b8464dd45c4",
+      "bytes": 572
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/normalize_goliath_ancestry.go",
+      "blob": "f9467a98413004826ce4f3807205b22e0497ea1f",
+      "sha256": "sha256:cf5a0542e01dd7c7fdf3a71c2b7a2492aa5670ff6f48dd4fe9c36dd2aed28ab1",
+      "bytes": 6912
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/deduplicate_goliath_ancestry.go",
+      "blob": "ad2b61ae4a511fb33d43db620606dd29c7f63d84",
+      "sha256": "sha256:03a2c1c9e2ed598513b259498d21b67698422c6fbddaf16e23ebbcce0c43c769",
+      "bytes": 3242
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/align_ranged_weapon_action_declaration.go",
+      "blob": "da8be9fced33826c1874a3fa6a2e510f3b37494a",
+      "sha256": "sha256:19b6cb9397450f024882ad5181a7adaba137cc57a608b1ef446e22b445e18953",
+      "bytes": 1549
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/inherit_lineage_source.go",
+      "blob": "d9d62209086a5d8857807136307182942f456ac7",
+      "sha256": "sha256:4b3ca345660087b83ce3135965acec6fc93b448b010969fb9f9d27e108b53d90",
+      "bytes": 771
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_goliath_reaction_authority.go",
+      "blob": "6af5e59d05cb143b8d5e59e0cf474cc75437ce04",
+      "sha256": "sha256:e9b456138b2cd8b90fa1a2a281cdf95de9d159fa20e6ab012a591e1d72d8c7bf",
+      "bytes": 5411
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_class_starting_equipment_references.go",
+      "blob": "eafd3b13430719b3b8d00c72341b5769690f6aa9",
+      "sha256": "sha256:3687a21c90f9f9b9a64f1cf68f15b9fc98ca1661ec2f18256edd8de69dc19822",
+      "bytes": 11096
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_goliath_stone_targeting_contract.go",
+      "blob": "56b51c75da1b28f302dc8ac1f24aaad0c2f85543",
+      "sha256": "sha256:bbb746cdc8fc55c538fe0910db6161e39d96f8cd3022c65cab26b580f57ac2d8",
+      "bytes": 2008
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_half_caster_spellcasting_contract.go",
+      "blob": "aa430ceff8ea141583048e6187eee927b1aa8a06",
+      "sha256": "sha256:fb0f207af4057c3d2dbe9ea429155c249d30a049e4a0dfa46f744c642e2ae078",
+      "bytes": 10009
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/align_certified_metadata_projection.go",
+      "blob": "2d160c9542a160ba9f06ec6e2bca7c76a395c131",
+      "sha256": "sha256:e4ee896d3c13a5f0f8640e4c099e20bc8f0311099b29cdf64ef684766de524e2",
+      "bytes": 4084
+    },
+    {
+      "commit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+      "path": "backend/migrations/align_certified_metadata_projection.go",
+      "blob": "0de7a5041ca205e7395da0a20d4b11535bd66182",
+      "sha256": "sha256:33a5b296da4b3a9f0974b84f26f983b063609450959d09fb96b79562756b110f",
+      "bytes": 4626
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_bard_spellcasting_contract.go",
+      "blob": "4bae33afb7daa83c05b0001cddb6d1cc6553b63c",
+      "sha256": "sha256:24a3b0f3ee4bcca256d26ad8d262b97800a8ade57ed6458a2cb005b25717f5ce",
+      "bytes": 7913
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_sleep_spell_class_list_contract.go",
+      "blob": "42f0757263ad687db906eca4dd5e9a99fde201c5",
+      "sha256": "sha256:025be4e941f7bf0645bfcb3f017bac4dee30d50e64642a3a03c200d39c061e69",
+      "bytes": 6565
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_bardic_inspiration_boon_contract.go",
+      "blob": "d9f52aac03ddf481c1be6fca6c487d8ad3ff1818",
+      "sha256": "sha256:a7302031eac73d433e53b46e5a0e90edc016d8ef0e8cba9480937dbb9e3659ac",
+      "bytes": 6997
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_spear_weapon_profile.go",
+      "blob": "02f1b4e4b5a61c3b7ad695b2a1d03c029b745c17",
+      "sha256": "sha256:098d9aefc5645ffebc1fa840cba405234555c172b13efc13ebc0286024638267",
+      "bytes": 4064
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_sleep_2024_lifecycle.go",
+      "blob": "417ce85f23793fe1d9a04160021c0782bd8090ab",
+      "sha256": "sha256:2a3a7f03b2ffa6f50be3144de69a21111053a60776dbb50de5d1ad2e8f939e41",
+      "bytes": 10263
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_fire_bolt_upcast_description.go",
+      "blob": "45e5fab8ce6aefe95e52900fd6c1362b5e455185",
+      "sha256": "sha256:7a4bc946191afa10ad6a66cd349b2bf4ab171153984e34946abf6fc808947ddc",
+      "bytes": 5282
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mini_mvp_base_styles_origin_runtime.go",
+      "blob": "1d9dc756d08b45091299358ddba5e8b769588155",
+      "sha256": "sha256:90b094487d9af7c52247e07aeb8a8578ccc66be840981069481b0a1df44561d7",
+      "bytes": 20533
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mini_mvp_limited_action_uses.go",
+      "blob": "ba5e9aaf1a8fa67d0c5c4aa7c78a7491b7e0c6e7",
+      "sha256": "sha256:917870349c03a3641999701a492e8bee7cbb5f86e3763bc38e682ed0c1173495",
+      "bytes": 1532
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_crafter_in_play_choice.go",
+      "blob": "cbd7912f3d825c0203e522f213dc2c59a623763e",
+      "sha256": "sha256:560f4b542340a3b0a57d363fdfa1b1710b8ef9c3cc74ac56f154d23d987fea13",
+      "bytes": 1469
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_missing_weapon_mastery_profiles.go",
+      "blob": "f08c48de7f9ce1518ced95d8cbc73892817f916a",
+      "sha256": "sha256:b54dca70e3512bdc8f1d9b1cc2e4ec5c3a48256006535fc048d64c0558160744",
+      "bytes": 4471
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_level_one_species_runtime_contracts.go",
+      "blob": "cc8f5af0f961e350f4fc2011336ad0dc853ba319",
+      "sha256": "sha256:d8918d661bf4aed2d31f6691ee95bbaef6fcdc1bbea347a7ed9bc5db0264c711",
+      "bytes": 5603
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_level_one_monk_runtime_contracts.go",
+      "blob": "1d31c4d940898ac7ebcfbd371cc1866cabb00da3",
+      "sha256": "sha256:2fc68a65488548a6bc79561d3b884b68d9f6d16ab4700d0646948f2a206f20ad",
+      "bytes": 7836
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_barbarian_rage_stacking.go",
+      "blob": "c7f89ca6a78a8a190c8bf21bdbf7df4799b440b5",
+      "sha256": "sha256:a45c71c5fa7ce92451e95d3ef0daa0895d5863c6662cac0b4407a726cc0aef4a",
+      "bytes": 3213
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_wood_elf_speed.go",
+      "blob": "e2b5752015097248eaf5f02e649bcd2b43f20689",
+      "sha256": "sha256:3e75176a5fc97af1cb7bd6371bc88b31c79d3c4bb51a74096bd32b5fb417a3c9",
+      "bytes": 2829
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_cloud_goliath_teleport.go",
+      "blob": "444a85f4cfe9a76a3b0b73c996d2637c2531f88a",
+      "sha256": "sha256:bdf9f8200f3067aeeb6a18f7906885e43bac45af94dc4ce445a59177d80fabdf",
+      "bytes": 3045
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_friends_mind_sliver_cantrips.go",
+      "blob": "baa9a177bf9be0d968d66543d43de88d45247d72",
+      "sha256": "sha256:2adc1845a65fb655c87cde1bd5abc29fabb803eb3df120c1fb300150fb509e55",
+      "bytes": 4547
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_true_strike_cantrip.go",
+      "blob": "51a5c56fd4d612c3eb1aa1ea83fdc8b74a9bf116",
+      "sha256": "sha256:6135e56d14ec1fadf7783c2bd71e9065736920fdca625d9c5a0367dd72b2f212",
+      "bytes": 3814
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/suppress_true_strike_zero_damage.go",
+      "blob": "da83bc6d3216985600e4b658b34ab41b6bcf5212",
+      "sha256": "sha256:de9ebb26e42c47882bfb68dd235699fb88c698ebd0e496a0a823529f97e8a747",
+      "bytes": 2655
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mini_mvp_spell_clarity.go",
+      "blob": "f297b4056a93662e30dada11015fdc99d319ab3e",
+      "sha256": "sha256:262128514bed89ef5181d1d028d34fd491e98f521c2fd953706d73277f23c615",
+      "bytes": 6129
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mini_mvp_spell_trigger_timing.go",
+      "blob": "61a3f8e89d9baacaac52faeec447cee889372b47",
+      "sha256": "sha256:4e0394b85569e7b60bfd4c6badf593f1df494d0b408c5d016c0fac393d932edc",
+      "bytes": 3707
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mini_mvp_post_hit_spell_targets.go",
+      "blob": "057426df13cff3d8556ec669ef514df7b3771e99",
+      "sha256": "sha256:68ea307703df678368186ee3a9f2edc15f23da42de6e84812cdb845b5a96495e",
+      "bytes": 2448
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mini_mvp_ranged_post_hit_spell_ranges.go",
+      "blob": "b7f738f8b502b141759f3ccbe65ccb0ec67896b7",
+      "sha256": "sha256:ef4c21fe8606f501b580ac5343c0c01c256050565b6cccfba4c508c491f77c72",
+      "bytes": 2198
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/materialize_runtime_boons_and_acid_splash_area.go",
+      "blob": "8f3abce3ccc80a5c36ae6589c8aa9f5ab413669d",
+      "sha256": "sha256:bbcd7b12eb01c00107fbda26640c98bf7974fdc650fa10f08e12d326f8c249ed",
+      "bytes": 7542
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/materialize_polymorphed_condition.go",
+      "blob": "32c89dfd92c5a3d92adf8943360e858a1245bc3e",
+      "sha256": "sha256:4d7b749bd05fc16b8544ca0268b1531769ef104bfa91be42c7b83c05e4b93a6a",
+      "bytes": 4301
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_mini_mvp_area_targeting.go",
+      "blob": "e4404636cb24ac0a5002119ac044898a71a290a1",
+      "sha256": "sha256:c42a14bf008d3927fb6658ef4551d0b356847bf9860c00cf1ec4c317a36dba3b",
+      "bytes": 3696
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/materialize_condition_library_icons.go",
+      "blob": "01125bdc2bbccfc7a9c8ea40a620309428218401",
+      "sha256": "sha256:60dbe78da6e6395e55aa5891a38d53079de4c0f788d1720bc73adbc8c748064f",
+      "bytes": 2100
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_content_mechanics.go",
+      "blob": "540e2e3da725b3143a660eb6ef1ef7f3b851506a",
+      "sha256": "sha256:068eac09b25855c229f7afd87fa2baa5202734bc34cc093e1553d7d03228550c",
+      "bytes": 4914
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/normalize_spell_targeting_ranges.go",
+      "blob": "d90e117cc01decdd19f16e9f14ae22a4c94bdac8",
+      "sha256": "sha256:2c40c64f63ba736fd5703120267e4a7167847a39a2bab4e7f2cd642fc094a444",
+      "bytes": 4891
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/certify_micro_micro_content.go",
+      "blob": "5db2daabe61b4dc69c7be6d44e6a0f734216be59",
+      "sha256": "sha256:ae47b4a9b1427ab265ef318344293da22ff1e6441fec2cceb7aab83582952622",
+      "bytes": 12377
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/certify_micro_micro_qa_fixes.go",
+      "blob": "c41c2c0711a1955604eae21a3397160f6a8b881b",
+      "sha256": "sha256:44f150570b7851e121b3bae764478c2dea0d86ebb847a1f40be8356a6b326ad8",
+      "bytes": 8400
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/refresh_transitive_micro_micro_certifications.go",
+      "blob": "de354882bb0045ce704106b95842faf80964129c",
+      "sha256": "sha256:72299a70edab96d12cab0c1275474955b9f0811503a94a75836e45da10e202a2",
+      "bytes": 2903
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/repair_spell_targeting_certifications.go",
+      "blob": "d8a06dd2be09c279466664ecb6ad3f6d01134ccd",
+      "sha256": "sha256:13cb8a39176115c88280e161af653d0e4b7cf98d1016a98ff2022942410229fb",
+      "bytes": 5422
+    },
+    {
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "backend/migrations/lock_certified_content_mechanics.go",
+      "blob": "720f436f5ae16b6c1694e8261354cd9eab2461a8",
+      "sha256": "sha256:c3a6bf9fbc84d08894e968dbb5734c878fa07a76405e83edc889b27067c92233",
+      "bytes": 2189
+    }
+  ]
+}

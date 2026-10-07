@@ -126,7 +126,8 @@
         "scripts/release/retirement-outcome-journal.test.mjs",
         "scripts/release/retirement-projection.test.mjs",
         "scripts/release/retirement-registry.test.mjs",
-        "scripts/release/retirement-state.test.mjs"
+        "scripts/release/retirement-state.test.mjs",
+        "scripts/testing/historical-revocation-source.test.mjs"
       ],
       "contract": "Dependency selection, local target isolation, credentials and test-count contracts",
       "network": "local-fixtures-only",
@@ -834,6 +835,12 @@
       "script": "scripts/performance/check-image-egress.mjs",
       "export": "checkImageEgress",
       "contract": "Actual PG/Gin/Node gameplay continues during held and failing image CONNECT; exact retries, TLS verification, protocol storage and recovery are required."
+    },
+    {
+      "id": "historical-fresh-chain",
+      "script": "scripts/performance/check-historical-fresh.mjs",
+      "export": "checkHistoricalFresh",
+      "contract": "Separate owned native PostgreSQL 17 Unicode database: execute the complete original registered chain from legacy bootstrap, use explicit frozen public phase inputs and three authentic archived revocation preimages, seed no ledger, preserve unrelated bytes, keep final manual statuses unverified/unlocked, repeat all tables exactly and stop every child. No private gameplay snapshot or production DSN."
     }
   ]
 }

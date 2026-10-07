@@ -4,7 +4,8 @@ import path from 'node:path';
 import {assertTestDsn, assertRealOwnedPath} from './guards.mjs';
 import {cleanEnvironment, execute, resolveTool, writeRegistry} from './runtime.mjs';
 
-export async function startNativePostgres(registry, {pgBin, signal} = {}) {
+export async function startNativePostgres(registry, {pgBin, signal, databaseLocale = 'C'} = {}) {
+  if (!['C', 'C.UTF-8'].includes(databaseLocale)) throw new Error('Unsupported disposable database locale');
   const executable = name => resolveTool(name, pgBin ? path.join(pgBin, name + (process.platform === 'win32' ? '.exe' : '')) : undefined);
   const initdb = executable('initdb'), pgctl = executable('pg_ctl'), psql = executable('psql');
   const data = path.join(registry.directory, 'postgres');
@@ -27,7 +28,10 @@ export async function startNativePostgres(registry, {pgBin, signal} = {}) {
     env, input: sensitive ? `SET log_min_error_statement = 'PANIC';\n${sql}` : sql,
     log: sensitive ? undefined : path.join(registry.directory, 'sql.log'), signal,
   });
-  await query(`CREATE DATABASE ${registry.runId};`, 'postgres');
+  // PostgreSQL 17's built-in Unicode locale is independent of the host OS.
+  // Historical Russian class labels require Unicode lower(), unlike plain C.
+  const locale = databaseLocale === 'C.UTF-8' ? " TEMPLATE template0 ENCODING 'UTF8' LOCALE_PROVIDER builtin BUILTIN_LOCALE 'C.UTF-8'" : '';
+  await query(`CREATE DATABASE ${registry.runId}${locale};`, 'postgres');
   // This marker proves ownership independently of the database name.
   await query(`CREATE TABLE test_run_ownership (run_id text PRIMARY KEY); INSERT INTO test_run_ownership VALUES ('${registry.runId}');`);
   const url = new URL(`postgres://test_runner@127.0.0.1:${registry.ports.database}/${registry.runId}?sslmode=disable`);

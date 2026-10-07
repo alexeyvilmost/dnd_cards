@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "kind": "source-composed-wizard-before156",
+  "generatedBeforeHash": "sha256:898406fd955508eae172e2612ce9ac9a479be7eca5b84f9ea0ed1f6d616d99f3",
+  "authoredAfterHash": "sha256:c689394b404ccd71b77b6ab1afde00f756fb54ae1ebb60fa176e037722172d6b",
+  "previousFailure": "fresh102_3e88b17a0286d1500c70/report.json",
+  "scope": "generated042/044 row receives authentic pre144 authored mechanics before ordinary156 and169, not original UUID-bound writer",
+  "files": [
+    {
+      "kind": "actual",
+      "commit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+      "path": "backend/migrations/migrations.go",
+      "blob": "facc9390e5ebde13d6fa703c3544756c57255b92",
+      "sha256": "7cb07c4c83f5dbba562b03be937e252f1ba72de9ce32b86e29ead6381228d430",
+      "bytes": 230745
+    },
+    {
+      "kind": "actual",
+      "commit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+      "path": "backend/migrations/seed_forge_mvp.go",
+      "blob": "34443353a44202964ba0490cc5e9b5d2b3d4b0b6",
+      "sha256": "6b139350581c8704f6732dd1642296512f67644cbd667ec68ec0545b5a0946e0",
+      "bytes": 11939
+    },
+    {
+      "kind": "actual",
+      "commit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+      "path": "backend/migrations/repair_wizard_level_two_spellbook.go",
+      "blob": "f4f7b1f7ad0cc0eca6936c4c61fd0f5d71055851",
+      "sha256": "28e693ab9d8aa5b711760376211a29d13028449345f21b1eee5f681932059bea",
+      "bytes": 2532
+    },
+    {
+      "kind": "actual",
+      "commit": "529ee164ccd16a9c4eb39f9d2abd1ec924a6be98",
+      "path": "backend/migrations/harden_level_five_runtime.go",
+      "blob": "f8267813e47d4b1a62c5e332230dfbd8348d1fa4",
+      "sha256": "1278b50c618a840f9a4bdb0a38f3ec3027daae45b29c4ebe30a660ee254a0f24",
+      "bytes": 9605
+    },
+    {
+      "kind": "authored",
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "officials/canon/prod-snapshot/effects.json",
+      "blob": "f09269dd9f4d8a7341e885c5d5be43e858f74d8d",
+      "sha256": "0e4a5edd1dc7e536106aabf68b9a1c63cd1a824e65ac2754f02c87101af74523",
+      "bytes": 2922665
+    },
+    {
+      "kind": "authored",
+      "commit": "48646f81672341128d38cce19c0440f6f6681e08",
+      "path": "frontend/src/canon/data/micro-mvp-l1-content-patch.v1.json",
+      "blob": "fbd1bf9664ba682fec363aee16c085bab827c5dc",
+      "sha256": "f6d8e9944fa14263405b00ea34dbe717c215451505b03e238061dab3431f1b4b",
+      "bytes": 284784
+    }
+  ]
+}

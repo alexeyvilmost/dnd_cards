@@ -30,7 +30,7 @@ export async function waitReady(origin, resource, validate = () => true, timeout
   }
   throw new Error(`Local readiness timeout: ${resource}`);
 }
-export async function startTestStack({dbOnly = false, pgBin = process.env.TEST_PG_BIN, go = process.env.TEST_GO, reuseBuild = false, isolatedBuild = false, reactProfile = false, catalogSnapshot, recoverySnapshot, recoveryWorkerArtifact, profile = 'fresh', performance: performanceEnabled = false, catalogBatch = false, catalogPrefetch = false, equipmentIntent = false, initiativeOptions = false, workerMirrors = false, preparationCache = false, compactReceipts = false, frozenCatalogs = false} = {}) {
+export async function startTestStack({dbOnly = false, databaseLocale = 'C', pgBin = process.env.TEST_PG_BIN, go = process.env.TEST_GO, reuseBuild = false, isolatedBuild = false, reactProfile = false, catalogSnapshot, recoverySnapshot, recoveryWorkerArtifact, profile = 'fresh', performance: performanceEnabled = false, catalogBatch = false, catalogPrefetch = false, equipmentIntent = false, initiativeOptions = false, workerMirrors = false, preparationCache = false, compactReceipts = false, frozenCatalogs = false} = {}) {
   if (!['fresh', 'integration'].includes(profile) || catalogSnapshot && profile !== 'fresh') throw new Error('Choose fresh, integration, or one explicit catalog snapshot; profiles cannot be combined');
   if (recoverySnapshot && (catalogSnapshot || profile !== 'fresh' || dbOnly) || recoveryWorkerArtifact && !recoverySnapshot) throw Error('Owned recovery cannot be combined with another bootstrap profile');
   const runId = assertRunId(`test_${randomBytes(12).toString('hex')}`);
@@ -69,7 +69,7 @@ export async function startTestStack({dbOnly = false, pgBin = process.env.TEST_P
   try {
     registry.ports.database = await freePort();
     await writeRegistry(registry);
-    database = await startNativePostgres(registry, {pgBin, signal: controller.signal});
+    database = await startNativePostgres(registry, {pgBin, signal: controller.signal, databaseLocale});
     const env = cleanEnvironment({CANONICAL_RUNTIME_TEST_DSN: database.dsn, CONTENT_MIGRATION_TEST_DSN: database.dsn,
       TEST_RUN_ID: runId, TEST_RUN_DIRECTORY: registry.directory, TEST_DATABASE_URL: database.dsn});
     if (dbOnly) {

@@ -975,7 +975,7 @@
         4,
         8
       ],
-      "status": "supported_matrix_ci38_verified_historical_sources_local_passed_fresh_ci_open",
+      "status": "maintained_original303_local_passed_mandatory_ci_pending",
       "steps": [
         "Сформировать расширенный manifest всех актуальных offline suites и отдельный ручной перечень historical certification suites. Общие replay/authorization/migration contracts не переносить в legacy только из-за старого имени или включения в прежний coverage pipeline.",
         "Добавить сценарии melee/ranged/caster, разные уровни и multiclass, reactions/saving throws/damage/effects/death/movement, геометрию крупных существ и area delivery, party, camp/shop/loot/journey, короткий/долгий отдых и подготовку. Новые механики проверять второй сущностью на том же примитиве.",
@@ -1012,7 +1012,55 @@
         "Нестабильные performance budgets временно перевести в диагностический режим с owner и сроком исправления; не отключать correctness/replay/authorization проверки.",
         "Удалять только артефакты disposable test run по registry; исторический corpus и production данные не затрагивать."
       ],
-      "execution": "local_only_until_explicitly_authorized",
+      "execution": {
+        "0": "l",
+        "1": "o",
+        "2": "c",
+        "3": "a",
+        "4": "l",
+        "5": "_",
+        "6": "o",
+        "7": "n",
+        "8": "l",
+        "9": "y",
+        "10": "_",
+        "11": "u",
+        "12": "n",
+        "13": "t",
+        "14": "i",
+        "15": "l",
+        "16": "_",
+        "17": "e",
+        "18": "x",
+        "19": "p",
+        "20": "l",
+        "21": "i",
+        "22": "c",
+        "23": "i",
+        "24": "t",
+        "25": "l",
+        "26": "y",
+        "27": "_",
+        "28": "a",
+        "29": "u",
+        "30": "t",
+        "31": "h",
+        "32": "o",
+        "33": "r",
+        "34": "i",
+        "35": "z",
+        "36": "e",
+        "37": "d",
+        "maintainedFreshChain": {
+          "record": "docs/audits/2026-10-04/execution/TEST-05-maintained-fresh-chain-20261007.json",
+          "localStatus": "passed",
+          "originalMigrations": 303,
+          "repeatTables": 98,
+          "mandatoryGate": "historical-fresh-chain",
+          "fullHistoricalCI": false,
+          "sharedStackGate": "passed"
+        }
+      },
       "scope_inventory": {
         "existing": [
           "frontend/vitest.rules-core.config.ts",
@@ -1132,6 +1180,9 @@
         "freshInstallAcceptance": false,
         "fullHistoricalCI": false,
         "remaining": "The portable read-only inspector is implemented and mandatory unit selection includes its tests. The ordinary full fresh migration runner still requires promotion of the remaining authored phase adapters and certificate-preimage handling into the maintained CI profile."
+      },
+      "latestExecution": {
+        "nextAcceptance": "Commit locally verified maintained profile; preserve active 5c45 deployment from superseding pushes, then actual hosted extended CI including historical-fresh-chain."
       }
     },
     {

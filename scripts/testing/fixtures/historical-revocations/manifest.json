@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "kind": "archived-revocation-input-provenance",
+  "productionBootstrap": false,
+  "currentCertifications": false,
+  "sourceDumpHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+  "sourceDumpBytes": 958580611,
+  "sourceFiles": [
+    {
+      "name": "authentic-preimages.private.json",
+      "sha256": "sha256:c066ff8544843b6a4114857c4b44d15f2d4d27a4a710babfddd2e5105a8972cc"
+    },
+    {
+      "name": "authentic-119.private.json",
+      "sha256": "sha256:97086f6a09315893c43a6393103f69aa666ffa4049b393e88afe46653d1d886f"
+    }
+  ],
+  "acceptedOrdinaryChain": {
+    "receipt": "outputs/testing/test05-historical-source-audit/fresh102_a20ccb282665f37743b3/report.json",
+    "sha256": "sha256:1e4b1f3a36831bc9e079aeba9db6754b59f55ec685e6f2d39591eba23ab983b1",
+    "registeredMigrations": 303,
+    "unchangedOriginalRevocations": true
+  },
+  "privacy": {
+    "privateGameplayRowsIncluded": 0,
+    "privateMetadataKeysIncluded": 0,
+    "notesAlreadyPresentInPublicSources": true,
+    "notesSha256": "sha256:18c39830527a0d0f93e2552d157f07ff7ba006ed3d151dbae50134d1cc172253"
+  },
+  "dataset": {
+    "file": "revocations.json.gz",
+    "bytes": 2381,
+    "sha256": "sha256:b75801a643f07a221134ed91baceb4484e87ac3fff77046c39e6b7d375d64fd4",
+    "jsonBytes": 6670,
+    "jsonSha256": "sha256:b61339c908f07c3b0f924d4b25078cb733f44a4034f3664132e41daf5c0a127e",
+    "rows": 3
+  },
+  "originalPreimages": [
+    {
+      "migration": "102_revoke_invalid_feather_fall_certification",
+      "entityID": "33e73716-4d61-4669-b9d4-b0e2f6fcc63f",
+      "cardNumber": "SPELL-0253",
+      "preimageHash": "sha256:b21918779a2dc511758538259515c7563c77e903b4bdba5562c63a4dc0a956e1"
+    },
+    {
+      "migration": "103_revoke_invalid_mage_hand_certification",
+      "entityID": "70e35366-5446-49ff-b0b9-759dbbff347e",
+      "cardNumber": "SPELL-0173",
+      "preimageHash": "sha256:5afe9ee54b84e20705c93cbe0c064313e7c7897c67ec1c529b30aea08c10a20d"
+    },
+    {
+      "migration": "119_repair_sleep_spell_class_list_contract",
+      "entityID": "0f81f3e2-ff95-4629-9292-e81332a57282",
+      "cardNumber": "SPELL-0311",
+      "preimageHash": "sha256:c786baf8287c8e976f16ab9db434c2d9b3b4a29a458f448e956dd8000952c47d"
+    }
+  ]
+}

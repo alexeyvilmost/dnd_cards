@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "rows": [
+    {
+      "kind": "action",
+      "id": "58af20d9-f80a-42dd-8e9d-844740fcffe1",
+      "reference": "ACT-goliath-large-form"
+    },
+    {
+      "kind": "action",
+      "id": "7517b42e-4417-407f-a16c-5fa0c9e81282",
+      "reference": "ACT-goliath-stone"
+    }
+  ],
+  "sourceRefusalReportHash": "sha256:a45135905ad49cc1e181509517b2610deba165bc78291927ae0d96e4951b492b"
+}
