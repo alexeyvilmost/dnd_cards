@@ -98,5 +98,65 @@
     "These are historical C/D compositions and a historical D3 snapshot. Fresh then-current snapshot and pair verification remain required before production deletion.",
     "The original native/Linux execution proofs remain pinned to57f; c644 changes only local proof validation, tests and documentation.",
     "Production host approval/executor/controller integration is not implemented by this local-only profile."
+  ],
+  "currentMainIntegration": {
+    "mergeCommit": "febddad25da612abc5ea087aac915be7dcc58e96",
+    "mainSource": "a0c4db750744ec3c1d3687683c0161751f98162c",
+    "mainCi": {
+      "id": 37559117528,
+      "status": "completed",
+      "conclusion": "success",
+      "independentlyObservedAt": "2026-10-07T02:10:34Z"
+    },
+    "changedUpstreamPaths": [
+      "scripts/release/produce-writer-browser-proof.mjs",
+      "scripts/release/rehearsal-scenarios.mjs",
+      "scripts/release/rehearsal-scenarios.test.mjs"
+    ],
+    "original301And302SourcesUnchanged": true,
+    "proofValidatorSourcesUnchanged": true,
+    "mergedNodeVerification": {
+      "selectedFiles": [
+        "scripts/release/produce-writer-browser-proof.test.mjs",
+        "scripts/release/rehearsal-scenarios.test.mjs",
+        "scripts/release/retirement-artifacts.test.mjs",
+        "scripts/release/retirement-build-baseline.test.mjs",
+        "scripts/release/retirement-execution-result.test.mjs",
+        "scripts/release/retirement-outcome-journal.test.mjs",
+        "scripts/release/retirement-projection.test.mjs",
+        "scripts/release/retirement-registry.test.mjs",
+        "scripts/release/retirement-state.test.mjs",
+        "scripts/release/validate-manifest.test.mjs",
+        "scripts/release/writer-fixture-cli.test.mjs",
+        "scripts/release/writer-runtime-profile.test.mjs"
+      ],
+      "allNamedFilesIndependentlyConfirmedPresent": true,
+      "passed": 163,
+      "skipped": 0,
+      "failed": 0
+    },
+    "manualObservationCorrection": {
+      "nonexistentArgumentsInEarlierManualCommands": [
+        "scripts/release/atomic-file-store.test.mjs",
+        "scripts/release/migration-transition.test.mjs",
+        "scripts/release/produce-writer-browser-proof-guards.test.mjs"
+      ],
+      "actualEarlierCountsRetained": [
+        148,
+        151
+      ],
+      "claimsForAbsentSuites": false,
+      "finalAction": "Re-ran the explicit existing12-file list with a pre-run regular-file presence check. Real producer/profile/CLI files passed12 cases and final combined run passed163."
+    },
+    "rootMainModified": false,
+    "pushed": false,
+    "productionChanges": 0
+  },
+  "nextHostIntegration": [
+    "Publish and accept application metadata supporting302 in a separately verified release; retain Main release ownership until its current301 release is accepted.",
+    "Capture the then-current accepted release; do not relabel a new capture as the previous application release.",
+    "Validate current snapshot provenance separately from the two application compositions exercised on the owned restored copy.",
+    "Bind fresh full backup/restore/archive/reader evidence to an explicit execution intent under the common deployment lock.",
+    "Record the pre-execution intent before calling the exact OCI CLI, reconcile uncertain results with the identical request, and persist the existing retirement observation journal without restoring the production DB."
   ]
 }

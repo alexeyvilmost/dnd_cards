@@ -3430,7 +3430,14 @@
           "productionChanges": 0,
           "productionReady": false,
           "nativeBoundExecutionVerified": true,
-          "syntheticExternalProofHashes": false
+          "syntheticExternalProofHashes": false,
+          "currentMainMerge": {
+            "sourceCommit": "febddad25da612abc5ea087aac915be7dcc58e96",
+            "mainSource": "a0c4db750744ec3c1d3687683c0161751f98162c",
+            "passed": 163,
+            "skipped": 0,
+            "productionChanges": 0
+          }
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
