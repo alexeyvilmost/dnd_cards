@@ -31,7 +31,7 @@ export function createDockerUIRehearsal({directory,postgresImage,executionProfil
   let before,desired,boundary,runId,pending,accepted,continued,continuedBody,ui,oldChunks,fixtureProof,cleanupPromise;
   const browserNames=[];
   async function browserChecks(){
-    const runtime=path.join(root,'browser');mkdirSync(runtime);mkdirSync(path.join(runtime,'node_modules'));
+    const runtime=path.join(root,'browser');mkdirSync(runtime,{mode:0o700});mkdirSync(path.join(runtime,'node_modules'));
     for(const name of ['playwright','playwright-core']){
       const source=path.join(browserRuntimeDirectory,name);if(!path.isAbsolute(source)||read(path.join(source,'package.json')).version!==playwrightVersion)throw Error('Playwright runtime differs from pinned browser image');
       cpSync(source,path.join(runtime,'node_modules',name),{recursive:true,dereference:true,errorOnExist:true,force:false});
@@ -40,7 +40,7 @@ export function createDockerUIRehearsal({directory,postgresImage,executionProfil
     const account=await createRehearsalAccount(await authorizeDockerRehearsal({names,owner}),{label:'Owned UI verification'});
     save(path.join(runtime,'input.json'),{owner,origin:'https://gateway:8443',account:{username:account.username,password:account.password}});const name=owner+'_browser';browserNames.push(name);
     command(['pull',playwrightImage]);
-    let failure;try{command(['run','--name',name,'--label','bagofholding.rehearsal='+owner,'--network',names.network,'--ipc','private','--shm-size','256m','--mount',`type=bind,source=${runtime},target=/runtime`,'--workdir','/runtime',playwrightImage,'node','ui-browser-checks.mjs','input.json','result.json']);}catch(error){failure=error;}
+    let failure;try{command(['run','--name',name,'--label','bagofholding.rehearsal='+owner,'--user',`${process.getuid()}:${process.getgid()}`,'--network',names.network,'--ipc','private','--shm-size','256m','--mount',`type=bind,source=${runtime},target=/runtime`,'--workdir','/runtime',playwrightImage,'node','ui-browser-checks.mjs','input.json','result.json']);}catch(error){failure=error;}
     const result=read(path.join(runtime,'result.json'));if(failure||result.status!=='passed'||result.owner!==owner)throw Error('Actual pinned browser checks failed');return result;
   }
   const request=resource=>JSON.parse(command(['exec',names.rulesWorker,'node','--input-type=module','-e',"const r=await fetch('http://frontend:3000'+process.argv[1]);const b=Buffer.from(await r.arrayBuffer());const{createHash}=await import('node:crypto');console.log(JSON.stringify({status:r.status,hash:createHash('sha256').update(b).digest('hex'),html:process.argv[1]==='/'?b.toString():undefined}));",resource]));

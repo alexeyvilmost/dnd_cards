@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-local-mixed-OCI-ownership-fix",
+  "status": "passed-local-only",
+  "recordedAt": "2026-10-07T18:08:55.725Z",
+  "baseCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
+  "collectorSourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
+  "actualCandidateSource": "07af60c1dcbc93f4fd4723207fbddf819679e991",
+  "actualPreviousSource": "8aa27f54044ec57e8fded102f20160a90bc60652",
+  "actualFrontendImage": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:be5f8a5487da01835712bf743866b519affc0be16647e02a40720a6c130f2015",
+  "controller": {
+    "uid": 1001,
+    "gid": 1001,
+    "linux": true,
+    "ownedVolumeRemoved": true
+  },
+  "checks": [
+    {
+      "id": "image-contract",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:7036cd1dda5da6a7ad4f2fb7daf58dbfc85d92bd97ed3feca6ee785304052353"
+    },
+    {
+      "id": "api-routing",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:6bcdf8c6f5c73d1830650951d361f7bf1118f916b78c89db26ed1983f8c34667"
+    },
+    {
+      "id": "character",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:b903e8b49e723b0c960ef9926fc000a294880bd95ea6c9a092710286cd805b69"
+    },
+    {
+      "id": "equipment",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:2de0be40a9d2a4c07ed8bc019c8e0f628f0a7f5db0661a0ce87f61e591ac605e"
+    },
+    {
+      "id": "combat-pending",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:c56f687ae934d44bdc366c5095a891082138ccd85665fb548c1f46d8df77eadf"
+    },
+    {
+      "id": "reload",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:3c66995adb29e7dba641516d5c369b43d436ca6a0c48022d7db933d279075948"
+    },
+    {
+      "id": "exact-retry",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:f38e8b0c87323265a42631ba6600ce3d295ed05d02b06351232dace6562fca4b"
+    },
+    {
+      "id": "paper",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:a2dd0988974fb7ef8fb8e0230d76708d14ca8b99722444b5c7ef4b221ea6a2d3"
+    },
+    {
+      "id": "json-export",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:c00f60493d6387b753f4842e4946ece9f13ad4a154b9bb598523b29ee74d54b0"
+    },
+    {
+      "id": "pdf-export",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:95c507040153bc73a192af05a69847d51a1f1a166a6b10fb2e264d1b8970ac4f"
+    },
+    {
+      "id": "frontend-rollback",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:1198133f96f642b579df57648d9bf2c00d7daf6b41005bfd477f92900152c970"
+    },
+    {
+      "id": "old-chunk-fetch",
+      "status": "passed",
+      "disposition": "executed",
+      "evidenceHash": "sha256:57b311ce925df76b97f3dc8d6059db546ede25a65886562de2f9ce4a350bb939"
+    }
+  ],
+  "cleanup": {
+    "status": "stopped",
+    "errors": [],
+    "retainedImages": true
+  },
+  "completedAt": "2026-10-07T18:08:02.786Z",
+  "previousBrowserAttempt": {
+    "allSixScenariosPassed": true,
+    "collectorReadRefused": true,
+    "originalFailurePreserved": true
+  },
+  "localContracts": {
+    "tests": 29,
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0
+  },
+  "permissions": {
+    "workerAndBrowserUseObserverUID": true,
+    "artifactMode": "0600",
+    "artifactAndBrowserDirectoryMode": "0700",
+    "productionComposeUnchanged": true
+  },
+  "supersededCI": {
+    "runId": 37662026737,
+    "cancellationRequested": true,
+    "reason": "Second privately written browser report had the same ownership mismatch; fresh exact-source CI required for the combined fix.",
+    "conclusion": "cancelled",
+    "actualTerminalObservedAt": "2026-10-07T18:09:38.952Z"
+  },
+  "authorization": "not-produced",
+  "hostedWorkflowAccepted": false,
+  "productionReady": false,
+  "productionChanges": 0,
+  "productionDatabaseRestored": false,
+  "paidProviderRequests": 0,
+  "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
+  "remaining": [
+    "Fresh exact-source main CI and publication of the combined collector fix",
+    "Actual frontend-only hosted mixed checks and independent production acceptance",
+    "Separately verified physical legacy-table retirement"
+  ]
+}

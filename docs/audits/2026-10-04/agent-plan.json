@@ -2493,7 +2493,29 @@
       "remaining_gates": [
         "OCI-SELECTIVE",
         "REL-ENABLE"
-      ]
+      ],
+      "latestLocalMixedVerification": {
+        "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
+        "status": "passed-local-only",
+        "actualLinuxChecks": 12,
+        "contracts": 29,
+        "controllerUID": 1001,
+        "controllerGID": 1001,
+        "sourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
+        "hostedWorkflowAccepted": false,
+        "productionAccepted": false,
+        "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
+        "supersededCI": {
+          "runId": 37662026737,
+          "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
+          "conclusion": "cancelled"
+        },
+        "remaining": [
+          "Fresh exact-source main CI and publication of the combined collector fix",
+          "Actual frontend-only hosted mixed checks and independent production acceptance",
+          "Separately verified physical legacy-table retirement"
+        ]
+      }
     },
     {
       "id": "REL-04",
@@ -2736,7 +2758,29 @@
       "remaining_gates": [
         "OCI-SELECTIVE",
         "REL-ENABLE"
-      ]
+      ],
+      "latestLocalMixedVerification": {
+        "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
+        "status": "passed-local-only",
+        "actualLinuxChecks": 12,
+        "contracts": 29,
+        "controllerUID": 1001,
+        "controllerGID": 1001,
+        "sourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
+        "hostedWorkflowAccepted": false,
+        "productionAccepted": false,
+        "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
+        "supersededCI": {
+          "runId": 37662026737,
+          "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
+          "conclusion": "cancelled"
+        },
+        "remaining": [
+          "Fresh exact-source main CI and publication of the combined collector fix",
+          "Actual frontend-only hosted mixed checks and independent production acceptance",
+          "Separately verified physical legacy-table retirement"
+        ]
+      }
     },
     {
       "id": "REL-06",
@@ -6687,5 +6731,27 @@
     "runId": 37623876785,
     "attempt": 2,
     "acceptedNewDeployment": false
+  },
+  "latest_local_selective_verification": {
+    "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
+    "status": "passed-local-only",
+    "actualLinuxChecks": 12,
+    "contracts": 29,
+    "controllerUID": 1001,
+    "controllerGID": 1001,
+    "sourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
+    "hostedWorkflowAccepted": false,
+    "productionAccepted": false,
+    "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "supersededCI": {
+      "runId": 37662026737,
+      "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
+      "conclusion": "cancelled"
+    },
+    "remaining": [
+      "Fresh exact-source main CI and publication of the combined collector fix",
+      "Actual frontend-only hosted mixed checks and independent production acceptance",
+      "Separately verified physical legacy-table retirement"
+    ]
   }
 }
