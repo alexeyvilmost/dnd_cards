@@ -21,6 +21,10 @@
           "External OAuth/provider/storage are deliberately emulated in normal suites; emulator success is not paid-provider acceptance."
         ],
         "nextAcceptance": []
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
       }
     },
     {
@@ -40,6 +44,10 @@
           "The supported archived corpus is finite; no claim that unknown historical executables are automatically compatible."
         ],
         "nextAcceptance": []
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
       }
     },
     {
@@ -66,7 +74,11 @@
         "nextAcceptance": []
       },
       "historical_acceptance_scope": "Operational four-lane CI/local orchestration now owns separate DB/process/build resources; aggregation enforces exact once global assignment, current source/manifest, same artifact/UI and stopped cleanup. Partial shard reports are release-ineligible.56 targeted checks and private build/no-shared-write proof passed. The complete fresh sharded run remains pending root source freeze.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "TEST-04",
@@ -86,7 +98,11 @@
         ],
         "nextAcceptance": []
       },
-      "historical_acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries."
+      "historical_acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "TEST-05",
@@ -124,7 +140,6 @@
           "upgradeAndRepeatPassed": true,
           "freshInstallAcceptance": false
         },
-        "currentRemainingGate": "Integrate the maintained fresh migration profile and its mandatory CI gate using verified public historical inputs; the actual pre278 source has now been found and its upgrade/repeat accepted.",
         "independentLinuxHistoricalProfile": {
           "record": "docs/audits/2026-10-04/execution/TEST-05-linux-historical-profile-20261007.json",
           "status": "passed",
@@ -155,7 +170,8 @@
           "productionDeliveryIndependentlyAccepted": true
         },
         "previousRecord": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
+        "previousCurrentRemainingGate20261007": "Integrate the maintained fresh migration profile and its mandatory CI gate using verified public historical inputs; the actual pre278 source has now been found and its upgrade/repeat accepted."
       },
       "historical_acceptance_scope": "All17 persisted Solo continuation/queue fields have positive durable API coverage:220 accepted cases,440 exact retries across reload/restart, and2 separate fail-closed boundary cases. The immutable corpus has222 entries;224 unit checks pass. Actual owned stack stopped. These targeteds do not substitute for the final combined suite. Historical fresh001/pre102 provenance and Linux race are independent remaining gates; supported297/298/299 upgrade receipts stay unchanged.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
@@ -164,6 +180,10 @@
         "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
         "firstHealthyDeployment": false,
         "freshHistoricalBoundary": "ordinary143 passed;all67primary-before-sources closed;schedule101/118/121 live guards and144-current not yet executed"
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
       }
     },
     {
@@ -189,16 +209,18 @@
         ],
         "nextAcceptance": []
       },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "PERF-01",
       "title": "Пакетное разрешение зависимостей и безопасный кеш неизменяемого каталога",
       "status": "implemented_ci_verified_cache_enablement_unproven",
       "evidence": "docs/audits/2026-10-04/execution/PERF-01.md",
-      "remaining_gates": [
-        "PERF-HOST"
-      ],
+      "remaining_gates": [],
       "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
@@ -232,20 +254,26 @@
         "limitations": [
           "Ordinary equip median 37.3→56.4 ms and unequip 38.0→56.6 ms worsened against legacy. Latest prefetch/flights/static memo correctness has no new latency claim. Preparation cache and prefetch remain OFF in the intended initial rollout."
         ],
-        "nextAcceptance": [
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": [
           "Enable only a measured beneficial configuration after exact target-host comparison; retain ordinary path regression as an explicit outcome."
         ]
       },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": [
+        "PERF-HOST"
+      ]
     },
     {
       "id": "PERF-02",
       "title": "Короткая транзакция экипировки и единая подготовка начала боя",
       "status": "production_runtime_activation_independently_verified",
       "evidence": "docs/audits/2026-10-04/execution/PERF-02.md",
-      "remaining_gates": [
-        "Verified runtime activation and rollback of the read-only initiative-options path; production flag currently OFF."
-      ],
+      "remaining_gates": [],
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
@@ -282,9 +310,7 @@
         "limitations": [
           "D229 production activation is independently verified; prior local latency comparisons do not constitute a fresh target-host latency acceptance."
         ],
-        "nextAcceptance": [
-          "Retain explicit cache/prefetch OFF and preserved historical artifacts; frontend-only a161 has a separate acceptance."
-        ],
+        "nextAcceptance": [],
         "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
         "currentIntegratedChoice": {
           "evidence": "docs/audits/2026-10-04/execution/PERF-02-integrated-initiative-20261007.json",
@@ -361,7 +387,10 @@
           "equipmentIntentActivationVerified": true,
           "protectedExecutionProfileVerified": true,
           "productionLatencyComparison": false
-        }
+        },
+        "previous_nextAcceptance_20261007": [
+          "Retain explicit cache/prefetch OFF and preserved historical artifacts; frontend-only a161 has a separate acceptance."
+        ]
       },
       "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
@@ -383,6 +412,13 @@
       "historical_remaining_gates": [
         "PERF-HOST",
         "Batch remains OFF after 160 measured actual UI runs; stable overall initialization improvement is unproven"
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": [
+        "Verified runtime activation and rollback of the read-only initiative-options path; production flag currently OFF."
       ]
     },
     {
@@ -402,7 +438,8 @@
         "limitations": [
           "160 commands are not an indefinite heap bound; retained command IDs add about 195 B/turn. No whole-process memory ceiling or target-host saturation SLA established. Mirror switch is opt-in; parent plans ON at first cutover but live adoption is unproved."
         ],
-        "nextAcceptance": [
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": [
           "After verified cutover, record actual runtime flags and host capacity; retain no-TTL dedup/history semantics. Additional concurrency workers require measured CPU bottleneck and host budget."
         ]
       },
@@ -410,7 +447,12 @@
       "historical_final_local_suite_status": "pending_fresh_source_after_completion_followup",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
-      ]
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": []
     },
     {
       "id": "PERF-04",
@@ -454,7 +496,11 @@
         ],
         "nextAcceptance": []
       },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "PERF-05",
@@ -479,7 +525,11 @@
         ],
         "nextAcceptance": []
       },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "REF-01",
@@ -505,7 +555,11 @@
         "nextAcceptance": []
       },
       "historical_acceptance_scope": "Typed exhaustive routers now cover 44 commands and 15 saved decisions; cohesive attack/damage continuations extracted without a second rules owner. Exact immutable before/after executable replay84 and targeted100 plus TypeScript passed; the full combined suite on the latest source remains pending.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "REF-02",
@@ -525,7 +579,11 @@
         ],
         "nextAcceptance": []
       },
-      "historical_acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются."
+      "historical_acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "REL-01",
@@ -544,6 +602,10 @@
           "The accelerated selective workflow is a separate private follow-on; having a correct planner does not mean production selective rollout has occurred."
         ],
         "nextAcceptance": []
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
       }
     },
     {
@@ -571,7 +633,11 @@
         ],
         "nextAcceptance": []
       },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "REL-03",
@@ -580,8 +646,7 @@
       "evidence": "docs/audits/2026-10-04/execution/REL-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
-        "OCI-SELECTIVE",
-        "REL-ENABLE"
+        "OCI-SELECTIVE"
       ],
       "latest_evidence_note": "Статус pending_oci устарел: настоящий локальный registry build/publish/pull/reuse9/9 и collector health/history/migration8+7 выполнены. Это сохранённые local-only fixtures, не CI-attested текущий production candidate.",
       "current_evidence": [
@@ -605,16 +670,23 @@
           "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
         "nextAcceptance": [
-          "Genuine frontend-only production delivery with unchanged backend/worker."
+          "Fresh exact-source CI and actual hosted mixed OCI checks after committing the local collector fix.",
+          "Genuine frontend-only production delivery with backend/worker container IDs unchanged."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+        "currentRemainingGate": "OCI-SELECTIVE"
       },
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
       "latest_observed": {
         "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
         "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
         "firstHealthyDeployment": false
-      }
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json"
     },
     {
       "id": "REL-04",
@@ -622,9 +694,7 @@
       "status": "full_automatic_production_verified",
       "evidence": "docs/audits/2026-10-04/execution/REL-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "REL-ENABLE"
-      ],
+      "remaining_gates": [],
       "previous_status": "local_oci_passed_exact_production_candidate_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "completion_evidence": [
@@ -644,9 +714,17 @@
         "limitations": [
           "Candidate publication does not assert host rehearsal/cutover success. Historical 014f local-only OCI receipts keep their original identity."
         ],
-        "nextAcceptance": []
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": []
       },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": [
+        "REL-ENABLE"
+      ]
     },
     {
       "id": "REL-05",
@@ -655,8 +733,7 @@
       "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [
-        "OCI-SELECTIVE",
-        "REL-ENABLE"
+        "OCI-SELECTIVE"
       ],
       "previous_status": "healthy_predecessor_verified_ci19_passed_metadata_reader_repair_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
@@ -681,9 +758,11 @@
           "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
         ],
         "nextAcceptance": [
-          "Genuine frontend-only production delivery with unchanged backend/worker."
+          "Fresh exact-source CI and actual hosted mixed OCI checks after committing the local collector fix.",
+          "Genuine frontend-only production delivery with backend/worker container IDs unchanged."
         ],
-        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+        "currentRemainingGate": "OCI-SELECTIVE"
       },
       "latest_observed": {
         "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
@@ -696,7 +775,12 @@
           "status": "verification_only_release_policy_locally_verified_hosted_ci_pending",
           "productionAccepted": false
         }
-      }
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json"
     },
     {
       "id": "REL-06",
@@ -792,6 +876,10 @@
         "nextReportingAction": "Preserve original plan criteria; record this explicit scope override in human and machine reports. Do not require or ask for external storage again.",
         "recordHash": "sha256:8dd4c4b94432cbf8fed9b2d1205cdb1d9daca1147018cac9be52c535b08fe1b4",
         "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
       }
     },
     {
@@ -816,7 +904,11 @@
         ],
         "nextAcceptance": []
       },
-      "historical_acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД."
+      "historical_acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "DB-02",
@@ -834,13 +926,19 @@
         "limitations": [
           "DB_COMPACT_RECEIPTS remains 0 in first adoption to keep old 4549 rollback reader safe. No old receipt backfill. Private format proof is same-image, not future distinct candidate/previous acceptance."
         ],
-        "nextAcceptance": [
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": [
           "After genuine dual-reader first adoption, integrate ninth-stage writer gate; run exact published distinct pair on public synthetic fixture plus independent full retained-history restore; enable only new writes after accepted proof and record monotonic format obligation."
         ]
       },
       "current_evidence": [
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
-      ]
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": []
     },
     {
       "id": "DB-03",
@@ -848,9 +946,7 @@
       "status": "enablement_rejected_measured_latency_regression",
       "evidence": "docs/audits/2026-10-04/execution/DB-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "REL-ENABLE"
-      ],
+      "remaining_gates": [],
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/DB-03-latency100.json",
         "docs/audits/2026-10-04/execution/DB-03-latency100-optimized.json"
@@ -864,11 +960,19 @@
         "limitations": [
           "Storage benefit does not satisfy latency acceptance. Current ON adds SQL versus OFF (init26→27, continue14→16); reduction29→27 was only relative to earlier ON implementation."
         ],
-        "nextAcceptance": [
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": [
           "Keep DB_FROZEN_CATALOGS=0. This is a completed negative decision for this iteration, not an unimplemented optimization or permission to erase compatibility code. Reopen only with a separately measured hypothesis."
         ]
       },
-      "historical_acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF."
+      "historical_acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": [
+        "REL-ENABLE"
+      ]
     },
     {
       "id": "DB-04",
@@ -915,7 +1019,11 @@
         }
       },
       "historical_acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending"
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "AI-01",
@@ -939,7 +1047,11 @@
         ],
         "nextAcceptance": []
       },
-      "historical_acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено."
+      "historical_acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "AI-02",
@@ -947,9 +1059,7 @@
       "status": "proxy_backend_deployed_live_configuration_verified_ui_generation_pending",
       "evidence": "docs/audits/2026-10-04/execution/AI-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
-      "remaining_gates": [
-        "APPLICATION-CUTOVER"
-      ],
+      "remaining_gates": [],
       "previous_status": "done_local",
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
       "latest_execution_result": {
@@ -960,7 +1070,8 @@
           "Local/emulated pipeline and real provider probe are separate evidence; exact deployed application-to-storage path awaits successful cutover acceptance.",
           "First actual deploy37273035754 failed after operator stop of expired rehearsal; original4549 remains healthy. No production adoption."
         ],
-        "nextAcceptance": [
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": [
           "Verify intended application flow on accepted release with explicit request identity and no blind paid retry."
         ]
       },
@@ -969,7 +1080,14 @@
         "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
         "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
         "firstHealthyDeployment": false
-      }
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": [
+        "APPLICATION-CUTOVER"
+      ]
     },
     {
       "id": "AI-03",
@@ -988,14 +1106,20 @@
         "limitations": [
           "IMAGE_JOBS_ENABLED=0 for first adoption. Same-image emulator foundation does not authorize future distinct-image writer change; support for reading a format is distinct from evidence that data of that format was written. Concurrency bound is not a monetary quota."
         ],
-        "nextAcceptance": [
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": [
           "Integrate/run exact-pair hosted browser + host format/history ninth gate after actual compatible predecessor exists; preserve ON→OFF→OFF obligation and unknown outcome no-retry semantics, then enable jobs through recorded policy."
         ]
       },
       "historical_acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline.",
       "current_evidence": [
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
-      ]
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": []
     },
     {
       "id": "CLEAN-01",
@@ -1015,14 +1139,20 @@
         ],
         "nextAcceptance": []
       },
-      "historical_acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены."
+      "historical_acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      }
     },
     {
       "id": "CLEAN-02",
       "title": "Постепенно убрать старые продуктовые ветки",
       "status": "v1_v2_code_removed_ci_verified_db_retained",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-02.md",
-      "remaining_gates": [],
+      "remaining_gates": [
+        "LEGACY-DB-RETIREMENT"
+      ],
       "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
@@ -1039,7 +1169,7 @@
           "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
         ],
         "nextAcceptance": [
-          "Only after a V3-only compatible predecessor and retained verified backup: prepare exact FK-bound table removal migration, without deleting current shared inventory."
+          "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
         ]
       },
       "historical_acceptance_scope": "Explicitly authorized V1/V2 code/support removal completed with native PG11 and fresh UI/worker13 checks. Current V3, paper, runs, shared inventories and historical DB rows preserved; physical retired-storage removal requires verified backup/migration separately. Fresh full suite pending.",
@@ -1061,6 +1191,10 @@
           "productionReady": false,
           "productionChanges": 0
         }
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
       }
     },
     {
@@ -1080,11 +1214,17 @@
         "limitations": [
           "Variants add about29.4 MB to dist because originals stay; no Git history or full-image shrink claimed. VITE_MEDIA_VARIANTS=0; OCI media input proposal is prepared_not_release_authorized."
         ],
-        "nextAcceptance": [
+        "nextAcceptance": [],
+        "previous_nextAcceptance_20261007": [
           "If enabling variants, bind their exact source manifest into release OCI inputs and verify final image/old document/export paths; do not trade retained originals for an unmeasured size claim."
         ]
       },
-      "historical_acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты."
+      "historical_acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+        "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+      },
+      "previous_remaining_gates_20261007": []
     }
   ],
   "notes": [
@@ -1097,15 +1237,15 @@
     "THIN + explicit recovery local gate passed; new exact committed CI/publication/adoption pending. No old backup reuse or production success claim.",
     "CI10/all3publication passed; second actual manual deploy refused beforecapture root0755. Exact root0700 repair verified, originallive4549 healthy/noapplicationmutations. Both old failures remain actual; reviewed-chain source/fullCI/newfreshadoption pending."
   ],
-  "updated_at": "2026-10-07T13:32:13.655Z",
-  "work_status": "reviewed_replay_fix_local_pass_pending_new_exact_ci_and_fresh_adoption",
+  "updated_at": "2026-10-07T17:37:30.170Z",
+  "work_status": "full-production-accepted-selective-local-permission-fix-verified",
   "final_verification": "docs/audits/2026-10-04/execution/final-verification.json",
   "remaining_handoff": "docs/audits/2026-10-04/execution/remaining-verification.json",
   "source_snapshot": {
     "sha256": "a2866f240748ea0ffd40f681fb56ee984c4e94efa485ad80a0068e1ce35e48b1",
     "files": 4419
   },
-  "status_semantics": "tasks.status — текущее доказанное состояние на дату execution_current; original_status сохраняет исходное not_started. Шаги и acceptance исходного плана сохранены. implemented_ci_verified не означает production deployment; прочие ограничения указаны в execution_result. Не повторять завершённые срезы.",
+  "status_semantics": "execution_current/current_storage — актуальные принятые результаты. Датированные измерения и superseded_current_fields_20261007 сохраняют прежние SHA/границы. Полная выкатка и очистка приняты; selective publication отказала, локальное исправление ещё не выкачено. Исходные 29 steps/acceptance/dependencies неизменны.",
   "historical_notes": [
     "Чужие untracked output/tmp/skills сохранены.",
     "Только фактически принятые задачи получают done.",
@@ -1172,7 +1312,7 @@
     "files": 4313
   },
   "environment_readiness": "docs/audits/2026-10-04/execution/environment-docker-ready.json",
-  "latest_verification": "docs/audits/2026-10-04/execution/CI-10-second-publication.json",
+  "latest_verification": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
   "local_commit_gate": {
     "status": "local-and-readonly-host-preflight-passed-exact-commit-ci-pending",
     "baseCommit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
@@ -1221,329 +1361,21 @@
   },
   "current_execution": {
     "schemaVersion": 1,
-    "kind": "exact-ci11-publication-and-third-historical-replay-refusal",
-    "recordedAt": "2026-10-05T11:04:00.660Z",
-    "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-    "ci": {
-      "id": 37291814837,
-      "attempt": 1,
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837",
-      "verified": {
-        "id": 37291814837,
-        "workflow": ".github/workflows/ci.yml",
-        "repository": "alexeyvilmost/dnd_cards",
-        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-        "event": "push"
-      },
-      "createdAt": "2026-10-05T09:42:27Z",
-      "updatedAt": "2026-10-05T09:58:38Z",
-      "recordedRunIntervalMs": 971000,
-      "counts": {
-        "node": 715,
-        "vitest": 6462,
-        "go": 753,
-        "workerAndDatabase": 20,
-        "browserFlows": 12,
-        "uiFixtures": 48,
-        "battle3d": 8,
-        "nativeCursorChecks": 18
-      },
-      "aggregateHash": "sha256:2e1ee7250862aa9968fc0ef58f5f19142113af2533c23db4e88e782c7209e308",
-      "sourceSnapshot": {
-        "sha256": "409bc2ec62555b04084b377326b12d0006320483867fde758bfe0cf3741d5444",
-        "files": 4420
-      },
-      "aggregateWallMs": 888210,
-      "maxShardDurationMs": 873592,
-      "recordedWorkflowIntervalMs": 971000,
-      "globalCoverageComplete": true,
-      "cleanup": "stopped"
-    },
-    "publication": {
-      "id": 37293818656,
-      "attempt": 1,
-      "status": "completed",
-      "conclusion": "success",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37293818656",
-      "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0"
-    },
-    "manifest": {
-      "releaseId": "candidate-0593be8e7bcf-b3cc4ceb1c84",
-      "hash": "sha256:bafc6a164313928a311054907b928b0c4ac20ce3d1c5c2e9509cb78c8be48acf",
-      "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
-      "components": {
-        "backend": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "inputFingerprint": "sha256:d3998ef62f39ee4bf849a0af89631115a49f5d618c78593bc1038fd21b3d93ae",
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:8202bf3120da1c596b84c731b6861d6da917e4c4fce538e6f4868f619acae7bd"
-        },
-        "frontend": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c94268e88302b58f3b407a3e9d8740d27114f445a73f570b73d5f4012d2e421b"
-        },
-        "rulesWorker": {
-          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-          "inputFingerprint": "sha256:0ae0f6963a8cfa291f4623a366135be995917e6caaef1fedfcb7f2df06ccfb01",
-          "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:d8b79c27f5c9a4cf18e68d8ce5e8cd8635c33c6e1dccbe901d1444c06fcaee2d"
-        }
-      }
-    },
-    "deployment": {
-      "id": 37294402253,
-      "attempt": 1,
-      "status": "completed",
-      "conclusion": "failure",
-      "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-      "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37294402253",
-      "jobId": 111712223552,
-      "jobCompletedAt": "2026-10-05T10:38:31Z",
-      "productionSuccess": false,
-      "refusalStage": "historical-replay",
-      "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
-      "originalActiveHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
-      "originalLiveComponentsUnchangedAndHealthy": true,
-      "observedMigrationLedgerCount": 302,
-      "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
-      "rehearsalHash": "sha256:24dc8710d3d66b70a5e9804f5c6cdb4e0f1e62b81775c0fc431565dadd2fcee7",
-      "rehearsalStartedAt": "2026-10-05T10:18:52.477Z",
-      "rehearsalCompletedAt": "2026-10-05T10:38:28.941Z",
-      "capture": {
-        "createdAt": "2026-10-05T10:08:08.180Z",
-        "files": [
-          {
-            "path": "database.dump",
-            "bytes": 958580611,
-            "sha256": "sha256:160556323a3e17e4d777ed6af3325d63f525c894fa940d8f1d757a19ad058992"
-          }
-        ]
-      },
-      "completedMainChecks": [
-        {
-          "id": "snapshot",
-          "status": "passed"
-        },
-        {
-          "id": "migrations",
-          "status": "passed"
-        },
-        {
-          "id": "full-candidate-health",
-          "status": "passed"
-        },
-        {
-          "id": "image-contract",
-          "status": "passed"
-        },
-        {
-          "id": "historical-inventory",
-          "status": "passed"
-        }
-      ],
-      "additiveMigrationScenarios": [
-        {
-          "id": "atomic-ddl-ledger",
-          "status": "passed"
-        },
-        {
-          "id": "crash-before-ledger",
-          "status": "passed"
-        },
-        {
-          "id": "repeat-after-commit",
-          "status": "passed"
-        },
-        {
-          "id": "same-connection-lock",
-          "status": "passed"
-        },
-        {
-          "id": "unknown-migration-rejected",
-          "status": "passed"
-        },
-        {
-          "id": "schema-proof",
-          "status": "passed"
-        },
-        {
-          "id": "old-readers-after-expansion",
-          "status": "passed"
-        }
-      ],
-      "migrationCleanup": {
-        "status": "trials-cleared",
-        "remaining": 0
-      },
-      "cleanup": {
-        "remainingOwnedResources": 0,
-        "resources": {
-          "bagofholding.rehearsal:container": 0,
-          "bagofholding.rehearsal:network": 0,
-          "bagofholding.rehearsal:volume": 0,
-          "bagofholding.legacy-inspection:container": 0,
-          "bagofholding.legacy-inspection:network": 0,
-          "bagofholding.legacy-inspection:volume": 0
-        },
-        "dockerAuthRemoved": true,
-        "deploymentJournalCreated": false,
-        "deployLockPresent": false,
-        "activeManifestPresent": false,
-        "readyPresent": false,
-        "operationPresent": false
-      },
-      "rehearsalCleanup": {
-        "status": "stopped",
-        "errors": [],
-        "resourceCount": 26
-      },
-      "edge": [
-        {
-          "path": "/",
-          "status": 200
-        },
-        {
-          "path": "/api/health",
-          "status": 200
-        },
-        {
-          "path": "/build-info.json",
-          "status": 200
-        }
-      ],
-      "automaticTtlRejectionClaimed": false
-    },
-    "localHistoryDiagnosis": {
-      "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
-      "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
-      "recordTextBytes": 73529052,
-      "records": 2344,
-      "combats": 136,
-      "passed": 112,
-      "failed": 24,
-      "reason": "Combat replay diverged",
-      "artifactFamilies": 3,
-      "replayModuleSameAsOriginalLive": true,
-      "cleanup": "stopped",
-      "productionFailureCauseProven": false
-    },
-    "manualReleaseGatesEnabled": true,
-    "autoSelectiveReconcileEnabled": false,
-    "firstLiveWritersEnabled": false,
-    "paidProviderRequestsThisRecord": 0,
+    "status": "full-production-accepted-selective-local-permission-fix-verified",
+    "recordedAt": "2026-10-07T17:37:30.170Z",
+    "applicationSourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "actualCIRun": 37646729627,
+    "actualPublicationRun": 37648754267,
+    "actualDeploymentRun": 37649818547,
+    "actualDeploymentAttempt": 1,
+    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+    "selectiveRefusalRecord": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+    "productionDatabaseRestored": false,
+    "all29Complete": false,
     "remaining": [
-      "Diagnose and correct replay inputs without rewriting archived records or executables.",
-      "Verify bounded complete restore/history/replay within unchanged freshness policy on next exact source.",
-      "Review explicit recovery of all three failed attempts; normal successful-baseline discovery unchanged.",
-      "Commit reviewed local correction, exact full CI, immutable publication, fresh capture and all host gates.",
-      "Only after real healthy adoption: writer compatibility, selective, rollback, automatic/reconcile acceptance."
-    ],
-    "all29TasksComplete": false,
-    "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-    "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
-    "latestLocalCorrection": {
-      "schemaVersion": 1,
-      "kind": "reviewed-go-json-map-replay-and-three-attempt-recovery",
-      "recordedAt": "2026-10-05T11:28:22.608Z",
-      "baseCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-      "status": "locally-verified-awaiting-new-exact-ci-and-fresh-host-rehearsal",
-      "sourcePaths": 13,
-      "proofPath": "infra/first-adoption-recoveries/37294402253-1.json",
-      "proofHash": "sha256:d03d78e7c611065537080c69cff13c2b7c61ce61a6b0641d6026d40cc6f86c34",
-      "reviewedFailedAttempts": 3,
-      "contract": {
-        "sourceEncoding": "go-json-map-v1",
-        "defaultSourceEncoding": "direct-worker",
-        "historicalRecordSchemaChanged": false,
-        "outputNormalized": false,
-        "arraysReordered": false,
-        "scope": "every step envelope and intent crosses backend JSONMap wire ordering; no artifact-specific branches, no candidate hash search"
-      },
-      "originalSnapshotReplay": {
-        "passed": 136,
-        "records": 2344,
-        "commands": 2209,
-        "usedArtifacts": 18,
-        "reportHash": "sha256:6103047c2702642202d203d4c6fc4a6916b523df52075081fc42b1f6ef5ead87"
-      },
-      "originalSnapshot": {
-        "deploymentRunId": 37273035754,
-        "createdAt": "2026-10-05T06:35:01.822Z",
-        "sha256": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
-        "scope": "original snapshot; not the later failed rehearsal snapshot"
-      },
-      "originalSnapshotOnly": true,
-      "latestProductionCaptureReplay": false,
-      "historicalBytesRewritten": false,
-      "localIntegration": {
-        "receiptHash": "sha256:8669888c27f67ece0b017478b10f1c9a512257bc46ff172f368933acdd220017",
-        "checks": [
-          {
-            "id": "actual-Go-HTTP-worker-replay-and-selection",
-            "tests": 33,
-            "passed": 33,
-            "skipped": 0,
-            "status": "passed"
-          },
-          {
-            "id": "Linux-complete-three-refusal-protocol",
-            "tests": 27,
-            "passed": 27,
-            "skipped": 0,
-            "status": "passed",
-            "network": "none",
-            "repositoryReadOnly": true
-          },
-          {
-            "id": "diff",
-            "status": "passed"
-          },
-          {
-            "id": "database-dumps",
-            "status": "passed"
-          },
-          {
-            "id": "known-credentials",
-            "status": "passed"
-          }
-        ],
-        "sourceUnchanged": {
-          "unchanged": true,
-          "files": 4424,
-          "sha256": "e00c85caf840995e4d06d8d3a997a6fb1ee9d62d92dee9bd141213ea1c62d0b2"
-        },
-        "cleanup": {
-          "status": "stopped",
-          "remainingOwnedResources": 0
-        }
-      },
-      "privatePriorNativeCursor": {
-        "checks": 19,
-        "unchangedAppliedSource": true,
-        "cleanup": "stopped",
-        "latencyMeasured": false
-      },
-      "preservedDiagnosticRefusal": {
-        "path": "full-136-report.json",
-        "sha256": "sha256:d8c0a734e9e3f05dbe0d272bafcd029ec60482a204aa6ae6230713672c744380",
-        "reason": "diagnostic count assumed after-baseline for every group; group51 before-baseline corrected only in v2 wrapper; preserved first source"
-      },
-      "productionChanges": 0,
-      "paidProviderRequests": 0,
-      "firstHealthyDeployment": false,
-      "freshnessPolicyMinutes": 30,
-      "transportBytesLimit": 134217728,
-      "replayTimeoutMs": 300000,
-      "firstLiveWriterPolicy": "all-off",
-      "autoSelectiveReconcile": "off",
-      "remaining": [
-        "New reviewed commit and exact full CI.",
-        "All three immutable images and explicit recovery of all three failed attempts.",
-        "Fresh protected capture; all restore, history, replay, pending and duplicate-command gates under unchanged freshness.",
-        "Independently verify successful adoption before writer/selective/automatic release acceptance."
-      ],
-      "all29TasksComplete": false
-    },
-    "latestLocalCorrectionRecord": "docs/audits/2026-10-04/execution/REL-06-go-wire-recovery.json"
+      "Genuine selective production acceptance after the fixed owned collector passes hosted verification.",
+      "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+    ]
   },
   "last_verified_commit_gate": {
     "status": "passed",
@@ -2769,22 +2601,21 @@
   ],
   "execution_current": {
     "schemaVersion": 1,
-    "status": "production_e747_accepted_selective_and_retirement_open",
-    "recordedAt": "2026-10-07T15:31:04.285Z",
-    "applicationSourceCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
-    "deploymentControlCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
-    "releaseId": "candidate-e747b51700d1-85391d7f147f",
-    "manifestHash": "sha256:1dd99b6478b203602e43a0635859cd2fe123909a64370c5c04ff14c9ef428b78",
-    "actualCIRun": 37635397136,
-    "actualPublicationRun": 37638000262,
-    "actualDeploymentRun": 37639635869,
-    "actualCoordinatorRun": null,
+    "status": "full-production-accepted-selective-local-permission-fix-verified",
+    "recordedAt": "2026-10-07T17:37:30.170Z",
+    "applicationSourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "actualCIRun": 37646729627,
+    "actualPublicationRun": 37648754267,
+    "actualDeploymentRun": 37649818547,
+    "actualDeploymentAttempt": 1,
+    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+    "selectiveRefusalRecord": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
     "productionDatabaseRestored": false,
     "all29Complete": false,
-    "record": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
-    "diskRetentionRecord": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
-    "localIntegrationRecord": "docs/audits/2026-10-04/execution/INTEGRATION-main-local-20261007.json",
-    "actualDeploymentAttempt": 1
+    "remaining": [
+      "Genuine selective production acceptance after the fixed owned collector passes hosted verification.",
+      "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+    ]
   },
   "backup_storage_scope": {
     "schemaVersion": 1,
@@ -2895,38 +2726,21 @@
     "nextAcceptance": "Exact committed extended CI, hosted genuine cross-image/browser proof, full host ninth gate and independent live writer verification; then real selective/rollback/automatic acceptance."
   },
   "execution_followon_current": {
-    "status": "integrated-local-checks-passed-exact-new-ci-pending",
-    "productionEvidence": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
-    "latestAcceptedSource": "e333fc421b4241001f970f955e5a0aa532ccd706",
-    "latestAcceptedCI": 37496663630,
-    "nextLocalEvidence": "docs/audits/2026-10-04/execution/REL-05-planner-integration.json",
-    "productionChangedByThisIntegration": false,
-    "next": [
-      {
-        "id": "commit-and-ci",
-        "steps": [
-          "Commit only reviewed release planner files and public progress reports.",
-          "Push the exact reviewed commit to main; uniquely bind and accept its required extended CI, mandatory nonzero/no-skip groups and stopped cleanup."
-        ]
-      },
-      {
-        "id": "full-baseline",
-        "steps": [
-          "Use the last independently verified deployment37486931185, applicationf05/control025, as baseline.",
-          "Publish genuine immutable components and exact-source writer/browser evidence; retain any actual conservative full selection, including the newly recorded control refusal.",
-          "Notify owner before a new production cutover, capture fresh protected backup and preserve the previous source/image identities.",
-          "Run all required host restore/history/ninth-stage proofs; do not restore a diagnostic DB over live data. Independently verify manifest, live source/digests/launch identities and migration ledger."
-        ]
-      },
-      {
-        "id": "selective-and-automatic",
-        "steps": [
-          "Apply only the already prepared genuine UI accessibility change after the actual full baseline exists.",
-          "Run bound core plus affected UI/E2E checks; publish only selected frontend, retaining exact backend/worker digests.",
-          "Verify actual backend/worker container IDs and launch identities unchanged; rehearse full rollback on an owned clone with existing durable decisions/receipts/jobs.",
-          "Complete the explicitly gated hosted main automatic/reconcile acceptance; do not treat a flag or a skipped workflow as deployment."
-        ]
-      }
+    "schemaVersion": 1,
+    "status": "full-production-accepted-selective-local-permission-fix-verified",
+    "recordedAt": "2026-10-07T17:37:30.170Z",
+    "applicationSourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "actualCIRun": 37646729627,
+    "actualPublicationRun": 37648754267,
+    "actualDeploymentRun": 37649818547,
+    "actualDeploymentAttempt": 1,
+    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+    "selectiveRefusalRecord": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+    "productionDatabaseRestored": false,
+    "all29Complete": false,
+    "remaining": [
+      "Genuine selective production acceptance after the fixed owned collector passes hosted verification.",
+      "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
     ]
   },
   "latest_paired_batch_measurement": {
@@ -3050,98 +2864,36 @@
   },
   "latest_production_delivery": {
     "schemaVersion": 1,
-    "status": "full-automatic-main-production-delivered-selective-open",
-    "recordedAt": "2026-10-06T21:34:40.483Z",
-    "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
-    "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
-    "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
-    "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
-    "actualCIRun": 37525609296,
-    "actualPublicationRun": 37527905823,
-    "actualDeploymentRun": 37528869764,
-    "actualCoordinatorRun": 37533666035,
+    "status": "full-production-accepted-selective-local-permission-fix-verified",
+    "recordedAt": "2026-10-07T17:37:30.170Z",
+    "applicationSourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "actualCIRun": 37646729627,
+    "actualPublicationRun": 37648754267,
+    "actualDeploymentRun": 37649818547,
+    "actualDeploymentAttempt": 1,
+    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+    "selectiveRefusalRecord": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
     "productionDatabaseRestored": false,
     "all29Complete": false,
-    "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+    "remaining": [
+      "Genuine selective production acceptance after the fixed owned collector passes hosted verification.",
+      "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+    ]
   },
   "latest_selective_publication": {
-    "runId": 37523259999,
-    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37523259999",
-    "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
+    "runId": 37657959211,
+    "sourceCommit": "07af60c1dcbc93f4fd4723207fbddf819679e991",
     "status": "failed",
-    "stage": "owned hosted mixed OCI startup",
-    "completedChecks": 0,
-    "cleanup": "stopped without errors",
-    "candidatePublished": false,
-    "productionDeploymentDispatched": false,
-    "rootCause": "not established; original log contains no underlying startup cause"
+    "record": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+    "productionDeploymentDispatched": false
   },
   "latest_selective_verification": {
-    "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
-    "runId": 37522307188,
+    "sourceCommit": "07af60c1dcbc93f4fd4723207fbddf819679e991",
+    "runId": 37657155123,
     "suite": "core",
-    "reportHash": "sha256:d702ed25e662f85bc98479b9db0e5b09a244a083bab705e5fb27173aeac816ef",
-    "mandatorySkips": 0,
-    "cleanup": {
-      "status": "stopped",
-      "errors": []
-    },
-    "globalCoverageComplete": true,
-    "checks": [
-      {
-        "id": "source-hygiene",
-        "status": "passed"
-      },
-      {
-        "id": "isolated-stack",
-        "status": "passed"
-      },
-      {
-        "id": "worker-and-database-node",
-        "status": "passed",
-        "tests": 2,
-        "passed": 2,
-        "skipped": 0
-      },
-      {
-        "id": "backend-compile",
-        "status": "passed"
-      },
-      {
-        "id": "go-backend",
-        "status": "passed",
-        "required": 15
-      },
-      {
-        "id": "source-stability",
-        "status": "passed"
-      },
-      {
-        "id": "local-api-spine",
-        "status": "passed"
-      },
-      {
-        "id": "local-browser-flows",
-        "status": "passed",
-        "tests": 12,
-        "passed": 12,
-        "skipped": 0
-      },
-      {
-        "id": "node-contracts",
-        "status": "passed",
-        "tests": 563,
-        "passed": 563,
-        "skipped": 0
-      },
-      {
-        "id": "vitest",
-        "status": "passed",
-        "tests": 566,
-        "passed": 566,
-        "skipped": 0
-      }
-    ]
+    "checks": 10,
+    "workloadUnits": 166,
+    "record": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json"
   },
   "latest_automatic_policy_preparation": {
     "boundedFailureDiagnostics": true,
@@ -3157,19 +2909,21 @@
   },
   "latest_automatic_delivery": {
     "schemaVersion": 1,
-    "status": "full-automatic-main-production-delivered-selective-open",
-    "recordedAt": "2026-10-06T21:34:40.483Z",
-    "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
-    "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
-    "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
-    "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
-    "actualCIRun": 37525609296,
-    "actualPublicationRun": 37527905823,
-    "actualDeploymentRun": 37528869764,
-    "actualCoordinatorRun": 37533666035,
+    "status": "full-production-accepted-selective-local-permission-fix-verified",
+    "recordedAt": "2026-10-07T17:37:30.170Z",
+    "applicationSourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "actualCIRun": 37646729627,
+    "actualPublicationRun": 37648754267,
+    "actualDeploymentRun": 37649818547,
+    "actualDeploymentAttempt": 1,
+    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+    "selectiveRefusalRecord": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
     "productionDatabaseRestored": false,
     "all29Complete": false,
-    "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+    "remaining": [
+      "Genuine selective production acceptance after the fixed owned collector passes hosted verification.",
+      "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+    ]
   },
   "latestMaintenanceJournalRecovery": {
     "record": "docs/audits/2026-10-04/execution/CI-34-maintenance-journal-recovery-20261007.json",
@@ -3177,5 +2931,568 @@
     "runId": 37623876785,
     "attempt": 2,
     "acceptedNewDeployment": false
+  },
+  "superseded_current_fields_20261007": {
+    "recordedAt": "2026-10-07T17:37:30.170Z",
+    "reason": "Retain historical current/latest fields before reconciliation with actual accepted full release and refused selective publication.",
+    "values": {
+      "work_status": "reviewed_replay_fix_local_pass_pending_new_exact_ci_and_fresh_adoption",
+      "latest_verification": "docs/audits/2026-10-04/execution/CI-10-second-publication.json",
+      "git": {
+        "commit": "bf79b52c3c5b9a88c6d6772f24f9c9fcb39dcce2",
+        "pushed": true,
+        "scope": "bf79 fullCI10/all3publication verified; locally checked reviewed-chain source and actual trusted proof await new commit."
+      },
+      "exact_commit_ci": {
+        "id": 37291814837,
+        "attempt": 1,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837",
+        "verified": {
+          "id": 37291814837,
+          "workflow": ".github/workflows/ci.yml",
+          "repository": "alexeyvilmost/dnd_cards",
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "event": "push"
+        },
+        "createdAt": "2026-10-05T09:42:27Z",
+        "updatedAt": "2026-10-05T09:58:38Z",
+        "recordedRunIntervalMs": 971000,
+        "counts": {
+          "node": 715,
+          "vitest": 6462,
+          "go": 753,
+          "workerAndDatabase": 20,
+          "browserFlows": 12,
+          "uiFixtures": 48,
+          "battle3d": 8,
+          "nativeCursorChecks": 18
+        },
+        "aggregateHash": "sha256:2e1ee7250862aa9968fc0ef58f5f19142113af2533c23db4e88e782c7209e308",
+        "sourceSnapshot": {
+          "sha256": "409bc2ec62555b04084b377326b12d0006320483867fde758bfe0cf3741d5444",
+          "files": 4420
+        },
+        "aggregateWallMs": 888210,
+        "maxShardDurationMs": 873592,
+        "recordedWorkflowIntervalMs": 971000,
+        "globalCoverageComplete": true,
+        "cleanup": "stopped"
+      },
+      "current_execution": {
+        "schemaVersion": 1,
+        "kind": "exact-ci11-publication-and-third-historical-replay-refusal",
+        "recordedAt": "2026-10-05T11:04:00.660Z",
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "ci": {
+          "id": 37291814837,
+          "attempt": 1,
+          "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37291814837",
+          "verified": {
+            "id": 37291814837,
+            "workflow": ".github/workflows/ci.yml",
+            "repository": "alexeyvilmost/dnd_cards",
+            "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+            "event": "push"
+          },
+          "createdAt": "2026-10-05T09:42:27Z",
+          "updatedAt": "2026-10-05T09:58:38Z",
+          "recordedRunIntervalMs": 971000,
+          "counts": {
+            "node": 715,
+            "vitest": 6462,
+            "go": 753,
+            "workerAndDatabase": 20,
+            "browserFlows": 12,
+            "uiFixtures": 48,
+            "battle3d": 8,
+            "nativeCursorChecks": 18
+          },
+          "aggregateHash": "sha256:2e1ee7250862aa9968fc0ef58f5f19142113af2533c23db4e88e782c7209e308",
+          "sourceSnapshot": {
+            "sha256": "409bc2ec62555b04084b377326b12d0006320483867fde758bfe0cf3741d5444",
+            "files": 4420
+          },
+          "aggregateWallMs": 888210,
+          "maxShardDurationMs": 873592,
+          "recordedWorkflowIntervalMs": 971000,
+          "globalCoverageComplete": true,
+          "cleanup": "stopped"
+        },
+        "publication": {
+          "id": 37293818656,
+          "attempt": 1,
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37293818656",
+          "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0"
+        },
+        "manifest": {
+          "releaseId": "candidate-0593be8e7bcf-b3cc4ceb1c84",
+          "hash": "sha256:bafc6a164313928a311054907b928b0c4ac20ce3d1c5c2e9509cb78c8be48acf",
+          "rulesArtifactHash": "sha256:2b10b83e24f9429ef1f11793fb18e360d44794b055db29c98bafd1f6698fe7db",
+          "components": {
+            "backend": {
+              "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+              "inputFingerprint": "sha256:d3998ef62f39ee4bf849a0af89631115a49f5d618c78593bc1038fd21b3d93ae",
+              "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:8202bf3120da1c596b84c731b6861d6da917e4c4fce538e6f4868f619acae7bd"
+            },
+            "frontend": {
+              "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+              "inputFingerprint": "sha256:72e21f4e096f3d472de21a73e262c925839fe84bd8299143d11c24f1686f0aa5",
+              "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:c94268e88302b58f3b407a3e9d8740d27114f445a73f570b73d5f4012d2e421b"
+            },
+            "rulesWorker": {
+              "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+              "inputFingerprint": "sha256:0ae0f6963a8cfa291f4623a366135be995917e6caaef1fedfcb7f2df06ccfb01",
+              "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:d8b79c27f5c9a4cf18e68d8ce5e8cd8635c33c6e1dccbe901d1444c06fcaee2d"
+            }
+          }
+        },
+        "deployment": {
+          "id": 37294402253,
+          "attempt": 1,
+          "status": "completed",
+          "conclusion": "failure",
+          "controlCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37294402253",
+          "jobId": 111712223552,
+          "jobCompletedAt": "2026-10-05T10:38:31Z",
+          "productionSuccess": false,
+          "refusalStage": "historical-replay",
+          "originalLiveCommit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
+          "originalActiveHash": "sha256:92feb159cc4ad6587d01ea33c0a82a173e6d3eeae52adeac6a4ce446b12a61a9",
+          "originalLiveComponentsUnchangedAndHealthy": true,
+          "observedMigrationLedgerCount": 302,
+          "auditHash": "sha256:efd04e70f55ddd2b2a7c08ad94c123d2674e02c5131b97f3c7453a09a6f88242",
+          "rehearsalHash": "sha256:24dc8710d3d66b70a5e9804f5c6cdb4e0f1e62b81775c0fc431565dadd2fcee7",
+          "rehearsalStartedAt": "2026-10-05T10:18:52.477Z",
+          "rehearsalCompletedAt": "2026-10-05T10:38:28.941Z",
+          "capture": {
+            "createdAt": "2026-10-05T10:08:08.180Z",
+            "files": [
+              {
+                "path": "database.dump",
+                "bytes": 958580611,
+                "sha256": "sha256:160556323a3e17e4d777ed6af3325d63f525c894fa940d8f1d757a19ad058992"
+              }
+            ]
+          },
+          "completedMainChecks": [
+            {
+              "id": "snapshot",
+              "status": "passed"
+            },
+            {
+              "id": "migrations",
+              "status": "passed"
+            },
+            {
+              "id": "full-candidate-health",
+              "status": "passed"
+            },
+            {
+              "id": "image-contract",
+              "status": "passed"
+            },
+            {
+              "id": "historical-inventory",
+              "status": "passed"
+            }
+          ],
+          "additiveMigrationScenarios": [
+            {
+              "id": "atomic-ddl-ledger",
+              "status": "passed"
+            },
+            {
+              "id": "crash-before-ledger",
+              "status": "passed"
+            },
+            {
+              "id": "repeat-after-commit",
+              "status": "passed"
+            },
+            {
+              "id": "same-connection-lock",
+              "status": "passed"
+            },
+            {
+              "id": "unknown-migration-rejected",
+              "status": "passed"
+            },
+            {
+              "id": "schema-proof",
+              "status": "passed"
+            },
+            {
+              "id": "old-readers-after-expansion",
+              "status": "passed"
+            }
+          ],
+          "migrationCleanup": {
+            "status": "trials-cleared",
+            "remaining": 0
+          },
+          "cleanup": {
+            "remainingOwnedResources": 0,
+            "resources": {
+              "bagofholding.rehearsal:container": 0,
+              "bagofholding.rehearsal:network": 0,
+              "bagofholding.rehearsal:volume": 0,
+              "bagofholding.legacy-inspection:container": 0,
+              "bagofholding.legacy-inspection:network": 0,
+              "bagofholding.legacy-inspection:volume": 0
+            },
+            "dockerAuthRemoved": true,
+            "deploymentJournalCreated": false,
+            "deployLockPresent": false,
+            "activeManifestPresent": false,
+            "readyPresent": false,
+            "operationPresent": false
+          },
+          "rehearsalCleanup": {
+            "status": "stopped",
+            "errors": [],
+            "resourceCount": 26
+          },
+          "edge": [
+            {
+              "path": "/",
+              "status": 200
+            },
+            {
+              "path": "/api/health",
+              "status": 200
+            },
+            {
+              "path": "/build-info.json",
+              "status": 200
+            }
+          ],
+          "automaticTtlRejectionClaimed": false
+        },
+        "localHistoryDiagnosis": {
+          "scope": "original protected capture37273035754; not exact third-attempt cloned postimages",
+          "snapshotHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+          "recordTextBytes": 73529052,
+          "records": 2344,
+          "combats": 136,
+          "passed": 112,
+          "failed": 24,
+          "reason": "Combat replay diverged",
+          "artifactFamilies": 3,
+          "replayModuleSameAsOriginalLive": true,
+          "cleanup": "stopped",
+          "productionFailureCauseProven": false
+        },
+        "manualReleaseGatesEnabled": true,
+        "autoSelectiveReconcileEnabled": false,
+        "firstLiveWritersEnabled": false,
+        "paidProviderRequestsThisRecord": 0,
+        "remaining": [
+          "Diagnose and correct replay inputs without rewriting archived records or executables.",
+          "Verify bounded complete restore/history/replay within unchanged freshness policy on next exact source.",
+          "Review explicit recovery of all three failed attempts; normal successful-baseline discovery unchanged.",
+          "Commit reviewed local correction, exact full CI, immutable publication, fresh capture and all host gates.",
+          "Only after real healthy adoption: writer compatibility, selective, rollback, automatic/reconcile acceptance."
+        ],
+        "all29TasksComplete": false,
+        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "humanStatus": "docs/audits/2026-10-04/execution/current-status.md",
+        "latestLocalCorrection": {
+          "schemaVersion": 1,
+          "kind": "reviewed-go-json-map-replay-and-three-attempt-recovery",
+          "recordedAt": "2026-10-05T11:28:22.608Z",
+          "baseCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+          "status": "locally-verified-awaiting-new-exact-ci-and-fresh-host-rehearsal",
+          "sourcePaths": 13,
+          "proofPath": "infra/first-adoption-recoveries/37294402253-1.json",
+          "proofHash": "sha256:d03d78e7c611065537080c69cff13c2b7c61ce61a6b0641d6026d40cc6f86c34",
+          "reviewedFailedAttempts": 3,
+          "contract": {
+            "sourceEncoding": "go-json-map-v1",
+            "defaultSourceEncoding": "direct-worker",
+            "historicalRecordSchemaChanged": false,
+            "outputNormalized": false,
+            "arraysReordered": false,
+            "scope": "every step envelope and intent crosses backend JSONMap wire ordering; no artifact-specific branches, no candidate hash search"
+          },
+          "originalSnapshotReplay": {
+            "passed": 136,
+            "records": 2344,
+            "commands": 2209,
+            "usedArtifacts": 18,
+            "reportHash": "sha256:6103047c2702642202d203d4c6fc4a6916b523df52075081fc42b1f6ef5ead87"
+          },
+          "originalSnapshot": {
+            "deploymentRunId": 37273035754,
+            "createdAt": "2026-10-05T06:35:01.822Z",
+            "sha256": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+            "scope": "original snapshot; not the later failed rehearsal snapshot"
+          },
+          "originalSnapshotOnly": true,
+          "latestProductionCaptureReplay": false,
+          "historicalBytesRewritten": false,
+          "localIntegration": {
+            "receiptHash": "sha256:8669888c27f67ece0b017478b10f1c9a512257bc46ff172f368933acdd220017",
+            "checks": [
+              {
+                "id": "actual-Go-HTTP-worker-replay-and-selection",
+                "tests": 33,
+                "passed": 33,
+                "skipped": 0,
+                "status": "passed"
+              },
+              {
+                "id": "Linux-complete-three-refusal-protocol",
+                "tests": 27,
+                "passed": 27,
+                "skipped": 0,
+                "status": "passed",
+                "network": "none",
+                "repositoryReadOnly": true
+              },
+              {
+                "id": "diff",
+                "status": "passed"
+              },
+              {
+                "id": "database-dumps",
+                "status": "passed"
+              },
+              {
+                "id": "known-credentials",
+                "status": "passed"
+              }
+            ],
+            "sourceUnchanged": {
+              "unchanged": true,
+              "files": 4424,
+              "sha256": "e00c85caf840995e4d06d8d3a997a6fb1ee9d62d92dee9bd141213ea1c62d0b2"
+            },
+            "cleanup": {
+              "status": "stopped",
+              "remainingOwnedResources": 0
+            }
+          },
+          "privatePriorNativeCursor": {
+            "checks": 19,
+            "unchangedAppliedSource": true,
+            "cleanup": "stopped",
+            "latencyMeasured": false
+          },
+          "preservedDiagnosticRefusal": {
+            "path": "full-136-report.json",
+            "sha256": "sha256:d8c0a734e9e3f05dbe0d272bafcd029ec60482a204aa6ae6230713672c744380",
+            "reason": "diagnostic count assumed after-baseline for every group; group51 before-baseline corrected only in v2 wrapper; preserved first source"
+          },
+          "productionChanges": 0,
+          "paidProviderRequests": 0,
+          "firstHealthyDeployment": false,
+          "freshnessPolicyMinutes": 30,
+          "transportBytesLimit": 134217728,
+          "replayTimeoutMs": 300000,
+          "firstLiveWriterPolicy": "all-off",
+          "autoSelectiveReconcile": "off",
+          "remaining": [
+            "New reviewed commit and exact full CI.",
+            "All three immutable images and explicit recovery of all three failed attempts.",
+            "Fresh protected capture; all restore, history, replay, pending and duplicate-command gates under unchanged freshness.",
+            "Independently verify successful adoption before writer/selective/automatic release acceptance."
+          ],
+          "all29TasksComplete": false
+        },
+        "latestLocalCorrectionRecord": "docs/audits/2026-10-04/execution/REL-06-go-wire-recovery.json"
+      },
+      "execution_current": {
+        "schemaVersion": 1,
+        "status": "production_e747_accepted_selective_and_retirement_open",
+        "recordedAt": "2026-10-07T15:31:04.285Z",
+        "applicationSourceCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+        "deploymentControlCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+        "releaseId": "candidate-e747b51700d1-85391d7f147f",
+        "manifestHash": "sha256:1dd99b6478b203602e43a0635859cd2fe123909a64370c5c04ff14c9ef428b78",
+        "actualCIRun": 37635397136,
+        "actualPublicationRun": 37638000262,
+        "actualDeploymentRun": 37639635869,
+        "actualCoordinatorRun": null,
+        "productionDatabaseRestored": false,
+        "all29Complete": false,
+        "record": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
+        "diskRetentionRecord": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
+        "localIntegrationRecord": "docs/audits/2026-10-04/execution/INTEGRATION-main-local-20261007.json",
+        "actualDeploymentAttempt": 1
+      },
+      "execution_followon_current": {
+        "status": "integrated-local-checks-passed-exact-new-ci-pending",
+        "productionEvidence": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+        "latestAcceptedSource": "e333fc421b4241001f970f955e5a0aa532ccd706",
+        "latestAcceptedCI": 37496663630,
+        "nextLocalEvidence": "docs/audits/2026-10-04/execution/REL-05-planner-integration.json",
+        "productionChangedByThisIntegration": false,
+        "next": [
+          {
+            "id": "commit-and-ci",
+            "steps": [
+              "Commit only reviewed release planner files and public progress reports.",
+              "Push the exact reviewed commit to main; uniquely bind and accept its required extended CI, mandatory nonzero/no-skip groups and stopped cleanup."
+            ]
+          },
+          {
+            "id": "full-baseline",
+            "steps": [
+              "Use the last independently verified deployment37486931185, applicationf05/control025, as baseline.",
+              "Publish genuine immutable components and exact-source writer/browser evidence; retain any actual conservative full selection, including the newly recorded control refusal.",
+              "Notify owner before a new production cutover, capture fresh protected backup and preserve the previous source/image identities.",
+              "Run all required host restore/history/ninth-stage proofs; do not restore a diagnostic DB over live data. Independently verify manifest, live source/digests/launch identities and migration ledger."
+            ]
+          },
+          {
+            "id": "selective-and-automatic",
+            "steps": [
+              "Apply only the already prepared genuine UI accessibility change after the actual full baseline exists.",
+              "Run bound core plus affected UI/E2E checks; publish only selected frontend, retaining exact backend/worker digests.",
+              "Verify actual backend/worker container IDs and launch identities unchanged; rehearse full rollback on an owned clone with existing durable decisions/receipts/jobs.",
+              "Complete the explicitly gated hosted main automatic/reconcile acceptance; do not treat a flag or a skipped workflow as deployment."
+            ]
+          }
+        ]
+      },
+      "latest_production_delivery": {
+        "schemaVersion": 1,
+        "status": "full-automatic-main-production-delivered-selective-open",
+        "recordedAt": "2026-10-06T21:34:40.483Z",
+        "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+        "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
+        "actualCIRun": 37525609296,
+        "actualPublicationRun": 37527905823,
+        "actualDeploymentRun": 37528869764,
+        "actualCoordinatorRun": 37533666035,
+        "productionDatabaseRestored": false,
+        "all29Complete": false,
+        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+      },
+      "latest_selective_publication": {
+        "runId": 37523259999,
+        "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37523259999",
+        "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
+        "status": "failed",
+        "stage": "owned hosted mixed OCI startup",
+        "completedChecks": 0,
+        "cleanup": "stopped without errors",
+        "candidatePublished": false,
+        "productionDeploymentDispatched": false,
+        "rootCause": "not established; original log contains no underlying startup cause"
+      },
+      "latest_selective_verification": {
+        "sourceCommit": "81f7daf506d6fe7c77ba11a01efd999388816aa1",
+        "runId": 37522307188,
+        "suite": "core",
+        "reportHash": "sha256:d702ed25e662f85bc98479b9db0e5b09a244a083bab705e5fb27173aeac816ef",
+        "mandatorySkips": 0,
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        },
+        "globalCoverageComplete": true,
+        "checks": [
+          {
+            "id": "source-hygiene",
+            "status": "passed"
+          },
+          {
+            "id": "isolated-stack",
+            "status": "passed"
+          },
+          {
+            "id": "worker-and-database-node",
+            "status": "passed",
+            "tests": 2,
+            "passed": 2,
+            "skipped": 0
+          },
+          {
+            "id": "backend-compile",
+            "status": "passed"
+          },
+          {
+            "id": "go-backend",
+            "status": "passed",
+            "required": 15
+          },
+          {
+            "id": "source-stability",
+            "status": "passed"
+          },
+          {
+            "id": "local-api-spine",
+            "status": "passed"
+          },
+          {
+            "id": "local-browser-flows",
+            "status": "passed",
+            "tests": 12,
+            "passed": 12,
+            "skipped": 0
+          },
+          {
+            "id": "node-contracts",
+            "status": "passed",
+            "tests": 563,
+            "passed": 563,
+            "skipped": 0
+          },
+          {
+            "id": "vitest",
+            "status": "passed",
+            "tests": 566,
+            "passed": 566,
+            "skipped": 0
+          }
+        ]
+      },
+      "latest_automatic_policy_preparation": {
+        "boundedFailureDiagnostics": true,
+        "failedReportArtifact": true,
+        "focusedTests": {
+          "passed": 39,
+          "failed": 0,
+          "skipped": 0
+        },
+        "automaticPolicyPrepared": true,
+        "repositoryAutomaticVariables": "still OFF at recording; explicit enablement follows clean policy commit and verification of healthy full adoption",
+        "actualAutomaticDeliveryAcceptance": "pending"
+      },
+      "latest_automatic_delivery": {
+        "schemaVersion": 1,
+        "status": "full-automatic-main-production-delivered-selective-open",
+        "recordedAt": "2026-10-06T21:34:40.483Z",
+        "applicationSourceCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "deploymentControlCommit": "fdca59c3f2a08dd8df8f0dd6e6d1408295cf4c3d",
+        "releaseId": "candidate-fdca59c3f2a0-4369ffcce44e",
+        "manifestHash": "sha256:38bf4be4c91e016e2b00efd7a42387b1818d256d054d54a3c5d0da8970d9643b",
+        "actualCIRun": 37525609296,
+        "actualPublicationRun": 37527905823,
+        "actualDeploymentRun": 37528869764,
+        "actualCoordinatorRun": 37533666035,
+        "productionDatabaseRestored": false,
+        "all29Complete": false,
+        "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
+      }
+    }
+  },
+  "current_storage": {
+    "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+    "observedAt": "2026-10-07T16:53:32.296Z",
+    "fullServerBackups": 2,
+    "disk": {
+      "total": 50884108288,
+      "used": 25205776384,
+      "available": 25618616320
+    },
+    "sameHostBackupsAcceptedByOwner": true,
+    "externalDurability": false
   }
 }

@@ -617,7 +617,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -734,7 +738,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -838,7 +846,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -944,7 +956,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -1117,21 +1133,18 @@
           "Fresh install stops naturally at278:611of1656preconditions differ; found archive is not a complete pre278 snapshot."
         ],
         "mainCIHistoricalProfile": {
-          "record": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
-          "status": "passed",
-          "sourceCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
-          "run": 37635397136,
-          "attempt": 1,
-          "actualMainCI": true,
-          "migrations": 303,
-          "freshInstallAcceptance": true,
-          "repeatTables": 98,
-          "repeatRows": 24592,
-          "cleanup": "stopped",
-          "productionDeliveryIndependentlyAccepted": true
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+          "id": 37646729627,
+          "checks": 39,
+          "freshInstallAcceptance": true
         },
         "previousRecord": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "previous_status": "supported_matrix_ci_verified_historical_fresh_open",
       "latest_execution_result": {
@@ -1298,7 +1311,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -1378,9 +1395,7 @@
         "limitations": [
           "Ordinary equip median 37.3→56.4 ms and unequip 38.0→56.6 ms worsened against legacy. Latest prefetch/flights/static memo correctness has no new latency claim. Preparation cache and prefetch remain OFF in the intended initial rollout."
         ],
-        "nextAcceptance": [
-          "Enable only a measured beneficial configuration after exact target-host comparison; retain ordinary path regression as an explicit outcome."
-        ],
+        "nextAcceptance": [],
         "evidence": [
           "docs/audits/2026-10-04/execution/PERF-01.md",
           "docs/audits/2026-10-04/execution/PERF-01-cache.md",
@@ -1410,7 +1425,14 @@
           },
           "latencyImprovementProven": false,
           "productionChanges": 0
-        }
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": [
+          "Enable only a measured beneficial configuration after exact target-host comparison; retain ordinary path regression as an explicit outcome."
+        ]
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -1497,9 +1519,7 @@
         "limitations": [
           "D229 production activation is independently verified; prior local latency comparisons do not constitute a fresh target-host latency acceptance."
         ],
-        "nextAcceptance": [
-          "Retain explicit cache/prefetch OFF and preserved historical artifacts; frontend-only a161 has a separate acceptance."
-        ],
+        "nextAcceptance": [],
         "record": "docs/audits/2026-10-04/execution/PERF-02-current-initiative.json",
         "currentIntegratedChoice": {
           "evidence": "docs/audits/2026-10-04/execution/PERF-02-integrated-initiative-20261007.json",
@@ -1576,7 +1596,14 @@
           "equipmentIntentActivationVerified": true,
           "protectedExecutionProfileVerified": true,
           "productionLatencyComparison": false
-        }
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": [
+          "Retain explicit cache/prefetch OFF and preserved historical artifacts; frontend-only a161 has a separate acceptance."
+        ]
       },
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
       "latest_execution_result": {
@@ -1692,7 +1719,12 @@
         "nextAcceptance": [],
         "limitations": [
           "Host has two logical CPUs and four admitted worker calls; additional CPU capacity or production p95 improvement not claimed."
-        ]
+        ],
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": []
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "previous_status": "implemented_ci_verified_bounded_capacity_scope",
@@ -1832,7 +1864,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -1923,7 +1959,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -2021,7 +2061,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -2113,7 +2157,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -2198,7 +2246,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -2296,7 +2348,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -2381,14 +2437,18 @@
         "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
         "productionAcceptance": "verified-for-full-automatic-delivery",
         "nextAcceptance": [
-          "Genuine frontend-only production delivery with unchanged backend/worker images and container identities; retain local rollback proof separately."
+          "Fresh exact-source CI and actual hosted mixed OCI checks after committing the local collector fix.",
+          "Genuine frontend-only production delivery with backend/worker container IDs unchanged."
         ],
         "limitations": [],
         "latestSelectiveEvidence": {
-          "record": "docs/audits/2026-10-04/execution/CI-31-selective-publication-refusal.json",
-          "frontendOnlyCI": "passed",
-          "actualSelectiveDelivery": "not achieved",
-          "localMixedOCI": "12 checks passed; diagnostic only"
+          "record": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+          "status": "publication-refused-local-permission-fix-verified",
+          "productionAccepted": false
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
         }
       },
       "previous_status": "first_healthy_adoption_verified_followon_delivery_pending",
@@ -2530,7 +2590,12 @@
           "deploymentRun": 37581756410,
           "attempt": 2,
           "status": "independently_verified"
-        }
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": []
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json"
     },
@@ -2609,19 +2674,23 @@
         "record": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
         "productionAcceptance": "verified-for-full-automatic-delivery",
         "nextAcceptance": [
-          "Genuine frontend-only production delivery with unchanged backend/worker images and container identities; retain local rollback proof separately."
+          "Fresh exact-source CI and actual hosted mixed OCI checks after committing the local collector fix.",
+          "Genuine frontend-only production delivery with backend/worker container IDs unchanged."
         ],
         "limitations": [],
         "latestSelectiveEvidence": {
-          "record": "docs/audits/2026-10-04/execution/CI-31-selective-publication-refusal.json",
-          "frontendOnlyCI": "passed",
-          "actualSelectiveDelivery": "not achieved",
-          "localMixedOCI": "12 checks passed; diagnostic only"
+          "record": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+          "status": "publication-refused-local-permission-fix-verified",
+          "productionAccepted": false
         },
         "verificationOnlyPolicy": {
           "record": "docs/audits/2026-10-04/execution/REL-05-verification-only-policy-20261007.json",
           "status": "verification_only_release_policy_locally_verified_hosted_ci_pending",
           "productionAccepted": false
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
         }
       },
       "previous_status": "healthy_predecessor_verified_integrated_selective_auto_local_ci16_pending",
@@ -2749,6 +2818,10 @@
           "skipped": 0,
           "productionChanges": 0,
           "linuxPassed": 89
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
         }
       },
       "previous_status": "full_host_restore_and_healthy_adoption_verified",
@@ -2893,7 +2966,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -2973,7 +3050,12 @@
         "record": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
         "productionAcceptance": "verified-for-documented-scope",
         "nextAcceptance": [],
-        "limitations": []
+        "limitations": [],
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": []
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "previous_status": "implemented_ci_verified_writer_off_followon_pending",
@@ -3089,9 +3171,7 @@
         "limitations": [
           "Storage benefit does not satisfy latency acceptance. Current ON adds SQL versus OFF (init26→27, continue14→16); reduction29→27 was only relative to earlier ON implementation."
         ],
-        "nextAcceptance": [
-          "Keep DB_FROZEN_CATALOGS=0. This is a completed negative decision for this iteration, not an unimplemented optimization or permission to erase compatibility code. Reopen only with a separately measured hypothesis."
-        ],
+        "nextAcceptance": [],
         "evidence": [
           "docs/audits/2026-10-04/execution/DB-03-transaction-scope.md",
           "docs/audits/2026-10-04/execution/DB-03-latency100-optimized.json"
@@ -3111,7 +3191,14 @@
           "productionFrozenWriterEnabled": false,
           "physicalReductionBytes": 4472832,
           "targetHostLatencyAcceptancePending": true
-        }
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": [
+          "Keep DB_FROZEN_CATALOGS=0. This is a completed negative decision for this iteration, not an unimplemented optimization or permission to erase compatibility code. Reopen only with a separately measured hypothesis."
+        ]
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -3213,7 +3300,7 @@
           "supported_by_code_local_and_ci",
           "supported_by_code_local_and_ci"
         ],
-        "productionAcceptance": "not_claimed",
+        "productionAcceptance": "verified_for_owner_authorized_backup_and_host_file_retention_only",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
         "backupArchivePreparation": {
           "evidence": "docs/audits/2026-10-04/execution/DB-04-backup-archive.json",
@@ -3240,14 +3327,18 @@
           "productionDatabaseChanges": 0
         },
         "currentBackupRetention": {
-          "record": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
-          "status": "actual_two_current307_backups_and_restore_baseline_verified",
-          "retainedBackups": 2,
-          "currentSnapshotSchema": 307,
-          "currentSnapshotRestoreDrill": true,
-          "predecessorRestoreDrill": true,
-          "diskFreeBytes": 25285570560,
-          "productionDatabaseChanges": 0
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "fullServerBackups": 2,
+          "productionDatabaseChanges": 0,
+          "physicalDisk": {
+            "total": 50884108288,
+            "used": 25205776384,
+            "available": 25618616320
+          }
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
@@ -3359,7 +3450,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -3466,7 +3561,12 @@
           "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
           "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
           "firstHealthyDeployment": false
-        }
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": []
       },
       "current_verification": "docs/audits/2026-10-04/execution/AI-02-owner-confirmation.json"
     },
@@ -3531,7 +3631,12 @@
         "record": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
         "productionAcceptance": "verified-for-documented-scope",
         "nextAcceptance": [],
-        "limitations": []
+        "limitations": [],
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": []
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
       "previous_status": "implemented_ci_verified_jobs_off_followon_pending",
@@ -3643,7 +3748,11 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -3708,10 +3817,10 @@
           "Later explicit user request superseded gradual deprecation: obsolete V1/V2 routes/controllers/models/client/export removed, current V3 CharacterSheetV2 and shared inventory/paper/run mechanics retained; legacy inventory kind rejects rather than falls through."
         ],
         "limitations": [
-          "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
+          "V1/V2 code, routes and API support are removed. Legacy tables remain. Current and rollback releases are V3-only; physical production retirement has not been executed."
         ],
         "nextAcceptance": [
-          "Only after a V3-only compatible predecessor and retained verified backup: prepare exact FK-bound table removal migration, without deleting current shared inventory."
+          "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
         ],
         "evidence": [
           "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.md",
@@ -3863,7 +3972,14 @@
           "nativeLinuxContractsPassed": 163,
           "productionReady": false,
           "productionChanges": 0
-        }
+        },
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousLimitations20261007": [
+          "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
+        ]
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     },
@@ -3931,9 +4047,7 @@
         "limitations": [
           "Variants add about29.4 MB to dist because originals stay; no Git history or full-image shrink claimed. VITE_MEDIA_VARIANTS=0; OCI media input proposal is prepared_not_release_authorized."
         ],
-        "nextAcceptance": [
-          "If enabling variants, bind their exact source manifest into release OCI inputs and verify final image/old document/export paths; do not trade retained originals for an unmeasured size claim."
-        ],
+        "nextAcceptance": [],
         "evidence": [
           "docs/audits/2026-10-04/execution/CLEAN-03.md",
           "docs/audits/2026-10-04/execution/CLEAN-03-media.md",
@@ -3946,7 +4060,14 @@
           "supported_by_code_local_and_ci"
         ],
         "productionAcceptance": "not_claimed",
-        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json"
+        "currentRecord": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "latestVerifiedRelease": {
+          "record": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+          "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652"
+        },
+        "previousNextAcceptance20261007": [
+          "If enabling variants, bind their exact source manifest into release OCI inputs and verify final image/old document/export paths; do not trade retained originals for an unmeasured size claim."
+        ]
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
     }
