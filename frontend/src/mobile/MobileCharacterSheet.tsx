@@ -699,7 +699,7 @@ export default function MobileCharacterSheet() {
       )}
 
       {overlay?.type === 'ac' && (
-        <MobileOverlay title="Класс доспеха" onClose={() => setOverlay(null)}>
+        <MobileOverlay title="КД" onClose={() => setOverlay(null)}>
           <div className="m-breakdown">
             <strong>{armorClass}</strong>
             {(data.acBreakdown?.parts ?? []).map((part, index) => (

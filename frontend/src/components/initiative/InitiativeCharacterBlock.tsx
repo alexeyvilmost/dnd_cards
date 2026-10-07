@@ -126,7 +126,7 @@ const InitiativeCharacterBlock: React.FC<InitiativeCharacterBlockProps> = ({
 
       <span
         className="flex-shrink-0 text-xs font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded"
-        aria-description="Класс доспеха"
+        aria-description="КД"
       >
         КД {character.ac}
       </span>
