@@ -157,10 +157,10 @@ export default function MobileCharactersPage() {
       </header>
 
       <div className="m-page-body">
-        {error && <div className="m-alert m-alert--error" role="alert">{error}</div>}
+        {error && <div className="m-alert m-alert--error">{error}</div>}
         {loading && <div className="m-empty">Загружаем ваших героев…</div>}
 
-        {!loading && !error && characters.length === 0 && (
+        {!loading && characters.length === 0 && (
           <section className="m-empty m-empty--panel">
             <Sparkles size={34} />
             <h2>Пора создать первого героя</h2>
@@ -177,7 +177,7 @@ export default function MobileCharactersPage() {
               <div className="m-character-card-top">
                 <div className="m-avatar" aria-hidden>
                   {character.avatar_url
-                    ? <img src={character.avatar_url} alt="" loading="lazy" decoding="async" />
+                    ? <img src={character.avatar_url} alt="" />
                     : <span>{(character.name || '?').slice(0, 1).toUpperCase()}</span>}
                 </div>
                 <div className="m-character-meta">
