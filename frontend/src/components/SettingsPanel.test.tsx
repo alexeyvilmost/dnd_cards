@@ -8,6 +8,7 @@ import {getSettings} from '../settings';
 describe('shared settings categories',()=>{
   let root:Root,container:HTMLDivElement;
   const click=async(text:string)=>act(async()=>Array.from(container.querySelectorAll('button')).find(b=>b.textContent?.includes(text))!.click());
+  const checkbox=(label:string)=>Array.from(container.querySelectorAll('label')).find(node=>node.textContent?.startsWith(label))!.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
   beforeEach(async()=>{let stored:string|null=null;vi.stubGlobal('localStorage',{getItem:()=>stored,setItem:(_k:string,v:string)=>{stored=v;}});container=document.createElement('div');document.body.append(container);root=createRoot(container);await act(async()=>root.render(<SettingsPanel/>));});
   afterEach(async()=>{await act(async()=>root.unmount());container.remove();vi.unstubAllGlobals();});
   it('shows one scrolling panel with section links and preserves independent saved choices',async()=>{
@@ -43,7 +44,7 @@ describe('shared settings categories',()=>{
     await click('Бой и поле');
     expect(container.textContent).toContain('Монетки на поле');
     expect(container.textContent).toContain('Камера смотрит строго сверху');
-    const combat3d=()=>container.querySelector<HTMLInputElement>('#settings-section-combat input[type="checkbox"]')!;
+    const combat3d=()=>checkbox('Монетки на поле');
     expect(combat3d().checked).toBe(false);
     await act(async()=>combat3d().click());
     expect(getSettings()).toEqual({...before,combat3d:true});
@@ -51,5 +52,22 @@ describe('shared settings categories',()=>{
     root=createRoot(container);
     await act(async()=>root.render(<SettingsPanel initialPage="combat"/>));
     expect(combat3d().checked).toBe(true);
+  });
+  it('persists presentation policies independently of the battle-map mode',async()=>{
+    const policies=[
+      ['Скрывать нарративные действия в бою','hideNarrativeCombatActions',true],
+      ['Показывать детальное описание в превью','showDetailedPreview',false],
+      ['Скрывать технические эффекты и способности','hideTechnicalAbilities',true],
+      ['Скрывать недоступные действия','hideUnavailableActions',true],
+    ] as const;
+    for(const [label,key,defaultValue] of policies){
+      expect(checkbox(label).checked).toBe(defaultValue);
+      await act(async()=>checkbox(label).click());
+      expect(getSettings()[key]).toBe(!defaultValue);
+      expect(getSettings().combat3d).toBe(false);
+    }
+    await act(async()=>root.unmount());root=createRoot(container);
+    await act(async()=>root.render(<SettingsPanel/>));
+    for(const [label,,defaultValue] of policies)expect(checkbox(label).checked).toBe(!defaultValue);
   });
 });

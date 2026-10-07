@@ -711,6 +711,16 @@ test.describe('real CharacterV3 sheet pending-combat bridge', () => {
     const targetEventCount = targetEvents.length;
     await page.reload();
     await dismissMobileSuggestion(page);
+    // Exhausted actions are hidden by default, including after a reload.
+    await expect(page.getByTestId('sheet-combat-turn-state').first()).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator(`[data-action-id="${weaponActionId}"]`)).toHaveCount(0);
+    // Showing unavailable actions restores the same disabled action, never a
+    // usable duplicate or another runtime command after response-loss replay.
+    await page.goto('/settings');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+    await page.getByLabel(/^Скрывать недоступные действия/).uncheck();
+    await page.goto(`/characters-v3/${IDS.source}`);
+    await dismissMobileSuggestion(page);
     await expect(page.locator(`[data-action-id="${weaponActionId}"]`).getByRole('button'))
       .toBeDisabled({ timeout: 30_000 });
     expect(Number(api.getCharacter(IDS.source)?.runtime_revision)).toBe(1);
