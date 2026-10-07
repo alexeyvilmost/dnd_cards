@@ -41,6 +41,10 @@ export async function runMigrationRehearsal(input,adapter){
   for(const row of request.target.filter(row=>allowed.has(row.id)))if(!metadata.additiveMigrations?.some(actual=>equal(row,actual)))throw Error('Candidate source checksum differs from requested additive migration');
   const checks=[];
   const trial=async()=>{const id=await adapter.createTrial();trials.push(id);return id;};
+  // Keep only databases still needed by later scenarios. In particular the
+  // first trial must survive until repeat/schema proof; finished siblings do
+  // not. Retain ownership until DROP succeeds so finally can retry cleanup.
+  const retire=async id=>{await adapter.dropTrial(id);trials.splice(trials.indexOf(id),1);};
   const record=(id,proof)=>checks.push({id,status:'passed',...proof});
   let failed,cleanup,stage='atomic-ddl-ledger';
   try{
@@ -61,6 +65,7 @@ export async function runMigrationRehearsal(input,adapter){
     unchanged(crashBefore,await adapter.snapshot(crash));
     receiptValid(await adapter.execute(crash,request),request);
     record('crash-before-ledger',{transactionRolledBack:true,restartPassed:true,committedBaselineHash:evidenceHash(crashBefore)});
+    await retire(crash);
 
     // Treat the first successful receipt as lost: re-observe and run the same
     // immutable request again. No failure flag or hidden application branch.
@@ -78,14 +83,17 @@ export async function runMigrationRehearsal(input,adapter){
       await adapter.release(handle);receiptValid(await adapter.finish(handle),request);
     }finally{if(handle)await adapter.release(handle);}
     record('same-connection-lock',{startupLockShared:true,ddlAndLedgerSessionVerified:true});
+    await retire(locked);
 
     stage='unknown-migration-rejected';const unknown=await trial();await adapter.mutate(unknown,'unknown-ledger');const unknownBefore=await adapter.snapshot(unknown);
     await rejected(()=>adapter.execute(unknown,request));unchanged(unknownBefore,await adapter.snapshot(unknown));
     record('unknown-migration-rejected',{rejected:true,committedStateHash:evidenceHash(unknownBefore)});
+    await retire(unknown);
 
     stage='schema-proof';await adapter.mutate(first,'trigger-when-false');const corrupt=await adapter.snapshot(first);
     await rejected(()=>adapter.execute(first,request,{inspectOnly:true}));await rejected(()=>adapter.execute(first,request));unchanged(corrupt,await adapter.snapshot(first));
     record('schema-proof',{tamperedTriggerRejected:true,noSilentRepair:true});
+    await retire(first);
 
     // Main clone is expanded only after all destructive fault scenarios ran on
     // private sibling databases. Old app reads/retries remain on this clone.
