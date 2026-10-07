@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "status": "actual_full_deployment_independently_accepted",
+  "sourceCommit": "ee7b585e26ee6970ee627e04bb821637cb8d5668",
+  "acceptedAt": "2026-10-07T08:41:50.305Z",
+  "ci": {
+    "id": 37588311756,
+    "attempt": 1,
+    "status": "success",
+    "tier": "extended"
+  },
+  "publication": {
+    "id": 37590133221,
+    "attempt": 1,
+    "status": "success"
+  },
+  "deployment": {
+    "id": 37591020353,
+    "attempt": 1,
+    "status": "success",
+    "artifactId": 11470412794,
+    "url": "https://github.com/alexeyvilmost/dnd_cards/actions/runs/37591020353"
+  },
+  "components": {
+    "backend": {
+      "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963",
+      "inputFingerprint": "sha256:cbb5bcbc6aeebe4baeab7a593ebf4ac569f158cb07dc872dc856aa8ea830db01",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:25c9f06622f03cbf488828e227630a0009d26405c5b4ac4f6815f64cc6a93293",
+      "instance": {
+        "releaseId": "candidate-d2295bf1a06f-155a098cc5ce",
+        "releaseCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963"
+      },
+      "healthy": true,
+      "containerId": "3fb713de9ac92970a7d67ede94b6a4e4c33a6d55392b8429db02c9200f68cefe"
+    },
+    "frontend": {
+      "sourceCommit": "ee7b585e26ee6970ee627e04bb821637cb8d5668",
+      "inputFingerprint": "sha256:83e06efdda20956c4822a06318379348d36b1db8c116fdfa578b1edca1c6590e",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:cca0fa68b4ec2f59da6700143c1f7ebcaa699a8196e70c1a63d646de1139f35d",
+      "instance": {
+        "releaseId": "candidate-ee7b585e26ee-9d8ffc4c42ba",
+        "releaseCommit": "ee7b585e26ee6970ee627e04bb821637cb8d5668"
+      },
+      "healthy": true,
+      "containerId": "1090afa5e4ab9ab4e270875c4af489b45b9166e654ad96b33afa81046e18fc12"
+    },
+    "rulesWorker": {
+      "sourceCommit": "ee7b585e26ee6970ee627e04bb821637cb8d5668",
+      "inputFingerprint": "sha256:a3715930855ef1eef93dee93204332c3cc9ed2d9b602d9d3fcbb98371210db49",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:c09a28313abd77137bc9d52260598b740ee9e595b2efb07b85eac77f32b1f595",
+      "instance": {
+        "releaseId": "candidate-ee7b585e26ee-9d8ffc4c42ba",
+        "releaseCommit": "ee7b585e26ee6970ee627e04bb821637cb8d5668"
+      },
+      "healthy": true,
+      "containerId": "09bcad784a5cd74e5e4eef0d694a38f66a3552bfd0b97e246b67c076a99676e8"
+    }
+  },
+  "rulesArtifactHash": "sha256:cc8555d452b5ee8d93affcd5609c4195d0c0b443b2c5312785466a943ea40730",
+  "migrationCount": 306,
+  "accepted301": {
+    "id": "301_character_lifecycle",
+    "checksum": "sha256:b9e0ce00f22803866a7f511d0e0ba8bf7b3975ceae7cf9f51dfb0e2176ad4ab5"
+  },
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "flags": {
+    "RULES_INITIATIVE_OPTIONS_ENABLED": "1",
+    "RULES_EQUIPMENT_INTENT_ENABLED": "1",
+    "RULES_PREPARATION_CACHE_ENABLED": "0",
+    "RULES_CATALOG_PREFETCH_ENABLED": "0",
+    "RULES_CATALOG_BATCH_ENABLED": "1",
+    "RULES_WORKER_MIRRORS_ENABLED": "1",
+    "DB_COMPACT_RECEIPTS": "1",
+    "DB_FROZEN_CATALOGS": "0",
+    "IMAGE_JOBS_ENABLED": "1"
+  },
+  "backendContainerUnchanged": true,
+  "workerActuallyRebuilt": true,
+  "workerArtifactBytesUnchanged": true,
+  "selectiveReleaseClaimed": false,
+  "protectedFullAnchor": {
+    "anchorHash": "sha256:ffb1afbc871803488d4c7ab09de248ba642eef4caf32823ac2f026210edf3be9",
+    "originalAnchor": {
+      "kind": "full-proof-anchor",
+      "manifestHash": "sha256:e8422bb6a632e5f34ec2e38690e781d5f561fa05bde1ab115820f7d36d943376",
+      "bundleHash": "sha256:5bbaef25ed444ae59fe9b9e361ca65296c1191b5f446208f7d820a8fb34c693b",
+      "rehearsalHash": "sha256:012cc6fd07edadbfcec86f8c9ff7dcd52985b396b586e29ca2e0ec826d726aef",
+      "backupHash": "sha256:9242ea4c530788a9b72c0fba4a6c83d480ae508aeba551cd07fc747a33e9e5a0",
+      "restoreReportHash": "sha256:f56a3f00fc7230d84b0a7a72824892cfe05c60e71f10e04d80a632f4c85473d3",
+      "filesystemHash": "sha256:92375694d39dfcddfe31a742d14e4cfcfd7d68bb07447a7738c08a1c218de948",
+      "runtimeCompatibilityHash": "sha256:f1bef6e83f36bbd0e6fa6f62394df3a456ad807ed19caaed68271e91c9e22a0d",
+      "completedAt": "2026-10-07T08:35:22.841Z",
+      "backupCreatedAt": "2026-10-07T08:03:31.257Z"
+    }
+  },
+  "backup": {
+    "directory": "/opt/bagofholding/backups/capture-37591020353-1",
+    "createdAt": "2026-10-07T08:03:31.257Z",
+    "fileCount": 45,
+    "bytesVerified": true,
+    "sourceCommit": "d2295bf1a06f65bc0c666697ccd04e542816e963"
+  },
+  "databaseRestored": false,
+  "paidProviderRequests": 0,
+  "postReleaseHealth": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/build-info.json",
+      "status": 200
+    }
+  ],
+  "evidence": [
+    {
+      "file": "outputs/operations/ee7b-deployment-37591020353-1/deployed-release/independent-live-verification.json",
+      "sha256": "sha256:7f2142ef054c4e9856f107803093ca69705412c252bd5515b32a64e665dc019c"
+    },
+    {
+      "file": "outputs/operations/ee7b-backup-37591020353-1-independent.json",
+      "sha256": "sha256:abb9d87f632820f7650c85ce4dc7dc48e4d46dd0fddfa3600d51fcecd079515c"
+    }
+  ],
+  "next": "Actual e089 frontend-only CI/publication/deployment and unchanged backend/worker acceptance; afterwards merged critical code plus schema307 and explicit catalog acceptance, then fresh retirement302 proofs."
+}
