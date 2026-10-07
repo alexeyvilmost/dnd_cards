@@ -67,5 +67,74 @@
     "Only three closed Sept29 dumps were measured; this does not estimate all backups or future database growth.",
     "No production archive replacement, automatic retention, schedule, deletion or storage configuration enabled.",
     "Other files of full release captures, executable rules and historical/media references remain required."
-  ]
+  ],
+  "actualDatabaseRestore": {
+    "scope": "Three compact archive reconstructed dumps restored to sequential disposable owned native PostgreSQL databases; no application startup.",
+    "observedAt": "2026-10-07T03:16:39.711Z",
+    "privateEvidence": "outputs/operations/first-capture-private-cfe9/backup_archive_native_2026-10-07T03-12-43.973Z/receipt.json",
+    "evidenceHash": "sha256:0998566b20795b6f23d4b4a1824ae1c6d116fae411900cde90217a31826c9e62",
+    "restores": [
+      {
+        "bytes": 752375071,
+        "sha256": "5bd528e7014620cc9104a4a5a7d48cdb5d86ef415c299aaee715f2695cce73ef",
+        "postgresVersion": "psql (PostgreSQL) 17.11",
+        "inventory": {
+          "relationsIncludingViews": 81,
+          "migrationRows": 290,
+          "migrationLedgerHash": "18c9c3359a1be4693272a3d7946a96a055ad94ea181b03b3111aa813cb65d106",
+          "databaseBytes": 1631901363
+        },
+        "readableTableCount": 80,
+        "countedRows": 33081,
+        "sourceUnchanged": true,
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        },
+        "status": "passed"
+      },
+      {
+        "bytes": 752381994,
+        "sha256": "345d154a1aaf6706c6a5c9b3625864a3bae5d8533d3fd5b160751b3773ff86d9",
+        "postgresVersion": "psql (PostgreSQL) 17.11",
+        "inventory": {
+          "relationsIncludingViews": 83,
+          "migrationRows": 291,
+          "migrationLedgerHash": "192744465f9078e06ed38b8cb977bb6aa188501b5efb789b26fdaa3aca030113",
+          "databaseBytes": 1632065203
+        },
+        "readableTableCount": 82,
+        "countedRows": 33259,
+        "sourceUnchanged": true,
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        },
+        "status": "passed"
+      },
+      {
+        "bytes": 752415055,
+        "sha256": "48bbea95435a2b26185c2e0443edcef0f9407debf806a7171f6ad877298c03a3",
+        "postgresVersion": "psql (PostgreSQL) 17.11",
+        "inventory": {
+          "relationsIncludingViews": 83,
+          "migrationRows": 297,
+          "migrationLedgerHash": "1cb5b9615947488862ced84cb404bbccb731a70e9d65fccc5539b8c6539579ad",
+          "databaseBytes": 1632319155
+        },
+        "readableTableCount": 82,
+        "countedRows": 34124,
+        "sourceUnchanged": true,
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        },
+        "status": "passed"
+      }
+    ],
+    "productionChanges": 0,
+    "productionDatabaseRestored": false,
+    "originalFilesDeleted": 0,
+    "applicationAndArtifactRecoveryProven": false
+  }
 }

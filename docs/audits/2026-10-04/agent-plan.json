@@ -2953,7 +2953,15 @@
           "originalBytes": 2257172120,
           "archiveFileBytes": 776803113,
           "potentialLogicalReductionBytes": 1480369007,
-          "physicalProductionReclaimedBytes": 0
+          "physicalProductionReclaimedBytes": 0,
+          "actualDatabaseRestore": {
+            "evidence": "docs/audits/2026-10-04/execution/DB-04-backup-archive.json",
+            "restoredDatabases": 3,
+            "sourceUnchanged": true,
+            "cleanupErrors": 0,
+            "productionChanges": 0,
+            "applicationAndArtifactRecoveryProven": false
+          }
         }
       },
       "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
