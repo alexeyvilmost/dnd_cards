@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "status": "current307-full-native-restore-passed",
+  "observedAt": "2026-10-07T12:20:54.553Z",
+  "sourceCommit": "c6fba32e67a7c88fe55235a578ea412dbe534a95",
+  "backupDirectory": "D:/TimeWebBackups/dnd_cards/capture-current307-20261007-1122",
+  "captureHash": "sha256:71e7f0db4bc73679890aa297eb2c54114b285259a07c14f0a092771f082873e0",
+  "privateReceipt": "D:/CodexScratch/current307-native-restore-1791375247174/receipt.json",
+  "privateReceiptHash": "sha256:2ad72b708094a9c1f0e5bca5609f7b5d996a9c2eaaffda0ca7a6f67f059ec370",
+  "filesVerified": 46,
+  "migrationRows": 307,
+  "tableCount": 97,
+  "totalRows": 37518,
+  "databaseBytes": 2358810291,
+  "referenceCoverage": {
+    "artifactCount": 20,
+    "sourceReleaseCount": 1,
+    "sourceReleaseReferenceHash": "sha256:67d7a0aedcf085db79d8b52adfb58952d233da38fb853c64ad191f56804e54e2",
+    "mediaReferences": 3356,
+    "schemaFingerprint": "sha256:328de3d7c60cc7cab5d00277e51dbb4ea58bc0479a978d07539fee6a5aa07568"
+  },
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "sourceUnchanged": true,
+  "dumpUnchanged": true,
+  "productionDatabaseChanges": 0,
+  "productionDatabaseRestored": false,
+  "nativeRestoreDrillPerformed": true,
+  "acceptedDeploymentRecovery": false,
+  "limitations": [
+    "Local native restore and exact reference coverage; published API/browser/history replay are separate checks.",
+    "This receipt is not a production deployment recovery anchor."
+  ]
+}

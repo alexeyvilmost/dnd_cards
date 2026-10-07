@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "status": "actual-original-pre278-and-pre279-maintained-inspection-passed",
+  "observedAt": "2026-10-07T12:19:30.910Z",
+  "implementation": "scripts/testing/historical-catalog-preconditions.mjs",
+  "implementationHash": "sha256:0fb5d4e8dbe122b301009826bc43a304b16e18ccaff47f4e1b99066e62494bff",
+  "checks": [
+    {
+      "phase": 278,
+      "sourceDumpHash": "sha256:df0de6041e1db92003fab293977b9879287a73b3b89c391289e5c431a891f724",
+      "sourceHydrated": false,
+      "targets": 1656,
+      "failed": 0,
+      "original277And278Executed": true,
+      "repeatTables": 71,
+      "repeatAllTablesHash": "sha256:343d16c85b7b220a5f49a697c7a388e78132820e42a7fb9e6a0f560acb25076e",
+      "cleanup": {
+        "status": "stopped"
+      },
+      "receipt": "outputs/operations/newly-found-mechanics-snapshot-1791375415853/receipt.json",
+      "receiptHash": "sha256:52300adf800f4e80ae5ab2201ed448a907591a082a1fddfd2508362a26df48bf"
+    },
+    {
+      "phase": 279,
+      "sourceDumpHash": "sha256:c8d61df3c0b531953798019b8170528b2c710b5ad9c0df2df4ab711bde00d28b",
+      "sourceHydrated": false,
+      "targets": 2564,
+      "failed": 0,
+      "activeCards": 886,
+      "original279Executed": false,
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "receipt": "outputs/operations/original-pre279-maintained-1791375544231/receipt.json",
+      "receiptHash": "sha256:f62714e05d1036b7686e54f169d306d0b8507f86037eacb009ada3f0b34dd59e"
+    }
+  ],
+  "unitTests": {
+    "targetedTotal": 57,
+    "passed": 57,
+    "failed": 0,
+    "skipped": 0,
+    "newInspectorTests": 7
+  },
+  "sourceAndInspectorUnchanged": true,
+  "productionChanges": 0,
+  "freshInstallAcceptance": false,
+  "fullHistoricalCI": false,
+  "remaining": "The portable read-only inspector is implemented and mandatory unit selection includes its tests. The ordinary full fresh migration runner still requires promotion of the remaining authored phase adapters and certificate-preimage handling into the maintained CI profile."
+}

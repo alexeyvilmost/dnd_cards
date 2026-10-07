@@ -1068,7 +1068,7 @@
           "Fresh install stops naturally at278:611of1656preconditions differ; found archive is not a complete pre278 snapshot."
         ],
         "nextAcceptance": [
-          "Obtain authentic pre278 source snapshot; do not hydrate target before-fields from final values or copy certificates."
+          "The portable read-only inspector is implemented and mandatory unit selection includes its tests. The ordinary full fresh migration runner still requires promotion of the remaining authored phase adapters and certificate-preimage handling into the maintained CI profile."
         ],
         "record": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json",
         "foundPre278Source": {
@@ -1079,9 +1079,60 @@
           "upgradeAndRepeatPassed": true,
           "freshInstallAcceptance": false
         },
-        "currentRemainingGate": "Integrate the maintained fresh migration profile and its mandatory CI gate using verified public historical inputs; the actual pre278 source has now been found and its upgrade/repeat accepted."
+        "currentRemainingGate": "The portable read-only inspector is implemented and mandatory unit selection includes its tests. The ordinary full fresh migration runner still requires promotion of the remaining authored phase adapters and certificate-preimage handling into the maintained CI profile."
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "maintained_catalog_preconditions": {
+        "schemaVersion": 1,
+        "status": "actual-original-pre278-and-pre279-maintained-inspection-passed",
+        "observedAt": "2026-10-07T12:19:30.910Z",
+        "implementation": "scripts/testing/historical-catalog-preconditions.mjs",
+        "implementationHash": "sha256:0fb5d4e8dbe122b301009826bc43a304b16e18ccaff47f4e1b99066e62494bff",
+        "checks": [
+          {
+            "phase": 278,
+            "sourceDumpHash": "sha256:df0de6041e1db92003fab293977b9879287a73b3b89c391289e5c431a891f724",
+            "sourceHydrated": false,
+            "targets": 1656,
+            "failed": 0,
+            "original277And278Executed": true,
+            "repeatTables": 71,
+            "repeatAllTablesHash": "sha256:343d16c85b7b220a5f49a697c7a388e78132820e42a7fb9e6a0f560acb25076e",
+            "cleanup": {
+              "status": "stopped"
+            },
+            "receipt": "outputs/operations/newly-found-mechanics-snapshot-1791375415853/receipt.json",
+            "receiptHash": "sha256:52300adf800f4e80ae5ab2201ed448a907591a082a1fddfd2508362a26df48bf"
+          },
+          {
+            "phase": 279,
+            "sourceDumpHash": "sha256:c8d61df3c0b531953798019b8170528b2c710b5ad9c0df2df4ab711bde00d28b",
+            "sourceHydrated": false,
+            "targets": 2564,
+            "failed": 0,
+            "activeCards": 886,
+            "original279Executed": false,
+            "cleanup": {
+              "status": "stopped",
+              "errors": []
+            },
+            "receipt": "outputs/operations/original-pre279-maintained-1791375544231/receipt.json",
+            "receiptHash": "sha256:f62714e05d1036b7686e54f169d306d0b8507f86037eacb009ada3f0b34dd59e"
+          }
+        ],
+        "unitTests": {
+          "targetedTotal": 57,
+          "passed": 57,
+          "failed": 0,
+          "skipped": 0,
+          "newInspectorTests": 7
+        },
+        "sourceAndInspectorUnchanged": true,
+        "productionChanges": 0,
+        "freshInstallAcceptance": false,
+        "fullHistoricalCI": false,
+        "remaining": "The portable read-only inspector is implemented and mandatory unit selection includes its tests. The ordinary full fresh migration runner still requires promotion of the remaining authored phase adapters and certificate-preimage handling into the maintained CI profile."
+      }
     },
     {
       "id": "OBS-01",
@@ -3115,7 +3166,43 @@
           "productionDatabaseChanges": 0
         }
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current307_native_restore": {
+        "schemaVersion": 1,
+        "status": "current307-full-native-restore-passed",
+        "observedAt": "2026-10-07T12:20:54.553Z",
+        "sourceCommit": "c6fba32e67a7c88fe55235a578ea412dbe534a95",
+        "backupDirectory": "D:/TimeWebBackups/dnd_cards/capture-current307-20261007-1122",
+        "captureHash": "sha256:71e7f0db4bc73679890aa297eb2c54114b285259a07c14f0a092771f082873e0",
+        "privateReceipt": "D:/CodexScratch/current307-native-restore-1791375247174/receipt.json",
+        "privateReceiptHash": "sha256:2ad72b708094a9c1f0e5bca5609f7b5d996a9c2eaaffda0ca7a6f67f059ec370",
+        "filesVerified": 46,
+        "migrationRows": 307,
+        "tableCount": 97,
+        "totalRows": 37518,
+        "databaseBytes": 2358810291,
+        "referenceCoverage": {
+          "artifactCount": 20,
+          "sourceReleaseCount": 1,
+          "sourceReleaseReferenceHash": "sha256:67d7a0aedcf085db79d8b52adfb58952d233da38fb853c64ad191f56804e54e2",
+          "mediaReferences": 3356,
+          "schemaFingerprint": "sha256:328de3d7c60cc7cab5d00277e51dbb4ea58bc0479a978d07539fee6a5aa07568"
+        },
+        "cleanup": {
+          "status": "stopped",
+          "errors": []
+        },
+        "sourceUnchanged": true,
+        "dumpUnchanged": true,
+        "productionDatabaseChanges": 0,
+        "productionDatabaseRestored": false,
+        "nativeRestoreDrillPerformed": true,
+        "acceptedDeploymentRecovery": false,
+        "limitations": [
+          "Local native restore and exact reference coverage; published API/browser/history replay are separate checks.",
+          "This receipt is not a production deployment recovery anchor."
+        ]
+      }
     },
     {
       "id": "AI-01",
