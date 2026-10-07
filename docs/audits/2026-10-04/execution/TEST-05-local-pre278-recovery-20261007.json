@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "kind": "local-authentic-pre278-recovery-and-snapshot-privacy-verification",
+  "observedAt": "2026-10-07T09:59:59.645Z",
+  "status": "local-source-and-boundary-verified",
+  "sourceBaseCommit": "68031265d44c28807234f73040f9cc290e3247b5",
+  "sourceFiles": [
+    {
+      "path": "scripts/testing/catalog-snapshot.mjs",
+      "sha256": "sha256:5d0a43143d505715fdadc89512a280952fb91eb62f84f172024e8be7214489a4",
+      "bytes": 4914
+    },
+    {
+      "path": "scripts/testing/catalog-snapshot.test.mjs",
+      "sha256": "sha256:7516734dd03dae22ed5d435d18d175661581b259e6543398910ccecf1e527255",
+      "bytes": 1742
+    },
+    {
+      "path": "backend/migrations/catalog_mechanics_278.go",
+      "sha256": "sha256:683dc139ed609fe363a4d558d66d5869c521ac8c144e2cfc73dca50b240cd9c1",
+      "bytes": 21043
+    },
+    {
+      "path": "backend/migrations/manual_content_review_274.go",
+      "sha256": "sha256:777222763c50246a0311402e79532fcfd70f9e54d62af7b820feb6e9730acb40",
+      "bytes": 3344
+    },
+    {
+      "path": "backend/migrations/manual_content_review_status_277.go",
+      "sha256": "sha256:01e82872331a96073e21ba3e4b1a8276da450bac74a23439e6792123a73e70b7",
+      "bytes": 1386
+    }
+  ],
+  "evidence": {
+    "ledger": {
+      "path": "outputs/operations/pc-dump-ledger-search-1791365662517.json",
+      "sha256": "sha256:1799383a8fa6a91b968738d76a0b22097d28498a12f24a74635a3bd0cf7997ee"
+    },
+    "first": {
+      "path": "outputs/operations/pc-pre278-catalogs-1791365731434/receipt.json",
+      "sha256": "sha256:b2e32eb6d702fcdd7568b18df9747e667d00700f5a7bdac227c66bd95305d2d7"
+    },
+    "older": {
+      "path": "outputs/operations/pc-pre278-catalogs-v2-1791365923379/receipt.json",
+      "sha256": "sha256:c9ceca6a416b27c1a2bf4ad71c59adbd348580e188af15285499667ba6fa74e6"
+    },
+    "composition": {
+      "path": "outputs/operations/authentic-pre278-composition-1791366567657/receipt.json",
+      "sha256": "sha256:15b79e340dc0322ade50acd6a298bfbb8c4d401b8b1e3831f5aa47e28a250c80"
+    },
+    "archive": {
+      "path": "outputs/operations/feat0075-original-archive-1791366367529/receipt.json",
+      "sha256": "sha256:69b784d353e332807e5877607624bd8dc84112cad40793249bbcc19fa3654dc7"
+    },
+    "native": {
+      "path": "outputs/operations/source-composed278-native-1791367070073/receipt.json",
+      "sha256": "sha256:1f78720622b5cf8fb5321aa8e2e112cd4c0d7c4e82604b7a2b2b66a1dd0e42ec"
+    }
+  },
+  "privacy": {
+    "unit": {
+      "tests": 7,
+      "passed": 7,
+      "skipped": 0,
+      "exitCode": 0,
+      "log": "outputs/operations/catalog-snapshot-privacy-unit-20261007.tap",
+      "sha256": "sha256:bb138af0fcd171e09324c799e67b9b5a925c9281eea38e948fd09ee45e382468"
+    },
+    "actualOlderOwnedRestores": 8,
+    "unexpectedPrivateRowCanaryRejected": 8,
+    "privateImportedRows": 0,
+    "ownedCleanup": "stopped"
+  },
+  "catalogSource": {
+    "originalFullSnapshot": false,
+    "compositionExplicit": true,
+    "nonInsertConditions": 1605,
+    "distinctEntities": 1575,
+    "unresolved": 0,
+    "archivedFieldComposition": {
+      "entity": "63800537-0399-4bf9-b024-fa8f0f355b49",
+      "reference": "FEAT-0075",
+      "fields": [
+        "related_effects"
+      ],
+      "expectedValuesUsedToGenerateSource": false
+    },
+    "sourceValuesAndOriginalManifestsUnchanged": true
+  },
+  "nativeBoundary": {
+    "actualSourceHash": "69bb97405a82c54c8f4d750e5fe8904fbdca1d7268aa13e3b37d34ffbf5bf1c7",
+    "originalSourceBoundary": "272_readable_catalog_compatibility",
+    "boundedOriginalMigrations": [
+      "273_urvin_run",
+      "274_manual_content_review",
+      "275_seed_recommended_spell_choices",
+      "276_reusable_run_sources",
+      "277_partial_narrative_review"
+    ],
+    "before": {
+      "targets": 1656,
+      "passed": 1653,
+      "failed": 3
+    },
+    "after": {
+      "targets": 1656,
+      "passed": 1656,
+      "failed": 0
+    },
+    "boundary": "278_catalog_mechanics_audit",
+    "appliedOriginal278": true,
+    "repeatedOriginal278": true,
+    "repeatAllPublicTableBytesExact": true,
+    "existingNonCatalogTableBytesExact": true,
+    "ledgerBytesUnchangedDuringHydration": true,
+    "privateImportedRows": 0,
+    "cleanup": "stopped"
+  },
+  "failedAttemptsPreserved": [
+    "outputs/operations/authentic-pre278-composition-1791366505030/receipt.json",
+    "outputs/operations/source-composed278-native-1791366720856/receipt.json",
+    "outputs/operations/source-composed278-native-1791366813901/receipt.json",
+    "outputs/operations/source-composed278-native-1791366887061/receipt.json",
+    "outputs/operations/source-composed278-native-1791366962530/receipt.json"
+  ],
+  "limits": {
+    "productionChanges": 0,
+    "productionReady": false,
+    "freshInstallAcceptance": false,
+    "fullHistoricalChainAccepted": false,
+    "revokedCertificateRestored": false,
+    "testHydrationAssignedManualVerificationStatuses": false,
+    "originalMigrationReviewPolicyPreserved": true
+  }
+}

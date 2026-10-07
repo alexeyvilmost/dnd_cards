@@ -8,6 +8,18 @@ import {execute, resolveTool} from './runtime.mjs';
 // Never import users, characters, templates containing personal snapshots,
 // sessions, command receipts, history, inventories, OAuth, images or audit rows.
 export const catalogTables = Object.freeze(['schema_migrations', 'actions', 'backgrounds', 'cards', 'classes', 'concepts', 'effects', 'feats', 'monsters', 'races', 'resources', 'spells', 'variables', 'content_choice_recommendations', 'audio_cues', 'entity_audio_bindings', 'entity_tag_assignments', 'entity_tag_definitions', 'passive_presentations', 'roguelike_item_rules', 'roguelike_shop_settings', 'ruleset_releases']);
+export async function assertEmptyNonCatalogSnapshotTables(database) {
+  // Older snapshots predate some private tables. Inspect the actual schema,
+  // rather than requiring a newer table or ignoring other private storage.
+  const tables = JSON.parse((await database.query("SELECT coalesce(json_agg(c.relname ORDER BY c.relname),'[]'::json) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind IN ('r','p');")).trim());
+  if (!Array.isArray(tables) || tables.some(name => typeof name !== 'string' || !/^[a-z][a-z0-9_]*$/.test(name)) || new Set(tables).size !== tables.length) throw new Error('Unsupported snapshot table inventory');
+  const privateTables = tables.filter(name => !catalogTables.includes(name) && name !== 'test_run_ownership');
+  if (privateTables.length) {
+    const count = (await database.query('SELECT ' + privateTables.map(name => `(SELECT count(*) FROM public."${name}")`).join('+') + ';')).trim();
+    if (count !== '0') throw new Error('Private gameplay rows unexpectedly appeared in catalog fixture');
+  }
+  return {privateTablesChecked: privateTables.length, privateRows: 0};
+}
 export async function restoreCatalogSnapshot(database, registry, snapshot) {
   assertTestDsn(database.dsn, registry);
   const file = path.resolve(snapshot);
@@ -36,10 +48,9 @@ export async function restoreCatalogSnapshot(database, registry, snapshot) {
     if (changes.length) sanitize.push(`ALTER TABLE ${table} DISABLE TRIGGER ALL; UPDATE ${table} SET ${changes.join(',')}; ALTER TABLE ${table} ENABLE TRIGGER ALL;`);
   }
   sanitize.push('COMMIT;'); await database.query(sanitize.join('\n'));
-  const privateCount = (await database.query('SELECT (SELECT count(*) FROM users)+(SELECT count(*) FROM characters_v3)+(SELECT count(*) FROM roguelike_runs)+(SELECT count(*) FROM paper_documents);')).trim();
-  if (privateCount !== '0') throw new Error('Private gameplay rows unexpectedly appeared in catalog fixture');
+  const privacy = await assertEmptyNonCatalogSnapshotTables(database);
   const hash = createHash('sha256');
   for await (const chunk of createReadStream(file)) hash.update(chunk);
   return {profile: 'local-catalog-snapshot', snapshotName: path.basename(file), sha256: hash.digest('hex'), tables: catalogTables,
-    migrationBaseline: (await database.query('SELECT max(version) FROM schema_migrations;')).trim(), privateRows: 0};
+    migrationBaseline: (await database.query('SELECT max(version) FROM schema_migrations;')).trim(), ...privacy};
 }
