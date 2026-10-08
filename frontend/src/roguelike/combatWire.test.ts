@@ -13,7 +13,7 @@ it('restores the party leader and exact same-frame data without losing presentat
 it('restores an empty snapshot and rejects overwrites, duplicates, foreign leaders and missing references',()=>{
  const input={wire_schema:'combat-frame-v1',run:run(),leader_index:1,snapshot:{},snapshot_mirrors:['world']};
  expect(expandCombatReply(input).run.character!.turn_state?.solo_combat_v1).toEqual({world:input.run.combat_state!.world});
- for(const changes of [{leader_index:0},{snapshot_mirrors:['world','world']},{snapshot_mirrors:['__proto__']},{snapshot_mirrors:['absent']},{snapshot:{world:1}},{snapshot:undefined},{snapshot:[]}])expect(()=>expandCombatReply({...input,...changes})).toThrow();
+ for(const changes of [{leader_index:0},{snapshot_mirrors:['world','world']},{snapshot_mirrors:['__proto__']},{snapshot_mirrors:['absent']},{snapshot:{world:1}},{snapshot:undefined},{snapshot:[] as unknown as Record<string,unknown>}])expect(()=>expandCombatReply({...input,...changes})).toThrow();
 });
 it('keeps legacy replies compatible',()=>{const input={run:run()};expect(expandCombatReply(input)).toBe(input);});
 

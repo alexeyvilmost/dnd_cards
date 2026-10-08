@@ -32,6 +32,12 @@
       "durableReadback": true,
       "historicalHashes": true,
       "productionCommands": 0
+    },
+    "finalFrontendTypecheck": "passed",
+    "finalFrontendLint": "passed",
+    "finalFrontendProductionBuild": {
+      "status": "passed",
+      "modules": 5081
     }
   },
   "evidence": [
@@ -197,5 +203,19 @@
     "beforeMedianMs": 16.4186,
     "afterMedianMs": 12.3579,
     "fullApiLatencyImprovementClaimed": false
+  },
+  "ciFailureAndRepair": {
+    "candidate": "314780191d56f03ea9b7e9b9c671ff8fc9da0a96",
+    "run": 37835067065,
+    "stage": "isolated-stack UI TypeScript build",
+    "cause": "A late malformed-array negative testcase lacked its intentional unknown-to-record cast.",
+    "repair": "Cast only the adversarial testcase input; retain production types and runtime validation.",
+    "localAfterRepair": {
+      "typecheck": "passed",
+      "lint": "passed",
+      "codecChecks": 11,
+      "productionBuild": "passed"
+    },
+    "newExactCIRequired": true
   }
 }

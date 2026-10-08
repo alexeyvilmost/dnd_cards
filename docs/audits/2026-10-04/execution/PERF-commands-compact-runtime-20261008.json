@@ -4422,5 +4422,161 @@
       "Production backup/rehearsal and independent verification",
       "TimeWeb owned ordinary and rapid benchmarks before budget acceptance"
     ]
+  },
+  "latestVerifiedRelease": {
+    "sourceCommit": "825c042b3193620fa529a658a6157945c9f35112",
+    "ci": {
+      "run": 37825622097,
+      "status": "passed",
+      "checks": 39
+    },
+    "publication": {
+      "run": 37827932645,
+      "attempt": 2,
+      "status": "passed"
+    },
+    "deployment": {
+      "run": 37829505101,
+      "attempt": 1,
+      "status": "independently-verified"
+    },
+    "schemaMigrations": 308,
+    "productionDatabaseRestore": false,
+    "backup": "/opt/bagofholding/backups/capture-37829505101-1",
+    "evidence": [
+      {
+        "path": "outputs/operations/825c042b-deployment-37829505101-1/deployed-release/independent-live-verification.json",
+        "sha256": "8ad67c0f21cf2bd7ad613a22deaf08ef945790217ff1d0fe08760776115a4d10"
+      },
+      {
+        "path": "outputs/operations/commands-profile-host-825c042b-actual-candidate-20261008.json",
+        "sha256": "db53edeed04c23409c6bd47e382135a5d1533c40ad7781c4af79a3b1f029b5ac"
+      },
+      {
+        "path": "outputs/operations/commands-profile-host-825c042b-actual-candidate-fast-20261008.json",
+        "sha256": "e7cf741a4374aec36e3edef12d67dc5e64095f58af757642a92baeaf49c06506"
+      },
+      {
+        "path": "outputs/operations/commands-profile-host-825c042b-afterload-candidate-fast-20261008.json",
+        "sha256": "9e8c5a2ab01cc69b7263ba1fcc51dc5d6661cb8336cfc320753d3cdd7d159feb"
+      }
+    ],
+    "summaries": {
+      "commands-profile-host-825c042b-actual-candidate-20261008.json": {
+        "commands": 50,
+        "retries": 50,
+        "summary": {
+          "journal-27-approach_action": {
+            "count": 10,
+            "medianMs": 608.8916119999994,
+            "maxMs": 912.3114959999999
+          },
+          "exact-retry": {
+            "count": 50,
+            "medianMs": 75.27238399999987,
+            "maxMs": 183.5945950000023
+          },
+          "journal-28-end_turn": {
+            "count": 10,
+            "medianMs": 110.54112700000042,
+            "maxMs": 578.7345310000001
+          },
+          "journal-29-death_save": {
+            "count": 10,
+            "medianMs": 117.63093099999969,
+            "maxMs": 144.3623099999968
+          },
+          "journal-30-death_save": {
+            "count": 10,
+            "medianMs": 90.32864300000074,
+            "maxMs": 128.90246900000056
+          },
+          "journal-31-death_save": {
+            "count": 10,
+            "medianMs": 116.06975600000078,
+            "maxMs": 154.88625599999978
+          }
+        }
+      },
+      "commands-profile-host-825c042b-actual-candidate-fast-20261008.json": {
+        "commands": 15,
+        "retries": 15,
+        "summary": {
+          "journal-27-approach_action": {
+            "count": 3,
+            "medianMs": 738.4504390000002,
+            "maxMs": 941.2045069999999
+          },
+          "exact-retry": {
+            "count": 15,
+            "medianMs": 81.41464800000176,
+            "maxMs": 146.86834399999998
+          },
+          "journal-28-end_turn": {
+            "count": 3,
+            "medianMs": 272.90000900000086,
+            "maxMs": 1219.0563389999995
+          },
+          "journal-29-death_save": {
+            "count": 3,
+            "medianMs": 204.42793300000085,
+            "maxMs": 368.5642749999997
+          },
+          "journal-30-death_save": {
+            "count": 3,
+            "medianMs": 202.45154399999956,
+            "maxMs": 410.6547350000005
+          },
+          "journal-31-death_save": {
+            "count": 3,
+            "medianMs": 196.04958500000066,
+            "maxMs": 336.7737020000004
+          }
+        }
+      },
+      "commands-profile-host-825c042b-afterload-candidate-fast-20261008.json": {
+        "commands": 15,
+        "retries": 15,
+        "summary": {
+          "battle-load": {
+            "count": 3,
+            "medianMs": 210.1371510000008,
+            "maxMs": 434.25777100000005
+          },
+          "journal-27-approach_action": {
+            "count": 3,
+            "medianMs": 557.532327,
+            "maxMs": 654.8110369999995
+          },
+          "exact-retry": {
+            "count": 15,
+            "medianMs": 87.67229900000166,
+            "maxMs": 147.63349600000038
+          },
+          "journal-28-end_turn": {
+            "count": 3,
+            "medianMs": 241.74715999999898,
+            "maxMs": 1220.8980320000003
+          },
+          "journal-29-death_save": {
+            "count": 3,
+            "medianMs": 137.44840999999997,
+            "maxMs": 310.69328700000005
+          },
+          "journal-30-death_save": {
+            "count": 3,
+            "medianMs": 160.21861799999897,
+            "maxMs": 396.816327
+          },
+          "journal-31-death_save": {
+            "count": 3,
+            "medianMs": 161.18510700000024,
+            "maxMs": 457.00542900000073
+          }
+        }
+      }
+    },
+    "budget200MsAchieved": false,
+    "publicEdgeLatencyMeasured": false
   }
 }
