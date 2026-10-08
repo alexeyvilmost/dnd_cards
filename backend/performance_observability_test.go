@@ -55,7 +55,7 @@ func TestPerformanceWorkerCorrelationAndNumericAllowlist(t *testing.T) {
 			t.Error("worker context lost")
 		}
 		w.Header().Set("X-Request-ID", "trace-2")
-		w.Header().Set("X-Rules-Performance", `{"worker_execute_ms":2.5,"private_seed":123,"worker_parse_ms":-1}`)
+		w.Header().Set("X-Rules-Performance", `{"worker_execute_ms":2.5,"worker_prediction_cancel_ms":0.3,"worker_prediction_cancelled":1,"private_seed":123,"worker_parse_ms":-1}`)
 		w.Write([]byte(`{"status":"ready","patch":{"runtime_revision":2}}`))
 	}))
 	defer server.Close()
@@ -66,7 +66,7 @@ func TestPerformanceWorkerCorrelationAndNumericAllowlist(t *testing.T) {
 		t.Fatal(err)
 	}
 	values := trace.snapshot()
-	if values["worker_execute_ms"] != 2.5 || values["worker_correlated_calls"] != 1 || values["worker_calls"] != 1 {
+	if values["worker_execute_ms"] != 2.5 || values["worker_prediction_cancel_ms"] != 0.3 || values["worker_prediction_cancelled"] != 1 || values["worker_correlated_calls"] != 1 || values["worker_calls"] != 1 {
 		t.Fatal("missing measured fields")
 	}
 	if _, ok := values["private_seed"]; ok {

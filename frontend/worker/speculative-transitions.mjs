@@ -58,6 +58,21 @@ export function createSpeculativeTransitions({artifactsDirectory,maxResults=8,ma
     const [key,job]=queued.entries().next().value;queued.delete(key);busy=key;thread.postMessage(job);
   }
   return {
+    async cancelUnused(hash,intent){
+      // A different command from this exact input makes an unrequested guess
+      // disposable. Never cancel work already awaited by another reader, or a
+      // prediction for another battle/input. Ordinary execution remains the
+      // authoritative fallback, including when the actual command is rejected.
+      const wanted=keyOf(hash,intent),prefix=`${hash}:`;
+      let removed=0;
+      for(const key of queued.keys())if(key.startsWith(prefix)&&key!==wanted&&!waiters.has(key)){queued.delete(key);removed++;}
+      if(busy?.startsWith(prefix)&&busy!==wanted&&!waiters.has(busy)){
+        const current=thread;thread=undefined;busy=undefined;
+        if(current)await current.terminate();
+        removed++;pump();
+      }
+      return removed;
+    },
     schedule(hash,envelope,projection){
       if(closed||!envelope)return;
       const state=envelope.state,pending=state?.pendingDeathSave;

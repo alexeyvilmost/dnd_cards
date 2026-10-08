@@ -305,6 +305,8 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         if(measured)metrics.worker_frame_cache_hit=1;
       }
       const beforeHash=timed('worker_snapshot_hash_ms',()=>body.frameKey||snapshotHash(body.envelope));
+      const cancelled=await timedAsync('worker_prediction_cancel_ms',()=>speculation.cancelUnused(beforeHash,body.intent));
+      if(measured)metrics.worker_prediction_cancelled=cancelled;
       const predicted=await timedAsync('worker_prediction_wait_ms',()=>speculation.take(beforeHash,body.intent,{readOnlyProjected:true}));
       if(measured){metrics.worker_prediction_hit=Number(Boolean(predicted));if(predicted){metrics.worker_speculative_execute_ms=predicted.executeMs;metrics.worker_speculative_prepare_ms=predicted.prepareMs;if(predicted.projection)metrics.worker_speculative_mirror_ms=predicted.projection.mirrorMs;}}
       const result = predicted?.result??timed('worker_execute_ms', () => artifact.stepRoguelikeCombat(body.envelope, body.intent, hash));
