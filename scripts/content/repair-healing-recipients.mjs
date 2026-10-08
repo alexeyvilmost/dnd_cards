@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
+import {archiveReviewedCatalog,catalogArchiveOptions} from './reviewed-catalog-archive.mjs';
 
 export const healingRecipientRepair = JSON.parse(fs.readFileSync(new URL('./healing-recipient-repair.json', import.meta.url), 'utf8'));
 const literal = value => "'" + value.replaceAll("'", "''") + "'";
@@ -18,6 +19,7 @@ export function healingRecipientRepairSql({apply = false} = {}) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const apply = process.argv.includes('--apply');
+  if(apply)archiveReviewedCatalog({...catalogArchiveOptions(process.argv),operation:'repair-healing-recipients',payload:healingRecipientRepair});
   if (!process.env.DATABASE_URL) throw Error('DATABASE_URL is required');
   const url = new URL(process.env.DATABASE_URL);
   const result = spawnSync(process.env.PSQL_BIN || 'psql', ['-w','-X','-v','ON_ERROR_STOP=1'], {

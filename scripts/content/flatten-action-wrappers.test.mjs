@@ -9,7 +9,7 @@ test('keeps species flight at level 5 and subclass actions at their unlock, pres
   assert.deepEqual(plan.parents[1].after.level_progression['3'].actions,['b']);
   assert.equal(plan.parents[1].after.level_progression['1'],undefined);
   assert.equal(plan.actions[0].after.detailed_description,'Описание flight');assert.equal(plan.actions.length,1);
-  assert.match(actionWrapperMigrationSql(plan,{apply:true}),/content_action_wrapper_archive/);
+  assert.doesNotMatch(actionWrapperMigrationSql(plan,{apply:true}),/CREATE TABLE|content_action_wrapper_archive/);
 });
 test('never drops costs, contextual grants, resource changes, duration or additional semantics',()=>{
   for(const modify of [e=>{e.mechanics.duration={type:'rounds',amount:10}},e=>{e.mechanics.activation.cost=[{resource:'action'}]},e=>{e.mechanics.effects[0].condition={kind:'bloodied'}},e=>{e.mechanics.effects[0].result.push({kind:'resource',op:'grant',id:'charges',amount:1})},e=>{e.mechanics.effects[0].result.push({kind:'narrative',description:'Дополнительное правило'})},e=>{e.script={bonus:1}},e=>{e.repeatable=true}]){

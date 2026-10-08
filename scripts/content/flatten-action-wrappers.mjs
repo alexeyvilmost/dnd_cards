@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {spawnSync} from 'node:child_process';
+import {archiveReviewedCatalog,catalogArchiveOptions} from './reviewed-catalog-archive.mjs';
 
 const onlyKeys=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).every(key=>keys.includes(key));
 const empty=value=>value==null||value===''||(Array.isArray(value)&&!value.length)||(typeof value==='object'&&!Object.keys(value).length);
@@ -95,8 +96,6 @@ export function actionWrapperMigrationSql(plan,{apply=false}={}){
   const actionProjection="jsonb_build_object('description',description,'detailed_description',detailed_description)";
   for(const row of plan.actions??[])sql.push(`DO $check$ BEGIN IF NOT EXISTS(SELECT 1 FROM actions WHERE id=${literal(row.id)} AND deleted_at IS NULL AND mechanics::jsonb=${json(row.mechanics)} AND ${actionProjection} IN (${json(row.before)},${json(row.after)})) THEN RAISE EXCEPTION 'Action description changed'; END IF; END $check$;`);
   if(apply){
-    sql.push("CREATE TABLE IF NOT EXISTS content_action_wrapper_archive(effect_id uuid PRIMARY KEY, effect_snapshot jsonb NOT NULL, owners_snapshot jsonb NOT NULL, archived_at timestamptz NOT NULL DEFAULT now());");
-    for(const replacement of plan.replacements)sql.push(`INSERT INTO content_action_wrapper_archive(effect_id,effect_snapshot,owners_snapshot) SELECT id,to_jsonb(e),${json({parents:plan.parents.filter(parent=>replacement.owners.some(owner=>owner.id===parent.id)),actions:(plan.actions??[]).filter(row=>replacement.grants.some(grant=>grant.id===row.id))})} FROM effects e WHERE id=${literal(replacement.effect.id)} ON CONFLICT DO NOTHING;`);
     for(const row of plan.parents)sql.push(`UPDATE ${row.table} SET related_effects=${row.after.related_effects==null?'NULL':json(row.after.related_effects)},related_actions=${row.after.related_actions==null?'NULL':json(row.after.related_actions)},level_progression=${json(row.after.level_progression)},updated_at=now() WHERE id=${literal(row.id)} AND ${parentProjection}=${json(row.before)};`);
     for(const row of plan.actions??[])sql.push(`UPDATE actions SET detailed_description=${row.after.detailed_description==null?'NULL':literal(row.after.detailed_description)},updated_at=now() WHERE id=${literal(row.id)} AND ${actionProjection}=${json(row.before)};`);
     for(const replacement of plan.replacements){sql.push(`UPDATE effects SET deleted_at=now(),updated_at=now() WHERE id=${literal(replacement.effect.id)} AND deleted_at IS NULL;`);
@@ -109,6 +108,7 @@ export function actionWrapperMigrationSql(plan,{apply=false}={}){
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const planPath=process.argv.find(argument=>argument.endsWith('.json'));if(!planPath)throw Error('Reviewed plan JSON is required');
   const plan=JSON.parse(fs.readFileSync(planPath,'utf8'));const apply=process.argv.includes('--apply');
+  if(apply)archiveReviewedCatalog({...catalogArchiveOptions(process.argv),operation:'flatten-action-wrappers',payload:plan});
   if(!process.env.DATABASE_URL)throw Error('DATABASE_URL is required');const url=new URL(process.env.DATABASE_URL);
   const result=spawnSync(process.env.PSQL_BIN||'psql',['-w','-X','-v','ON_ERROR_STOP=1'],{input:actionWrapperMigrationSql(plan,{apply}),encoding:'utf8',windowsHide:true,env:{...process.env,PGHOST:url.hostname,PGPORT:url.port||'5432',PGDATABASE:decodeURIComponent(url.pathname.slice(1)),PGUSER:decodeURIComponent(url.username),PGPASSWORD:decodeURIComponent(url.password),PGSSLMODE:url.searchParams.get('sslmode')||'require'}});
   if(result.status!==0)throw Error('Wrapper migration failed; transaction rolled back');

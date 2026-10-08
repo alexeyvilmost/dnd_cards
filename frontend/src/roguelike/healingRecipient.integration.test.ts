@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import repair from '../../../scripts/content/healing-recipient-repair.json';
-import cureWounds from './healingRecipient.fixture.json';
+import cureWounds from './fixtures/healingRecipient.json';
 import {actorHasConsciousVitality} from '../engine/lifePolicies';
 import {createWorld, type ActorState, type RuleActionDefinition} from '../rules-core/domain';
 import type {SoloCombatState} from '../solo-combat/types';
