@@ -17,7 +17,12 @@ if(!isMainThread&&workerData?.combatSpeculation){
 
 export function createSpeculativeTransitions({artifactsDirectory,maxResults=8,maxBytes=32*1024*1024}={}){
   const results=new Map(),queued=new Map(),waiters=new Map();let thread,busy,closed=false,bytes=0;
-  const keyOf=(hash,intent)=>intent?.type==='end_turn'&&typeof intent.actorId==='string'&&Object.keys(intent).length===2?`${hash}:${intent.actorId}`:undefined;
+  const keyOf=(hash,intent)=>{
+    if(typeof intent?.actorId!=='string')return undefined;
+    if(intent.type==='end_turn'&&Object.keys(intent).length===2)return `${hash}:end_turn:${intent.actorId}`;
+    if(intent.type==='death_save'&&['rolled','resolved'].includes(intent.phase)&&Object.keys(intent).length===3)return `${hash}:death_save:${intent.phase}:${intent.actorId}`;
+    return undefined;
+  };
   function fail(){thread=undefined;busy=undefined;queued.clear();for(const resolve of waiters.values())resolve(undefined);waiters.clear();}
   function pump(){
     if(closed||busy||!queued.size)return;
@@ -32,10 +37,13 @@ export function createSpeculativeTransitions({artifactsDirectory,maxResults=8,ma
   }
   return {
     schedule(hash,envelope){
-      if(closed||!envelope||envelope.state?.outcome!=='active')return;
-      const state=envelope.state,scene=state.world?.scene,actorId=scene?.initiative?.[scene.activeIndex];
+      if(closed||!envelope)return;
+      const state=envelope.state,pending=state?.pendingDeathSave;
+      if(state?.outcome!=='active'&&pending?.phase!=='resolved')return;
+      const scene=state.world?.scene,actorId=pending?.actorId??scene?.initiative?.[scene.activeIndex];
       if(typeof actorId!=='string'||!(state.controlledCharacterIds??[state.characterId]).includes(actorId))return;
-      const intent={type:'end_turn',actorId},key=keyOf(hash,intent);
+      const intent=pending?{type:'death_save',actorId,phase:pending.phase}:{type:'end_turn',actorId},key=keyOf(hash,intent);
+      if(!key)return;
       if(results.has(key)||queued.has(key)||busy===key)return;
       queued.set(key,{key,envelope,artifactHash:envelope.artifactHash,intent});
       while(queued.size>maxResults)queued.delete(queued.keys().next().value);pump();

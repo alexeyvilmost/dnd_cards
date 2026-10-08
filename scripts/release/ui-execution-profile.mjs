@@ -5,6 +5,10 @@ const backendBooleans=['RULES_CATALOG_BATCH_ENABLED','RULES_WORKER_MIRRORS_ENABL
 export function safeExecutionEnvironment(component,environment){
   const entries=new Map();for(const row of environment??[]){const split=row.indexOf('=');if(split<1||entries.has(row.slice(0,split)))throw Error('Duplicate/invalid observed environment');entries.set(row.slice(0,split),row.slice(split+1));}
   const result={};for(const key of component==='backend'?backendBooleans:[]){const value=entries.get(key)??'0';if(!['0','1'].includes(value))throw Error('Unsupported explicit runtime boolean');result[key]=value;}
+  // Keep historical v1 profiles byte-compatible when these settings were
+  // absent. Explicit new settings must bind UI proofs and survive rehearsal.
+  const optional=component==='backend'?['RULES_COMBAT_ASYNC_PERSIST_ENABLED']:['RULES_PERFORMANCE_ENABLED'];
+  for(const key of optional){if(!entries.has(key))continue;const value=entries.get(key);if(!['0','1'].includes(value))throw Error('Unsupported explicit runtime boolean');result[key]=value;}
   const key=component==='backend'?'RULES_WORKER_MAX_INFLIGHT':'RULES_WORKER_MAX_CACHED_ARTIFACTS',value=entries.get(key)??'4';
   if(!/^[1-9]\d{0,3}$/.test(value))throw Error('Invalid bounded runtime setting');result[key]=value;return result;
 }

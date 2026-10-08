@@ -65,10 +65,28 @@ function legacyPlayerError(error) {
 
 // Independent of executable artifact versions, so archived workers also get a
 // verifiable journal. Normalize objects while preserving array order.
+// Cache only exact serialized JSON subtrees. Pure hashing cannot infer that
+// catalogs or sheets stay unchanged: a changed byte always misses this cache.
+const canonicalSubtrees=new Map();let canonicalSubtreeBytes=0;
 export function snapshotHash(value) {
-  const normalize = item => Array.isArray(item) ? item.map(normalize)
-    : item && typeof item === 'object'
-      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, normalize(item[key])])) : item;
+  const normalize = (item,depth=0) => {
+    let key;
+    if(item&&typeof item==='object'&&(depth===2||depth===5)){
+      const raw=JSON.stringify(item);
+      if(raw?.length>=8192&&raw.length<=600000){
+        key=raw;const cached=canonicalSubtrees.get(key);
+        if(cached){canonicalSubtrees.delete(key);canonicalSubtrees.set(key,cached);return cached.value;}
+      }
+    }
+    const result=Array.isArray(item)?item.map(entry=>normalize(entry,depth+1))
+      :item&&typeof item==='object'?Object.fromEntries(Object.keys(item).sort().map(key=>[key,normalize(item[key],depth+1)])):item;
+    if(key){
+      const bytes=Buffer.byteLength(key)+Buffer.byteLength(JSON.stringify(result));
+      canonicalSubtrees.set(key,{value:result,bytes});canonicalSubtreeBytes+=bytes;
+      while(canonicalSubtrees.size>32||canonicalSubtreeBytes>16*1024*1024){const oldest=canonicalSubtrees.keys().next().value;canonicalSubtreeBytes-=canonicalSubtrees.get(oldest).bytes;canonicalSubtrees.delete(oldest);}
+    }
+    return result;
+  };
   return hashOf(JSON.stringify(normalize(value)));
 }
 

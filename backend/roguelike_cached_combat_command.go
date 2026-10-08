@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"os"
@@ -34,8 +36,14 @@ func compactCombatProjectionCharacter(character *CharacterV3) *CharacterV3 {
 	return &copy
 }
 
-func cachedCombatWorkerCall(ctx context.Context, client roguelikeWorkerClient, slot *combatCacheSlot, run *RoguelikeRun, intent any) (*roguelikeWorkerResult, error) {
-	_, hash := slot.frame()
+type preparedCombatWorkerKey struct{}
+type preparedCombatWorker struct {
+	inputHash [32]byte
+	result    *roguelikeWorkerResult
+	err       error
+}
+
+func cachedCombatWorkerBody(run *RoguelikeRun, intent any, hash string) map[string]any {
 	characters := []*CharacterV3{}
 	for _, member := range run.Characters {
 		characters = append(characters, compactCombatProjectionCharacter(member))
@@ -46,12 +54,64 @@ func cachedCombatWorkerCall(ctx context.Context, client roguelikeWorkerClient, s
 	} else {
 		body["envelope"] = run.CombatEnvelope
 	}
+	return body
+}
+
+func callCombatWorkerBody(ctx context.Context, client roguelikeWorkerClient, body map[string]any, run *RoguelikeRun, intent any) (*roguelikeWorkerResult, error) {
 	result, err := client.call(ctx, "/transition", body)
 	if errors.Is(err, errCombatFrameUnavailable) {
 		performanceAdd(ctx, "combat_worker_full_input_retry", 1)
 		result, err = client.call(ctx, "/transition", map[string]any{"artifactHash": run.CombatEnvelope["artifactHash"], "envelope": run.CombatEnvelope, "intent": intent, "character": run.Character, "characters": run.Characters})
 	}
 	return result, err
+}
+
+func cachedCombatWorkerCall(ctx context.Context, client roguelikeWorkerClient, slot *combatCacheSlot, run *RoguelikeRun, intent any) (*roguelikeWorkerResult, error) {
+	_, hash := slot.frame()
+	body := cachedCombatWorkerBody(run, intent, hash)
+	if prepared, ok := ctx.Value(preparedCombatWorkerKey{}).(*preparedCombatWorker); ok {
+		input, err := json.Marshal(body)
+		if err == nil && sha256.Sum256(input) == prepared.inputHash {
+			performanceAdd(ctx, "combat_compute_overlap_hit", 1)
+			return prepared.result, prepared.err
+		}
+	}
+	return callCombatWorkerBody(ctx, client, body, run, intent)
+}
+
+// Compute a pure transition while the preceding acknowledged command commits.
+// Acceptance still waits for that commit and the ordinary owner/revision locks.
+// Reuse requires identical complete worker input, not just the run revision.
+func (rc *RoguelikeController) preparePendingCombat(c *gin.Context, id, owner uuid.UUID, request RoguelikeCommandRequest) {
+	if request.Type != "combat_intent" {
+		return
+	}
+	rc.combatCache.mu.Lock()
+	slot := rc.combatCache.slots[combatCacheKey(id, owner)]
+	rc.combatCache.mu.Unlock()
+	if slot == nil {
+		return
+	}
+	slot.mu.Lock()
+	if slot.pending == nil || slot.failure || slot.run == nil || slot.hash == "" || slot.run.Revision != request.ExpectedRevision || slot.run.UserID != owner || slot.run.Phase != RoguelikePhaseCombat || slot.run.Status != RoguelikeStatusActive {
+		slot.mu.Unlock()
+		return
+	}
+	run, hash := cloneCachedCombatRun(slot.run), slot.hash
+	slot.mu.Unlock()
+	intent := request.Payload["intent"]
+	body := cachedCombatWorkerBody(run, intent, hash)
+	input, err := json.Marshal(body)
+	if err != nil {
+		return
+	}
+	ctx := c.Request.Context()
+	done := performanceSince(ctx, "combat_compute_overlap_ms")
+	client := roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}
+	result, err := callCombatWorkerBody(ctx, client, body, run, intent)
+	done()
+	prepared := &preparedCombatWorker{inputHash: sha256.Sum256(input), result: result, err: err}
+	c.Request = c.Request.WithContext(context.WithValue(ctx, preparedCombatWorkerKey{}, prepared))
 }
 
 func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatCacheSlot, id, owner uuid.UUID, request RoguelikeCommandRequest, requestHash string) {
@@ -64,6 +124,10 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 		previousRun = cloneCachedCombatRun(slot.receiptRun)
 	}
 	slot.mu.Unlock()
+	if previousRun != nil {
+		c.Set("combat_wire_base_run", previousRun)
+		c.Set("combat_wire_base_command_id", previousID.String())
+	}
 	if previousID == request.CommandID {
 		if previousHash != requestHash {
 			writeRoguelikeError(c, roguelikeError(409, "command_id_reused", "ID команды уже использован"))

@@ -1671,6 +1671,8 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 			writeRoguelikeError(c, replayErr)
 			return
 		} else if frame != nil {
+			c.Set("combat_wire_base_run", frame)
+			c.Set("combat_wire_base_command_id", request.CommandID.String())
 			performanceAdd(c.Request.Context(), "combat_receipt_cache_hit", 1)
 			status := "saved"
 			if background {
@@ -1680,6 +1682,7 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 			writeCombatRunResponse(c, frame)
 			return
 		}
+		rc.preparePendingCombat(c, runID, userID, request)
 		slot, release, err := rc.combatCache.acquire(c.Request.Context(), runID, userID)
 		if err != nil {
 			writeRoguelikeError(c, err)

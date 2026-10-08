@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "date": "2026-10-08",
-  "status": "implemented-local-verified-release-pending",
-  "sourceCommit": "e0852290ef0405174df55b386e75e7e51b51456b",
-  "productionRelease": "24866cda598536247ce99bbf389e84abf24c7bbb",
+  "status": "corrective-runtime-release-local-verified-pending",
+  "sourceCommit": "f08967335118ed4b3bfe184e6bbc628479502cf9",
+  "productionRelease": "f08967335118ed4b3bfe184e6bbc628479502cf9",
   "report": "docs/audits/2026-10-08-combat-commands-performance.md",
   "constraints": [
     "Never issue player combat commands against the production run for benchmarking.",
@@ -66,6 +66,214 @@
       "randomValuesVerified": true,
       "beforeAfterHashesVerified": true,
       "sourceEncoding": "go-json-map-v1"
+    },
+    "followup": {
+      "targetAchieved": false,
+      "productionCommands": 0,
+      "localCompleteClient": {
+        "journal-27-approach_action": {
+          "count": 10,
+          "median_ms": 360.8845999999903,
+          "p95_ms": 969.4419999999955,
+          "p95_preliminary": true,
+          "min_ms": 327.84709999999905,
+          "max_ms": 969.4419999999955
+        },
+        "exact-retry": {
+          "count": 50,
+          "median_ms": 34.365200000000186,
+          "p95_ms": 41.31269999999495,
+          "p95_preliminary": true,
+          "min_ms": 30.383499999996275,
+          "max_ms": 44.53750000000582
+        },
+        "journal-28-end_turn": {
+          "count": 10,
+          "median_ms": 149.59419999999955,
+          "p95_ms": 179.632099999988,
+          "p95_preliminary": true,
+          "min_ms": 137.568299999999,
+          "max_ms": 179.632099999988
+        },
+        "journal-29-death_save": {
+          "count": 10,
+          "median_ms": 150.9757999999929,
+          "p95_ms": 189.92990000000282,
+          "p95_preliminary": true,
+          "min_ms": 128.41889999999694,
+          "max_ms": 189.92990000000282
+        },
+        "journal-30-death_save": {
+          "count": 10,
+          "median_ms": 138.56609999999637,
+          "p95_ms": 156.71040000001085,
+          "p95_preliminary": true,
+          "min_ms": 127.84360000000743,
+          "max_ms": 156.71040000001085
+        },
+        "journal-31-death_save": {
+          "count": 10,
+          "median_ms": 138.8758999999991,
+          "p95_ms": 163.97470000000612,
+          "p95_preliminary": true,
+          "min_ms": 128.7210999999952,
+          "max_ms": 163.97470000000612
+        }
+      },
+      "localRapidCompleteClient": {
+        "journal-27-approach_action": {
+          "count": 3,
+          "median_ms": 378.35929999999644,
+          "p95_ms": 1149.615700000002,
+          "p95_preliminary": true,
+          "min_ms": 329.067999999992,
+          "max_ms": 1149.615700000002
+        },
+        "exact-retry": {
+          "count": 15,
+          "median_ms": 32.83060000000114,
+          "p95_ms": 48.77430000000459,
+          "p95_preliminary": true,
+          "min_ms": 29.267699999996694,
+          "max_ms": 48.77430000000459
+        },
+        "journal-28-end_turn": {
+          "count": 3,
+          "median_ms": 272.23820000000705,
+          "p95_ms": 797.2494000000006,
+          "p95_preliminary": true,
+          "min_ms": 262.8391000000047,
+          "max_ms": 797.2494000000006
+        },
+        "journal-29-death_save": {
+          "count": 3,
+          "median_ms": 270.3853999999992,
+          "p95_ms": 285.34850000000006,
+          "p95_preliminary": true,
+          "min_ms": 224.0399000000034,
+          "max_ms": 285.34850000000006
+        },
+        "journal-30-death_save": {
+          "count": 3,
+          "median_ms": 241.38099999999395,
+          "p95_ms": 245.2980000000025,
+          "p95_preliminary": true,
+          "min_ms": 238.79300000000512,
+          "max_ms": 245.2980000000025
+        },
+        "journal-31-death_save": {
+          "count": 3,
+          "median_ms": 251.10629999999946,
+          "p95_ms": 275.9711000000025,
+          "p95_preliminary": true,
+          "min_ms": 237.7844999999943,
+          "max_ms": 275.9711000000025
+        }
+      },
+      "experimentalTimeWeb": {
+        "journal-27-approach_action": {
+          "count": 3,
+          "median_ms": 801.1015549999993,
+          "p95_ms": 1396.8643129999998,
+          "p95_preliminary": true,
+          "min_ms": 759.1843049999989,
+          "max_ms": 1396.8643129999998
+        },
+        "exact-retry": {
+          "count": 15,
+          "median_ms": 67.1546649999982,
+          "p95_ms": 117.97157099999959,
+          "p95_preliminary": true,
+          "min_ms": 52.65945400000055,
+          "max_ms": 117.97157099999959
+        },
+        "journal-28-end_turn": {
+          "count": 3,
+          "median_ms": 311.35775699999795,
+          "p95_ms": 878.4935419999997,
+          "p95_preliminary": true,
+          "min_ms": 302.6789939999999,
+          "max_ms": 878.4935419999997
+        },
+        "journal-29-death_save": {
+          "count": 3,
+          "median_ms": 316.62453299999834,
+          "p95_ms": 352.1826549999996,
+          "p95_preliminary": true,
+          "min_ms": 301.7564919999986,
+          "max_ms": 352.1826549999996
+        },
+        "journal-30-death_save": {
+          "count": 3,
+          "median_ms": 326.35452799999985,
+          "p95_ms": 332.2375719999991,
+          "p95_preliminary": true,
+          "min_ms": 280.32595599999695,
+          "max_ms": 332.2375719999991
+        },
+        "journal-31-death_save": {
+          "count": 3,
+          "median_ms": 298.33827200000087,
+          "p95_ms": 416.3620799999999,
+          "p95_preliminary": true,
+          "min_ms": 284.9903110000014,
+          "max_ms": 416.3620799999999
+        }
+      },
+      "oldTimeWeb": {
+        "journal-27-approach_action": {
+          "count": 10,
+          "median_ms": 2231.886795000013,
+          "p95_ms": 2844.2408830000004,
+          "p95_preliminary": true,
+          "min_ms": 2151.5901890000023,
+          "max_ms": 2844.2408830000004
+        },
+        "exact-retry": {
+          "count": 50,
+          "median_ms": 308.1607690000019,
+          "p95_ms": 341.11755700000504,
+          "p95_preliminary": true,
+          "min_ms": 277.00033299998904,
+          "max_ms": 360.53657699999167
+        },
+        "journal-28-end_turn": {
+          "count": 10,
+          "median_ms": 3070.5657740000024,
+          "p95_ms": 3358.80592,
+          "p95_preliminary": true,
+          "min_ms": 2957.4163659999977,
+          "max_ms": 3358.80592
+        },
+        "journal-29-death_save": {
+          "count": 10,
+          "median_ms": 1951.7350159999987,
+          "p95_ms": 2076.1950189999916,
+          "p95_preliminary": true,
+          "min_ms": 1906.9003879999946,
+          "max_ms": 2076.1950189999916
+        },
+        "journal-30-death_save": {
+          "count": 10,
+          "median_ms": 2066.4441769999976,
+          "p95_ms": 2259.4497299999985,
+          "p95_preliminary": true,
+          "min_ms": 1980.615380999996,
+          "max_ms": 2259.4497299999985
+        },
+        "journal-31-death_save": {
+          "count": 10,
+          "median_ms": 1927.552853999994,
+          "p95_ms": 2214.4435079999985,
+          "p95_preliminary": true,
+          "min_ms": 1886.1896049999923,
+          "max_ms": 2214.4435079999985
+        }
+      },
+      "clientIncludes": "HTTP parse + canonical frame restoration + private cache cloning; excludes UI paint/public network",
+      "timewebBaselineIncludesBackendGzip": true,
+      "experimentalTimeWebIsPublishedImage": false,
+      "smallSampleTailIsPreliminary": true
     }
   },
   "tasks": [
@@ -194,7 +402,7 @@
       ],
       "acceptance": [
         "All local correctness gates pass.",
-        "Ordinary warm action p95 target <=500ms assessed on TimeWeb; disclose any missed target.",
+        "All turn latency target <=200ms, desired 100ms assessed on TimeWeb; cold/miss/rapid tails must be disclosed and optimized.",
         "No gameplay data loss or implicit rules upgrade."
       ]
     }
@@ -206,7 +414,11 @@
     "outputs/operations/commands-profile-server-cpu-end-turn-20261008.json",
     "outputs/operations/commands-profile-api-20261008.json",
     "outputs/operations/commands-profile-api-candidate-20261008.json",
-    "outputs/operations/commands-profile-checks-20261008.json"
+    "outputs/operations/commands-profile-checks-20261008.json",
+    "outputs/operations/commands-profile-sequence-delta-20261008.json",
+    "outputs/operations/commands-profile-fast-sequence-delta-20261008.json",
+    "outputs/operations/commands-profile-host-baseline-20261008.json",
+    "outputs/operations/commands-profile-host-delta-experiment-candidate-20261008.json"
   ],
   "userAcceptedLossBudget": {
     "maximumUnflushedCommandsPerRun": 1,
@@ -230,12 +442,25 @@
     },
     "protocols": [
       "combat-frame-v1",
+      "combat-frame-v2",
       "mirrors-v2"
     ],
     "unknownProjector": "full-input fallback before execution",
     "archivedSourceBytes": "unchanged; checksum-guarded equivalent runtime optimizations",
     "startupWarm": "read-only latest eight active combats",
-    "shutdownGraceSeconds": 45
+    "shutdownGraceSeconds": 45,
+    "clientReplyFrames": 4,
+    "preparedTransition": "pure calculation overlaps preceding persistence; complete worker-input SHA256 required before reuse",
+    "speculativeIntents": [
+      "end_turn",
+      "death_save rolled",
+      "death_save resolved"
+    ],
+    "canonicalHashMemo": {
+      "entries": 32,
+      "bytes": 16777216,
+      "key": "exact JSON of complete subtree; canonical normalization unchanged"
+    }
   },
   "verified": {
     "productionCommands": 0,
@@ -292,9 +517,11 @@
       "steps": [
         "Review staged production diff and scanners.",
         "Commit verified scope excluding private captures and personal skills.",
+        "After exact verified commit/push, prepare and activate only reviewed protected host Compose profile before guarded deployment starts; retain old immutable rollback files.",
         "Push exact main SHA; await required same-SHA CI, immutable image publication and guarded deployment.",
         "Fresh host backup and saved previous production commit before cutover.",
-        "Independently compare actual identities/digests/health to accepted deployment receipt."
+        "Independently compare actual identities/digests/health to accepted deployment receipt.",
+        "Inspect actual backend async/performance flags, worker performance flag and backend StopTimeout=45; an accepted image alone is insufficient."
       ]
     },
     {
@@ -306,5 +533,21 @@
         "Do not claim a universal 200 ms maximum from a warm subset; continue optimization if the budget is exceeded."
       ]
     }
+  ],
+  "productionRuntime": {
+    "asyncPersistEnabled": false,
+    "backendPerformanceEnabled": false,
+    "workerPerformanceEnabled": false,
+    "verification": "actual-container-inspection",
+    "deploymentRun": "37734250488",
+    "backup": "/opt/bagofholding/backups/capture-37734250488-1",
+    "cause": "protected host compose template did not receive three new flags and 45s grace"
+  },
+  "followupImplemented": [
+    "bounded exact acknowledged-frame delta with sliding-array ranges and exact-ID full-response fallback",
+    "fast typed transient JSON and BestSpeed gzip",
+    "strict complete-input binding for overlapping pure calculation",
+    "generic death_save speculation with exact phase/actor/input key",
+    "optional async/performance settings in selective release execution profile"
   ]
 }

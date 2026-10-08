@@ -7,8 +7,9 @@ import type { Action, PassiveEffect } from '../types';
 import {playCommandSound,playCommittedEvents} from '../audio/commandSounds';
 import type {RollInfluence} from '../engine/rollInfluence';
 import type {RollLog} from '../mvp/contracts';
-import {expandCombatReply} from './combatWire';
+import {createCombatReplyCache,MissingCombatBaseError} from './combatWire';
 import {notifyRunUpdated} from './navigation';
+const combatReplies=createCombatReplyCache();
 
 export interface JourneyAura extends PassiveEffect {key:string;mechanics:NonNullable<PassiveEffect['mechanics']>}
 export interface JourneyRoom {id:string;name:string;description:string;icon:string}
@@ -153,6 +154,7 @@ export const roguelikeApi = {
   },
   remove: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/roguelike/runs/${id}`);
+    combatReplies.clear(id);
     notifyRunUpdated();
   },
   create: async (sourceCharacterId: string | string[], options?:{mode?:string;aura_id?:string;templates?:Array<{template_id:string;name:string}>}): Promise<RoguelikeRun> => {
@@ -169,13 +171,19 @@ export const roguelikeApi = {
     payload: Record<string, unknown> = {},
     commandId: string = crypto.randomUUID(),
   ): Promise<RoguelikeRun> => {
-    const { data:wire } = await apiClient.post<{ run: RoguelikeRun; events?: CharacterEventRow[] }>(`/api/roguelike/runs/${id}/commands`, {
+    const request={
       command_id: commandId,
       expected_revision: revision,
       type,
       payload,
-    },{headers:{'X-Combat-Wire':'combat-frame-v1'}});
-    const data=expandCombatReply(wire);
+    };
+    const {data:wire}=await apiClient.post<{run:RoguelikeRun;events?:CharacterEventRow[]}>(`/api/roguelike/runs/${id}/commands`,request,{headers:combatReplies.headers(id)});
+    let data;
+    try{data=combatReplies.expand(wire,commandId);}catch(error){
+      if(!(error instanceof MissingCombatBaseError))throw error;
+      const full=await apiClient.post<{run:RoguelikeRun;events?:CharacterEventRow[]}>(`/api/roguelike/runs/${id}/commands`,request,{headers:{'X-Combat-Wire':'combat-frame-v1'}});
+      data=combatReplies.expand(full.data,commandId);
+    }
     playCommandSound(type,commandId);
     if(type==='camp_action'||type==='use_item')playCommittedEvents((data.events??[]).map(e=>e.payload),commandId);
     return { ...data.run, command_events: data.events };

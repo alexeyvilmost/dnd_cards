@@ -8,7 +8,7 @@ import {pathToFileURL, fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
 import ts from 'typescript';
-import {createRulesWorker,createArtifactCache} from './server.mjs';
+import {createRulesWorker,createArtifactCache,snapshotHash} from './server.mjs';
 import {nativeHashSource} from './native-hash.mjs';
 import {createCombatFrameCache} from './combat-frames.mjs';
 import {createSpeculativeTransitions} from './speculative-transitions.mjs';
@@ -16,6 +16,16 @@ import {buildIdentity} from '../../scripts/release/write-build-identity.mjs';
 import {ignorePolicy, inventory, copyInputs} from '../../scripts/release/measure-local.mjs';
 
 const token = 'local-test-worker-token-with-32-characters';
+test('canonical subtree cache preserves the original hash after mutation, reordering and eviction',()=>{
+  const original=value=>{const normalize=item=>Array.isArray(item)?item.map(normalize):item&&typeof item==='object'?Object.fromEntries(Object.keys(item).sort().map(key=>[key,normalize(item[key])])):item;return `sha256:${createHash('sha256').update(JSON.stringify(normalize(value))).digest('hex')}`;};
+  const make=name=>({state:{catalog:{z:'<'+name+'> & 🐉'.repeat(1200),a:{'11':1,'2':2}},actors:{one:{character:{a:1}},two:{character:{z:3}}}},entropy:{seed:'private',cursor:1}});
+  const first=make('one'),second=make('two');
+  for(const value of [first,first,second,second])assert.equal(snapshotHash(value),original(value));
+  first.state.catalog.a['2']=9;assert.equal(snapshotHash(first),original(first));
+  first.state.catalog={a:first.state.catalog.a,z:first.state.catalog.z};assert.equal(snapshotHash(first),original(first));
+  for(let i=0;i<40;i++){const value=make(String(i));assert.equal(snapshotHash(value),original(value));}
+  assert.equal(snapshotHash(second),original(second));
+});
 test('speculation uses only the exact pinned frame and end-turn intent and cannot spend or advance input entropy',async()=>{
   const directory=await mkdtemp(path.join(tmpdir(),'combat-speculation-'));
   const source="exports.stepRoguelikeCombat=(envelope,intent)=>({envelope:{...envelope,entropy:{...envelope.entropy,cursor:envelope.entropy.cursor+1},state:{...envelope.state,computedFor:intent.actorId}},randomValues:[0.5]});";
@@ -43,6 +53,23 @@ test('native SHA preserves portable hashes including malformed UTF-16 and refuse
   const native=Function('require',`${optimized};return ${name};`)(createRequire(import.meta.url));
   for(const text of ['', 'abc', 'Русский текст 🐉', '\u0000', '\ud800', '\udc00', '\ud800\ud800', 'я'.repeat(1_000_000)])assert.equal(native(text),original(text));
   assert.equal(nativeHashSource(routine.replace('value)', 'other)')),routine.replace('value)', 'other)'));
+});
+
+test('pending continuations predict only exact phase and actor; influences remain explicit authoritative commands',async()=>{
+  const directory=await mkdtemp(path.join(tmpdir(),'combat-pending-speculation-'));
+  const source="exports.stepRoguelikeCombat=(envelope,intent)=>({envelope:{...envelope,entropy:{...envelope.entropy,cursor:envelope.entropy.cursor+1},state:{...envelope.state,computedFor:[intent.actorId,intent.phase]}},randomValues:[0.5]});";
+  const artifactHash=`sha256:${createHash('sha256').update(source).digest('hex')}`;
+  await writeFile(path.join(directory,`${artifactHash.slice(7)}.cjs`),source);
+  const speculation=createSpeculativeTransitions({artifactsDirectory:directory});
+  try{
+    for(const [actorId,phase] of [['hero','rolled'],['ally','resolved']]){
+      const envelope={artifactHash,entropy:{cursor:5},state:{outcome:'active',controlledCharacterIds:['hero','ally'],pendingDeathSave:{actorId,phase},world:{scene:{initiative:['hero'],activeIndex:0}}}},before=structuredClone(envelope),hash=actorId+phase;
+      speculation.schedule(hash,envelope);
+      const intent={type:'death_save',actorId,phase},result=await speculation.take(hash,intent);
+      assert.ok(result);assert.deepEqual(result.result.envelope.state.computedFor,[actorId,phase]);assert.deepEqual(envelope,before);
+      for(const altered of [{...intent,phase:phase==='rolled'?'resolved':'rolled'},{...intent,actorId:'enemy'},{...intent,effectId:'influence'}, {type:'end_turn',actorId}])assert.equal(await speculation.take(hash,altered),undefined);
+    }
+  }finally{await speculation.close();assert.equal(path.dirname(directory),tmpdir());assert.ok(path.basename(directory).startsWith('combat-pending-speculation-'));await rm(directory,{recursive:true,force:true});}
 });
 test('combat frames bound memory, bind executable identity and preserve Go input ordering',()=>{
   const cache=createCombatFrameCache({maxFrames:2,maxBytes:1000});

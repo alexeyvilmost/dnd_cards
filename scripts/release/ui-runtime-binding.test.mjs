@@ -22,6 +22,19 @@ test('same UI matrix with changed runtime policy cannot reuse old core/planning 
   assert.throws(()=>revalidateFrontendCI(f.ciReport,f.planning,next,f.workloadPlan),/changed/);
   let writes=0;await assert.rejects(dispatchVerifiedRelease({...f,freshPlanning:async()=>next,prepareFrontend:()=>{writes++;}}),/new frontend verification/);assert.equal(writes,0);
 });
+
+test('combat acknowledgement and worker profiling bind new profiles without rewriting historical ones',()=>{
+  const historical=profile(),before=evidenceHash(historical);
+  assert.equal(validateExecutionProfile(historical),historical);assert.equal(evidenceHash(historical),before);
+  assert.equal(Object.hasOwn(historical.backend.environment,'RULES_COMBAT_ASYNC_PERSIST_ENABLED'),false);
+  assert.equal(Object.hasOwn(historical.rulesWorker.environment,'RULES_PERFORMANCE_ENABLED'),false);
+  const current=structuredClone(historical);
+  current.backend.environment=safeExecutionEnvironment('backend',['RULES_COMBAT_ASYNC_PERSIST_ENABLED=1']);
+  current.rulesWorker.environment=safeExecutionEnvironment('rulesWorker',['RULES_PERFORMANCE_ENABLED=1']);
+  assert.equal(validateExecutionProfile(current),current);assert.notEqual(evidenceHash(current),before);
+  for(const component of ['backend','rulesWorker'])assert.throws(()=>safeExecutionEnvironment(component,[component==='backend'?'RULES_COMBAT_ASYNC_PERSIST_ENABLED=enabled':'RULES_PERFORMANCE_ENABLED=enabled']));
+  current.backend.environment.RULES_COMBAT_ASYNC_PERSIST_ENABLED='0';assert.equal(validateExecutionProfile(current),current);
+});
 test('deployment workflow identity is validated before host entry and must be the current trusted attempt',async()=>{
   const workflow={id:9,runAttempt:2,controlCommit:'c'.repeat(40),eventName:'workflow_run'},repository='fixture/project';let reads=0;
   const metadata={id:9,run_attempt:2,head_sha:workflow.controlCommit,path:'.github/workflows/deploy.yml',head_branch:'main',event:'workflow_run',status:'in_progress',conclusion:null,repository:{full_name:repository},head_repository:{full_name:repository}};

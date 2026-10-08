@@ -91,7 +91,7 @@ func main() {
 
 	// gzip ответов (списки справочников после B1 сжимаются на ~85%).
 	// SSE-потоки боёв (/stream) исключаем — gzip буферизирует и ломает realtime.
-	r.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedPathsRegexs([]string{`.*/stream$`})))
+	r.Use(gzip.Gzip(gzip.BestSpeed, gzip.WithExcludedPathsRegexs([]string{`.*/stream$`})))
 	r.Use(RequestIDMiddleware())
 	r.Use(PerformanceMiddleware(performanceEnabled))
 	r.Use(SecurityHeadersMiddleware())

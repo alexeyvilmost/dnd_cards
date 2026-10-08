@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
+	fastjson "github.com/goccy/go-json"
 )
 
 const workerMirrorWire = "mirrors-v2"
@@ -33,7 +35,7 @@ func workerMirrorHash(raw json.RawMessage) string {
 }
 func workerMirrorObject(raw json.RawMessage) (map[string]json.RawMessage, error) {
 	var result map[string]json.RawMessage
-	if json.Unmarshal(raw, &result) != nil || result == nil {
+	if fastjson.Unmarshal(raw, &result) != nil || result == nil {
 		return nil, fmt.Errorf("invalid worker mirror object")
 	}
 	return result, nil
@@ -48,20 +50,20 @@ func decodeWorkerMirrors(payload []byte) (*roguelikeWorkerResult, error) {
 	}
 	var result roguelikeWorkerResult
 	if _, ok := root["wireSchema"]; !ok {
-		err = json.Unmarshal(payload, &result)
+		err = fastjson.Unmarshal(payload, &result)
 		return &result, err
 	}
 	var frame workerMirrorFrame
-	if len(root) != 3 || root["value"] == nil || root["mirrors"] == nil || json.Unmarshal(root["wireSchema"], &frame.Schema) != nil || frame.Schema != 2 {
+	if len(root) != 3 || root["value"] == nil || root["mirrors"] == nil || fastjson.Unmarshal(root["wireSchema"], &frame.Schema) != nil || frame.Schema != 2 {
 		return nil, fmt.Errorf("invalid worker mirror frame")
 	}
 	frame.Value = root["value"]
-	decoder := json.NewDecoder(bytes.NewReader(root["mirrors"]))
+	decoder := fastjson.NewDecoder(bytes.NewReader(root["mirrors"]))
 	decoder.DisallowUnknownFields()
 	if decoder.Decode(&frame.Mirrors) != nil || frame.Mirrors.State == nil || len(frame.Mirrors.State) > 10 {
 		return nil, fmt.Errorf("invalid worker mirror frame")
 	}
-	if err = json.Unmarshal(frame.Value, &result); err != nil {
+	if err = fastjson.Unmarshal(frame.Value, &result); err != nil {
 		return nil, err
 	}
 	var raw struct {
@@ -70,7 +72,7 @@ func decodeWorkerMirrors(payload []byte) (*roguelikeWorkerResult, error) {
 		} `json:"envelope"`
 		Patch json.RawMessage `json:"patch"`
 	}
-	if json.Unmarshal(frame.Value, &raw) != nil || raw.Envelope.State == nil || raw.Patch == nil {
+	if fastjson.Unmarshal(frame.Value, &raw) != nil || raw.Envelope.State == nil || raw.Patch == nil {
 		return nil, fmt.Errorf("invalid worker mirror value")
 	}
 	stateRaw := raw.Envelope.State
