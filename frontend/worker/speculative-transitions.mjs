@@ -1,5 +1,6 @@
 import {Worker,isMainThread,parentPort,workerData} from 'node:worker_threads';
 import {performance} from 'node:perf_hooks';
+import {compactWorkerMirrors} from './mirrors.mjs';
 import {createArtifactCache,snapshotHash} from './server.mjs';
 import {acceptsCompactProjection,projectionKey} from './combat-frames.mjs';
 
@@ -18,6 +19,10 @@ if(!isMainThread&&workerData?.combatSpeculation){
           ?artifact.projectRoguelikePartyCombatPatch(result.envelope,job.projection.characters)
           :artifact.projectRoguelikeCombatPatch(result.envelope,job.projection.character);
         projection={key:projectionKey(job.projection),projected,afterHash:snapshotHash(projected.envelope)};
+        const mirrorStarted=performance.now();
+        const compact=compactWorkerMirrors({...result,...projected,trace:{beforeHash:job.beforeHash,afterHash:projection.afterHash,runtimeRevision:projected.patch.runtime_revision}});
+        projection.preparedMirrors=compact.wireSchema===2?compact.mirrors:null;
+        projection.mirrorMs=performance.now()-mirrorStarted;
       }
       const message={key:job.key,result,executeMs,...(projection?{projection}:{})};
       // Account conservatively in the calculation thread. Serializing these
@@ -58,7 +63,7 @@ export function createSpeculativeTransitions({artifactsDirectory,maxResults=8,ma
       const intent=pending?{type:'death_save',actorId,phase:pending.phase}:{type:'end_turn',actorId},key=keyOf(hash,intent);
       if(!key)return;
       if(results.has(key)||queued.has(key)||busy===key)return;
-      queued.set(key,{key,envelope,artifactHash:envelope.artifactHash,intent,projection});
+      queued.set(key,{key,beforeHash:hash,envelope,artifactHash:envelope.artifactHash,intent,projection});
       while(queued.size>maxResults)queued.delete(queued.keys().next().value);pump();
     },
     async take(hash,intent,{readOnlyProjected=false}={}){

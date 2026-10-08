@@ -6,13 +6,14 @@ import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
-import {workerTestBuild} from '../../scripts/testing/worker-test-build.mjs';
-import {withContainerCatalog} from './fixtures/container-catalog.mjs';
+import {workerTestBuild} from "../../scripts/testing/worker-test-build.mjs";
+import {withContainerCatalog} from "./fixtures/container-catalog.mjs";
 import {createRulesWorker,snapshotHash} from './server.mjs';
 import {compileNativeHashArtifact} from './native-hash.mjs';
 import {createSpeculativeTransitions} from './speculative-transitions.mjs';
 import {projectionInputs,projectionKey,nextProjectionInputs} from './combat-frames.mjs';
 import {goJSONMapWireValue} from './replay.mjs';
+import {compactWorkerMirrors,expandWorkerMirrors,applyPreparedWorkerMirrors} from './mirrors.mjs';
 const file=fileURLToPath(new URL('artifact.cjs',workerTestBuild())),bytes=fs.readFileSync(file);
 const artifact=compileNativeHashArtifact(file,bytes),hash='sha256:'+createHash('sha256').update(bytes).digest('hex');
 function inputFor(size) {
@@ -38,9 +39,13 @@ for(const size of [1,2,6])test(`prepared projection preserves complete results a
     const expected=artifact.stepRoguelikeCombat(envelope,intent,hash),patch=size>1?artifact.projectRoguelikePartyCombatPatch(expected.envelope,selected.characters):artifact.projectRoguelikeCombatPatch(expected.envelope,selected.character);
     assert.deepEqual(actual.result,expected);assert.deepEqual(actual.projection.projected,patch);assert.equal(actual.projection.afterHash,snapshotHash(patch.envelope));assert.equal(JSON.stringify(envelope),before);
     assert.equal(actual.projection.key,projectionKey(selected));
+    const full={...expected,...patch,trace:{beforeHash:key,afterHash:actual.projection.afterHash,runtimeRevision:patch.patch.runtime_revision}};
+    assert.deepEqual(applyPreparedWorkerMirrors(full,actual.projection.preparedMirrors),compactWorkerMirrors(full));
+    assert.deepEqual(expandWorkerMirrors(JSON.parse(JSON.stringify(applyPreparedWorkerMirrors(full,actual.projection.preparedMirrors)))),JSON.parse(JSON.stringify(full)));
+    assert.equal(JSON.stringify(actual.projection.preparedMirrors).includes('request_id'),false);
     for(const changed of [{...selected,character:{...selected.character,runtime_revision:900}},{...selected,character:{...selected.character,turn_state:{...selected.character.turn_state,qa_choice:'changed'}}},...(size>1?[{...selected,characters:[...selected.characters].reverse()}]:[])])assert.notEqual(projectionKey(changed),actual.projection.key);
-    actual.result.envelope.entropy.cursor=900;actual.projection.projected.patch.turn_state.qa_choice='changed';
-    const retry=await speculate.take(key,intent);assert.deepEqual(retry.result,expected);assert.deepEqual(retry.projection.projected,patch);
+    actual.result.envelope.entropy.cursor=900;actual.projection.projected.patch.turn_state.qa_choice='changed';if(actual.projection.preparedMirrors)actual.projection.preparedMirrors.state.push({field:'not-an-entity',sha256:'corrupt'});
+    const retry=await speculate.take(key,intent);assert.deepEqual(retry.result,expected);assert.deepEqual(retry.projection.projected,patch);assert.deepEqual(applyPreparedWorkerMirrors(full,retry.projection.preparedMirrors),compactWorkerMirrors(full));
   } finally {await speculate.close();assert.equal(path.dirname(directory),tmpdir());assert.ok(path.basename(directory).startsWith('prepared-projection-'));await rm(directory,{recursive:true,force:true});}
 });
 test('HTTP projection mismatch retains changed sheet choices and authoritative revision',async()=>{
@@ -48,15 +53,34 @@ test('HTTP projection mismatch retains changed sheet choices and authoritative r
   try {
     await writeFile(path.join(directory,hash.slice(7)+'.cjs'),bytes);
     server=await createRulesWorker({artifactFile:file,artifactsDirectory:directory,token,performanceEnabled:true});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
-    const call=async(route,body)=>{const response=await fetch('http://127.0.0.1:'+server.address().port+route,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-performance-trace':'1'},body:JSON.stringify(goJSONMapWireValue(body))});assert.equal(response.status,200);return {body:await response.json(),metrics:JSON.parse(response.headers.get('x-rules-performance'))};};
+    const call=async(route,body)=>{const response=await fetch('http://127.0.0.1:'+server.address().port+route,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-performance-trace':'1','x-rules-wire':'mirrors-v2'},body:JSON.stringify(goJSONMapWireValue(body))});assert.equal(response.status,200);return {body:expandWorkerMirrors(await response.json()),metrics:JSON.parse(response.headers.get('x-rules-performance'))};};
     const input=inputFor(2),initial=await call('/initialize',{artifactHash:hash,input});
     const characters=input.characters.map(c=>({...c,...initial.body.patches[c.id]})),compact=projectionInputs(characters[0],characters);
     const envelope=goJSONMapWireValue(initial.body.envelope),intent={type:'end_turn',actorId:envelope.state.world.scene.initiative[envelope.state.world.scene.activeIndex]};
     compact.characters[0].runtime_revision+=2;compact.characters[0].turn_state.qa_choice={selected:'changed 🐉'};compact.character=compact.characters[0];
     const actual=await call('/transition',{artifactHash:hash,envelope,intent,character:compact.character,characters:compact.characters,projectionInputVersion:1});
     const stepped=artifact.stepRoguelikeCombat(envelope,intent,hash),projected=artifact.projectRoguelikePartyCombatPatch(stepped.envelope,compact.characters);
-    assert.equal(actual.metrics.worker_prediction_projection_hit,0);
+    assert.equal(actual.metrics.worker_prediction_projection_hit,0);assert.equal(actual.metrics.worker_prepared_mirror_hit,0);
     assert.deepEqual(actual.body,JSON.parse(JSON.stringify({...stepped,...projected,trace:{beforeHash:snapshotHash(envelope),afterHash:snapshotHash(projected.envelope),runtimeRevision:projected.patch.runtime_revision}})));
     assert.deepEqual(actual.body.patch.turn_state.qa_choice,{selected:'changed 🐉'});
   } finally {if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}assert.equal(path.dirname(directory),tmpdir());assert.ok(path.basename(directory).startsWith('projection-http-'));await rm(directory,{recursive:true,force:true});}
+});
+
+test('prepared HTTP mirror retains exact full wire, request IDs and legacy negotiation',async()=>{
+ const directory=await mkdtemp(path.join(tmpdir(),'mirror-http-')),token='synthetic-prepared-mirror-only-worker-token';let server;
+ try {
+  await writeFile(path.join(directory,hash.slice(7)+'.cjs'),bytes);
+  server=await createRulesWorker({artifactFile:file,artifactsDirectory:directory,token,performanceEnabled:true});await new Promise(r=>server.listen(0,'127.0.0.1',r));
+  const call=async(route,body,mirror,id)=>{const response=await fetch('http://127.0.0.1:'+server.address().port+route,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-performance-trace':'1','x-request-id':id,...(mirror?{'x-rules-wire':'mirrors-v2'}:{})},body:JSON.stringify(goJSONMapWireValue(body))});assert.equal(response.status,200);assert.equal(response.headers.get('x-request-id'),id);return {body:await response.json(),metrics:JSON.parse(response.headers.get('x-rules-performance'))};};
+  for(const size of [1,2,6]) {
+   const input=inputFor(size),initial=await call('/initialize',{artifactHash:hash,input},false,'initialize-'+size);
+   const selected=nextProjectionInputs(initial.body,input.character,input.characters),envelope=goJSONMapWireValue(initial.body.envelope),intent={type:'end_turn',actorId:envelope.state.world.scene.initiative[envelope.state.world.scene.activeIndex]};
+   const body={artifactHash:hash,envelope,intent,...selected,projectionInputVersion:1};
+   const ordinary=artifact.stepRoguelikeCombat(envelope,intent,hash),projected=size>1?artifact.projectRoguelikePartyCombatPatch(ordinary.envelope,selected.characters):artifact.projectRoguelikeCombatPatch(ordinary.envelope,selected.character);
+   const full=JSON.parse(JSON.stringify({...ordinary,...projected,trace:{beforeHash:snapshotHash(envelope),afterHash:snapshotHash(projected.envelope),runtimeRevision:projected.patch.runtime_revision}}));
+   const actual=await call('/transition',body,true,'prepared-'+size);
+   assert.equal(actual.metrics.worker_prediction_projection_hit,1);assert.equal(actual.metrics.worker_prepared_mirror_hit,1);assert.equal(actual.metrics.worker_mirror_compact_ms,undefined);assert.equal(typeof actual.metrics.worker_stringify_ms,'number');assert.deepEqual(expandWorkerMirrors(actual.body),full);
+   const legacy=await call('/transition',body,false,'legacy-'+size);assert.equal(legacy.metrics.worker_prepared_mirror_hit,0);assert.equal(legacy.body.wireSchema,undefined);assert.deepEqual(legacy.body,full);
+  }
+ } finally {if(server){server.closeAllConnections();await new Promise(r=>server.close(r));}assert.equal(path.dirname(directory),tmpdir());assert.ok(path.basename(directory).startsWith('mirror-http-'));await rm(directory,{recursive:true,force:true});}
 });

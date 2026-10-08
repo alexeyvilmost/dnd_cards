@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "date": "2026-10-08",
-  "status": "ca2a-release-deployed-verified-latency-target-pending",
-  "sourceCommit": "ca2a1425d1289708c52f0329bd8cdeb3f5e917e2",
-  "productionRelease": "ca2a1425d1289708c52f0329bd8cdeb3f5e917e2",
+  "status": "db0996-release-deployed-verified-persistence-followup-local-verified-latency-target-pending",
+  "sourceCommit": "db0996f31c13d765fe0fcd70386dae7c346d6699",
+  "productionRelease": "db0996f31c13d765fe0fcd70386dae7c346d6699",
   "report": "docs/audits/2026-10-08-combat-commands-performance.md",
   "constraints": [
     "Never issue player combat commands against the production run for benchmarking.",
@@ -355,6 +355,89 @@
         "productionCommands": 0,
         "includes": "TimeWeb host HTTP, actual immutable images, backend gzip and real frontend frame restoration; excludes public edge/external network",
         "targetAchieved": false
+      },
+      "publishedDb0996TimeWeb": {
+        "regular": {
+          "journal-27-approach_action": {
+            "count": 10,
+            "medianMs": 750.0659399999986,
+            "maxMs": 1463.541314,
+            "p95Preliminary": true
+          },
+          "exact-retry": {
+            "count": 50,
+            "medianMs": 70.70161500000177,
+            "maxMs": 182.85591599999998,
+            "p95Preliminary": true
+          },
+          "journal-28-end_turn": {
+            "count": 10,
+            "medianMs": 208.1763160000046,
+            "maxMs": 529.711742,
+            "p95Preliminary": true
+          },
+          "journal-29-death_save": {
+            "count": 10,
+            "medianMs": 191.22866499999873,
+            "maxMs": 234.5596680000017,
+            "p95Preliminary": true
+          },
+          "journal-30-death_save": {
+            "count": 10,
+            "medianMs": 205.6711800000012,
+            "maxMs": 267.68825300000026,
+            "p95Preliminary": true
+          },
+          "journal-31-death_save": {
+            "count": 10,
+            "medianMs": 210.87606499999674,
+            "maxMs": 246.55554200000188,
+            "p95Preliminary": true
+          }
+        },
+        "rapid": {
+          "journal-27-approach_action": {
+            "count": 3,
+            "medianMs": 857.0062089999992,
+            "maxMs": 1452.860362,
+            "p95Preliminary": true
+          },
+          "exact-retry": {
+            "count": 15,
+            "medianMs": 81.76919499999894,
+            "maxMs": 145.71090800000002,
+            "p95Preliminary": true
+          },
+          "journal-28-end_turn": {
+            "count": 3,
+            "medianMs": 565.3725889999987,
+            "maxMs": 1486.300285,
+            "p95Preliminary": true
+          },
+          "journal-29-death_save": {
+            "count": 3,
+            "medianMs": 487.92475300000115,
+            "maxMs": 620.1049059999996,
+            "p95Preliminary": true
+          },
+          "journal-30-death_save": {
+            "count": 3,
+            "medianMs": 491.3733519999987,
+            "maxMs": 703.472323,
+            "p95Preliminary": true
+          },
+          "journal-31-death_save": {
+            "count": 3,
+            "medianMs": 491.68171899999834,
+            "maxMs": 654.7904179999996,
+            "p95Preliminary": true
+          }
+        },
+        "productionCommands": 0,
+        "publicEdgeIncluded": false,
+        "backendGzipIncluded": true,
+        "clientRestorationIncluded": true,
+        "targetAchieved": false
       }
     }
   },
@@ -500,7 +583,14 @@
     "outputs/operations/commands-profile-sequence-delta-20261008.json",
     "outputs/operations/commands-profile-fast-sequence-delta-20261008.json",
     "outputs/operations/commands-profile-host-baseline-20261008.json",
-    "outputs/operations/commands-profile-host-delta-experiment-candidate-20261008.json"
+    "outputs/operations/commands-profile-host-delta-experiment-candidate-20261008.json",
+    "outputs/operations/commands-profile-host-db0996-delta-candidate-20261008.json",
+    "outputs/operations/commands-profile-host-db0996-delta-candidate-fast-20261008.json",
+    "outputs/operations/commands-profile-host-runtime-columns-full-candidate-20261008.json",
+    "outputs/operations/commands-profile-host-runtime-columns-candidate-fast-20261008.json",
+    "outputs/operations/persistence-followup-main-required-go-20261008.json",
+    "outputs/operations/persistence-followup-main-full-api-20261008.json",
+    "outputs/operations/persistence-followup-main-rapid-api-20261008.json"
   ],
   "userAcceptedLossBudget": {
     "maximumUnflushedCommandsPerRun": 1,
@@ -595,15 +685,22 @@
   },
   "remaining": [
     {
+      "id": "persistence-followup-release",
+      "steps": [
+        "Require matching exact-source CI and immutable image publication after local verification, reviewed staging and source provenance update.",
+        "Use the ordinary guarded deployment and fresh protected capture; never restore production DB for app release.",
+        "Independently verify actual component digests, baked identities, health, flags and receipt.",
+        "Repeat regular and rapid TimeWeb HTTP on deployed immutable images; report cold, median and maximum separately."
+      ]
+    },
+    {
       "id": "latency-followup",
       "steps": [
-        "Verify aura optimization activates for the exact recognized portable routines; keep unknown artifacts unchanged.",
-        "Prime party frame only after successful initialization commit.",
-        "Precompute complete recognized projection and afterHash off the HTTP thread; reuse only for exact persisted turn_state, revision and member order.",
-        "Compare transport JSON directly with exact DeepEqual semantics and differential tests.",
-        "Run full private HTTP and rapid sequences, canonical GET equality, journal hashes/RNG, bounded one-command loss and required local suites.",
-        "Update source provenance, review/stage exact scope, commit/push; require matching CI, images and guarded deployment.",
-        "Independently verify component manifest identities/flags, then repeat identical TimeWeb measurements on immutable images; do not claim 200ms from local/warm-only data."
+        "Use numeric persistence phase and worker traces to locate remaining previous-commit and full-frame transport costs.",
+        "Prototype a base-hash-bound worker response delta on an isolated clone; preserve exact canonical DTO, strict missing-base fallback, RNG and saved history.",
+        "Do not loosen the one-unflushed-command bound without a separately verified whole-turn durability design.",
+        "Require second entities, groups 1/2/6, mismatch, eviction, retry, reload, failure and concurrency tests before enabling any new transport.",
+        "Accept only measured full turns below 200ms on TimeWeb, including rapid commands and cold requests; warm local medians alone do not satisfy the target."
       ]
     }
   ],
@@ -613,14 +710,15 @@
     "workerPerformanceEnabled": true,
     "backendStopTimeoutSeconds": 45,
     "verification": "actual-container-inspection-and-accepted-receipt",
-    "ciRun": "37742025894/2",
-    "publicationRun": "37744024456/1",
-    "deploymentRun": "37745006380/1",
-    "independentProof": "outputs/operations/ca2a1425-deployment-37745006380-1/deployed-release/independent-live-verification.json",
-    "backup": "/opt/bagofholding/backups/capture-37745006380-1",
+    "ciRun": "37751764087/1",
+    "publicationRun": "37753862822/1",
+    "deploymentRun": "37754844057/1",
+    "independentProof": "outputs/operations/db0996f3-deployment-37754844057-1/deployed-release/independent-live-verification.json",
+    "backup": "/opt/bagofholding/backups/capture-37754844057-1",
     "schemaVersion": 308,
     "rulesArtifact": "sha256:c59096195e4f748cfeaedfebb06af5cd916e1e7e4037a27cb0e589b91d9578ca",
-    "databaseRestored": false
+    "databaseRestored": false,
+    "frontendSourceCommit": "ca2a1425d1289708c52f0329bd8cdeb3f5e917e2"
   },
   "followupImplemented": [
     "bounded exact acknowledged-frame delta with sliding-array ranges and exact-ID full-response fallback",
@@ -630,7 +728,7 @@
     "optional async/performance settings in selective release execution profile"
   ],
   "nextLocalChanges": {
-    "status": "local-verified-not-deployed",
+    "status": "deployed-as-db0996-verified",
     "baseCommit": "ca2a1425d1289708c52f0329bd8cdeb3f5e917e2",
     "workerTestsPassed": 27,
     "requiredGoTestsPassed": 10,
@@ -682,19 +780,194 @@
       }
     },
     "targetAchieved": false,
-    "note": "Warm local end-turn median 79ms/max98ms; rapid end-turn median239ms/max558ms. Next-command acceptance remains bounded by previous durable commit. Production verification remains required."
+    "note": "Warm local end-turn median 79ms/max98ms; rapid end-turn median239ms/max558ms. Next-command acceptance remains bounded by previous durable commit. Production verification remains required.",
+    "deployedCommit": "db0996f31c13d765fe0fcd70386dae7c346d6699"
   },
   "storage": {
     "serverBackups": [
-      "capture-37734250488-1",
+      "capture-37754844057-1",
       "capture-37745006380-1"
     ],
     "deletedObsoleteDumpBytes": 2010000504,
     "deletedFinishedRehearsalCopyBytes": 1012331228,
     "workingDatabaseChanges": 0,
-    "availableBytesObserved": 22414823424,
-    "usedBytesObserved": 28409569280,
-    "measuredAt": "2026-10-08T08:41:00Z",
-    "persistentDeployIdentityRetained": true
+    "availableBytesObserved": 20905455616,
+    "usedBytesObserved": 29918937088,
+    "measuredAt": "2026-10-08T10:04:04.918Z",
+    "persistentDeployIdentityRetained": true,
+    "additionalDeletedObsoleteDumpBytes": 1011450217,
+    "additionalDeletedFinishedRehearsalCopyBytes": 1012249274,
+    "obsoletePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37734250488-1"
+  },
+  "persistenceFollowup": {
+    "status": "local-verified-not-deployed",
+    "baseCommit": "db0996f31c13d765fe0fcd70386dae7c346d6699",
+    "changes": [
+      "Prepare mirrors-v2 metadata in the existing calculation thread for the exact projection; retain legacy and mismatch fallback.",
+      "Skip unused AfterCreate receipt decompression only for discarded cached-combat inserts; persisted bytes and reader unchanged.",
+      "Read journal identity fields directly from strictly parsed worker JSON; retain ordinary fallback.",
+      "Persist validated runtime patch columns and currency only in cached combat; ordinary party saves unchanged.",
+      "Log numeric SQL timing/SQLSTATE without private interpolated SQL; log completed persistence phases."
+    ],
+    "requiredGoPassed": 16,
+    "nodePassed": 52,
+    "hostExperimentalRegular": {
+      "journal-27-approach_action": {
+        "count": 10,
+        "medianMs": 712.5174479999987,
+        "maxMs": 1328.934554,
+        "p95Preliminary": true
+      },
+      "exact-retry": {
+        "count": 50,
+        "medianMs": 70.88917999999103,
+        "maxMs": 147.63896499999964,
+        "p95Preliminary": true
+      },
+      "journal-28-end_turn": {
+        "count": 10,
+        "medianMs": 173.2552199999991,
+        "maxMs": 554.4510579999996,
+        "p95Preliminary": true
+      },
+      "journal-29-death_save": {
+        "count": 10,
+        "medianMs": 171.93914100000256,
+        "maxMs": 205.0062170000092,
+        "p95Preliminary": true
+      },
+      "journal-30-death_save": {
+        "count": 10,
+        "medianMs": 169.35541099999682,
+        "maxMs": 232.6209250000029,
+        "p95Preliminary": true
+      },
+      "journal-31-death_save": {
+        "count": 10,
+        "medianMs": 169.1020009999993,
+        "maxMs": 272.2759040000019,
+        "p95Preliminary": true
+      }
+    },
+    "hostExperimentalRapid": {
+      "journal-27-approach_action": {
+        "count": 3,
+        "medianMs": 798.615984,
+        "maxMs": 1329.622113,
+        "p95Preliminary": true
+      },
+      "exact-retry": {
+        "count": 15,
+        "medianMs": 76.80910300000005,
+        "maxMs": 126.25921300000005,
+        "p95Preliminary": true
+      },
+      "journal-28-end_turn": {
+        "count": 3,
+        "medianMs": 368.185211,
+        "maxMs": 1089.295374,
+        "p95Preliminary": true
+      },
+      "journal-29-death_save": {
+        "count": 3,
+        "medianMs": 288.2988069999992,
+        "maxMs": 485.17733199999975,
+        "p95Preliminary": true
+      },
+      "journal-30-death_save": {
+        "count": 3,
+        "medianMs": 329.196285,
+        "maxMs": 517.7419210000003,
+        "p95Preliminary": true
+      },
+      "journal-31-death_save": {
+        "count": 3,
+        "medianMs": 366.38563200000135,
+        "maxMs": 465.33762000000024,
+        "p95Preliminary": true
+      }
+    },
+    "hostCanonicalGetAndExactRetryVerified": true,
+    "hostHistoricalRngComparison": "not a separate assertion in this HTTP host harness; covered by local replay and original snapshot checks",
+    "targetAchieved": false,
+    "fullLocalHttpProof": "outputs/operations/persistence-followup-main-full-api-20261008.json",
+    "fullLocalHttpSummary": {
+      "journal-27-approach_action": {
+        "count": 10,
+        "medianMs": 301.195000000007,
+        "maxMs": 831.931500000006,
+        "p95Preliminary": true
+      },
+      "exact-retry": {
+        "count": 50,
+        "medianMs": 29.73629999998957,
+        "maxMs": 44.085699999995995,
+        "p95Preliminary": true
+      },
+      "journal-28-end_turn": {
+        "count": 10,
+        "medianMs": 71.73829999999725,
+        "maxMs": 93.58899999999267,
+        "p95Preliminary": true
+      },
+      "journal-29-death_save": {
+        "count": 10,
+        "medianMs": 65.61040000000503,
+        "maxMs": 93.19280000000435,
+        "p95Preliminary": true
+      },
+      "journal-30-death_save": {
+        "count": 10,
+        "medianMs": 71.88859999999113,
+        "maxMs": 91.03889999999956,
+        "p95Preliminary": true
+      },
+      "journal-31-death_save": {
+        "count": 10,
+        "medianMs": 63.63950000000477,
+        "maxMs": 74.0106999999989,
+        "p95Preliminary": true
+      }
+    },
+    "rapidLocalHttpProof": "outputs/operations/persistence-followup-main-rapid-api-20261008.json",
+    "rapidLocalHttpSummary": {
+      "journal-27-approach_action": {
+        "count": 3,
+        "medianMs": 314.1430999999975,
+        "maxMs": 892.2328000000016,
+        "p95Preliminary": true
+      },
+      "exact-retry": {
+        "count": 15,
+        "medianMs": 30.210799999997107,
+        "maxMs": 39.42819999999847,
+        "p95Preliminary": true
+      },
+      "journal-28-end_turn": {
+        "count": 3,
+        "medianMs": 171.4491999999991,
+        "maxMs": 551.6923000000024,
+        "p95Preliminary": true
+      },
+      "journal-29-death_save": {
+        "count": 3,
+        "medianMs": 133.30579999999827,
+        "maxMs": 160.0490000000027,
+        "p95Preliminary": true
+      },
+      "journal-30-death_save": {
+        "count": 3,
+        "medianMs": 123.95560000000114,
+        "maxMs": 132.32050000000163,
+        "p95Preliminary": true
+      },
+      "journal-31-death_save": {
+        "count": 3,
+        "medianMs": 145.26459999999497,
+        "maxMs": 167.48339999999735,
+        "p95Preliminary": true
+      }
+    },
+    "originalSnapshotHistoricalHashesVerified": true
   }
 }

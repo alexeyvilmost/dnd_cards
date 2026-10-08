@@ -42,3 +42,14 @@ export function expandWorkerMirrors(wire){
   if(Buffer.byteLength(JSON.stringify(value))>16*1024*1024)throw Error('Expanded mirror frame too large');
   return value;
 }
+
+// Only metadata created for this exact, privately prepared projection reaches
+// this helper. It is never accepted from an HTTP caller or a previous frame.
+export function applyPreparedWorkerMirrors(result,mirrors) {
+ if(!mirrors)return result;
+ const original=result.patch;
+ const value={...result,patch:{...original,turn_state:{...original.turn_state,solo_combat_v1:{...original.turn_state.solo_combat_v1}}}};
+ for(const {field} of mirrors.state)delete value.patch.turn_state.solo_combat_v1[field];
+ if(mirrors.leader){value.patches={...result.patches};delete value.patches[mirrors.leader.id];}
+ return {wireSchema:2,value,mirrors};
+}

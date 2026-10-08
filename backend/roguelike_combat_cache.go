@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"sync"
@@ -229,7 +230,7 @@ func (cache *combatRuntimeCache) replay(id, owner, commandID uuid.UUID, requestH
 
 // Successful completion restores ordinary durable semantics. A failed write
 // invalidates the uncommitted frame and blocks further commands until a reload.
-func (slot *combatCacheSlot) finish(err error, started time.Time, requestID string, published bool) {
+func (slot *combatCacheSlot) finish(err error, started time.Time, requestID string, published bool, contexts ...context.Context) {
 	slot.mu.Lock()
 	if err != nil {
 		slot.run = nil
@@ -252,6 +253,12 @@ func (slot *combatCacheSlot) finish(err error, started time.Time, requestID stri
 		status = "failed"
 	}
 	log.Printf("combat_persistence request_id=%s status=%s duration_ms=%.3f", requestID, status, float64(time.Since(started).Microseconds())/1000)
+	if len(contexts) > 0 {
+		if trace := performanceFrom(contexts[0]); trace != nil {
+			metrics, _ := json.Marshal(trace.snapshot())
+			log.Printf("combat_persistence_phases request_id=%s metrics=%s", requestID, metrics)
+		}
+	}
 }
 func (cache *combatRuntimeCache) acknowledgeReload(id, owner uuid.UUID) {
 	cache.mu.Lock()

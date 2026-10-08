@@ -43,6 +43,7 @@ func main() {
 	db, err := gorm.Open(postgres.Open(dbConfig.GetDSN()), &gorm.Config{
 		DisableAutomaticPing: true,
 		PrepareStmt:          false,
+		Logger:               newDatabaseLogger(log.Default(), 200*time.Millisecond),
 	})
 	if err != nil {
 		log.Fatal("Ошибка подключения к базе данных:", err)

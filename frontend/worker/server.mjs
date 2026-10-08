@@ -1,7 +1,7 @@
 import {createServer} from 'node:http';
 import {createHash, timingSafeEqual, randomUUID} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
-import {compactWorkerMirrors,MIRROR_WIRE} from './mirrors.mjs';
+import {compactWorkerMirrors,applyPreparedWorkerMirrors,MIRROR_WIRE} from './mirrors.mjs';
 import {compileNativeHashArtifact} from './native-hash.mjs';
 import {createCombatFrameCache,acceptsCompactProjection,projectionInputs,projectionKey,nextProjectionInputs} from './combat-frames.mjs';
 import {createSpeculativeTransitions} from './speculative-transitions.mjs';
@@ -197,11 +197,14 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const start = performance.now();
       try {return await work();} finally {record(name, start);}
     };
-    const send = (status, value) => {
-      if(status===200&&request.headers['x-rules-wire']===MIRROR_WIRE){
+    const send = (status, value, preparedMirrors) => {
+      const prepared=status===200&&request.headers['x-rules-wire']===MIRROR_WIRE&&Boolean(preparedMirrors);
+      if(status===200&&request.headers['x-rules-wire']===MIRROR_WIRE&&!prepared){
         value=timed('worker_mirror_compact_ms',()=>compactWorkerMirrors(value));
       }
+      if(prepared)value=applyPreparedWorkerMirrors(value,preparedMirrors);
       const serialized = timed('worker_stringify_ms', () => JSON.stringify(value));
+      if(measured)metrics.worker_prepared_mirror_hit=Number(prepared);
       const headers = {'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Request-ID': requestId};
       if (measured) {
         metrics.worker_callback_to_send_ms = performance.now() - started;
@@ -307,7 +310,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         : artifact.projectRoguelikeCombatPatch(result.envelope, body.character));
       const afterHash=projectionHit?prepared.afterHash:timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
       send(200, {...result, ...projected,
-        trace: {beforeHash,afterHash,runtimeRevision: projected.patch.runtime_revision}});
+        trace: {beforeHash,afterHash,runtimeRevision: projected.patch.runtime_revision}},projectionHit?prepared.preparedMirrors:undefined);
       setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),nextProjectionInputs(projected,body.character,body.characters));});
       return;
     } catch (error) {

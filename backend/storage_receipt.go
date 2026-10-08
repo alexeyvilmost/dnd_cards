@@ -96,6 +96,9 @@ func (receipt *RoguelikeCommandReceipt) AfterFind(_ *gorm.DB) error {
 	return receipt.ReceiptStorage.decode(&receipt.Response)
 }
 func (receipt *RoguelikeCommandReceipt) AfterCreate(_ *gorm.DB) error {
+	if receipt.omitResponseReload {
+		return nil
+	}
 	return receipt.ReceiptStorage.decode(&receipt.Response)
 }
 func (receipt *CharacterRuntimeCommandRecord) BeforeCreate(tx *gorm.DB) error {

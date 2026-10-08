@@ -186,6 +186,7 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 		writeRoguelikeError(c, errors.New("invalid combat trace"))
 		return
 	}
+	selectedColumns := map[uuid.UUID][]string{}
 	expected := map[uuid.UUID]int64{}
 	expectedUpdated := map[uuid.UUID]time.Time{}
 	for _, member := range roguelikeCharacters(run) {
@@ -203,6 +204,11 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 			writeRoguelikeError(c, err)
 			return
 		}
+		columns := []string{"currency", "updated_at"}
+		for key := range patch {
+			columns = append(columns, key)
+		}
+		selectedColumns[member.ID] = columns
 	}
 	ready := make(chan cachedCombatResponse, 1)
 	responseWritten := make(chan struct{})
@@ -283,7 +289,7 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 					return commitCtx.Err()
 				}
 			}
-			if err = saveRoguelikeParty(tx, locked); err != nil {
+			if err = saveRoguelikeParty(tx, locked, selectedColumns); err != nil {
 				return err
 			}
 			if err = saveRoguelikeRun(tx, locked); err != nil {
@@ -294,7 +300,7 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 			}
 			// Serialize the canonical tagged run once in the receipt writer. Avoid
 			// turning the same immutable DTO into another large intermediate tree.
-			return tx.Create(&RoguelikeCommandReceipt{RunID: id, UserID: owner, CommandID: request.CommandID, CommandType: request.Type, RequestHash: requestHash, Response: JSONMap{"run": accepted}, Request: nonNilRoguelikeMap(request.Payload)}).Error
+			return tx.Create(&RoguelikeCommandReceipt{RunID: id, UserID: owner, CommandID: request.CommandID, CommandType: request.Type, RequestHash: requestHash, Response: JSONMap{"run": accepted}, Request: nonNilRoguelikeMap(request.Payload), omitResponseReload: true}).Error
 		})
 		if err == nil && accepted != nil {
 			slot.setFrame(accepted, afterHash)
@@ -305,7 +311,7 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 			slot.mu.Unlock()
 		}
 		requestID, _ := ctx.Value(requestCorrelationKey{}).(string)
-		slot.finish(err, started, requestID, released)
+		slot.finish(err, started, requestID, released, commitCtx)
 		if !released {
 			ready <- cachedCombatResponse{run: accepted, receipt: replay, err: err}
 		}
