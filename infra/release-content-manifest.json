@@ -1957,8 +1957,8 @@
     },
     {
       "path": "backend/roguelike_worker_client.go",
-      "sha256": "sha256:08f1484a0aa46b809b60007415280aa9cfe745f0cfeb55948fee9c7a49558db4",
-      "bytes": 25761
+      "sha256": "sha256:1c287e6d6d931025e5ac645bc35c1fddb153b6621571c2516a8eb16f40ca29e2",
+      "bytes": 25823
     },
     {
       "path": "backend/roguelike_worker_controller.go",
