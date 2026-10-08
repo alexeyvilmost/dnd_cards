@@ -15,8 +15,10 @@ import (
 )
 
 type roguelikeWorkerClient struct {
-	URL, Token string
-	HTTP       *http.Client
+	URL, Token     string
+	HTTP           *http.Client
+	CombatBase     JSONMap
+	CombatBaseHash string
 }
 
 // Only fixed, player-facing errors cross the worker boundary. Never forward
@@ -283,6 +285,9 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 	request.Header.Set("Content-Type", "application/json")
 	if os.Getenv("RULES_WORKER_MIRRORS_ENABLED") == "1" {
 		request.Header.Set("X-Rules-Wire", workerMirrorWire)
+		if input, ok := body.(map[string]any); ok && endpoint == "/transition" && client.CombatBase != nil && client.CombatBaseHash != "" && input["frameKey"] == client.CombatBaseHash {
+			request.Header.Set("X-Rules-Wire", workerDeltaWire)
+		}
 	}
 	if requestID, ok := ctx.Value(requestCorrelationKey{}).(string); ok && validRequestID(requestID) {
 		request.Header.Set("X-Request-ID", requestID)
@@ -305,7 +310,7 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		var metrics map[string]float64
 		raw := response.Header.Get("X-Rules-Performance")
 		if len(raw) <= 8192 && json.Unmarshal([]byte(raw), &metrics) == nil {
-			for _, key := range []string{"worker_body_read_ms", "worker_parse_ms", "worker_artifact_load_ms", "worker_artifact_cache_hit", "worker_frame_cache_hit", "worker_prediction_hit", "worker_prediction_projection_hit", "worker_prepared_mirror_hit", "worker_prediction_wait_ms", "worker_speculative_execute_ms", "worker_execute_ms", "worker_project_ms", "worker_snapshot_hash_ms", "worker_stringify_ms", "worker_mirror_compact_ms", "worker_callback_to_send_ms", "worker_process_cpu_ms"} {
+			for _, key := range []string{"worker_body_read_ms", "worker_parse_ms", "worker_artifact_load_ms", "worker_artifact_cache_hit", "worker_frame_cache_hit", "worker_prediction_hit", "worker_prediction_projection_hit", "worker_prepared_mirror_hit", "worker_state_delta_hit", "worker_state_delta_ms", "worker_prediction_wait_ms", "worker_speculative_execute_ms", "worker_speculative_prepare_ms", "worker_speculative_mirror_ms", "worker_execute_ms", "worker_project_ms", "worker_snapshot_hash_ms", "worker_stringify_ms", "worker_mirror_compact_ms", "worker_partial_mirror_ms", "worker_callback_to_send_ms", "worker_process_cpu_ms"} {
 				if value, exists := metrics[key]; exists {
 					performanceAdd(ctx, key, value)
 				}
@@ -344,10 +349,14 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		return nil, fmt.Errorf("rules worker response too large")
 	}
 	var result roguelikeWorkerResult
-	if request.Header.Get("X-Rules-Wire") == workerMirrorWire {
+	if request.Header.Get("X-Rules-Wire") == workerMirrorWire || request.Header.Get("X-Rules-Wire") == workerDeltaWire {
 		expandDone := performanceSince(ctx, "backend_worker_mirror_expand_ms")
 		var decoded *roguelikeWorkerResult
-		decoded, err = decodeWorkerMirrors(payload)
+		if request.Header.Get("X-Rules-Wire") == workerDeltaWire {
+			decoded, err = decodeWorkerStateDelta(payload, client.CombatBase, client.CombatBaseHash)
+		} else {
+			decoded, err = decodeWorkerMirrors(payload)
+		}
 		expandDone()
 		if err != nil {
 			return nil, err

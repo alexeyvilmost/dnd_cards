@@ -3,15 +3,16 @@ import type {RoguelikeRun} from './api';
 type CommandReply={run:RoguelikeRun;events?:import('../character/api').CharacterEventRow[]};
 type StateDelta={base_command_id:string;references:string[][];array_prefixes:Array<{path:string[];length:number;offset?:number}>};
 type CombatWireReply=CommandReply & {wire_schema?:string;leader_index?:number;snapshot?:Record<string,unknown>;snapshot_mirrors?:string[];state_delta?:StateDelta};
+type CombatBase={commandId:string;run:Pick<RoguelikeRun,'id'|'user_id'|'revision'|'combat_state'>};
 export class MissingCombatBaseError extends Error {}
 
-function expandStateDelta(raw:CombatWireReply,base?:{commandId:string;run:RoguelikeRun}) {
+function expandStateDelta(raw:CombatWireReply,base?:CombatBase,cloneBase=true) {
  const delta=raw.state_delta;
  if(!delta)return raw.run.combat_state;
  if(raw.wire_schema!=='combat-frame-v2'||!Array.isArray(delta.references)||delta.references.length>1024||!Array.isArray(delta.array_prefixes)||delta.array_prefixes.length>128)throw Error('Invalid combat delta');
  if(!base||base.commandId!==delta.base_command_id||base.run.id!==raw.run.id||base.run.user_id!==raw.run.user_id)throw new MissingCombatBaseError('Missing exact combat base');
  if(!raw.run.combat_state||!base.run.combat_state)throw Error('Missing combat state');
- const source=structuredClone(base.run.combat_state) as unknown as Record<string,unknown>,target=structuredClone(raw.run.combat_state) as unknown as Record<string,unknown>,seen:string[][]=[];
+ const source=(cloneBase?structuredClone(base.run.combat_state):base.run.combat_state) as unknown as Record<string,unknown>,target=structuredClone(raw.run.combat_state) as unknown as Record<string,unknown>,seen:string[][]=[];
  const parent=(root:Record<string,unknown>,path:string[])=>{
   if(!Array.isArray(path)||!path.length||path.length>8||path.some(k=>typeof k!=='string'||['__proto__','constructor','prototype'].includes(k)))throw Error('Invalid delta path');
   let object=root;
@@ -24,7 +25,7 @@ function expandStateDelta(raw:CombatWireReply,base?:{commandId:string;run:Roguel
  return target as unknown as RoguelikeRun['combat_state'];
 }
 
-export function expandCombatReply(raw:CombatWireReply,base?:{commandId:string;run:RoguelikeRun}):CommandReply {
+export function expandCombatReply(raw:CombatWireReply,base?:CombatBase):CommandReply {
   if(raw.wire_schema===undefined)return raw;
   if(!['combat-frame-v1','combat-frame-v2'].includes(raw.wire_schema)||!raw.run||!Array.isArray(raw.snapshot_mirrors)||raw.snapshot_mirrors.length>128)throw Error('Invalid combat frame');
   const run={...raw.run};
@@ -47,11 +48,27 @@ export function expandCombatReply(raw:CombatWireReply,base?:{commandId:string;ru
 // replies. A missing/evicted base retries the same command in full wire format.
 export function createCombatReplyCache(maxFrames=4) {
  if(!Number.isSafeInteger(maxFrames)||maxFrames<1||maxFrames>16)throw Error('Invalid combat reply cache limit');
- const frames=new Map<string,{commandId:string;run:RoguelikeRun}>();
+ const frames=new Map<string,CombatBase>();
  const latest=(id:string)=>[...frames.values()].filter(row=>row.run.id===id).sort((a,b)=>b.run.revision-a.run.revision)[0];
  return {
   headers(id:string){const frame=latest(id);return {'X-Combat-Wire':'combat-frame-v2',...(frame?{'X-Combat-Base':frame.commandId}:{})};},
-  expand(raw:CombatWireReply,commandId:string){const reply=expandCombatReply(raw,raw.state_delta?frames.get(raw.state_delta.base_command_id):undefined);if(raw.wire_schema){frames.delete(commandId);frames.set(commandId,{commandId,run:structuredClone(reply.run)});while(frames.size>maxFrames)frames.delete(frames.keys().next().value!);}return reply;},
+  expand(raw:CombatWireReply,commandId:string){
+    let reply:CommandReply,privateState:RoguelikeRun['combat_state'];
+    if(raw.wire_schema&&raw.state_delta){
+      // Only hidden cache entries may share immutable subtrees. The incoming
+      // delta and the complete state returned to UI each receive their own copy.
+      privateState=expandStateDelta(raw,frames.get(raw.state_delta.base_command_id),false);
+      reply=expandCombatReply({...raw,state_delta:undefined,run:{...raw.run,combat_state:structuredClone(privateState)}});
+    }else{
+      reply=expandCombatReply(raw);
+      if(raw.wire_schema)privateState=structuredClone(reply.run.combat_state);
+    }
+    if(raw.wire_schema){
+      frames.delete(commandId);frames.set(commandId,{commandId,run:{id:reply.run.id,user_id:reply.run.user_id,revision:reply.run.revision,combat_state:privateState}});
+      while(frames.size>maxFrames)frames.delete(frames.keys().next().value!);
+    }
+    return reply;
+  },
   clear(id:string){for(const [key,row]of frames)if(row.run.id===id)frames.delete(key);},
  };
 }

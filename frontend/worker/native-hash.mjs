@@ -36,9 +36,22 @@ export function spatialMemoSource(source) {
   if(!aura.includes('illuminationSources, __projectionLifeMemo)'))return source;
   const spatial=routines.spatialFacts.replace('illuminationSources) {','illuminationSources, __memo) {\n const __previous=__spatialLifeMemo; if(__memo)__spatialLifeMemo=__memo; try {')
     .slice(0,-1)+'\n } finally {__spatialLifeMemo=__previous;}\n}';
+  const footprintStart=source.indexOf('function actorFootprint('),footprintEnd=source.indexOf('\n}',footprintStart)+2;
+  const footprint=footprintStart>=0&&footprintEnd>footprintStart?source.slice(footprintStart,footprintEnd):undefined;
+  const cacheFootprint=footprint&&createHash('sha256').update(footprint).digest('hex')==='40e2b0c11b5b7c67d12f5002d82dc4066d87dfe5da1d8c318197247dc39464bf';
+  if(cacheFootprint)source=source.replace(footprint,footprint.replace('function actorFootprint(', 'function __footprintUncached('));
+  const footprintHelpers=cacheFootprint?`
+const __footprintBySpatialScope=new WeakMap();
+function actorFootprint(actor,rules) {
+  if(!__spatialLifeMemo||!actor||!rules||rules.tacticalFootprints!=='sized')return __footprintUncached(actor,rules);
+  let scopes=__footprintBySpatialScope.get(__spatialLifeMemo);if(!scopes){scopes=new WeakMap();__footprintBySpatialScope.set(__spatialLifeMemo,scopes);}
+  let actors=scopes.get(rules);if(!actors){actors=new WeakMap();scopes.set(rules,actors);}
+  if(!actors.has(actor))actors.set(actor,__footprintUncached(actor,rules));return actors.get(actor);
+}
+`:'';
   return source.replace(routines.projectCombatAuras,aura).replace(routines.spatialFacts,spatial)
     .replace(routines.collectLifePolicies,routines.collectLifePolicies.replace('function collectLifePolicies(','function __collectLifePoliciesUncached('))
-    +`\nlet __spatialLifeMemo;
+    +footprintHelpers+`\nlet __spatialLifeMemo;
 
 function __sameAuraCharacterJSON(left,right) {
   const a=Object.keys(left),b=Object.keys(right);

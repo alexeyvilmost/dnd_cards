@@ -137,3 +137,11 @@ test('reviewed replay refusal binds the full failed report and all seven additiv
  const wrongHash=structuredClone(args);wrongHash.report.runId='substituted';assert.throws(()=>validateReviewedReplayRefusal(wrongHash));
  const wrongInput=structuredClone(args);wrongInput.input.backup.schemaFingerprint=hash('f');assert.throws(()=>validateReviewedReplayRefusal(wrongInput));
 });
+
+test('collector records trusted API operation without private cause or spoofed diagnostics',async()=>{
+ const {rehearsalRequestFailure}=await import('./rehearsal-scenarios.mjs');const {input}=fixture();
+ for(const trusted of [false,true]) {
+  const failure=trusted?rehearsalRequestFailure(409,'/roguelike/runs/12345678-1234-1234-1234-123456789abc/commands','POST',{type:'combat_intent',payload:{intent:{type:'approach_action'},token:'private-token'}},{code:'combat_worker_rejected',error:'private seed'}):Object.assign(Error('private-token'),{requestFailure:{route:'/private-token'}});let saved;
+  await assert.rejects(collectRehearsal(input,{execution:'simulation',start:async()=>{throw failure;},cleanup:async()=>({status:'stopped',errors:[]})},{onReport:async report=>{saved=report;}}));assert.equal(saved.status,'failed');assert.equal(saved.cleanup.status,'stopped');assert.equal(Boolean(saved.requestFailure),trusted);assert.ok(!JSON.stringify(saved).includes('private-token'));assert.ok(!JSON.stringify(saved).includes('private seed'));assert.ok(!JSON.stringify(saved).includes('12345678-1234'));
+ }
+});

@@ -1,6 +1,8 @@
 import {Worker,isMainThread,parentPort,workerData} from 'node:worker_threads';
 import {performance} from 'node:perf_hooks';
 import {compactWorkerMirrors} from './mirrors.mjs';
+import {compactState} from './state-delta.mjs';
+import {compactPartialMirrors} from './partial-mirrors.mjs';
 import {createArtifactCache,snapshotHash} from './server.mjs';
 import {acceptsCompactProjection,projectionKey} from './combat-frames.mjs';
 
@@ -23,8 +25,10 @@ if(!isMainThread&&workerData?.combatSpeculation){
         const compact=compactWorkerMirrors({...result,...projected,trace:{beforeHash:job.beforeHash,afterHash:projection.afterHash,runtimeRevision:projected.patch.runtime_revision}});
         projection.preparedMirrors=compact.wireSchema===2?compact.mirrors:null;
         projection.mirrorMs=performance.now()-mirrorStarted;
+        projection.preparedStateDelta=compactState(projected.envelope.state,job.envelope.state,job.beforeHash);
+        const partial=compactPartialMirrors(compact.value??compact);projection.preparedPartialMirrors={mirrors:partial.mirrors,snapshot:partial.value.patch.turn_state.solo_combat_v1};
       }
-      const message={key:job.key,result,executeMs,...(projection?{projection}:{})};
+      const message={key:job.key,result,executeMs,prepareMs:performance.now()-started-executeMs,...(projection?{projection}:{})};
       // Account conservatively in the calculation thread. Serializing these
       // large graphs on the HTTP event loop would delay unrelated requests.
       message.size=Buffer.byteLength(JSON.stringify(message))+32;
@@ -64,13 +68,15 @@ export function createSpeculativeTransitions({artifactsDirectory,maxResults=8,ma
       if(!key)return;
       if(results.has(key)||queued.has(key)||busy===key)return;
       queued.set(key,{key,beforeHash:hash,envelope,artifactHash:envelope.artifactHash,intent,projection});
-      while(queued.size>maxResults)queued.delete(queued.keys().next().value);pump();
+      while(queued.size>maxResults){const removable=[...queued.keys()].find(key=>!waiters.has(key));if(removable===undefined)break;queued.delete(removable);}pump();
     },
     async take(hash,intent,{readOnlyProjected=false}={}){
       const copy=value=>readOnlyProjected&&value?.projection?value:structuredClone(value);
       const key=keyOf(hash,intent);if(!key||closed)return undefined;
       if(results.has(key))return copy(results.get(key));
-      if(busy===key){return new Promise(resolve=>{
+      if(busy===key||queued.has(key)){
+        if(queued.has(key)){const job=queued.get(key),others=[...queued.entries()].filter(([id])=>id!==key);queued.clear();queued.set(key,job);for(const [id,value]of others)queued.set(id,value);}
+        return new Promise(resolve=>{
         // Multiple authenticated requests may ask for the same deterministic
         // frame. They share work; the API separately serializes acceptance.
         const prior=waiters.get(key);waiters.set(key,value=>{prior?.(value);resolve(value?copy(value):undefined);});

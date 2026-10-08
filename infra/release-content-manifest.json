@@ -77,8 +77,8 @@
     },
     {
       "path": "backend/canonical_json.go",
-      "sha256": "sha256:55a88ba48fcc48c854dd1b4cb0aad16ea046cc454f8dd5d013df61030b48b395",
-      "bytes": 6696
+      "sha256": "sha256:c04e123a43cafc5c614e56056d2a41bb3a02b15443b7b1384f8b42973f085098",
+      "bytes": 7209
     },
     {
       "path": "backend/canonical_session_controller.go",
@@ -127,8 +127,8 @@
     },
     {
       "path": "backend/character_preparation_cache.go",
-      "sha256": "sha256:92e9948fa3b15bd799208ffffe7ac8fba9f1bb354824cfa33b89ac1ea5a207cf",
-      "bytes": 12870
+      "sha256": "sha256:24dd7a685cfe28c75c59b74e6d8b34d1b52cc45b590e79b07464c1f0e5c2ded1",
+      "bytes": 13688
     },
     {
       "path": "backend/character_preparation_flights.go",
@@ -1812,8 +1812,8 @@
     },
     {
       "path": "backend/roguelike_cached_combat_command.go",
-      "sha256": "sha256:34ea53f20a651ad93e960ecd6827f7df2ec8992ddc93ecdb44acf751b34e1ad0",
-      "bytes": 13096
+      "sha256": "sha256:87c8164d558a316c0401bbad710de11ee3845090295c114272f6d82a17c3736a",
+      "bytes": 13575
     },
     {
       "path": "backend/roguelike_camp_inventory.go",
@@ -1842,8 +1842,8 @@
     },
     {
       "path": "backend/roguelike_combat_cache.go",
-      "sha256": "sha256:2a0dd0d87f031e89efa1c118eda00f9f0b29dabaad0f80d298f09edda4bdd1cf",
-      "bytes": 10299
+      "sha256": "sha256:ec7ee3edfdaf42f529fdb72417e8ff83423a69c32e445d1e542e1095b0082565",
+      "bytes": 10235
     },
     {
       "path": "backend/roguelike_combat_conclusion.go",
@@ -1947,8 +1947,8 @@
     },
     {
       "path": "backend/roguelike_worker_client.go",
-      "sha256": "sha256:da3df79dfc1fbaa420ddc391bea5de62dcb0a1639e7018afec82a6b342b8a1e7",
-      "bytes": 25097
+      "sha256": "sha256:08f1484a0aa46b809b60007415280aa9cfe745f0cfeb55948fee9c7a49558db4",
+      "bytes": 25761
     },
     {
       "path": "backend/roguelike_worker_controller.go",
@@ -1959,6 +1959,11 @@
       "path": "backend/roguelike_worker_mirrors.go",
       "sha256": "sha256:40ff60914881e2f30f6a4bf6a0b3a150ea81e077592721a4b5a15f8455d54178",
       "bytes": 7642
+    },
+    {
+      "path": "backend/roguelike_worker_state_delta.go",
+      "sha256": "sha256:6a742e43beda04b759a3147f4fa723883b0ceeedfff7183a1721fc6323645791",
+      "bytes": 7160
     },
     {
       "path": "backend/roguelikecontent/classes.go",

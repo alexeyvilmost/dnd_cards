@@ -202,6 +202,24 @@ func appendCanonicalJSON(output *bytes.Buffer, value any) error {
 }
 
 func compareUTF16(left, right string) int {
+	ascii := func(value string) bool {
+		for i := 0; i < len(value); i++ {
+			if value[i] >= 0x80 {
+				return false
+			}
+		}
+		return true
+	}
+	if ascii(left) && ascii(right) {
+		if left < right {
+			return -1
+		}
+		if left > right {
+			return 1
+		}
+		return 0
+	}
+
 	leftUnits := utf16.Encode([]rune(left))
 	rightUnits := utf16.Encode([]rune(right))
 	limit := len(leftUnits)
@@ -230,11 +248,18 @@ func appendCanonicalJSONString(output *bytes.Buffer, value string) error {
 		return errors.New("canonical JSON contains invalid UTF-8")
 	}
 	output.WriteByte('"')
-	for _, character := range value {
+	begin := 0
+	const hex = "0123456789abcdef"
+	for index := 0; index < len(value); index++ {
+		character := value[index]
+		if character >= 0x20 && character != '"' && character != '\\' {
+			continue
+		}
+		output.WriteString(value[begin:index])
 		switch character {
 		case '"', '\\':
 			output.WriteByte('\\')
-			output.WriteRune(character)
+			output.WriteByte(character)
 		case '\b':
 			output.WriteString(`\b`)
 		case '\f':
@@ -246,13 +271,13 @@ func appendCanonicalJSONString(output *bytes.Buffer, value string) error {
 		case '\t':
 			output.WriteString(`\t`)
 		default:
-			if character < 0x20 {
-				fmt.Fprintf(output, `\u%04x`, character)
-			} else {
-				output.WriteRune(character)
-			}
+			output.WriteString(`\u00`)
+			output.WriteByte(hex[character>>4])
+			output.WriteByte(hex[character&15])
 		}
+		begin = index + 1
 	}
+	output.WriteString(value[begin:])
 	output.WriteByte('"')
 	return nil
 }

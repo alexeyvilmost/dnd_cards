@@ -322,7 +322,7 @@ func (rc *RoguelikeController) warmCombatCache() {
 				return
 			}
 			client := roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}
-			result, err := client.call(ctx, "/prefetch", map[string]any{"artifactHash": frame.CombatEnvelope["artifactHash"], "envelope": frame.CombatEnvelope})
+			result, err := client.call(ctx, "/prefetch", cachedCombatWorkerBody(frame, nil, ""))
 			if err == nil {
 				hash, _ := result.Trace["afterHash"].(string)
 				slot.setFrame(frame, hash)

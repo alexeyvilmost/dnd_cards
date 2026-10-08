@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import {safeRehearsalRequestFailure} from './rehearsal-scenarios.mjs';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -59,6 +59,8 @@ export async function collectRehearsal(input,adapter,{runId=randomUUID(),onRepor
     assertWriterRehearsalBoundary(input.manifest,Object.fromEntries(report.checks.map(row=>[row.id,row])));
     assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:image?.images,identities:image?.identities,rehearsalReceipt:report,...retirementWriterBaseline(input)},report.checks.find(row=>row.id==='writer-compatibility'));
   } catch(error){failure=error;report.failure='candidate-rehearsal-failed';report.failureStage=stage;
+    const requestFailure=safeRehearsalRequestFailure(error);
+    if(requestFailure)report.requestFailure=requestFailure;
     const processFailure=safeDockerFailure(error);
     if(processFailure)report.processFailure=processFailure;
     // Only our fixed scenario IDs enter persisted diagnostics. The original

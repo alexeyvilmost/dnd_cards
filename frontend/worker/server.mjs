@@ -2,6 +2,8 @@ import {createServer} from 'node:http';
 import {createHash, timingSafeEqual, randomUUID} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {compactWorkerMirrors,applyPreparedWorkerMirrors,MIRROR_WIRE} from './mirrors.mjs';
+import {compactState} from './state-delta.mjs';
+import {compactPartialMirrors,applyPartialMirrors} from './partial-mirrors.mjs';
 import {compileNativeHashArtifact} from './native-hash.mjs';
 import {createCombatFrameCache,acceptsCompactProjection,projectionInputs,projectionKey,nextProjectionInputs} from './combat-frames.mjs';
 import {createSpeculativeTransitions} from './speculative-transitions.mjs';
@@ -197,12 +199,15 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const start = performance.now();
       try {return await work();} finally {record(name, start);}
     };
-    const send = (status, value, preparedMirrors) => {
-      const prepared=status===200&&request.headers['x-rules-wire']===MIRROR_WIRE&&Boolean(preparedMirrors);
-      if(status===200&&request.headers['x-rules-wire']===MIRROR_WIRE&&!prepared){
+    const send = (status, value, preparedMirrors, stateDelta, preparedPartialMirrors) => {
+      const prepared=status===200&&[MIRROR_WIRE,'mirrors-v3'].includes(request.headers['x-rules-wire'])&&Boolean(preparedMirrors);
+      if(status===200&&[MIRROR_WIRE,'mirrors-v3'].includes(request.headers['x-rules-wire'])&&!prepared){
         value=timed('worker_mirror_compact_ms',()=>compactWorkerMirrors(value));
       }
       if(prepared)value=applyPreparedWorkerMirrors(value,preparedMirrors);
+      const deltaHit=status===200&&request.headers['x-rules-wire']==='mirrors-v3'&&stateDelta&&value.wireSchema===2;
+      if(deltaHit){const partial=preparedPartialMirrors?{value:applyPartialMirrors(value.value,preparedPartialMirrors),mirrors:preparedPartialMirrors.mirrors}:timed('worker_partial_mirror_ms',()=>compactPartialMirrors(value.value));value={wireSchema:3,value:{...partial.value,envelope:{...partial.value.envelope,state:stateDelta.state}},stateDelta:stateDelta.metadata,mirrors:{state:value.mirrors.state.map(row=>row.field),partial:partial.mirrors,...(value.mirrors.leader?{leader:value.mirrors.leader.id}:{})}};}
+      if(measured)metrics.worker_state_delta_hit=Number(Boolean(deltaHit));
       const serialized = timed('worker_stringify_ms', () => JSON.stringify(value));
       if(measured)metrics.worker_prepared_mirror_hit=Number(prepared);
       const headers = {'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Request-ID': requestId};
@@ -239,7 +244,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       if(request.url==='/prefetch'){
         if(body.envelope?.artifactHash!==hash)return send(409,{error:'frame_unavailable'});
         const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(body.envelope));
-        frames.set(afterHash,body.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash));
+        frames.set(afterHash,body.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),body.projectionInputVersion===1&&acceptsCompactProjection(artifact)?projectionInputs(body.character,body.characters):undefined);
         return send(200,{status:'ready',trace:{afterHash}});
       }
       if (request.url === '/upgrade') {
@@ -300,7 +305,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       }
       const beforeHash=timed('worker_snapshot_hash_ms',()=>body.frameKey||snapshotHash(body.envelope));
       const predicted=await timedAsync('worker_prediction_wait_ms',()=>speculation.take(beforeHash,body.intent,{readOnlyProjected:true}));
-      if(measured){metrics.worker_prediction_hit=Number(Boolean(predicted));if(predicted)metrics.worker_speculative_execute_ms=predicted.executeMs;}
+      if(measured){metrics.worker_prediction_hit=Number(Boolean(predicted));if(predicted){metrics.worker_speculative_execute_ms=predicted.executeMs;metrics.worker_speculative_prepare_ms=predicted.prepareMs;if(predicted.projection)metrics.worker_speculative_mirror_ms=predicted.projection.mirrorMs;}}
       const result = predicted?.result??timed('worker_execute_ms', () => artifact.stepRoguelikeCombat(body.envelope, body.intent, hash));
       const prepared=predicted?.projection;
       const projectionHit=Boolean(prepared&&acceptsCompactProjection(artifact)&&prepared.key===projectionKey(projectionInputs(body.character,body.characters)));
@@ -310,7 +315,8 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         : artifact.projectRoguelikeCombatPatch(result.envelope, body.character));
       const afterHash=projectionHit?prepared.afterHash:timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
       send(200, {...result, ...projected,
-        trace: {beforeHash,afterHash,runtimeRevision: projected.patch.runtime_revision}},projectionHit?prepared.preparedMirrors:undefined);
+        trace: {beforeHash,afterHash,runtimeRevision: projected.patch.runtime_revision}},projectionHit?prepared.preparedMirrors:undefined,
+        body.frameKey&&request.headers['x-rules-wire']==='mirrors-v3'?(projectionHit?prepared.preparedStateDelta:timed('worker_state_delta_ms',()=>compactState(projected.envelope.state,body.envelope.state,beforeHash))):undefined,projectionHit?prepared.preparedPartialMirrors:undefined);
       setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),nextProjectionInputs(projected,body.character,body.characters));});
       return;
     } catch (error) {

@@ -47,3 +47,35 @@ it('sliding history references retain the exact window and reject an out-of-rang
  expect((cache.expand(next,'second').run.combat_state as unknown as {log:unknown[]}).log).toEqual([{id:2},{id:3},{id:4}]);
  expect(()=>cache.expand({...next,state_delta:{...next.state_delta,array_prefixes:[{path:['log'],length:2,offset:2}]}},'bad')).toThrow();
 });
+
+it('retains complete concurrent replies while isolating their combat bases from UI edits',()=>{
+ const cache=createCombatReplyCache(),first=cache.expand(baseWire(),'first');
+ first.run.character!.turn_state!.other=99;
+ (first.run.combat_state!.actionPresentation as unknown as {image:string}).image='UI edit';
+ const second=cache.expand(deltaWire(),'second'),concurrent=cache.expand(deltaWire(),'concurrent');
+ expect(second.run.combat_state).toEqual(concurrent.run.combat_state);
+ expect((second.run.combat_state!.actionPresentation as unknown as {image:string}).image).toBe('original');
+ expect(second.run.characters!.map(member=>member.id)).toEqual(['ally','hero']);
+ expect(second.run.character!.turn_state!.solo_combat_v1).toBeDefined();
+});
+
+it('returns unrelated response data without cloning it into the private combat base',()=>{
+ const cache=createCombatReplyCache(),unrelated=()=>{},wire=baseWire();
+ const raw={...wire,run:{...wire.run,unrelated}};
+ const reply=cache.expand(raw,'first');
+ expect((reply.run as unknown as {unrelated:unknown}).unrelated).toBe(unrelated);
+ expect(cache.headers('run')['X-Combat-Base']).toBe('first');
+});
+
+it('private reconstructed trees never alias caller or UI and rejected responses do not poison their base',()=>{
+ const cache=createCombatReplyCache();cache.expand(baseWire(),'first');
+ const raw=deltaWire(),reply=cache.expand(raw,'second');
+ (raw.run.combat_state!.world.actors.hero as unknown as {hp:number}).hp=999;
+ (reply.run.combat_state!.world.actors.hero as unknown as {hp:number}).hp=999;
+ const next={...raw,run:{...raw.run,revision:4,combat_state:{} as RoguelikeRun['combat_state']},state_delta:{base_command_id:'second',references:[['world'],['log'],['actionPresentation']],array_prefixes:[]}};
+ const actual=cache.expand(next,'third');
+ expect((actual.run.combat_state!.world.actors.hero as unknown as {hp:number}).hp).toBe(2);
+ expect((actual.run.combat_state as unknown as {log:unknown[]}).log).toEqual([{id:1},{id:2},{id:3}]);
+ expect(()=>cache.expand({...next,snapshot_mirrors:['world','world']},'bad')).toThrow();
+ expect(cache.headers('run')['X-Combat-Base']).toBe('third');
+});

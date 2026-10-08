@@ -22,8 +22,17 @@ type cachedCombatResponse struct {
 	err     error
 }
 
-func compactCombatProjectionCharacter(character *CharacterV3) *CharacterV3 {
-	copy := *character
+type combatProjectionInput struct {
+	ID              uuid.UUID `json:"id"`
+	RuntimeRevision int64     `json:"runtime_revision"`
+	TurnState       *JSONMap  `json:"turn_state"`
+}
+
+func compactCombatProjectionCharacter(character *CharacterV3) *combatProjectionInput {
+	if character == nil {
+		return nil
+	}
+	copy := combatProjectionInput{ID: character.ID, RuntimeRevision: character.RuntimeRevision, TurnState: character.TurnState}
 	if character.TurnState != nil {
 		turn := JSONMap{}
 		for key, value := range *character.TurnState {
@@ -44,7 +53,7 @@ type preparedCombatWorker struct {
 }
 
 func cachedCombatWorkerBody(run *RoguelikeRun, intent any, hash string) map[string]any {
-	characters := []*CharacterV3{}
+	characters := []*combatProjectionInput{}
 	for _, member := range run.Characters {
 		characters = append(characters, compactCombatProjectionCharacter(member))
 	}
@@ -58,6 +67,10 @@ func cachedCombatWorkerBody(run *RoguelikeRun, intent any, hash string) map[stri
 }
 
 func callCombatWorkerBody(ctx context.Context, client roguelikeWorkerClient, body map[string]any, run *RoguelikeRun, intent any) (*roguelikeWorkerResult, error) {
+	if hash, ok := body["frameKey"].(string); ok && hash != "" {
+		client.CombatBase = run.CombatEnvelope
+		client.CombatBaseHash = hash
+	}
 	result, err := client.call(ctx, "/transition", body)
 	if errors.Is(err, errCombatFrameUnavailable) {
 		performanceAdd(ctx, "combat_worker_full_input_retry", 1)

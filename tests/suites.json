@@ -259,7 +259,10 @@
         "frontend/worker/historical-replay.test.mjs",
         "scripts/performance/fresh-worker.test.mjs",
         "scripts/performance/retained-artifacts.test.mjs",
-        "scripts/performance/crash-recovery.test.mjs"
+        "scripts/performance/crash-recovery.test.mjs",
+        "frontend/worker/state-delta.test.mjs",
+        "frontend/worker/state-delta-http.test.mjs",
+        "frontend/worker/speculative-queue.test.mjs"
       ],
       "contract": "Authenticated worker, exact archived artifact, replay and saved decisions",
       "network": "loopback",
@@ -331,7 +334,10 @@
         "TestRuntimeCardCatalog",
         "TestCatalogPrefetch",
         "TestPreparationCatalogFlights",
-        "TestInitializationPreparationCommitRaces"
+        "TestInitializationPreparationCommitRaces",
+        "TestWorkerStateDelta",
+        "TestWorkerDecodedCanonical",
+        "TestCompactProjection"
       ],
       "database": "required",
       "contract": "Atomic commands, CAS, exact retry, conservation, journal, saved paper and image pipeline",

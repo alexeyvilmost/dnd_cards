@@ -25,3 +25,12 @@ test('native registry and generated Docker namespace are required before authori
   const owner=`rehearsal_${'a'.repeat(24)}`;
   await assert.rejects(authorizeDockerRehearsal({owner,names:{postgres:`${owner}_db`,backend:'production',rulesWorker:`${owner}_worker`,network:`${owner}_net`}}),/Generated Docker/);
 });
+
+test('safe request metadata rejects impersonation and private routes',async()=>{
+ const {safeRehearsalRequestFailure}=await import('./rehearsal-scenarios.mjs');
+ const error=rehearsalRequestFailure(409,'/roguelike/runs/12345678-1234-1234-1234-123456789abc/commands','POST',{type:'combat_intent',payload:{intent:{type:'approach_action'},token:'private-token'}},{code:'combat_worker_rejected',error:'private seed'});
+ const actual=safeRehearsalRequestFailure(error);assert.deepEqual(actual,{kind:'owned-canonical-api',status:409,method:'POST',route:'/roguelike/runs/:id/commands',details:['combat_intent','approach_action','combat_worker_rejected']});actual.details.push('forged');assert.equal(safeRehearsalRequestFailure(error).details.length,3);
+ assert.equal(safeRehearsalRequestFailure(Object.assign(Error(error.message),{requestFailure:actual})),undefined);
+ assert.equal(safeRehearsalRequestFailure(rehearsalRequestFailure(409,'/private-token','POST',{},{})),undefined);
+ assert.equal(safeRehearsalRequestFailure(rehearsalRequestFailure(999,'/auth/login','POST',{},{})),undefined);
+});
