@@ -337,7 +337,8 @@
         "TestInitializationPreparationCommitRaces",
         "TestWorkerStateDelta",
         "TestWorkerDecodedCanonical",
-        "TestCompactProjection"
+        "TestCompactProjection",
+        "TestCombatReadBase"
       ],
       "database": "required",
       "contract": "Atomic commands, CAS, exact retry, conservation, journal, saved paper and image pipeline",

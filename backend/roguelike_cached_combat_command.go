@@ -136,10 +136,14 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 	if slot.receiptRun != nil {
 		previousRun = cloneCachedCombatRun(slot.receiptRun)
 	}
+	wireBase, wireID := previousRun, previousID.String()
+	if slot.readBase != nil && c.GetHeader("X-Combat-Base") == slot.readBaseID {
+		wireBase, wireID = cloneCachedCombatRun(slot.readBase), slot.readBaseID
+	}
 	slot.mu.Unlock()
-	if previousRun != nil {
-		c.Set("combat_wire_base_run", previousRun)
-		c.Set("combat_wire_base_command_id", previousID.String())
+	if wireBase != nil {
+		c.Set("combat_wire_base_run", wireBase)
+		c.Set("combat_wire_base_command_id", wireID)
 	}
 	if previousID == request.CommandID {
 		if previousHash != requestHash {

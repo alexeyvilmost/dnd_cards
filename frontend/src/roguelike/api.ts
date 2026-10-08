@@ -7,7 +7,7 @@ import type { Action, PassiveEffect } from '../types';
 import {playCommandSound,playCommittedEvents} from '../audio/commandSounds';
 import type {RollInfluence} from '../engine/rollInfluence';
 import type {RollLog} from '../mvp/contracts';
-import {createCombatReplyCache,MissingCombatBaseError} from './combatWire';
+import {createCombatReplyCache,MissingCombatBaseError,expandCombatReply} from './combatWire';
 import {notifyRunUpdated} from './navigation';
 const combatReplies=createCombatReplyCache();
 
@@ -149,8 +149,10 @@ export const roguelikeApi = {
     return data.runs ?? [];
   },
   get: async (id: string): Promise<RoguelikeRun> => {
-    const { data } = await apiClient.get<{ run: RoguelikeRun }>(`/api/roguelike/runs/${id}`);
-    return data.run;
+    const {data,headers}=await apiClient.get<{run:RoguelikeRun;wire_schema?:string}>(`/api/roguelike/runs/${id}`,{headers:combatReplies.headers(id)});
+    const token=headers['x-combat-read-base'];
+    if(data.wire_schema&&typeof token==='string'&&/^read:[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(token))return combatReplies.expand(data,token).run;
+    return expandCombatReply(data).run;
   },
   remove: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/roguelike/runs/${id}`);

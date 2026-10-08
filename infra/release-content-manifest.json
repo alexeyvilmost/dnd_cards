@@ -397,8 +397,8 @@
     },
     {
       "path": "backend/main.go",
-      "sha256": "sha256:2e0393e5c8a56da224f5d39cb45a463e75e7ef752413b439847da2e44ed15e7c",
-      "bytes": 26750
+      "sha256": "sha256:698663f047783266800faedc69686852bcf1249c878ed5d2b4fe599fb29f09cb",
+      "bytes": 26772
     },
     {
       "path": "backend/middleware.go",
@@ -1812,8 +1812,8 @@
     },
     {
       "path": "backend/roguelike_cached_combat_command.go",
-      "sha256": "sha256:87c8164d558a316c0401bbad710de11ee3845090295c114272f6d82a17c3736a",
-      "bytes": 13575
+      "sha256": "sha256:c27bb79e57ee92907e725844c905965c211ac0fe18a36827c5420bc659807db2",
+      "bytes": 13765
     },
     {
       "path": "backend/roguelike_camp_inventory.go",
@@ -1842,8 +1842,8 @@
     },
     {
       "path": "backend/roguelike_combat_cache.go",
-      "sha256": "sha256:ec7ee3edfdaf42f529fdb72417e8ff83423a69c32e445d1e542e1095b0082565",
-      "bytes": 10235
+      "sha256": "sha256:aa6a415c99fdcb6e82fba283b21100012748b757526cf62a569eeb7066424062",
+      "bytes": 10282
     },
     {
       "path": "backend/roguelike_combat_conclusion.go",
@@ -1856,9 +1856,14 @@
       "bytes": 4487
     },
     {
+      "path": "backend/roguelike_combat_read_base.go",
+      "sha256": "sha256:8d22fd881120be975445d692b0c428701d859f3ffd9c5431fe6f54cd857b75ad",
+      "bytes": 1249
+    },
+    {
       "path": "backend/roguelike_combat_wire.go",
-      "sha256": "sha256:216089801433f404de89ad477e27cdce2e9bc7d35a92037f6758b22829a4dfc1",
-      "bytes": 7889
+      "sha256": "sha256:4d02958bea7bade6e6711d816f7b6462680308a00778bbe47c0d940e7f234f1c",
+      "bytes": 7932
     },
     {
       "path": "backend/roguelike_compositions.go",
@@ -1867,8 +1872,8 @@
     },
     {
       "path": "backend/roguelike_controller.go",
-      "sha256": "sha256:a5a0782faee6bb25b55b5106199688811953ddedc9898d798b23ca06fde45ef6",
-      "bytes": 61288
+      "sha256": "sha256:5fc77fbe668e2baf30d004b2450aff6c1cab5fb5c26855c1a8890b2d82c12350",
+      "bytes": 61286
     },
     {
       "path": "backend/roguelike_domain.go",

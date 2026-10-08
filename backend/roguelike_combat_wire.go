@@ -207,7 +207,7 @@ func compactCombatFrame(run *RoguelikeRun) combatFrameResponse {
 	frame.Snapshot = JSONMap{}
 	for key, value := range snapshot {
 		source, exists := copy.CombatState[key]
-		if exists && sameCombatWireValue(value, source) {
+		if exists && (sameCombatWireValue(value, source) || equalCombatWireJSON(value, source, 0)) {
 			frame.Mirrors = append(frame.Mirrors, key)
 		} else {
 			frame.Snapshot[key] = value

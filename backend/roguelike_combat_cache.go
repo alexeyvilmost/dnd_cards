@@ -23,6 +23,8 @@ type combatCacheSlot struct {
 	hash        string
 	commandID   uuid.UUID
 	requestHash string
+	readBase    *RoguelikeRun
+	readBaseID  string
 	receiptRun  *RoguelikeRun
 	pending     chan struct{}
 	failure     bool

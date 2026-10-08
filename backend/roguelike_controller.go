@@ -662,7 +662,7 @@ func (rc *RoguelikeController) Get(c *gin.Context) {
 	}
 	if combatAsyncEnabled() && rc.combatCache != nil {
 		if run := rc.combatCache.pendingFrame(runID, userID); run != nil {
-			writeCombatRunResponse(c, run)
+			rc.writeCombatReadResponse(c, run)
 			return
 		}
 		rc.combatCache.acknowledgeReload(runID, userID)
@@ -672,7 +672,7 @@ func (rc *RoguelikeController) Get(c *gin.Context) {
 		writeRoguelikeError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"run": run})
+	rc.writeCombatReadResponse(c, run)
 }
 
 func roguelikeEncounterCandidates(level, budget, encountersWon int, available map[string]Monster) []struct {

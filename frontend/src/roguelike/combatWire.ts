@@ -49,7 +49,7 @@ export function expandCombatReply(raw:CombatWireReply,base?:CombatBase):CommandR
 export function createCombatReplyCache(maxFrames=4) {
  if(!Number.isSafeInteger(maxFrames)||maxFrames<1||maxFrames>16)throw Error('Invalid combat reply cache limit');
  const frames=new Map<string,CombatBase>();
- const latest=(id:string)=>[...frames.values()].filter(row=>row.run.id===id).sort((a,b)=>b.run.revision-a.run.revision)[0];
+ const latest=(id:string)=>[...frames.values()].filter(row=>row.run.id===id).reverse().sort((a,b)=>b.run.revision-a.run.revision)[0];
  return {
   headers(id:string){const frame=latest(id);return {'X-Combat-Wire':'combat-frame-v2',...(frame?{'X-Combat-Base':frame.commandId}:{})};},
   expand(raw:CombatWireReply,commandId:string){

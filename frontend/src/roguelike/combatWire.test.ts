@@ -67,6 +67,18 @@ it('returns unrelated response data without cloning it into the private combat b
  expect(cache.headers('run')['X-Combat-Base']).toBe('first');
 });
 
+it('prefers the latest supplied read base when a reload keeps the same revision',()=>{
+ const cache=createCombatReplyCache(),wire=baseWire();
+ cache.expand(wire,'command');
+ const token='read:4c3ad27e-f354-41eb-8083-faf090e42477';
+ const supplied={...wire,run:{...wire.run,combat_state:{...wire.run.combat_state,actionPresentation:{image:'reloaded'}} as RoguelikeRun['combat_state']}};
+ const reply=cache.expand(supplied,token);
+ (reply.run.combat_state!.actionPresentation as unknown as {image:string}).image='UI edit';
+ expect(cache.headers('run')['X-Combat-Base']).toBe(token);
+ const next=deltaWire();next.state_delta.base_command_id=token;
+ expect((cache.expand(next,'next').run.combat_state!.actionPresentation as unknown as {image:string}).image).toBe('reloaded');
+});
+
 it('private reconstructed trees never alias caller or UI and rejected responses do not poison their base',()=>{
  const cache=createCombatReplyCache();cache.expand(baseWire(),'first');
  const raw=deltaWire(),reply=cache.expand(raw,'second');

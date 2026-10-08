@@ -110,7 +110,7 @@ func main() {
 		"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-Performance-Trace", "Idempotency-Key",
 		roguelikeRunHeader, roguelikeIntentHeader,
 	}
-	corsConfig.ExposeHeaders = []string{"X-Request-ID", "Retry-After", "Server-Timing", "X-Performance-Metrics"}
+	corsConfig.ExposeHeaders = []string{"X-Request-ID", "Retry-After", "Server-Timing", "X-Performance-Metrics", "X-Combat-Read-Base"}
 	corsConfig.AllowCredentials = true
 	r.Use(cors.New(corsConfig))
 
