@@ -24,6 +24,14 @@
       "durableReadback": true,
       "historicalHashes": true,
       "productionCommands": 0
+    },
+    "workerContracts": 61,
+    "wireOrderFullAPI": {
+      "commands": 50,
+      "exactRetries": 50,
+      "durableReadback": true,
+      "historicalHashes": true,
+      "productionCommands": 0
     }
   },
   "evidence": [
@@ -42,6 +50,10 @@
     {
       "path": "outputs/operations/snapshot-v3-ab-full-api-20261008.json",
       "sha256": "2370be673f2bd9117aa3892f1f7adbb11497da7b33b27c207cad1841ef03901f"
+    },
+    {
+      "path": "outputs/operations/snapshot-v3-wire-order-full-api-20261008.json",
+      "sha256": "275473dbd01696559e4a45835e515bf1d5ba0ff1b53c92a53cf5e8b01fd5591a"
     }
   ],
   "summary": {
@@ -178,5 +190,12 @@
       "order": 7,
       "action": "Compare actual TimeWeb phases against cfd5d29 and 825c042b; report remaining >200 ms scenarios and address measured dominant costs."
     }
-  ]
+  ],
+  "workerOrdering": {
+    "change": "ASCII keys use the identical lexical order without UTF-8 buffers; non-ASCII keys encode once per key and preserve stable ties.",
+    "measuredEnvironment": "local isolated normalization prototype, not end-to-end production",
+    "beforeMedianMs": 16.4186,
+    "afterMedianMs": 12.3579,
+    "fullApiLatencyImprovementClaimed": false
+  }
 }

@@ -31,6 +31,15 @@ function goWire(value) {
   return result.stdout;
 }
 const goSource = {sourceEncoding: GO_JSON_MAP_ENCODING};
+test('wire ordering preserves stable replacement-byte ties and isolates normalized values', () => {
+  const input = {nested: {'\uD801': 1, '\uD800': 2, '\uE000': 3, '😀': 4}, optional: undefined,
+    values: [undefined, NaN, new Date('2020-01-01T00:00:00Z')]};
+  const original = JSON.stringify(input), normalized = goJSONMapWireValue(input);
+  assert.deepEqual(Object.keys(normalized.nested), ['\uE000', '\uD801', '\uD800', '😀']);
+  assert.deepEqual(normalized.values, [null, null, '2020-01-01T00:00:00.000Z']);
+  normalized.nested['\uD801'] = 99;
+  assert.equal(JSON.stringify(input), original);
+});
 const jsonbOrder = value => Array.isArray(value) ? value.map(jsonbOrder)
   : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value)
     .sort((a,b) => Buffer.byteLength(a)-Buffer.byteLength(b) || Buffer.compare(Buffer.from(a),Buffer.from(b)))

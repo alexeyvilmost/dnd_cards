@@ -15,9 +15,18 @@ export const GO_JSON_MAP_ENCODING = 'go-json-map-v1';
 export function goJSONMapWireValue(value) {
   const wire = JSON.stringify(value);
   assert.notEqual(wire, undefined, 'Replay input must be a JSON value');
-  const order = item => Array.isArray(item) ? item.map(order)
-    : item && typeof item === 'object'
-      ? Object.fromEntries(Object.keys(item).sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b))).map(key=>[key,order(item[key])])) : item;
+  const order = item => {
+    if (Array.isArray(item)) return item.map(order);
+    if (!item || typeof item !== 'object') return item;
+    let keys = Object.keys(item);
+    // ASCII has the same UTF-8 and UTF-16 order. For other keys encode once,
+    // retaining the original stable byte comparison, including replacements
+    // for unpaired surrogates. Never borrow mutable input subtrees.
+    if (keys.every(key => /^[\x00-\x7f]*$/.test(key))) keys.sort();
+    else keys = keys.map(key => ({key, bytes: Buffer.from(key)}))
+      .sort((a,b) => Buffer.compare(a.bytes,b.bytes)).map(row => row.key);
+    return Object.fromEntries(keys.map(key => [key,order(item[key])]));
+  };
   return order(JSON.parse(wire));
 }
 
