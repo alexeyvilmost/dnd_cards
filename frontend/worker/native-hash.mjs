@@ -27,18 +27,30 @@ export function spatialMemoSource(source) {
     routines[name]=routine;
   }
   const aura=routines.projectCombatAuras.replace('{','{\n const __projectionLifeMemo=new WeakMap();')
-    .replace('spatialFacts(state, actor.id, target.id, false, illuminationSources)','spatialFacts(state, actor.id, target.id, false, illuminationSources, __projectionLifeMemo)')
+    .replace('spatialFacts(state, actor2.id, target2.id, false, illuminationSources)','spatialFacts(state, actor2.id, target2.id, false, illuminationSources, __projectionLifeMemo)')
     // This exact routine changes only character and passives on copied actors.
     // Comparing those values plus actor key order gives the same JSON equality
     // without serializing every unchanged inventory, resource and effect twice.
     .replace('JSON.stringify(state.world.actors) === JSON.stringify(actors)',
-      "Object.keys(state.world.actors).length === Object.keys(actors).length && Object.keys(state.world.actors).every((id,index)=>Object.keys(actors)[index]===id && JSON.stringify(state.world.actors[id].character)===JSON.stringify(actors[id].character) && JSON.stringify(state.world.actors[id].passives)===JSON.stringify(actors[id].passives))");
+      "Object.keys(state.world.actors).length === Object.keys(actors).length && Object.keys(state.world.actors).every((id,index)=>Object.keys(actors)[index]===id && __sameAuraCharacterJSON(state.world.actors[id].character,actors[id].character) && __sameAuraPassivesJSON(state.world.actors[id].passives,actors[id].passives))");
   if(!aura.includes('illuminationSources, __projectionLifeMemo)'))return source;
   const spatial=routines.spatialFacts.replace('illuminationSources) {','illuminationSources, __memo) {\n const __previous=__spatialLifeMemo; if(__memo)__spatialLifeMemo=__memo; try {')
     .slice(0,-1)+'\n } finally {__spatialLifeMemo=__previous;}\n}';
   return source.replace(routines.projectCombatAuras,aura).replace(routines.spatialFacts,spatial)
     .replace(routines.collectLifePolicies,routines.collectLifePolicies.replace('function collectLifePolicies(','function __collectLifePoliciesUncached('))
     +`\nlet __spatialLifeMemo;
+
+function __sameAuraCharacterJSON(left,right) {
+  const a=Object.keys(left),b=Object.keys(right);
+  if(a.length!==b.length||a.some((key,index)=>key!==b[index]))return JSON.stringify(left)===JSON.stringify(right);
+  return a.every(key=>left[key]===right[key]||JSON.stringify(left[key])===JSON.stringify(right[key]));
+}
+function __sameAuraPassivesJSON(left,right) {
+  if(!Array.isArray(left)||!Array.isArray(right))return JSON.stringify(left)===JSON.stringify(right);
+  if(left.length!==right.length)return false;
+  for(let index=0;index<left.length;index++)if(left[index]!==right[index]&&(JSON.stringify(left[index])??'null')!==(JSON.stringify(right[index])??'null'))return false;
+  return true;
+}
 function collectLifePolicies(state,passives,character) {
   if(!__spatialLifeMemo)return __collectLifePoliciesUncached(state,passives,character);
   let byPassive=__spatialLifeMemo.get(state);if(!byPassive){byPassive=new Map();__spatialLifeMemo.set(state,byPassive);}

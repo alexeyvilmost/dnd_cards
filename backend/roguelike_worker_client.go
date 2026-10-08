@@ -305,7 +305,7 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		var metrics map[string]float64
 		raw := response.Header.Get("X-Rules-Performance")
 		if len(raw) <= 8192 && json.Unmarshal([]byte(raw), &metrics) == nil {
-			for _, key := range []string{"worker_body_read_ms", "worker_parse_ms", "worker_artifact_load_ms", "worker_artifact_cache_hit", "worker_frame_cache_hit", "worker_prediction_hit", "worker_prediction_wait_ms", "worker_speculative_execute_ms", "worker_execute_ms", "worker_project_ms", "worker_snapshot_hash_ms", "worker_stringify_ms", "worker_mirror_compact_ms", "worker_callback_to_send_ms", "worker_process_cpu_ms"} {
+			for _, key := range []string{"worker_body_read_ms", "worker_parse_ms", "worker_artifact_load_ms", "worker_artifact_cache_hit", "worker_frame_cache_hit", "worker_prediction_hit", "worker_prediction_projection_hit", "worker_prediction_wait_ms", "worker_speculative_execute_ms", "worker_execute_ms", "worker_project_ms", "worker_snapshot_hash_ms", "worker_stringify_ms", "worker_mirror_compact_ms", "worker_callback_to_send_ms", "worker_process_cpu_ms"} {
 				if value, exists := metrics[key]; exists {
 					performanceAdd(ctx, key, value)
 				}

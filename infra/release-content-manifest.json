@@ -1837,8 +1837,8 @@
     },
     {
       "path": "backend/roguelike_combat_cache.go",
-      "sha256": "sha256:18090576f073a7098d76545d970c84c8e8a6fca8b6551527f6f7fac76b1a0d5f",
-      "bytes": 9387
+      "sha256": "sha256:b762c023c2f034d635dafc6f8df52a9d57d38d92591557f7ef7bf6c4582cb98b",
+      "bytes": 10027
     },
     {
       "path": "backend/roguelike_combat_conclusion.go",
@@ -1852,8 +1852,8 @@
     },
     {
       "path": "backend/roguelike_combat_wire.go",
-      "sha256": "sha256:6dbd0768db97b961dd30f53aae624621febf1f0f905d74418bbc2df0012b0718",
-      "bytes": 6366
+      "sha256": "sha256:216089801433f404de89ad477e27cdce2e9bc7d35a92037f6758b22829a4dfc1",
+      "bytes": 7889
     },
     {
       "path": "backend/roguelike_compositions.go",
@@ -1897,8 +1897,8 @@
     },
     {
       "path": "backend/roguelike_party_worker.go",
-      "sha256": "sha256:5b2d797d1ba9b3194c2bedb6c353761b9efc4e61d6e9a97f452b902704fdd504",
-      "bytes": 10636
+      "sha256": "sha256:fabd39eb60176872923b4054f650f5a40be41576e315a2c7d0fc2b121f0cf7ea",
+      "bytes": 10773
     },
     {
       "path": "backend/roguelike_routes.go",
@@ -1942,13 +1942,13 @@
     },
     {
       "path": "backend/roguelike_worker_client.go",
-      "sha256": "sha256:277b914ef58b5d8586b816c71b6723638cb3669a8f656686803b65d851d7d188",
-      "bytes": 25031
+      "sha256": "sha256:52f943db26169b77396da59b20f5b791441cc8b899afbc010e9fe0dfd92124f7",
+      "bytes": 25067
     },
     {
       "path": "backend/roguelike_worker_controller.go",
-      "sha256": "sha256:3347421f319d1a381b64c47a16b98509f831a4d544f93d7c984c10ad3676a1db",
-      "bytes": 12615
+      "sha256": "sha256:c968c4814e7cb242cf1ea9c5cefd603b640a542add9c99aefa833c39284a2860",
+      "bytes": 12354
     },
     {
       "path": "backend/roguelike_worker_mirrors.go",

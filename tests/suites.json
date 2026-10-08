@@ -252,6 +252,8 @@
       ],
       "files": [
         "frontend/worker/server.test.mjs",
+        "frontend/worker/native-spatial.test.mjs",
+        "frontend/worker/speculative-projection.test.mjs",
         "frontend/worker/replay.test.mjs",
         "frontend/worker/replay-source-encoding.test.mjs",
         "frontend/worker/historical-replay.test.mjs",
@@ -307,6 +309,7 @@
         "TestCombatJournal",
         "TestCombatRulesUpgrade",
         "TestCombatCache",
+        "TestCombatWireJSONEqualityMatchesDeepEqual",
         "TestOwnedRunLoadsPartyLeaderOnceAndKeepsSoloAccess",
         "TestRunItemSale",
         "TestConcurrentRunSale",

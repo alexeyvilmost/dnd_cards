@@ -270,6 +270,25 @@ func (cache *combatRuntimeCache) acknowledgeReload(id, owner uuid.UUID) {
 }
 func combatAsyncEnabled() bool { return os.Getenv("RULES_COMBAT_ASYNC_PERSIST_ENABLED") == "1" }
 
+// Publish only the canonical reloaded aggregate after a successful transaction.
+// Opening presentation and failed/replayed transactions cannot become a base.
+func (rc *RoguelikeController) primeCommittedCombat(run *RoguelikeRun, trace JSONMap) {
+	if !combatAsyncEnabled() || rc.combatCache == nil || run == nil || len(run.CombatEnvelope) == 0 {
+		return
+	}
+	rc.combatCache.mu.Lock()
+	slot := rc.combatCache.slots[combatCacheKey(run.ID, run.UserID)]
+	rc.combatCache.mu.Unlock()
+	if slot == nil {
+		return
+	}
+	hash, _ := trace["afterHash"].(string)
+	if !roguelikeSnapshotHash.MatchString(hash) {
+		hash = ""
+	}
+	slot.setFrame(run, hash)
+}
+
 // Warm recent active snapshots after process startup without accepting a game
 // command or writing to PostgreSQL. Revision gates still run on each command.
 func (rc *RoguelikeController) warmCombatCache() {

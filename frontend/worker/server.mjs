@@ -3,7 +3,7 @@ import {createHash, timingSafeEqual, randomUUID} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {compactWorkerMirrors,MIRROR_WIRE} from './mirrors.mjs';
 import {compileNativeHashArtifact} from './native-hash.mjs';
-import {createCombatFrameCache,acceptsCompactProjection} from './combat-frames.mjs';
+import {createCombatFrameCache,acceptsCompactProjection,projectionInputs,projectionKey,nextProjectionInputs} from './combat-frames.mjs';
 import {createSpeculativeTransitions} from './speculative-transitions.mjs';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
@@ -285,7 +285,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
         send(200, {...result, ...projected,
           trace: {beforeHash: '', afterHash, runtimeRevision: projected.patch.runtime_revision}});
-        setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash));});
+        setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),nextProjectionInputs(projected,body.input.character,body.input.characters));});
         return;
       }
       if(body.projectionInputVersion===1&&!acceptsCompactProjection(artifact))return send(409,{error:'projection_unavailable'});
@@ -296,16 +296,19 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         if(measured)metrics.worker_frame_cache_hit=1;
       }
       const beforeHash=timed('worker_snapshot_hash_ms',()=>body.frameKey||snapshotHash(body.envelope));
-      const predicted=await timedAsync('worker_prediction_wait_ms',()=>speculation.take(beforeHash,body.intent));
+      const predicted=await timedAsync('worker_prediction_wait_ms',()=>speculation.take(beforeHash,body.intent,{readOnlyProjected:true}));
       if(measured){metrics.worker_prediction_hit=Number(Boolean(predicted));if(predicted)metrics.worker_speculative_execute_ms=predicted.executeMs;}
       const result = predicted?.result??timed('worker_execute_ms', () => artifact.stepRoguelikeCombat(body.envelope, body.intent, hash));
-      const projected = timed('worker_project_ms', () => body.characters?.length > 1
+      const prepared=predicted?.projection;
+      const projectionHit=Boolean(prepared&&acceptsCompactProjection(artifact)&&prepared.key===projectionKey(projectionInputs(body.character,body.characters)));
+      if(measured)metrics.worker_prediction_projection_hit=Number(projectionHit);
+      const projected = projectionHit?prepared.projected:timed('worker_project_ms', () => body.characters?.length > 1
         ? artifact.projectRoguelikePartyCombatPatch(result.envelope, body.characters)
         : artifact.projectRoguelikeCombatPatch(result.envelope, body.character));
-      const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
+      const afterHash=projectionHit?prepared.afterHash:timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
       send(200, {...result, ...projected,
         trace: {beforeHash,afterHash,runtimeRevision: projected.patch.runtime_revision}});
-      setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash));});
+      setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),nextProjectionInputs(projected,body.character,body.characters));});
       return;
     } catch (error) {
       // No request or snapshot logging: the envelope contains private entropy.

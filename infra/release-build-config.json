@@ -16,7 +16,7 @@
     "imageJobs": true,
     "frozenCatalogs": false
   },
-  "contentManifestHash": "sha256:ef0f63bbcc2e2782edb1f2d2f6726aed735790ef37a5b780faadcd5d02fc9484",
+  "contentManifestHash": "sha256:060c11e1c06344c95557cb296a721ba8c17c33e7f3d30e8685fe3ffe71ee992b",
   "migrationSet": [
     {
       "id": "001_create_image_library",

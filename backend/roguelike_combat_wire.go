@@ -59,7 +59,7 @@ func compactCombatState(next, before JSONMap, delta *combatStateDelta) JSONMap {
 			}
 			m, mapValue := combatWireMap(value)
 			array, arrayValue := value.([]any)
-			if len(delta.References) < 1024 && ((mapValue && len(m) >= 4) || (arrayValue && len(array) >= 4)) && reflect.DeepEqual(value, old) {
+			if len(delta.References) < 1024 && ((mapValue && len(m) >= 4) || (arrayValue && len(array) >= 4)) && equalCombatWireJSON(value, old, 0) {
 				delta.References = append(delta.References, path)
 				continue
 			}
@@ -67,7 +67,7 @@ func compactCombatState(next, before JSONMap, delta *combatStateDelta) JSONMap {
 				matched := false
 				for offset := 0; offset <= 64 && offset <= len(previous)-8; offset++ {
 					length := min(len(previous)-offset, len(array))
-					if length >= 8 && reflect.DeepEqual(previous[offset:offset+length], array[:length]) {
+					if length >= 8 && equalCombatWireJSON(previous[offset:offset+length], array[:length], 0) {
 						delta.ArrayPrefixes = append(delta.ArrayPrefixes, combatArrayPrefix{Path: path, Length: length, Offset: offset})
 						result[key] = array[length:]
 						matched = true
@@ -87,6 +87,66 @@ func compactCombatState(next, before JSONMap, delta *combatStateDelta) JSONMap {
 		return result
 	}
 	return JSONMap(compact(map[string]any(next), map[string]any(before), nil))
+}
+
+// Decoded combat graphs contain JSON maps, arrays and primitives. Compare those
+// directly while retaining DeepEqual's type, nil and shared-reference semantics.
+// Other values and unusually deep graphs use the original comparison.
+func equalCombatWireJSON(a, b any, depth int) bool {
+	if depth >= 128 {
+		return reflect.DeepEqual(a, b)
+	}
+	switch a := a.(type) {
+	case nil:
+		return b == nil
+	case string:
+		other, ok := b.(string)
+		return ok && a == other
+	case bool:
+		other, ok := b.(bool)
+		return ok && a == other
+	case float64:
+		other, ok := b.(float64)
+		return ok && a == other
+	case JSONMap:
+		other, ok := b.(JSONMap)
+		return ok && equalCombatWireMap(map[string]any(a), map[string]any(other), depth)
+	case map[string]any:
+		other, ok := b.(map[string]any)
+		return ok && equalCombatWireMap(a, other, depth)
+	case []any:
+		other, ok := b.([]any)
+		if !ok || len(a) != len(other) || (a == nil) != (other == nil) {
+			return false
+		}
+		if sameCombatWireValue(a, other) {
+			return true
+		}
+		for i, value := range a {
+			if !equalCombatWireJSON(value, other[i], depth+1) {
+				return false
+			}
+		}
+		return true
+	default:
+		return reflect.DeepEqual(a, b)
+	}
+}
+
+func equalCombatWireMap(a, b map[string]any, depth int) bool {
+	if len(a) != len(b) || (a == nil) != (b == nil) {
+		return false
+	}
+	if sameCombatWireValue(a, b) {
+		return true
+	}
+	for key, value := range a {
+		other, exists := b[key]
+		if !exists || !equalCombatWireJSON(value, other, depth+1) {
+			return false
+		}
+	}
+	return true
 }
 
 func sameCombatWireValue(a, b any) bool {

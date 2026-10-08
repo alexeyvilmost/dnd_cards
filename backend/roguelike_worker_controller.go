@@ -333,14 +333,8 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		writeRoguelikeError(c, err)
 		return
 	}
-	if combatAsyncEnabled() && rc.combatCache != nil && acceptedRun != nil && len(acceptedRun.CombatEnvelope) > 0 {
-		rc.combatCache.mu.Lock()
-		slot := rc.combatCache.slots[combatCacheKey(runID, userID)]
-		rc.combatCache.mu.Unlock()
-		if slot != nil {
-			hash, _ := result.Trace["afterHash"].(string)
-			slot.setFrame(acceptedRun, hash)
-		}
+	if acceptedRun != nil {
+		rc.primeCommittedCombat(acceptedRun, result.Trace)
 	}
 	c.JSON(http.StatusOK, response)
 }
