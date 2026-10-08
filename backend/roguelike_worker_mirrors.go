@@ -39,6 +39,91 @@ func workerMirrorObject(raw json.RawMessage) (map[string]json.RawMessage, error)
 	return result, nil
 }
 
+// The typed reader retains exact same-frame references without materializing
+// and reparsing another multi-megabyte JSON document.
+func decodeWorkerMirrors(payload []byte) (*roguelikeWorkerResult, error) {
+	root, err := workerMirrorObject(payload)
+	if err != nil {
+		return nil, err
+	}
+	var result roguelikeWorkerResult
+	if _, ok := root["wireSchema"]; !ok {
+		err = json.Unmarshal(payload, &result)
+		return &result, err
+	}
+	var frame workerMirrorFrame
+	if len(root) != 3 || root["value"] == nil || root["mirrors"] == nil || json.Unmarshal(root["wireSchema"], &frame.Schema) != nil || frame.Schema != 2 {
+		return nil, fmt.Errorf("invalid worker mirror frame")
+	}
+	frame.Value = root["value"]
+	decoder := json.NewDecoder(bytes.NewReader(root["mirrors"]))
+	decoder.DisallowUnknownFields()
+	if decoder.Decode(&frame.Mirrors) != nil || frame.Mirrors.State == nil || len(frame.Mirrors.State) > 10 {
+		return nil, fmt.Errorf("invalid worker mirror frame")
+	}
+	if err = json.Unmarshal(frame.Value, &result); err != nil {
+		return nil, err
+	}
+	var raw struct {
+		Envelope struct {
+			State map[string]json.RawMessage `json:"state"`
+		} `json:"envelope"`
+		Patch json.RawMessage `json:"patch"`
+	}
+	if json.Unmarshal(frame.Value, &raw) != nil || raw.Envelope.State == nil || raw.Patch == nil {
+		return nil, fmt.Errorf("invalid worker mirror value")
+	}
+	stateRaw := raw.Envelope.State
+	state, ok := result.Envelope["state"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("invalid worker state")
+	}
+	turn, ok := result.Patch["turn_state"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("invalid worker turn")
+	}
+	snapshot, ok := turn["solo_combat_v1"].(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("invalid worker snapshot")
+	}
+	allowed := map[string]bool{"world": true, "catalogActions": true, "actionPresentation": true, "actorPresentation": true, "log": true, "battleMap": true, "tokens": true, "combatAreas": true, "resourceBindings": true, "resourceBindingsByActor": true}
+	seen := map[string]bool{}
+	expanded := len(frame.Value)
+	for _, mirror := range frame.Mirrors.State {
+		source, exists := stateRaw[mirror.Field]
+		_, targetExists := snapshot[mirror.Field]
+		if !allowed[mirror.Field] || seen[mirror.Field] || !exists || targetExists || workerMirrorHash(source) != mirror.Hash {
+			return nil, fmt.Errorf("invalid worker state mirror")
+		}
+		seen[mirror.Field] = true
+		expanded += len(source)
+		if expanded > 16<<20 {
+			return nil, fmt.Errorf("expanded worker response too large")
+		}
+		snapshot[mirror.Field] = state[mirror.Field]
+	}
+	if leader := frame.Mirrors.Leader; leader != nil {
+		id, _ := state["characterId"].(string)
+		_, exists := result.Patches[id]
+		if id == "" || id != leader.ID || exists || workerMirrorHash(raw.Patch) != leader.Hash || result.Patches == nil {
+			return nil, fmt.Errorf("invalid worker leader mirror")
+		}
+		expanded += len(raw.Patch)
+		for _, mirror := range frame.Mirrors.State {
+			expanded += len(stateRaw[mirror.Field])
+		}
+		if expanded > 16<<20 {
+			return nil, fmt.Errorf("expanded worker response too large")
+		}
+		leaderPatch := JSONMap{}
+		for key, value := range result.Patch {
+			leaderPatch[key] = value
+		}
+		result.Patches[id] = leaderPatch
+	}
+	return &result, nil
+}
+
 // Expand only same-frame, exact content references. There is no external cache
 // or previous-client base revision. Existing validators and atomic persistence
 // always receive the complete legacy result. No rule/artifact bytes change.

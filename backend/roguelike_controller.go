@@ -29,10 +29,13 @@ const (
 	roguelikeBoltCard          = "CARD-0749"
 )
 
-type RoguelikeController struct{ db *gorm.DB }
+type RoguelikeController struct {
+	db          *gorm.DB
+	combatCache *combatRuntimeCache
+}
 
 func NewRoguelikeController(db *gorm.DB) *RoguelikeController {
-	return &RoguelikeController{db: db}
+	return &RoguelikeController{db: db, combatCache: newCombatRuntimeCache()}
 }
 
 type roguelikeHTTPError struct {
@@ -141,7 +144,7 @@ func newRoguelikeSeed() (string, error) {
 }
 
 func ownedRoguelikeRun(tx *gorm.DB, id, userID uuid.UUID, lock bool, catalogs ...*frozenCatalogReadScope) (*RoguelikeRun, error) {
-	query := tx.Preload("Character").Where("id = ? AND user_id = ?", id, userID)
+	query := tx.Where("id = ? AND user_id = ?", id, userID)
 	if lock {
 		query = query.Clauses(clause.Locking{Strength: "UPDATE"})
 	}
@@ -151,9 +154,6 @@ func ownedRoguelikeRun(tx *gorm.DB, id, userID uuid.UUID, lock bool, catalogs ..
 			return nil, roguelikeError(http.StatusNotFound, "run_not_found", "забег не найден")
 		}
 		return nil, err
-	}
-	if run.Character != nil {
-		run.Character.AccessMode = characterV3AccessOwner
 	}
 	if err := loadFrozenCombatCatalog(tx, &run, catalogs...); err != nil {
 		return nil, err
@@ -166,6 +166,18 @@ func ownedRoguelikeRun(tx *gorm.DB, id, userID uuid.UUID, lock bool, catalogs ..
 	if len(run.Party) > 0 {
 		if err := loadRoguelikeParty(tx, &run, lock); err != nil {
 			return nil, err
+		}
+	} else {
+		// Party loading already fetches the leader with every other member.
+		// Preloading it first doubles its potentially large retained snapshot.
+		var character CharacterV3
+		if err := tx.First(&character, "id = ?", run.CharacterID).Error; err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, err
+			}
+		} else {
+			character.AccessMode = characterV3AccessOwner
+			run.Character = &character
 		}
 	}
 	run.TrustedCombatAvailable = os.Getenv("RULES_WORKER_URL") != ""
@@ -487,6 +499,7 @@ func roguelikeRestElapsedSeconds(run *RoguelikeRun, commandType string) int {
 }
 
 func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
+	run.UpdatedAt = tx.NowFunc().UTC().Truncate(time.Microsecond)
 	columns := map[string]any{
 		"status": run.Status, "phase": run.Phase, "revision": run.Revision,
 		"experience": run.Experience, "gold": run.Gold, "supplies": run.Supplies,
@@ -496,7 +509,7 @@ func saveRoguelikeRun(tx *gorm.DB, run *RoguelikeRun) error {
 		"encounter": run.Encounter, "combat_envelope": nonNilRoguelikeMap(run.CombatEnvelope), "combat_catalog": nonNilRoguelikeMap(run.CombatCatalog),
 		"shop": run.Shop, "checkpoint": run.Checkpoint, "last_reward": run.LastReward,
 		"mode": run.Mode, "journey": nonNilRoguelikeMap(run.Journey), "mode_rules": nonNilRoguelikeMap(run.ModeRules), "journey_private": nonNilRoguelikeMap(run.JourneyPrivate),
-		"updated_at": time.Now().UTC(),
+		"updated_at": run.UpdatedAt,
 	}
 	if err := prepareRunStorageColumns(tx, run, columns); err != nil {
 		return err
@@ -646,6 +659,13 @@ func (rc *RoguelikeController) Get(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверный ID забега"})
 		return
+	}
+	if combatAsyncEnabled() && rc.combatCache != nil {
+		if run := rc.combatCache.pendingFrame(runID, userID); run != nil {
+			writeCombatRunResponse(c, run)
+			return
+		}
+		rc.combatCache.acknowledgeReload(runID, userID)
 	}
 	run, err := ownedRoguelikeRun(rc.db, runID, userID, false)
 	if err != nil {
@@ -1645,6 +1665,31 @@ func (rc *RoguelikeController) Command(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "неверная команда забега", "code": "invalid_command"})
 		return
+	}
+	if combatAsyncEnabled() && rc.combatCache != nil {
+		if frame, background, replayErr := rc.combatCache.replay(runID, userID, request.CommandID, requestHash); replayErr != nil {
+			writeRoguelikeError(c, replayErr)
+			return
+		} else if frame != nil {
+			performanceAdd(c.Request.Context(), "combat_receipt_cache_hit", 1)
+			status := "saved"
+			if background {
+				status = "background"
+			}
+			c.Header("X-Combat-Persistence", status)
+			writeCombatRunResponse(c, frame)
+			return
+		}
+		slot, release, err := rc.combatCache.acquire(c.Request.Context(), runID, userID)
+		if err != nil {
+			writeRoguelikeError(c, err)
+			return
+		}
+		defer release()
+		if request.Type == "combat_intent" {
+			rc.cachedCombatCommand(c, slot, runID, userID, request, requestHash)
+			return
+		}
 	}
 	if request.Type == "initialize_combat" || request.Type == "combat_intent" || request.Type == "upgrade_combat_rules" || request.Type == "short_rest" || request.Type == "long_rest" || request.Type == "bind_weapon" || request.Type == "recall_weapon" || request.Type == "camp_action" || request.Type == "camp_turn" || request.Type == "use_item" {
 		rc.trustedCombatCommand(c, runID, userID, request, requestHash)

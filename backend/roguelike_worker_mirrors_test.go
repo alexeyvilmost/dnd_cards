@@ -42,6 +42,14 @@ func TestWorkerMirrorsExactRestorationAndFailClosed(t *testing.T) {
 	if !reflect.DeepEqual(actual, expected) {
 		t.Fatal("mirror restoration changed full result")
 	}
+	decoded, err := decodeWorkerMirrors(wire)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var typed roguelikeWorkerResult
+	if err = json.Unmarshal(expanded, &typed); err != nil || !reflect.DeepEqual(decoded, &typed) {
+		t.Fatal("typed mirror reader differs from canonical expansion")
+	}
 	for _, mutate := range []func(map[string]any){
 		func(f map[string]any) { f["wireSchema"] = 3 }, func(f map[string]any) { f["unexpected"] = true },
 		func(f map[string]any) {
@@ -67,10 +75,16 @@ func TestWorkerMirrorsExactRestorationAndFailClosed(t *testing.T) {
 		if _, err := expandWorkerMirrors(mirrorTestJSON(t, frame)); err == nil {
 			t.Fatal("invalid mirror frame accepted")
 		}
+		if _, err := decodeWorkerMirrors(mirrorTestJSON(t, frame)); err == nil {
+			t.Fatal("typed reader accepted invalid mirror")
+		}
 	}
 	large, _ := mirrorTestFixture(t, 4_300_000)
 	if _, err := expandWorkerMirrors(large); err == nil {
 		t.Fatal("expanded limit bypassed")
+	}
+	if _, err := decodeWorkerMirrors(large); err == nil {
+		t.Fatal("typed reader bypassed expanded limit")
 	}
 	raw := mirrorTestJSON(t, legacy)
 	restored, err := expandWorkerMirrors(raw)

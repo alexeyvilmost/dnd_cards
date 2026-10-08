@@ -172,9 +172,8 @@ func coldRunColumns(run *RoguelikeRun) map[string]any {
 	return map[string]any{"combat_catalog": nonNilRoguelikeMap(run.CombatCatalog), "checkpoint": run.Checkpoint, "shop": run.Shop, "mode_rules": nonNilRoguelikeMap(run.ModeRules)}
 }
 func captureColdRunColumns(run *RoguelikeRun) error {
-	if os.Getenv("DB_FROZEN_CATALOGS") != "1" && run.CombatCatalogRef == nil {
-		return nil
-	}
+	// Inline catalogs also stay constant between combat commands. Avoid rewriting
+	// their TOAST values without requiring the separate frozen-storage feature.
 	run.storageOriginal = map[string][]byte{}
 	for column, value := range coldRunColumns(run) {
 		raw, err := json.Marshal(value)

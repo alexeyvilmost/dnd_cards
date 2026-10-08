@@ -2,6 +2,9 @@ import {createServer} from 'node:http';
 import {createHash, timingSafeEqual, randomUUID} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
 import {compactWorkerMirrors,MIRROR_WIRE} from './mirrors.mjs';
+import {compileNativeHashArtifact} from './native-hash.mjs';
+import {createCombatFrameCache,acceptsCompactProjection} from './combat-frames.mjs';
+import {createSpeculativeTransitions} from './speculative-transitions.mjs';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import path from 'node:path';
@@ -100,7 +103,7 @@ export function createArtifactCache({artifactsDirectory, maxCachedArtifacts = 4,
           // close may run while the asynchronous filesystem read is pending.
           if (closed) throw Error('Worker cache is closed');
           if (hashOf(bytes) !== hash) throw Error('Artifact hash mismatch');
-          const artifact = require(file);
+          const artifact = compileNativeHashArtifact(file,bytes) ?? require(file);
           cache.set(hash, artifact);
           return artifact;
         })().finally(() => loading.delete(hash));
@@ -153,6 +156,8 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
   catch (error) {if (error.code !== 'EEXIST') throw error;}
   if (hashOf(await readFile(artifactPath(artifactHash))) !== artifactHash) throw Error('Existing artifact is corrupt');
   const cache = createArtifactCache({artifactsDirectory, maxCachedArtifacts});
+  const frames = createCombatFrameCache();
+  const speculation = createSpeculativeTransitions({artifactsDirectory});
   const expectedAuth = Buffer.from(`Bearer ${token}`);
   const server = createServer(async (request, response) => {
     // Timings begin when Node invokes this callback. They cannot measure time
@@ -194,7 +199,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
     if (request.method === 'GET' && request.url === '/health') return send(200, {status: 'ok', ...identity});
     const suppliedAuth = Buffer.from(request.headers.authorization || '');
     if (suppliedAuth.length !== expectedAuth.length || !timingSafeEqual(suppliedAuth, expectedAuth)) return send(401, {error: 'unauthorized'});
-    if (request.method !== 'POST' || !['/initialize', '/transition', '/upgrade', '/rest', '/camp-action', '/camp-inventory', '/equipment', '/initiative-options', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
+    if (request.method !== 'POST' || !['/initialize', '/transition', '/prefetch', '/upgrade', '/rest', '/camp-action', '/camp-inventory', '/equipment', '/initiative-options', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
     try {
       let size = 0;
       const chunks = [];
@@ -210,6 +215,12 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const hash = body.artifactHash || artifactHash;
       if (measured) metrics.worker_artifact_cache_hit = Number(cache.has(hash));
       const artifact = await timedAsync('worker_artifact_load_ms', () => cache.load(hash));
+      if(request.url==='/prefetch'){
+        if(body.envelope?.artifactHash!==hash)return send(409,{error:'frame_unavailable'});
+        const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(body.envelope));
+        frames.set(afterHash,body.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash));
+        return send(200,{status:'ready',trace:{afterHash}});
+      }
       if (request.url === '/upgrade') {
         // Retain and verify the old executable too. The caller cannot choose a
         // target version: only this server's verified current artifact is used.
@@ -253,15 +264,31 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         const projected = timed('worker_project_ms', () => body.input.characters?.length > 1
           ? artifact.projectRoguelikePartyCombatPatch(result.envelope, body.input.characters)
           : artifact.projectRoguelikeCombatPatch(result.envelope, body.input.character));
-        return send(200, {...result, ...projected,
-          trace: {beforeHash: '', afterHash: timed('worker_snapshot_hash_ms', () => snapshotHash(projected.envelope)), runtimeRevision: projected.patch.runtime_revision}});
+        const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
+        send(200, {...result, ...projected,
+          trace: {beforeHash: '', afterHash, runtimeRevision: projected.patch.runtime_revision}});
+        setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash));});
+        return;
       }
-      const result = timed('worker_execute_ms', () => artifact.stepRoguelikeCombat(body.envelope, body.intent, hash));
+      if(body.projectionInputVersion===1&&!acceptsCompactProjection(artifact))return send(409,{error:'projection_unavailable'});
+      if(body.frameKey){
+        const cached=frames.get(body.frameKey,hash);
+        if(!cached)return send(409,{error:'frame_unavailable'});
+        body.envelope=cached;
+        if(measured)metrics.worker_frame_cache_hit=1;
+      }
+      const beforeHash=timed('worker_snapshot_hash_ms',()=>body.frameKey||snapshotHash(body.envelope));
+      const predicted=await timedAsync('worker_prediction_wait_ms',()=>speculation.take(beforeHash,body.intent));
+      if(measured){metrics.worker_prediction_hit=Number(Boolean(predicted));if(predicted)metrics.worker_speculative_execute_ms=predicted.executeMs;}
+      const result = predicted?.result??timed('worker_execute_ms', () => artifact.stepRoguelikeCombat(body.envelope, body.intent, hash));
       const projected = timed('worker_project_ms', () => body.characters?.length > 1
         ? artifact.projectRoguelikePartyCombatPatch(result.envelope, body.characters)
         : artifact.projectRoguelikeCombatPatch(result.envelope, body.character));
-      return send(200, {...result, ...projected,
-        trace: {beforeHash: timed('worker_snapshot_hash_ms', () => snapshotHash(body.envelope)), afterHash: timed('worker_snapshot_hash_ms', () => snapshotHash(projected.envelope)), runtimeRevision: projected.patch.runtime_revision}});
+      const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
+      send(200, {...result, ...projected,
+        trace: {beforeHash,afterHash,runtimeRevision: projected.patch.runtime_revision}});
+      setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash));});
+      return;
     } catch (error) {
       // No request or snapshot logging: the envelope contains private entropy.
       const missing = error.code === 'ENOENT';
@@ -270,7 +297,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         ...(rejectionCode ? {rejectionCode} : {message: missing ? 'Pinned rules artifact unavailable' : legacyPlayerError(error)})});
     }
   });
-  server.once('close', () => cache.close());
+  server.once('close', () => {cache.close();frames.clear();void speculation.close();});
   return server;
 }
 

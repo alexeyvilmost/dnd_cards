@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-08",
+  "status": "implemented-local-verified-release-pending",
+  "sourceCommit": "e0852290ef0405174df55b386e75e7e51b51456b",
+  "productionRelease": "24866cda598536247ce99bbf389e84abf24c7bbb",
+  "report": "docs/audits/2026-10-08-combat-commands-performance.md",
+  "constraints": [
+    "Never issue player combat commands against the production run for benchmarking.",
+    "Private snapshot and entropy remain in the ACL-protected local capture directory and runner directories, never in Git or public logs.",
+    "Preserve pinned artifacts, historical receipts, exact RNG stream, atomic costs, pending decisions and canonical DTO/renderers.",
+    "Local verification before commit/push/deploy; deployment explicitly authorized after local verification.",
+    "Do not enable frozen-catalog or preparation-cache experiments to claim an unmeasured performance improvement."
+  ],
+  "completed": [
+    {
+      "id": "loader",
+      "files": [
+        "backend/roguelike_controller.go",
+        "backend/roguelike_run_loading_test.go"
+      ],
+      "change": "Load the party leader through the single ordered party query; retain solo owner projection and row-lock behavior.",
+      "acceptance": "Owned run loading tested for solo/party and locked/unlocked modes, foreign owner rejected; measured SQL count 19 to 16."
+    },
+    {
+      "id": "inline-cold-columns",
+      "files": [
+        "backend/storage_catalog.go",
+        "backend/storage_catalog_test.go"
+      ],
+      "change": "Compare inline cold columns even when DB_FROZEN_CATALOGS=0 and omit only unchanged values from UPDATE.",
+      "acceptance": "Changed shop/checkpoint/catalog values retained, referenced-catalog integrity preserved, 761322 cold bytes omitted in measured fixture."
+    }
+  ],
+  "measurements": {
+    "productionBackendMs": [
+      2500,
+      3160,
+      2040,
+      2010,
+      1930
+    ],
+    "productionEndTurnIsolatedExecuteMs": 1544.222594,
+    "productionEndTurnCaveat": "One separate process with cold JIT; not a phase trace of the original POST.",
+    "local": {
+      "warmSamplesPerVariant": 5,
+      "before": {
+        "clientMedianMs": 898.9093,
+        "backendMedianMs": 842.064,
+        "transactionMedianMs": 451.957,
+        "sqlMedianMs": 369.555,
+        "sqlCount": 19
+      },
+      "candidate": {
+        "clientMedianMs": 841.36,
+        "backendMedianMs": 785.59,
+        "transactionMedianMs": 398.535,
+        "sqlMedianMs": 275.726,
+        "sqlCount": 16
+      },
+      "workerInputBytes": 4356372,
+      "apiUncompressedResponseBytes": 4195072
+    },
+    "replay": {
+      "frames": 30,
+      "randomValuesVerified": true,
+      "beforeAfterHashesVerified": true,
+      "sourceEncoding": "go-json-map-v1"
+    }
+  },
+  "tasks": [
+    {
+      "id": "N1-native-node-hash",
+      "priority": 1,
+      "files": [
+        "frontend/src/rules-core/determinism.ts",
+        "frontend/worker/artifact.ts",
+        "frontend/worker/build.mjs",
+        "frontend/src/roguelike/combatWorker.ts"
+      ],
+      "steps": [
+        "Introduce a narrowly scoped worker SHA-256 provider using node:crypto; retain exact existing canonicalStringify bytes and browser fallback.",
+        "Test against browser SHA on empty/Unicode/astral/control characters, long strings, numeric edge cases, nested objects, two independent battle scenes and all captured journal states.",
+        "Build a new owned worker artifact and replay the same sequence under both executors; compare every random value, state, rejection and hash while accounting only for the explicit artifact version boundary.",
+        "Benchmark revision 28 end_turn and short intents with at least 30 first/warm repetitions, recording execute/hash/AI spans.",
+        "Release the new artifact normally; existing battles keep their archived executor until the existing explicit upgrade command is allowed and chosen. Do not patch archived bundles."
+      ],
+      "acceptance": [
+        "Cryptographic outputs match exactly on all vectors.",
+        "No gameplay/RNG differences except the reviewed version boundary.",
+        "Native implementation measurably improves end_turn; separate current-run behavior from new-battle behavior."
+      ]
+    },
+    {
+      "id": "N2-api-frame-mirrors",
+      "priority": 1,
+      "files": [
+        "backend/roguelike_controller.go",
+        "backend/roguelike_worker_controller.go",
+        "backend/roguelike_party_worker.go",
+        "frontend/src/roguelike/api.ts"
+      ],
+      "steps": [
+        "Design opt-in versioned frame-local references for duplicate leader and exact scene fields within a single response.",
+        "Keep canonical complete receipts and default legacy JSON for unnegotiated clients.",
+        "Use exact equality to remove a mirror, never guess equality from actor ID or entity name.",
+        "Reconstruct the complete current canonical DTO in the API adapter before existing UI consumers run.",
+        "Test full GET/reload, decisions, initialization opening state, solo and parties of 2/4/6, old responses, exact retry after another accepted command, corrupt/missing references, dropped connection and worker failure.",
+        "Measure actual uncompressed/gzip bytes, marshal/compression time and click-to-ready with the captured scene."
+      ],
+      "acceptance": [
+        "Expanded response equals canonical legacy response.",
+        "No dependence on prior browser revision/cache.",
+        "Fewer repeated large fields and measured end-to-end improvement; no historical receipt rewrite."
+      ]
+    },
+    {
+      "id": "N3-worker-projection-wire",
+      "priority": 2,
+      "files": [
+        "frontend/worker/server.mjs",
+        "frontend/worker/mirrors.mjs",
+        "backend/roguelike_worker_client.go",
+        "backend/roguelike_worker_mirrors.go",
+        "frontend/src/roguelike/combatInitialization.ts"
+      ],
+      "steps": [
+        "Trace which CharacterV3 fields each supported archived/current projection actually reads.",
+        "Negotiate a projection-input capability or preserve the complete input for executors without proved compatibility; remove only data which is provably overwritten/unused.",
+        "Decode and validate mirrors directly into the authoritative typed result, avoiding repeated whole-result marshal/unmarshal while retaining exact hash/size/schema checks.",
+        "Compare complete results and errors with legacy transport for archived artifacts and distinct catalogs/parties.",
+        "Profile allocation/GC, worker_request_bytes and mirror expansion separately."
+      ],
+      "acceptance": [
+        "Legacy executors remain usable.",
+        "Malformed references fail closed before any write.",
+        "Full projected patches, runtime revisions, RNG and traces match."
+      ]
+    },
+    {
+      "id": "N4-post-save-read",
+      "priority": 2,
+      "files": [
+        "backend/roguelike_worker_controller.go",
+        "backend/roguelike_party_worker.go",
+        "backend/roguelike_controller.go"
+      ],
+      "steps": [
+        "Inventory all DB-triggered fields, Save hooks, timestamps, access decorations and participant ordering currently provided by the final reload.",
+        "Construct a response from the saved locked aggregate only if it can match the canonical reload DTO.",
+        "Add comparisons against a real GET on the same committed revision for solo/party, conclusion, aura/rest effects and timestamps.",
+        "Exercise concurrent updates, exact historical retry and injected journal/receipt failures.",
+        "Measure eliminated reads and lock hold time; revert if any metadata or atomicity discrepancy remains."
+      ],
+      "acceptance": [
+        "Canonical GET equality under defined timestamp representation.",
+        "No weaker CAS/locks or partial commits.",
+        "Measured reduction in SQL and transaction time."
+      ]
+    },
+    {
+      "id": "N5-spatial-derivation",
+      "priority": 3,
+      "files": [
+        "frontend/src/solo-combat/combatAuras.ts",
+        "frontend/src/solo-combat/engine.ts"
+      ],
+      "steps": [
+        "Profile repeated aura/light/nearby pair calculations per single authoritative transition.",
+        "Reuse derivations only for identical spatial and mechanical inputs inside that transition.",
+        "Explicitly invalidate for token changes, death/consciousness, plane/size, magic suppression, effect/source expiry, resources and relevant rules data.",
+        "Test two independent declarative aura/light entities plus movement, disappearance, unconsciousness and antimagic.",
+        "Compare complete output and RNG on the historical replay and synthetic party capacities; ship under a new artifact."
+      ],
+      "acceptance": [
+        "Derived effects and availability remain identical.",
+        "No turn-only cache or name/UUID special cases.",
+        "Lower CPU on repeated AI turns without changing retained artifacts."
+      ]
+    },
+    {
+      "id": "N6-release-and-production-verify",
+      "priority": 4,
+      "dependsOn": [
+        "N1-native-node-hash",
+        "N2-api-frame-mirrors"
+      ],
+      "steps": [
+        "Record code hashes and before/after evidence for the same revision-28 and short-action copies, including first request and at least 30 warm samples.",
+        "Run relevant authority/retry/rollback, transport compatibility and browser readiness suites.",
+        "Deploy only locally verified changes within user authorization using the project TimeWeb workflow; take the required current production backup and source identity.",
+        "Use opt-in numeric telemetry for controlled authorized requests, never replay mutating commands into a player's live battle.",
+        "Report ordinary-action and end_turn percentiles separately with byte counts and number of automatic AI turns."
+      ],
+      "acceptance": [
+        "All local correctness gates pass.",
+        "Ordinary warm action p95 target <=500ms assessed on TimeWeb; disclose any missed target.",
+        "No gameplay data loss or implicit rules upgrade."
+      ]
+    }
+  ],
+  "evidence": [
+    "outputs/operations/commands-profile-host-20261008.json",
+    "outputs/operations/commands-profile-replay-20261008.json",
+    "outputs/operations/commands-profile-end-turn-20261008.json",
+    "outputs/operations/commands-profile-server-cpu-end-turn-20261008.json",
+    "outputs/operations/commands-profile-api-20261008.json",
+    "outputs/operations/commands-profile-api-candidate-20261008.json",
+    "outputs/operations/commands-profile-checks-20261008.json"
+  ],
+  "userAcceptedLossBudget": {
+    "maximumUnflushedCommandsPerRun": 1,
+    "acknowledgement": "response can precede PostgreSQL commit",
+    "failedWrite": "block commands until canonical reload",
+    "boundaries": "initialize, upgrade, outcomes and economy durable",
+    "targetMs": 200,
+    "desiredMs": 100
+  },
+  "implementation": {
+    "backendFrames": 16,
+    "maximumBusyFrames": 32,
+    "workerFrameCount": 16,
+    "workerFrameBytes": 67108864,
+    "speculativeResults": 8,
+    "speculativeBytes": 33554432,
+    "flags": {
+      "RULES_COMBAT_ASYNC_PERSIST_ENABLED": "1",
+      "RULES_PERFORMANCE_ENABLED": "1",
+      "DB_FROZEN_CATALOGS": "0"
+    },
+    "protocols": [
+      "combat-frame-v1",
+      "mirrors-v2"
+    ],
+    "unknownProjector": "full-input fallback before execution",
+    "archivedSourceBytes": "unchanged; checksum-guarded equivalent runtime optimizations",
+    "startupWarm": "read-only latest eight active combats",
+    "shutdownGraceSeconds": 45
+  },
+  "verified": {
+    "productionCommands": 0,
+    "commands": 50,
+    "exactRetries": 50,
+    "canonicalGETEquality": true,
+    "archivedJournalFrames": 30,
+    "originalExecutionEquality": true,
+    "writeRollback": true,
+    "oneUnflushedCommandBound": true,
+    "wirePrivacy": true,
+    "phaseSummary": {
+      "journal-27-approach_action": {
+        "count": 10,
+        "medianMs": 323.98219999999856,
+        "p95Ms": 859.8055999999997,
+        "maxMs": 859.8055999999997
+      },
+      "exact-retry": {
+        "count": 50,
+        "medianMs": 38.167600000000675,
+        "p95Ms": 42.9207000000024,
+        "maxMs": 54.534599999999045
+      },
+      "journal-28-end_turn": {
+        "count": 10,
+        "medianMs": 134.33540000000357,
+        "p95Ms": 156.34389999999985,
+        "maxMs": 156.34389999999985
+      },
+      "journal-29-death_save": {
+        "count": 10,
+        "medianMs": 141.27130000000034,
+        "p95Ms": 152.8067999999912,
+        "maxMs": 152.8067999999912
+      },
+      "journal-30-death_save": {
+        "count": 10,
+        "medianMs": 176.75759999999718,
+        "p95Ms": 215.7577999999994,
+        "maxMs": 215.7577999999994
+      },
+      "journal-31-death_save": {
+        "count": 10,
+        "medianMs": 139.55949999999575,
+        "p95Ms": 163.37140000000363,
+        "maxMs": 163.37140000000363
+      }
+    }
+  },
+  "remaining": [
+    {
+      "id": "release",
+      "steps": [
+        "Review staged production diff and scanners.",
+        "Commit verified scope excluding private captures and personal skills.",
+        "Push exact main SHA; await required same-SHA CI, immutable image publication and guarded deployment.",
+        "Fresh host backup and saved previous production commit before cutover.",
+        "Independently compare actual identities/digests/health to accepted deployment receipt."
+      ]
+    },
+    {
+      "id": "production-latency",
+      "steps": [
+        "Benchmark only isolated owned copies; do not command the player combat.",
+        "Compare original TimeWeb 1931–3170 ms HTTP measurements with matched new scenarios.",
+        "Record cold/warm, prediction hit/miss, previous persistence wait, p50/p95/max and sample count.",
+        "Do not claim a universal 200 ms maximum from a warm subset; continue optimization if the budget is exceeded."
+      ]
+    }
+  ]
+}

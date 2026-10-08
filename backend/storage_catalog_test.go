@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"testing"
@@ -133,5 +134,31 @@ func TestColdRunComparisonRetainsChangedValues(t *testing.T) {
 	run.Checkpoint["nested"].(JSONMap)["gold"] = 2
 	if string(run.storageOriginal["checkpoint"]) != `{"nested":{"gold":1}}` {
 		t.Fatal("snapshot aliased mutable data")
+	}
+}
+
+func TestInlineColdRunComparisonPreservesChangesWithFrozenWriterDisabled(t *testing.T) {
+	t.Setenv("DB_FROZEN_CATALOGS", "0")
+	for _, value := range []string{"first catalog", "second catalog"} {
+		run := RoguelikeRun{CombatCatalog: JSONMap{"content": value}, Shop: JSONMap{"price": 3}, Checkpoint: JSONMap{}, ModeRules: JSONMap{}}
+		if err := captureColdRunColumns(&run); err != nil {
+			t.Fatal(err)
+		}
+		run.Shop["price"] = 4
+		columns := coldRunColumns(&run)
+		if err := prepareRunStorageColumns(&gorm.DB{Statement: &gorm.Statement{Context: context.Background()}}, &run, columns); err != nil {
+			t.Fatal(err)
+		}
+		if len(columns) != 1 || columns["shop"].(JSONMap)["price"] != 4 {
+			t.Fatal("unchanged inline data was rewritten or a changed shop was omitted")
+		}
+		run.CombatCatalog["content"] = value + " updated"
+		columns = coldRunColumns(&run)
+		if err := prepareRunStorageColumns(&gorm.DB{Statement: &gorm.Statement{Context: context.Background()}}, &run, columns); err != nil {
+			t.Fatal(err)
+		}
+		if len(columns) != 2 || columns["combat_catalog"].(JSONMap)["content"] != value+" updated" {
+			t.Fatal("a changed inline catalog was omitted")
+		}
 	}
 }

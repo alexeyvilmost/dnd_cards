@@ -7,6 +7,7 @@ import type { Action, PassiveEffect } from '../types';
 import {playCommandSound,playCommittedEvents} from '../audio/commandSounds';
 import type {RollInfluence} from '../engine/rollInfluence';
 import type {RollLog} from '../mvp/contracts';
+import {expandCombatReply} from './combatWire';
 import {notifyRunUpdated} from './navigation';
 
 export interface JourneyAura extends PassiveEffect {key:string;mechanics:NonNullable<PassiveEffect['mechanics']>}
@@ -168,12 +169,13 @@ export const roguelikeApi = {
     payload: Record<string, unknown> = {},
     commandId: string = crypto.randomUUID(),
   ): Promise<RoguelikeRun> => {
-    const { data } = await apiClient.post<{ run: RoguelikeRun; events?: CharacterEventRow[] }>(`/api/roguelike/runs/${id}/commands`, {
+    const { data:wire } = await apiClient.post<{ run: RoguelikeRun; events?: CharacterEventRow[] }>(`/api/roguelike/runs/${id}/commands`, {
       command_id: commandId,
       expected_revision: revision,
       type,
       payload,
-    });
+    },{headers:{'X-Combat-Wire':'combat-frame-v1'}});
+    const data=expandCombatReply(wire);
     playCommandSound(type,commandId);
     if(type==='camp_action'||type==='use_item')playCommittedEvents((data.events??[]).map(e=>e.payload),commandId);
     return { ...data.run, command_events: data.events };

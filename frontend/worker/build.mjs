@@ -23,3 +23,6 @@ await writeFile(path.join(output,'metafile.json'), `${JSON.stringify(result.meta
 await copyFile('worker/server.mjs', path.join(output,'server.mjs'));
 await copyFile('worker/replay.mjs', path.join(output,'replay.mjs'));
 await copyFile('worker/mirrors.mjs', path.join(output,'mirrors.mjs'));
+await copyFile('worker/native-hash.mjs', path.join(output,'native-hash.mjs'));
+await copyFile('worker/combat-frames.mjs', path.join(output,'combat-frames.mjs'));
+await copyFile('worker/speculative-transitions.mjs', path.join(output,'speculative-transitions.mjs'));

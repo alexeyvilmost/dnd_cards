@@ -305,7 +305,7 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 		var metrics map[string]float64
 		raw := response.Header.Get("X-Rules-Performance")
 		if len(raw) <= 8192 && json.Unmarshal([]byte(raw), &metrics) == nil {
-			for _, key := range []string{"worker_body_read_ms", "worker_parse_ms", "worker_artifact_load_ms", "worker_artifact_cache_hit", "worker_execute_ms", "worker_project_ms", "worker_snapshot_hash_ms", "worker_stringify_ms", "worker_mirror_compact_ms", "worker_callback_to_send_ms", "worker_process_cpu_ms"} {
+			for _, key := range []string{"worker_body_read_ms", "worker_parse_ms", "worker_artifact_load_ms", "worker_artifact_cache_hit", "worker_frame_cache_hit", "worker_prediction_hit", "worker_prediction_wait_ms", "worker_speculative_execute_ms", "worker_execute_ms", "worker_project_ms", "worker_snapshot_hash_ms", "worker_stringify_ms", "worker_mirror_compact_ms", "worker_callback_to_send_ms", "worker_process_cpu_ms"} {
 				if value, exists := metrics[key]; exists {
 					performanceAdd(ctx, key, value)
 				}
@@ -323,6 +323,9 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 			RejectionCode string `json:"rejectionCode"`
 		}
 		if json.NewDecoder(io.LimitReader(response.Body, 4096)).Decode(&failure) == nil {
+			if response.StatusCode == http.StatusConflict && (failure.Error == "frame_unavailable" || failure.Error == "projection_unavailable") {
+				return nil, errCombatFrameUnavailable
+			}
 			if rejection := publicWorkerRejection(failure.Error, failure.Message, failure.RejectionCode); rejection != nil {
 				return nil, rejection
 			}
@@ -343,21 +346,29 @@ func (client roguelikeWorkerClient) call(ctx context.Context, endpoint string, b
 	var result roguelikeWorkerResult
 	if request.Header.Get("X-Rules-Wire") == workerMirrorWire {
 		expandDone := performanceSince(ctx, "backend_worker_mirror_expand_ms")
-		payload, err = expandWorkerMirrors(payload)
+		var decoded *roguelikeWorkerResult
+		decoded, err = decodeWorkerMirrors(payload)
 		expandDone()
 		if err != nil {
 			return nil, err
 		}
+		result = *decoded
+	} else {
+		decodeDone := performanceSince(ctx, "backend_worker_unmarshal_ms")
+		err = json.Unmarshal(payload, &result)
+		decodeDone()
 	}
-	decodeDone := performanceSince(ctx, "backend_worker_unmarshal_ms")
-	err = json.Unmarshal(payload, &result)
-	decodeDone()
 	if err != nil {
 		return nil, fmt.Errorf("invalid rules worker response")
 	}
 	if result.Status == "needs_content" {
 		if len(result.Needs) == 0 || len(result.Needs) > 2048 {
 			return nil, fmt.Errorf("invalid dependency request")
+		}
+	} else if endpoint == "/prefetch" {
+		hash, ok := result.Trace["afterHash"].(string)
+		if result.Status != "ready" || !ok || !roguelikeSnapshotHash.MatchString(hash) {
+			return nil, fmt.Errorf("invalid combat prefetch result")
 		}
 	} else if endpoint == "/upgrade" {
 		if len(result.Envelope) == 0 || !roguelikeSnapshotHash.MatchString(result.ArtifactHash) || len(result.Trace) == 0 {

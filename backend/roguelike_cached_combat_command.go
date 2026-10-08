@@ -1,0 +1,272 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+var errCombatFrameUnavailable = errors.New("combat input cache unavailable")
+
+type cachedCombatResponse struct {
+	run     *RoguelikeRun
+	receipt JSONMap
+	err     error
+}
+
+func compactCombatProjectionCharacter(character *CharacterV3) *CharacterV3 {
+	copy := *character
+	if character.TurnState != nil {
+		turn := JSONMap{}
+		for key, value := range *character.TurnState {
+			if key != "solo_combat_v1" {
+				turn[key] = value
+			}
+		}
+		copy.TurnState = &turn
+	}
+	return &copy
+}
+
+func cachedCombatWorkerCall(ctx context.Context, client roguelikeWorkerClient, slot *combatCacheSlot, run *RoguelikeRun, intent any) (*roguelikeWorkerResult, error) {
+	_, hash := slot.frame()
+	characters := []*CharacterV3{}
+	for _, member := range run.Characters {
+		characters = append(characters, compactCombatProjectionCharacter(member))
+	}
+	body := map[string]any{"artifactHash": run.CombatEnvelope["artifactHash"], "intent": intent, "character": compactCombatProjectionCharacter(run.Character), "characters": characters, "projectionInputVersion": 1}
+	if hash != "" {
+		body["frameKey"] = hash
+	} else {
+		body["envelope"] = run.CombatEnvelope
+	}
+	result, err := client.call(ctx, "/transition", body)
+	if errors.Is(err, errCombatFrameUnavailable) {
+		performanceAdd(ctx, "combat_worker_full_input_retry", 1)
+		result, err = client.call(ctx, "/transition", map[string]any{"artifactHash": run.CombatEnvelope["artifactHash"], "envelope": run.CombatEnvelope, "intent": intent, "character": run.Character, "characters": run.Characters})
+	}
+	return result, err
+}
+
+func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatCacheSlot, id, owner uuid.UUID, request RoguelikeCommandRequest, requestHash string) {
+	ctx := c.Request.Context()
+	db := rc.db.WithContext(ctx)
+	slot.mu.Lock()
+	previousID, previousHash := slot.commandID, slot.requestHash
+	var previousRun *RoguelikeRun
+	if slot.receiptRun != nil {
+		previousRun = cloneCachedCombatRun(slot.receiptRun)
+	}
+	slot.mu.Unlock()
+	if previousID == request.CommandID {
+		if previousHash != requestHash {
+			writeRoguelikeError(c, roguelikeError(409, "command_id_reused", "ID команды уже использован"))
+			return
+		}
+		if previousRun != nil {
+			performanceAdd(ctx, "combat_receipt_cache_hit", 1)
+			writeCombatRunResponse(c, previousRun)
+			return
+		}
+	}
+	var receipt RoguelikeCommandReceipt
+	if err := db.Where("run_id=? AND user_id=? AND command_id=?", id, owner, request.CommandID).First(&receipt).Error; err == nil {
+		if receipt.CommandType != request.Type || receipt.RequestHash != requestHash {
+			writeRoguelikeError(c, roguelikeError(409, "command_id_reused", "ID команды уже использован"))
+			return
+		}
+		c.JSON(http.StatusOK, receipt.Response)
+		return
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		writeRoguelikeError(c, err)
+		return
+	}
+	run, err := slot.load(db, id, owner, false)
+	if err != nil {
+		writeRoguelikeError(c, err)
+		return
+	}
+	if err = urvinCommandAllowed(run, request.Type); err != nil {
+		writeRoguelikeError(c, err)
+		return
+	}
+	if run.Character == nil || run.Status != RoguelikeStatusActive || run.Phase != RoguelikePhaseCombat || run.Revision != request.ExpectedRevision || len(run.CombatEnvelope) == 0 {
+		writeRoguelikeError(c, roguelikeError(409, "run_revision_conflict", "Состояние боя изменилось; обновите страницу"))
+		return
+	}
+	client := roguelikeWorkerClient{URL: os.Getenv("RULES_WORKER_URL"), Token: os.Getenv("RULES_WORKER_TOKEN")}
+	result, err := cachedCombatWorkerCall(ctx, client, slot, run, request.Payload["intent"])
+	if err != nil {
+		if rejection := publicRoguelikeWorkerFailure(err); rejection != nil {
+			writeRoguelikeError(c, roguelikeError(409, rejection.Code, rejection.Message))
+		} else {
+			writeRoguelikeError(c, roguelikeError(503, "combat_execution_failed", "Действие не применено"))
+		}
+		return
+	}
+	if result.GoldSpent != 0 || result.ElapsedSeconds != 0 {
+		writeRoguelikeError(c, roguelikeError(409, "combat_patch_invalid", "Некорректный результат боя"))
+		return
+	}
+	afterHash, valid := result.Trace["afterHash"].(string)
+	beforeHash, beforeValid := result.Trace["beforeHash"].(string)
+	entropy, entropyValid := result.Envelope["entropy"].(map[string]any)
+	seed, seedValid := entropy["seed"].(string)
+	if !valid || !roguelikeSnapshotHash.MatchString(afterHash) || !beforeValid || !roguelikeSnapshotHash.MatchString(beforeHash) || result.Envelope["artifactHash"] != run.CombatEnvelope["artifactHash"] || !entropyValid || !seedValid || seed == "" {
+		writeRoguelikeError(c, errors.New("invalid combat trace"))
+		return
+	}
+	expected := map[uuid.UUID]int64{}
+	expectedUpdated := map[uuid.UUID]time.Time{}
+	for _, member := range roguelikeCharacters(run) {
+		expected[member.ID] = member.RuntimeRevision
+		expectedUpdated[member.ID] = member.UpdatedAt
+		patch := result.Patch
+		if len(run.Characters) > 1 {
+			patch = result.Patches[member.ID.String()]
+		}
+		if patch == nil {
+			writeRoguelikeError(c, roguelikeError(409, "combat_patch_invalid", "Движок не вернул участника"))
+			return
+		}
+		if err = applyTrustedRoguelikePatch(member, patch); err != nil {
+			writeRoguelikeError(c, err)
+			return
+		}
+	}
+	ready := make(chan cachedCombatResponse, 1)
+	responseWritten := make(chan struct{})
+	defer close(responseWritten)
+	commitCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 15*time.Second)
+	slot.mu.Lock()
+	slot.pending = make(chan struct{})
+	slot.mu.Unlock()
+	combatPersistenceWG.Add(1)
+	go func() {
+		defer combatPersistenceWG.Done()
+		defer cancel()
+		started := time.Now()
+		released := false
+		var accepted *RoguelikeRun
+		var replay JSONMap
+		stamp := time.Now().UTC().Truncate(time.Microsecond)
+		txDB := rc.db.WithContext(commitCtx).Session(&gorm.Session{NowFunc: func() time.Time { return stamp }})
+		err := performanceTransaction(txDB, commitCtx, func(tx *gorm.DB) error {
+			locked, err := slot.load(tx, id, owner, true)
+			if err != nil {
+				return err
+			}
+			// Another instance can finish this command while computation is in
+			// flight. Receipt lookup under the run lock precedes revision rejection.
+			var prior RoguelikeCommandReceipt
+			if err := tx.Where("run_id=? AND user_id=? AND command_id=?", id, owner, request.CommandID).First(&prior).Error; err == nil {
+				if prior.RequestHash != requestHash || prior.CommandType != request.Type {
+					return roguelikeError(409, "command_id_reused", "ID команды уже использован")
+				}
+				replay = prior.Response
+				return nil
+			} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			if locked.Revision != request.ExpectedRevision {
+				return roguelikeError(409, "run_revision_conflict", "Состояние боя изменилось")
+			}
+			for _, member := range roguelikeCharacters(locked) {
+				if member.RuntimeRevision != expected[member.ID] || !member.UpdatedAt.Equal(expectedUpdated[member.ID]) {
+					return roguelikeError(409, "party_revision_conflict", "Лист участника изменился")
+				}
+			}
+			// All affected rows are locked before publishing. Competing backend
+			// instances/external sheet writes cannot accept the same base revision.
+			locked.Character = run.Character
+			locked.Characters = run.Characters
+			locked.CombatEnvelope = result.Envelope
+			state, ok := result.Envelope["state"].(map[string]any)
+			if !ok {
+				return errors.New("invalid combat state")
+			}
+			locked.CombatState = JSONMap(state)
+			syncUrvinAura(locked)
+			setCharacterGold(locked.Character, locked.Gold)
+			applyTrustedCombatConclusion(locked)
+			locked.Revision++
+			locked.UpdatedAt = stamp.In(locked.UpdatedAt.Location())
+			for _, member := range roguelikeCharacters(locked) {
+				member.UpdatedAt = stamp.In(expectedUpdated[member.ID].Location())
+			}
+			accepted = cloneCachedCombatRun(locked)
+			// Outcome/economy boundaries always wait for a durable commit.
+			async := locked.Status == RoguelikeStatusActive && state["outcome"] == "active"
+			if async {
+				slot.setFrame(accepted, result.Trace["afterHash"].(string))
+				slot.mu.Lock()
+				slot.commandID = request.CommandID
+				slot.requestHash = requestHash
+				slot.receiptRun = cloneCachedCombatRun(accepted)
+				slot.mu.Unlock()
+				performanceAdd(ctx, "combat_async_response", 1)
+				released = true
+				ready <- cachedCombatResponse{run: accepted}
+				select {
+				case <-responseWritten:
+				case <-commitCtx.Done():
+					return commitCtx.Err()
+				}
+			}
+			if err = saveRoguelikeParty(tx, locked); err != nil {
+				return err
+			}
+			if err = saveRoguelikeRun(tx, locked); err != nil {
+				return err
+			}
+			if err = appendRoguelikeCombatEvent(tx, locked, request, run.CombatEnvelope, result); err != nil {
+				return err
+			}
+			// Serialize the canonical tagged run once in the receipt writer. Avoid
+			// turning the same immutable DTO into another large intermediate tree.
+			return tx.Create(&RoguelikeCommandReceipt{RunID: id, UserID: owner, CommandID: request.CommandID, CommandType: request.Type, RequestHash: requestHash, Response: JSONMap{"run": accepted}, Request: nonNilRoguelikeMap(request.Payload)}).Error
+		})
+		if err == nil && accepted != nil {
+			slot.setFrame(accepted, afterHash)
+			slot.mu.Lock()
+			slot.commandID = request.CommandID
+			slot.requestHash = requestHash
+			slot.receiptRun = cloneCachedCombatRun(accepted)
+			slot.mu.Unlock()
+		}
+		requestID, _ := ctx.Value(requestCorrelationKey{}).(string)
+		slot.finish(err, started, requestID, released)
+		if !released {
+			ready <- cachedCombatResponse{run: accepted, receipt: replay, err: err}
+		}
+	}()
+	select {
+	case response := <-ready:
+		if response.err != nil {
+			writeRoguelikeError(c, response.err)
+			return
+		}
+		if response.receipt != nil {
+			c.Header("X-Combat-Persistence", "saved")
+			c.JSON(http.StatusOK, response.receipt)
+			return
+		}
+		slot.mu.Lock()
+		background := slot.pending != nil
+		slot.mu.Unlock()
+		status := "saved"
+		if background {
+			status = "background"
+		}
+		c.Header("X-Combat-Persistence", status)
+		writeCombatRunResponse(c, response.run)
+	case <-ctx.Done():
+		return
+	}
+}

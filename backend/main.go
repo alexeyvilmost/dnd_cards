@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gin-contrib/cors"
@@ -132,6 +134,7 @@ func main() {
 	inventoryController := NewInventoryController(db)
 	characterV3Controller := NewCharacterV3Controller(db)
 	roguelikeController := NewRoguelikeController(db)
+	go roguelikeController.warmCombatCache()
 	imageLibraryController := NewImageLibraryController(db)
 	shopController := NewShopController(db)
 	actionController := NewActionController(db)
@@ -415,7 +418,26 @@ func main() {
 	}
 
 	log.Printf("Сервер запущен на порту %s", port)
-	if err := r.Run(os.Getenv("LISTEN_HOST") + ":" + port); err != nil {
+	server := &http.Server{Addr: os.Getenv("LISTEN_HOST") + ":" + port, Handler: r, ReadHeaderTimeout: 10 * time.Second}
+	stopping, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	shutdownDone := make(chan struct{})
+	go func() {
+		defer close(shutdownDone)
+		<-stopping.Done()
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			log.Print("HTTP shutdown deadline exceeded")
+		}
+	}()
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatal("Ошибка запуска сервера:", err)
+	}
+	<-shutdownDone
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if err := waitCombatPersistence(ctx); err != nil {
+		log.Print("Combat persistence shutdown deadline exceeded")
 	}
 }
