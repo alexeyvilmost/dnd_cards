@@ -11,7 +11,7 @@ import (
 
 func TestCombatReadBaseNegotiationDoesNotAcceptACommand(t *testing.T) {
 	t.Setenv("RULES_COMBAT_ASYNC_PERSIST_ENABLED", "1")
-	for _, negotiation := range []string{"", combatFrameWire, combatDeltaWire} {
+	for _, negotiation := range []string{"", combatFrameWire, combatDeltaWire, combatSnapshotDeltaWire} {
 		cache := newCombatRuntimeCache()
 		rc := &RoguelikeController{combatCache: cache}
 		run := &RoguelikeRun{ID: uuid.New(), UserID: uuid.New(), Revision: 7, Phase: RoguelikePhaseCombat, Status: RoguelikeStatusActive, CombatState: JSONMap{"world": map[string]any{"scene": map[string]any{"round": 2}}}}
@@ -24,7 +24,7 @@ func TestCombatReadBaseNegotiationDoesNotAcceptACommand(t *testing.T) {
 			t.Fatal("Read failed")
 		}
 		token := w.Header().Get("X-Combat-Read-Base")
-		if negotiation != combatDeltaWire {
+		if negotiation != combatDeltaWire && negotiation != combatSnapshotDeltaWire {
 			if token != "" || len(cache.slots) != 0 {
 				t.Fatal("Unnegotiated read seeded a base")
 			}

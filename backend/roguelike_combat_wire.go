@@ -11,6 +11,12 @@ import (
 
 const combatFrameWire = "combat-frame-v1"
 const combatDeltaWire = "combat-frame-v2"
+const combatSnapshotDeltaWire = "combat-frame-v3"
+const combatSnapshotBase = "snapshot:current"
+
+func supportsCombatDelta(c *gin.Context) bool {
+	return c.GetHeader("X-Combat-Wire") == combatDeltaWire || c.GetHeader("X-Combat-Wire") == combatSnapshotDeltaWire
+}
 
 type combatArrayPrefix struct {
 	Path   []string `json:"path"`
@@ -24,12 +30,13 @@ type combatStateDelta struct {
 }
 
 type combatFrameResponse struct {
-	WireSchema  string            `json:"wire_schema"`
-	Run         *RoguelikeRun     `json:"run"`
-	LeaderIndex *int              `json:"leader_index,omitempty"`
-	Snapshot    JSONMap           `json:"snapshot"`
-	Mirrors     []string          `json:"snapshot_mirrors"`
-	StateDelta  *combatStateDelta `json:"state_delta,omitempty"`
+	WireSchema    string            `json:"wire_schema"`
+	Run           *RoguelikeRun     `json:"run"`
+	LeaderIndex   *int              `json:"leader_index,omitempty"`
+	Snapshot      JSONMap           `json:"snapshot"`
+	Mirrors       []string          `json:"snapshot_mirrors"`
+	StateDelta    *combatStateDelta `json:"state_delta,omitempty"`
+	SnapshotDelta *combatStateDelta `json:"snapshot_delta,omitempty"`
 }
 
 func combatWireMap(value any) (map[string]any, bool) {
@@ -59,7 +66,8 @@ func compactCombatState(next, before JSONMap, delta *combatStateDelta) JSONMap {
 			}
 			m, mapValue := combatWireMap(value)
 			array, arrayValue := value.([]any)
-			if len(delta.References) < 1024 && ((mapValue && len(m) >= 4) || (arrayValue && len(array) >= 4)) && equalCombatWireJSON(value, old, 0) {
+			text, stringValue := value.(string)
+			if len(delta.References) < 1024 && ((mapValue && len(m) >= 4) || (arrayValue && len(array) >= 4) || (stringValue && len(text) >= 256)) && equalCombatWireJSON(value, old, 0) {
 				delta.References = append(delta.References, path)
 				continue
 			}
@@ -217,13 +225,13 @@ func compactCombatFrame(run *RoguelikeRun) combatFrameResponse {
 	return frame
 }
 func writeCombatRunResponse(c *gin.Context, run *RoguelikeRun) {
-	if c.GetHeader("X-Combat-Wire") == combatFrameWire || c.GetHeader("X-Combat-Wire") == combatDeltaWire {
+	if c.GetHeader("X-Combat-Wire") == combatFrameWire || supportsCombatDelta(c) {
 		// This transport retains encoding/json's schema and escaping. Use the
 		// existing optimized encoder only for transient combat responses; saved
 		// journals and receipts keep their canonical persistence serializer.
 		frame := compactCombatFrame(run)
-		if c.GetHeader("X-Combat-Wire") == combatDeltaWire {
-			frame.WireSchema = combatDeltaWire
+		if supportsCombatDelta(c) {
+			frame.WireSchema = c.GetHeader("X-Combat-Wire")
 			if baseValue, ok := c.Get("combat_wire_base_run"); ok {
 				base, valid := baseValue.(*RoguelikeRun)
 				baseID := c.GetString("combat_wire_base_command_id")
@@ -237,6 +245,16 @@ func writeCombatRunResponse(c *gin.Context, run *RoguelikeRun) {
 					done()
 				}
 			}
+		}
+		if frame.WireSchema == combatSnapshotDeltaWire && frame.Snapshot != nil && run.CombatState != nil {
+			done := performanceSince(c.Request.Context(), "combat_wire_snapshot_delta_ms")
+			delta := &combatStateDelta{BaseCommandID: combatSnapshotBase, References: [][]string{}, ArrayPrefixes: []combatArrayPrefix{}}
+			snapshot := compactCombatState(frame.Snapshot, run.CombatState, delta)
+			if len(delta.References) > 0 || len(delta.ArrayPrefixes) > 0 {
+				frame.Snapshot = snapshot
+				frame.SnapshotDelta = delta
+			}
+			done()
 		}
 		payload, err := fastjson.Marshal(frame)
 		if err != nil {

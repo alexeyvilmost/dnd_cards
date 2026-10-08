@@ -2,14 +2,14 @@ import type {RoguelikeRun} from './api';
 
 type CommandReply={run:RoguelikeRun;events?:import('../character/api').CharacterEventRow[]};
 type StateDelta={base_command_id:string;references:string[][];array_prefixes:Array<{path:string[];length:number;offset?:number}>};
-type CombatWireReply=CommandReply & {wire_schema?:string;leader_index?:number;snapshot?:Record<string,unknown>;snapshot_mirrors?:string[];state_delta?:StateDelta};
+type CombatWireReply=CommandReply & {wire_schema?:string;leader_index?:number;snapshot?:Record<string,unknown>;snapshot_mirrors?:string[];state_delta?:StateDelta;snapshot_delta?:StateDelta};
 type CombatBase={commandId:string;run:Pick<RoguelikeRun,'id'|'user_id'|'revision'|'combat_state'>};
 export class MissingCombatBaseError extends Error {}
 
 function expandStateDelta(raw:CombatWireReply,base?:CombatBase,cloneBase=true) {
  const delta=raw.state_delta;
  if(!delta)return raw.run.combat_state;
- if(raw.wire_schema!=='combat-frame-v2'||!Array.isArray(delta.references)||delta.references.length>1024||!Array.isArray(delta.array_prefixes)||delta.array_prefixes.length>128)throw Error('Invalid combat delta');
+ if(!['combat-frame-v2','combat-frame-v3'].includes(raw.wire_schema??'')||!Array.isArray(delta.references)||delta.references.length>1024||!Array.isArray(delta.array_prefixes)||delta.array_prefixes.length>128)throw Error('Invalid combat delta');
  if(!base||base.commandId!==delta.base_command_id||base.run.id!==raw.run.id||base.run.user_id!==raw.run.user_id)throw new MissingCombatBaseError('Missing exact combat base');
  if(!raw.run.combat_state||!base.run.combat_state)throw Error('Missing combat state');
  const source=(cloneBase?structuredClone(base.run.combat_state):base.run.combat_state) as unknown as Record<string,unknown>,target=structuredClone(raw.run.combat_state) as unknown as Record<string,unknown>,seen:string[][]=[];
@@ -27,7 +27,7 @@ function expandStateDelta(raw:CombatWireReply,base?:CombatBase,cloneBase=true) {
 
 export function expandCombatReply(raw:CombatWireReply,base?:CombatBase):CommandReply {
   if(raw.wire_schema===undefined)return raw;
-  if(!['combat-frame-v1','combat-frame-v2'].includes(raw.wire_schema)||!raw.run||!Array.isArray(raw.snapshot_mirrors)||raw.snapshot_mirrors.length>128)throw Error('Invalid combat frame');
+  if(!['combat-frame-v1','combat-frame-v2','combat-frame-v3'].includes(raw.wire_schema)||!raw.run||!Array.isArray(raw.snapshot_mirrors)||raw.snapshot_mirrors.length>128)throw Error('Invalid combat frame');
   const run={...raw.run};
   if(raw.state_delta)run.combat_state=expandStateDelta(raw,base);
   if(raw.leader_index!==undefined){
@@ -35,9 +35,16 @@ export function expandCombatReply(raw:CombatWireReply,base?:CombatBase):CommandR
     if(!Number.isInteger(index)||index<0||!run.characters?.[index]||run.character||run.characters[index].id!==run.character_id)throw Error('Invalid combat leader reference');
     run.characters=[...run.characters];run.characters[index]={...run.characters[index]};run.character=run.characters[index];
   }else if(run.character){run.character={...run.character};}
-  if(raw.snapshot!==undefined&&raw.snapshot!==null){
-    if(!run.character||!run.combat_state||run.character.turn_state?.solo_combat_v1||typeof raw.snapshot!=='object'||raw.snapshot===null)throw Error('Invalid combat snapshot');
-    const snapshot={...raw.snapshot},seen=new Set<string>(),state=run.combat_state as unknown as Record<string,unknown>;
+  let suppliedSnapshot=raw.snapshot;
+  if(raw.snapshot_delta){
+    if(raw.wire_schema!=='combat-frame-v3'||!suppliedSnapshot||raw.snapshot_delta.base_command_id!=='snapshot:current'||!run.combat_state)throw Error('Invalid combat snapshot delta');
+    // The fully restored state belongs to this response, never a hidden cache
+    // entry. Same-frame snapshot mirrors already share these values with UI.
+    suppliedSnapshot=expandStateDelta({...raw,run:{...run,combat_state:suppliedSnapshot as unknown as RoguelikeRun['combat_state']},state_delta:raw.snapshot_delta},{commandId:'snapshot:current',run},false) as unknown as Record<string,unknown>;
+  }
+  if(suppliedSnapshot!==undefined&&suppliedSnapshot!==null){
+    if(!run.character||!run.combat_state||run.character.turn_state?.solo_combat_v1||typeof raw.snapshot!=='object'||raw.snapshot===null||Array.isArray(raw.snapshot))throw Error('Invalid combat snapshot');
+    const snapshot={...suppliedSnapshot},seen=new Set<string>(),state=run.combat_state as unknown as Record<string,unknown>;
     for(const key of raw.snapshot_mirrors){if(typeof key!=='string'||key==='__proto__'||key==='constructor'||key==='prototype'||seen.has(key)||Object.hasOwn(snapshot,key)||!Object.hasOwn(state,key))throw Error('Invalid combat mirror');seen.add(key);Object.defineProperty(snapshot,key,{value:state[key],enumerable:true,writable:true,configurable:true});}
     run.character.turn_state={...run.character.turn_state,solo_combat_v1:snapshot};
   }else if(raw.snapshot_mirrors.length){throw Error('Missing combat snapshot');}
@@ -51,7 +58,7 @@ export function createCombatReplyCache(maxFrames=4) {
  const frames=new Map<string,CombatBase>();
  const latest=(id:string)=>[...frames.values()].filter(row=>row.run.id===id).reverse().sort((a,b)=>b.run.revision-a.run.revision)[0];
  return {
-  headers(id:string){const frame=latest(id);return {'X-Combat-Wire':'combat-frame-v2',...(frame?{'X-Combat-Base':frame.commandId}:{})};},
+  headers(id:string){const frame=latest(id);return {'X-Combat-Wire':'combat-frame-v3',...(frame?{'X-Combat-Base':frame.commandId}:{})};},
   expand(raw:CombatWireReply,commandId:string){
     let reply:CommandReply,privateState:RoguelikeRun['combat_state'];
     if(raw.wire_schema&&raw.state_delta){

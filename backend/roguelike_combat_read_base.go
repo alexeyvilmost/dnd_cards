@@ -10,7 +10,7 @@ import (
 // This token proves only the exact JSON supplied to this reader. It never
 // participates in command acceptance, receipts, ownership or revision checks.
 func (rc *RoguelikeController) writeCombatReadResponse(c *gin.Context, run *RoguelikeRun) {
-	if combatAsyncEnabled() && rc.combatCache != nil && c.GetHeader("X-Combat-Wire") == combatDeltaWire && run != nil && run.Status == RoguelikeStatusActive && run.Phase == RoguelikePhaseCombat && len(run.CombatState) > 0 {
+	if combatAsyncEnabled() && rc.combatCache != nil && supportsCombatDelta(c) && run != nil && run.Status == RoguelikeStatusActive && run.Phase == RoguelikePhaseCombat && len(run.CombatState) > 0 {
 		rc.combatCache.mu.Lock()
 		slot := rc.combatCache.slots[combatCacheKey(run.ID, run.UserID)]
 		rc.combatCache.mu.Unlock()

@@ -13,7 +13,7 @@ it('restores the party leader and exact same-frame data without losing presentat
 it('restores an empty snapshot and rejects overwrites, duplicates, foreign leaders and missing references',()=>{
  const input={wire_schema:'combat-frame-v1',run:run(),leader_index:1,snapshot:{},snapshot_mirrors:['world']};
  expect(expandCombatReply(input).run.character!.turn_state?.solo_combat_v1).toEqual({world:input.run.combat_state!.world});
- for(const changes of [{leader_index:0},{snapshot_mirrors:['world','world']},{snapshot_mirrors:['__proto__']},{snapshot_mirrors:['absent']},{snapshot:{world:1}},{snapshot:undefined}])expect(()=>expandCombatReply({...input,...changes})).toThrow();
+ for(const changes of [{leader_index:0},{snapshot_mirrors:['world','world']},{snapshot_mirrors:['__proto__']},{snapshot_mirrors:['absent']},{snapshot:{world:1}},{snapshot:undefined},{snapshot:[]}])expect(()=>expandCombatReply({...input,...changes})).toThrow();
 });
 it('keeps legacy replies compatible',()=>{const input={run:run()};expect(expandCombatReply(input)).toBe(input);});
 
@@ -90,4 +90,22 @@ it('private reconstructed trees never alias caller or UI and rejected responses 
  expect((actual.run.combat_state as unknown as {log:unknown[]}).log).toEqual([{id:1},{id:2},{id:3}]);
  expect(()=>cache.expand({...next,snapshot_mirrors:['world','world']},'bad')).toThrow();
  expect(cache.headers('run')['X-Combat-Base']).toBe('third');
+});
+
+it('restores same-frame long strings and sliding history for different entities while preserving sheet differences',()=>{
+ for(const description of ['first '.repeat(100),'другая сущность 🐉 '.repeat(80)]){
+  const first=baseWire(),cache=createCombatReplyCache();
+  first.run.combat_state={...first.run.combat_state,actionPresentation:{name:'state',description},log:[1,2,3,4,5,6,7,8,9]} as unknown as RoguelikeRun['combat_state'];
+  const raw={...first,wire_schema:'combat-frame-v3',snapshot_mirrors:['world'],snapshot:{actionPresentation:{name:'sheet'},log:[10]},snapshot_delta:{base_command_id:'snapshot:current',references:[['actionPresentation','description']],array_prefixes:[{path:['log'],offset:1,length:8}]}};
+  const reply=cache.expand(raw,'first');
+  expect(reply.run.character!.turn_state!.solo_combat_v1).toEqual({world:reply.run.combat_state!.world,actionPresentation:{name:'sheet',description},log:[2,3,4,5,6,7,8,9,10]});
+  expect(raw.snapshot).toEqual({actionPresentation:{name:'sheet'},log:[10]});
+  expect(cache.headers('run')['X-Combat-Wire']).toBe('combat-frame-v3');
+  (reply.run.combat_state!.actionPresentation as unknown as {description:string}).description='UI edit';
+  const next={...raw,run:{...raw.run,revision:3,combat_state:{} as RoguelikeRun['combat_state']},state_delta:{base_command_id:'first',references:[['world'],['actionPresentation'],['log']],array_prefixes:[]}};
+  expect((cache.expand(next,'second').run.combat_state!.actionPresentation as unknown as {description:string}).description).toBe(description);
+  for(const changes of [{base_command_id:'first'},{references:[['missing']]},{references:[['__proto__']]},{references:[['actionPresentation']]},{references:[['actionPresentation','description'],['actionPresentation','description']]},{array_prefixes:[{path:['log'],offset:10,length:8}]}])expect(()=>cache.expand({...raw,snapshot_delta:{...raw.snapshot_delta,...changes}},'bad')).toThrow();
+  expect(()=>cache.expand({...raw,wire_schema:'combat-frame-v2'},'bad')).toThrow();
+  expect(cache.headers('run')['X-Combat-Base']).toBe('second');
+ }
 });

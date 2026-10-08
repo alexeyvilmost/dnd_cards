@@ -112,6 +112,7 @@ func main() {
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{
 		"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-Performance-Trace", "Idempotency-Key",
+		"X-Combat-Wire", "X-Combat-Base",
 		roguelikeRunHeader, roguelikeIntentHeader,
 	}
 	corsConfig.ExposeHeaders = []string{"X-Request-ID", "Retry-After", "Server-Timing", "X-Performance-Metrics", "X-Combat-Read-Base"}

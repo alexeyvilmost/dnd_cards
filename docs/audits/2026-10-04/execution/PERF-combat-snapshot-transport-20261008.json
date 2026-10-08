@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-08",
+  "status": "locally-verified-not-deployed",
+  "parentCommit": "825c042b3193620fa529a658a6157945c9f35112",
+  "change": "Same-frame snapshot delta reuses canonical restored combat state without changing persisted data or gameplay",
+  "wireSchema": "combat-frame-v3",
+  "compatibility": {
+    "legacyReplies": true,
+    "v1Clients": true,
+    "v2Clients": true,
+    "newClientOldBackend": true
+  },
+  "verification": {
+    "focusedFrontendChecks": 11,
+    "requiredGoChecks": 36,
+    "windowsRaceChecks": 36,
+    "frontendTypecheck": "passed",
+    "focusedFrontendLint": "passed",
+    "frontendProductionBuild": "passed",
+    "controlledAB": {
+      "commands": 100,
+      "exactRetries": 100,
+      "durableReadback": true,
+      "historicalHashes": true,
+      "productionCommands": 0
+    }
+  },
+  "evidence": [
+    {
+      "path": "outputs/operations/snapshot-v3-required-go-20261008.json",
+      "sha256": "2095675b16b95acb5016c4901739018a8f5da4b3eb32d2ca5c4e832f81bc9014"
+    },
+    {
+      "path": "outputs/operations/snapshot-v3-windows-race-go-20261008.json",
+      "sha256": "2095675b16b95acb5016c4901739018a8f5da4b3eb32d2ca5c4e832f81bc9014"
+    },
+    {
+      "path": "outputs/operations/snapshot-v3-full-api-20261008.json",
+      "sha256": "51049859e54e44ecb1ce6fbc847e14abb4346019669c9ece41b508a1d8e0434c"
+    },
+    {
+      "path": "outputs/operations/snapshot-v3-ab-full-api-20261008.json",
+      "sha256": "2370be673f2bd9117aa3892f1f7adbb11497da7b33b27c207cad1841ef03901f"
+    }
+  ],
+  "summary": {
+    "combat-frame-v2-battle-load": {
+      "count": 10,
+      "medianMs": 81.68519999999262,
+      "maxMs": 609.120600000002,
+      "responseBytesMean": 1833902,
+      "clientRestoreMsMean": 6.296959999998944
+    },
+    "combat-frame-v2-journal-27-approach_action": {
+      "count": 10,
+      "medianMs": 205.12320000001637,
+      "maxMs": 248.01989999999932,
+      "responseBytesMean": 490190.5,
+      "clientRestoreMsMean": 11.681620000000112
+    },
+    "combat-frame-v2-exact-retry": {
+      "count": 50,
+      "medianMs": 18.92369999999937,
+      "maxMs": 30.472500000003492,
+      "responseBytesMean": 409773.9,
+      "clientRestoreMsMean": 10.64070199999922
+    },
+    "combat-frame-v2-journal-28-end_turn": {
+      "count": 10,
+      "medianMs": 44.00859999999375,
+      "maxMs": 137.83589999999822,
+      "responseBytesMean": 528784,
+      "clientRestoreMsMean": 11.818580000000656
+    },
+    "combat-frame-v2-journal-29-death_save": {
+      "count": 10,
+      "medianMs": 41.83959999999206,
+      "maxMs": 43.040400000012596,
+      "responseBytesMean": 414477.5,
+      "clientRestoreMsMean": 11.091999999999825
+    },
+    "combat-frame-v2-journal-30-death_save": {
+      "count": 10,
+      "medianMs": 41.5486000000019,
+      "maxMs": 44.57650000000285,
+      "responseBytesMean": 418194.5,
+      "clientRestoreMsMean": 11.631439999999566
+    },
+    "combat-frame-v2-journal-31-death_save": {
+      "count": 10,
+      "medianMs": 39.32779999999184,
+      "maxMs": 40.82140000000072,
+      "responseBytesMean": 414464,
+      "clientRestoreMsMean": 9.808310000000347
+    },
+    "combat-frame-v3-battle-load": {
+      "count": 10,
+      "medianMs": 77.74500000000262,
+      "maxMs": 102.69560000000638,
+      "responseBytesMean": 1537883,
+      "clientRestoreMsMean": 7.135610000001907
+    },
+    "combat-frame-v3-journal-27-approach_action": {
+      "count": 10,
+      "medianMs": 197.27389999999286,
+      "maxMs": 243.7103000000061,
+      "responseBytesMean": 194171.5,
+      "clientRestoreMsMean": 11.730280000000494
+    },
+    "combat-frame-v3-exact-retry": {
+      "count": 50,
+      "medianMs": 13.25170000000071,
+      "maxMs": 18.759600000004866,
+      "responseBytesMean": 113754.9,
+      "clientRestoreMsMean": 10.120826000000088
+    },
+    "combat-frame-v3-journal-28-end_turn": {
+      "count": 10,
+      "medianMs": 41.153999999994994,
+      "maxMs": 43.61380000000645,
+      "responseBytesMean": 232764.5,
+      "clientRestoreMsMean": 12.834810000001017
+    },
+    "combat-frame-v3-journal-29-death_save": {
+      "count": 10,
+      "medianMs": 37.04630000000179,
+      "maxMs": 41.818499999993946,
+      "responseBytesMean": 118459,
+      "clientRestoreMsMean": 12.007519999999932
+    },
+    "combat-frame-v3-journal-30-death_save": {
+      "count": 10,
+      "medianMs": 36.191500000000815,
+      "maxMs": 39.931900000003225,
+      "responseBytesMean": 122176,
+      "clientRestoreMsMean": 11.713399999999819
+    },
+    "combat-frame-v3-journal-31-death_save": {
+      "count": 10,
+      "medianMs": 36.26720000000205,
+      "maxMs": 38.28089999999793,
+      "responseBytesMean": 118444.5,
+      "clientRestoreMsMean": 11.073589999999239
+    }
+  },
+  "limitations": [
+    "Measurements are local PC loopback, not TimeWeb or public network.",
+    "Ten samples per phase cannot establish a production latency SLO.",
+    "Cold approach remains above 200 ms in some samples."
+  ],
+  "agentSteps": [
+    {
+      "order": 1,
+      "action": "Commit only reviewed wire, codec, negotiation, tests, provenance and report files."
+    },
+    {
+      "order": 2,
+      "action": "Wait for independent acceptance of parent release 825c042b before advancing main."
+    },
+    {
+      "order": 3,
+      "action": "Fast-forward main to this verified commit; push and require exact CI aggregate and immutable publication."
+    },
+    {
+      "order": 4,
+      "action": "Capture current production DB, rehearse exact images and rollback, deploy through canonical workflow; do not restore production DB."
+    },
+    {
+      "order": 5,
+      "action": "Independently verify manifest, baked component identities, edge health and retained data/schema."
+    },
+    {
+      "order": 6,
+      "action": "Run owned TimeWeb copy of battle with canonical V3 codec, ordinary and rapid command sequences; verify retries, persisted hashes and physical LZ4."
+    },
+    {
+      "order": 7,
+      "action": "Compare actual TimeWeb phases against cfd5d29 and 825c042b; report remaining >200 ms scenarios and address measured dominant costs."
+    }
+  ]
+}

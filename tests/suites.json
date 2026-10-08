@@ -321,6 +321,7 @@
         "TestRuntimePartySelectionPreservesNullZeroAndCanonicalSave",
         "TestCombatRulesUpgrade",
         "TestCombatCache",
+        "TestCombatSnapshotDelta",
         "TestCombatReadWarm",
         "TestCombatWireJSONEqualityMatchesDeepEqual",
         "TestOwnedRunLoadsPartyLeaderOnceAndKeepsSoloAccess",
