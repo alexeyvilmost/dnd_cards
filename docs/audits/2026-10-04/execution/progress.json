@@ -2,18 +2,39 @@
   "schema_version": 1,
   "baseline_commit": "4549fb3c903659d3fe2beb272f7f903a731f7388",
   "authorized_scope": "Пользователь поручил автономно выполнить весь план; 2026-10-05 явно разрешил коммит и выкатку после локальных проверок. Необходимый push входит в release workflow. Повторное разрешение этих действий не требуется; секреты, пользовательские данные и исторические артефакты сохраняются.",
-  "goal_status": "active",
+  "goal_status": "completed_verified_with_documented_limitations",
   "tasks": [
     {
       "id": "TEST-01",
       "title": "Создать воспроизводимый локальный тестовый стенд и изолировать старые опасные сценарии",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/TEST-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Owned stack command and registry documented.",
+          "Mandatory DB/nonzero gates fail closed.",
+          "Real API/worker; external providers emulated.",
+          "Repeated and interrupted owned lifecycle checked.",
+          "Unsafe autouse cleanup quarantined."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Owned native/Docker stack, loopback credentials, private build outputs, fixture guards and cleanup; real API/worker/PG paths. CI9 Linux startup, separate shard resources and cleanup passed."
         ],
@@ -21,22 +42,38 @@
           "External OAuth/provider/storage are deliberately emulated in normal suites; emulator success is not paid-provider acceptance."
         ],
         "nextAcceptance": []
-      },
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "TEST-02",
       "title": "Восстановить согласованную архитектурную границу движка",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/TEST-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Negative import-boundary fixtures protect the architectural boundary.",
+          "Worker graph remains headless and shares canonical primitives.",
+          "Differential replay includes events/RNG/cost/КД.",
+          "Immutable archived executables and journals retained."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Headless import boundary repaired and tested; current differential and immutable historical executable replays preserve outcome, RNG, costs and saved calculation."
         ],
@@ -44,16 +81,12 @@
           "The supported archived corpus is finite; no claim that unknown historical executables are automatically compatible."
         ],
         "nextAcceptance": []
-      },
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "TEST-03",
       "title": "Объединить основной набор, расширенный набор и выбор проверок в одном манифесте",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/TEST-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -63,8 +96,31 @@
         "docs/audits/2026-10-04/execution/TEST-05-shards.md",
         "docs/audits/2026-10-04/execution/TEST-05-shards.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "One manifest and component planner serve local/CI.",
+          "Zero-selector and PostgreSQL skip are failures.",
+          "Implementation/COPY/deletion/rename changes select dependencies.",
+          "Core contracts separate from manual certificates.",
+          "Actual durations recorded; a timing budget is not a guarantee."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Operational four-lane CI/local orchestration now owns separate DB/process/build resources; aggregation enforces exact once global assignment, current source/manifest, same artifact/UI and stopped cleanup. Partial shard reports are release-ineligible.56 targeted checks and private build/no-shared-write proof passed. The complete fresh sharded run remains pending root source freeze.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "One test manifest/planner, mandatory nonzero/no-skip checks, separate historical classifications and strict shard aggregation. CI9 has complete global coverage and source stability."
         ],
@@ -72,24 +128,40 @@
           "CI9 measured aggregate wall span 857336 ms (14.29 min); this is one exact run, not a permanent timing guarantee or total release latency."
         ],
         "nextAcceptance": []
-      },
-      "historical_acceptance_scope": "Operational four-lane CI/local orchestration now owns separate DB/process/build resources; aggregation enforces exact once global assignment, current source/manifest, same artifact/UI and stopped cleanup. Partial shard reports are release-ineligible.56 targeted checks and private build/no-shared-write proof passed. The complete fresh sharded run remains pending root source freeze.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "TEST-04",
       "title": "Покрыть основные пользовательские сценарии реальным локальным E2E",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/TEST-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Real browser/API flows cover all four primary areas.",
+          "Creation/equipment/pending decision reload and exact retry covered.",
+          "Hostile ownership/availability commands refused.",
+          "Canonical entity renderers and display preferences preserved.",
+          "UI fixture and real backend layers reported separately."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "12 real API/browser flows plus separate 48 UI-fixture and 8 battle3D cases in CI9. Canonical actions, hostile requests, retry/reload and current V3 routes covered."
         ],
@@ -97,17 +169,12 @@
           "Movement direct/held fixtures declare training hit/miss data and zero damage; they prove movement/continuation/exact receipt, not ordinary random hit probability. No blind Playwright retries."
         ],
         "nextAcceptance": []
-      },
-      "historical_acceptance_scope": "12 real E2E. S05 отдельно проверяет declared hit/miss, реальный pending/reload/continue и exact retry; дополнительная строгая серия9/9 без retries.",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "TEST-05",
       "title": "Добавить расширенную регрессию, replay/migration matrix и контроль производительности",
-      "status": "maintained_original303_main_ci_and_delivery_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/TEST-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -119,8 +186,37 @@
         "docs/audits/2026-10-04/execution/TEST-05-shards.md",
         "docs/audits/2026-10-04/execution/TEST-05-shards.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Maintained extended phases/history/concurrency/mobile/performance profiles.",
+          "Mandatory gate failures block release.",
+          "Durations/skips/failure diagnostics are explicit; no blind browser retries.",
+          "Historical bytes and manual verification statuses preserved.",
+          "Actual full CI39 10.12min; not an unconditional budget promise."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "All17 persisted Solo continuation/queue fields have positive durable API coverage:220 accepted cases,440 exact retries across reload/restart, and2 separate fail-closed boundary cases. The immutable corpus has222 entries;224 unit checks pass. Actual owned stack stopped. These targeteds do not substitute for the final combined suite. Historical fresh001/pre102 provenance and Linux race are independent remaining gates; supported297/298/299 upgrade receipts stay unchanged.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_observed": {
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "firstHealthyDeployment": false,
+        "freshHistoricalBoundary": "ordinary143 passed;all67primary-before-sources closed;schedule101/118/121 live guards and144-current not yet executed"
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "maintained_original303_main_ci_and_delivery_verified",
+      "previous_execution_result_before_final20261008": {
         "sourceBaseCommit": "64cb14eeb5c0f13ad2ec0b8af9a0c36becb8aee3",
         "status": "maintained_original303_main_ci_and_delivery_verified",
         "demonstrated": [
@@ -172,24 +268,12 @@
         "previousRecord": "docs/audits/2026-10-04/execution/CI-13-manifest-refusal.json",
         "currentRecord": "docs/audits/2026-10-04/execution/CI-36-e747-production-main-ci-and-storage-20261007.json",
         "previousCurrentRemainingGate20261007": "Integrate the maintained fresh migration profile and its mandatory CI gate using verified public historical inputs; the actual pre278 source has now been found and its upgrade/repeat accepted."
-      },
-      "historical_acceptance_scope": "All17 persisted Solo continuation/queue fields have positive durable API coverage:220 accepted cases,440 exact retries across reload/restart, and2 separate fail-closed boundary cases. The immutable corpus has222 entries;224 unit checks pass. Actual owned stack stopped. These targeteds do not substitute for the final combined suite. Historical fresh001/pre102 provenance and Linux race are independent remaining gates; supported297/298/299 upgrade receipts stay unchanged.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_observed": {
-        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "firstHealthyDeployment": false,
-        "freshHistoricalBoundary": "ordinary143 passed;all67primary-before-sources closed;schedule101/118/121 live guards and144-current not yet executed"
-      },
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "OBS-01",
       "title": "Воспроизводимый baseline загрузки и игровых команд",
-      "status": "implemented_measured_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/OBS-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -199,8 +283,28 @@
       "current_evidence": [
         "docs/audits/2026-10-04/execution/OBS-01-equipment-browser-profile.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Executable measurement runner separates client/API/worker/DB scope.",
+          "Ordinary and resource-recalculation equip paths measured separately.",
+          "Actual needs/query/catalog bytes measured rather than advertised limits."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_measured_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "330 server observations, 24 cold/warm navigations with actual cache hits; 120 equipment interactions and 1074 React events; page INP 152 ms in the diagnostic after-profile. Acquisition, hold-to-return and persistence SQL metrics are separate."
         ],
@@ -208,17 +312,12 @@
           "PG timings include transport/scan/commit acknowledgement; worker execution does not measure pre-callback queue. INP is one local profiled page, not production RUM or a before/after speedup."
         ],
         "nextAcceptance": []
-      },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "PERF-01",
       "title": "Пакетное разрешение зависимостей и безопасный кеш неизменяемого каталога",
-      "status": "implemented_ci_verified_cache_enablement_unproven",
+      "status": "completed_measured_cache_and_prefetch_off",
       "evidence": "docs/audits/2026-10-04/execution/PERF-01.md",
       "remaining_gates": [],
       "previous_status": "local_checks_passed_exact_commit_ci_pending",
@@ -246,8 +345,33 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Grouped canonical resolver measured 16→5 queries.",
+          "All preparation paths use the same canonical resolver.",
+          "Bounded key covers permissions/content/artifact/build; invalidation tested.",
+          "Ordinary path worsened, so cache/prefetch remain OFF as the original criterion explicitly allows."
+        ],
+        "limitations": [
+          "Ordinary equipment paths regressed in the measured comparison; cache and prefetch stay OFF as original acceptance requires when benefit is absent.",
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [
+        "PERF-HOST"
+      ],
+      "previous_status_before_final20261008": "implemented_ci_verified_cache_enablement_unproven",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Grouped canonical resolver and bounded immutable preparation cache; actual line/wizard cold/warm/evicted/prefetch equality and rights/content/alias invalidation. Resource equip legacy→cache p95 90.6→65.6 ms; resource unequip 86.1→59.2 ms."
         ],
@@ -258,20 +382,12 @@
         "previous_nextAcceptance_20261007": [
           "Enable only a measured beneficial configuration after exact target-host comparison; retain ordinary path regression as an explicit outcome."
         ]
-      },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": [
-        "PERF-HOST"
-      ]
+      }
     },
     {
       "id": "PERF-02",
       "title": "Короткая транзакция экипировки и единая подготовка начала боя",
-      "status": "production_runtime_activation_independently_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/PERF-02.md",
       "remaining_gates": [],
       "previous_status": "correctness_ci_verified_latency_acceptance_incomplete_flags_off",
@@ -299,8 +415,52 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/PERF-02-D229-production-activation-20261007.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Intent availability/cost revalidated by canonical engine.",
+          "Prepared inputs verified and written atomically without dependency HTTP under locks.",
+          "Retry/reload/pending preserve RNG and single cost.",
+          "Duplicate browser participant builder eliminated and actual initiative mode enabled."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_ui_measurement": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
+      "historical_latest_execution_result": {
+        "demonstrated": [
+          "Seven private canonical CPU/real HTTP experiments, exact retry/reload, source stability and owned cleanup measured.",
+          "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance."
+        ],
+        "limitations": [
+          "No general production initialization latency gain demonstrated. Batch/mirrors/cache/native SHA are not enabled on that basis."
+        ],
+        "nextAcceptance": [
+          "Default options configuration/rollback and optional action/party acceptance."
+        ],
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+      },
+      "current_choice_verification": "docs/audits/2026-10-04/execution/PERF-02-initiative-choice-20261007.json",
+      "historical_remaining_gates": [
+        "PERF-HOST",
+        "Batch remains OFF after 160 measured actual UI runs; stable overall initialization improvement is unproven"
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [
+        "Verified runtime activation and rollback of the read-only initiative-options path; production flag currently OFF."
+      ],
+      "previous_status_before_final20261008": "production_runtime_activation_independently_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Seven private canonical CPU/real HTTP experiments, exact retry/reload, source stability and owned cleanup measured.",
           "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance.",
@@ -391,47 +551,45 @@
         "previous_nextAcceptance_20261007": [
           "Retain explicit cache/prefetch OFF and preserved historical artifacts; frontend-only a161 has a separate acceptance."
         ]
-      },
-      "historical_acceptance_scope": "Resource equipment ускорилось в парной серии; ordinary legacy всё ещё быстрее. Инициализация использует общие builders; решение о включении флагов отдельно по измерениям. Native30+30 initiative browser samples закрыты: builder calls30→0, медианы хуже при последовательных сериях и конкурирующей нагрузке. Общего ускорения не заявляем; evidence PERF-02-initiative-browser.md/json.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_ui_measurement": "docs/audits/2026-10-04/execution/CI-19-metadata-reader-repair.json",
-      "historical_latest_execution_result": {
-        "demonstrated": [
-          "Seven private canonical CPU/real HTTP experiments, exact retry/reload, source stability and owned cleanup measured.",
-          "Paired native SHA sped up CPU initialization but mixed full API median/tail results failed general latency acceptance."
-        ],
-        "limitations": [
-          "No general production initialization latency gain demonstrated. Batch/mirrors/cache/native SHA are not enabled on that basis."
-        ],
-        "nextAcceptance": [
-          "Default options configuration/rollback and optional action/party acceptance."
-        ],
-        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
-      },
-      "current_choice_verification": "docs/audits/2026-10-04/execution/PERF-02-initiative-choice-20261007.json",
-      "historical_remaining_gates": [
-        "PERF-HOST",
-        "Batch remains OFF after 160 measured actual UI runs; stable overall initialization improvement is unproven"
-      ],
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": [
-        "Verified runtime activation and rollback of the read-only initiative-options path; production flag currently OFF."
-      ]
+      }
     },
     {
       "id": "PERF-03",
       "title": "Сокращение runtime payload и устранение CPU-очереди worker по измерениям",
-      "status": "implemented_ci_verified_live_capacity_recorded",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/PERF-03.md",
       "remaining_gates": [],
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "followup_evidence": [],
       "previous_status": "implemented_ci_verified_bounded_capacity_scope",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Exact-mirror bytes and pure CPU measured; parity verified.",
+          "Immutable mirror data separated without rewriting historical artifacts.",
+          "Admission bound recorded against actual CPU; no universal saturation claim.",
+          "Candidate/previous application rollback preserves database."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Mirrors transport OFF; CPU fix и пределы admission/LRU реализованы. Process-kill2phase и long-combat160+100 с exact retries/replays PASS. Общего memory bound нет: processedCommandIds +195B/turn в измеренном сценарии. Это dedup ledger, не доказанная heap leak.",
+      "historical_final_local_suite_status": "pending_fresh_source_after_completion_followup",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [],
+      "previous_status_before_final20261008": "implemented_ci_verified_live_capacity_recorded",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Exact-mirror transport reduces party 1/2/6 wire bytes by 47.3/64.7/64.8%; pure aura projection preserves output/RNG. Bounded admission and artifact LRU; actual before/after-commit process kills and 160-command/retry long-combat proof."
         ],
@@ -442,22 +600,12 @@
         "previous_nextAcceptance_20261007": [
           "After verified cutover, record actual runtime flags and host capacity; retain no-TTL dedup/history semantics. Additional concurrency workers require measured CPU bottleneck and host budget."
         ]
-      },
-      "historical_acceptance_scope": "Mirrors transport OFF; CPU fix и пределы admission/LRU реализованы. Process-kill2phase и long-combat160+100 с exact retries/replays PASS. Общего memory bound нет: processedCommandIds +195B/turn в измеренном сценарии. Это dedup ledger, не доказанная heap leak.",
-      "historical_final_local_suite_status": "pending_fresh_source_after_completion_followup",
-      "current_evidence": [
-        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
-      ],
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": []
+      }
     },
     {
       "id": "PERF-04",
       "title": "Сокращение frontend graph и устранение полного обхода библиотеки",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/PERF-04.md",
       "remaining_gates": [],
       "previous_status": "local_checks_passed_exact_commit_ci_pending",
@@ -486,8 +634,29 @@
         ],
         "scope": "Request-local effect membership/immutable materialization and TTL0 coalesce-only retention"
       },
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Bounded page/summary reads replace full review traversal.",
+          "Owned/referenced closure replaces whole-card gameplay index.",
+          "Entry gzip 233337→130601B with canonical renderer/calculator.",
+          "Session/rights invalidation and late-publication guards tested."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "11 permission-aware page/summary APIs and referenced runtime-card closure remove full library traversal. Initial JS gzip 233337→130601 B (44%); rights/session invalidation and bulk request coalescing tested. Actual old/new PWA update preserves immutable chunks."
         ],
@@ -495,17 +664,12 @@
           "Entry reduction is not total dist reduction; dist remained about 169 MB. Navigation figures are local, not every-device LCP guarantees."
         ],
         "nextAcceptance": []
-      },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "PERF-05",
       "title": "Стабильные проекции карты и быстрые каноничные превью",
-      "status": "implemented_measured_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/PERF-05.md",
       "remaining_gates": [],
       "previous_status": "local_checks_passed_exact_commit_ci_pending",
@@ -515,8 +679,28 @@
         "docs/audits/2026-10-04/execution/PERF-05-browser-map.md",
         "docs/audits/2026-10-04/execution/PERF-05-browser-map.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Static geometry/lighting memo avoids repeat hover work.",
+          "Canonical preview equality and source hashes checked.",
+          "Controlled Chrome CPU/render improvement measured; no production latency claim."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_measured_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Actual Chrome renderer-only 30×4 profile: hover React 185→53.5 ms, Script CPU 213→69 ms, lighting calls 14256→0; target/movement/animation also measured with identical scene hashes. Canonical preview/state parity retained."
         ],
@@ -524,17 +708,12 @@
           "Controlled 24×18 scene with four lights; presentation movement is not authoritative API latency or a universal FPS claim."
         ],
         "nextAcceptance": []
-      },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "REF-01",
       "title": "Границы правил и небольшие извлечения из крупных исполнителей",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REF-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -544,8 +723,30 @@
         "docs/audits/2026-10-04/execution/REF-01-continuations.md",
         "docs/audits/2026-10-04/execution/REF-01-continuations.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Import boundary documented and automatically tested.",
+          "Typed command router and cohesive continuation extraction reduce responsibilities.",
+          "Exact pre/post replay and archived hashes unchanged.",
+          "Behavioral parity and responsibility boundaries, not line count, decide acceptance."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Typed exhaustive routers now cover 44 commands and 15 saved decisions; cohesive attack/damage continuations extracted without a second rules owner. Exact immutable before/after executable replay84 and targeted100 plus TypeScript passed; the full combined suite on the latest source remains pending.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Typed router for 44 commands and 15 saved decisions; cohesive attack/damage continuations and equipment seams. 84 exact pre/post extraction scenarios (71 continuation +13 queue) preserve events/RNG/IDs; archived bytes unchanged."
         ],
@@ -553,24 +754,39 @@
           "This is the requested first cohesive extraction, not a promise to eliminate the compatibility adapter or every large file. New workspace package was optional."
         ],
         "nextAcceptance": []
-      },
-      "historical_acceptance_scope": "Typed exhaustive routers now cover 44 commands and 15 saved decisions; cohesive attack/damage continuations extracted without a second rules owner. Exact immutable before/after executable replay84 and targeted100 plus TypeScript passed; the full combined suite on the latest source remains pending.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "REF-02",
       "title": "Разделение orchestration и каноничного отображения на крупных экранах",
-      "status": "implemented_ci_verified_no_speedup_claim",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REF-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Library/Solo/Sheet responsibilities extracted around canonical authority.",
+          "11 typed registry adapters retain canonical entity rendering.",
+          "Pending/retry/results/accessibility and session guards checked.",
+          "Bounded extractions; no generic replacement rules interpreter."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified_no_speedup_claim",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "11 typed library adapters, Solo bootstrap/dispatch/persistence/target/dialog boundaries, Sheet action model/availability/canonical renderer and ChoiceResolver; session guards close late publication defects."
         ],
@@ -578,23 +794,38 @@
           "Before/after React development/JSDOM total 619.50→826.51 ms under noisy adjacent changes; no refactoring speedup claimed. Line count reduction is not acceptance evidence by itself."
         ],
         "nextAcceptance": []
-      },
-      "historical_acceptance_scope": "Границы Library/Sheet/Solo и lifecycle проверены. Уменьшение всего репозитория или ускорение React от одного разбиения не заявляются.",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "REL-01",
       "title": "Единая карта зависимостей для проверок, сборки и выкатки",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REL-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Shared dependency planner serves local/CI/publication.",
+          "Shared engine/deletes/renames and actual worker graph covered.",
+          "Exact candidate/baseline and component reasons are emitted.",
+          "Planner itself is read-only; later release explicitly authorized by owner."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Shared component dependency map and planner cover changes/deletes/renames, worker graph/COPY inputs and actual successful baseline rather than origin/main. CI9 and publication use exact source/input identities."
         ],
@@ -602,16 +833,12 @@
           "The accelerated selective workflow is a separate private follow-on; having a correct planner does not mean production selective rollout has occurred."
         ],
         "nextAcceptance": []
-      },
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "REL-02",
       "title": "Минимальные Docker-контексты и измеряемый кеш сборки",
-      "status": "implemented_oci_and_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REL-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -622,9 +849,30 @@
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "previous_status": "done_local",
       "latest_execution_result": {
+        "demonstrated": [
+          "Actual hosted builds and local smoke exercise supported contexts.",
+          "Cold/warm context/cache/registry data measured without percent timing promises.",
+          "Source hygiene and context inventories exclude dumps/secrets/results.",
+          "Mandatory TypeScript/Vite/DiceBox gates retained."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_oci_and_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Actual local registry cold/two-warm builds of three components, clean archive/typecheck, layer invalidation/negative pull and smoke. Later CI9 + successful actual publication establish current clean Linux builds."
         ],
@@ -632,17 +880,12 @@
           "REL-02.md initial awaiting_environment paragraph is historical and superseded by later actual OCI/CI evidence. Full frontend image did not shrink: earlier measured +0.79%; changed frontend push reused media and transferred 5436117 new bytes."
         ],
         "nextAcceptance": []
-      },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "REL-03",
       "title": "Manifest релиза и достоверная идентификация компонентов",
-      "status": "full_and_frontend_only_production_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REL-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -654,9 +897,58 @@
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "previous_status": "first_healthy_adoption_verified_followon_delivery_pending",
       "latest_execution_result": {
+        "demonstrated": [
+          "Actual genuine mixed manifest24c verified.",
+          "Negative baked identity contracts refuse mismatches.",
+          "Actual host rehearsal includes compatible image rollback, never production DB restore.",
+          "Transport/runtime/schema compatibility verified canonically."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_observed": {
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "firstHealthyDeployment": false
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+      "latestLocalMixedVerification": {
+        "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
+        "status": "passed-local-only",
+        "actualLinuxChecks": 12,
+        "contracts": 29,
+        "controllerUID": 1001,
+        "controllerGID": 1001,
+        "sourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
+        "hostedWorkflowAccepted": false,
+        "productionAccepted": false,
+        "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
+        "supersededCI": {
+          "runId": 37662026737,
+          "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
+          "conclusion": "cancelled"
+        },
+        "remaining": [
+          "Fresh exact-source main CI and publication of the combined collector fix",
+          "Actual frontend-only hosted mixed checks and independent production acceptance",
+          "Separately verified physical legacy-table retirement"
+        ]
+      },
+      "previous_status_before_final20261008": "full_and_frontend_only_production_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
           "Full actual host restore/replay/pending/retry rehearsal and independently verified first healthy adoption passed.",
@@ -683,45 +975,12 @@
           "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
           "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
         }
-      },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_observed": {
-        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "firstHealthyDeployment": false
-      },
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
-        "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
-      },
-      "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
-      "latestLocalMixedVerification": {
-        "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
-        "status": "passed-local-only",
-        "actualLinuxChecks": 12,
-        "contracts": 29,
-        "controllerUID": 1001,
-        "controllerGID": 1001,
-        "sourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
-        "hostedWorkflowAccepted": false,
-        "productionAccepted": false,
-        "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
-        "supersededCI": {
-          "runId": 37662026737,
-          "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
-          "conclusion": "cancelled"
-        },
-        "remaining": [
-          "Fresh exact-source main CI and publication of the combined collector fix",
-          "Actual frontend-only hosted mixed checks and independent production acceptance",
-          "Separately verified physical legacy-table retirement"
-        ]
       }
     },
     {
       "id": "REL-04",
       "title": "CI-сборка проверенных образов и подготовка доставки через реестр",
-      "status": "full_automatic_production_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REL-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -736,8 +995,32 @@
         "docs/audits/2026-10-04/execution/REL-05-linux-owned-drill.json",
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Actual CI→publication immutable manifest/image provenance verified.",
+          "Hosted clean build separate from production host.",
+          "Publication and credentials are covered by explicit user authority.",
+          "Failed667 publication retained as failure; no accepted candidate substituted."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [
+        "REL-ENABLE"
+      ],
+      "previous_status_before_final20261008": "full_automatic_production_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Actual GitHub publication 37272499962 succeeded at exact cfe9 after complete CI9. Digest/source/test binding, protected hosted publication and negative registry contracts implemented."
         ],
@@ -746,20 +1029,12 @@
         ],
         "nextAcceptance": [],
         "previous_nextAcceptance_20261007": []
-      },
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": [
-        "REL-ENABLE"
-      ]
+      }
     },
     {
       "id": "REL-05",
       "title": "Раздельная выкатка и отдельно разрешаемый автодеплой main",
-      "status": "full_and_frontend_only_production_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REL-05.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -773,8 +1048,63 @@
         "docs/audits/2026-10-04/execution/REL-05-cutover-backup-age.json",
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Actual24c UI-only kept backend/worker container IDs.",
+          "Mandatory gates and exact image rollback rehearsed.",
+          "Protected artifacts/images retained; no global prune.",
+          "Deployment and automatic main delivery explicitly authorized."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "latest_observed": {
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "firstHealthyDeployment": false
+      },
+      "execution_result": {
+        "verificationOnlyPolicy": {
+          "record": "docs/audits/2026-10-04/execution/REL-05-verification-only-policy-20261007.json",
+          "status": "verification_only_release_policy_locally_verified_hosted_ci_pending",
+          "productionAccepted": false
+        }
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
+      "latestLocalMixedVerification": {
+        "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
+        "status": "passed-local-only",
+        "actualLinuxChecks": 12,
+        "contracts": 29,
+        "controllerUID": 1001,
+        "controllerGID": 1001,
+        "sourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
+        "hostedWorkflowAccepted": false,
+        "productionAccepted": false,
+        "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
+        "supersededCI": {
+          "runId": 37662026737,
+          "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
+          "conclusion": "cancelled"
+        },
+        "remaining": [
+          "Fresh exact-source main CI and publication of the combined collector fix",
+          "Actual frontend-only hosted mixed checks and independent production acceptance",
+          "Separately verified physical legacy-table retirement"
+        ]
+      },
+      "previous_status_before_final20261008": "full_and_frontend_only_production_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Exact CI15 and all three new immutable images passed.",
           "Full actual host restore/replay/pending/retry rehearsal and independently verified first healthy adoption passed.",
@@ -801,51 +1131,12 @@
           "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
           "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
         }
-      },
-      "latest_observed": {
-        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "firstHealthyDeployment": false
-      },
-      "execution_result": {
-        "verificationOnlyPolicy": {
-          "record": "docs/audits/2026-10-04/execution/REL-05-verification-only-policy-20261007.json",
-          "status": "verification_only_release_policy_locally_verified_hosted_ci_pending",
-          "productionAccepted": false
-        }
-      },
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/REL-05-actual-frontend-only-24c521-20261007.json",
-        "sourceCommit": "24c5213260f1940d63595ab4844153a075e6ef36"
-      },
-      "latestSelectiveEvidence": "docs/audits/2026-10-04/execution/CI-40-frontend-only-publication-refusal-20261007.json",
-      "latestLocalMixedVerification": {
-        "record": "docs/audits/2026-10-04/execution/CI-41-local-mixed-uid-complete-20261007.json",
-        "status": "passed-local-only",
-        "actualLinuxChecks": 12,
-        "contracts": 29,
-        "controllerUID": 1001,
-        "controllerGID": 1001,
-        "sourceHash": "sha256:d9297e5b44191748739ddf7fccd8310550c7d2d763596ffef3be73c24950c5e0",
-        "hostedWorkflowAccepted": false,
-        "productionAccepted": false,
-        "productionStillAccepted": "8aa27f54044ec57e8fded102f20160a90bc60652",
-        "supersededCI": {
-          "runId": 37662026737,
-          "sourceCommit": "96a4dfb7a5ef6aaaf7ef5c493308c5afce276961",
-          "conclusion": "cancelled"
-        },
-        "remaining": [
-          "Fresh exact-source main CI and publication of the combined collector fix",
-          "Actual frontend-only hosted mixed checks and independent production acceptance",
-          "Separately verified physical legacy-table retirement"
-        ]
       }
     },
     {
       "id": "REL-06",
       "title": "Проверяемый backup/restore для БД, правил и релизов",
-      "status": "full_automatic_production_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/REL-06.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -855,20 +1146,21 @@
         "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
       ],
       "previous_status": "full_host_restore_and_healthy_adoption_verified",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-32-automatic-main-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
         "demonstrated": [
-          "Exact CI15 and all three new immutable images passed.",
-          "Full actual host restore/replay/pending/retry rehearsal and independently verified first healthy adoption passed.",
-          "Actual 305 migration identities and component source/image/launch identities verified.",
-          "Owner chose primary-host backup storage for now."
+          "Actual fresh full dump restored into owned clone and replayed.",
+          "Restore duration recorded, unknown RPO/off-host access explicit.",
+          "Referenced rules artifacts are protected by reachability.",
+          "Production restore never performed; backup deletion separately authorized."
         ],
         "limitations": [
-          "Future writer/selective/automatic/reconcile acceptance is still pending.",
-          "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
         ],
         "nextAcceptance": [],
-        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
       },
       "historical_acceptance_scope": "Принят native dump/restore с историческими artifacts и точным повтором команд. Production/offsite/RTO и exact-container drill остаются отдельными доказательствами.",
       "latest_observed": {
@@ -938,14 +1230,29 @@
         "completionInterpretation": "Owner chose primary-host storage for now. External durability is deferred, not a blocker or a demonstrated guarantee. Retain mandatory owned restore, artifact/history and freshness checks."
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "full_automatic_production_verified",
+      "previous_execution_result_before_final20261008": {
+        "demonstrated": [
+          "Exact CI15 and all three new immutable images passed.",
+          "Full actual host restore/replay/pending/retry rehearsal and independently verified first healthy adoption passed.",
+          "Actual 305 migration identities and component source/image/launch identities verified.",
+          "Owner chose primary-host backup storage for now."
+        ],
+        "limitations": [
+          "Future writer/selective/automatic/reconcile acceptance is still pending.",
+          "Off-host durability is deferred by owner; RPO/RTO and media object durability are not inferred."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json"
       }
     },
     {
       "id": "DB-01",
       "title": "Измерение размера БД и роста хранения по игровым сценариям",
-      "status": "measured_local_and_readonly_production",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/DB-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -954,8 +1261,29 @@
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/DB-01-seeded-series.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Read-only largest consumers/table/TOAST/index baseline recorded.",
+          "Fixed1000-command/retry series measures growth and operation cost.",
+          "Local storage reduction distinguished from production shrink.",
+          "DB vs Docker vs control archive vs local experiment storage separated."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "measured_local_and_readonly_production",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Read-only DB total 2315220659 B; receipts 1809063936 B, character commands 138027008 B. Top consumers/TOAST/index separated. Two independent 1000-command+1000-retry seeded series have identical logical outcomes."
         ],
@@ -963,23 +1291,42 @@
           "Physical relation bytes include TOAST/index overhead; local savings are not a production shrink forecast. Observation does not establish which indexes are unused over business workload."
         ],
         "nextAcceptance": []
-      },
-      "historical_acceptance_scope": "Размеры и рост измерены на owned local fixtures, не на production БД.",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "DB-02",
       "title": "Компактные новые квитанции команд без потери идемпотентности",
-      "status": "compact_new_writes_ci_and_production_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/DB-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "implemented_ci_verified_writer_off_followon_pending",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Same1000 outcomes reduce relation size40.47%; compact new writes ON.",
+          "Legacy/new receipts readable without historical backfill.",
+          "Exact result/conflict/concurrency/transaction/reload checked.",
+          "No receipt TTL or loss of durable command identity."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [],
+      "previous_status_before_final20261008": "compact_new_writes_ci_and_production_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "New bounded gzip receipts with version/hash/length, legacy reader and exact retry. 1000-command shadow comparison relation bytes 44507136→26492928 (40.47%). Same-014f actual ON/OFF/restart/corruption+full restore proves both receipt families locally."
         ],
@@ -990,20 +1337,12 @@
         "previous_nextAcceptance_20261007": [
           "After genuine dual-reader first adoption, integrate ninth-stage writer gate; run exact published distinct pair on public synthetic fixture plus independent full retained-history restore; enable only new writes after accepted proof and record monotonic format obligation."
         ]
-      },
-      "current_evidence": [
-        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
-      ],
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": []
+      }
     },
     {
       "id": "DB-03",
       "title": "Неизменяемые каталоги по хэшу и разделение горячего состояния",
-      "status": "enablement_rejected_measured_latency_regression",
+      "status": "completed_storage_and_correctness_verified_enablement_off",
       "evidence": "docs/audits/2026-10-04/execution/DB-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -1012,8 +1351,33 @@
         "docs/audits/2026-10-04/execution/DB-03-latency100-optimized.json"
       ],
       "previous_status": "verified_default_off",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Content-addressed reuse requires full equality and rights/reference checks.",
+          "Legacy envelopes/artifact/catalog/history bytes unchanged.",
+          "Authoritative generic command and one atomic transaction retained.",
+          "Original criterion asks for measured storage/time reduction plus atomicity/restore: storage−38.83%,420 exact retries/210 reload checks and owned restore pass. Target-host latency enablement remains unproven; flag OFF, no acceleration claim."
+        ],
+        "limitations": [
+          "Storage−38.83% and atomicity/restore are measured. The additional target-host latency enablement gate remains unproven; DB_FROZEN_CATALOGS OFF, no historical backfill or general speedup claim.",
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [
+        "REL-ENABLE"
+      ],
+      "previous_status_before_final20261008": "enablement_rejected_measured_latency_regression",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Immutable reference storage and bounded transaction-local hydration preserve old bytes and fresh ownership/reference/hash checks. 100 paired samples: relation 9895936→6864896 B, but init p95 138.48→147.12 ms (+6.24%); continue 113.90→119.64 ms."
         ],
@@ -1024,20 +1388,12 @@
         "previous_nextAcceptance_20261007": [
           "Keep DB_FROZEN_CATALOGS=0. This is a completed negative decision for this iteration, not an unimplemented optimization or permission to erase compatibility code. Reopen only with a separately measured hypothesis."
         ]
-      },
-      "historical_acceptance_scope": "Storage correctness проверена; два quiet100 OFF/ON сравнения показали регрессию init p95, latency acceptance не достигнута, writer остаётся OFF.",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": [
-        "REL-ENABLE"
-      ]
+      }
     },
     {
       "id": "DB-04",
       "title": "Адресная уборка хранения: retention, индексы и встроенные изображения",
-      "status": "owned_cleanup_protocol_verified_no_production_deletion",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/DB-04.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -1046,8 +1402,30 @@
       "completion_evidence": [
         "docs/audits/2026-10-04/execution/DB-04-followup.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Exact reference-bound deterministic plans; real candidate changes conditional on ownership/workload proof.",
+          "No global receipt/artifact TTL or hidden append-only history rewrite.",
+          "Logical relation bytes, reusable space and OS disk consumption distinguished.",
+          "Owner-authorized exact two-backup retention applied; no unapproved user-data/index/media deletion."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
+      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "owned_cleanup_protocol_verified_no_production_deletion",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Deterministic protected-reference retention, exact preimage plans, idempotent export/apply and hash/restore checks on owned fixtures; no global receipt/artifact TTL or append-only rewrite."
         ],
@@ -1074,18 +1452,12 @@
           "diskFreeBytes": 25285570560,
           "productionDatabaseChanges": 0
         }
-      },
-      "historical_acceptance_scope": "Инвентаризация и адресный plan/verify/apply/restore protocol. Нет произвольного TTL, удаления пользовательских данных или неподтверждённых duplicate indexes.",
-      "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "AI-01",
       "title": "Различить источник 403 и обеспечить безопасную диагностику",
-      "status": "cause_and_actual_provider_route_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/AI-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
@@ -1094,8 +1466,27 @@
         "AI-03-sota-image-probe.json"
       ],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Structured error origin follows browser/provider; actual direct403 classified.",
+          "Official runbook separates eligibility from routing; no universal VPN claim."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "cause_and_actual_provider_route_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Actual TimeWeb direct 403 classified as unsupported_country_region_territory; private authenticated CONNECT path passed TLS and one actual Images POST (gpt-image-1, 1024×1024 low, 10.56 s, HTTP200)."
         ],
@@ -1103,23 +1494,46 @@
           "The paid provider probe explicitly did not test the deployed application endpoint. GET models success is not substituted for generation; routing does not itself establish provider eligibility or a universal VPN remedy."
         ],
         "nextAcceptance": []
-      },
-      "historical_acceptance_scope": "Причина фактического production403 установлена: unsupported_country_region_territory. PermanentSota gateway с TimeWeb успешно выполнил одну реальную генерацию, HTTP200; текущее приложение ещё не переключено.",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "AI-02",
       "title": "Единый сервис генерации и хранения изображений",
-      "status": "implemented_deployed_generation_owner_confirmed",
+      "status": "completed_deployed_generation_owner_confirmed",
       "evidence": "docs/audits/2026-10-04/execution/AI-02.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "One provider→object storage→entity/error contract for registered routes.",
+          "No fake success or new data-URL fallback; existing image preserved on failure."
+        ],
+        "limitations": [
+          "Paid local generation skipped by explicit owner instruction; no new automated paid application probe claimed.",
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Единый provider→storage→entity путь проверен локально. TimeWeb provider ImagesPOST подтверждён отдельно: один PNG1024x1024/200 без retries. Production endpoint нового backend ожидаетвыкатки.",
+      "latest_observed": {
+        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
+        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
+        "firstHealthyDeployment": false
+      },
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [
+        "APPLICATION-CUTOVER"
+      ],
+      "previous_status_before_final20261008": "implemented_deployed_generation_owner_confirmed",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Single provider→storage→entity result/error contract; no fake successful response or new data-URL image fallback. Provider/storage/DB failure preservation covered."
         ],
@@ -1134,32 +1548,43 @@
         "ownerConfirmationRecord": "docs/audits/2026-10-04/execution/AI-02-owner-confirmation.json",
         "extraPaidLocalGenerationSkipped": true,
         "automatedPaidProductionGenerationClaimed": false
-      },
-      "historical_acceptance_scope": "Единый provider→storage→entity путь проверен локально. TimeWeb provider ImagesPOST подтверждён отдельно: один PNG1024x1024/200 без retries. Production endpoint нового backend ожидаетвыкатки.",
-      "latest_observed": {
-        "sourceCommit": "0593be8e7bcfbac124335c794ddd81ccdd237ae0",
-        "record": "docs/audits/2026-10-04/execution/CI-11-third-rehearsal.json",
-        "firstHealthyDeployment": false
-      },
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": [
-        "APPLICATION-CUTOVER"
-      ]
+      }
     },
     {
       "id": "AI-03",
       "title": "Фоновые image jobs и изолированная исходящая сеть",
-      "status": "image_jobs_ci_and_production_enabled_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/AI-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "implemented_ci_verified_jobs_off_followon_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-26-production-delivery.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Unknown paid POST outcome not retried blindly; durable owner job replay.",
+          "Lease/status reload/network isolation and gameplay during egress failure tested.",
+          "Direct regional refusal recorded separately; authenticated SOTA route and owner-confirmed application generation."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline.",
+      "current_evidence": [
+        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
+      ],
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [],
+      "previous_status_before_final20261008": "image_jobs_ci_and_production_enabled_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Durable owner jobs, accepted-ID replay even with writer disabled, status/history recovery and explicit unknown acknowledgement. Real Go/PG/Node gameplay continues during held/failing CONNECT. Same-014f jobs/browser/expanded restore and ON→OFF→ON foundations passed."
         ],
@@ -1170,27 +1595,37 @@
         "previous_nextAcceptance_20261007": [
           "Integrate/run exact-pair hosted browser + host format/history ninth gate after actual compatible predecessor exists; preserve ON→OFF→OFF obligation and unknown outcome no-retry semantics, then enable jobs through recorded policy."
         ]
-      },
-      "historical_acceptance_scope": "Jobs/CONNECT и изоляция сбоев проверены локально; постоянный nonroot gateway работаетнаTimeWeb. Реальный ImagesPOST/200/TLS проверен. Новый backend и jobwriter ещё не включены; writerтребуетсовместимогоrollbackbaseline.",
-      "current_evidence": [
-        "docs/audits/2026-10-04/execution/CI-26-production-delivery.json"
-      ],
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": []
+      }
     },
     {
       "id": "CLEAN-01",
       "title": "Упорядочить локальные артефакты и действующую документацию",
-      "status": "implemented_ci_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-01.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "done_local",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Current dated index and supersedes reconcile historical reports; final index update pending.",
+          "Unique originals/evidence retained, reversible archive and bounded path checks."
+        ],
+        "limitations": [
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "implemented_ci_verified",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "Reversible documentation archive/current index, local artifact ignore boundaries, no loss of originals/evidence; bounded link check and build included."
         ],
@@ -1198,21 +1633,14 @@
           "Archived recommendations stay historical. Stale task not_started and old awaiting_environment wording need the parent’s evidence-based reconciliation, not deletion of source evidence."
         ],
         "nextAcceptance": []
-      },
-      "historical_acceptance_scope": "Актуальный индекс, сохранённые архивы и проверяемая инвентаризация. Пользовательские untracked artifacts/skills и история сохранены.",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
       }
     },
     {
       "id": "CLEAN-02",
       "title": "Постепенно убрать старые продуктовые ветки",
-      "status": "v1_v2_code_and_tables_removed_production_verified",
+      "status": "completed_verified_documented_scope",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-02.md",
-      "remaining_gates": [
-        "POST-RETIREMENT-RELEASE-INTEGRATION"
-      ],
+      "remaining_gates": [],
       "previous_status": "local_checks_passed_exact_commit_ci_pending",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
       "previous_verified_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
@@ -1220,25 +1648,19 @@
         "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.md",
         "docs/audits/2026-10-04/execution/CLEAN-02-retired-characters.json"
       ],
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
         "demonstrated": [
-          "Later explicit user request superseded gradual deprecation: obsolete V1/V2 routes/controllers/models/client/export removed, current V3 CharacterSheetV2 and shared inventory/paper/run mechanics retained; legacy inventory kind rejects rather than falls through."
+          "Kept/hidden/deleted map plus explicit V1/V2 retirement archive and actual schema308.",
+          "V3 shared sheet/paper/inventory/shop/run mechanics preserved in browser flows."
         ],
         "limitations": [
-          "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
         ],
-        "nextAcceptance": [
-          "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
-        ],
-        "productionRetirement": {
-          "record": "docs/audits/2026-10-04/execution/CLEAN-02-installed35-production-retirement-20261008.json",
-          "status": "succeeded_and_independently_verified",
-          "operationId": "retirement302-installed35-20261008",
-          "actualManualRecordRun": 37693544430,
-          "schemaVersions": 308,
-          "productionDatabaseRestored": false
-        }
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
       },
       "historical_acceptance_scope": "Explicitly authorized V1/V2 code/support removal completed with native PG11 and fresh UI/worker13 checks. Current V3, paper, runs, shared inventories and historical DB rows preserved; physical retired-storage removal requires verified backup/migration separately. Fresh full suite pending.",
       "historical_final_local_suite_status": "proportionate_local_gate_passed_ci_pending",
@@ -1261,21 +1683,62 @@
         }
       },
       "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_status_before_final20261008": "v1_v2_code_and_tables_removed_production_verified",
+      "previous_execution_result_before_final20261008": {
+        "demonstrated": [
+          "Later explicit user request superseded gradual deprecation: obsolete V1/V2 routes/controllers/models/client/export removed, current V3 CharacterSheetV2 and shared inventory/paper/run mechanics retained; legacy inventory kind rejects rather than falls through."
+        ],
+        "limitations": [
+          "Production still has 21 V1/12 V2 rows, 10 old inventory parents/45 items; tables about671744 B. No DB drop executed; old app rollback still needs its tables."
+        ],
+        "nextAcceptance": [
+          "Legacy V1/V2 production tables remain; fresh v4 bundle, owned host controller and trusted retirement baseline remain required."
+        ],
+        "productionRetirement": {
+          "record": "docs/audits/2026-10-04/execution/CLEAN-02-installed35-production-retirement-20261008.json",
+          "status": "succeeded_and_independently_verified",
+          "operationId": "retirement302-installed35-20261008",
+          "actualManualRecordRun": 37693544430,
+          "schemaVersions": 308,
+          "productionDatabaseRestored": false
+        }
       }
     },
     {
       "id": "CLEAN-03",
       "title": "Сократить media-дистрибутив и подготовить обслуживание Git",
-      "status": "pwa_verified_media_variants_off_tradeoff_recorded",
+      "status": "completed_compile_layer_delivered_media_variants_off",
       "evidence": "docs/audits/2026-10-04/execution/CLEAN-03.md",
       "final_local_suite": "docs/audits/2026-10-04/execution/final-verification.json",
       "remaining_gates": [],
       "previous_status": "in_progress_completion_audit",
       "completion_followup": "docs/audits/2026-10-04/execution/completion-followup.json",
-      "current_verification": "docs/audits/2026-10-04/execution/CI-15-healthy-adoption.json",
+      "current_verification": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
       "latest_execution_result": {
+        "demonstrated": [
+          "Actual local OCI transfer188307705→186965859B; compile-layer change integrated248, actual release pending.",
+          "All635 runtime files identical paths/SHA; original media/URLs/licenses/Git history preserved."
+        ],
+        "limitations": [
+          "Measured local OCI payload reduction1,341,846B with all635 runtime payload files unchanged. Originals/Git history/URLs retained, optional WebP OFF; no clone/archive/browser-speed reduction claimed.",
+          "Server backups plus private PC copies are the accepted arrangement; no separate off-host scheduled service, RPO or RTO guarantee claimed.",
+          "No production restore, receipt TTL, index removal, historical backfill or media GC performed.",
+          "Historical failures and dated claims remain evidence; final scope does not turn them into successful attempts."
+        ],
+        "nextAcceptance": [],
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+      },
+      "historical_acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты.",
+      "latest_verified_release": {
+        "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+        "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb"
+      },
+      "previous_remaining_gates_20261007": [],
+      "previous_status_before_final20261008": "pwa_verified_media_variants_off_tradeoff_recorded",
+      "previous_execution_result_before_final20261008": {
         "demonstrated": [
           "PWA shell closure 19 entries/860.35 KiB versus2101049 B; actual offline and A/B old-chunk preservation. Optional 17 image variants transfer42.82→29.45 MB with retained original URLs/native dimensions/alpha."
         ],
@@ -1286,13 +1749,7 @@
         "previous_nextAcceptance_20261007": [
           "If enabling variants, bind their exact source manifest into release OCI inputs and verify final image/old document/export paths; do not trade retained originals for an unmeasured size claim."
         ]
-      },
-      "historical_acceptance_scope": "WebP варианты OFF, originals сохранены, Git size не уменьшен, enabled dist больше. PWA/браузер проверены; image/pull bytes и OCI включение media не приняты.",
-      "latest_verified_release": {
-        "record": "docs/audits/2026-10-04/execution/E122-full-release-and-storage-20261007.json",
-        "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000"
-      },
-      "previous_remaining_gates_20261007": []
+      }
     }
   ],
   "notes": [
@@ -3659,5 +4116,11 @@
         ]
       }
     }
-  ]
+  ],
+  "current_verified_release": {
+    "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb",
+    "record": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json"
+  },
+  "final_original29_report": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+  "final_report_verification": "docs/audits/2026-10-04/execution/FINAL-original29-local-verification-20261008.json"
 }
