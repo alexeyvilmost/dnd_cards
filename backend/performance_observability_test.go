@@ -102,10 +102,11 @@ func TestPerformanceSQLCountsPreloadOnceAndRecordsActualLockScope(t *testing.T) 
 	}
 	values := trace.snapshot()
 	_, hasPersist := values["persist_sql_ms"]
+	_, hasCharacterPersist := values["persist_characters_v3_ms"]
 	_, hasLock := values["lock_statement_ms"]
 	// Fast local calls may round to 0.000 ms; presence and SQL cardinality
 	// establish coverage without a machine-speed-dependent lower bound.
-	if values["sql_count"] != 4 || !hasLock || !hasPersist || values["lock_acquired_to_tx_return_ms"] < 0 {
+	if values["sql_count"] != 4 || !hasLock || !hasPersist || !hasCharacterPersist || values["lock_acquired_to_tx_return_ms"] < 0 {
 		t.Fatalf("missing transaction timings: %#v", values)
 	}
 }

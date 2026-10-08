@@ -23,6 +23,7 @@ func (rc *RoguelikeController) writeCombatReadResponse(c *gin.Context, run *Rogu
 			}
 		}
 		if slot != nil {
+			rc.warmOwnedCombatRead(c, slot, run)
 			token := "read:" + uuid.NewString()
 			slot.mu.Lock()
 			slot.readBase = &RoguelikeRun{ID: run.ID, UserID: run.UserID, Revision: run.Revision, CombatState: run.CombatState}

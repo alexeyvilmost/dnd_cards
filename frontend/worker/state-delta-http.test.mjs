@@ -46,15 +46,15 @@ for(const size of [1,2,6])test('delta HTTP preserves complete canonical result, 
  }finally{if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}assert.equal(path.dirname(dir),tmpdir());assert.ok(path.basename(dir).startsWith('worker-delta-http-'));await rm(dir,{recursive:true,force:true});}
 });
 
-for(const size of [1,2])test('startup prefetch prepares only an exact verified projection for party '+size,async()=>{
+for(const size of [1,2])for(const deferPrediction of [false,true])test('startup prefetch prepares an exact frame for party '+size+', deferred='+deferPrediction,async()=>{
  const dir=await mkdtemp(path.join(tmpdir(),'worker-delta-http-')),token='synthetic-delta-prefetch-only-worker-token';let server;
  try {
   await writeFile(path.join(dir,hash.slice(7)+'.cjs'),bytes);server=await createRulesWorker({artifactFile:file,artifactsDirectory:dir,token,performanceEnabled:true});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   const call=async(route,body)=>{const response=await fetch('http://127.0.0.1:'+server.address().port+route,{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-performance-trace':'1','x-rules-wire':'mirrors-v3'},body:JSON.stringify(goJSONMapWireValue(body))});assert.equal(response.status,200);return {body:await response.json(),metrics:JSON.parse(response.headers.get('x-rules-performance'))};};
   const input=inputFor(size),initialized=await artifact.initializeRoguelikeCombat(input,hash),projected=size>1?artifact.projectRoguelikePartyCombatPatch(initialized.envelope,input.characters):artifact.projectRoguelikeCombatPatch(initialized.envelope,input.character),base=goJSONMapWireValue(projected.envelope),selected=nextProjectionInputs(projected,input.character,input.characters),before=snapshotHash(base);
-  const prefetched=await call('/prefetch',{artifactHash:hash,envelope:base,...selected,projectionInputVersion:1});assert.equal(prefetched.body.trace.afterHash,before);
+  const prefetched=await call('/prefetch',{artifactHash:hash,envelope:base,...selected,projectionInputVersion:1,deferPrediction});assert.equal(prefetched.body.trace.afterHash,before);
   const intent={type:'end_turn',actorId:base.state.world.scene.initiative[base.state.world.scene.activeIndex]},actual=await call('/transition',{artifactHash:hash,frameKey:before,intent,...selected,projectionInputVersion:1});
-  assert.equal(actual.metrics.worker_prediction_projection_hit,1);assert.equal(actual.metrics.worker_prepared_mirror_hit,1);assert.equal(actual.metrics.worker_state_delta_hit,1);
+  assert.equal(actual.metrics.worker_prediction_projection_hit,Number(!deferPrediction));assert.equal(actual.metrics.worker_prepared_mirror_hit,Number(!deferPrediction));assert.equal(actual.metrics.worker_state_delta_hit,1);
   const stepped=artifact.stepRoguelikeCombat(base,intent,hash),expected=size>1?artifact.projectRoguelikePartyCombatPatch(stepped.envelope,selected.characters):artifact.projectRoguelikeCombatPatch(stepped.envelope,selected.character);
   assert.deepEqual(expand(actual.body,base),JSON.parse(JSON.stringify({...stepped,...expected,trace:{beforeHash:before,afterHash:snapshotHash(expected.envelope),runtimeRevision:expected.patch.runtime_revision}})));
  }finally{if(server){server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}assert.equal(path.dirname(dir),tmpdir());assert.ok(path.basename(dir).startsWith('worker-delta-http-'));await rm(dir,{recursive:true,force:true});}

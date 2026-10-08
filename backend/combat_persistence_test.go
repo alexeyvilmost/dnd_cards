@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -14,29 +15,36 @@ func TestCombatInsertOnlyReceiptKeepsDurableReader(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv("DB_COMPACT_RECEIPTS", "1")
-	for _, skip := range []bool{false, true} {
-		expected := JSONMap{"turn": 2, "nested": map[string]any{"effects": []any{"one", "two"}}, "text": strings.Repeat("snapshot 🐉", 20000)}
-		raw, _ := json.Marshal(expected)
-		r := RoguelikeCommandReceipt{RunID: uuid.New(), UserID: f.owner.ID, CommandID: uuid.New(), CommandType: "combat_intent", RequestHash: strings.Repeat("a", 64), Request: JSONMap{}, Response: expected, omitResponseReload: skip}
-		if err := f.db.Create(&r).Error; err != nil {
-			t.Fatal(err)
-		}
-		if r.ResponseVersion != 2 {
-			t.Fatal("compact writer not used")
-		}
-		if skip && len(r.Response) != 0 {
-			t.Fatal("discarded return unnecessarily decoded")
-		}
-		if !skip && r.Response["text"] == nil {
-			t.Fatal("ordinary create return changed")
-		}
-		var loaded RoguelikeCommandReceipt
-		if err := f.db.First(&loaded, "id=?", r.ID).Error; err != nil {
-			t.Fatal(err)
-		}
-		got, _ := json.Marshal(loaded.Response)
-		if string(got) != string(raw) {
-			t.Fatal("durable exact retry bytes changed")
+	for _, prepared := range []bool{false, true} {
+		for _, skip := range []bool{false, true} {
+			expected := JSONMap{"turn": 2, "nested": map[string]any{"effects": []any{"one", "two"}}, "text": strings.Repeat("snapshot 🐉", 20000)}
+			raw, _ := json.Marshal(expected)
+			r := RoguelikeCommandReceipt{RunID: uuid.New(), UserID: f.owner.ID, CommandID: uuid.New(), CommandType: "combat_intent", RequestHash: strings.Repeat("a", 64), Request: JSONMap{}, Response: expected, omitResponseReload: skip}
+			if prepared {
+				if err := r.prepareStorage(context.Background())(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := f.db.Create(&r).Error; err != nil {
+				t.Fatal(err)
+			}
+			if r.ResponseVersion != 2 {
+				t.Fatal("compact writer not used")
+			}
+			if skip && len(r.Response) != 0 {
+				t.Fatal("discarded return unnecessarily decoded")
+			}
+			if !skip && r.Response["text"] == nil {
+				t.Fatal("ordinary create return changed")
+			}
+			var loaded RoguelikeCommandReceipt
+			if err := f.db.First(&loaded, "id=?", r.ID).Error; err != nil {
+				t.Fatal(err)
+			}
+			got, _ := json.Marshal(loaded.Response)
+			if string(got) != string(raw) {
+				t.Fatal("durable exact retry bytes changed")
+			}
 		}
 	}
 }

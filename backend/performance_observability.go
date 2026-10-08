@@ -152,6 +152,12 @@ func registerPerformanceCallbacks(db *gorm.DB) error {
 		sql := strings.ToUpper(tx.Statement.SQL.String())
 		if strings.HasPrefix(sql, "INSERT ") || strings.HasPrefix(sql, "UPDATE ") || strings.HasPrefix(sql, "DELETE ") {
 			performanceAdd(ctx, "persist_sql_ms", elapsed)
+			// Fixed identifiers only: SQL text and private dynamic table names
+			// never become telemetry keys.
+			switch tx.Statement.Table {
+			case "roguelike_runs", "characters_v3", "roguelike_command_receipts", "roguelike_combat_events":
+				performanceAdd(ctx, "persist_"+tx.Statement.Table+"_ms", elapsed)
+			}
 		}
 		if strings.Contains(sql, "FOR UPDATE") || strings.Contains(sql, "PG_ADVISORY_XACT_LOCK") {
 			performanceAdd(ctx, "lock_statement_ms", elapsed)

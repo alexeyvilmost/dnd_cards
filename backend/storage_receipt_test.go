@@ -2,14 +2,71 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
+	"context"
 	"encoding/json"
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
+
+func TestReceiptStoragePreparationFailureIsJoinedAndCannotBypassEncoding(t *testing.T) {
+	t.Setenv("DB_COMPACT_RECEIPTS", "1")
+	receipt := RoguelikeCommandReceipt{Response: JSONMap{"unencodable": make(chan int)}}
+	join := receipt.prepareStorage(context.Background())
+	for attempt := 0; attempt < 3; attempt++ {
+		if join() == nil || receipt.storagePrepared || receipt.ResponseVersion != 1 || len(receipt.ResponsePayload) != 0 {
+			t.Fatal("failed encoder escaped its persistence lifetime or bypassed normal encoding")
+		}
+	}
+}
+
+func TestReceiptStorageConcurrentCompressionKeepsExactIndependentPayloads(t *testing.T) {
+	var workers sync.WaitGroup
+	for worker := 0; worker < 8; worker++ {
+		workers.Add(1)
+		go func(worker int) {
+			defer workers.Done()
+			for revision := 0; revision < 12; revision++ {
+				response := JSONMap{"revision": revision, "owner": worker, "state": strings.Repeat("immutable calculation ", 1000)}
+				raw, _ := json.Marshal(response)
+				var fresh bytes.Buffer
+				writer, _ := gzip.NewWriterLevel(&fresh, gzip.BestSpeed)
+				if _, err := writer.Write(raw); err != nil {
+					t.Error(err)
+					return
+				}
+				if err := writer.Close(); err != nil {
+					t.Error(err)
+					return
+				}
+				var storage ReceiptStorage
+				if err := storage.encode(&response, true); err != nil {
+					t.Error(err)
+					return
+				}
+				if !bytes.Equal(storage.ResponsePayload, fresh.Bytes()) {
+					t.Error("compressed historical representation changed")
+					return
+				}
+				if err := storage.decode(&response); err != nil {
+					t.Error(err)
+					return
+				}
+				restored, _ := json.Marshal(response)
+				if !bytes.Equal(raw, restored) {
+					t.Error("another receipt changed accepted state")
+					return
+				}
+			}
+		}(worker)
+	}
+	workers.Wait()
+}
 
 func TestReceiptStorageExactDualReadAndIntegrity(t *testing.T) {
 	for _, enabled := range []bool{false, true} {

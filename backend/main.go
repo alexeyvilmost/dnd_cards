@@ -40,7 +40,11 @@ func main() {
 	log.Printf("Подключение к БД: %s:%s/%s", dbConfig.DBHost, dbConfig.DBPort, dbConfig.DBName)
 
 	// Подключение к базе данных
-	db, err := gorm.Open(postgres.Open(dbConfig.GetDSN()), &gorm.Config{
+	applicationDSN, err := dbConfig.ApplicationDSN()
+	if err != nil {
+		log.Fatal(err)
+	}
+	db, err := gorm.Open(postgres.Open(applicationDSN), &gorm.Config{
 		DisableAutomaticPing: true,
 		PrepareStmt:          false,
 		Logger:               newDatabaseLogger(log.Default(), 200*time.Millisecond),

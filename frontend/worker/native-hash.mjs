@@ -90,10 +90,49 @@ export function nativeHashSource(source) {
   return source.replace(match[0],replacement);
 }
 export function compileNativeHashArtifact(file,bytes) {
-  const source=bytes.toString('utf8'),optimized=progressGuardSource(spatialMemoSource(nativeHashSource(source)));
+  const source=bytes.toString('utf8'),optimized=progressGuardSource(routeObservationMemoSource(spatialMemoSource(nativeHashSource(source))));
   if(optimized===source)return undefined;
   const compiled=new Module(file);
   compiled.filename=file;compiled.paths=Module._nodeModulePaths(path.dirname(file));
   compiled._compile(optimized,file);
   return compiled.exports;
+}
+
+// Reuse only inside one recognized, read-only route search. Coordinates still
+// reach the original aura geometry on every edge. Nested scopes restore both
+// caches and arbitrary later combat phases always recompute their observations.
+export function routeObservationMemoSource(source) {
+  if (!source.includes('let __spatialLifeMemo;')) return source;
+  const routines = {};
+  const expected = {
+    reachableRoutes: '2ad83d7b1fcfef325339eaa9b78e38c3b6802fe418d1123b62c483deb2272c5a',
+    auraDifficultStep: '87977f205a84b487e88b741b6e52ace408edc2e3af456f46a77c3443cc9541c3',
+  };
+  for (const [name, hash] of Object.entries(expected)) {
+    const start = source.indexOf(`function ${name}(`);
+    const end = source.indexOf('\n}', start) + 2;
+    if (start < 0 || end <= start) return source;
+    const routine = source.slice(start, end);
+    if (createHash('sha256').update(routine).digest('hex') !== hash) return source;
+    routines[name] = routine;
+  }
+  const route = routines.reachableRoutes;
+  const opening = route.indexOf(') {') + 2;
+  if (opening < 2 || route[opening] !== '{') return source;
+  const wrapped = route.slice(0, opening + 1) + `
+ const __previousLife=__spatialLifeMemo,__previousAura=__routeAuraPayloadMemo;
+ __spatialLifeMemo=new WeakMap();__routeAuraPayloadMemo=new WeakMap();try {
+` + route.slice(opening + 1, -1) + `
+ }finally{__spatialLifeMemo=__previousLife;__routeAuraPayloadMemo=__previousAura;}
+}`;
+  const payloads = '[...source2.passives ?? [], ...source2.runtime.activeEffects.filter((e) => e.roundsLeft === void 0 || e.roundsLeft > 0).map((e) => e.mechanics)].flatMap(payloadsOf)';
+  const aura = routines.auraDifficultStep.replace(payloads, '__routeAuraPayloads(source2)');
+  return source.replace(route, wrapped).replace(routines.auraDifficultStep, aura) + `
+let __routeAuraPayloadMemo;
+function __routeAuraPayloads(source2) {
+  if(!__routeAuraPayloadMemo)return ${payloads};
+  if(!__routeAuraPayloadMemo.has(source2))__routeAuraPayloadMemo.set(source2,${payloads});
+  return __routeAuraPayloadMemo.get(source2);
+}
+`;
 }

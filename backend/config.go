@@ -86,6 +86,17 @@ func (c *Config) GetDSN() string {
 		c.DBHost, port, c.DBUser, c.DBPassword, c.DBName, c.DBSSLMode)
 }
 
+// Set the default for every newly opened application connection, including
+// pool replacements. PostgreSQL retains existing values and column policies;
+// columns without an explicit compression policy use this for subsequent writes.
+func (c *Config) ApplicationDSN() (string, error) {
+	compression := getEnv("DB_TOAST_COMPRESSION", "lz4")
+	if compression != "lz4" && compression != "pglz" {
+		return "", fmt.Errorf("DB_TOAST_COMPRESSION must be lz4 or pglz")
+	}
+	return c.GetDSN() + " default_toast_compression=" + compression, nil
+}
+
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value

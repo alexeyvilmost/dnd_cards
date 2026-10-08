@@ -3,16 +3,25 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
 	"gorm.io/gorm"
 )
 
 const maxReceiptJSONBytes = 64 << 20
+
+// Reset detaches every private output buffer before a compressor is reused.
+// The stored gzip representation and the historical reader remain unchanged.
+var receiptCompressors = sync.Pool{New: func() any {
+	writer, _ := gzip.NewWriterLevel(io.Discard, gzip.BestSpeed)
+	return writer
+}}
 
 // ReceiptStorage is an additive representation of the exact accepted JSON.
 // Version 1 retains the existing JSONB. Version 2 never consults current state.
@@ -41,7 +50,12 @@ func (storage *ReceiptStorage) encode(response *JSONMap, enabled bool) error {
 		return nil
 	}
 	var compressed bytes.Buffer
-	writer, _ := gzip.NewWriterLevel(&compressed, gzip.BestSpeed)
+	writer := receiptCompressors.Get().(*gzip.Writer)
+	writer.Reset(&compressed)
+	defer func() {
+		writer.Reset(io.Discard)
+		receiptCompressors.Put(writer)
+	}()
 	if _, err = writer.Write(raw); err != nil {
 		return fmt.Errorf("receipt compression failed")
 	}
@@ -86,11 +100,33 @@ func (storage ReceiptStorage) decode(response *JSONMap) error {
 	return nil
 }
 
-func (receipt *RoguelikeCommandReceipt) BeforeCreate(tx *gorm.DB) error {
-	defer performanceSince(tx.Statement.Context, "receipt_encode_ms")()
+func (receipt *RoguelikeCommandReceipt) encodeStorage(ctx context.Context) error {
+	defer performanceSince(ctx, "receipt_encode_ms")()
 	err := receipt.ReceiptStorage.encode(&receipt.Response, os.Getenv("DB_COMPACT_RECEIPTS") == "1")
-	performanceAdd(tx.Statement.Context, "receipt_encoded_bytes", float64(len(receipt.ResponsePayload)))
+	performanceAdd(ctx, "receipt_encoded_bytes", float64(len(receipt.ResponsePayload)))
 	return err
+}
+
+// The accepted DTO is immutable. Encoding can overlap the row writes, but must
+// finish successfully before receipt insertion and transaction commit. Joining
+// even on a SQL failure keeps the encoder inside the persistence lifetime.
+func (receipt *RoguelikeCommandReceipt) prepareStorage(ctx context.Context) func() error {
+	done := make(chan struct{})
+	var err error
+	go func() {
+		err = receipt.encodeStorage(ctx)
+		receipt.storagePrepared = err == nil
+		close(done)
+	}()
+	return func() error { <-done; return err }
+}
+
+func (receipt *RoguelikeCommandReceipt) BeforeCreate(tx *gorm.DB) error {
+	if receipt.storagePrepared {
+		receipt.storagePrepared = false
+		return nil
+	}
+	return receipt.encodeStorage(tx.Statement.Context)
 }
 func (receipt *RoguelikeCommandReceipt) AfterFind(_ *gorm.DB) error {
 	return receipt.ReceiptStorage.decode(&receipt.Response)

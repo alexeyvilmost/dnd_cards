@@ -244,7 +244,8 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       if(request.url==='/prefetch'){
         if(body.envelope?.artifactHash!==hash)return send(409,{error:'frame_unavailable'});
         const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(body.envelope));
-        frames.set(afterHash,body.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),body.projectionInputVersion===1&&acceptsCompactProjection(artifact)?projectionInputs(body.character,body.characters):undefined);
+        frames.set(afterHash,body.envelope);
+        if(body.deferPrediction!==true)speculation.schedule(afterHash,frames.get(afterHash,hash),body.projectionInputVersion===1&&acceptsCompactProjection(artifact)?projectionInputs(body.character,body.characters):undefined);
         return send(200,{status:'ready',trace:{afterHash}});
       }
       if (request.url === '/upgrade') {

@@ -306,6 +306,9 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 					return commitCtx.Err()
 				}
 			}
+			receipt := &RoguelikeCommandReceipt{RunID: id, UserID: owner, CommandID: request.CommandID, CommandType: request.Type, RequestHash: requestHash, Response: JSONMap{"run": accepted}, Request: nonNilRoguelikeMap(request.Payload), omitResponseReload: true}
+			joinEncoding := receipt.prepareStorage(commitCtx)
+			defer joinEncoding()
 			if err = saveRoguelikeParty(tx, locked, selectedColumns); err != nil {
 				return err
 			}
@@ -315,9 +318,13 @@ func (rc *RoguelikeController) cachedCombatCommand(c *gin.Context, slot *combatC
 			if err = appendRoguelikeCombatEvent(tx, locked, request, run.CombatEnvelope, result); err != nil {
 				return err
 			}
-			// Serialize the canonical tagged run once in the receipt writer. Avoid
-			// turning the same immutable DTO into another large intermediate tree.
-			return tx.Create(&RoguelikeCommandReceipt{RunID: id, UserID: owner, CommandID: request.CommandID, CommandType: request.Type, RequestHash: requestHash, Response: JSONMap{"run": accepted}, Request: nonNilRoguelikeMap(request.Payload), omitResponseReload: true}).Error
+			doneEncodingWait := performanceSince(commitCtx, "receipt_encode_wait_ms")
+			err = joinEncoding()
+			doneEncodingWait()
+			if err != nil {
+				return err
+			}
+			return tx.Create(receipt).Error
 		})
 		if err == nil && accepted != nil {
 			slot.setFrame(accepted, afterHash)
