@@ -167,7 +167,7 @@ describe('canonical entity details in an inspection context', () => {
   it('keeps linked detail windows in inspection mode when following a spell reference', async () => {
     await render(<EntityDetailProvider readOnly><Opener type="spell" /></EntityDetailProvider>);
     await click(button('Открыть'));
-    const link = [...document.querySelectorAll<HTMLElement>('.ft-link')].find(element => element.textContent === 'Связанное действие')!;
+    const link = [...document.querySelectorAll<HTMLAnchorElement>('.ft-link a')].find(element => element.textContent === 'Связанное действие')!;
     expect(link).toBeTruthy();
     await click(link);
     expect(document.querySelector('.edm-title')?.textContent).toBe('Сущность action');

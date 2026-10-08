@@ -286,7 +286,7 @@ describe('SheetPendingCombatPanel', () => {
         onResolve={onResolve}
       />,
     ));
-    expect(container.textContent).toContain('Концентрация: спасбросок CON');
+    expect(container.textContent).toContain('Концентрация: спасбросок Телосложение');
     expect(container.textContent).toContain('СЛ 11');
     expect(container.textContent).toContain('Получено урона: 22');
     const input = container.querySelector<HTMLInputElement>(
