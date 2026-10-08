@@ -8,7 +8,7 @@ import path from 'node:path';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {createRulesWorker, snapshotHash} from './server.mjs';
-import {replayCombatRecords} from './replay.mjs';
+import {replayCombatRecords,goJSONMapWireValue} from './replay.mjs';
 import {withContainerCatalog} from './fixtures/container-catalog.mjs';
 
 const currentInput = async () => withContainerCatalog(
@@ -134,9 +134,18 @@ test('replays actual HTTP worker transitions, RNG and projected revisions after 
     assert.equal(result.envelope.state.combatOpeningState, undefined);
     const records = [{schemaVersion: 1, type: 'initialize_combat', artifactHash: result.envelope.artifactHash,
       baseline: result.envelope, baselinePosition: 'after', ...result.trace}];
+    const initialBytes=JSON.stringify(result.envelope);
+    const prefetched=await post('/prefetch',{artifactHash:result.envelope.artifactHash,envelope:result.envelope});
+    assert.equal(prefetched.status,'ready');assert.equal(prefetched.trace.afterHash,snapshotHash(result.envelope));assert.equal(JSON.stringify(result.envelope),initialBytes);
     for (let i = 0; i < 3; i++) {
       const before = result.envelope;
       const intent = {type: 'end_turn', actorId: input.character.id};
+      if(i>0){
+        const character={...input.character,runtime_revision:result.patch.runtime_revision};
+        const cached=await post('/transition',{artifactHash:before.artifactHash,frameKey:result.trace.afterHash,intent,character});
+        const complete=await post('/transition',{artifactHash:before.artifactHash,envelope:goJSONMapWireValue(before),intent,character});
+        assert.deepEqual(cached,complete,'Cached transition changed rolls, projection or trace');
+      }
       result = await post('/transition', {artifactHash: before.artifactHash, envelope: before, intent,
         character: {...input.character, runtime_revision: result.patch.runtime_revision}});
       assert.equal(result.combatOpeningState, undefined, 'Later transitions never replay an opening board');

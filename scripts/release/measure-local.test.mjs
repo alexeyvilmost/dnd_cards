@@ -77,6 +77,18 @@ test('input fingerprints distinguish UI, media, shared engine and dependency cha
   }
 });
 
+test('real context inventories omit both mobile screens but retain changing shared engine input', t => {
+  const root=mkdtempSync(path.join(tmpdir(),'rel02-mobile-inputs-'));
+  t.after(()=>rmSync(root,{recursive:true,force:true}));
+  const write=(file,value)=>{const target=path.join(root,file);mkdirSync(path.dirname(target),{recursive:true});writeFileSync(target,value);};
+  const mobile=['frontend/src/mobile/MobileCharacterSheet.tsx','frontend/src/mobile/MobileLibrary.tsx'],engine='frontend/src/engine/cost.ts';
+  for(const file of [...mobile,engine])write(file,'original');
+  const before=inventory(root,policies.worker),frontend=inventory(root,policies.frontend);
+  assert.deepEqual(before.map(file=>file.path),[engine]);for(const file of mobile)assert(frontend.some(row=>row.path===file));
+  for(const file of mobile)write(file,'new screen text');assert.deepEqual(inventory(root,policies.worker),before);
+  write(engine,'new rule operation');assert.notDeepEqual(inventory(root,policies.worker),before);
+});
+
 test('Go embed closure fails when a required SQL/JSON input is omitted', t => {
   const directory = mkdtempSync(path.join(tmpdir(), 'rel02-embed-'));
   t.after(() => rmSync(directory, {recursive: true, force: true}));

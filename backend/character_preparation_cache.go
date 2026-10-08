@@ -30,13 +30,37 @@ func workerCatalogHash(value any) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	return workerCatalogHashDecoded(decoded)
+}
+
+// Only already-parsed JSON maps, arrays and primitives enter this adapter.
+func workerCatalogHashDecoded(decoded any) (string, error) {
+	raw, err := workerCatalogJSONDecoded(decoded)
+	if err != nil {
+		return "", err
+	}
+	return canonicalSHA256(raw), nil
+}
+func workerCatalogJSONDecoded(decoded any, limits ...int) ([]byte, error) {
 	var output bytes.Buffer
 	var appendValue func(any) error
 	index := func(key string) (uint64, bool) {
+		if len(key) == 0 || len(key) > 10 || key[0] < '0' || key[0] > '9' || (len(key) > 1 && key[0] == '0') {
+			return 0, false
+		}
+		for i := 1; i < len(key); i++ {
+			if key[i] < '0' || key[i] > '9' {
+				return 0, false
+			}
+		}
+
 		n, err := strconv.ParseUint(key, 10, 32)
 		return n, err == nil && n < 4294967295 && strconv.FormatUint(n, 10) == key
 	}
 	appendValue = func(value any) error {
+		if len(limits) > 0 && output.Len() > limits[0] {
+			return fmt.Errorf("canonical worker value too large")
+		}
 		switch typed := value.(type) {
 		case map[string]any:
 			keys := make([]string, 0, len(typed))
@@ -85,10 +109,13 @@ func workerCatalogHash(value any) (string, error) {
 			return appendCanonicalJSON(&output, value)
 		}
 	}
-	if err = appendValue(decoded); err != nil {
-		return "", err
+	if err := appendValue(decoded); err != nil {
+		return nil, err
 	}
-	return canonicalSHA256(output.Bytes()), nil
+	if len(limits) > 0 && output.Len() > limits[0] {
+		return nil, fmt.Errorf("canonical worker value too large")
+	}
+	return output.Bytes(), nil
 }
 
 type roguelikeCatalogSelection struct {

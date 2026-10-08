@@ -47,11 +47,58 @@ func applyTrustedRoguelikePatch(character *CharacterV3, patch JSONMap) error {
 	if !ok || int64(revision) != character.RuntimeRevision+1 {
 		return fmt.Errorf("invalid worker runtime revision")
 	}
-	data, err := json.Marshal(patch)
+	// Turn-state mirrors are immutable data supplied by the worker. Retain their
+	// same-frame references instead of serializing another complete scene.
+	small := JSONMap{}
+	for key, value := range patch {
+		if key != "turn_state" {
+			small[key] = value
+		}
+	}
+	data, err := json.Marshal(small)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, character)
+	var decoded CharacterV3
+	if err = json.Unmarshal(data, &decoded); err != nil {
+		return err
+	}
+	if _, ok := patch["current_hp"]; ok {
+		character.CurrentHP = decoded.CurrentHP
+	}
+	if _, ok := patch["resources"]; ok {
+		character.Resources = decoded.Resources
+	}
+	if _, ok := patch["max_resources"]; ok {
+		character.MaxResources = decoded.MaxResources
+	}
+	if _, ok := patch["active_effects"]; ok {
+		character.ActiveEffects = decoded.ActiveEffects
+	}
+	if _, ok := patch["inventory_items"]; ok {
+		character.InventoryItems = decoded.InventoryItems
+	}
+	if _, ok := patch["equipment"]; ok {
+		character.Equipment = decoded.Equipment
+	}
+	if _, ok := patch["runtime_revision"]; ok {
+		character.RuntimeRevision = decoded.RuntimeRevision
+	}
+	if raw, ok := patch["turn_state"]; ok {
+		switch value := raw.(type) {
+		case map[string]any:
+			turn := JSONMap(value)
+			character.TurnState = &turn
+		case JSONMap:
+			turn := value
+			character.TurnState = &turn
+		case nil:
+			character.TurnState = nil
+		default:
+			return fmt.Errorf("invalid worker turn state")
+		}
+	}
+	return nil
 }
 
 // Computation happens before taking write locks. The transaction compares both
@@ -168,6 +215,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		return
 	}
 	var response JSONMap
+	var acceptedRun *RoguelikeRun
 	err = performanceTransaction(rc.db, c.Request.Context(), func(tx *gorm.DB) error {
 		catalogReads := newFrozenCatalogReadScope(tx)
 		defer catalogReads.close()
@@ -257,6 +305,7 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 		if err != nil {
 			return err
 		}
+		acceptedRun = accepted
 		response, err = roguelikeRunResponse(accepted)
 		if err != nil {
 			return err
@@ -283,6 +332,9 @@ func (rc *RoguelikeController) trustedCombatCommand(c *gin.Context, runID, userI
 	if err != nil {
 		writeRoguelikeError(c, err)
 		return
+	}
+	if acceptedRun != nil {
+		rc.primeCommittedCombat(acceptedRun, result.Trace)
 	}
 	c.JSON(http.StatusOK, response)
 }

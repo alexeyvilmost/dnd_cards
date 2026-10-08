@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "createdAt": "2026-10-08T00:58:53.347Z",
+  "applicationSource": "24866cda598536247ce99bbf389e84abf24c7bbb",
+  "originalRequirementsHash": "9da575744fc909bb1dc3c76afb52277bf7a474008abf0638a41349502122cc6d",
+  "counts": {
+    "tasks": 29,
+    "steps": 195,
+    "verification": 117,
+    "acceptance": 107,
+    "total": 419
+  },
+  "checks": [
+    {
+      "name": "selected-markdown-links",
+      "status": "passed"
+    },
+    {
+      "name": "git-diff-whitespace",
+      "status": "passed"
+    },
+    {
+      "name": "tracked-database-dump-and-insecure-seed-guard",
+      "status": "passed"
+    },
+    {
+      "name": "known-credentials",
+      "status": "passed"
+    },
+    {
+      "name": "canonical-component-planner-and-current-input-fingerprints",
+      "status": "passed"
+    },
+    {
+      "name": "reviewed-staged-whitespace-and-presentation",
+      "status": "passed"
+    }
+  ],
+  "markdown": {
+    "files": 8,
+    "checkedLocalTargets": 65,
+    "missing": 0,
+    "outside": 0
+  },
+  "scope": "Local report/source-hygiene verification; actual runtime and measurements are independently bound by the final report.",
+  "evidence": [
+    {
+      "file": "docs/audits/2026-10-04/execution/README.md",
+      "bytes": 1388,
+      "sha256": "sha256:b95bd4325eb4d8095d33fa7efc570ba89b37adb9f271cee3319e9193ffe6e382"
+    },
+    {
+      "file": "docs/audits/2026-10-04/execution/current-status.md",
+      "bytes": 6351,
+      "sha256": "sha256:cec7c367e918943b2d7b101ebc0552c74693fdc2c5d169e3c9478c1987dd7a08"
+    },
+    {
+      "file": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.md",
+      "bytes": 6351,
+      "sha256": "sha256:cec7c367e918943b2d7b101ebc0552c74693fdc2c5d169e3c9478c1987dd7a08"
+    },
+    {
+      "file": "docs/audits/2026-10-04/execution/execution-index-before-final-20261008.md",
+      "bytes": 2911,
+      "sha256": "sha256:906ad47cb2bbd90c1aa1d8726af480ea05355fe9e167e4c29974c7a497b59518"
+    },
+    {
+      "file": "docs/audits/2026-10-04/execution/current-status-before-final-20261008.md",
+      "bytes": 21972,
+      "sha256": "sha256:39f76b8ec33f20c402e11246c19c16989fd5c5d6a595af1defaac1ba1087e83b"
+    },
+    {
+      "file": "docs/audits/2026-10-04/execution/recommendations-status-before-final-20261008.md",
+      "bytes": 1626,
+      "sha256": "sha256:25507ff33371cc11e756b9a5abd90063837af0d2f9ecee586cbd2341eab54620"
+    },
+    {
+      "file": "docs/audits/2026-10-04/recommendations.md",
+      "bytes": 50469,
+      "sha256": "sha256:a3abcc27582767c1505b93158b7bcc2ddfd5b082eea702202e94983f3f2a334f"
+    },
+    {
+      "file": "docs/image-generation-operations.md",
+      "bytes": 19906,
+      "sha256": "sha256:bf8ecf12014c80df5673754bc33080bd8086617321e4c5bc94f25c2077f3112f"
+    },
+    {
+      "file": "docs/audits/2026-10-04/execution/FINAL-original29-20261008.json",
+      "bytes": 1329917,
+      "sha256": "sha256:2da11daea3fe2e34856a9b02d8b2781f45d3ecb5c80bf86c7baadec2b7e7374e"
+    },
+    {
+      "file": "docs/audits/2026-10-04/agent-plan.json",
+      "bytes": 433959,
+      "sha256": "sha256:7db55cdb223cc73e960bf351a0ff6bd2c4467f202793e13cccc234921e83036a"
+    },
+    {
+      "file": "docs/audits/2026-10-04/execution/progress.json",
+      "bytes": 212873,
+      "sha256": "sha256:c36c0a2cf6b36128ed14f0c9d38d77708492932c615eed093f0808930b370cf4"
+    }
+  ],
+  "applicationRetestingRequired": false,
+  "applicationInputsChanged": false,
+  "canonicalComponentMatrix": [
+    {
+      "name": "backend",
+      "component": "backend",
+      "context": "backend",
+      "dockerfile": "backend/Dockerfile",
+      "sourceFingerprint": "sha256:68894d15adfb45fbdf3f12a68751c3e808f71a53ed3f86025fe02b00356214f1",
+      "inputFingerprint": "sha256:6f1f5bb426c7846109ef6fd6de309caccf5f6d8734e18e5a57d22ec1d50a976e",
+      "sourceCommit": "78cdd7d27243c66d4e7651694088bc02669eac73",
+      "operation": "reuse",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:38efd16a7abce695690d5adbd115c502221b49dce9a18fe024f25fe8df643a0b",
+      "imageRepository": "ghcr.io/alexeyvilmost/dnd_cards/backend",
+      "baseImages": {
+        "GO_IMAGE": "golang@sha256:1ae0735f00daffa3aaf1363a5184c0d2dc55c78e3db4ec70241cdac97bf84b59",
+        "ALPINE_IMAGE": "alpine@sha256:5291449c3df73caf6ed85e649dec1b9e818b39a5d8c871e97afc13e9cd5e8fa8"
+      },
+      "buildArguments": {},
+      "platform": "linux/amd64"
+    },
+    {
+      "name": "frontend",
+      "component": "frontend",
+      "context": ".",
+      "dockerfile": "frontend/Dockerfile",
+      "sourceFingerprint": "sha256:412489d568719451757e48b7d83b425afda968fc3d8a142ed5a848f0ea95810f",
+      "inputFingerprint": "sha256:d1016b74128ea990c97b1ff01c58b9d1738efdfe5601c2d3cdb5529cf257ceff",
+      "sourceCommit": "24866cda598536247ce99bbf389e84abf24c7bbb",
+      "operation": "reuse",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:71c9907428c30aa720f71173a317893f8692e4e64551fb837cb38bfeafcf2628",
+      "imageRepository": "ghcr.io/alexeyvilmost/dnd_cards/frontend",
+      "baseImages": {
+        "NODE_IMAGE": "node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6",
+        "NGINX_IMAGE": "nginx@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2"
+      },
+      "buildArguments": {
+        "VITE_API_URL": "",
+        "VITE_MEDIA_VARIANTS": "0"
+      },
+      "platform": "linux/amd64"
+    },
+    {
+      "name": "worker",
+      "component": "rulesWorker",
+      "context": ".",
+      "dockerfile": "infra/Dockerfile.rules-worker",
+      "sourceFingerprint": "sha256:882645db077034456eebc9ce9450d5bdb522b9d0c4f4746eedfcc8512eff5437",
+      "inputFingerprint": "sha256:763d1653b26e5422b0c4da89a577a886c506ae2f48a40b972ef87a526e9740a6",
+      "sourceCommit": "78cdd7d27243c66d4e7651694088bc02669eac73",
+      "operation": "reuse",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:47985c852f05d09927df46a51068bec37d9befe68e49d2f4154e6ae03689fd3f",
+      "imageRepository": "ghcr.io/alexeyvilmost/dnd_cards/worker",
+      "baseImages": {
+        "NODE_IMAGE": "node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6"
+      },
+      "buildArguments": {},
+      "platform": "linux/amd64"
+    }
+  ],
+  "lastReviewedAt": "2026-10-08T01:00:47.524Z",
+  "presentationReviewed": true,
+  "stagedScope": {
+    "files": 12,
+    "documentationOnly": true
+  }
+}

@@ -175,6 +175,7 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		}
 	}
 	var response JSONMap
+	var acceptedRun *RoguelikeRun
 	err = performanceTransaction(rc.db, c.Request.Context(), func(tx *gorm.DB) error {
 		catalogReads := newFrozenCatalogReadScope(tx)
 		defer catalogReads.close()
@@ -272,6 +273,7 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 		if err != nil {
 			return err
 		}
+		acceptedRun = accepted
 		response, err = roguelikeRunResponse(accepted)
 		if err != nil {
 			return err
@@ -287,6 +289,9 @@ func (rc *RoguelikeController) trustedPartyCommand(c *gin.Context, run *Roguelik
 	if err != nil {
 		writeRoguelikeError(c, err)
 		return
+	}
+	if acceptedRun != nil {
+		rc.primeCommittedCombat(acceptedRun, result.Trace)
 	}
 	c.JSON(http.StatusOK, response)
 }

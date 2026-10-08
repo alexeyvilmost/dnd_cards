@@ -22,6 +22,7 @@
 !frontend/scripts/check-dice-box-assets.mjs
 !frontend/scripts/pwa-shell.mjs
 !frontend/scripts/media-variants.mjs
+!frontend/scripts/compile-layer.mjs
 !backend/animationpresentation/catalog.json
 !backend/audiopresentation/catalog.json
 !LICENSE*

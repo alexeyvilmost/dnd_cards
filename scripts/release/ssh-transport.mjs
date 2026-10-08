@@ -16,14 +16,19 @@ const hash=value=>'sha256:'+createHash('sha256').update(value).digest('hex');
 const sha=/^[a-f0-9]{40}$/;
 export function shellQuote(value){return `'${String(value).replaceAll("'", "'\\''")}'`;}
 function absolute(value){return typeof value==='string'&&/^\/[a-zA-Z0-9_./-]+$/.test(value)&&!value.split('/').some(part=>part==='.'||part==='..')&&value!=='/';}
-export function validateSSHRequest(request){
+export function validateSSHRequestContext(request){
   if(request?.schemaVersion!==1||!sha.test(request.controlCommit??'')||!sha.test(request.sourceCommit??'')
     ||!/^\w[\w.-]*\/[\w.-]+$/.test(request.repository??'')||!/^\w[\w-]*(?:\[bot\])?$/.test(request.actor??'')
-    ||!['workflow_dispatch','workflow_run'].includes(request.eventName)||!['apply','adopt'].includes(request.mode)
-    ||request.mode==='adopt'&&request.eventName!=='workflow_dispatch'
+    ||!['workflow_dispatch','workflow_run'].includes(request.eventName)
     ||![request.runId,request.attempt].every(value=>/^[1-9]\d*$/.test(String(value))&&Number.isSafeInteger(Number(value)))
-    ||!['attemptRoot','hostConfig','rehearsalConfig','nodePath'].every(key=>absolute(request[key]))
+    ||!['attemptRoot','hostConfig','nodePath'].every(key=>absolute(request[key]))
     ||request.productionEnabled!=='true')throw Error('Invalid exact-source SSH deployment request');
+  return request;
+}
+export function validateSSHRequest(request){
+  validateSSHRequestContext(request);
+  if(!['apply','adopt'].includes(request.mode)||request.mode==='adopt'&&request.eventName!=='workflow_dispatch'
+    ||!absolute(request.rehearsalConfig))throw Error('Invalid exact-source SSH deployment request');
   return request;
 }
 export function validateSSHEndpoint(endpoint){

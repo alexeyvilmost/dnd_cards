@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "current307_complete_archive_restore_and_retirement_locally_verified",
+  "sourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+  "completedAt": "2026-10-07T13:18:01.290Z",
+  "sourceCapture": "37623876785/1",
+  "sourceDumpHash": "sha256:a8ccd7d0396e75750fc5af67bc5c50f4ce6e9acf75bea0754bb7daaf354974c5",
+  "sqlSourceHash": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff",
+  "receiptHash": "sha256:b107996ca3f2bdb7991ad958f858e90431ab2389bc164c9fc3da4da00f660764",
+  "archiveHash": "sha256:c3471eeebdfd8b2332240e387de72771955664edc3fa282cada47a53047027bc",
+  "archiveBytes": 486063,
+  "archiveRestoreReportHash": "sha256:35c1fa9e643830fd1ed3b365c5c0c6c3b57d9fc73ec3db4c034c556353c3a1c6",
+  "preimages": {
+    "characters": {
+      "rows": 21,
+      "sha256": "sha256:f10d69e39e0744c2da4584c7eea24bf3dd21b97adcc32577096742a3146512cb"
+    },
+    "characters_v2": {
+      "rows": 12,
+      "sha256": "sha256:80c03f34e26870967c54ba99819dbffce6ddb4d9fe8a99eee1b7771ec142fd80"
+    },
+    "retired_items": {
+      "rows": 45,
+      "sha256": "sha256:c5e72cef3262a4569e3b256689ae0c87b0d211736ff411170d89822d796b99eb"
+    },
+    "retired_inventories": {
+      "rows": 10,
+      "sha256": "sha256:47147d9d71d5677e1b4d0c4f0d8e47dbe2a53114650c3dc3f0119fc7e49e7001"
+    }
+  },
+  "priorMigrationCount": 307,
+  "retained": {
+    "productionTables": 94,
+    "localOwnershipMarkerTables": 1,
+    "allFullRowFingerprintsPreserved": true
+  },
+  "checks": [
+    "complete-source-restored-on-owned-native-postgres",
+    "exact-retired-row-archive-created-under-private-acl",
+    "actual-private-archive-restored-with-identical-full-row-preimages",
+    "all-retained-table-row-fingerprints-preserved-during-archive-restore",
+    "all-existing-migration-ledger-rows-retained-exactly",
+    "real-owned-retirement-preserves-all-retained-table-full-row-fingerprints",
+    "same-request-retry-retains-identical-journal-receipt"
+  ],
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "sourceDumpUnchanged": true,
+  "sqlSourceUnchanged": true,
+  "helperSourceUnchanged": true,
+  "productionChanges": 0,
+  "productionDatabaseRestored": false,
+  "paidProviderRequests": 0,
+  "productionReady": false,
+  "actualApplicationRollbackPairProven": false,
+  "limitations": [
+    "The rollback-pair binding is explicitly synthetic; this proof covers SQL/archive preservation only.",
+    "Current307 published application pair, browser/history replay and host external-artifact execution remain required before production retirement.",
+    "A later production deletion requires a fresh capture bound to the then-current production release."
+  ]
+}

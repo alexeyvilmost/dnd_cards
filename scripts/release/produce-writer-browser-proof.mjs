@@ -7,6 +7,8 @@ import {probeImageJobBrowser} from './image-job-browser-probe.mjs';
 import {prepareWriterBrowser} from './writer-browser-runtime.mjs';
 import {observeWriterImageRoles} from './writer-image-observation.mjs';
 import {producePublicWriterDump} from './produce-public-writer-dump.mjs';
+import {databaseMigrationSet} from './migration-transition.mjs';
+import {retireEmptyWriterFixture} from './retire-empty-writer-fixture.mjs';
 import {validatePublicWriterImageRoles,decodePublicWriterDump,decodePublicWriterRules,validatePublicWriterAccounts} from './writer-fixture-package.mjs';
 import {validateWriterTrace} from './writer-traces.mjs';
 import {expectedWriterBrowserProfiles} from './writer-runtime-profile.mjs';
@@ -58,9 +60,15 @@ export async function executeWriterBrowserPair({candidate,active,publicDump,imag
    for(const role of writerPreviewRoles){
     const manifest=role==='candidate'?candidate.manifest:active.manifest;
     onPhase(`browser-case-${index}-preview-${role}-start`);
-    const preview=await adapter.start({role,...writerPolicy(manifest),releaseId:manifest.releaseId});assertObserved(preview,imageRoles,role,role);
+    const expected=role==='candidate'?manifest.migrationSet:databaseMigrationSet(active);
+    let preview=await adapter.start({role,...writerPolicy(manifest),releaseId:manifest.releaseId});assertObserved(preview,imageRoles,role,role);
+    if(expected.some(row=>row.id==='302_retire_legacy_characters')){
+     await adapter.stopApplications();
+     await retireEmptyWriterFixture(adapter,expected,{candidate:candidate.manifest,active});
+     preview=await adapter.start({role,...writerPolicy(manifest),releaseId:manifest.releaseId});assertObserved(preview,imageRoles,role,role);
+    }
     onPhase(`browser-case-${index}-preview-${role}-ledger`);
-    const applied=JSON.parse(await adapter.query("SELECT coalesce(json_agg(version ORDER BY version),'[]'::json) FROM schema_migrations;"));assert.deepEqual(applied,[...manifest.migrationSet.map(row=>row.id)].sort(),'Public fixture did not reach the exact preview migration ledger');
+    const applied=JSON.parse(await adapter.query("SELECT coalesce(json_agg(version ORDER BY version),'[]'::json) FROM schema_migrations;"));assert.deepEqual(applied,[...expected.map(row=>row.id)].sort(),'Public fixture did not reach the exact preview migration ledger');
     if(binding.executionProfile[role])same(preview.executionProfile,binding.executionProfile[role]);else binding.executionProfile[role]=preview.executionProfile;
     await adapter.stopApplications();
    }

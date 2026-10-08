@@ -18,6 +18,7 @@ import {assertFrontendEligibility} from '../release/ui-release-policy.mjs';
 import {safeNodeFailureDiagnostics} from './node-failure-diagnostics.mjs';
 import {safeVitestFailureDiagnostics} from './vitest-failure-diagnostics.mjs';
 import {supplementVitestFailureDiagnostics} from './vitest-suite-error-reporter.mjs';
+import {withBrowserFailureDiagnostics} from './browser-failure-diagnostics.mjs';
 
 export function suiteOptions(args) {
   const result = {suite:'core', mode:'local', candidate:'HEAD'};
@@ -185,9 +186,13 @@ export async function runSuite(argv,{frontendPlanning}={}) {
     }
     for (const group of scripts) {await check(group.id,async()=>{await invoke(group.id,process.execPath,[group.file],{env:stack.env,timeout:600_000});return {exit_code:0,contract:group.contract};});done([`script:${group.id}`]);}
     for (const group of browserGroups) await check(group.id,async()=>{
-      await invoke(group.id,process.execPath,['frontend/node_modules/@playwright/test/cli.js','test','--config=frontend/playwright.local.config.ts',...group.files],{
-        env:{...stack.env,...(args.mode==='ci'?{TEST_BROWSER_CHANNEL:'chrome'}:{})},timeout:1_200_000});
-      const result=verifyPlaywrightResult(JSON.parse(readFileSync(path.join(stack.registry.directory,'acceptance/playwright.json'),'utf8')),group.files);done([`browser:${group.id}`]);return result;
+      const reportFile=path.join(stack.registry.directory,'acceptance/playwright.json');
+      const result=await withBrowserFailureDiagnostics(async()=>{
+        await invoke(group.id,process.execPath,['frontend/node_modules/@playwright/test/cli.js','test','--config=frontend/playwright.local.config.ts',...group.files],{
+          env:{...stack.env,...(args.mode==='ci'?{TEST_BROWSER_CHANNEL:'chrome'}:{})},timeout:1_200_000});
+        return verifyPlaywrightResult(JSON.parse(readFileSync(reportFile,'utf8')),group.files);
+      },{reportFile,files:group.files,root:repositoryRoot,testDirectory:'frontend/e2e-local'});
+      done([`browser:${group.id}`]);return result;
     });
     if (args.suite==='extended') {
       for (const gate of gates) await check(gate.id,async()=>{

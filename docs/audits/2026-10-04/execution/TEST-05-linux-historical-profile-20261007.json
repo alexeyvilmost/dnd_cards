@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "kind": "actual-independent-linux-extended-ci-and-historical303-profile",
+  "sourceCommit": "072c1726775a1d6043ef89be97279468abb53f6b",
+  "branch": "codex/verification-only-20261007",
+  "run": 37631316140,
+  "attempt": 1,
+  "observedAt": "2026-10-07T14:06:11.118Z",
+  "suite": "extended",
+  "checks": 39,
+  "workloadUnits": 942,
+  "allFourShardsPassed": true,
+  "globalCoverageComplete": true,
+  "goRaceEnabled": true,
+  "sourceSnapshot": {
+    "sha256": "08d6ea4195d497d928e036437e017af250eaf2d8dccacd45e8fc6b8c9bb87116",
+    "files": 4647
+  },
+  "historical": {
+    "status": "passed",
+    "historicalChainVerified": true,
+    "freshInstallAcceptance": true,
+    "migrations": 303,
+    "revocations": [
+      {
+        "migration": "102",
+        "rows": 1,
+        "preimagesExact": true
+      },
+      {
+        "migration": "103",
+        "rows": 1,
+        "preimagesExact": true
+      },
+      {
+        "migration": "119",
+        "rows": 1,
+        "preimagesExact": true
+      }
+    ],
+    "sourceDumpHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+    "archivedRevocationManifestHash": "sha256:a2270835660e18d83de5a505bd063f573db5d3e91423378e0583f05bb7f65cfe",
+    "repeat": {
+      "tableCount": 98,
+      "rowCount": 24592,
+      "hash": "9540d2f7db323665213cee782c4d41bdea058aafe6fae705a6045ab37e7f48ca"
+    },
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    },
+    "unicodeLocale": {
+      "provider": "b",
+      "locale": "C.UTF-8",
+      "russian": "волшебник",
+      "greek": "ωμεγα"
+    }
+  },
+  "cleanup": {
+    "status": "stopped",
+    "errors": []
+  },
+  "actualMainCI": false,
+  "mayAuthorizeProductionRelease": false,
+  "ordinaryUnseededProductionStartupProven": false,
+  "productionChanges": 0,
+  "combinedReportHash": "sha256:2ada27f610e5dfac3958e9ef7e2cb7ddabe8309b909cd900b6deaf447294b29f",
+  "verificationReceiptHash": "sha256:96bbaa065325bec2e69358f2305f130d04ac4b82f6fdab11777f5aaeede1a9be",
+  "limitations": [
+    "This is the maintained composed historical-input profile using original migration code and declared authentic/public inputs, not an unseeded ordinary production startup.",
+    "The branch is intentionally outside main; this successful CI cannot authorize production publication or deployment."
+  ]
+}

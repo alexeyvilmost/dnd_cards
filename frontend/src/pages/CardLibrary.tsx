@@ -1716,6 +1716,8 @@ const CardLibrary = () => {
                             <img
                               src={card.image_url}
                               alt={card.name}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-contain"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
@@ -1726,6 +1728,8 @@ const CardLibrary = () => {
                             <img
                               src="/default_image.png"
                               alt="Default D&D"
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-contain"
                             />
                           )}

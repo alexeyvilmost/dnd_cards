@@ -9,7 +9,7 @@ import {bindCaptureDatabase,databaseIdentityHash} from './database-binding.mjs';
 import {isLegacyBaseline,baselineDocument,baselineArtifact,componentImage,deploymentStateFile} from './legacy-baseline.mjs';
 export {bindCaptureDatabase} from './database-binding.mjs';
 import {assertHostConfiguration} from './docker-deployment.mjs';
-import {validateActive} from './deploy-state.mjs';
+import {validateActive,createDeploymentStore} from './deploy-state.mjs';
 import {checksum} from './backup-manifest.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
 
@@ -94,6 +94,11 @@ export async function captureHostBackup({config,policy,output,adapter,production
   if(path.dirname(output)!==path.resolve(config.backupDirectory)||!/^capture-[A-Za-z0-9][A-Za-z0-9_.-]{0,100}$/.test(path.basename(output)))throw Error('Fresh capture-* child of protected backupDirectory required');
   const activeFile=deploymentStateFile(config);await regularFile(activeFile);
   const active=validateActive(await read(activeFile)),activeHash=evidenceHash(active);
+  // Fail before pg_dump and the full restore rehearsal. The final cutover
+  // repeats the same pending-operation check under its normal owner lock.
+  try{await lstat(path.join(config.root,'deploy.lock'));throw Error('Deployment lock exists; inspect owner/outcome before capture');}
+  catch(error){if(error.code!=='ENOENT')throw error;}
+  if(createDeploymentStore(config.root).pending().length)throw Error('Unresolved deployment journal requires inspection/recovery before capture');
   adapter??=createHostCaptureAdapter(config);const sourceBinding=await adapter.preflight(active);
   if(sourceBinding?.schemaVersion!==1||!/^[a-f0-9]{64}$/.test(sourceBinding.backendContainerId)||!/^sha256:[a-f0-9]{64}$/.test(sourceBinding.databaseIdentityHash))throw Error('Verified capture database binding required');
   await mkdir(output,{mode:0o700}); // EEXIST is deliberately not recoverable.

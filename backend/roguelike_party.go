@@ -104,9 +104,17 @@ func loadRoguelikeParty(tx *gorm.DB, run *RoguelikeRun, lock bool) error {
 	run.Character = byID[run.CharacterID]
 	return nil
 }
-func saveRoguelikeParty(tx *gorm.DB, run *RoguelikeRun) error {
+func saveRoguelikeParty(tx *gorm.DB, run *RoguelikeRun, selected ...map[uuid.UUID][]string) error {
 	for _, c := range roguelikeCharacters(run) {
-		if err := tx.Omit("User", "Group").Save(c).Error; err != nil {
+		query := tx.Omit("User", "Group")
+		if len(selected) > 0 {
+			columns, ok := selected[0][c.ID]
+			if len(selected) != 1 || !ok || len(columns) == 0 {
+				return fmt.Errorf("missing authoritative runtime columns")
+			}
+			query = query.Select(columns)
+		}
+		if err := query.Save(c).Error; err != nil {
 			return err
 		}
 	}

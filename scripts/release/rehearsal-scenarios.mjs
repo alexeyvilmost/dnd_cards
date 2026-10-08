@@ -7,11 +7,15 @@ import {dockerCommand} from './rehearsal-command.mjs';
 // adapter, origin, serialized proof or a lookalike object to register users.
 const authorizedRehearsals=new WeakMap();
 function authorize(access){const capability=Object.freeze({kind:'owned-rehearsal'});authorizedRehearsals.set(capability,access);return capability;}
+const trustedRehearsalFailures=new WeakMap();
+export function safeRehearsalRequestFailure(error){const value=trustedRehearsalFailures.get(error);return value?{...value,details:[...value.details]}:undefined;}
 export function rehearsalRequestFailure(status,route,method,body,data){
   const safeRoute=String(route).replace(/[a-f0-9-]{36}/gi,':id');
   const safeIdentifier=value=>typeof value==='string'&&/^[a-z][a-z0-9_]{0,80}$/.test(value)?value:null;
   const details=[safeIdentifier(body?.type),safeIdentifier(body?.payload?.intent?.type),safeIdentifier(data?.code)].filter(Boolean);
-  return Error(`Owned canonical API returned HTTP ${status}: ${method} ${safeRoute}${details.length?' ('+details.join(', ')+')':''}`);
+  const error=Error(`Owned canonical API returned HTTP ${status}: ${method} ${safeRoute}${details.length?' ('+details.join(', ')+')':''}`);
+  if(Number.isInteger(status)&&status>=100&&status<=599&&['GET','POST','PUT','DELETE'].includes(method)&&/^\/(auth\/(register|login)|character-templates(?:\/:id\/copies)?|characters-v3\/:id|roguelike\/runs(?:\/:id(?:\/commands)?)?)$/.test(safeRoute))trustedRehearsalFailures.set(error,{kind:'owned-canonical-api',status,method,route:safeRoute,details});
+  return error;
 }
 export async function authorizeNativeRehearsal(stack){
   const assertOwned=async()=>{

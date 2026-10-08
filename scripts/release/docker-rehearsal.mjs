@@ -27,6 +27,10 @@ const readJSON=async file=>JSON.parse(await readFile(file,'utf8'));
 // Verify the entire captured corpus on shared hosts within a bounded budget.
 // This changes no replay inputs, executable hashes, outcomes or RNG checks.
 export const historicalReplayMaximumMs=10*60_000;
+export function rehearsalApplicationState(input,manifest=input.manifest) {
+  if(manifest===input.previousManifest)return input.active;
+  return {schemaVersion:1,status:'active',manifest,instances:Object.fromEntries(Object.keys(manifest.components).map(key=>[key,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]))};
+}
 export function createDockerRehearsal({postgresImage,backupDirectory,directory,executeDocker=dockerCommand}) {
   const run=`rehearsal_${randomBytes(12).toString('hex')}`,label=`bagofholding.rehearsal=${run}`;
   const names={postgres:`${run}_db`,rulesWorker:`${run}_worker`,backend:`${run}_api`,frontend:`${run}_ui`,network:`${run}_net`,volume:`${run}_artifacts`,pgVolume:`${run}_pgdata`};
@@ -85,7 +89,7 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
     await command(['run','-i','--name',copyName,'--label',label,'--network','none','--read-only','--user','0','--mount',`type=bind,source=${backupDirectory},target=/input,readonly`,'--mount',`type=volume,source=${names.volume},target=/artifacts`,'--entrypoint','node',image('rulesWorker'),'--input-type=module','-e',copyProgram],{input:JSON.stringify(artifactFiles)});
     artifactsReady=true;
     }
-    const common=key=>{const launch=manifest===original.previousManifest?original.active.instances[key]:{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit};return legacy?{SOURCE_COMMIT:manifest.claimedReleaseCommit}:{RELEASE_ID:launch.releaseId,RELEASE_COMMIT:launch.releaseCommit};};
+    const common=key=>{if(legacy)return {SOURCE_COMMIT:manifest.claimedReleaseCommit};const launch=rehearsalApplicationState(original,manifest).instances[key];return {RELEASE_ID:launch.releaseId,RELEASE_COMMIT:launch.releaseCommit};};
     const workerEnv=await envFile(`worker-${generation}`,{...common('rulesWorker'),PORT:'8090',RULES_WORKER_TOKEN:secrets.worker,RULES_ARTIFACTS_DIR:'/artifacts',RULES_ARTIFACT_FILE:'/app/artifact.cjs'});
     await resource('container',names.rulesWorker,['run','-d','--name',names.rulesWorker,'--label',label,'--network',names.network,'--network-alias','rules-worker','--read-only','--env-file',workerEnv,'--mount',`type=volume,source=${names.volume},target=/artifacts`,image('rulesWorker')]);
     await wait(()=>request('http://127.0.0.1:8090/health'));
@@ -109,7 +113,7 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
       if(actual.Config.Labels?.['bagofholding.rehearsal']!==run||actual.Config.Image!==expected||actual.Image!==inspected.Id||!inspected.RepoDigests?.includes(expected)||actual.State.Running!==true||Object.values(actual.NetworkSettings.Ports??{}).some(value=>value?.length))throw Error('Writer probe image ownership differs');
       const identity=writerHealthIdentity(await request(url),key);observedImages[key]=expected;observedIdentities[key]=identity;services[key]={healthy:true,imageDigest:expected,identity};if(key==='backend')environment=actual.Config.Env;
     }
-    const state=manifest===input.previousManifest?input.active:{schemaVersion:1,status:'active',manifest,instances:Object.fromEntries(Object.keys(services).map(key=>[key,{releaseId:manifest.releaseId,releaseCommit:manifest.releaseCommit}]))};
+    const state=rehearsalApplicationState(input,manifest);
     assertServiceIdentities(state,services);assertRuntimeWriterPolicy(environment,{manifest:{writerPolicy:historyWriterPolicy}});
     return {images:observedImages,identities:observedIdentities,environment};
   }
@@ -189,7 +193,7 @@ export function createDockerRehearsal({postgresImage,backupDirectory,directory,e
           if(actual.Config.Image!==expected||actual.Image!==inspected.Id||!inspected.RepoDigests?.includes(expected)||actual.State.Running!==true||Object.keys(actual.NetworkSettings.Ports??{}).some(port=>actual.NetworkSettings.Ports[port]?.length))throw Error('Candidate running image differs or publishes a port');
           images[key]=expected;services[key]={healthy:true,imageDigest:expected,identity:identities[key]};
         }
-        assertServiceIdentities({schemaVersion:1,status:'active',manifest:input.manifest,instances:Object.fromEntries(Object.keys(services).map(key=>[key,{releaseId:input.manifest.releaseId,releaseCommit:input.manifest.releaseCommit}]))},services);
+        assertServiceIdentities(rehearsalApplicationState(input),services);
         if(id==='full-candidate-health'){
           const current=await canonicalScenario('Rehearsal current application');
           const actual=await query(`SELECT combat_envelope->>'artifactHash' FROM roguelike_runs WHERE id='${uuid(current.id)}';`);

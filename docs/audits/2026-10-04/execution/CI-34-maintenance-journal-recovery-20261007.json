@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "status": "maintenance_files_relocated_and_failed_deploy_job_rerun",
+  "recordedAt": "2026-10-07T13:32:13.655Z",
+  "sourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+  "runId": 37623876785,
+  "attempt": 2,
+  "workflowStatus": "in_progress",
+  "workflowConclusion": null,
+  "failedAttempt": 1,
+  "cause": "Two root-owned completed cleanup receipts were stored in the deployment journal directory. The conservative pending-operation check interpreted these non-deployment JSON files as unresolved operations.",
+  "correction": {
+    "status": "passed",
+    "completedAt": "2026-10-07T13:30:04.041Z",
+    "files": [
+      {
+        "from": "/opt/bagofholding/operations/obsolete-rehearsal-copy-cleanup-20261007-intent.json",
+        "to": "/opt/bagofholding/maintenance/obsolete-rehearsal-copy-cleanup-20261007-intent.json",
+        "sha256": "sha256:6e756c79f9389bb8711fe43a93362c31839d8c93b34924a09b3a0d2379f5a504"
+      },
+      {
+        "from": "/opt/bagofholding/operations/obsolete-rehearsal-copy-cleanup-20261007-result.json",
+        "to": "/opt/bagofholding/maintenance/obsolete-rehearsal-copy-cleanup-20261007-result.json",
+        "sha256": "sha256:0b0f421e1ceab2f3668f6520ac61c5b47337fd5da380f69927269d3d2b2d6b09"
+      }
+    ],
+    "bytesPreserved": true,
+    "productionDatabaseChanges": 0,
+    "serviceReplacements": 0
+  },
+  "productionDatabaseChanges": 0,
+  "serviceReplacementsDuringCorrection": 0,
+  "currentAcceptedSource": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+  "acceptedNewDeployment": false,
+  "rerunMethod": "GitHub rerun failed jobs; same exact source and immutable published candidate, new protected attempt and fresh backup; no production apply bypass.",
+  "localFollowOn": {
+    "status": "early_capture_pending_operation_guard_locally_verified",
+    "recordedAt": "2026-10-07T13:44:00.467Z",
+    "sourceParent": "431574f562c1fc54e06ba936e393a7db84fba256",
+    "checks": {
+      "passed": 39,
+      "failed": 0,
+      "skipped": 0
+    },
+    "inputs": [
+      {
+        "file": "scripts/release/capture-host-backup.mjs",
+        "sha256": "sha256:5e59448b5109dd36ba49f22d0c2c7e31abc337c84edcf39291ae713cd170c0d1"
+      },
+      {
+        "file": "scripts/release/capture-host-backup.test.mjs",
+        "sha256": "sha256:093761e9f52ea3ae6a27cf668bc9741fd7d5b2d104f8e26e5c8ab789b38448e8"
+      }
+    ],
+    "behavior": "An existing deployment lock or any unresolved journal now refuses before database preflight/pg_dump and before creating a capture directory. Completed deployment outcomes and separately stored maintenance receipts keep normal capture. The final under-lock cutover guard remains unchanged.",
+    "hostedCI": "pending",
+    "productionAccepted": false
+  }
+}

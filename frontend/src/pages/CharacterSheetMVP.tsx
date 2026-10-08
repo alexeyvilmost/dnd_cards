@@ -1331,7 +1331,7 @@ const CharacterSheetMVP = () => {
               {acBreakdown && (
                 <div className="sheet-stat">
                   <span>КД</span>
-                  <ValueBreakdownTip breakdown={acBreakdown} label="Класс доспеха">
+                  <ValueBreakdownTip breakdown={acBreakdown} label="КД">
                     <strong>{ac}</strong>
                   </ValueBreakdownTip>
                 </div>

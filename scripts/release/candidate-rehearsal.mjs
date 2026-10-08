@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import {safeRehearsalRequestFailure} from './rehearsal-scenarios.mjs';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -18,14 +18,18 @@ const same=(a,b)=>evidenceHash(a)===evidenceHash(b);
 function assertInputWriterPublication(input,check){
   if(check?.traces?.some(trace=>trace.outcomeId==='frontend-pending-job-reload')&&!same(check.writerPublication,writerPublication(input.publishedCandidate,input.verifiedReleaseRun)))throw Error('Writer browser publication differs from verified candidate input');
 }
-export function rehearsalInput(candidate,active,backup) {
-  validateManifest(candidate?.manifest);validateActive(active);
+export function assertPublishedRehearsalCandidate(candidate) {
+  validateManifest(candidate?.manifest);
   const manifest=candidate.manifest,core=candidate.reports?.core;
   if(candidate.status!=='candidate-only'||candidate.deployable!==false||candidate.provenance?.manifestHash!==evidenceHash(manifest)
     ||candidate.provenance.sourceCommit!==manifest.releaseCommit||!Number.isSafeInteger(candidate.provenance.releaseRunId)
     ||!/^sha256:[a-f0-9]{64}$/.test(candidate.provenance.planHash??'')||!/^([a-f0-9]{40})$/.test(candidate.provenance.controlCommit??''))throw Error('Published candidate provenance required');
   const evidence=manifest.validationEvidence.find(row=>row.gate==='core');
   if(core?.status!=='passed'||core.compositionFingerprint!==compositionFingerprint(manifest)||evidence?.reportHash!==evidenceHash(core))throw Error('Exact candidate core report required');
+  return manifest;
+}
+export function rehearsalInput(candidate,active,backup) {
+  const manifest=assertPublishedRehearsalCandidate(candidate);validateActive(active);
   if(manifest.previousReleaseId!==(isLegacyBaseline(active)?null:active.manifest.releaseId)||backup.releaseManifestHash!==evidenceHash(baselineDocument(active)))throw Error('Candidate, active release and backup predecessor differ');
   const retirementActive=active.database?.status==='verified-character-retirement'?validatePublicActive(active):undefined;
   validateWriterTransition(manifest,isLegacyBaseline(active)?null:active.manifest,retirementActive);
@@ -55,6 +59,8 @@ export async function collectRehearsal(input,adapter,{runId=randomUUID(),onRepor
     assertWriterRehearsalBoundary(input.manifest,Object.fromEntries(report.checks.map(row=>[row.id,row])));
     assertWriterCompatibility(input.manifest,{previousManifest:input.previousManifest,images:image?.images,identities:image?.identities,rehearsalReceipt:report,...retirementWriterBaseline(input)},report.checks.find(row=>row.id==='writer-compatibility'));
   } catch(error){failure=error;report.failure='candidate-rehearsal-failed';report.failureStage=stage;
+    const requestFailure=safeRehearsalRequestFailure(error);
+    if(requestFailure)report.requestFailure=requestFailure;
     const processFailure=safeDockerFailure(error);
     if(processFailure)report.processFailure=processFailure;
     // Only our fixed scenario IDs enter persisted diagnostics. The original

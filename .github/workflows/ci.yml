@@ -117,15 +117,22 @@ jobs:
           name: frontend-verification-planning
           path: outputs/testing
       - name: PostgreSQL 17 binaries for the owned native cluster
+        timeout-minutes: 8
         # Official PGDG repository. The runner creates its own random cluster,
         # role, database and marker; no shared service database is passed in.
         run: |
           if [ ! -x /usr/lib/postgresql/17/bin/initdb ]; then
             sudo install -d /usr/share/postgresql-common/pgdg
-            sudo curl --fail --silent --show-error https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+            sudo curl --fail --silent --show-error --connect-timeout 15 --max-time 60 --retry 2 https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
             echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main' | sudo tee /etc/apt/sources.list.d/dnd-test-pgdg.list
-            sudo apt-get update
-            sudo apt-get install --yes postgresql-17
+            # Hosted Ubuntu uses mirror+file. Keep signed official packages,
+            # avoiding long retries against the intermittently failing mirror.
+            if [ -f /etc/apt/apt-mirrors.txt ]; then
+              printf '%s\n' 'https://archive.ubuntu.com/ubuntu/' | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+            fi
+            apt_options=(-o Acquire::Retries=1 -o Acquire::http::Timeout=15 -o Acquire::https::Timeout=15)
+            timeout 180 sudo apt-get "${apt_options[@]}" update
+            timeout 240 sudo apt-get "${apt_options[@]}" install --yes postgresql-17
           fi
           echo '/usr/lib/postgresql/17/bin' >> "$GITHUB_PATH"
       - name: Run the shared suite runner

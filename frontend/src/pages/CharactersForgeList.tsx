@@ -109,7 +109,7 @@ const CharactersForgeList = () => {
             <div key={c.id} className="entity-card forge-char-card">
               <Link to={`/characters-v3/${c.id}${c.roguelike_run_id ? `?roguelike=${c.roguelike_run_id}` : ''}`} className="forge-char-card-link">
                 <span className="forge-char-token" aria-hidden>
-                  {c.avatar_url ? <img src={c.avatar_url} alt="" /> : (c.name || '?').slice(0, 1)}
+                  {c.avatar_url ? <img src={c.avatar_url} alt="" loading="lazy" decoding="async" /> : (c.name || '?').slice(0, 1)}
                 </span>
                 <span className="ec-name">{(c.character_type === 'dungeon_crawl' ? withoutLegacyRunSuffix(c.name) : c.name) || 'Без имени'}</span>
                 <span className="ec-sub">{subtitle(c)}</span>

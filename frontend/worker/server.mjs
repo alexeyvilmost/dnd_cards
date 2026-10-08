@@ -1,7 +1,12 @@
 import {createServer} from 'node:http';
 import {createHash, timingSafeEqual, randomUUID} from 'node:crypto';
 import {performance} from 'node:perf_hooks';
-import {compactWorkerMirrors,MIRROR_WIRE} from './mirrors.mjs';
+import {compactWorkerMirrors,applyPreparedWorkerMirrors,MIRROR_WIRE} from './mirrors.mjs';
+import {compactState} from './state-delta.mjs';
+import {compactPartialMirrors,applyPartialMirrors} from './partial-mirrors.mjs';
+import {compileNativeHashArtifact} from './native-hash.mjs';
+import {createCombatFrameCache,acceptsCompactProjection,projectionInputs,projectionKey,nextProjectionInputs} from './combat-frames.mjs';
+import {createSpeculativeTransitions} from './speculative-transitions.mjs';
 import {mkdir, readFile, writeFile} from 'node:fs/promises';
 import {createRequire} from 'node:module';
 import path from 'node:path';
@@ -62,10 +67,28 @@ function legacyPlayerError(error) {
 
 // Independent of executable artifact versions, so archived workers also get a
 // verifiable journal. Normalize objects while preserving array order.
+// Cache only exact serialized JSON subtrees. Pure hashing cannot infer that
+// catalogs or sheets stay unchanged: a changed byte always misses this cache.
+const canonicalSubtrees=new Map();let canonicalSubtreeBytes=0;
 export function snapshotHash(value) {
-  const normalize = item => Array.isArray(item) ? item.map(normalize)
-    : item && typeof item === 'object'
-      ? Object.fromEntries(Object.keys(item).sort().map(key => [key, normalize(item[key])])) : item;
+  const normalize = (item,depth=0) => {
+    let key;
+    if(item&&typeof item==='object'&&(depth===2||depth===5)){
+      const raw=JSON.stringify(item);
+      if(raw?.length>=8192&&raw.length<=600000){
+        key=raw;const cached=canonicalSubtrees.get(key);
+        if(cached){canonicalSubtrees.delete(key);canonicalSubtrees.set(key,cached);return cached.value;}
+      }
+    }
+    const result=Array.isArray(item)?item.map(entry=>normalize(entry,depth+1))
+      :item&&typeof item==='object'?Object.fromEntries(Object.keys(item).sort().map(key=>[key,normalize(item[key],depth+1)])):item;
+    if(key){
+      const bytes=Buffer.byteLength(key)+Buffer.byteLength(JSON.stringify(result));
+      canonicalSubtrees.set(key,{value:result,bytes});canonicalSubtreeBytes+=bytes;
+      while(canonicalSubtrees.size>32||canonicalSubtreeBytes>16*1024*1024){const oldest=canonicalSubtrees.keys().next().value;canonicalSubtreeBytes-=canonicalSubtrees.get(oldest).bytes;canonicalSubtrees.delete(oldest);}
+    }
+    return result;
+  };
   return hashOf(JSON.stringify(normalize(value)));
 }
 
@@ -100,7 +123,7 @@ export function createArtifactCache({artifactsDirectory, maxCachedArtifacts = 4,
           // close may run while the asynchronous filesystem read is pending.
           if (closed) throw Error('Worker cache is closed');
           if (hashOf(bytes) !== hash) throw Error('Artifact hash mismatch');
-          const artifact = require(file);
+          const artifact = compileNativeHashArtifact(file,bytes) ?? require(file);
           cache.set(hash, artifact);
           return artifact;
         })().finally(() => loading.delete(hash));
@@ -153,6 +176,8 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
   catch (error) {if (error.code !== 'EEXIST') throw error;}
   if (hashOf(await readFile(artifactPath(artifactHash))) !== artifactHash) throw Error('Existing artifact is corrupt');
   const cache = createArtifactCache({artifactsDirectory, maxCachedArtifacts});
+  const frames = createCombatFrameCache();
+  const speculation = createSpeculativeTransitions({artifactsDirectory});
   const expectedAuth = Buffer.from(`Bearer ${token}`);
   const server = createServer(async (request, response) => {
     // Timings begin when Node invokes this callback. They cannot measure time
@@ -174,11 +199,17 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const start = performance.now();
       try {return await work();} finally {record(name, start);}
     };
-    const send = (status, value) => {
-      if(status===200&&request.headers['x-rules-wire']===MIRROR_WIRE){
+    const send = (status, value, preparedMirrors, stateDelta, preparedPartialMirrors) => {
+      const prepared=status===200&&[MIRROR_WIRE,'mirrors-v3'].includes(request.headers['x-rules-wire'])&&Boolean(preparedMirrors);
+      if(status===200&&[MIRROR_WIRE,'mirrors-v3'].includes(request.headers['x-rules-wire'])&&!prepared){
         value=timed('worker_mirror_compact_ms',()=>compactWorkerMirrors(value));
       }
+      if(prepared)value=applyPreparedWorkerMirrors(value,preparedMirrors);
+      const deltaHit=status===200&&request.headers['x-rules-wire']==='mirrors-v3'&&stateDelta&&value.wireSchema===2;
+      if(deltaHit){const partial=preparedPartialMirrors?{value:applyPartialMirrors(value.value,preparedPartialMirrors),mirrors:preparedPartialMirrors.mirrors}:timed('worker_partial_mirror_ms',()=>compactPartialMirrors(value.value));value={wireSchema:3,value:{...partial.value,envelope:{...partial.value.envelope,state:stateDelta.state}},stateDelta:stateDelta.metadata,mirrors:{state:value.mirrors.state.map(row=>row.field),partial:partial.mirrors,...(value.mirrors.leader?{leader:value.mirrors.leader.id}:{})}};}
+      if(measured)metrics.worker_state_delta_hit=Number(Boolean(deltaHit));
       const serialized = timed('worker_stringify_ms', () => JSON.stringify(value));
+      if(measured)metrics.worker_prepared_mirror_hit=Number(prepared);
       const headers = {'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Request-ID': requestId};
       if (measured) {
         metrics.worker_callback_to_send_ms = performance.now() - started;
@@ -194,7 +225,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
     if (request.method === 'GET' && request.url === '/health') return send(200, {status: 'ok', ...identity});
     const suppliedAuth = Buffer.from(request.headers.authorization || '');
     if (suppliedAuth.length !== expectedAuth.length || !timingSafeEqual(suppliedAuth, expectedAuth)) return send(401, {error: 'unauthorized'});
-    if (request.method !== 'POST' || !['/initialize', '/transition', '/upgrade', '/rest', '/camp-action', '/camp-inventory', '/equipment', '/initiative-options', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
+    if (request.method !== 'POST' || !['/initialize', '/transition', '/prefetch', '/upgrade', '/rest', '/camp-action', '/camp-inventory', '/equipment', '/initiative-options', '/journey-check', '/journey-effect'].includes(request.url)) return send(404, {error: 'not_found'});
     try {
       let size = 0;
       const chunks = [];
@@ -210,6 +241,12 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
       const hash = body.artifactHash || artifactHash;
       if (measured) metrics.worker_artifact_cache_hit = Number(cache.has(hash));
       const artifact = await timedAsync('worker_artifact_load_ms', () => cache.load(hash));
+      if(request.url==='/prefetch'){
+        if(body.envelope?.artifactHash!==hash)return send(409,{error:'frame_unavailable'});
+        const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(body.envelope));
+        frames.set(afterHash,body.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),body.projectionInputVersion===1&&acceptsCompactProjection(artifact)?projectionInputs(body.character,body.characters):undefined);
+        return send(200,{status:'ready',trace:{afterHash}});
+      }
       if (request.url === '/upgrade') {
         // Retain and verify the old executable too. The caller cannot choose a
         // target version: only this server's verified current artifact is used.
@@ -253,15 +290,35 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         const projected = timed('worker_project_ms', () => body.input.characters?.length > 1
           ? artifact.projectRoguelikePartyCombatPatch(result.envelope, body.input.characters)
           : artifact.projectRoguelikeCombatPatch(result.envelope, body.input.character));
-        return send(200, {...result, ...projected,
-          trace: {beforeHash: '', afterHash: timed('worker_snapshot_hash_ms', () => snapshotHash(projected.envelope)), runtimeRevision: projected.patch.runtime_revision}});
+        const afterHash=timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
+        send(200, {...result, ...projected,
+          trace: {beforeHash: '', afterHash, runtimeRevision: projected.patch.runtime_revision}});
+        setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),nextProjectionInputs(projected,body.input.character,body.input.characters));});
+        return;
       }
-      const result = timed('worker_execute_ms', () => artifact.stepRoguelikeCombat(body.envelope, body.intent, hash));
-      const projected = timed('worker_project_ms', () => body.characters?.length > 1
+      if(body.projectionInputVersion===1&&!acceptsCompactProjection(artifact))return send(409,{error:'projection_unavailable'});
+      if(body.frameKey){
+        const cached=frames.get(body.frameKey,hash);
+        if(!cached)return send(409,{error:'frame_unavailable'});
+        body.envelope=cached;
+        if(measured)metrics.worker_frame_cache_hit=1;
+      }
+      const beforeHash=timed('worker_snapshot_hash_ms',()=>body.frameKey||snapshotHash(body.envelope));
+      const predicted=await timedAsync('worker_prediction_wait_ms',()=>speculation.take(beforeHash,body.intent,{readOnlyProjected:true}));
+      if(measured){metrics.worker_prediction_hit=Number(Boolean(predicted));if(predicted){metrics.worker_speculative_execute_ms=predicted.executeMs;metrics.worker_speculative_prepare_ms=predicted.prepareMs;if(predicted.projection)metrics.worker_speculative_mirror_ms=predicted.projection.mirrorMs;}}
+      const result = predicted?.result??timed('worker_execute_ms', () => artifact.stepRoguelikeCombat(body.envelope, body.intent, hash));
+      const prepared=predicted?.projection;
+      const projectionHit=Boolean(prepared&&acceptsCompactProjection(artifact)&&prepared.key===projectionKey(projectionInputs(body.character,body.characters)));
+      if(measured)metrics.worker_prediction_projection_hit=Number(projectionHit);
+      const projected = projectionHit?prepared.projected:timed('worker_project_ms', () => body.characters?.length > 1
         ? artifact.projectRoguelikePartyCombatPatch(result.envelope, body.characters)
         : artifact.projectRoguelikeCombatPatch(result.envelope, body.character));
-      return send(200, {...result, ...projected,
-        trace: {beforeHash: timed('worker_snapshot_hash_ms', () => snapshotHash(body.envelope)), afterHash: timed('worker_snapshot_hash_ms', () => snapshotHash(projected.envelope)), runtimeRevision: projected.patch.runtime_revision}});
+      const afterHash=projectionHit?prepared.afterHash:timed('worker_snapshot_hash_ms',()=>snapshotHash(projected.envelope));
+      send(200, {...result, ...projected,
+        trace: {beforeHash,afterHash,runtimeRevision: projected.patch.runtime_revision}},projectionHit?prepared.preparedMirrors:undefined,
+        body.frameKey&&request.headers['x-rules-wire']==='mirrors-v3'?(projectionHit?prepared.preparedStateDelta:timed('worker_state_delta_ms',()=>compactState(projected.envelope.state,body.envelope.state,beforeHash))):undefined,projectionHit?prepared.preparedPartialMirrors:undefined);
+      setImmediate(()=>{frames.set(afterHash,projected.envelope);speculation.schedule(afterHash,frames.get(afterHash,hash),nextProjectionInputs(projected,body.character,body.characters));});
+      return;
     } catch (error) {
       // No request or snapshot logging: the envelope contains private entropy.
       const missing = error.code === 'ENOENT';
@@ -270,7 +327,7 @@ export async function createRulesWorker({artifactFile, artifactsDirectory, token
         ...(rejectionCode ? {rejectionCode} : {message: missing ? 'Pinned rules artifact unavailable' : legacyPlayerError(error)})});
     }
   });
-  server.once('close', () => cache.close());
+  server.once('close', () => {cache.close();frames.clear();void speculation.close();});
   return server;
 }
 

@@ -25,6 +25,7 @@ func TestInitializationPreparationCommitRaces(t *testing.T) {
 			t.Run(fmt.Sprintf("party%d/%s", size, mutation), func(t *testing.T) {
 				f := openCharacterV3AccessFixture(t)
 				t.Setenv("JWT_SECRET", characterV3AccessTestSecret)
+				t.Setenv("RULES_COMBAT_ASYNC_PERSIST_ENABLED", "1")
 				t.Setenv("RULES_PREPARATION_CACHE_ENABLED", "0")
 				t.Setenv("RULES_CATALOG_BATCH_ENABLED", "1")
 				t.Setenv("DB_FROZEN_CATALOGS", "0")
@@ -147,7 +148,8 @@ func TestInitializationPreparationCommitRaces(t *testing.T) {
 				}()
 				t.Setenv("RULES_WORKER_URL", server.URL)
 				t.Setenv("RULES_WORKER_TOKEN", strings.Repeat("q", 32))
-				registerRoguelikeRoutes(f.router.Group("/api"), f.auth, NewRoguelikeController(f.db))
+				controller := NewRoguelikeController(f.db)
+				registerRoguelikeRoutes(f.router.Group("/api"), f.auth, controller)
 				request := RoguelikeCommandRequest{CommandID: uuid.New(), ExpectedRevision: 1, Type: "initialize_combat", Payload: JSONMap{}}
 				url, token := "/api/roguelike/runs/"+run.ID.String()+"/commands", f.token(t, f.owner)
 				done := make(chan *httptest.ResponseRecorder, 1)
@@ -202,6 +204,15 @@ func TestInitializationPreparationCommitRaces(t *testing.T) {
 					if response.Code != 409 || !strings.Contains(response.Body.String(), "initialization_inputs_stale") {
 						t.Fatalf("stale prepared command accepted/wrong rejection: %d %s", response.Code, response.Body.String())
 					}
+					controller.combatCache.mu.Lock()
+					slot := controller.combatCache.slots[combatCacheKey(run.ID, f.owner.ID)]
+					controller.combatCache.mu.Unlock()
+					if slot == nil {
+						t.Fatal("command did not serialize the combat lane")
+					}
+					if frame, hash := slot.frame(); frame != nil || hash != "" {
+						t.Fatal("failed preparation published a combat base")
+					}
 					if snapshot() != before {
 						t.Fatal("rejection changed authoritative run/characters/entropy")
 					}
@@ -214,6 +225,28 @@ func TestInitializationPreparationCommitRaces(t *testing.T) {
 				} else {
 					if response.Code != 200 {
 						t.Fatalf("valid preparation refused: %d %s", response.Code, response.Body.String())
+					}
+					controller.combatCache.mu.Lock()
+					slot := controller.combatCache.slots[combatCacheKey(run.ID, f.owner.ID)]
+					controller.combatCache.mu.Unlock()
+					if slot == nil {
+						t.Fatal("accepted initialization has no combat lane")
+					}
+					frame, hash := slot.frame()
+					if frame == nil || hash != "sha256:"+strings.Repeat("b", 64) || len(roguelikeCharacters(frame)) != size {
+						t.Fatal("canonical solo/party initialization was not primed")
+					}
+					actual, err := ownedRoguelikeRun(f.db, run.ID, f.owner.ID, false)
+					if err != nil {
+						t.Fatal(err)
+					}
+					cachedJSON, err := roguelikeRunResponse(frame)
+					if err != nil {
+						t.Fatal(err)
+					}
+					actualJSON, err := roguelikeRunResponse(actual)
+					if err != nil || equipmentInputHash(cachedJSON) != equipmentInputHash(actualJSON) {
+						t.Fatal("primed initialization differs from canonical reload")
 					}
 					accepted, oldCalls := snapshot(), calls.Load()
 					retry := performCharacterV3Request(t, f.router, "POST", url, token, request)

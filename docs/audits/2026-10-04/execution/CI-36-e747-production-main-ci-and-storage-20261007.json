@@ -1,0 +1,162 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "kind": "independent-full-release-main-ci-and-two-backup-retention",
+  "sourceCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+  "observedAt": "2026-10-07T15:31:04.285Z",
+  "manifestHash": "sha256:1dd99b6478b203602e43a0635859cd2fe123909a64370c5c04ff14c9ef428b78",
+  "projectionHash": "sha256:9bd74452f523afbd8ca53f2cd06b939b5612153bc3dc5519cd66ffd1301f4d5b",
+  "deployment": {
+    "runId": 37639635869,
+    "runAttempt": 1,
+    "controlCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+    "sourceCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+    "rawRunHash": "sha256:b1ca5980813f2dda6eb6311b2a8a2470c6d66c001dfdf6cdbd208e1d5199dca6"
+  },
+  "predecessor": {
+    "runId": 37623876785,
+    "runAttempt": 2,
+    "controlCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "sourceCommit": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "rawRunHash": "sha256:1ec64ca050d95595ce9869db45505d2a212072de5ef2e30edb2d1dfecf5bea8f"
+  },
+  "allThreeImagesAndSourcesVerified": true,
+  "migrations": 307,
+  "migrationSetUnchanged": true,
+  "protectedExecutionProfileVerified": true,
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "productionDatabaseRestored": false,
+  "productionDatabaseChanges": 0,
+  "paidProviderRequests": 0,
+  "mainCI": {
+    "id": 37635397136,
+    "attempt": 1,
+    "actualMainCI": true,
+    "checks": 39,
+    "globalCoverageComplete": true,
+    "historical303": {
+      "status": "passed",
+      "historicalChainVerified": true,
+      "freshInstallAcceptance": true,
+      "migrations": 303,
+      "revocations": [
+        {
+          "migration": "102",
+          "rows": 1,
+          "preimagesExact": true
+        },
+        {
+          "migration": "103",
+          "rows": 1,
+          "preimagesExact": true
+        },
+        {
+          "migration": "119",
+          "rows": 1,
+          "preimagesExact": true
+        }
+      ],
+      "sourceDumpHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+      "archivedRevocationManifestHash": "sha256:a2270835660e18d83de5a505bd063f573db5d3e91423378e0583f05bb7f65cfe",
+      "repeat": {
+        "tableCount": 98,
+        "rowCount": 24592,
+        "hash": "5f740e788ec72cffcb70d219c996273c8763893a1628d847cbae19a71d8256fe"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "unicodeLocale": {
+        "provider": "b",
+        "locale": "C.UTF-8",
+        "russian": "волшебник",
+        "greek": "ωμεγα"
+      },
+      "report": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_c5238f4bd5071c0997d929ef/historical-fresh/report.json"
+    },
+    "observedWorkflowSpanMs": 1114000
+  },
+  "retainedBackups": [
+    {
+      "directory": "/opt/bagofholding/backups/capture-37639635869-1",
+      "captureHash": "sha256:ba43fdc51de72f972a1c592dabae150560e5044034c488aacecf2d4baf58f369",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:0a6bc3fd3c8109104a750c567057517318ec7f09ff1ad7854f09b6acccdeaeb9",
+        "bytes": 1005036747
+      },
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37639635869-1",
+      "allFilesVerified": true
+    },
+    {
+      "directory": "/opt/bagofholding/backups/capture-37623876785-2",
+      "captureHash": "sha256:7c06b7166c314461e22df6a8cdfef728b05edffa0290fd4cdb53ed0828efc3f7",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:028c986fa57994943c42db6e15c0012402fe4f2019c51973e7ca55b7fb69e6c1",
+        "bytes": 1005036747
+      },
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37623876785-2",
+      "allFilesVerified": true
+    }
+  ],
+  "protectedRestoreBaselineVerified": true,
+  "obsoleteBackupFilesDeletedBytes": 1005036747,
+  "finishedRehearsalCopiesDeletedBytes": 1005910193,
+  "disk": {
+    "total": 50884108288,
+    "used": 25538822144,
+    "available": 25285570560
+  },
+  "requests": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/build-info.json",
+      "status": 200
+    }
+  ],
+  "persistentDeployIdentityRetained": true,
+  "all29Complete": false,
+  "selectiveProductionVerified": false,
+  "productionRetirement302Executed": false,
+  "evidence": [
+    {
+      "file": "outputs/operations/e747-deployment-37639635869-1/deployed-release/independent-live-verification.json",
+      "sha256": "sha256:d564bc141914093717bff244fc0dfd67f561985c52c966c98147c0531eb7fef3"
+    },
+    {
+      "file": "outputs/operations/two-current-backups-e747-20261007-result.json",
+      "sha256": "sha256:a2728289707bee2cbeb4a3cb15e05e9af18db7b07250963268f82ac8bae8dfaa"
+    },
+    {
+      "file": "outputs/operations/finished-e747-history-copy-20261007-result.json",
+      "sha256": "sha256:0a84107f7eeb321bed7ecc85ba40fb4ea098abadba4e29fe5cd11ce197a46881"
+    },
+    {
+      "file": "outputs/operations/retention-final-observation-1791387064323.json",
+      "sha256": "sha256:eb315c7d2b2b0af81485d93fcdc68d0cb8c6085ec4340064f693f90106e67af6"
+    },
+    {
+      "file": "outputs/operations/e747-main-ci-37635397136-1/accepted-reports/independent-verification.json",
+      "sha256": "sha256:6c21eed7779a4163bead1f48527281a29aa38c1a3b2ef887a238a548b136e36b"
+    },
+    {
+      "file": "outputs/operations/e747-main-ci-37635397136-1/accepted-reports/terminal-run.json",
+      "sha256": "sha256:75645c731d91be078f0d6ccd978b9362f84d51ab0235dbfa3d741fa89e274dda"
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "kind": "accepted-installed35-release-and-actual-storage",
+  "status": "passed",
+  "observedAt": "2026-10-07T21:47:21.05Z",
+  "sourceCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201",
+  "releaseId": "candidate-35a9bdf09e6f-519d79a360f1",
+  "actualRuns": {
+    "ci": 37681583257,
+    "publication": 37684028510,
+    "deployment": 37685268475,
+    "attempt": 1
+  },
+  "checks": {
+    "ci": 39,
+    "unitsOfWork": 948,
+    "ciWorkflowIntervalMs": 1142000,
+    "serverRehearsal": 9,
+    "independentLive": "passed"
+  },
+  "liveApplicationIdentities": {
+    "backend": {
+      "containerId": "82e074b918418582d95602c5c60d6d92be64451ba8483a31e2b5295eaa7791f5",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/backend@sha256:bc12c832e56a06e797e46fbd0fae0ecc332284e89ed944cc46954f78134eeda6",
+      "imageId": "sha256:bc12c832e56a06e797e46fbd0fae0ecc332284e89ed944cc46954f78134eeda6",
+      "expectedImageId": "sha256:bc12c832e56a06e797e46fbd0fae0ecc332284e89ed944cc46954f78134eeda6",
+      "running": true,
+      "health": "healthy",
+      "releaseId": "candidate-35a9bdf09e6f-519d79a360f1",
+      "releaseCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201"
+    },
+    "frontend": {
+      "containerId": "d95822f415a1a019e90c7540de46321d0743c805da6e36b19b4c9317f726149b",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/frontend@sha256:8e5c60ca312222e2039966dae15bab2472bf3fd15cbdae7da2a02c1d61e71acf",
+      "imageId": "sha256:8e5c60ca312222e2039966dae15bab2472bf3fd15cbdae7da2a02c1d61e71acf",
+      "expectedImageId": "sha256:8e5c60ca312222e2039966dae15bab2472bf3fd15cbdae7da2a02c1d61e71acf",
+      "running": true,
+      "health": "healthy",
+      "releaseId": "candidate-35a9bdf09e6f-519d79a360f1",
+      "releaseCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201"
+    },
+    "rulesWorker": {
+      "containerId": "7866404337acf4679a5235cda74177e147903859411cb6f86ac7e8d8e05464d6",
+      "imageDigest": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:37de387f19ec7aa63847928d3d297db7246be73d0aef252e9fef16b0a12fa224",
+      "imageId": "sha256:37de387f19ec7aa63847928d3d297db7246be73d0aef252e9fef16b0a12fa224",
+      "expectedImageId": "sha256:37de387f19ec7aa63847928d3d297db7246be73d0aef252e9fef16b0a12fa224",
+      "running": true,
+      "health": "healthy",
+      "releaseId": "candidate-35a9bdf09e6f-519d79a360f1",
+      "releaseCommit": "35a9bdf09e6f9bdabd1492028a788c20eeda8201"
+    }
+  },
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "schemaVersions": 307,
+  "disk": {
+    "total": 50884108288,
+    "used": 22482214912,
+    "available": 28342177792
+  },
+  "actualFullServerBackups": [
+    {
+      "directory": "/opt/bagofholding/backups/capture-installed35-retirement-20261008-1791409281130",
+      "captureHash": "sha256:bbe878407ae515cbcb9fe4928e54b77354ccff561c1ef3ac5d348d9e2c6e0c4e",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:a67617713b8b8954def7883fc02bd0bcb434f88c75531ed1fbdf1f876800ebf9",
+        "bytes": 1005036747
+      },
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-installed35-retirement-20261008-1791409281130",
+      "allFilesVerified": true
+    },
+    {
+      "directory": "/opt/bagofholding/backups/capture-37685268475-1",
+      "captureHash": "sha256:90fc05c0cddb3550a4ea6611bc9163b7fc491a0b7f819d87bc54151f9b445be1",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:2351834c72b2fef19674b9b2ea00e906f1d8b7b0128fefaa9a0c211dc1616f5a",
+        "bytes": 1005036747
+      },
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37685268475-1",
+      "allFilesVerified": true
+    }
+  ],
+  "actualFullServerBackupCount": 2,
+  "protectedOriginalPre35RestoreVerified": true,
+  "freshInstalled35Capture": {
+    "directory": "/opt/bagofholding/backups/capture-installed35-retirement-20261008-1791409281130",
+    "all46OriginalFilesVerified": true,
+    "originalCaptureCreatedAt": "2026-10-07T21:41:23.415Z",
+    "localNativeAndPublishedReaderDrills": "running_at_this_observation"
+  },
+  "pcBackupsRoot": "D:/TimeWebBackups/dnd_cards",
+  "maintenanceChangedWorkingDatabase": false,
+  "maintenanceRestoredWorkingDatabase": false,
+  "maintenanceServiceRestarts": 0,
+  "legacyPhysicalRetirementExecuted": false,
+  "all29Complete": false,
+  "paidLocalGeneration": "skipped_at_owner_request_with_prior_owner_production_confirmation",
+  "limitations": [
+    "Fresh installed35 retirement rehearsal is local and was still running at this observation; no retirement SQL has run in production.",
+    "Earlier 76ae full-stack CI failure remains preserved; the later successful 35a9 CI does not establish the original failure cause.",
+    "Free space is an actual point-in-time measurement; deletion sizes and deduplication estimates are not an exact net free-space claim.",
+    "Two full backups remain; historical manifests/artifacts remain, and no recurring cleanup schedule is claimed."
+  ],
+  "evidence": [
+    {
+      "file": "outputs/operations/35a9-deployment-37685268475-1/deployed-release/independent-live-verification.json",
+      "sha256": "sha256:27f614c815256ee5bb5e93dcab4103c7ab4917f91ce4fc644eb2a446f401986a"
+    },
+    {
+      "file": "outputs/operations/35a9-main-ci-37681583257-1/accepted-reports/independently-reproduced-contracts.json",
+      "sha256": "sha256:b2d5f68a8db57e21945fabe47aa3ef0978144f493a70ee8f4caf48c88e153da7"
+    },
+    {
+      "file": "outputs/operations/storage-retention-inventory-1791409641160.json",
+      "sha256": "sha256:dce71b0de87fd149e5dffb7875b71937d907799bcb18029a3cffe6a2fcc3ed6d"
+    },
+    {
+      "file": "outputs/operations/two-current-backups-installed35-37685268475-20261008-result.json",
+      "sha256": "sha256:6633f7a07481a270b09c826e1a5fdba24faf71ecde814d32227031dde53e7889"
+    },
+    {
+      "file": "outputs/operations/inactive-release-assets-apply-1791407622055.json",
+      "sha256": "sha256:484cc11b68d6cc65bc5f02756ed464059f83599dae5b2b5e71e891eb9eabf8a3"
+    },
+    {
+      "file": "outputs/operations/finished-control-archives-before35-removed-20261008.json",
+      "sha256": "sha256:dc6aff77e99dad47edb04ef21a2f17e7dcd31bc3a2c56592dbf8a7734203ea8a"
+    },
+    {
+      "file": "outputs/operations/remaining24c-control-archive-removed-20261008.json",
+      "sha256": "sha256:40ad6ac2f92488bfa77b298c473a9026133766ac42b9726e7880a76362e5cb47"
+    },
+    {
+      "file": "outputs/operations/finished-35a9-history-copy-20261007-result.json",
+      "sha256": "sha256:9724ddb267d42551ef34bb8dde7de64ff19bece5b291503acef824f5827568fc"
+    },
+    {
+      "file": "outputs/operations/finished-control-archives-preserved-20261008.json",
+      "sha256": "sha256:e22d90c49ea7dabb1556c34df68b4af8c25ebac40775cb61d9151de4360573f5"
+    }
+  ],
+  "manifestHash": "sha256:adf6ad3fecf4f84f26956aef98a354ac168ee77114261e640a452210cd44fb55"
+}

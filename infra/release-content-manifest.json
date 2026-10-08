@@ -77,8 +77,8 @@
     },
     {
       "path": "backend/canonical_json.go",
-      "sha256": "sha256:55a88ba48fcc48c854dd1b4cb0aad16ea046cc454f8dd5d013df61030b48b395",
-      "bytes": 6696
+      "sha256": "sha256:c04e123a43cafc5c614e56056d2a41bb3a02b15443b7b1384f8b42973f085098",
+      "bytes": 7209
     },
     {
       "path": "backend/canonical_session_controller.go",
@@ -127,8 +127,8 @@
     },
     {
       "path": "backend/character_preparation_cache.go",
-      "sha256": "sha256:92e9948fa3b15bd799208ffffe7ac8fba9f1bb354824cfa33b89ac1ea5a207cf",
-      "bytes": 12870
+      "sha256": "sha256:24dd7a685cfe28c75c59b74e6d8b34d1b52cc45b590e79b07464c1f0e5c2ded1",
+      "bytes": 13688
     },
     {
       "path": "backend/character_preparation_flights.go",
@@ -249,6 +249,11 @@
       "path": "backend/cors_config.go",
       "sha256": "sha256:2ab5a6cf59fa514b36cbb75d6672a9e4b9220fb83831cfccc3e6c0a8305b780e",
       "bytes": 1387
+    },
+    {
+      "path": "backend/database_logger.go",
+      "sha256": "sha256:fd97db0f4604beee947938a90af70d9d22a84c2ca3137e03d6959ec79bfcbd5e",
+      "bytes": 1914
     },
     {
       "path": "backend/deployment_entity_create_smoke.go",
@@ -392,8 +397,8 @@
     },
     {
       "path": "backend/main.go",
-      "sha256": "sha256:31de4e86eff1f1d6e34d6ab88ac8ade15dd90d16883eeb3454a359dad09922ac",
-      "bytes": 25862
+      "sha256": "sha256:698663f047783266800faedc69686852bcf1249c878ed5d2b4fe599fb29f09cb",
+      "bytes": 26772
     },
     {
       "path": "backend/middleware.go",
@@ -1722,8 +1727,8 @@
     },
     {
       "path": "backend/models_roguelike.go",
-      "sha256": "sha256:b6ce95705c6666559f4a22505eca0c969eb8a4e78f8c223f9e4a355da83010a1",
-      "bytes": 6327
+      "sha256": "sha256:866ed8aa51d1a8245465f3466ea1523f1161d8dada1e911f240689e5bea20ccd",
+      "bytes": 6441
     },
     {
       "path": "backend/monster_controller.go",
@@ -1787,8 +1792,8 @@
     },
     {
       "path": "backend/performance_observability.go",
-      "sha256": "sha256:4b7f17067f33dc9c3e616005c73a380375249d51a22513a109e7d608d0f333dd",
-      "bytes": 6543
+      "sha256": "sha256:fc7d613576ef6870b9765bdc8685461118f2daf402b0f8fc97ee8d506c57e72d",
+      "bytes": 6688
     },
     {
       "path": "backend/race_controller.go",
@@ -1804,6 +1809,11 @@
       "path": "backend/resource_controller.go",
       "sha256": "sha256:b7e03ce927d8caa9b942c50658836ac831b84eae1e753036b19d7d24f426f815",
       "bytes": 6428
+    },
+    {
+      "path": "backend/roguelike_cached_combat_command.go",
+      "sha256": "sha256:c27bb79e57ee92907e725844c905965c211ac0fe18a36827c5420bc659807db2",
+      "bytes": 13765
     },
     {
       "path": "backend/roguelike_camp_inventory.go",
@@ -1831,14 +1841,29 @@
       "bytes": 13686
     },
     {
+      "path": "backend/roguelike_combat_cache.go",
+      "sha256": "sha256:aa6a415c99fdcb6e82fba283b21100012748b757526cf62a569eeb7066424062",
+      "bytes": 10282
+    },
+    {
       "path": "backend/roguelike_combat_conclusion.go",
       "sha256": "sha256:5948142e59eaebc28a5d2fbf4ef777b2e3ca0420dbb06200fe66bb23d164b1fb",
       "bytes": 442
     },
     {
       "path": "backend/roguelike_combat_journal.go",
-      "sha256": "sha256:3b3cb51c70c76bad6e036d4a6a44a3118eebdf7b0b7701d52916acf99bfcea70",
-      "bytes": 3659
+      "sha256": "sha256:bd386173ac920c14e7d21b3d84d6a1bdef7284b7f88f79c473c3272c234e1cb8",
+      "bytes": 4487
+    },
+    {
+      "path": "backend/roguelike_combat_read_base.go",
+      "sha256": "sha256:8d22fd881120be975445d692b0c428701d859f3ffd9c5431fe6f54cd857b75ad",
+      "bytes": 1249
+    },
+    {
+      "path": "backend/roguelike_combat_wire.go",
+      "sha256": "sha256:4d02958bea7bade6e6711d816f7b6462680308a00778bbe47c0d940e7f234f1c",
+      "bytes": 7932
     },
     {
       "path": "backend/roguelike_compositions.go",
@@ -1847,8 +1872,8 @@
     },
     {
       "path": "backend/roguelike_controller.go",
-      "sha256": "sha256:122cb5bfdfbbbbe4313f23349824fa11ca5a47468611ca56bf703a56d7e28a7a",
-      "bytes": 59657
+      "sha256": "sha256:5fc77fbe668e2baf30d004b2450aff6c1cab5fb5c26855c1a8890b2d82c12350",
+      "bytes": 61286
     },
     {
       "path": "backend/roguelike_domain.go",
@@ -1877,13 +1902,13 @@
     },
     {
       "path": "backend/roguelike_party.go",
-      "sha256": "sha256:0497c91f435fda92c335066d8ebb17cf739c373968cce63718ceb55bd0ea4b14",
-      "bytes": 11495
+      "sha256": "sha256:22da3536dd63e04afd6254299631bd060d30f3e8584f3e66b3b99df91c22b222",
+      "bytes": 11769
     },
     {
       "path": "backend/roguelike_party_worker.go",
-      "sha256": "sha256:5b2d797d1ba9b3194c2bedb6c353761b9efc4e61d6e9a97f452b902704fdd504",
-      "bytes": 10636
+      "sha256": "sha256:fabd39eb60176872923b4054f650f5a40be41576e315a2c7d0fc2b121f0cf7ea",
+      "bytes": 10773
     },
     {
       "path": "backend/roguelike_routes.go",
@@ -1927,18 +1952,23 @@
     },
     {
       "path": "backend/roguelike_worker_client.go",
-      "sha256": "sha256:a31d567130fa99835036dcb0a3988369a7c00f3445e15d1e5a4b6bed66f30563",
-      "bytes": 24430
+      "sha256": "sha256:08f1484a0aa46b809b60007415280aa9cfe745f0cfeb55948fee9c7a49558db4",
+      "bytes": 25761
     },
     {
       "path": "backend/roguelike_worker_controller.go",
-      "sha256": "sha256:40f16558c15f439631a92deb7ef4473a6165e5f099bc7b8fc2d032a3c795e4f6",
-      "bytes": 10923
+      "sha256": "sha256:c968c4814e7cb242cf1ea9c5cefd603b640a542add9c99aefa833c39284a2860",
+      "bytes": 12354
     },
     {
       "path": "backend/roguelike_worker_mirrors.go",
-      "sha256": "sha256:3f72ce05d283940e26dc6a3763b9f4343344ea5e8ccb56d73a0ee178eb5da6a9",
-      "bytes": 4340
+      "sha256": "sha256:40ff60914881e2f30f6a4bf6a0b3a150ea81e077592721a4b5a15f8455d54178",
+      "bytes": 7642
+    },
+    {
+      "path": "backend/roguelike_worker_state_delta.go",
+      "sha256": "sha256:6a742e43beda04b759a3147f4fa723883b0ceeedfff7183a1721fc6323645791",
+      "bytes": 7160
     },
     {
       "path": "backend/roguelikecontent/classes.go",
@@ -1997,13 +2027,13 @@
     },
     {
       "path": "backend/storage_catalog.go",
-      "sha256": "sha256:51e7ce5c5353891ef2cef0f6b09299cf921342407d3acbdab74d7ac79b123bcc",
-      "bytes": 7914
+      "sha256": "sha256:df55ad47a30c6bc1756b79449a9ecfd22ee52a82e6fd27382454a7888d535fb9",
+      "bytes": 7980
     },
     {
       "path": "backend/storage_receipt.go",
-      "sha256": "sha256:cd5b216ba7c8c56b174795119c5b2c54a9e5739d84531d1d276b3096929e342e",
-      "bytes": 4309
+      "sha256": "sha256:7af0c28ed0d56814b97bea7e62c3550b6a4ff1f63f23e48f736bdec5e15910bd",
+      "bytes": 4358
     },
     {
       "path": "backend/trusted_proxies.go",

@@ -16,7 +16,7 @@
     "imageJobs": true,
     "frozenCatalogs": false
   },
-  "contentManifestHash": "sha256:c5185ad3ee1e2c3ffc9e45f85ccf7386a55a2350a55d59546634cc6ea991538f",
+  "contentManifestHash": "sha256:4bbf5b3dd9db3f12bae000ab90eb6a3ae6aad4105390c350c91e715a02360668",
   "migrationSet": [
     {
       "id": "001_create_image_library",
@@ -1547,6 +1547,10 @@
     {
       "id": "307_catalog_presentation",
       "checksum": "sha256:f2a1975deccfaadc1b83d9339977792c49ea0cad9d754d68608483419dbcbd32"
+    },
+    {
+      "id": "302_retire_legacy_characters",
+      "checksum": "sha256:3778107970711143adfc39ec964a8aa0081269020963d29bfded0ea367aa5dff"
     }
   ]
 }

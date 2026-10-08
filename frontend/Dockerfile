@@ -20,6 +20,7 @@ COPY frontend/index.html frontend/tsconfig.json frontend/tsconfig.node.json fron
 COPY frontend/scripts/check-dice-box-assets.mjs ./scripts/check-dice-box-assets.mjs
 COPY frontend/scripts/pwa-shell.mjs ./scripts/pwa-shell.mjs
 COPY frontend/scripts/media-variants.mjs ./scripts/media-variants.mjs
+COPY frontend/scripts/compile-layer.mjs ./scripts/compile-layer.mjs
 COPY frontend/utils ./utils
 COPY frontend/charges/charges.json ./charges/charges.json
 COPY backend/animationpresentation/catalog.json /app/backend/animationpresentation/catalog.json
@@ -32,6 +33,7 @@ ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 # Keep TypeScript, Vite and both canonical DiceBox checks mandatory.
 RUN npm run build
+RUN node scripts/compile-layer.mjs dist public compile-layer
 ARG COMPONENT_SOURCE_COMMIT
 ARG COMPONENT_INPUT_FINGERPRINT
 RUN node /app/scripts/release/write-build-identity.mjs frontend /app/component-identity.json
@@ -40,7 +42,7 @@ FROM ${NGINX_IMAGE}
 RUN rm -f /etc/nginx/conf.d/default.conf
 # UI edits reuse the large media layer; media edits reuse application compilation.
 COPY frontend/public /usr/share/nginx/html
-COPY --from=build /app/frontend/dist /usr/share/nginx/html
+COPY --from=build /app/frontend/compile-layer /usr/share/nginx/html
 COPY frontend/nginx.conf.template /etc/nginx/templates/app.conf.template
 COPY frontend/start.sh /start.sh
 COPY frontend/write-build-info.sh /write-build-info.sh

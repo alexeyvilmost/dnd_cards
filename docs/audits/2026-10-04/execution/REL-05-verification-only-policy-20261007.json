@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "taskId": "REL-05",
+  "status": "verification_only_release_policy_locally_verified_hosted_ci_pending",
+  "recordedAt": "2026-10-07T13:32:13.655Z",
+  "sourceParent": "4c3df310ec13fc2610737059c2d81eda758c6913",
+  "inputs": [
+    {
+      "file": "scripts/release/component-dependencies.json",
+      "sha256": "sha256:5252703dfbc806ba67a40042904421aa7d92c4a00ffe3618c7a4392b1a5c7c94"
+    },
+    {
+      "file": "scripts/release/plan-components.test.mjs",
+      "sha256": "sha256:2f143bffc58b37902d0b4ec08fdc4ea7930743801ffbb63e2819be9fb0dbb572"
+    },
+    {
+      "file": "scripts/release/ui-release-policy.mjs",
+      "sha256": "sha256:b66cc9dbf0be46199ccef95836f603672b7e35cb6c45bf2fb680ff99a267abb5"
+    },
+    {
+      "file": "scripts/release/ui-release-policy.test.mjs",
+      "sha256": "sha256:5b92a520e515aacff7bde0a37e33a752e717dfab6ab3617a53ba67671e577fd2"
+    },
+    {
+      "file": "scripts/release/ui-release-dispatch.mjs",
+      "sha256": "sha256:741edb92bd0f6d7c75840d3935ece26bc9f4f1ad6dc3d16937c278f8ddd1a7aa"
+    },
+    {
+      "file": "scripts/release/ui-ci.test.mjs",
+      "sha256": "sha256:2870af3557029c6990128324a59d4c2e26d0442bb5f1be9fef2f715241e01795"
+    }
+  ],
+  "localChecks": {
+    "policyPlanningDispatchDockerInputsAndCITests": {
+      "passed": 78,
+      "failed": 0,
+      "skipped": 0
+    },
+    "deploymentStateRegression": {
+      "passed": 26,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fullReleaseNodeRegression": {
+      "tests": 792,
+      "passed": 782,
+      "failed": 0,
+      "skipped": 10,
+      "skippedScope": "Existing Linux-only private-mode host/recovery tests on Windows; mandatory Linux CI remains pending.",
+      "files": 90,
+      "logHash": "sha256:2ccab4a654564a79d746e279a21bbc581465bbdd1745cf3400f72a97c7908cd9",
+      "completedAt": "2026-10-07T13:33:09.010Z"
+    }
+  },
+  "behavior": "Testing/performance/suite-routing changes require extended CI but may skip publication and deployment when all three deployed images, compiler/base/argument input fingerprints, protected runtime domain and current worker closure are identical. Release-tooling/infrastructure changes and unknown runtime paths retain full verification.",
+  "productionAccepted": false,
+  "productionChanges": 0,
+  "actualSelectiveProductionReleaseProven": false,
+  "limitations": [
+    "Checks use isolated Git repositories and synthetic unit metadata; no hosted selective acceptance is inferred.",
+    "This policy change itself remains full-path because release tooling and worker input bytes changed.",
+    "The deployed baseline is not advanced by a verified no-deployment-needed result."
+  ]
+}

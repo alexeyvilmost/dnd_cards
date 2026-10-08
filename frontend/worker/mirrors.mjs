@@ -13,11 +13,11 @@ export function compactWorkerMirrors(result){
   const mirrors={state:[]};
   for(const field of fields){
     const source=JSON.stringify(state[field]);
-    if(source===undefined||source.length<256||source!==JSON.stringify(snapshot[field]))continue;
+    if(source===undefined||source.length<256||(state[field]!==snapshot[field]&&source!==JSON.stringify(snapshot[field])))continue;
     mirrors.state.push({field,sha256:hash(source)});delete value.patch.turn_state.solo_combat_v1[field];
   }
   const id=state.characterId;
-  if(typeof id==='string'&&result.patches?.[id]&&JSON.stringify(originalPatch)===JSON.stringify(result.patches[id])){
+  if(typeof id==='string'&&result.patches?.[id]&&(originalPatch===result.patches[id]||JSON.stringify(originalPatch)===JSON.stringify(result.patches[id]))){
     value.patches={...result.patches};delete value.patches[id];
     mirrors.leader={id,sha256:hash(JSON.stringify(value.patch))};
   }
@@ -41,4 +41,15 @@ export function expandWorkerMirrors(wire){
   if(leader)value.patches[leader.id]=structuredClone(value.patch);
   if(Buffer.byteLength(JSON.stringify(value))>16*1024*1024)throw Error('Expanded mirror frame too large');
   return value;
+}
+
+// Only metadata created for this exact, privately prepared projection reaches
+// this helper. It is never accepted from an HTTP caller or a previous frame.
+export function applyPreparedWorkerMirrors(result,mirrors) {
+ if(!mirrors)return result;
+ const original=result.patch;
+ const value={...result,patch:{...original,turn_state:{...original.turn_state,solo_combat_v1:{...original.turn_state.solo_combat_v1}}}};
+ for(const {field} of mirrors.state)delete value.patch.turn_state.solo_combat_v1[field];
+ if(mirrors.leader){value.patches={...result.patches};delete value.patches[mirrors.leader.id];}
+ return {wireSchema:2,value,mirrors};
 }

@@ -7,7 +7,7 @@ import {localAcceptanceContext} from './acceptance-context.mjs';
 import {browserPerformanceProxy} from '../performance/browser-proxy.mjs';
 import {repositoryRoot, execute, writeRegistry, cleanEnvironment} from './runtime.mjs';
 import {verifyPlaywrightResult} from './suites.mjs';
-import {safeBrowserFailureDiagnostics} from './browser-failure-diagnostics.mjs';
+import {withBrowserFailureDiagnostics} from './browser-failure-diagnostics.mjs';
 
 // The UI-fixture layer has no API upstream. Even an unhandled request or a
 // service worker cannot write to the owned real database (or another service).
@@ -41,16 +41,13 @@ export async function checkBrowserFixtures(stack, files, {ci=false, profile='pro
     proxy=await browserPerformanceProxy([origin]);
     stack.registry.browserFixture={profile,origin,proxy:proxy.server};await writeRegistry(stack.registry);
     const reportFile=path.join(stack.registry.directory,'acceptance',`playwright-fixtures-${profile}.json`);
-    try {
+    return await withBrowserFailureDiagnostics(async()=>{
       await execute(process.execPath,['frontend/node_modules/@playwright/test/cli.js','test','--config=frontend/playwright.fixtures.config.ts',...files],{
         env:cleanEnvironment({TEST_RUN_ID:stack.env.TEST_RUN_ID,TEST_RUN_DIRECTORY:stack.env.TEST_RUN_DIRECTORY,
           TEST_FIXTURE_UI_ORIGIN:origin,TEST_FIXTURE_PROXY:proxy.server,TEST_FIXTURE_PROFILE:profile,...(ci?{CI:'1',TEST_BROWSER_CHANNEL:'chrome'}:{})}),
         log:path.join(stack.registry.directory,`browser-fixtures-${profile}.log`),timeout:3_600_000});
       return verifyPlaywrightResult(JSON.parse(await readFile(reportFile,'utf8')),files);
-    } catch(error) {
-      try {error.browserDiagnostics=safeBrowserFailureDiagnostics(JSON.parse(await readFile(reportFile,'utf8')),{files,root:repositoryRoot,testDirectory:'frontend/e2e'});} catch { /* Preserve the original failure when no usable report exists. */ }
-      throw error;
-    }
+    },{reportFile,files,root:repositoryRoot,testDirectory:'frontend/e2e'});
   } finally {
     if(proxy) await proxy.close();
     if(server) {

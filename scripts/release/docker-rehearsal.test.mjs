@@ -3,7 +3,27 @@ import assert from 'node:assert/strict';
 import {mkdtemp,writeFile,readdir,rm} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {createDockerRehearsal} from './docker-rehearsal.mjs';
+import {createDockerRehearsal,rehearsalApplicationState} from './docker-rehearsal.mjs';
+import {assertServiceIdentities} from './deploy-state.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+
+// Synthetic metadata only; the published-image reader exercise covers actual
+// Docker startup. A selective predecessor keeps the untouched launch identities.
+for(const changed of ['frontend','backend'])test(`reader identity checks retain the actual mixed predecessor after ${changed}-only deployment`,()=>{
+  const {active}=retirementStateUnitFixture();
+  active.manifest.releaseId='mixed-'+changed;active.manifest.releaseCommit='b'.repeat(40);
+  active.instances[changed]={releaseId:active.manifest.releaseId,releaseCommit:active.manifest.releaseCommit};
+  active.manifest.components[changed].sourceCommit=active.manifest.releaseCommit;
+  const next=structuredClone(active.manifest);next.releaseId='next-full';next.releaseCommit='c'.repeat(40);next.previousReleaseId=active.manifest.releaseId;
+  const input={manifest:active.manifest,previousManifest:active.manifest,active};
+  const services=Object.fromEntries(Object.entries(active.manifest.components).map(([key,component])=>[key,{healthy:true,imageDigest:component.imageDigest,identity:{component:key,provenance:'baked',sourceCommit:component.sourceCommit,inputFingerprint:component.inputFingerprint,apiProtocolVersion:active.manifest.apiProtocolVersion,...active.instances[key],...(key==='rulesWorker'?{artifactHash:active.manifest.rulesArtifactHash,workerRuntime:active.manifest.workerRuntime,workerProtocolVersion:active.manifest.workerProtocolVersion,supportedWorldSchemaVersions:active.manifest.supportedWorldSchemaVersions,capabilities:active.manifest.capabilities}:{})}}]));
+  assert.doesNotThrow(()=>assertServiceIdentities(rehearsalApplicationState(input),services));
+  const corrupt=structuredClone(services);corrupt.rulesWorker.identity.releaseCommit='d'.repeat(40);
+  assert.throws(()=>assertServiceIdentities(rehearsalApplicationState(input),corrupt),/identity\/health differs/);
+  const candidateState=rehearsalApplicationState(input,next);
+  assert.deepEqual(candidateState.instances,Object.fromEntries(Object.keys(next.components).map(key=>[key,{releaseId:next.releaseId,releaseCommit:next.releaseCommit}])));
+  assert.equal(candidateState.manifest,next);
+});
 
 for(const changedOwnership of [false,true])test(`restore failure cleans every owned resource; changed ownership=${changedOwnership}`,async()=>{
   const directory=await mkdtemp(path.join(os.tmpdir(),'rehearsal-adapter-test-'));

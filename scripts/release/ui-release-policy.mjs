@@ -44,6 +44,7 @@ export function assertFullAnchorBinding(anchor,runtimeHash) {
 }
 const pathSafe=file=>typeof file==='string'&&file.length>0&&!file.includes('\\')&&!file.startsWith('/')&&!/[:\0\r\n]/.test(file)&&file.split('/').every(part=>part&&!['.','..'].includes(part));
 const hooks=new Set(['useIsMobile','useReducedMotion','useViewportPopoverPosition']);
+const verificationOnlyPath=file=>pathSafe(file)&&(/^(?:scripts\/(?:testing|performance)|docs)\/.+/.test(file)||file==='tests/suites.json'||file==='README.md');
 export function uiPathKind(file) {
   if (!pathSafe(file)) return 'unknown';
   if (/^docs\/.*\.md$/.test(file)||file==='README.md') return 'documentation';
@@ -87,11 +88,23 @@ export function classifyReleaseVerification(input={}) {
     if (row.inputFingerprint!==componentInputFingerprint(row) || !['build','reuse'].includes(row.operation)) throw Error('Invalid component matrix fingerprint');
     if (row.component!=='frontend' && (row.operation!=='reuse' || !same({sourceCommit:row.sourceCommit,inputFingerprint:row.inputFingerprint,imageDigest:row.imageDigest},previous.components[row.component]))) return full('backend-or-worker-not-exact-reuse');
   }
-  if (selection.components?.backend || selection.components?.worker || selection.components?.infrastructure) return full('non-ui-component-selected');
-  if (selection.changed_files.some(file=>uiPathKind(file)==='unknown')) return full('unsafe-or-worker-input-path');
   const frontend=matrix.find(row=>row.component==='frontend');
   if (!frontend) throw Error('Missing frontend matrix row');
   if(evidenceHash({baseImages:frontend.baseImages,buildArguments:frontend.buildArguments,platform:frontend.platform})!==candidateDomain.frontendBuildContractHash)return full('frontend-build-contract-changed');
+  // Verification tooling still requires extended CI. It can avoid a runtime
+  // release only with an exact deployed domain, all three existing images and
+  // compiler inputs, and a current worker closure excluding every changed file.
+  if(selection.changed_files.some(file=>uiPathKind(file)==='unknown')&&selection.changed_files.every(verificationOnlyPath)
+    && !selection.components?.frontend&&!selection.components?.backend&&!selection.components?.worker){
+    if(!fullAnchor||!workerInputs||workerInputs.sourceCommit!==candidate.releaseCommit||workerInputs.artifactHash!==candidate.rulesArtifactHash
+      ||!Array.isArray(workerInputs.paths)||!workerInputs.paths.length||workerInputs.paths.some(file=>!pathSafe(file))
+      ||new Set(workerInputs.paths).size!==workerInputs.paths.length||selection.changed_files.some(file=>workerInputs.paths.includes(file)))return full('missing-or-changed-verification-worker-closure');
+    if(matrix.every(row=>row.operation==='reuse'&&same({sourceCommit:row.sourceCommit,inputFingerprint:row.inputFingerprint,imageDigest:row.imageDigest},previous.components[row.component]))
+      &&same(candidate.components,previous.components))return {kind:'no-deployment-needed',reason:'verification-only-exact-runtime-reuse',candidate:candidate.releaseCommit,previousManifestHash:evidenceHash(previous),selectionHash:evidenceHash(selection),matrixHash:evidenceHash(matrix)};
+    return full('verification-inputs-change-runtime');
+  }
+  if (selection.components?.backend || selection.components?.worker || selection.components?.infrastructure) return full('non-ui-component-selected');
+  if (selection.changed_files.some(file=>uiPathKind(file)==='unknown')) return full('unsafe-or-worker-input-path');
   const changed=selection.changed_files.some(file=>!['documentation','test'].includes(uiPathKind(file)));
   // Tests may conservatively select a component even though Docker excludes
   // their bytes. Exact compiler/base-image/arguments fingerprint equality is

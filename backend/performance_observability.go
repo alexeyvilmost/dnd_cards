@@ -99,11 +99,12 @@ func (writer *performanceResponseWriter) WriteHeaderNow() {
 	writer.ResponseWriter.WriteHeaderNow()
 }
 
-// Configuration opt-in plus per-request opt-in. No timings are persisted or
-// logged; the authenticated local runner stores sanitized numeric headers.
+// Configuration opt-in. Combat commands are measured automatically; other
+// routes require the trace header. Headers contain numeric timings only.
 func PerformanceMiddleware(enabled bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if !enabled || c.GetHeader("X-Performance-Trace") != "1" {
+		autoCombat := strings.HasPrefix(c.Request.URL.Path, "/api/roguelike/runs/") && strings.HasSuffix(c.Request.URL.Path, "/commands")
+		if !enabled || (c.GetHeader("X-Performance-Trace") != "1" && !autoCombat) {
 			c.Next()
 			return
 		}

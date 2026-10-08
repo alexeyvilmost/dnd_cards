@@ -3,6 +3,7 @@ import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {githubReader} from './ui-ci.mjs';
+import {readRetirementBaselineArtifact} from './retirement-baseline.mjs';
 import {readConvergenceBaseline,preflightAutomaticDeployment,planReconciliation,dispatchReconciliation,verifyReconciledCI} from './automatic-convergence.mjs';
 const read=file=>JSON.parse(readFileSync(file,'utf8'));
 const save=(file,value)=>{mkdirSync(path.dirname(file),{recursive:true});writeFileSync(file,JSON.stringify(value,null,2)+'\n',{flag:'wx'});};
@@ -21,13 +22,13 @@ if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.ur
     const [candidateDir,releaseRunFile,latestFile,baselineDir,output]=args;if(args.length!==5)throw Error('Expected candidate, run, latest, baseline and output');
     const latest=read(latestFile),result=await preflightAutomaticDeployment({eventName:env.GITHUB_EVENT_NAME,repository,get,
       candidate:read(path.join(candidateDir,'candidate.json')),releaseRun:read(releaseRunFile),latest,
-      ...(latest?{manifest:read(path.join(baselineDir,'manifest.json')),receipt:read(path.join(baselineDir,'deployment.json'))}:{})});
+      ...(latest?{manifest:read(path.join(baselineDir,'manifest.json')),receipt:read(path.join(baselineDir,'deployment.json')),retirementObservation:readRetirementBaselineArtifact(baselineDir)}:{})});
     save(output,result);emit(`candidate_available=${result.candidateAvailable}\npreflight_status=${result.status}`);
   }else if(command==='plan'){
     const [policyFile,latestFile,baselineDir,output]=args;if(args.length!==4)throw Error('Expected policy, latest, baseline and output');
     const latest=read(latestFile),policy=read(policyFile),result=await planReconciliation({event:read(env.GITHUB_EVENT_PATH),eventName:env.GITHUB_EVENT_NAME,repository,
       controlCommit:env.GITHUB_SHA,runId:Number(env.GITHUB_RUN_ID),runAttempt:Number(env.GITHUB_RUN_ATTEMPT),variables:env,policy,latest,get,
-      ...(latest?{manifest:read(path.join(baselineDir,'manifest.json')),receipt:read(path.join(baselineDir,'deployment.json'))}:{})});
+      ...(latest?{manifest:read(path.join(baselineDir,'manifest.json')),receipt:read(path.join(baselineDir,'deployment.json')),retirementObservation:readRetirementBaselineArtifact(baselineDir)}:{})});
     save(output,result);emit(`status=${result.status}\nclaim_name=${result.claimName??''}`);
   }else if(command==='dispatch'){
     const [policyFile,planFile,output]=args;if(args.length!==3)throw Error('Expected policy, immutable request and output');

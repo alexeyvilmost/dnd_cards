@@ -350,7 +350,7 @@ const CharacterSheet = ({
         <div className="cs-vitals">
           <div className="cs-ac">
             <div className="cs-ac-inner">
-              <ValueBreakdownTip breakdown={acBreakdown ?? { value: ac, parts: [] }} label="Класс доспеха">
+              <ValueBreakdownTip breakdown={acBreakdown ?? { value: ac, parts: [] }} label="КД">
                 <span className="cs-ac-v">{ac}</span>
               </ValueBreakdownTip>
               <span className="cs-ac-l">КД</span>

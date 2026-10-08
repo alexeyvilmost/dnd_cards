@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "actual-full-release-and-authorized-storage-cleanup",
+  "createdAt": "2026-10-07T19:43:41.228Z",
+  "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000",
+  "status": "passed",
+  "ci": {
+    "id": 37666531361,
+    "attempt": 1,
+    "status": "success",
+    "requiredChecks": 39,
+    "original303FreshAndRepeat": true,
+    "evidence": "outputs/operations/e122-main-ci-37666531361-1/accepted-reports/independent-verification.json"
+  },
+  "publication": {
+    "id": 37668882984,
+    "attempt": 1,
+    "status": "success",
+    "allThreeComponentsBuilt": true,
+    "evidence": "outputs/operations/e122-publication-37668882984-1/actual-run.json"
+  },
+  "deployment": {
+    "runId": 37669897771,
+    "runAttempt": 1,
+    "controlCommit": "e122021329176074169fe8ca33aed7ead5ba7000",
+    "sourceCommit": "e122021329176074169fe8ca33aed7ead5ba7000",
+    "rawRunHash": "sha256:998cd452bd1b1e71bfc9094a6914493dbff85c8bfc33f58e19b58869ccffa0cf",
+    "status": "success",
+    "completedAt": "2026-10-07T19:41:06Z",
+    "independentVerification": "outputs/operations/e122-deployment-37669897771-1/deployed-release/independent-live-verification.json",
+    "verifiedAt": "2026-10-07T19:41:49.602Z",
+    "selective": false,
+    "migrations": 307,
+    "hostRehearsalNinePassed": true,
+    "hostRehearsalCleanup": "stopped-errors-zero"
+  },
+  "retainedFullServerBackups": [
+    {
+      "directory": "/opt/bagofholding/backups/capture-37669897771-1",
+      "captureHash": "sha256:06d9a797f0340267e8d899c3ec031f9611d5d4e62aab83ee22457f5ac56730cd",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:6f456f044226c742fd6811796a49bbff9b4a4ea2757f345b27a580e40a00fb5c",
+        "bytes": 1005036747
+      },
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37669897771-1",
+      "allFilesVerified": true
+    },
+    {
+      "directory": "/opt/bagofholding/backups/capture-37649818547-1",
+      "captureHash": "sha256:eb290ab32185b611c01821abe5de5341b53e29eebef62f8a88aa9c750a1fbb25",
+      "database": {
+        "path": "database.dump",
+        "category": "database",
+        "sha256": "sha256:e75c66280194358f84b0a7dce117d78c0a97b5f8e2b111d08b505f400113becd",
+        "bytes": 1005036747
+      },
+      "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37649818547-1",
+      "allFilesVerified": true
+    }
+  ],
+  "removedBytes": 2010859729,
+  "retentionEvidence": "outputs/operations/two-current-backups-e122-37669897771-20261007-result.json",
+  "derivedCleanupEvidence": "outputs/operations/finished-e122-history-copy-20261007-result.json",
+  "privatePCCopies": [
+    "D:/TimeWebBackups/dnd_cards/capture-37669897771-1",
+    "D:/TimeWebBackups/dnd_cards/capture-37649818547-1",
+    "D:/TimeWebBackups/dnd_cards/capture-37639635869-1"
+  ],
+  "retainedPCCopiesRecoveryMetadataVerified": true,
+  "storage": {
+    "observedAt": "2026-10-07T19:42:56.203Z",
+    "total": 50884108288,
+    "used": 26423623680,
+    "available": 24400769024,
+    "evidence": "outputs/operations/storage-retention-inventory-1791402176350.json"
+  },
+  "productionDatabaseRestored": false,
+  "storageCleanupDatabaseChanges": 0,
+  "paidGenerationRequests": 0,
+  "paidGenerationOwnerVerified": true,
+  "remaining": [
+    "Actual frontend-only release of 24c5213260f1940d63595ab4844153a075e6ef36",
+    "Production physical retirement 302 with full controller and durable record",
+    "Final audit of all 29 original requirements"
+  ],
+  "historicalReportsUnchanged": true
+}

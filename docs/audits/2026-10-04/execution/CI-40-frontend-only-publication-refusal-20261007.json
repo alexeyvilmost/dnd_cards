@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "status": "publication-refused-local-permission-fix-verified",
+  "sourceCommit": "07af60c1dcbc93f4fd4723207fbddf819679e991",
+  "recordedAt": "2026-10-07T17:37:30.170Z",
+  "actualCIRun": 37657155123,
+  "actualPublicationRun": 37657959211,
+  "actualDeploymentRun": 37658796034,
+  "actualDeploymentConclusion": "skipped",
+  "actualReconcileRun": 37658803802,
+  "actualReconcileConclusion": "skipped",
+  "actualMainCI": {
+    "status": "passed",
+    "suite": "core",
+    "checks": 10,
+    "workloadUnits": 166,
+    "sourceSnapshot": {
+      "sha256": "6ec6b253176049b6865a974c6b2e699236a5c9abc4ae4d7ae7d74a014d29e5d7",
+      "files": 4652
+    },
+    "globalCoverageComplete": true,
+    "suiteDurationMs": 214188,
+    "workflowIntervalMs": 372000,
+    "shards": [
+      "backend",
+      "flows",
+      "unit"
+    ]
+  },
+  "actualComponentJobs": {
+    "backend": "exact-predecessor-reuse-success",
+    "frontend": "build-and-image-verification-success",
+    "rulesWorker": "exact-predecessor-reuse-success"
+  },
+  "mixed": {
+    "schemaVersion": 1,
+    "kind": "hosted-frontend-mixed-oci",
+    "status": "failed",
+    "proof": {
+      "schemaVersion": 1,
+      "kind": "frontend-oci-checks",
+      "execution": "docker",
+      "scope": "owned-synthetic",
+      "runId": "0e9a1f04-32a5-4020-b4db-93cde5985bbc",
+      "status": "failed",
+      "checks": [],
+      "cleanup": {
+        "status": "stopped",
+        "errors": [],
+        "retainedImages": true
+      },
+      "failure": {
+        "stage": "start",
+        "startupStage": "initial-observation",
+        "code": "ui-observation-artifact-closure"
+      },
+      "completedAt": "2026-10-07T17:24:11.743Z",
+      "authorization": "not-produced"
+    }
+  },
+  "productionDeploymentAccepted": false,
+  "productionUnchanged": true,
+  "productionDatabaseRestored": false,
+  "productionDatabaseChanges": 0,
+  "productionStillAcceptedAt": "2026-10-07T16:51:02.958Z",
+  "productionSource": "8aa27f54044ec57e8fded102f20160a90bc60652",
+  "productionRecord": "docs/audits/2026-10-04/execution/CI-39-full-release-and-storage-20261007.json",
+  "localPermissionProbe": {
+    "status": "passed",
+    "scope": "owned-Linux-filesystem-and-actual-published-worker-startup",
+    "originalDifferentUIDReadRefused": true,
+    "actualCollectorUser": "1001:1001",
+    "fixed0600ArtifactReadable": true,
+    "artifactHash": "sha256:2fbcb7baa3c8612c1061fe5d826ef7a12c30a97410ababe1d25fa8facafe50d4",
+    "observerGuardsUnchanged": true,
+    "actualMixed12ChecksExecuted": false,
+    "productionChanges": 0,
+    "paidProviderRequests": 0,
+    "completedAt": "2026-10-07T17:32:48.620Z",
+    "image": "ghcr.io/alexeyvilmost/dnd_cards/worker@sha256:a49d28bf0cec3f6f58ff453e67675537b0345d4ebc8cbbe248730ae5a6efd38b",
+    "cleanup": {
+      "status": "stopped",
+      "errors": []
+    }
+  },
+  "localContracts": {
+    "tests": 29,
+    "passed": 29,
+    "failed": 0,
+    "skipped": 0
+  },
+  "collectorSourceHash": "sha256:f3a730d5d250f576c4b32373b9fa006de4d0bf48c3036112c862bf107e8a0761",
+  "fix": {
+    "scope": "owned-synthetic-Linux-collector-only",
+    "workerUser": "current collector UID:GID",
+    "artifactDirectoryMode": "0700",
+    "workerArtifactFileModeUnchanged": "0600",
+    "productionWorkerUserChanged": false,
+    "observationGuardsUnchanged": true
+  },
+  "nextAcceptance": [
+    "Fresh exact-source CI and actual hosted mixed OCI checks after committing the local collector fix.",
+    "Genuine frontend-only production delivery with backend/worker container IDs unchanged."
+  ],
+  "all29Complete": false
+}

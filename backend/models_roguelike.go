@@ -65,6 +65,8 @@ type RoguelikeRun struct {
 func (RoguelikeRun) TableName() string { return "roguelike_runs" }
 
 type RoguelikeCommandReceipt struct {
+	// Private insert-only receipts need no decoded return value; AfterFind always decodes.
+	omitResponseReload bool
 	ReceiptStorage
 	ID          uuid.UUID `gorm:"type:uuid;primaryKey;default:gen_random_uuid()"`
 	RunID       uuid.UUID `gorm:"type:uuid;not null;uniqueIndex:idx_roguelike_run_command"`

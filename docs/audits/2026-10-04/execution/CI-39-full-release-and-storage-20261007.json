@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "status": "passed",
+  "kind": "independent-full-release-and-authorized-storage-cleanup",
+  "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+  "verifiedAt": "2026-10-07T16:51:02.958Z",
+  "manifestHash": "sha256:a534cd33bd0b2e3ccaf1c6c470c831ac070e6e3fc29077fcdd91b20f9384cf2c",
+  "projectionHash": "sha256:7ecdaada5f1651e6ebc5ccb2eacd4e6e7ee210c2349c0f65355f8881aec3d8af",
+  "deployment": {
+    "runId": 37649818547,
+    "runAttempt": 1,
+    "controlCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "sourceCommit": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "rawRunHash": "sha256:06f88e3c0ff4963b3ea48dcda0ba3bc7c806b5dad6936f8b8ee8f864470c982b"
+  },
+  "predecessor": {
+    "runId": 37639635869,
+    "runAttempt": 1,
+    "controlCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+    "sourceCommit": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+    "rawRunHash": "sha256:b1ca5980813f2dda6eb6311b2a8a2470c6d66c001dfdf6cdbd208e1d5199dca6"
+  },
+  "migrations": 307,
+  "migrationSetUnchanged": true,
+  "allThreeImagesAndSourcesVerified": true,
+  "protectedExecutionProfileVerified": true,
+  "writerPolicy": {
+    "compactReceipts": true,
+    "imageJobs": true,
+    "frozenCatalogs": false
+  },
+  "paidProviderRequests": 0,
+  "productionDatabaseRestored": false,
+  "productionDatabaseChanges": 0,
+  "mainCI": {
+    "schemaVersion": 1,
+    "status": "passed",
+    "observedAt": "2026-10-07T16:02:43.542Z",
+    "source": "8aa27f54044ec57e8fded102f20160a90bc60652",
+    "branch": "main",
+    "run": 37646729627,
+    "attempt": 1,
+    "suite": "extended",
+    "checks": 39,
+    "globalCoverageComplete": true,
+    "sourceSnapshot": {
+      "sha256": "f8183999e1886f7a60a2502965728b60ced2d4e2f8ea94987266391343237248",
+      "files": 4652
+    },
+    "historical303": {
+      "status": "passed",
+      "historicalChainVerified": true,
+      "freshInstallAcceptance": true,
+      "migrations": 303,
+      "revocations": [
+        {
+          "migration": "102",
+          "rows": 1,
+          "preimagesExact": true
+        },
+        {
+          "migration": "103",
+          "rows": 1,
+          "preimagesExact": true
+        },
+        {
+          "migration": "119",
+          "rows": 1,
+          "preimagesExact": true
+        }
+      ],
+      "sourceDumpHash": "sha256:c6024ff9d7c5fa64f96111a3f01b22b89566ae3c4e15b8a57b73981a38630c60",
+      "archivedRevocationManifestHash": "sha256:a2270835660e18d83de5a505bd063f573db5d3e91423378e0583f05bb7f65cfe",
+      "repeat": {
+        "tableCount": 98,
+        "rowCount": 24592,
+        "hash": "14b131f981bb715f4559c9a20e33f7ed82c283d4f33f3757cad9461c3cd8c1a2"
+      },
+      "cleanup": {
+        "status": "stopped",
+        "errors": []
+      },
+      "unicodeLocale": {
+        "provider": "b",
+        "locale": "C.UTF-8",
+        "russian": "волшебник",
+        "greek": "ωμεγα"
+      },
+      "report": "/home/runner/work/dnd_cards/dnd_cards/outputs/testing/runs/test_2fbfee3c6b5cbc2df2c28a8d/historical-fresh/report.json"
+    },
+    "actualMainCI": true,
+    "meetsReleaseVerificationPrerequisite": true,
+    "reportHash": "sha256:98c16c21e769def47055e36567263456147788012de8c948a51f3c94891c24de"
+  },
+  "storage": {
+    "observedAt": "2026-10-07T16:53:32.296Z",
+    "disk": {
+      "total": 50884108288,
+      "used": 25205776384,
+      "available": 25618616320
+    },
+    "retention": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "completedAt": "2026-10-07T16:51:25.947Z",
+      "retained": [
+        {
+          "directory": "/opt/bagofholding/backups/capture-37649818547-1",
+          "captureHash": "sha256:eb290ab32185b611c01821abe5de5341b53e29eebef62f8a88aa9c750a1fbb25",
+          "database": {
+            "path": "database.dump",
+            "category": "database",
+            "sha256": "sha256:e75c66280194358f84b0a7dce117d78c0a97b5f8e2b111d08b505f400113becd",
+            "bytes": 1005036747
+          },
+          "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37649818547-1",
+          "allFilesVerified": true
+        },
+        {
+          "directory": "/opt/bagofholding/backups/capture-37639635869-1",
+          "captureHash": "sha256:ba43fdc51de72f972a1c592dabae150560e5044034c488aacecf2d4baf58f369",
+          "database": {
+            "path": "database.dump",
+            "category": "database",
+            "sha256": "sha256:0a6bc3fd3c8109104a750c567057517318ec7f09ff1ad7854f09b6acccdeaeb9",
+            "bytes": 1005036747
+          },
+          "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37639635869-1",
+          "allFilesVerified": true
+        }
+      ],
+      "deleted": [
+        {
+          "file": "/opt/bagofholding/backups/capture-37623876785-2/database.dump",
+          "bytes": 1005036747,
+          "sha256": "sha256:028c986fa57994943c42db6e15c0012402fe4f2019c51973e7ca55b7fb69e6c1",
+          "inode": 330110,
+          "privatePCCopy": "D:/TimeWebBackups/dnd_cards/capture-37623876785-2"
+        }
+      ],
+      "deletedBytes": 1005036747,
+      "protectedRecoverabilityBaselineVerified": true,
+      "allCaptureMetadataAndArtifactsPreserved": true,
+      "productionDatabaseChanges": 0,
+      "productionDatabaseRestored": false,
+      "serviceReplacements": 0
+    },
+    "derivedHistoryCopyCleanup": {
+      "status": "passed",
+      "completedAt": "2026-10-07T16:51:39.019Z",
+      "deleted": {
+        "file": "/opt/bagofholding/deploy-attempts/deploy-37649818547-1/rehearsal/rehearsal_f6391f89982a84a21e559931_history_2.dump",
+        "bytes": 1005845467,
+        "sha256": "sha256:c2a6e45f690d15ec417fb82e68beb00ff31861dd44e5a7d2344fa47b2fa083c1"
+      },
+      "productionDatabaseChanges": 0,
+      "originalDumpPreserved": true,
+      "protectedProductionBackupPreserved": true
+    },
+    "losslessRulesDedup": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "kind": "lossless-captured-content-addressed-rules-dedup",
+      "startedAt": "2026-10-07T16:52:16.613Z",
+      "completedAt": "2026-10-07T16:53:09.840Z",
+      "files": 816,
+      "captures": 28,
+      "estimatedPhysicalReclaimBytes": 1086730240,
+      "observedAvailableBytesDelta": 1157148672,
+      "diskAvailableBytes": 25213767680,
+      "allArtifactPathsAndBytesRetained": true,
+      "allCaptureMetadataAndDatesRetained": true,
+      "originalDatabaseDumpsUntouched": true,
+      "productionDatabaseChanges": 0,
+      "serviceReplacements": 0
+    },
+    "boundedSystemJournal": {
+      "schemaVersion": 1,
+      "status": "passed",
+      "completedAt": "2026-10-07T16:53:28.115Z",
+      "configurationFile": "/etc/systemd/journald.conf.d/90-bagofholding-storage.conf",
+      "systemMaxUse": "200M",
+      "runtimeMaxUse": "50M",
+      "beforeJournal": "Archived and active journals take up 584.7M in the file system.",
+      "afterJournal": "Archived and active journals take up 198.6M in the file system.",
+      "observedAvailableBytesDelta": 404877312,
+      "applicationContainersUnchanged": true,
+      "productionDatabaseChanges": 0
+    },
+    "caddyDockerLog": {
+      "observedBytes": 897953342,
+      "bounded": false,
+      "manuallyTruncated": false
+    }
+  },
+  "proofHashes": {
+    "live": "sha256:6f41012a1b6f05fda9c8d0592396f4cae58ef886a910d65fcc912198948bf422",
+    "ci": "sha256:248b7599d7ff7e5f0d895d8c68e7bc14f514f9e848ba17c838b736ff61c3dc4b",
+    "retention": "sha256:9b5c2d3d18da50225f082d899c85ca5694d940a5b480e40f157efb70384003dc",
+    "derived": "sha256:f5f30b67d657c3f1830a1bc6af1f224e04de71c3d6b90baed7c895bfac5fcf9d",
+    "rules": "sha256:14bbd30b58551d6e758bb8b4942a4926ed1436f84b63f5cba0668f94611feef8",
+    "journal": "sha256:09de2a4831ef207261e6cc291424c3f6d28962ffbf883fac90fb3a72a71cd3a3"
+  },
+  "remainingAcceptance": [
+    "Genuine frontend-only production acceptance remains separate.",
+    "Legacy V1/V2 tables remain; production retirement has not been executed."
+  ]
+}

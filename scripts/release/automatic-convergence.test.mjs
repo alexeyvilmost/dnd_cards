@@ -1,11 +1,18 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {uiFixture,h} from './ui-release-unit-fixture.mjs';
 import {evidenceHash} from './validate-manifest.mjs';
-import {verifySuiteReport,validateBuildPlan} from './ci-release.mjs';
+import {verifySuiteReport,validateBuildPlan,requiredBuildVerificationTier} from './ci-release.mjs';
 import {components} from './measure-local.mjs';
 import {automaticVariables,readConvergenceBaseline,preflightAutomaticDeployment,planReconciliation,dispatchReconciliation,verifyReconciledCI} from './automatic-convergence.mjs';
 import {dispatchVerifiedRelease} from './ui-release-dispatch.mjs';
 import {classifyReleaseVerification} from './ui-release-policy.mjs';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {createDeploymentStore} from './deploy-state.mjs';
+import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
+import {retirementDatabaseStateFromInspection} from './retirement-state.mjs';
+import {projectRetirementObservation,retirementBaselineReceipt} from './retirement-projection.mjs';
 const repository='fixture/project',control='c'.repeat(40),B='b'.repeat(40),C='e'.repeat(40),at=id=>`2026-01-01T00:${String(id).padStart(2,'0')}:00Z`;
 function fixture(){
   const u=uiFixture(),manifest=structuredClone(u.planning.input.previousManifest),receipt={schemaVersion:1,status:'succeeded',releaseCommit:manifest.releaseCommit,releaseId:manifest.releaseId,controlCommit:control,manifestHash:evidenceHash(manifest)};
@@ -25,7 +32,7 @@ function fixture(){
     return paged(id===20?claims:[{id:id*1000,name:'deployed-release',expired:false,size_in_bytes:100,created_at:at(id),expires_at:'2099-01-01T00:00:00Z',workflow_run:{id,head_sha:control}}],'artifacts');
   };
   f.plan=async()=>planReconciliation({eventName:'workflow_run',event:{repository:{full_name:repository},workflow_run:deployments[0]},repository,controlCommit:control,runId:20,runAttempt:coordinator.run_attempt,
-    variables:f.variables,policy:f.policy,latest:await readConvergenceBaseline(f.get,repository),manifest:f.manifest,receipt:f.receipt,get:f.get});
+    variables:f.variables,policy:f.policy,latest:await readConvergenceBaseline(f.get,repository),manifest:f.manifest,receipt:f.receipt,retirementObservation:f.retirementObservation,get:f.get});
   f.claim=p=>claims.push({id:20000,name:p.claimName,expired:false,size_in_bytes:100,created_at:at(21),expires_at:'2099-01-01T00:00:00Z',workflow_run:{id:20,head_sha:control}});
   f.dispatch=request=>dispatchReconciliation({request,get:f.get,variables:f.variables,policy:f.policy,post:async(route,body)=>{posts.push({route,body});}});
   f.ci=request=>verifyReconciledCI({request,get:f.get,variables:f.variables,policy:f.policy,eventName:'workflow_dispatch',ref:'refs/heads/main',source:request.source,suite:'extended'});
@@ -37,11 +44,40 @@ function candidateFixture(f){
   const plan={schemaVersion:1,status:'build-planned',candidate:B,controlCommit:control,releaseRunId:42,repository,config,matrix,selection:input.selection,
     verification:{id:10,sourceCommit:B,repository},verificationEvidence:verifySuiteReport(f.u.ciReport,B,{requiredTier:'core'}),previousManifest:input.previousManifest,
     baselineIdentity:{releaseId:input.previousManifest.releaseId,manifestHash:evidenceHash(input.previousManifest)}};
+  plan.verificationEvidence=verifySuiteReport(f.u.ciReport,B,{requiredTier:requiredBuildVerificationTier(plan)});
   plan.planHash=evidenceHash({candidate:B,controlCommit:control,releaseRunId:42,selection:plan.selection,matrix,config,verification:plan.verificationEvidence,baselineIdentity:plan.baselineIdentity});validateBuildPlan(plan);
   const candidate={manifest:input.candidateManifest,buildPlan:plan,provenance:{schemaVersion:1,releaseRunId:42,controlCommit:control,sourceCommit:B,planHash:plan.planHash,manifestHash:evidenceHash(input.candidateManifest)}};
   return {candidate,releaseRun:{id:42,workflow:'.github/workflows/release.yml',controlCommit:control}};
 }
-async function preflight(f,overrides={}){return preflightAutomaticDeployment({eventName:'workflow_run',...candidateFixture(f),latest:await readConvergenceBaseline(f.get,repository),manifest:f.manifest,receipt:f.receipt,repository,get:f.get,...overrides});}
+async function preflight(f,overrides={}){return preflightAutomaticDeployment({eventName:'workflow_run',...candidateFixture(f),latest:await readConvergenceBaseline(f.get,repository),manifest:f.manifest,receipt:f.receipt,retirementObservation:f.retirementObservation,repository,get:f.get,...overrides});}
+
+function retiredFixture(t){
+  const f=fixture(),s=retirementStateUnitFixture(),root=mkdtempSync(path.join(tmpdir(),'convergence-retirement-'));
+  t.after(()=>{assert.equal(path.dirname(root),path.resolve(tmpdir()));assert.ok(path.basename(root).startsWith('convergence-retirement-'));rmSync(root,{recursive:true,force:true});});
+  const active={...structuredClone(s.active),database:retirementDatabaseStateFromInspection(s,s.inspection)},stamp='2026-10-06T00:00:00Z';
+  const operation={schemaVersion:1,kind:'character-retirement-observation-302',releaseId:s.request.releaseId,status:'succeeded',previous:s.active,desired:active,transitionHash:evidenceHash({previous:s.active,desired:active}),createdAt:stamp,updatedAt:stamp};
+  const store=createDeploymentStore(root);store.writeActive(active);store.writeOperation(operation);
+  f.retirementObservation=projectRetirementObservation({store,operation,manifest:active.manifest,request:{repository,runId:8,attempt:1,controlCommit:control,sourceCommit:active.manifest.releaseCommit}});
+  f.manifest=active.manifest;f.receipt=retirementBaselineReceipt(f.retirementObservation);
+  return f;
+}
+
+test('recorded retirement can request fresh verification and safely supersede an older candidate',async t=>{
+  const f=retiredFixture(t),p=await f.plan();assert.equal(p.status,'planned');f.claim(p);assert.equal((await f.dispatch(p.request)).status,'dispatched');assert.equal(f.posts.length,1);
+  assert.equal((await preflight(f)).reason,'newer-successful-deployment');
+  // A new candidate with this exact predecessor may proceed; an old one may not.
+  f.u.planning.input.previousManifest=structuredClone(f.manifest);
+  f.u.planning.input.candidateManifest.previousReleaseId=f.manifest.releaseId;
+  for(const row of f.u.planning.input.matrix){row.operation='build';row.imageDigest=null;row.sourceCommit=B;}
+  f.u.ciReport.suite='extended';
+  assert.equal((await preflight(f)).status,'ready');
+});
+
+test('missing or foreign retirement proof blocks reconciliation and preflight without dispatch',async t=>{
+  for(const change of [f=>delete f.retirementObservation,f=>{f.retirementObservation.deployment.runId=9;}]){
+    const f=retiredFixture(t);change(f);await assert.rejects(f.plan());await assert.rejects(preflight(f));assert.equal(f.posts.length,0);
+  }
+});
 
 test('A success supersedes B(old baseline) without a deploy attempt; fresh extended B is dispatched once and reaches the new predecessor',async()=>{
   const f=fixture(),old=candidateFixture(f),original=evidenceHash(old);

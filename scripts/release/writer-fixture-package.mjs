@@ -5,6 +5,8 @@ import {mkdir,writeFile,realpath,lstat} from 'node:fs/promises';
 import path from 'node:path';
 import {createHash} from 'node:crypto';
 import {createCompactOciAdapter} from './compact-oci-adapter.mjs';
+import {databaseMigrationSet} from './migration-transition.mjs';
+import {retireEmptyWriterFixture} from './retire-empty-writer-fixture.mjs';
 import {evidenceHash,compositionFingerprint,writerPolicy,validateManifest} from './validate-manifest.mjs';
 import {verifyCandidateProvenance} from './deployment-handoff.mjs';
 import {validateWriterTrace} from './writer-traces.mjs';
@@ -79,6 +81,14 @@ export async function createHostedWriterFixture({candidate,active,verifiedReleas
   for(const component of components){const row=value.imageRoles[role][component];imageRoles[role][component==='rulesWorker'?'worker':component]={image:row.image,identity:row.identity,sourceCommit:row.identity.sourceCommit,inputFingerprint:row.identity.inputFingerprint};roleLaunches[role][component]={releaseId:row.identity.releaseId,releaseCommit:row.identity.releaseCommit};}
  }
  const adapter=await createCompactOciAdapter({directory:path.join(directory,'runtime'),dump:{schemaVersion:1,kind:'owned-integration-dump',runId:value.dump.runId,registryPath,dumpFile,sha256:value.dump.sha256,bytes:value.dump.bytes},imageRoles,roleLaunches,postgresImage,imageProtocol:true});
+ if(candidate.manifest.migrationSet.some(row=>row.id==='302_retire_legacy_characters')){
+  try{
+   assert(databaseMigrationSet(active).some(row=>row.id==='302_retire_legacy_characters'),'Fixture retirement requires an already recorded baseline');
+   await adapter.start({role:'previous',...writerPolicy(active.manifest),releaseId:active.manifest.releaseId});
+   await adapter.stopApplications();
+   await retireEmptyWriterFixture(adapter,databaseMigrationSet(active),{candidate:candidate.manifest,active});
+  }catch(error){try{await adapter.cleanup();}catch(cleanup){throw new AggregateError([error,cleanup],'Writer fixture preparation and cleanup failed');}throw error;}
+ }
  return {adapter,accounts:structuredClone(value.accounts),rollInfluences:decodePublicWriterRules(value.ruleData,value.sourceFiles),cleanup:()=>adapter.cleanup(),browserTrace:async binding=>{
   const proof=structuredClone(value.browserProof),trace={schemaVersion:1,kind:'verified-hosted-writer-trace',execution:'hosted-proof-consumption',outcomeId:'frontend-pending-job-reload',consumptionBindingHash:evidenceHash(binding),verifiedReleaseRunHash:evidenceHash(verifiedReleaseRun),proofHash:evidenceHash(proof),proof};
   validateWriterTrace(trace,trace.outcomeId,binding);return trace;

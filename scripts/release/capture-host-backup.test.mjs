@@ -39,6 +39,20 @@ test('fresh capture binds bytes and active composition but cannot claim restored
   await assert.rejects(captureHostBackup(f),/EEXIST/);assert.deepEqual(f.calls,['preflight','dump','preflight']);
   if(process.platform!=='win32'){assert.equal((await stat(f.output)).mode&0o777,0o700);assert.equal((await stat(path.join(f.output,'capture.json'))).mode&0o777,0o600);}
 });
+test('existing owner lock or unresolved journal refuses before any database access or capture directory',async t=>{
+ for(const mode of ['lock','preparing','maintenance-intent','maintenance-result','malformed']){
+  const f=await fixture(t);
+  if(mode==='lock')await mkdir(path.join(f.root,'deploy.lock'));
+  else{await mkdir(path.join(f.root,'operations'));const value=mode==='preparing'?{schemaVersion:1,releaseId:'candidate',status:'preparing'}:mode==='maintenance-intent'?{schemaVersion:1,kind:'obsolete-rehearsal-copy-cleanup'}:{schemaVersion:1,status:'passed'};await writeFile(path.join(f.root,'operations','fixture.json'),mode==='malformed'?'{':JSON.stringify(value));}
+  await assert.rejects(captureHostBackup(f));assert.deepEqual(f.calls,[]);await assert.rejects(stat(f.output),{code:'ENOENT'});
+ }
+});
+test('completed deployment journals and maintenance outside the journal retain normal capture',async t=>{
+ const f=await fixture(t);await mkdir(path.join(f.root,'operations'));await mkdir(path.join(f.root,'maintenance'));
+ for(const status of ['succeeded','rolled_back','failed_before_cutover'])await writeFile(path.join(f.root,'operations',status+'.json'),JSON.stringify({schemaVersion:1,releaseId:status,status}));
+ await writeFile(path.join(f.root,'maintenance','cleanup.json'),JSON.stringify({schemaVersion:1,status:'passed'}));
+ assert.equal((await captureHostBackup(f)).status,'captured');assert.deepEqual(f.calls,['preflight','dump']);
+});
 test('capture preserves verified historical semantic certification separately from executable CJS',async t=>{
  const f=await fixture(t),releaseHash='sha256:04678a044c4dc809d213e01e392bc0f16562d5103ee96e070089c1edf7e7100b';
  const directory=path.join(f.root,'shared','source-certifications',releaseHash.slice(7));await mkdir(path.dirname(directory),{recursive:true});

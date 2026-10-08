@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "taskId": "CLEAN-02",
+  "status": "current307_readers_and_host_boundary_verified_locally",
+  "recordedAt": "2026-10-07T15:45:06.275Z",
+  "current307ReaderPreflight": {
+    "schemaVersion": 1,
+    "status": "passed",
+    "verifiedAt": "2026-10-07T14:49:52.000Z",
+    "bundleHash": "sha256:3788b467d7a52d65f854badbce5d7f8a8602902bcd554def6be6f49a5364d1d1",
+    "originalReaderReceiptHash": "sha256:a9e35ccd9a6bcbfab3ff40aa60b69e5bbe5f236d6a5367b6ac03f317439b8df3",
+    "readerChecks": 11,
+    "browserChecks": 24,
+    "historicalReaderGenerations": 2,
+    "migrations": 307,
+    "productionReady": false,
+    "productionChanges": 0
+  },
+  "canonicalHost": {
+    "files": {
+      "scripts/release/retirement-host.mjs": "sha256:fec228edd511dcd55a8701ab7ebf3b3d6cb064ea43a9ff62848fb65fd4d7a41f",
+      "scripts/release/retirement-production-artifacts.mjs": "sha256:368708592cc2366596d9ffc8a67b2e4a6e4ef7e10cafbad248b7ad5e3a58ee5e",
+      "scripts/release/retirement-rehearsal-input.mjs": "sha256:05f50e5829d1ed89f4e9589e6a7a797712ff9f2f747743711b2abfe02e7c96c3",
+      "scripts/release/retirement-artifacts.mjs": "sha256:567e4521e84910c91bf430aa82f2fd5ae2fdda3d9ad548ef3a0416917387f2a6",
+      "scripts/release/candidate-rehearsal.mjs": "sha256:7a6f2b472f63a0df253d2d13cfb2067a1a25a009a4ed8fcace6bd4896d889102"
+    },
+    "windowsContractsPassed": 178,
+    "nativeLinuxContractsPassed": 163,
+    "nativeScope": "native-linux-unit-and-filesystem-boundaries",
+    "nativeImage": "node@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6",
+    "nativeSourceBase": "e747b51700d1893b21351b11a331f5a93a4e9cce",
+    "nativeOverlayInputs": {
+      "scripts/release/retirement-production-artifacts.mjs": "sha256:368708592cc2366596d9ffc8a67b2e4a6e4ef7e10cafbad248b7ad5e3a58ee5e",
+      "scripts/release/retirement-production-artifacts.test.mjs": "sha256:64dfeef493f02106c364d420692990beea2684e5f04af421f60305c8aca3b4ec",
+      "scripts/release/retirement-host.mjs": "sha256:fec228edd511dcd55a8701ab7ebf3b3d6cb064ea43a9ff62848fb65fd4d7a41f",
+      "scripts/release/retirement-artifacts.mjs": "sha256:567e4521e84910c91bf430aa82f2fd5ae2fdda3d9ad548ef3a0416917387f2a6",
+      "scripts/release/candidate-rehearsal.mjs": "sha256:7a6f2b472f63a0df253d2d13cfb2067a1a25a009a4ed8fcace6bd4896d889102",
+      "scripts/release/retirement-rehearsal-input.mjs": "sha256:05f50e5829d1ed89f4e9589e6a7a797712ff9f2f747743711b2abfe02e7c96c3",
+      "scripts/release/retirement-rehearsal-input.test.mjs": "sha256:8fb6e0b4e784d504e24acaf31acfb9c8f9cfbc4332e9b82f0d01d36b125740a3",
+      "tests/suites.json": "sha256:2e30bbfaf34197b317d54c60a269caad1fa6fe233a22dd5c69faf4f128a803f3"
+    },
+    "nativeOwnedCleanupStopped": true
+  },
+  "actualCurrentCaptureMetadataInput": {
+    "schemaVersion": 1,
+    "status": "passed-actual-metadata-input-only",
+    "verifiedAt": "2026-10-07T15:27:30.147Z",
+    "candidateSource": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "rollbackSource": "904ec8cbc809f2c26357ce2a14c272e703298e7d",
+    "capturedSource": "5c45a520376846f1a248fca521cfbe972f6ebcc2",
+    "capturedActiveHash": "sha256:c9bc1732c96512bd63d69d3446349f37ea225f1aa8ff391a84834aae33542c66",
+    "rollbackActiveHash": "sha256:6d6eef87b368b8a9c14f4467b5ad4b3aa9d9e1b692f8f1385564947d6b6c91c4",
+    "captureHash": "sha256:ba43fdc51de72f972a1c592dabae150560e5044034c488aacecf2d4baf58f369",
+    "backupFileHash": "sha256:e36259722311e5b93a474ddcb4acf83aa86c3c65076b7ebcba86c07b0b13a63e",
+    "migrations": 307,
+    "historicalArtifacts": 21,
+    "sourceBindingsRewritten": false,
+    "backupRestoredDuringThisCheck": false,
+    "actualV4RetirementGraphAccepted": false,
+    "productionReady": false,
+    "productionChanges": 0
+  },
+  "actualFreshV4ArtifactGraphAccepted": false,
+  "actualFullHostControllerExecuted": false,
+  "productionPolicyEnabled": false,
+  "automaticRetirement": false,
+  "productionDatabaseRestored": false,
+  "productionRetirementExecuted": false,
+  "productionChanges": 0,
+  "productionReady": false,
+  "remaining": [
+    "Свежий v4 архив и published reader proof после принятия текущего installed состава",
+    "Проверка полного host controller на собственной локальной копии",
+    "Отдельная реальная writer compatibility после удаления на публичном локальном стенде; полная пользовательская история остаётся в OFF-профиле, чтобы не запускать скопированные задания",
+    "Настоящая recorded-only публикация retirement baseline для следующего обычного выпуска",
+    "Точный явно разрешённый production переход без восстановления БД"
+  ]
+}

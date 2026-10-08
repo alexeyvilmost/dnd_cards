@@ -61,7 +61,7 @@ func roguelikeCombatJournalRecord(request RoguelikeCommandRequest, before JSONMa
 }
 
 func appendRoguelikeCombatEvent(tx *gorm.DB, run *RoguelikeRun, request RoguelikeCommandRequest, before JSONMap, result *roguelikeWorkerResult) error {
-	key, err := roguelikeCombatJournalKey(result.Envelope)
+	key, err := validatedRoguelikeCombatJournalKey(result.Envelope)
 	if err != nil {
 		return err
 	}
@@ -90,4 +90,26 @@ func appendRoguelikeCombatEvent(tx *gorm.DB, run *RoguelikeRun, request Roguelik
 	encounterNumber, _ := numberFromJSON(run.Encounter["number"])
 	return tx.Create(&RoguelikeCombatEvent{RunID: run.ID, CommandID: request.CommandID, Revision: run.Revision,
 		CombatKey: key, Attempt: run.Attempt, EncounterNumber: int(encounterNumber), Record: record}).Error
+}
+
+// Worker responses have already crossed a strict JSON parser. Read the two
+// journal identity fields without re-encoding the complete private combat.
+// Unrecognized programmatic representations retain the ordinary decoder.
+func validatedRoguelikeCombatJournalKey(envelope JSONMap) (string, error) {
+	artifact, ok := envelope["artifactHash"].(string)
+	if !ok {
+		return roguelikeCombatJournalKey(envelope)
+	}
+	entropy, ok := combatWireMap(envelope["entropy"])
+	if !ok {
+		return roguelikeCombatJournalKey(envelope)
+	}
+	seed, ok := entropy["seed"].(string)
+	if !ok {
+		return roguelikeCombatJournalKey(envelope)
+	}
+	if seed == "" || !roguelikeSnapshotHash.MatchString(artifact) {
+		return "", fmt.Errorf("invalid combat journal identity")
+	}
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(artifact+":"+seed))), nil
 }
