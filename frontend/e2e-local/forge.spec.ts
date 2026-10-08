@@ -25,11 +25,10 @@ test('S06 empty Forge uses real race/class/background/choice data and saves an o
     if (await section.count()) {
       await openForgeSection(page, label); await completeVisibleForgeChoices(page);
       if (label === 'Характеристики') {
-        await page.getByRole('button', { name: 'Оптимально для класса', exact: true }).click();
-        const bonuses = page.locator('.choice-box').filter({ hasText: 'Бонусы предыстории' });
-        for (const name of ['Сила', 'Телосложение']) {
-          const bonus = bonuses.getByRole('button', { name: new RegExp(`^${name}(?: \\+\\d)?$`) });
-          if (!(await bonus.getAttribute('class'))?.split(/\s+/).includes('on')) await bonus.click();
+        await page.getByRole('button', { name: 'Рекомендация класса', exact: true }).click();
+        for (const [name, value] of [['Сила', 2], ['Телосложение', 1]] as const) {
+          const bonus = page.getByRole('button', { name: `Бонус +${value}: ${name}`, exact: true });
+          if (await bonus.getAttribute('aria-pressed') !== 'true') await bonus.click();
         }
       }
     }
