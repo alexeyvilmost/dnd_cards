@@ -7,6 +7,12 @@ import CardBottomPanel from './CardBottomPanel';
 import { getCardBorderWrapperStyle } from '../utils/cardStyles';
 import { getCardDescriptionFontSize } from '../utils/cardTextStyles';
 import { getEffectiveRarityColor } from '../utils/rarityVisuals';
+import {useEntityRef} from './EntityRefRegistry';
+
+function MasteryReference({id}:{id:string}) {
+  const {entity} = useEntityRef('effect',id);
+  return entity ? <div className="text-xs text-center font-fantasy"><strong>Мастерство:</strong>{' '}<FormattedText text={`[[${entity.name}|effect:${entity.id}]]`} /></div> : null;
+}
 
 // Функция для получения значения цвета редкости для inline стилей
 interface CardPreviewProps {
@@ -129,6 +135,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
                 <h3 className={getTitleClass(card.rarity, card.name)} style={getTitleStyle(card.rarity)}>
                   {card.name}
                 </h3>
+                {card.mastery && <MasteryReference id={card.mastery} />}
               </div>
 
               {/* Изображение - стандартный размер */}
@@ -205,6 +212,7 @@ const CardPreview = ({ card, className = '', disableHover = false, onClick }: Ca
             <h3 className={getTitleClass(card.rarity, card.name)} style={getTitleStyle(card.rarity)}>
               {card.name}
             </h3>
+            {card.mastery && <MasteryReference id={card.mastery} />}
             {hasProperties && (
               <div className={`text-xs font-medium ${getRarityColor(card.rarity)} flex justify-center items-center whitespace-pre-wrap`}>
                 {renderProperties(propertiesArray, Boolean(isExtended))}

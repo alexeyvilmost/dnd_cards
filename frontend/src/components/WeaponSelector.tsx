@@ -1,3 +1,4 @@
+import {IconLabel} from './UiIcon';
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -141,7 +142,7 @@ const WeaponSelector: React.FC<WeaponSelectorProps> = ({ onClose }) => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {category.name}
+                      <IconLabel text={category.name} />
                     </h2>
                     <p className="text-gray-600 text-sm">
                       {category.description}

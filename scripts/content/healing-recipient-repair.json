@@ -1,0 +1,301 @@
+{
+  "version": 1,
+  "spells": [
+    {
+      "id": "167a8a8f-2eaa-45ec-9ee2-3b5bd522b9e7",
+      "card_number": "regenerate",
+      "name": "Регенерация",
+      "before": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "4d8 + 15"
+              },
+              {
+                "kind": "narrative",
+                "description": "Время сотворения — 1 минута. В течение 1 часа цель восстанавливает 1 Хит в начале каждого своего хода; отрубленные части тела отрастают через 2 минуты."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "touch",
+          "shape": "single",
+          "filter": "ally"
+        },
+        "activation": {
+          "cost": [
+            {
+              "level": 7,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "minute",
+            "amount": 1
+          }
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid"
+        ]
+      },
+      "after": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "4d8 + 15"
+              },
+              {
+                "kind": "narrative",
+                "description": "Время сотворения — 1 минута. В течение 1 часа цель восстанавливает 1 Хит в начале каждого своего хода; отрубленные части тела отрастают через 2 минуты."
+              }
+            ],
+            "resolution": "auto",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "range": "touch",
+          "shape": "single",
+          "filter": "ally"
+        },
+        "activation": {
+          "cost": [
+            {
+              "level": 7,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active",
+          "cast_time": {
+            "unit": "minute",
+            "amount": 1
+          }
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid"
+        ]
+      }
+    },
+    {
+      "id": "5e90e06d-99db-439c-86fc-b39393940b41",
+      "card_number": "mass_cure_wounds",
+      "name": "Множественное лечение ран",
+      "before": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "5d8 + spellcasting",
+                "scaling": {
+                  "per": "spell_slot_above",
+                  "dice": "1d8"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "До 6 существ в сфере радиусом 30 фт с центром на видимой точке в 60 фт."
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "area": {
+            "kind": "sphere",
+            "radius_ft": 30
+          },
+          "shape": "area",
+          "domain": "actor",
+          "range_ft": 60,
+          "max_targets": 6,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 5,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid"
+        ]
+      },
+      "after": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "5d8 + spellcasting",
+                "scaling": {
+                  "per": "spell_slot_above",
+                  "dice": "1d8"
+                }
+              },
+              {
+                "kind": "narrative",
+                "description": "До 6 существ в сфере радиусом 30 фт с центром на видимой точке в 60 фт."
+              }
+            ],
+            "resolution": "auto",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "area": {
+            "kind": "sphere",
+            "radius_ft": 30
+          },
+          "shape": "area",
+          "domain": "actor",
+          "range_ft": 60,
+          "max_targets": 6,
+          "min_targets": 1,
+          "actor_targets": true,
+          "allowed_relations": [
+            "self",
+            "ally",
+            "enemy",
+            "neutral"
+          ],
+          "requires_line_of_sight": true
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "action"
+            },
+            {
+              "level": 5,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid"
+        ]
+      }
+    },
+    {
+      "id": "ddb5e045-045c-45ce-ab5e-4d6a489be913",
+      "card_number": "SPELL-0213",
+      "name": "Лечащее слово",
+      "before": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "2d4 + spellcasting",
+                "scaling": {
+                  "per": "spell_slot_above",
+                  "dice": "2d4"
+                }
+              }
+            ],
+            "resolution": "auto"
+          }
+        ],
+        "targeting": {
+          "range": "60 футов",
+          "shape": "single",
+          "filter": "any"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid"
+        ]
+      },
+      "after": {
+        "effects": [
+          {
+            "result": [
+              {
+                "kind": "healing",
+                "amount": "2d4 + spellcasting",
+                "scaling": {
+                  "per": "spell_slot_above",
+                  "dice": "2d4"
+                }
+              }
+            ],
+            "resolution": "auto",
+            "who": "target"
+          }
+        ],
+        "targeting": {
+          "range": "60 футов",
+          "shape": "single",
+          "filter": "any"
+        },
+        "activation": {
+          "cost": [
+            {
+              "resource": "bonus_action"
+            },
+            {
+              "level": 1,
+              "amount": 1,
+              "resource": "spell_slot"
+            }
+          ],
+          "mode": "active"
+        },
+        "spell_class_list_ids": [
+          "CLASS-bard",
+          "CLASS-cleric",
+          "CLASS-druid"
+        ]
+      }
+    }
+  ]
+}

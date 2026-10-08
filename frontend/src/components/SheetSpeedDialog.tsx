@@ -1,5 +1,6 @@
 import type { ValueBreakdown } from '../mvp/contracts';
 import '../contexts/DiceDialog.css';
+import UiIcon from './UiIcon';
 
 // Виды перемещения PHB 2024: ходьба, полёт, плавание, лазание, копание.
 const MODE_LABEL: Record<string, string> = {
@@ -33,7 +34,7 @@ export default function SheetSpeedDialog({
           <div className="dice-dialog-summary">Все виды перемещения персонажа.</div>
           <div className="dice-dialog-list">
             <div style={rowStyle}>
-              <span>{MODE_ICON.walk} Ходьба</span>
+              <span><UiIcon symbol={MODE_ICON.walk} /> Ходьба</span>
               <strong style={valStyle}>{speed} фт</strong>
             </div>
             {speedBreakdown && speedBreakdown.parts.length > 0 && (
@@ -48,7 +49,7 @@ export default function SheetSpeedDialog({
             )}
             {special.map(([mode, v]) => (
               <div key={mode} style={rowStyle}>
-                <span>{MODE_ICON[mode] ?? '•'} {MODE_LABEL[mode] ?? mode}</span>
+                <span><UiIcon symbol={MODE_ICON[mode] ?? 'range'} /> {MODE_LABEL[mode] ?? mode}</span>
                 <strong style={valStyle}>{v} фт</strong>
               </div>
             ))}

@@ -7,6 +7,8 @@ import { getAbilityLabel } from '../types';
 import { FormattedText } from '../utils/formattedText';
 import Bg3Card from './Bg3Card';
 import BackgroundEquipment from './BackgroundEquipment';
+import {labelOf, SKILLS} from '../mechanics/registries';
+import {normalizeSkillId} from '../character/skillNormalize';
 
 interface BackgroundPreviewProps {
   background: Background;
@@ -24,7 +26,7 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
   const { showDetailedPreview } = useSiteSettings();
   const { entity: originFeat, error: featError } = useEntityRef('feat', background.origin_feat ?? '');
   const abilities = (background.ability_scores || []).map(getAbilityLabel).join(', ');
-  const skills = (background.skill_proficiencies || []).join(', ');
+  const skills = (background.skill_proficiencies || []).map(skill => labelOf(SKILLS, normalizeSkillId(skill))).join(', ');
 
   return (
     <Bg3Card
@@ -48,7 +50,7 @@ const BackgroundPreview: React.FC<BackgroundPreviewProps> = ({
         {background.origin_feat && (
           <div className="bg3-srow">
             <span className="bg3-lbl">Черта:</span>
-            <span className="bg3-val">{(originFeat as Feat | null)?.name ?? (featError ? 'Черта недоступна' : 'Загрузка черты…')}</span>
+            <span className="bg3-val">{originFeat ? <FormattedText onDark text={`[[${(originFeat as Feat).name}|feat:${originFeat.id}]]`} /> : (featError ? 'Черта недоступна' : 'Загрузка черты…')}</span>
           </div>
         )}
         {skills && (

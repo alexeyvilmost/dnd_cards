@@ -10,6 +10,7 @@ import { createPortal } from 'react-dom';
 import { usePinMode } from '../hooks/usePinMode';
 import { useEntityDetail } from '../contexts/entityDetail';
 import { previewAnchor } from '../utils/previewAnchor';
+import { DISMISS_ENTITY_PREVIEWS, pointerPreviewsSuppressed } from '../utils/previewLifecycle';
 
 interface HoverCardProps {
   children: ReactNode;   // триггер (inline)
@@ -21,9 +22,12 @@ interface HoverCardProps {
   allowPin?: boolean;
 }
 
-function computePosition(trigger: { x: number; y: number }, card: { width: number; height: number }) {
+function computePosition(trigger: { x: number; y: number; left: number; right: number }, card: { width: number; height: number }) {
   const M = 8;
-  let left = trigger.x;
+  // Leave the trigger and the controls below it clickable in pin mode.
+  let left = trigger.right + 12;
+  if (left + card.width > window.innerWidth - M) left = trigger.left - card.width - 12;
+  if (left < M) left = trigger.x;
   let top = trigger.y + 6;
   if (left + card.width > window.innerWidth - M) left = window.innerWidth - M - card.width;
   if (left < M) left = M;
@@ -59,6 +63,12 @@ const HoverCard = ({ children, content, className, onClick, disabled = false, al
   }, []);
 
   useEffect(() => {
+    const dismiss = () => { clearTimer(); setOpen(false); };
+    window.addEventListener(DISMISS_ENTITY_PREVIEWS, dismiss);
+    return () => { clearTimer(); window.removeEventListener(DISMISS_ENTITY_PREVIEWS, dismiss); };
+  }, []);
+
+  useEffect(() => {
     if (hoverDisabled) {
       clearTimer();
       setOpen(false);
@@ -86,7 +96,8 @@ const HoverCard = ({ children, content, className, onClick, disabled = false, al
     if (!t || !c) return;
     const place = () => {
       const rect = c.getBoundingClientRect();
-      setPos(computePosition(previewAnchor(t), { width: rect.width, height: rect.height }));
+      const bounds = t.getBoundingClientRect();
+      setPos(computePosition({...previewAnchor(t),left:bounds.left,right:bounds.right}, { width: rect.width, height: rect.height }));
     };
     place();
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(place);
@@ -100,11 +111,12 @@ const HoverCard = ({ children, content, className, onClick, disabled = false, al
       <span
         ref={triggerRef}
         className={className}
-        onMouseEnter={hoverDisabled ? undefined : openNow}
+        onMouseEnter={hoverDisabled ? undefined : () => {if (!pointerPreviewsSuppressed()) openNow();}}
+        onMouseMove={hoverDisabled ? undefined : () => {if (!open && !pointerPreviewsSuppressed()) openNow();}}
         onMouseLeave={hoverDisabled ? undefined : handleLeave}
         onFocus={hoverDisabled ? undefined : openNow}
         onBlur={hoverDisabled ? undefined : handleLeave}
-        onClick={onClick}
+        onClick={() => { clearTimer(); setOpen(false); onClick?.(); }}
       >
         {children}
       </span>

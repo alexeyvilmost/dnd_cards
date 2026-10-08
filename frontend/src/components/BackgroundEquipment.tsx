@@ -1,11 +1,9 @@
-import { previewAnchor } from '../utils/previewAnchor';
 import { useEffect, useState } from 'react';
 import type { Card, EquipmentOption } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { getCurrencyIconPath, currencyIconStyle } from '../utils/currencies';
-import { useSiteSettings } from '../settings';
-import CardPreview from './CardPreview';
-import ItemPreview from './ItemPreview';
+import EntityRefPreview from './EntityRefPreview';
+import HoverCard from './HoverCard';
 
 // Совместим и с предысторией ({a,b}), и с классом ({a,b,c}).
 type EquipOptions = {
@@ -19,14 +17,10 @@ const hasContent = (o?: EquipmentOption | null) => !!o && ((o.items?.length || 0
 
 // Иконка предмета с карточкой-превью (как в библиотеке) при наведении.
 const ItemIcon: React.FC<{ card: Card; quantity: number }> = ({ card, quantity }) => {
-  const [hover, setHover] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const asInterface = useSiteSettings().itemPreview === 'interface';
   return (
-    <div
+    <HoverCard content={<EntityRefPreview type="card" id={card.id} />}><div
       className="bgeq-item"
-      onMouseEnter={(e) => { setHover(true); setPos(previewAnchor(e.currentTarget)); }}
-      onMouseLeave={() => setHover(false)}
+      tabIndex={0} aria-label={card.name}
     >
       <img
         src={card.image_url || '/default_image.png'}
@@ -34,26 +28,15 @@ const ItemIcon: React.FC<{ card: Card; quantity: number }> = ({ card, quantity }
         onError={(e) => ((e.target as HTMLImageElement).src = '/default_image.png')}
       />
       {quantity > 1 && <span className="bgeq-qty">{quantity}</span>}
-      {hover && (
-        <div
-          className="entity-preview-enter"
-          style={{
-            position: 'fixed', zIndex: 100, pointerEvents: 'none',
-            left: Math.min(pos.x + 14, window.innerWidth - (asInterface ? 360 : 210)),
-            top: Math.min(Math.max(pos.y - 40, 8), window.innerHeight - 290),
-          }}
-        >
-          {asInterface ? <ItemPreview card={card} disableHover /> : <CardPreview card={card} disableHover />}
-        </div>
-      )}
-    </div>
+    </div></HoverCard>
   );
 };
 
 const Variant: React.FC<{
   label: string; option?: EquipmentOption | null; index: Map<string, Card>;
   selectable?: boolean; selected?: boolean; onSelect?: () => void;
-}> = ({ label, option, index, selectable, selected, onSelect }) => {
+  loading?: boolean;
+}> = ({ label, option, index, selectable, selected, onSelect, loading }) => {
   if (!hasContent(option)) return null;
   const items = (option!.items || [])
     .map((r) => ({ r, card: index.get(r.card_id) }))
@@ -68,7 +51,8 @@ const Variant: React.FC<{
           {items.map(({ r, card }) => (
             <ItemIcon key={r.card_id} card={card} quantity={r.quantity} />
           ))}
-          {items.length === 0 && <span className="bgeq-only-gold">только золото</span>}
+          {!option!.items?.length && <span className="bgeq-only-gold">только золото</span>}
+          {!!option!.items?.length && !items.length && <span className="bgeq-only-gold" role="status">{loading ? 'Загрузка предметов…' : 'Предметы недоступны'}</span>}
         </div>
         {gold > 0 && (
           <div className="bgeq-gold" aria-description={`${gold} золота`}>
@@ -95,11 +79,13 @@ export const BackgroundEquipment: React.FC<{
   selectable?: boolean;
   selected?: OptKey;
   onSelect?: (key: OptKey) => void;
-}> = ({ options, selectable, selected, onSelect }) => {
+  hideHeading?: boolean;
+}> = ({ options, selectable, selected, onSelect, hideHeading = false }) => {
   const [index, setIndex] = useState<Map<string, Card>>(new Map());
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     let alive = true;
-    getCardsIndex().then((m) => alive && setIndex(m));
+    getCardsIndex().then((m) => {if (alive) {setIndex(m); setLoading(false);}}).catch(() => {if (alive) setLoading(false);});
     return () => { alive = false; };
   }, []);
 
@@ -109,7 +95,13 @@ export const BackgroundEquipment: React.FC<{
   return (
     <div className="bgeq">
       <style>{`
-        .bgeq{ margin-top:auto; padding-top:10px; }
+        .bgeq{ margin-top:auto; padding-top:10px; container-type:inline-size; }
+        .bgeq-options{display:flex;flex-direction:column;gap:8px;}
+        @container (min-width:500px){
+          .bgeq-options{flex-direction:row;align-items:stretch;gap:20px;}
+          .bgeq-options>.bgeq-variant{flex:1;min-width:0;width:auto;position:relative;}
+          .bgeq-options>.bgeq-variant+.bgeq-variant::before{content:"";position:absolute;left:-11px;top:12px;bottom:12px;width:1px;background:linear-gradient(transparent,#8a7320,transparent);}
+        }
         .bgeq-title{ text-align:center; color:#e7cf9a; font-weight:700; font-size:.95rem; margin-bottom:2px; }
         .bgeq-variant{ margin-top:4px; }
         .bgeq-variant--btn{ display:block; width:100%; text-align:left; background:transparent; border:1px solid transparent; border-radius:8px; padding:2px 8px; cursor:pointer; transition:border-color .15s, background .15s; }
@@ -135,10 +127,12 @@ export const BackgroundEquipment: React.FC<{
         .bgeq-gold img{ width:34px; height:34px; object-fit:contain; }
         .bgeq-gold-amount{ color:#e7cf9a; font-weight:700; font-size:.95rem; line-height:1; margin-top:1px; }
       `}</style>
-      <div className="bgeq-title">Снаряжение.</div>
-      <Variant label="А" option={options.option_a} index={index} selectable={selectable} selected={selected === 'a'} onSelect={() => onSelect?.('a')} />
-      <Variant label="Б" option={options.option_b} index={index} selectable={selectable} selected={selected === 'b'} onSelect={() => onSelect?.('b')} />
-      <Variant label="В" option={options.option_c} index={index} selectable={selectable} selected={selected === 'c'} onSelect={() => onSelect?.('c')} />
+      {!hideHeading && <div className="bgeq-title">Снаряжение.</div>}
+      <div className="bgeq-options">
+      <Variant label="А" option={options.option_a} index={index} loading={loading} selectable={selectable} selected={selected === 'a'} onSelect={() => onSelect?.('a')} />
+      <Variant label="Б" option={options.option_b} index={index} loading={loading} selectable={selectable} selected={selected === 'b'} onSelect={() => onSelect?.('b')} />
+      <Variant label="В" option={options.option_c} index={index} loading={loading} selectable={selectable} selected={selected === 'c'} onSelect={() => onSelect?.('c')} />
+      </div>
     </div>
   );
 };

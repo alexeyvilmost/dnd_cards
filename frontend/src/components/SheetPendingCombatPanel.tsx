@@ -1,5 +1,6 @@
 import SlotRecoveryChoices from './SlotRecoveryChoices';
 import { useEffect, useState } from 'react';
+import {abilityFullRu} from '../engine/describeMechanics';
 import type {
   DecisionResponse,
   PendingResolution,
@@ -160,8 +161,8 @@ export default function SheetPendingCombatPanel({
     const title = escapeCheck
       ? `Освобождение: ${pending.skill === 'athletics' ? 'Атлетика' : 'Акробатика'}`
       : pending.type === 'concentration_save'
-      ? `Концентрация: спасбросок ${ability.toUpperCase()}`
-      : `Спасбросок ${ability.toUpperCase()}`;
+      ? `Концентрация: спасбросок ${abilityFullRu(ability)}`
+      : `Спасбросок ${abilityFullRu(ability)}`;
     const afterFailureBoons = decidingRuntime && !escapeCheck
       ? runtimeBoons(decidingRuntime).filter((boon) => (
         boon.appliesTo.includes('saving_throw') && boon.timing.includes('after_failure')
@@ -194,7 +195,7 @@ export default function SheetPendingCombatPanel({
               onChange={(event) => setSelectedAbility(event.target.value)}
             >
               {abilityOptions.map((option) => (
-                <option key={option} value={option}>{option.toUpperCase()}</option>
+                <option key={option} value={option}>{abilityFullRu(option)}</option>
               ))}
             </select>
           </label>

@@ -4,6 +4,7 @@
  * на ссылки внутри превью. Выход: T ещё раз, Esc или клик по подсказке.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import UiIcon from '../components/UiIcon';
 
 interface PinModeApi {
   pinModeActive: boolean;
@@ -56,7 +57,7 @@ export function PinModeProvider({ children }: { children: ReactNode }) {
             fontSize: 13, boxShadow: '0 6px 24px rgba(0,0,0,0.5)', cursor: 'pointer',
           }}
         >
-          📌 Режим закрепления превью — наводите на ссылки. <b>T</b> / <b>Esc</b> — выход
+          <UiIcon symbol="📌" /> Режим закрепления превью — наводите на ссылки. <b>T</b> / <b>Esc</b> — выход
         </button>
       )}
     </Ctx.Provider>

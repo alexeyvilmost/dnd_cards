@@ -355,7 +355,7 @@ export default function SoloCombatPage({laboratory = false}: {laboratory?: boole
   const activeDetectMagic = state
     ? combatDetectMagicStatus(state, activeControlledActorId)
     : null;
-  const {secondaryActionId, setSecondaryActionId, selectedMovementTargetId, setSelectedMovementTargetId, selectedActionId, setSelectedActionId, selectedActionChoices, setSelectedActionChoices, selectedMultiTargetIds, setSelectedMultiTargetIds, selectedMissileDarts, setSelectedMissileDarts, movementMode, setMovementMode, dancingLightsMoveGroupId, setDancingLightsMoveGroupId, chooseAction, confirmMultipleTargets, clickCell, worldInputDialog} = useCombatTargetSelection({state, busy, playerTurn, activeControlledActorId, activeDancingLightsGroup, presentationBlockedRef, combatPassiveEnabled, applyIntent, requestSpellCastLevel, setError});
+  const {secondaryActionId, setSecondaryActionId, selectedMovementTargetId, setSelectedMovementTargetId, selectedActionId, setSelectedActionId, selectedActionChoices, setSelectedActionChoices, selectedMultiTargetIds, setSelectedMultiTargetIds, selectedMissileDarts, setSelectedMissileDarts, movementMode, setMovementMode, dancingLightsMoveGroupId, setDancingLightsMoveGroupId, cancelSelection, chooseAction, confirmMultipleTargets, clickCell, worldInputDialog} = useCombatTargetSelection({state, busy, playerTurn, activeControlledActorId, activeDancingLightsGroup, presentationBlockedRef, combatPassiveEnabled, applyIntent, requestSpellCastLevel, setError});
 
   const addSceneCharacter = async (characterId: string) => {
     if (!state || !character) throw new Error('Сцена ещё не загружена');
@@ -537,6 +537,7 @@ export default function SoloCombatPage({laboratory = false}: {laboratory?: boole
             highlightedActorId={hoveredActorId}
             onActorHover={setCombatHoveredActorId}
             onCell={clickCell}
+            onCancelSelection={cancelSelection}
             onFacing={!busy&&!presentation.blocked&&playerTurn&&!pending&&!pendingTriggered&&!pendingD20Interrupt?facing=>applyIntent({type:'facing',actorId:activeControlledActorId,facing},()=>selectCombatFacing(state,activeControlledActorId,facing)):undefined}
             onDeclineAdditionalMovement={state.pendingAdditionalMovement && !state.playerMovement
               && !busy && !pending && !pendingTriggered && !pendingD20Interrupt && !state.pendingInterception ? () => {

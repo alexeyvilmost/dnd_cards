@@ -1,8 +1,7 @@
 /* Opacity only: no transform/size changes that could disturb viewport fitting
    or the pointer while inspecting nested links in pinned previews. */
 .entity-preview-enter,
-.forge-effect-popover,
-.forge-entity-preview-pop {
+.forge-effect-popover {
   animation: entity-preview-appear 160ms ease-out;
 }
 @keyframes entity-preview-appear {
@@ -11,6 +10,5 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .entity-preview-enter,
-  .forge-effect-popover,
-  .forge-entity-preview-pop { animation: none; }
+  .forge-effect-popover { animation: none; }
 }

@@ -1327,7 +1327,7 @@ function RulesLabScenarioScreen({
           <h2 id="rules-lab-pending-title">Ожидающее решение</h2>
           {pendingTargetSave ? (
             <p data-testid="rules-lab-pending-detail">
-              {actorName(world, pendingTargetSave.targetActorId)} бросает {pendingTargetSave.request.ability.toUpperCase()}
+              {actorName(world, pendingTargetSave.targetActorId)} бросает {abilityFullRu(pendingTargetSave.request.ability)}
               {' '}против СЛ {pendingTargetSave.request.dc}. Источник: {actorName(world, pendingTargetSave.sourceActorId)}.
             </p>
           ) : pendingProtection ? (
@@ -1406,3 +1406,4 @@ function RulesLabRoute() {
 }
 
 export default RulesLabRoute;
+import {abilityFullRu} from '../engine/describeMechanics';

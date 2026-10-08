@@ -1,3 +1,4 @@
+import {IconLabel} from './UiIcon';
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -219,7 +220,7 @@ const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({ onClose }) => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {slot.name}
+                        <IconLabel text={slot.name} />
                       </h3>
                       <p className="text-gray-600 text-sm">
                         {slot.description}

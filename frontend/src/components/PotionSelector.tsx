@@ -1,3 +1,4 @@
+import {IconLabel} from './UiIcon';
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -175,7 +176,7 @@ const PotionSelector: React.FC<PotionSelectorProps> = ({ onClose }) => {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-gray-900">
-                        {category.name}
+                        <IconLabel text={category.name} />
                       </h3>
                       <p className="text-gray-600 text-sm">
                         {category.description}
@@ -198,7 +199,7 @@ const PotionSelector: React.FC<PotionSelectorProps> = ({ onClose }) => {
           <div>
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                {categories.find(cat => cat.id === selectedCategory)?.name}
+                <IconLabel text={categories.find(cat => cat.id === selectedCategory)?.name} />
               </h2>
               <p className="text-gray-600">
                 {categories.find(cat => cat.id === selectedCategory)?.description}

@@ -1,3 +1,4 @@
+import UiIcon from './UiIcon';
 import React, { useState } from 'react';
 import { Wand2, Loader2, AlertCircle, CheckCircle, Gamepad2, BookOpen } from 'lucide-react';
 import { imagesApi, type ImageGenerationStyle, type ImageGenerationQuality } from '../api/imagesApi';
@@ -297,7 +298,7 @@ const ImageGenerator: React.FC<ImageGeneratorProps> = ({
 
       {!entityId && !onCreateEntity && (
         <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
-          💡 Сначала сохраните карту, чтобы сгенерировать для неё изображение
+          <UiIcon symbol="💡" /> Сначала сохраните карту, чтобы сгенерировать для неё изображение
         </div>
       )}
 

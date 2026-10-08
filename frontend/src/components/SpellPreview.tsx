@@ -15,6 +15,7 @@ import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics'
 import { formatFormulaDisplay } from '../engine/formula';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
+import UiIcon from './UiIcon';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -71,7 +72,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
   // Meta-элементы (только релевантные)
   const meta: Array<[string, string]> = [];
-  if (spell.range) meta.push(['🎯', spell.range]);
+  if (spell.range) meta.push(['range', spell.range]);
   if (spell.area) meta.push(['⊙', spell.area]);
   if (spell.duration) meta.push(['⏱', spell.duration]);
   if (spell.concentration) meta.push(['◈', 'Концентрация']);
@@ -206,7 +207,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         <div className="sp-meta">
           {meta.map(([icon, label], i) => (
             <span key={i}>
-              <i>{icon}</i>
+              <UiIcon symbol={icon} />
               {label}
             </span>
           ))}

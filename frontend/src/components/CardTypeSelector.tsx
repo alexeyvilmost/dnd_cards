@@ -1,3 +1,4 @@
+import {IconLabel} from './UiIcon';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -146,7 +147,7 @@ const CardTypeSelector: React.FC<CardTypeSelectorProps> = ({ onClose }) => {
               >
                 <div className="mb-4">
                   <h3 className="text-xl font-semibold text-gray-900">
-                    {type.name}
+                    <IconLabel text={type.name} />
                   </h3>
                 </div>
                 <p className="text-gray-600 text-sm">

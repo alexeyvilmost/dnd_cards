@@ -16,6 +16,7 @@ import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { getPropertyLabel } from '../utils/propertyLabels';
 import {actionUsagePreview} from '../engine/actionUsagePreview';
 import type {RuntimeState} from '../mvp/contracts';
+import UiIcon from './UiIcon';
 
 interface ActionPreviewProps {
   action: Action;
@@ -45,7 +46,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
     ? (ACTION_RECHARGE_OPTIONS.find((o) => o.value === action.recharge)?.label || action.recharge)
     : '';
 
-  const subtype = sourceLabel || [actionTypeLabel, action.distance].filter(Boolean).join(' · ');
+  const subtype = sourceLabel || actionTypeLabel;
 
   const stats = parseMechanicsStats(action.mechanics as Record<string, unknown> | null | undefined);
   // Контекстные оружейные числа (wp) имеют приоритет над обобщённой механикой для атаки/урона.
@@ -64,6 +65,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
 
   // Мета-строка
   const meta: Array<[string, string]> = [];
+  if (action.distance) meta.push(['range', action.distance]);
   if (rechargeLabel) {
     meta.push(['⟳', rechargeLabel + (action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : '')]);
   }
@@ -145,7 +147,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
             ? `дальний ${wp.normalRangeFt ?? '?'} / ${wp.longRangeFt ?? '?'} фт`
             : `рукопашный · досягаемость ${wp.reachFt ?? 5} фт`}</div>
           {!!wp.properties?.length && <div><strong>Свойства:</strong> {wp.properties.map(getPropertyLabel).join(', ')}</div>}
-          {mastery && <div aria-description={mastery.description ?? undefined}><strong>Мастерство:</strong> {mastery.name}</div>}
+          {mastery && <div><strong>Мастерство:</strong> <FormattedText onDark text={`[[${mastery.name}|effect:${mastery.id}]]`} /></div>}
         </div>
       )}
 
@@ -174,7 +176,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
       {meta.length > 0 && (
         <div className="sp-meta">
           {meta.map(([icon, label], i) => (
-            <span key={i}><i>{icon}</i>{label}</span>
+            <span key={i}><UiIcon symbol={icon} />{label}</span>
           ))}
         </div>
       )}

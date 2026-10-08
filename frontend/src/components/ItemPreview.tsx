@@ -17,6 +17,7 @@ import { useContainerTotals, useResolvedRefs } from './RelatedItems';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
+import UiIcon from './UiIcon';
 
 // Третий режим отображения предмета (entityDisplay.items='interface'): стат-блок в стиле превью
 // ЗАКЛИНАНИЯ (тёмный BG3, классы .sp-*, общий SPELL_CARD_CSS), но с полями ПРЕДМЕТА. Порядок полей —
@@ -126,7 +127,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
           {mastery && (
             <div className="sp-srow">
               <span className="sp-lbl">Мастерство:</span>
-              <span className="sp-bonus" aria-description={mastery.description ?? undefined}>{mastery.name}</span>
+              <span className="sp-bonus"><FormattedText onDark text={`[[${mastery.name}|effect:${mastery.id}]]`} /></span>
             </div>
           )}
           {dmgEntries.length > 0 && (
@@ -190,7 +191,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
             <span key={i}>
               {m.img
                 ? <img className="sp-metaicon" src={m.img} alt="" style={m.imgStyle} />
-                : <i>{m.emoji}</i>}
+                : <UiIcon symbol={m.emoji ?? '✦'} />}
               {m.label}
             </span>
           ))}

@@ -87,7 +87,7 @@ export async function generateImageRequest<T>(client:AxiosInstance,route:string,
   if(response.status!==202)throw new ImageAPIError('Сервер не подтвердил фоновое задание. Проверьте историю генерации.','image_job_invalid','persistence',id,undefined,'unknown');
   let job=(response.data as {job:ImageJob}).job;
   notify();const deadline=Date.now()+10*60_000;
-  while(true){
+  for(;;){
     assertIdentity();
     if(!job||job.id!==id||!['queued','running','succeeded','failed','unknown'].includes(job.state))throw new ImageAPIError('Не удалось подтвердить статус задания. Проверьте историю генерации.','image_job_invalid','persistence',id,undefined,'unknown');
     if(job.state==='succeeded'){

@@ -1,5 +1,5 @@
-import { previewAnchor } from '../../utils/previewAnchor';
 import { useState, type ReactNode } from 'react';
+import HoverCard from '../HoverCard';
 import type { SupportableEntity } from '../../content/supportStatus';
 import SupportStatusBadge from './SupportStatusBadge';
 
@@ -18,21 +18,11 @@ type EntitySquareCardProps = {
 
 const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled, disabledReason, supportEntity }: EntitySquareCardProps) => {
   const [failed, setFailed] = useState(false);
-  const [hover, setHover] = useState(false);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
   const url = imageUrl?.trim();
   const showImage = url && !failed;
   const longName = name.length > 12;
 
-  const onEnter = (e: React.MouseEvent) => {
-    if (preview) {
-      setHover(true);
-      setPos(previewAnchor(e.currentTarget));
-    }
-  };
-
-  return (
-    <>
+  const card = (
       <button
         type="button"
         className={`forge-square-card ${selected ? 'selected' : ''}${disabled ? ' disabled' : ''}`}
@@ -41,8 +31,6 @@ const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled
         aria-disabled={disabled || undefined}
         data-image-state={url ? (failed ? 'error' : 'declared') : 'missing'}
         onClick={disabled ? undefined : onClick}
-        onMouseEnter={onEnter}
-        onMouseLeave={() => setHover(false)}
       >
         <div className="forge-square-card-media">
           {showImage ? (
@@ -54,20 +42,8 @@ const EntitySquareCard = ({ name, imageUrl, selected, onClick, preview, disabled
         <span className={`forge-square-card-label${longName ? ' long' : ''}`}>{name}</span>
         {supportEntity && <SupportStatusBadge entity={supportEntity} compact />}
       </button>
-      {hover && preview && (
-        <div
-          className="forge-entity-preview-pop"
-          style={{
-            left: Math.min(pos.x + 16, window.innerWidth - 340),
-            top: Math.min(Math.max(pos.y - 40, 10), window.innerHeight - 20),
-            transform: pos.y > window.innerHeight / 2 ? 'translateY(-100%)' : 'translateY(0)',
-          }}
-        >
-          {preview}
-        </div>
-      )}
-    </>
   );
+  return preview ? <HoverCard content={preview}>{card}</HoverCard> : card;
 };
 
 export default EntitySquareCard;

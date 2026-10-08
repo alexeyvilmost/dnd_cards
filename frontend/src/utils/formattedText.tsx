@@ -247,10 +247,12 @@ const renderParsedNodes = (
           key={key}
           className="ft-link"
           content={<EntityRefPreview type={node.refType} id={node.refId} />}
-          onClick={onOpenRef ? () => onOpenRef(node.refType, node.refId) : undefined}
           disabled={disableHoverPreviews}
         >
-          {armorClassTerminology(node.label)}
+          <a href={`/entity/${({card:'cards', spell:'spells', action:'actions', effect:'effects', concept:'concepts', feat:'feats', race:'races', class:'classes', background:'backgrounds', resource:'resources', variable:'variables'} as const)[node.refType]}/${encodeURIComponent(node.refId)}`}
+            style={{color:'inherit',textDecoration:'inherit'}} onClick={onOpenRef ? event => {event.preventDefault(); onOpenRef(node.refType,node.refId);} : undefined}>
+            {armorClassTerminology(node.label)}
+          </a>
         </HoverCard>
       );
     }

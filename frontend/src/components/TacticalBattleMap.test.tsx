@@ -29,6 +29,22 @@ describe('TacticalBattleMap world-object clarity', () => {
     root = createRoot(container);
   });
 
+  it.each([false, true])('cancels targeting on a battlefield right click (3D: %s) without submitting a cell action', async combat3d => {
+    renderer.combat3d = combat3d;
+    const base = structuredClone(compiled.roots.magicInitiateFighter.actor);
+    const state = {world:{actors:{hero:{...base,id:'hero'}},objects:{},scene:{mode:'encounter',initiative:['hero'],activeIndex:0,round:1}},
+      tokens:{hero:{actorId:'hero',position:{x:1,y:1}}},characterId:'hero',sideByActorId:{hero:'party'},catalogActions:[],combatAreas:{}} as unknown as SoloCombatState;
+    const onCancelSelection = vi.fn(), onCell = vi.fn();
+    await act(async () => root.render(<TacticalBattleMap state={state} actorId="hero" selectedActionId={null}
+      movementMode={false} onCell={onCell} onCancelSelection={onCancelSelection}/>));
+    const map = container.querySelector('[data-testid="battle-map-3d"], [data-testid="tactical-map-viewport"]')!;
+    const event = new MouseEvent('contextmenu', {bubbles:true,cancelable:true,button:2});
+    await act(async () => map.dispatchEvent(event));
+    expect(event.defaultPrevented).toBe(true);
+    expect(onCancelSelection).toHaveBeenCalledOnce();
+    expect(onCell).not.toHaveBeenCalled();
+  });
+
   it.each(['switch', 'fallback'] as const)('centers a real 2D viewport after initial 3D %s without stale fit flags', async(mode)=>{
     const frames=new Map<number,FrameRequestCallback>();
     let sequence=0;

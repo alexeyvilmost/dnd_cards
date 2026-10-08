@@ -61,6 +61,7 @@ export default function TacticalBattleMap({
   inspectedActorId,
   highlightedActorId,
   onCell,
+  onCancelSelection,
   onInspectActor,
   onActorHover,
   onDeclineAdditionalMovement,
@@ -80,6 +81,7 @@ export default function TacticalBattleMap({
   inspectedActorId?: string | null;
   highlightedActorId?: string | null;
   onCell: (position: GridPosition, actorId?: string) => void;
+  onCancelSelection?: () => void;
   onInspectActor?: (actorId: string) => void;
   onActorHover?: (actorId: string | null) => void;
   onDeclineAdditionalMovement?: () => void;
@@ -413,7 +415,7 @@ export default function TacticalBattleMap({
         area.heavilyObscured ? 'Сильно заслонённая область' : null,
         area.blocksVerbalComponents ? 'Блокирует вербальные компоненты' : null,
         area.hazard?.resolution === 'save'
-          ? `Опасность: спасбросок ${area.hazard.save.ability.toUpperCase()} СЛ ${area.hazard.save.dc}`
+          ? `Опасность: спасбросок ${abilityFullRu(area.hazard.save.ability)} СЛ ${area.hazard.save.dc}`
           : area.hazard?.resolution === 'automatic' ? 'Опасность без спасброска' : null,
         ...combatAreaHazardLines(area),
         area.triggers.length
@@ -470,7 +472,11 @@ export default function TacticalBattleMap({
             </div>, document.body)}
   </>;
 
-  if (combat3d && !rendererError) return <div className="battle-map-3d" data-testid="battle-map-3d">
+  if (combat3d && !rendererError) return <div className="battle-map-3d" data-testid="battle-map-3d" onContextMenu={event => {
+    if (!onCancelSelection) return;
+    event.preventDefault();
+    onCancelSelection();
+  }}>
     <BattleSceneBoundary onUnavailable={setRendererError}>
       <Suspense fallback={<div className="battle-map-3d-loading" role="status">Подготавливаем поле с монетками…</div>}>
         <BattleScene state={state} actorId={actorId} activeId={activeId} feedback={feedback ?? null}
@@ -501,6 +507,11 @@ export default function TacticalBattleMap({
         onActorHover?.(null);
       }}
       aria-label="Поле боя"
+      onContextMenu={event => {
+        if (!onCancelSelection) return;
+        event.preventDefault();
+        onCancelSelection();
+      }}
       aria-description={`Масштаб ${Math.round(zoom * 100)}% · колесо меняет масштаб · перетаскивание двигает карту · Home возвращает к персонажу`}
       onKeyDown={event => {
         if (event.target !== event.currentTarget) return;
@@ -672,3 +683,4 @@ export default function TacticalBattleMap({
     </div>
   );
 }
+import {abilityFullRu} from '../engine/describeMechanics';

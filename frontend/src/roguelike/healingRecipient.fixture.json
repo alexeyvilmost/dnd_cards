@@ -1,0 +1,64 @@
+{
+  "id": "8d98d8f6-7085-48cd-b2a4-1f18cd8470d9",
+  "name": "Лечение ран",
+  "mechanics": {
+    "effects": [
+      {
+        "who": "target",
+        "result": [
+          {
+            "kind": "healing",
+            "amount": "2d8 + spellcasting",
+            "scaling": {
+              "per": "spell_slot_above",
+              "dice": "2d8"
+            }
+          }
+        ],
+        "resolution": "auto"
+      }
+    ],
+    "targeting": {
+      "range": "Касание",
+      "shape": "single",
+      "domain": "actor",
+      "filter": "any",
+      "range_ft": 5,
+      "max_targets": 1,
+      "min_targets": 1,
+      "actor_targets": true,
+      "requires_touch": true,
+      "allowed_relations": [
+        "self",
+        "ally",
+        "enemy",
+        "neutral"
+      ],
+      "requires_line_of_sight": false
+    },
+    "activation": {
+      "cost": [
+        {
+          "resource": "action"
+        },
+        {
+          "level": 1,
+          "amount": 1,
+          "resource": "spell_slot"
+        }
+      ],
+      "mode": "active",
+      "cast_time": {
+        "unit": "action",
+        "amount": 1
+      }
+    },
+    "spell_class_list_ids": [
+      "CLASS-bard",
+      "CLASS-cleric",
+      "CLASS-druid",
+      "CLASS-paladin",
+      "CLASS-ranger"
+    ]
+  }
+}

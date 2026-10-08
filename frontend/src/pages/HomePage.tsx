@@ -8,6 +8,20 @@ const catalogParams = new Set(['type', 'q', 'search', 'card', 'rarity', 'raritie
   'effect', 'template', 'slot', 'armor', 'resource', 'sort', 'view', 'spellLevel', 'spellClass', 'spellSubclass', 'spellSchool',
   'concentration', 'ritual', 'featCategory', 'repeatable', 'featAbility', 'backgroundAbility', 'backgroundSkill']);
 
+const librarySections = [
+  { label: 'Предметы', path: '/library' },
+  { label: 'Заклинания', path: '/library?type=spells' },
+  { label: 'Действия', path: '/library?type=actions' },
+  { label: 'Эффекты', path: '/library?type=effects' },
+  { label: 'Черты', path: '/library?type=feats' },
+  { label: 'Виды', path: '/library?type=races' },
+  { label: 'Классы', path: '/library?type=classes' },
+  { label: 'Предыстории', path: '/library?type=backgrounds' },
+  { label: 'Монстры', path: '/monsters' },
+  { label: 'Ресурсы', path: '/library?type=resources' },
+  { label: 'Понятия', path: '/library?type=concepts' },
+];
+
 export default function HomePage() {
   const location = useLocation();
   if ([...new URLSearchParams(location.search).keys()].some(key => catalogParams.has(key))) {
@@ -28,17 +42,9 @@ export default function HomePage() {
           <p>Всё, что может встретиться за игровым столом.</p>
 
         </div>
-        <nav className="home-bookshelf" aria-label="Книги библиотеки">
-          <img src="/images/home/bookshelf.png" alt="" className="home-bookshelf__art" />
-          <div className="home-bookshelf__books">
-            {[
-              ['Предметы', '/library'], ['Заклинания', '/library?type=spells'],
-              ['Действия', '/library?type=actions'], ['Эффекты', '/library?type=effects'],
-              ['Черты', '/library?type=feats'], ['Виды', '/library?type=races'],
-              ['Классы', '/library?type=classes'], ['Предыстории', '/library?type=backgrounds'],
-              ['Монстры', '/monsters'], ['Ресурсы', '/library?type=resources'], ['Понятия', '/library?type=concepts'],
-            ].map(([label,path]) => <Link key={path} to={path} className="home-book"><span>{label}</span></Link>)}
-          </div>
+        <nav className="home-library-links" aria-label="Разделы библиотеки">
+          {librarySections.map(({ label, path }) =>
+            <Link key={path} to={path} className="home-library-link">{label}<ArrowUpRight size={14} aria-hidden="true" /></Link>)}
         </nav>
       </section>
       <section className="home-tile home-tile-interactive" aria-labelledby="home-characters-title">

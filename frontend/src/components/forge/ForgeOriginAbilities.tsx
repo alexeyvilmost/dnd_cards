@@ -6,12 +6,13 @@ type Props = {
   assembled: AssembledCharacter;
   kind: 'race' | 'class';
   fallbackImageUrl?: string | null;
+  hiddenOriginIds?: string[];
 };
 
-const ForgeOriginAbilities = ({ assembled, kind, fallbackImageUrl }: Props) => {
+const ForgeOriginAbilities = ({ assembled, kind, fallbackImageUrl, hiddenOriginIds = [] }: Props) => {
   const { entityDisplay, hideTechnicalAbilities } = useSiteSettings();
-  const effects = (assembled.effects || []).filter((e) => e.origin.kind === kind && (!hideTechnicalAbilities || !e.effect.is_technical));
-  const actions = (assembled.actions || []).filter((a) => a.origin.kind === kind);
+  const effects = (assembled.effects || []).filter((e) => e.origin.kind === kind && !hiddenOriginIds.includes(e.origin.id) && (!hideTechnicalAbilities || !e.effect.is_technical));
+  const actions = (assembled.actions || []).filter((a) => a.origin.kind === kind && !hiddenOriginIds.includes(a.origin.id));
   if (!effects.length && !actions.length) return null;
 
   const effectTitle = kind === 'race' ? 'Видовые особенности' : 'Классовые особенности';

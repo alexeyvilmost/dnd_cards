@@ -1,7 +1,7 @@
 export { ChoiceResolver } from './ChoiceResolver';
 export { optionsForChoice, choiceOptionIdByReference, featForChoiceOption } from './choiceOptions';
 export type { ChoiceOption } from './choiceOptions';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {useSiteSettings} from '../settings';
 import { labelOf, SKILLS } from '../mechanics/registries';
 import { requiresInitialCharacterChoice, type PendingChoice } from '../mechanics/collectChoices';
@@ -20,7 +20,7 @@ import {
 } from './pointBuy';
 import NavRail from '../components/NavRail';
 import ForgeEntityIcon from '../components/forge/ForgeEntityIcon';
-import ForgeAbilityLine from '../components/forge/ForgeAbilityLine';
+import ForgeAbilityDisplay from '../components/forge/ForgeAbilityDisplay';
 import ForgeSpellIconGrid from '../components/forge/ForgeSpellIconGrid';
 
 // ─── Левая навигация ─────────────────────────────────────────────────────────
@@ -192,8 +192,29 @@ export function useAutoRecommendedChoices(
 
 const fmtMod = (v: number) => (v >= 0 ? `+${v}` : `${v}`);
 
+function AbilityBaseInput({value, label, onCommit}: {value:number; label:string; onCommit:(value:number)=>boolean}) {
+  const [text,setText]=useState(String(value));
+  const [error,setError]=useState('');
+  useEffect(()=>{setText(String(value));setError('');},[value]);
+  const commit=()=>{
+    const parsed=/^\d+$/.test(text.trim())?Number(text):NaN;
+    if (!Number.isInteger(parsed)||parsed<POINT_BUY_MIN||parsed>POINT_BUY_MAX) {
+      setText(String(value));setError('Введите число от 8 до 15.');
+    } else if (!onCommit(parsed)) {
+      setText(String(value));setError('Не хватает очков.');
+    } else setError('');
+  };
+  return <span className="forge-base-input-wrap">
+    <input type="text" inputMode="numeric" className="forge-base-input" aria-label={`База: ${label}`}
+      aria-description="Число от 8 до 15. Нажмите, чтобы изменить." value={text}
+      onFocus={e=>{setError('');e.currentTarget.select();}} onChange={e=>setText(e.target.value)} onBlur={commit}
+      onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();e.currentTarget.blur();} if(e.key==='Escape'){setText(String(value));setError('');}}}/>
+    {error&&<span role="status" className="forge-base-input-error">{error}</span>}
+  </span>;
+}
+
 export function AbilityAssigner({
-  abilities, method, bonuses, backgroundName, backgroundAbilities,
+  abilities, method, bonuses, backgroundAbilities,
   recommended, onSet, onSetAll, onMethodChange, onBonusesChange,
 }: {
   /** Итоговые значения (база + бонус предыстории). */
@@ -213,9 +234,22 @@ export function AbilityAssigner({
   const pointBuy = method === 'point_buy';
   const remaining = pointsRemaining(abilities, bonuses);
 
+  useEffect(() => {
+    if (!pointBuy || ABILITY_KEYS.every(key => typeof abilities[key] === 'number')) return;
+    const initial = {...abilities};
+    for (const key of ABILITY_KEYS) initial[key] ??= POINT_BUY_MIN + bonusOf(bonuses,key);
+    onSetAll(initial);
+  }, [pointBuy, abilities, bonuses, onSetAll]);
+
   const setBase = (k: AbilityKey, base: number) => {
-    const clamped = Math.min(POINT_BUY_MAX, Math.max(POINT_BUY_MIN, base));
-    onSet(k, clamped + bonusOf(bonuses, k));
+    if (!Number.isInteger(base)||base<POINT_BUY_MIN||base>POINT_BUY_MAX) return false;
+    const current=baseOf(abilities,bonuses,k)??POINT_BUY_MIN;
+    if ((pointCost(base)??0)-(pointCost(current)??0)>remaining) return false;
+    const next = {...abilities};
+    for (const ability of ABILITY_KEYS) next[ability] ??= POINT_BUY_MIN + bonusOf(bonuses, ability);
+    next[k] = base + bonusOf(bonuses, k);
+    onSetAll(next);
+    return true;
   };
 
   const applyRecommended = () => {
@@ -238,131 +272,71 @@ export function AbilityAssigner({
     onSetAll(reapplyBonuses(abilities, bonuses, next));
   };
 
-  const allowedBonusAbilities: AbilityKey[] = bonuses.anyAbilities || !backgroundAbilities.length
+  const allowedBonusAbilities: AbilityKey[] = bonuses.anyAbilities
     ? ABILITY_KEYS
     : backgroundAbilities;
-
-  /** Клик по чипу бонуса: two_one цикл — нет → +2 → +1 → нет; one_one_one — toggle +1 (макс 3). */
-  const cycleBonus = (k: AbilityKey) => {
-    const a = { ...bonuses.assignments };
-    const cur = a[k] ?? 0;
-    if (bonuses.mode === 'two_one') {
-      const hasTwo = Object.entries(a).some(([key, v]) => key !== k && v === 2);
-      const hasOne = Object.entries(a).some(([key, v]) => key !== k && v === 1);
-      if (cur === 0) a[k] = hasTwo ? (hasOne ? 0 : 1) : 2;
-      else if (cur === 2) a[k] = hasOne ? 0 : 1;
-      else delete a[k];
-      if (a[k] === 0) delete a[k];
-    } else {
-      if (cur) delete a[k];
-      else if (Object.values(a).filter(Boolean).length < 3) a[k] = 1;
-    }
-    changeBonuses({ ...bonuses, assignments: a });
+  const nextBonus=(key:AbilityKey,value:number):AbilityBonuses=>{
+    const assignments = {...bonuses.assignments};
+    if(assignments[key]===value) delete assignments[key];
+    else assignments[key]=value;
+    return {...bonuses,assignments,mode:Object.values(assignments).includes(2)?'two_one':'one_one_one'};
   };
-
-  const switchMode = (mode: AbilityBonuses['mode']) => {
-    if (mode === bonuses.mode) return;
-    changeBonuses({ ...bonuses, mode, assignments: {} });
+  const bonusAvailable=(key:AbilityKey,value:number)=>{
+    if (!allowedBonusAbilities.includes(key)) return false;
+    const values=Object.values(nextBonus(key,value).assignments).filter(Boolean);
+    const twos=values.filter(v=>v===2).length;
+    const ones=values.filter(v=>v===1).length;
+    return twos<=1 && ones<=(twos?1:3);
   };
-
-  return (
-    <div>
-      <div className="chips" style={{ marginBottom: 10 }}>
-        <button type="button" className={`chip ${pointBuy ? 'on' : ''}`} onClick={() => onMethodChange('point_buy')}>
-          Point-buy ({POINT_BUY_BUDGET} очков)
-        </button>
-        <button type="button" className={`chip ${!pointBuy ? 'on' : ''}`} onClick={() => onMethodChange('manual')}>
-          Ручной ввод
-        </button>
-      </div>
-
-      {pointBuy && (
-        <>
-          <div className="forge-note" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <span>
-              Осталось очков: <b className={remaining < 0 ? 'pb-over' : ''}>{remaining}</b> из {POINT_BUY_BUDGET}
-            </span>
-            <button type="button" className="chip rec" onClick={applyRecommended}
-              disabled={!Object.keys(recommended).length}
-              aria-description={Object.keys(recommended).length ? 'Заполнить оптимальным раскладом класса' : 'Сначала выберите класс'}>
-              Оптимально для класса
-            </button>
-            <button type="button" className="chip" onClick={resetBases}>Сбросить (все 8)</button>
-          </div>
-
-          {ABILITY_KEYS.map((k) => {
-            const base = baseOf(abilities, bonuses, k);
-            const bonus = bonusOf(bonuses, k);
-            const final = abilities[k];
-            const cost = typeof base === 'number' ? pointCost(base) : undefined;
-            return (
-              <div key={k} className="ab-row">
-                <span className="name">{ABILITY_LABEL_RU[k]}</span>
-                <span className="pb-ctrl">
-                  <button type="button" className="pb-btn" disabled={(base ?? POINT_BUY_MIN) <= POINT_BUY_MIN}
-                    onClick={() => setBase(k, (base ?? POINT_BUY_MIN) - 1)}>−</button>
-                  <span className="pb-base">{typeof base === 'number' ? base : '—'}</span>
-                  <button type="button" className="pb-btn"
-                    disabled={(base ?? POINT_BUY_MIN) >= POINT_BUY_MAX
-                      || (typeof base === 'number' && (pointCost(base + 1) ?? 99) - (cost ?? 0) > remaining)}
-                    onClick={() => setBase(k, (base ?? POINT_BUY_MIN - 1) + 1)}>+</button>
-                </span>
-                {bonus > 0 && <span className="pb-bonus">+{bonus}</span>}
-                <span className="pb-final">{typeof final === 'number' ? final : ''}</span>
-                <span className="mod">{typeof final === 'number' ? fmtMod(abilityMod(final)) : ''}</span>
-              </div>
-            );
-          })}
-        </>
-      )}
-
-      {!pointBuy && ABILITY_KEYS.map((k) => {
-        const cur = abilities[k];
-        return (
-          <div key={k} className="ab-row">
-            <span className="name">{ABILITY_LABEL_RU[k]}</span>
-            <input
-              type="number" min={1} max={30}
-              value={typeof cur === 'number' ? cur : ''}
-              onChange={(e) => onSet(k, e.target.value === '' ? undefined : parseInt(e.target.value, 10))}
-              style={{ width: 80 }}
-            />
-            <span className="mod">{typeof cur === 'number' ? fmtMod(abilityMod(cur)) : ''}</span>
-          </div>
-        );
-      })}
-
-      <div className="choice-box" style={{ marginTop: 14 }}>
-        <div className="choice-title">
-          Бонусы предыстории{backgroundName ? ` · ${backgroundName}` : ''}
-        </div>
-        <div className="chips" style={{ marginBottom: 6 }}>
-          <button type="button" className={`chip ${bonuses.mode === 'two_one' ? 'on' : ''}`}
-            onClick={() => switchMode('two_one')}>+2 / +1</button>
-          <button type="button" className={`chip ${bonuses.mode === 'one_one_one' ? 'on' : ''}`}
-            onClick={() => switchMode('one_one_one')}>+1 / +1 / +1</button>
-        </div>
-        <div className="chips">
-          {allowedBonusAbilities.map((k) => {
-            const v = bonuses.assignments[k] ?? 0;
-            return (
-              <button key={k} type="button" className={`chip ${v ? 'on' : ''}`} onClick={() => cycleBonus(k)}>
-                {ABILITY_LABEL_RU[k]}{v ? ` +${v}` : ''}
-              </button>
-            );
-          })}
-        </div>
-        <label className="forge-note" style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
-          <input
-            type="checkbox"
-            checked={bonuses.anyAbilities}
-            onChange={(e) => changeBonuses({ ...bonuses, anyAbilities: e.target.checked, assignments: {} })}
-          />
-          Разрешить любые характеристики (не только предыстории)
-        </label>
-      </div>
+  const hints: Record<AbilityKey,string> = {
+    str:'Сила удара и атлетика', dex:'Ловкость, защита и инициатива', con:'Здоровье и выносливость',
+    int:'Знания и рассуждение', wis:'Восприятие и интуиция', cha:'Общение и влияние',
+  };
+  return <div className="forge-ability-workbench">
+    <div className="forge-ability-methods" role="group" aria-label="Способ распределения характеристик">
+      <button type="button" className={`chip ${pointBuy?'on':''}`} aria-pressed={pointBuy} onClick={() => onMethodChange('point_buy')}>Покупка очков</button>
+      <button type="button" className={`chip ${!pointBuy?'on':''}`} aria-pressed={!pointBuy} onClick={() => onMethodChange('manual')}>Ручной ввод</button>
     </div>
-  );
+    {pointBuy && <>
+      <div className="forge-points-budget">
+        <div><small>Осталось очков</small><strong className={remaining<0?'pb-over':''} aria-live="polite">{remaining}<span> / {POINT_BUY_BUDGET}</span></strong></div>
+        <div className="forge-points-budget__actions">
+          <button type="button" className="chip rec" onClick={applyRecommended} disabled={!Object.keys(recommended).length}
+            aria-description={Object.keys(recommended).length?'Распределить очки по рекомендациям выбранного класса':'Сначала выберите класс'}>Рекомендация класса</button>
+          <button type="button" className="chip" onClick={resetBases}>Начать с 8</button>
+        </div>
+      </div>
+      <div className="forge-point-meter" role="progressbar" aria-label="Потрачено очков" aria-valuemin={0} aria-valuemax={POINT_BUY_BUDGET} aria-valuenow={Math.min(POINT_BUY_BUDGET,Math.max(0,POINT_BUY_BUDGET-remaining))}>
+        <span style={{width:`${Math.min(100,Math.max(0,(POINT_BUY_BUDGET-remaining)/POINT_BUY_BUDGET*100))}%`}} />
+      </div>
+      <p className="forge-note">Каждая характеристика начинается с 8. Покупайте базу до 15. Шаги 13 → 14 и 14 → 15 стоят по 2 очка. Бонусы предыстории не тратят очки: выберите +2 и +1 или три бонуса по +1. Повторное нажатие снимает бонус.</p>
+    </>}
+    <div className="forge-ability-table">
+      <div className="forge-ability-heading" aria-hidden="true"><span>Характеристика</span><span>{pointBuy?'База':'Значение'}</span><span>Бонус</span><span>Итог</span><span>Модификатор</span></div>
+      {ABILITY_KEYS.map(k => {
+        const base = baseOf(abilities,bonuses,k) ?? POINT_BUY_MIN;
+        const bonus = bonusOf(bonuses,k);
+        const final = pointBuy ? (abilities[k] ?? base+bonus) : abilities[k];
+        const cost = pointCost(base) ?? 0;
+        const increaseCost = (pointCost(base+1) ?? 99)-cost;
+        return <div key={k} className="forge-ability-row">
+          <div className="forge-ability-name"><strong>{ABILITY_LABEL_RU[k]}</strong><small>{hints[k]}</small></div>
+          {pointBuy ? <div className="forge-ability-stepper">
+            <button type="button" aria-label={`Уменьшить: ${ABILITY_LABEL_RU[k]}`} disabled={base<=POINT_BUY_MIN} onClick={()=>setBase(k,base-1)}>−</button>
+            <AbilityBaseInput value={base} label={ABILITY_LABEL_RU[k]} onCommit={value=>setBase(k,value)}/>
+            <button type="button" aria-label={`Увеличить: ${ABILITY_LABEL_RU[k]}`} disabled={base>=POINT_BUY_MAX||increaseCost>remaining} aria-description={`Стоимость следующего шага: ${increaseCost} очк.`} onClick={()=>setBase(k,base+1)}>+</button>
+          </div> : <input aria-label={ABILITY_LABEL_RU[k]} type="number" min={1} max={30} value={abilities[k]??''} onChange={e=>onSet(k,e.target.value===''?undefined:parseInt(e.target.value,10))} />}
+          <div className="forge-ability-bonus"><small>Бонус</small><div className="forge-ability-bonus-buttons" role="group" aria-label={`Бонус предыстории: ${ABILITY_LABEL_RU[k]}`}>
+            {[1,2].map(value=><button key={value} type="button" aria-label={`Бонус +${value}: ${ABILITY_LABEL_RU[k]}`} aria-pressed={bonus===value}
+              className={bonus===value?'on':''} disabled={!bonusAvailable(k,value)} onClick={()=>changeBonuses(nextBonus(k,value))}>+{value}</button>)}
+          </div></div>
+          <strong className="forge-ability-total"><small>Итог</small>{final??'—'}</strong>
+          <span className="forge-ability-mod"><small>Модификатор</small>{typeof final==='number'?fmtMod(abilityMod(final)):'—'}</span>
+        </div>;
+      })}
+    </div>
+    <label className="forge-check"><input type="checkbox" checked={bonuses.anyAbilities} onChange={e=>changeBonuses({...bonuses,anyAbilities:e.target.checked,assignments:{}})} />Разрешить любые характеристики (не только предыстории)</label>
+  </div>;
 }
 
 // ─── Живая сводка «Основное» ─────────────────────────────────────────────────
@@ -379,19 +353,23 @@ export function SummaryPanel({
   /** Итоговые правила (с числовыми модификаторами эффектов) — приоритетны над derived. */
   ruleState?: CharacterRuleState;
 }) {
-  const {hideTechnicalAbilities}=useSiteSettings();
-  const race = assembled?.race;
-  const klass = assembled?.klass;
-  const background = assembled?.background;
-  const feats = assembled?.feats || [];
+  const {hideTechnicalAbilities, entityDisplay}=useSiteSettings();
+  const race = draft.raceId===assembled?.race?.id ? assembled.race : null;
+  const klass = draft.classId===assembled?.klass?.id ? assembled.klass : null;
+  const background = draft.backgroundId === assembled?.background?.id ? assembled.background : null;
+  const feats = (assembled?.feats || []).filter(feat => {
+    const oldOriginFeat = assembled?.background?.origin_feat;
+    return background || ![feat.id,feat.card_number].includes(oldOriginFeat ?? '') || draft.featIds.includes(feat.id);
+  });
   const lineageName = lineageNameProp
     ?? race?.lineages?.find(
       (l) => l.name === draft.lineageId || (l as { id?: string }).id === draft.lineageId,
     )?.name
     ?? (draft.lineageId && !/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(draft.lineageId) ? draft.lineageId : undefined);
 
-  const effectsByOrigin = (kind: string) => (assembled?.effects || []).filter((e) => e.origin.kind === kind && (!hideTechnicalAbilities || !e.effect.is_technical));
-  const actionsByOrigin = (kind: string) => (assembled?.actions || []).filter((a) => a.origin.kind === kind);
+  const selectedOrigin=(kind:string,id:string)=>kind==='race'?[draft.raceId,draft.lineageId].includes(id):kind==='class'?[draft.classId,...Object.keys(draft.classLevels??{}),draft.subclassId,...Object.values(draft.subclassIds??{})].includes(id):true;
+  const effectsByOrigin = (kind: string) => (assembled?.effects || []).filter((e) => e.origin.kind === kind && selectedOrigin(kind,e.origin.id) && (!hideTechnicalAbilities || !e.effect.is_technical));
+  const actionsByOrigin = (kind: string) => (assembled?.actions || []).filter((a) => a.origin.kind === kind && selectedOrigin(kind,a.origin.id));
 
   return (
     <div>
@@ -410,26 +388,14 @@ export function SummaryPanel({
         ) : (
           <span className="sum-value">—</span>
         )}
-        {effectsByOrigin('race').map((e) => (
-          <ForgeAbilityLine
-            key={e.effect.id}
-            name={e.effect.name}
-            imageUrl={e.effect.image_url}
-            fallbackImageUrl={race?.image_url}
-            sourceLabel={`Способность вида · ${e.origin.name}`}
-            effect={e.effect}
-          />
-        ))}
-        {actionsByOrigin('race').map((a) => (
-          <ForgeAbilityLine
-            key={a.action.id}
-            name={a.action.name}
-            imageUrl={a.action.image_url}
-            fallbackImageUrl={race?.image_url}
-            sourceLabel={`Действие вида · ${a.origin.name}`}
-            action={a.action}
-          />
-        ))}
+        <ForgeAbilityDisplay mode={entityDisplay.effects} entries={effectsByOrigin('race').map(e => ({
+          key:e.effect.id, name:e.effect.name, imageUrl:e.effect.image_url, fallbackImageUrl:race?.image_url,
+          sourceLabel:e.origin.name, effect:e.effect,
+        }))} />
+        <ForgeAbilityDisplay mode={entityDisplay.actions} entries={actionsByOrigin('race').map(a => ({
+          key:a.action.id, name:a.action.name, imageUrl:a.action.image_url, fallbackImageUrl:race?.image_url,
+          sourceLabel:a.origin.name, action:a.action,
+        }))} />
       </div>
 
       <hr className="sum-divider" />
@@ -444,26 +410,14 @@ export function SummaryPanel({
         ) : (
           <span className="sum-value">—</span>
         )}
-        {effectsByOrigin('class').map((e) => (
-          <ForgeAbilityLine
-            key={e.effect.id}
-            name={e.effect.name}
-            imageUrl={e.effect.image_url}
-            fallbackImageUrl={klass?.image_url}
-            sourceLabel={`Способность класса · ${e.origin.name}`}
-            effect={e.effect}
-          />
-        ))}
-        {actionsByOrigin('class').map((a) => (
-          <ForgeAbilityLine
-            key={a.action.id}
-            name={a.action.name}
-            imageUrl={a.action.image_url}
-            fallbackImageUrl={klass?.image_url}
-            sourceLabel={`Действие класса · ${a.origin.name}`}
-            action={a.action}
-          />
-        ))}
+        <ForgeAbilityDisplay mode={entityDisplay.effects} entries={effectsByOrigin('class').map(e => ({
+          key:e.effect.id, name:e.effect.name, imageUrl:e.effect.image_url, fallbackImageUrl:klass?.image_url,
+          sourceLabel:e.origin.name, effect:e.effect,
+        }))} />
+        <ForgeAbilityDisplay mode={entityDisplay.actions} entries={actionsByOrigin('class').map(a => ({
+          key:a.action.id, name:a.action.name, imageUrl:a.action.image_url, fallbackImageUrl:klass?.image_url,
+          sourceLabel:a.origin.name, action:a.action,
+        }))} />
       </div>
 
       <hr className="sum-divider" />
@@ -485,29 +439,13 @@ export function SummaryPanel({
               <ForgeEntityIcon imageUrl={f.image_url} alt={f.name} />
               <span>{f.name}</span>
             </span>
-            {featEffects.map((e) => {
-              const p = effectAbilityPresentation(e.effect, e.origin, [f]);
-              return (
-              <ForgeAbilityLine
-                key={e.effect.id}
-                name={p.name}
-                imageUrl={e.effect.image_url}
-                fallbackImageUrl={p.fallbackImageUrl ?? f.image_url}
-                sourceLabel={p.sourceLabel}
-                effect={p.effect}
-              />
-              );
-            })}
-            {featActions.map((a) => (
-              <ForgeAbilityLine
-                key={a.action.id}
-                name={a.action.name}
-                imageUrl={a.action.image_url}
-                fallbackImageUrl={f.image_url}
-                sourceLabel={`Действие черты · ${a.origin.name}`}
-                action={a.action}
-              />
-            ))}
+            <ForgeAbilityDisplay mode={entityDisplay.effects} entries={featEffects.map(e => {
+              const p = effectAbilityPresentation(e.effect,e.origin,[f]);
+              return {key:e.effect.id, name:p.name, imageUrl:e.effect.image_url, fallbackImageUrl:p.fallbackImageUrl ?? f.image_url, sourceLabel:p.sourceLabel, effect:p.effect};
+            })} />
+            <ForgeAbilityDisplay mode={entityDisplay.actions} entries={featActions.map(a => ({
+              key:a.action.id,name:a.action.name,imageUrl:a.action.image_url,fallbackImageUrl:f.image_url,sourceLabel:a.origin.name,action:a.action,
+            }))} />
           </div>
         );
       })}

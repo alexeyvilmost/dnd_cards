@@ -1,5 +1,8 @@
 import CanonicalPreview from '../components/CanonicalEntityPreview';
 import EntityReferences from '../components/EntityReferences';
+import EntityProgressionTable from '../components/EntityProgressionTable';
+import EntityOriginProfile from '../components/EntityOriginProfile';
+import type {Race,CharacterClass} from '../types';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
@@ -67,7 +70,7 @@ const isKind = (value: string | undefined): value is EntityKind => Boolean(value
 const asText = (value: unknown) => typeof value === 'string' ? value : '';
 const imageOf = (entity: Entity) => asText(entity.image_url || entity.token_url || entity.image_cloudinary_url);
 const pagePath = (kind: EntityKind, id: string) => kind === 'spells' ? `/spell/${encodeURIComponent(id)}` : `/entity/${kind}/${encodeURIComponent(id)}`;
-const libraryPath = (kind: EntityKind) => kind === 'monsters' ? '/monsters' : `/?type=${kind}`;
+const libraryPath = (kind: EntityKind) => kind === 'monsters' ? '/monsters' : `/library?type=${kind}`;
 
 function EntityImage({ src, name }: { src: string; name: string }) {
   const [failed, setFailed] = useState(false);
@@ -101,7 +104,7 @@ function visibleValue(key: string, value: unknown): string | null {
   if (value === null || value === undefined || value === '') return null;
   if (key === 'is_template' && (value === false || value === 'false')) return null;
   if (typeof value === 'boolean') return value ? 'Да' : null;
-  if (Array.isArray(value)) return value.every((entry) => typeof entry !== 'object') ? value.map((entry) => key === 'properties' ? getPropertyLabel(String(entry)) : String(entry)).join(', ') : null;
+  if (Array.isArray(value)) return value.every((entry) => typeof entry !== 'object') ? value.map((entry) => key === 'properties' ? getPropertyLabel(String(entry)) : ['primary_abilities','saving_throws'].includes(key) ? abilityFullRu(String(entry)) : String(entry)).join(', ') : null;
   if (typeof value === 'object') return null;
   if (key === 'rarity') return RARITY_OPTIONS.find((option) => option.value === value)?.label || String(value);
   if (key === 'school') return SPELL_SCHOOL_OPTIONS.find((option) => option.value === value)?.label || String(value);
@@ -240,7 +243,7 @@ export default function EntityPage({ fixedType }: { fixedType?: EntityKind }) {
     value && typeof value === 'object' && !COMPLEX_SKIP.has(key),
   ));
 
-  return <div className="entity-page">
+  return <div className={`entity-page ${kind==='races'||kind==='classes'?'entity-page--origin':''}`}>
     <div className="entity-page__inner">
       <header className="entity-page__head">
         <Link to={libraryPath(kind)} className="entity-page__back">← {LABELS[kind]}</Link>
@@ -260,6 +263,8 @@ export default function EntityPage({ fixedType }: { fixedType?: EntityKind }) {
             <details><summary>Дополнительные поля и механика</summary>{extraKeys.map(editField)}</details>
           </section>}
           <section className="entity-page__panel"><h2>Описание</h2><div className="entity-page__prose"><FormattedText text={asText(shown.description)} emptyText="Описание не добавлено" onOpenRef={openRelated} /></div></section>
+          {(kind==='races'||kind==='classes')&&<EntityOriginProfile kind={kind} entity={shown as unknown as Race|CharacterClass}/>}
+          {(kind==='races'||kind==='classes')&&<EntityProgressionTable kind={kind} entity={shown as unknown as Race|CharacterClass}/>}
           {kind === 'spells' && asText(shown.upcast_description).trim() && <section className="entity-page__panel"><h2>На высших уровнях</h2><div className="entity-page__prose"><FormattedText text={asText(shown.upcast_description)} onOpenRef={openRelated} /></div></section>}
           {kind === 'spells' && asText(shown.save_outcome).trim() && <section className="entity-page__panel"><h2>Результат спасброска</h2><div className="entity-page__prose"><FormattedText text={asText(shown.save_outcome)} onOpenRef={openRelated} /></div></section>}
           {asText(shown.detailed_description).trim() && <section className="entity-page__panel"><h2>Подробно</h2><div className="entity-page__prose"><FormattedText text={asText(shown.detailed_description)} onOpenRef={openRelated} /></div></section>}

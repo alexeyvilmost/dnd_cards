@@ -47,8 +47,9 @@ import type { Action } from '../types';
 export const FAMILIAR_TOUCH_DELIVERY_CHOICE_ID = 'combat_familiar_touch_delivery';
 export function hasManualTargetSlots(action:SoloCombatState['catalogActions'][number],castLevel?:number,actorLevel?:number):boolean {
   const targeting=action.mechanics.targeting as Record<string,unknown>|undefined;
-  return Boolean(action.targeting&&sheetCombatDeclarationPolicy(action,castLevel,actorLevel).maxTargets>1)&&targeting?.domain!=='world'&&targeting?.actor_targets!==false
-    &&targeting?.shape!=='area'&&targeting?.shape!=='self';
+  if (!action.targeting || targeting?.domain === 'world' || targeting?.actor_targets === false
+    || targeting?.shape === 'area' || targeting?.shape === 'self') return false;
+  return sheetCombatDeclarationPolicy(action,castLevel,actorLevel).maxTargets > 1;
 }
 
 function combatWorldInputContext(
@@ -99,6 +100,17 @@ export function useCombatTargetSelection({state, busy, playerTurn, activeControl
   const [selectedMissileDarts,setSelectedMissileDarts]=useState<Record<string,number>>({});
   const [movementMode, setMovementMode] = useState(false);
   const [dancingLightsMoveGroupId, setDancingLightsMoveGroupId] = useState<string | null>(null);
+  const cancelSelection = () => {
+    setSecondaryActionId(null);
+    setSelectedMovementTargetId(null);
+    setSelectedActionId(null);
+    setSelectedActionChoices({});
+    setSelectedMultiTargetIds([]);
+    setSelectedMissileDarts({});
+    setMovementMode(false);
+    setDancingLightsMoveGroupId(null);
+    setError(null);
+  };
   const requestCombatChoices = async (
     action: SoloCombatState['catalogActions'][number],
     targetActorId?: string,
@@ -459,5 +471,5 @@ export function useCombatTargetSelection({state, busy, playerTurn, activeControl
     } catch (reason) { setError(playerFacingSheetActionError(reason)); }
   };
 
-  return {secondaryActionId, setSecondaryActionId, selectedMovementTargetId, setSelectedMovementTargetId, selectedActionId, setSelectedActionId, selectedActionChoices, setSelectedActionChoices, selectedMultiTargetIds, setSelectedMultiTargetIds, selectedMissileDarts, setSelectedMissileDarts, movementMode, setMovementMode, dancingLightsMoveGroupId, setDancingLightsMoveGroupId, chooseAction, confirmMultipleTargets, clickCell, worldInputDialog};
+  return {secondaryActionId, setSecondaryActionId, selectedMovementTargetId, setSelectedMovementTargetId, selectedActionId, setSelectedActionId, selectedActionChoices, setSelectedActionChoices, selectedMultiTargetIds, setSelectedMultiTargetIds, selectedMissileDarts, setSelectedMissileDarts, movementMode, setMovementMode, dancingLightsMoveGroupId, setDancingLightsMoveGroupId, cancelSelection, chooseAction, confirmMultipleTargets, clickCell, worldInputDialog};
 }

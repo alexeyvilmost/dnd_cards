@@ -70,7 +70,7 @@ import { projectActionSurgeCost, projectQuickenedSpellCost } from '../engine/act
 import { deniedCapabilities } from '../engine/modifiers';
 import { plannedValuesRng, PLANNING_RNG } from '../engine/dicePlan';
 import { executeRemoteManipulator, readTargetSave, InsufficientResourcesError } from '../engine/execute';
-import { describeMechanicsLine } from '../engine/describeMechanics';
+import { describeMechanicsLine, abilityFullRu } from '../engine/describeMechanics';
 import {
   bindEquippedWeaponActionContext,
   equippedWeaponChoices,
@@ -2363,7 +2363,7 @@ export default function SheetActionsPanel({
         ability: save.ability, dc: save.dc, onFail, onSuccess,
         ...(save.avoidsConditions?.length ? { avoidsConditions: save.avoidsConditions } : {}),
       };
-      const ab = save.ability.toUpperCase();
+      const ab = abilityFullRu(save.ability);
       await sendEncounter({
         patches: [{ actor_id: cb.actorId, set: { pendingSaves: [...(cb.pendingSaves ?? []), pending] } }],
         log: [{
@@ -2387,7 +2387,7 @@ export default function SheetActionsPanel({
       const saved = sroll.outcome === 'success';
       await sendEncounter({
         patches: [{ actor_id: cb.actorId, set: { hp: newHp, temp: newTemp, activeEffects: newEff } }],
-        log: [{ message: `${cb.name}: спасбросок ${ability.toUpperCase()} — ${saved ? 'успех' : 'провал'}${hpDmg ? `, урон ${hpDmg}` : ''}` }],
+        log: [{ message: `${cb.name}: спасбросок ${abilityFullRu(ability)} — ${saved ? 'успех' : 'провал'}${hpDmg ? `, урон ${hpDmg}` : ''}` }],
       });
       encCombatantsRef.current = encCombatantsRef.current.map((c) =>
         c.actorId === cb.actorId ? { ...c, hp: newHp, temp: newTemp, activeEffects: newEff as unknown as Combatant['activeEffects'] } : c);
@@ -2589,7 +2589,7 @@ export default function SheetActionsPanel({
           // Персонаж — цель бросит спас сама. Журнал кастера — как обычный каст (rf.events содержат
           // и его само-эффекты, и бросок урона); цель отдельно залогирует фактически полученный урон.
           await emitPendingSave(targetCb, m, save, onFail, onSuccess);
-          const casterEvents: EngineEvent[] = [...rf.events, { type: 'narrative', text: `«${String(m.name ?? action.name)}» → ${targetCb.name}: спасбросок ${save.ability.toUpperCase()} СЛ ${save.dc} (цель бросает у себя)` }];
+          const casterEvents: EngineEvent[] = [...rf.events, { type: 'narrative', text: `«${String(m.name ?? action.name)}» → ${targetCb.name}: спасбросок ${abilityFullRu(save.ability)} СЛ ${save.dc} (цель бросает у себя)` }];
           return { state: rf.state, events: casterEvents, pending: rf.pendingReactions ?? [], commitTarget: undefined, targetId };
         }
         // Монстр (нет листа): кастер катит спас монстра (мод — из поля «Спас цели») и применяет дельту.
@@ -2598,7 +2598,7 @@ export default function SheetActionsPanel({
         }
         const sroll = rollD20({ modifiers: [{ value: targetSaveMod, source: 'цель', reason: 'спасбросок' }], target: { type: 'dc', value: save.dc }, rng: () => Math.random() });
         const monOut = sroll.outcome === 'success' ? onSuccess : onFail;
-        const saveEvent: EngineEvent = { type: 'roll', label: `Спасбросок ${save.ability.toUpperCase()} цели — ${sroll.outcome === 'success' ? 'успех' : 'провал'}`, roll: sroll };
+        const saveEvent: EngineEvent = { type: 'roll', label: `Спасбросок ${abilityFullRu(save.ability)} цели — ${sroll.outcome === 'success' ? 'успех' : 'провал'}`, roll: sroll };
         const commitTarget = () => applyMonsterSaveOutcome(targetCb!, monOut, sroll, save.ability);
         return { state: rf.state, events: [saveEvent], pending: rf.pendingReactions ?? [], commitTarget, targetId };
       }

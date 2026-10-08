@@ -1,8 +1,10 @@
 import ForgeEntitySelection from '../components/forge/ForgeEntitySelection';
+import ForgeEntityIcon from '../components/forge/ForgeEntityIcon';
 import { previewAnchor } from '../utils/previewAnchor';
 import { useDeferredValue, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, Sun, Moon, FileText, Settings, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, User, Swords, Shield, ScrollText, Star, Zap, Sparkles, FileText, Settings, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import ForgeTokenDialog from '../components/forge/ForgeTokenDialog';
 import { racesApi, classesApi, backgroundsApi, featsApi, spellsApi } from '../api/client';
 import type { Race, CharacterClass, Background, Feat, Spell } from '../types';
 import { getSpellLevelLabel } from '../types';
@@ -79,7 +81,6 @@ import BackgroundPreview from '../components/BackgroundPreview';
 import SpellPreview from '../components/SpellPreview';
 import FeatPreview from '../components/FeatPreview';
 import ForgeFeatLine from '../components/forge/ForgeFeatLine';
-import ImageUploader from '../components/ImageUploader';
 import { BackgroundEquipment } from '../components/BackgroundEquipment';
 import { collectChosenSpellUuids, indexSpells } from '../engine/spellRefs';
 import { preparedSpellChoiceAllowsOwnedOption, spellMatchesChoice } from '../character/spellChoices';
@@ -195,16 +196,9 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [subclassComparisonOpen, setSubclassComparisonOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [paper, setPaper] = useState<boolean>(() => {
+  const [paper] = useState<boolean>(() => {
     try { return localStorage.getItem('forge-theme') === 'paper'; } catch { return false; }
   });
-  const toggleTheme = useCallback(() => {
-    setPaper((prev) => {
-      const next = !prev;
-      try { localStorage.setItem('forge-theme', next ? 'paper' : 'dark'); } catch { /* ignore */ }
-      return next;
-    });
-  }, []);
   const savedSkillsRef = useRef<string[]>([]);
   const restoredClassSkillsRef = useRef(false);
   const classSkillAutoSeededForRef = useRef<string | null>(null);
@@ -276,11 +270,15 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
     } catch { /* ignore */ }
   }, [editId, paperMode]);
 
-  // Автосейв черновика (только создание): пустой не сохраняем, чтобы не затереть.
+  const draftHadChoices = useRef(false);
+  // Не затираем ожидающий восстановления черновик пустым состоянием при входе.
+  // После реального выбора сохраняем и его отмену, даже если черновик стал пустым.
   useEffect(() => {
     if (paperMode) { paperSession?.onDraftChange(draft); return; }
     if (editId) return;
-    if (!isDraftMeaningful(draft)) return;
+    const meaningful = isDraftMeaningful(draft);
+    if (!meaningful && !draftHadChoices.current) return;
+    if (meaningful) draftHadChoices.current = true;
     const t = window.setTimeout(() => {
       try { localStorage.setItem(FORGE_DRAFT_KEY, JSON.stringify(draft)); } catch { /* ignore */ }
     }, 800);
@@ -724,6 +722,23 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
   const selectRace = (rid: string) => {
     patch({ raceId: rid, lineageId: null });
   };
+  const beginRaceChange = () => {
+    setDraft(d => ({...d, raceId:null, lineageId:null, resolvedChoices:{...d.resolvedChoices,
+      ...Object.fromEntries(raceChoices.map(choice => [choice.id, []]))}}));
+  };
+  const beginLineageChange = () => setDraft(d=>({...d,lineageId:null,resolvedChoices:{...d.resolvedChoices,
+    ...Object.fromEntries(raceChoices.filter(choice=>choice.origin.id===d.lineageId||choice.source==='subfeature').map(choice=>[choice.id,[]]))}}));
+  const beginClassChange = () => {
+    classSkillAutoSeededForRef.current=null;
+    setDraft(d=>({...d,classId:null,classLevels:{},subclassId:null,subclassIds:{},classSkillChoices:[],resolvedChoices:{...d.resolvedChoices,
+      ...Object.fromEntries(classChoices.map(choice=>[choice.id,[]]))}}));
+  };
+  const beginSubclassChange = () => setDraft(d=>{
+    const subclassIds={...normalizedSubclassIds(d.subclassIds,d.classId,d.subclassId)};
+    if(d.classId)delete subclassIds[d.classId];
+    return {...d,subclassId:null,subclassIds,resolvedChoices:{...d.resolvedChoices,
+      ...Object.fromEntries(classChoices.filter(choice=>choice.origin.id===d.subclassId||choice.source==='subfeature').map(choice=>[choice.id,[]]))}};
+  });
   const selectLineage = (id: string) => {
     const removing = draft.lineageId === id;
     patch({ lineageId: removing ? null : id });
@@ -779,6 +794,16 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
       next.abilityBonuses = bonuses;
       next.abilities = reapplyBonuses(d.abilities, d.abilityBonuses, bonuses);
       return next;
+    });
+  };
+  const beginBackgroundChange = () => {
+    setDraft(current => {
+      const bonuses = { ...current.abilityBonuses, assignments: {} };
+      const resolvedChoices = { ...current.resolvedChoices };
+      for (const choice of assembled.pendingChoices) if (choice.origin.kind === 'background' && choice.origin.id === current.backgroundId) delete resolvedChoices[choice.id];
+      return { ...current, backgroundId: null, swapFeat: false,
+        featIds: current.swapFeat ? [] : current.featIds, equipmentOption: 'a',
+        abilityBonuses: bonuses, abilities: reapplyBonuses(current.abilities, current.abilityBonuses, bonuses), resolvedChoices };
     });
   };
   const setBonuses = useCallback((bonuses: AbilityBonuses) => {
@@ -1064,11 +1089,14 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
 
   // Динамический список вкладок
   const sections: ForgeSectionDef[] = [];
-  sections.push({ id: 'race', label: 'Вид', icon: <User size={19} />, sub: [assembled.race?.name, lineageName].filter(Boolean).join(' · '), status: raceDone ? 'ok' : 'todo' });
-  sections.push({ id: 'class', label: 'Класс', icon: <Swords size={19} />, sub: assembled.klass?.name, status: classDone ? 'ok' : 'todo' });
+  const navRace=draft.raceId===assembled.race?.id?assembled.race:null;
+  const navClass=draft.classId===assembled.klass?.id?assembled.klass:null;
+  sections.push({ id: 'race', label: 'Вид', icon: navRace?.image_url ? <ForgeEntityIcon imageUrl={navRace.image_url} alt={navRace.name} size={27}/> : <User size={19} />, sub: [navRace?.name,draft.lineageId?lineageName:null].filter(Boolean).join(' · '), status: raceDone ? 'ok' : 'todo' });
+  sections.push({ id: 'class', label: 'Класс', icon: navClass?.image_url ? <ForgeEntityIcon imageUrl={navClass.image_url} alt={navClass.name} size={27}/> : <Swords size={19} />, sub: navClass?.name, status: classDone ? 'ok' : 'todo' });
   if (hasSubclass) sections.push({ id: 'subclass', label: 'Подкласс', icon: <Shield size={19} />, sub: subclassName, status: subclassDone ? 'ok' : 'todo' });
   if (hasSpells) sections.push({ id: 'spells', label: 'Заклинания', icon: <Sparkles size={19} />, sub: spellChoices.length ? `${selectedSpellCount}/${requiredSpellCount}` : `${grantedSpells.length} получено`, status: spellsDone ? 'ok' : 'todo' });
-  sections.push({ id: 'background', label: 'Предыстория', icon: <ScrollText size={19} />, sub: assembled.background?.name, status: draft.backgroundId ? 'ok' : 'todo' });
+  const navBackground = draft.backgroundId === assembled.background?.id ? assembled.background : null;
+  sections.push({ id: 'background', label: 'Предыстория', icon: navBackground?.image_url ? <ForgeEntityIcon imageUrl={navBackground.image_url} alt={navBackground.name} size={27}/> : <ScrollText size={19} />, sub: navBackground?.name, status: draft.backgroundId ? 'ok' : 'todo' });
   if (hasFeatTab) sections.push({ id: 'feat', label: 'Черта', icon: <Star size={19} />, sub: assembled.feats[0]?.name, status: featDone ? 'ok' : 'todo' });
   sections.push({ id: 'abilities', label: 'Характеристики', icon: <Zap size={19} />, sub: `${abilitiesAssigned}/6`, status: abilitiesDone ? 'ok' : 'todo' });
 
@@ -1563,16 +1591,6 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
             <Settings size={16} />
             <span className="sheet-header-btn-label">Настройки</span>
           </button>
-          {!paperMode && <button
-            type="button"
-            className="sheet-header-btn"
-            onClick={toggleTheme}
-            aria-label={paper ? 'Тёмная тема' : 'Светлая тема'}
-            aria-description={paper ? 'Тёмная тема' : 'Светлая тема'}
-          >
-            {paper ? <Moon size={16} /> : <Sun size={16} />}
-            <span className="sheet-header-btn-label">{paper ? 'Тёмная' : 'Светлая'}</span>
-          </button>}
           {(savedId || draft.id || paperSession?.documentId) && (
             <Link to={paperMode ? paperSession?.returnURL ?? '/paper-sheet' : `/characters-v3/${savedId || draft.id}`} className="sheet-edit forge-header-sheet-link" aria-description="Открыть лист персонажа">
               <FileText size={16} />
@@ -1597,14 +1615,14 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
                 <RaceSection races={visibleRaces} draft={draft} onSelect={selectRace}
                   assembled={assembled}
                   subraces={selectableSubraces} subraceUnlocked={subraceUnlocked} subraceLevel={subraceLevel}
-                  onPickSubrace={selectLineage}
-                  choices={raceOtherChoices} subChoices={raceSubChoices}
+                  onPickSubrace={selectLineage} onBeginLineageChange={beginLineageChange}
+                  choices={raceOtherChoices} subChoices={raceSubChoices} onBeginChange={beginRaceChange}
                   ownChoices={raceFeatOwnChoices}
                   resolved={draft.resolvedChoices} setResolved={setResolved} ruleState={ruleState} allFeats={visibleFeats} activeFeats={assembled.feats} />
               )}
               {act === 'class' && (
                 <>
-                <ClassSection classes={visibleClasses} draft={draft} onSelect={selectClass} assembled={assembled}
+                <ClassSection classes={visibleClasses} draft={draft} onSelect={selectClass} onBeginChange={beginClassChange} onBeginSubclassChange={beginSubclassChange} assembled={assembled}
                   onToggleSkill={toggleClassSkill} choices={classOtherChoices} ownChoices={classFeatOwnChoices} resolved={draft.resolvedChoices}
                   setResolved={setResolved} ruleState={ruleState} allFeats={visibleFeats} activeFeats={assembled.feats}
                   subclasses={selectableSubclasses} subclassUnlocked={subclassUnlocked} subclassLevel={subclassLevel}
@@ -1636,7 +1654,7 @@ const CharacterForge = ({ paperMode = false, paperSession }: CharacterForgeProps
                 <SpellsSection spells={visibleSpells} granted={grantedSpells} choices={spellChoices} ownerChoices={spellChoices} maxSlotLevel={maxSlotLevel} ruleState={ruleState} resolved={draft.resolvedChoices} setResolved={setResolved} />
               )}
               {act === 'background' && (
-                <BackgroundSection backgrounds={visibleBackgrounds} draft={draft} onSelect={selectBackground}
+                <BackgroundSection backgrounds={visibleBackgrounds} draft={draft} onSelect={selectBackground} onBeginChange={beginBackgroundChange}
                   background={assembled.background} feats={feats} onToggleSwapFeat={(v: boolean) => patch({ swapFeat: v })}
                   onEquipmentOption={(opt: 'a' | 'b') => patch({ equipmentOption: opt })} />
               )}
@@ -1686,6 +1704,7 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
     [draft, assembled, ruleState, spells, lineageName],
   );
   const deferredSummary = useDeferredValue(summarySnapshot);
+  const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
   const deferredLineageName = deferredSummary.lineageName ?? resolveLineageName(
     deferredSummary.draft.lineageId,
     {
@@ -1699,30 +1718,21 @@ function OverviewPanel({ draft, patch, assembled, ruleState, spells, lineageName
     <div className="forge-overview">
       <div className="forge-block">
         <div className="forge-section-h">Имя персонажа</div>
-        <input className="forge-input" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Фарадей фон Грасс" />
-        <div className="forge-section-h" style={{ marginTop: 10 }}>Уровень</div>
-        <div className="forge-level-row">
-          <button type="button" className="pb-btn" disabled={draft.level <= 1}
-            onClick={() => patch({ level: Math.max(1, draft.level - 1) })}>−</button>
-          <span className="pb-base">{draft.level}</span>
-          <button type="button" className="pb-btn" disabled={draft.level >= 20}
-            onClick={() => patch({ level: Math.min(20, draft.level + 1) })}>+</button>
+        <div className="forge-name-input">
+          <input className="forge-input" aria-label="Имя персонажа" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="Фарадей фон Грасс" />
+          <button type="button" className="forge-token-button" aria-label={paperMode ? 'Изменить портрет персонажа' : 'Изменить изображение токена'} onClick={() => setTokenDialogOpen(true)}>
+            {draft.avatarUrl ? <img src={draft.avatarUrl} alt="" /> : <ImageIcon size={21} aria-hidden="true" />}
+          </button>
         </div>
-        <div className="forge-section-h" style={{ marginTop: 14 }}>{paperMode ? 'Портрет' : 'Токен на поле боя'}</div>
-        <ImageUploader
-          currentImageUrl={draft.avatarUrl}
-          onImageUpload={(avatarUrl) => patch({ avatarUrl })}
-          className="forge-token-uploader"
-        />
-        <p className="forge-token-hint">{paperMode ? 'Изображение появится на странице портрета.' : 'Квадратное изображение лучше всего читается на сетке.'}</p>
       </div>
 
+      {tokenDialogOpen && <ForgeTokenDialog imageUrl={draft.avatarUrl} paperMode={paperMode} onChange={avatarUrl => patch({avatarUrl})} onClose={() => setTokenDialogOpen(false)} />}
       <SummaryPanel
-        draft={deferredSummary.draft}
+        draft={{...deferredSummary.draft,raceId:draft.raceId,lineageId:draft.lineageId,classId:draft.classId,classLevels:draft.classLevels,subclassId:draft.subclassId,subclassIds:draft.subclassIds,backgroundId:draft.backgroundId,featIds:draft.featIds,swapFeat:draft.swapFeat}}
         assembled={deferredSummary.assembled}
         ruleState={deferredSummary.ruleState}
         spells={deferredSummary.spells}
-        lineageName={deferredLineageName}
+        lineageName={draft.lineageId?deferredLineageName:undefined}
       />
 
       <div className="forge-overview-footer">
@@ -1780,7 +1790,9 @@ function ChoiceList({ choices, resolved, setResolved, ruleState, feats, activeFe
 
 // ─── Секции ────────────────────────────────────────────────────────────────
 
-function RaceSection({ races, draft, onSelect, assembled, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, ownChoices, subChoices, resolved, setResolved, ruleState, allFeats, activeFeats }: any) {
+function RaceSection({ races, draft, onSelect, onBeginChange, onBeginLineageChange, assembled, subraces, subraceUnlocked, subraceLevel, onPickSubrace, choices, ownChoices, subChoices, resolved, setResolved, ruleState, allFeats, activeFeats }: any) {
+  const [expanded,setExpanded]=useState(!draft.raceId);
+  const [subraceExpanded,setSubraceExpanded]=useState(!draft.lineageId);
   const topRaces = races.filter((r: Race) => !r.is_subrace);
   const race = races.find((r: Race) => r.id === draft.raceId) as Race | undefined;
   const subChoice = subChoices?.[0] as PendingChoice | undefined;
@@ -1791,29 +1803,29 @@ function RaceSection({ races, draft, onSelect, assembled, subraces, subraceUnloc
   return (
     <div>
       <div className="forge-block forge-square-block">
-        <ForgeEntitySelection entities={topRaces as Race[]} selectedId={draft.raceId} onSelect={onSelect}
+        <ForgeEntitySelection entities={topRaces as Race[]} selectedId={draft.raceId} onSelect={onSelect} onBeginChange={onBeginChange} onExpandedChange={setExpanded} entityKind="races"
           renderCard={(r, select) => <EntitySquareCard name={r.name} imageUrl={r.image_url} selected={draft.raceId === r.id}
             onClick={select} preview={<RacePreview race={r} disableHover/>} supportEntity={r}/>}
           >{r => r.traits?.length ? <ForgeTraitsBlock traits={r.traits}/> : null}</ForgeEntitySelection>
       </div>
 
       {/* Подвиды — сразу под основным видом */}
-      {hasEntitySubraces && subraceUnlocked && (
+      {!expanded && hasEntitySubraces && subraceUnlocked && (
         <div className="forge-block forge-square-block">
           <div className="forge-section-h forge-section-h--center">Подвид</div>
-          <ForgeEntitySelection entities={subraces as Race[]} selectedId={draft.lineageId} onSelect={onPickSubrace}
+          <ForgeEntitySelection entities={subraces as Race[]} selectedId={draft.lineageId} onSelect={onPickSubrace} onBeginChange={onBeginLineageChange} onExpandedChange={setSubraceExpanded} entityKind="races"
             renderCard={(r, select) => <EntitySquareCard name={r.name} imageUrl={r.image_url} selected={draft.lineageId === r.id}
               onClick={select} preview={<RacePreview race={r} disableHover/>} supportEntity={r}/>}
             >{r => r.traits?.length ? <ForgeTraitsBlock traits={r.traits}/> : null}</ForgeEntitySelection>
         </div>
       )}
-      {hasEntitySubraces && !subraceUnlocked && (
+      {!expanded && hasEntitySubraces && !subraceUnlocked && (
         <div className="forge-block forge-square-block">
           <div className="forge-section-h forge-section-h--center">Подвид</div>
           <p className="forge-note forge-note--center">Выбор подвида откроется на {subraceLevel}-м уровне.</p>
         </div>
       )}
-      {hasSubfeatureSubraces && (
+      {!expanded && hasSubfeatureSubraces && (
         <div className="forge-block forge-square-block">
           <div className="forge-section-h forge-section-h--center">{subChoice?.prompt || 'Подвид'}</div>
           <div className="forge-square-grid">
@@ -1829,17 +1841,19 @@ function RaceSection({ races, draft, onSelect, assembled, subraces, subraceUnloc
         </div>
       )}
 
-      {assembled && (
-        <ForgeOriginAbilities assembled={assembled} kind="race" fallbackImageUrl={race?.image_url} />
+      {assembled && !expanded && (
+        <ForgeOriginAbilities assembled={assembled} kind="race" fallbackImageUrl={race?.image_url} hiddenOriginIds={subraceExpanded && draft.lineageId ? [draft.lineageId] : []}/>
       )}
 
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} />
-      <ChoiceList choices={ownChoices || []} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} title="Параметры выбранных черт" />
+      {!expanded && <><ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} />
+      <ChoiceList choices={ownChoices || []} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} title="Параметры выбранных черт" /></>}
     </div>
   );
 }
 
-function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choices, ownChoices, resolved, setResolved, ruleState, allFeats, activeFeats, subclasses = [], subclassUnlocked = false, subclassLevel = 3, onPickSubclass, onEquipmentOption }: any) {
+function ClassSection({ classes, draft, onSelect, onBeginChange, onBeginSubclassChange, assembled, onToggleSkill, choices, ownChoices, resolved, setResolved, ruleState, allFeats, activeFeats, subclasses = [], subclassUnlocked = false, onPickSubclass, onEquipmentOption }: any) {
+  const [expanded,setExpanded]=useState(!draft.classId);
+  const [subclassExpanded,setSubclassExpanded]=useState(!draft.subclassId);
   const sc = classSkillChoice(assembled);
   const topClasses = (classes as CharacterClass[]).filter((c) => !c.is_subclass);
   const klass = classes.find((c: CharacterClass) => c.id === draft.classId) as CharacterClass | undefined;
@@ -1854,57 +1868,24 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
   return (
     <div>
       <div className="forge-block forge-square-block">
-        <ForgeEntitySelection entities={topClasses} selectedId={draft.classId} onSelect={onSelect}
+        <ForgeEntitySelection entities={topClasses} selectedId={draft.classId} onSelect={onSelect} onBeginChange={onBeginChange} onExpandedChange={setExpanded} entityKind="classes"
           renderCard={(c, select) => <EntitySquareCard name={c.name} imageUrl={c.image_url} selected={draft.classId === c.id}
             onClick={select} preview={<ClassPreview characterClass={c} disableHover/>} supportEntity={c}/>}
           >{c => c.hit_die ? <p className="forge-note">Кость хитов: {c.hit_die}</p> : null}</ForgeEntitySelection>
       </div>
-      {klass && (
-        <div className="forge-block forge-desc-block">
-          {equipVariants.length > 0 && (
-            <div style={{ marginTop: 8 }}>
-              <div className="forge-section-h">Стартовое снаряжение</div>
-              <BackgroundEquipment options={equipOptions} selectable
-                selected={draft.classEquipmentOption} onSelect={(k) => onEquipmentOption?.(k)} />
-            </div>
-          )}
-        </div>
-      )}
-      {klass && (subclasses as CharacterClass[]).length > 0 && subclassUnlocked && (
+      {klass && !expanded && equipVariants.length > 0 && <ForgeStartingEquipment options={equipOptions}
+        selected={draft.classEquipmentOption} onSelect={(k) => onEquipmentOption?.(k)} />}
+      {klass && !expanded && (subclasses as CharacterClass[]).length > 0 && subclassUnlocked && (
         <div className="forge-block forge-square-block">
           <div className="forge-section-h">Подкласс</div>
-          <div className="forge-square-grid">
-            {(subclasses as CharacterClass[]).map((c) => (
-              <EntitySquareCard
-                key={c.id}
-                name={c.name}
-                imageUrl={c.image_url}
-                selected={draft.subclassId === c.id}
-                onClick={() => onPickSubclass?.(c.id)}
-                preview={<ClassPreview characterClass={c} disableHover />}
-                supportEntity={c}
-              />
-            ))}
-          </div>
+          <ForgeEntitySelection entities={subclasses as CharacterClass[]} selectedId={draft.subclassId} onSelect={id=>onPickSubclass?.(id)} onBeginChange={onBeginSubclassChange} onExpandedChange={setSubclassExpanded} entityKind="classes"
+            renderCard={(c,select)=><EntitySquareCard name={c.name} imageUrl={c.image_url} selected={draft.subclassId===c.id} onClick={select} preview={<ClassPreview characterClass={c} disableHover/>} supportEntity={c}/>}/>
         </div>
       )}
-      {klass && (subclasses as CharacterClass[]).length > 0 && !subclassUnlocked && (
-        <div className="forge-block">
-          <p className="forge-note forge-note--center">Выбор подкласса откроется на {subclassLevel}-м уровне.</p>
-        </div>
+      {draft.classId && assembled && !expanded && (
+        <ForgeOriginAbilities assembled={assembled} kind="class" fallbackImageUrl={klass?.image_url} hiddenOriginIds={subclassExpanded && subclass ? [subclass.id] : []}/>
       )}
-      {subclass && (
-        <div className="forge-block forge-desc-block">
-          <div className="forge-entity-name">{subclass.name}</div>
-          {subclass.description && (
-            <p className="forge-note"><FormattedText text={subclass.description} emptyText="" /></p>
-          )}
-        </div>
-      )}
-      {draft.classId && assembled && (
-        <ForgeOriginAbilities assembled={assembled} kind="class" fallbackImageUrl={klass?.image_url} />
-      )}
-      {sc && (
+      {!expanded && sc && (
         <div className="forge-block">
           <div className="forge-section-h">Навыки класса — выберите {sc.count}</div>
           <div className="chips">
@@ -1925,8 +1906,9 @@ function ClassSection({ classes, draft, onSelect, assembled, onToggleSkill, choi
           </div>
         </div>
       )}
-      <ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} />
+      {!expanded && <><ChoiceList choices={choices} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} />
       <ChoiceList choices={ownChoices || []} resolved={resolved} setResolved={setResolved} ruleState={ruleState} feats={allFeats} activeFeats={activeFeats} title="Параметры выбранных черт" />
+      </>}
     </div>
   );
 }
@@ -1941,66 +1923,45 @@ function SubclassSection({ choices, resolved, setResolved, ruleState, klass, all
   );
 }
 
-function BackgroundSection({ backgrounds, draft, onSelect, background, feats, onToggleSwapFeat, onEquipmentOption }: any) {
-  const bgFromList = backgrounds.find((b: Background) => b.id === draft.backgroundId) as Background | undefined;
-  const bg = background ?? bgFromList;
-  const options = bg?.equipment_options;
-  // Origin-черта предыстории → сущность (по card_number/uuid), для превью.
-  const originFeat = bg?.origin_feat
-    ? (feats as Feat[])?.find((f) => f.card_number === bg.origin_feat || f.id === bg.origin_feat)
-    : undefined;
-  return (
-    <div>
-      <div className="forge-block forge-square-block">
-        <div className="forge-square-grid">
-          {backgrounds.map((b: Background) => (
-            <EntitySquareCard
-              key={b.id}
-              name={b.name}
-              imageUrl={b.image_url}
-              selected={draft.backgroundId === b.id}
-              onClick={() => onSelect(b.id)}
-              preview={<BackgroundPreview background={b} disableHover />}
-              supportEntity={b}
-            />
-          ))}
-          {backgrounds.length === 0 && <p className="forge-note">Нет предысторий в базе.</p>}
-        </div>
-      </div>
-      {bg && (
-        <div className="forge-block forge-desc-block">
-          <div className="forge-entity-name">{bg.name}</div>
-          {bg.description && (
-            <p className="forge-note forge-desc-text"><FormattedText text={bg.description} emptyText="" /></p>
-          )}
+function ForgeStartingEquipment({options,selected,onSelect}: React.ComponentProps<typeof BackgroundEquipment>) {
+  return <section className="forge-block forge-starting-equipment">
+    <div className="forge-section-h">Стартовое снаряжение</div>
+    <BackgroundEquipment options={options} hideHeading selectable selected={selected} onSelect={onSelect}/>
+  </section>;
+}
+
+function BackgroundSection({ backgrounds, draft, onSelect, onBeginChange, feats, onToggleSwapFeat, onEquipmentOption }: any) {
+  const [expanded,setExpanded]=useState(!draft.backgroundId);
+  const background=(backgrounds as Background[]).find(bg=>bg.id===draft.backgroundId);
+  return <div><div className="forge-block forge-square-block">
+    <ForgeEntitySelection entities={backgrounds as Background[]} selectedId={draft.backgroundId}
+      onSelect={onSelect} onBeginChange={onBeginChange} onExpandedChange={setExpanded} entityKind="backgrounds"
+      emptyText="Нет предысторий в базе." renderCard={(bg, select) => (
+        <EntitySquareCard name={bg.name} imageUrl={bg.image_url} selected={draft.backgroundId === bg.id}
+          onClick={select} preview={<BackgroundPreview background={bg} disableHover />} supportEntity={bg} />
+      )}>
+      {(bg) => {
+        const originFeat = (feats as Feat[]).find(f => f.id === bg.origin_feat || f.card_number === bg.origin_feat);
+        return <>
           <p className="forge-note">
-            Навыки: {(bg.skill_proficiencies || []).map((s: string) => labelOf(SKILLS, s)).join(', ') || '—'}<br />
+            Навыки: {(bg.skill_proficiencies || []).map(s => labelOf(SKILLS, normalizeSkillId(s))).join(', ') || '—'}<br />
             Инструмент: {bg.tool_proficiency || '—'}<br />
-            Характеристики: {(bg.ability_scores || []).map((a: string) => labelOf(ABILITIES, a)).join(', ') || '—'}
+            Характеристики: {(bg.ability_scores || []).map(a => labelOf(ABILITIES, a)).join(', ') || '—'}
           </p>
-          <div className="forge-note" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>Черта происхождения:</span>
-            {originFeat ? (
-              <ForgeFeatLine feat={originFeat} />
-            ) : (
-              <span>{bg.origin_feat || '—'}</span>
-            )}
+          <div className="forge-note forge-origin-feat"><span>Черта происхождения:</span>
+            {originFeat ? <ForgeFeatLine feat={originFeat} /> : <span>Черта недоступна</span>}
           </div>
-          {options && (options.option_a || options.option_b) && (
-            <div style={{ marginTop: 8 }}>
-              <div className="forge-section-h">Стартовое снаряжение</div>
-              <BackgroundEquipment options={options} selectable
-                selected={draft.equipmentOption} onSelect={(k) => onEquipmentOption(k)} />
-            </div>
-          )}
           <label className="forge-check">
-            <input type="checkbox" checked={!!draft.swapFeat} onChange={(e) => onToggleSwapFeat(e.target.checked)} />
+            <input type="checkbox" checked={!!draft.swapFeat} onChange={e => onToggleSwapFeat(e.target.checked)} />
             <span>Сменить черту происхождения</span>
           </label>
-        </div>
-      )}
-    </div>
-  );
+        </>;
+      }}
+    </ForgeEntitySelection>
+  </div>
+    {background&&!expanded&&background.equipment_options&&<ForgeStartingEquipment options={background.equipment_options}
+      selected={draft.equipmentOption} onSelect={onEquipmentOption}/>}
+  </div>;
 }
 
 function FeatSection({ feats, draft, onToggle, swapFeat, choices, ownChoices, resolved, setResolved, ruleState, activeFeats }: any) {

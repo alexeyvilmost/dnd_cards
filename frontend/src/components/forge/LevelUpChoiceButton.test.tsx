@@ -116,7 +116,7 @@ describe('level-up choice dialog buttons',()=>{
     const selected=container.querySelector<HTMLButtonElement>('.levelup-selected-feat .forge-square-card');
     expect(selected?.textContent).toContain('Feat one');
     await act(async()=>selected!.dispatchEvent(new MouseEvent('mouseover',{bubbles:true})));
-    expect(container.querySelector('.forge-entity-preview-pop')?.textContent).toContain('One');
+    expect(document.body.querySelector('.entity-preview-enter')?.textContent).toContain('One');
     await act(async()=>selected!.dispatchEvent(new MouseEvent('mouseout',{bubbles:true})));
     await click('Изменить: Feat one');
     const other=[...document.body.querySelectorAll<HTMLButtonElement>('.forge-choice-dialog .forge-square-card')].find(button=>button.textContent?.includes('Feat two'))!;

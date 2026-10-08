@@ -1081,11 +1081,6 @@
 .forge-origin-abilities .forge-section-h { text-align: left; }
 .forge-ability-lines { display: flex; flex-direction: column; gap: 3px; }
 
-.forge-entity-preview-pop {
-  position: fixed; z-index: 200; pointer-events: none;
-  width: min(320px, calc(100vw - 24px));
-}
-
 .sum-spell-grid { justify-content: flex-start; }
 
 /* Чекбокс «Сменить черту» */
@@ -1314,10 +1309,50 @@
 
 .choice-effect-options{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}.choice-effect-option{display:flex;flex-direction:column;gap:8px;align-items:center;max-width:170px}.choice-effect-option__name{font-size:12px;line-height:1.4;text-align:center;color:var(--forge-ink)}
 
-.forge-selected-entity{display:grid;grid-template-columns:140px minmax(0,1fr);gap:32px;align-items:start;text-align:left;padding:12px 8px}
+.forge-selected-entity{display:grid;grid-template-columns:140px minmax(0,1fr);gap:32px;align-items:start;text-align:left;padding:12px 8px;width:100%;max-width:850px;box-sizing:border-box;margin-inline:auto}
 .forge-selected-entity__card{display:flex;flex-direction:column;align-items:center;gap:14px;z-index:1}.forge-selected-entity__change{width:100%;min-height:38px}
 .forge-selected-entity__story{animation:forge-story-reveal .32s ease both;animation-delay:.12s;line-height:1.65;color:var(--forge-ink);max-width:65ch}.forge-selected-entity__story h3{font:500 27px/1.2 Georgia,serif;color:var(--forge-gold);margin:0 0 16px}
 @keyframes forge-story-reveal{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
-@media(max-width:580px){.forge-selected-entity{grid-template-columns:110px minmax(0,1fr);gap:18px;padding:6px 0}.forge-selected-entity__story h3{font-size:22px}.forge-selected-entity__story{font-size:14px}}
+@media(max-width:580px){.forge-selected-entity{grid-template-columns:130px minmax(0,1fr);gap:18px;padding:6px 0}.forge-selected-entity__story h3{font-size:22px}.forge-selected-entity__story{font-size:14px}}
 @media(max-width:360px){.forge-selected-entity{grid-template-columns:1fr}.forge-selected-entity__card{justify-self:center}.forge-selected-entity__story{text-align:left}}
 @media(prefers-reduced-motion:reduce){.forge-selected-entity__story{animation:none}}
+.forge-selected-entity__details{color:var(--forge-gold);text-decoration:none;font-size:13px;padding:6px 10px;text-align:center;border-radius:5px}
+.forge-selected-entity__details:hover{text-decoration:underline;background:rgba(201,170,107,.08)}
+.forge-selected-entity__details:focus-visible{outline:2px solid var(--forge-gold);outline-offset:3px}
+
+.forge-name-input{display:flex;align-items:center;gap:8px}.forge-name-input>.forge-input{flex:1;min-width:0}
+.forge-token-button{width:40px;height:40px;flex:0 0 auto;display:grid;place-items:center;border:1px solid var(--forge-line);border-radius:8px;background:var(--forge-panel-2);color:var(--forge-gold);cursor:pointer}
+.forge-token-button img{width:32px;height:32px;object-fit:cover;border-radius:5px}.forge-token-button:hover{border-color:var(--forge-gold)}
+.forge-token-dialog{width:min(520px,calc(100vw - 32px));max-height:90dvh;overflow:auto}.forge-token-dialog .forge-token-uploader{margin-top:20px}
+.forge-origin-feat{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.forge-starting-equipment{width:100%;max-width:940px;box-sizing:border-box;margin:20px auto;text-align:left}.forge-starting-equipment>.forge-section-h{text-align:left}
+.forge-selected-entity__story{max-width:none}.forge-selected-entity__story>span{display:block;max-width:65ch}
+.forge-overview .forge-spell-icon-grid{justify-content:flex-start;gap:6px;margin-block:10px}.forge-overview .cs-action-tile{width:44px;height:44px}
+
+.forge-ability-workbench{width:100%;max-width:940px;margin-inline:auto;padding:12px;box-sizing:border-box}
+.forge-ability-methods{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.forge-points-budget{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap}
+.forge-points-budget small{display:block;color:var(--forge-text-dim);font-size:12px}.forge-points-budget strong{display:block;color:var(--forge-gold);font:500 40px/1.3 Georgia,serif}
+.forge-points-budget strong span{font:400 16px/1.3 Inter,sans-serif;color:var(--forge-text-dim)}.forge-points-budget__actions{display:flex;gap:8px;flex-wrap:wrap}
+.forge-point-meter{height:4px;border-radius:2px;background:var(--forge-line);margin:14px 0}.forge-point-meter>span{display:block;height:100%;background:var(--forge-gold);transition:width .15s}
+.forge-ability-table{margin-block:24px;border-block:1px solid var(--forge-line)}
+.forge-ability-heading,.forge-ability-row{display:grid;grid-template-columns:minmax(144px,calc((100% - 426px)*.8)) minmax(124px,1fr) minmax(92px,.6fr) minmax(48px,.4fr) 96px;gap:12px;align-items:center;text-align:center}
+.forge-ability-heading{padding:12px 0;font-size:11px;letter-spacing:.035em;color:var(--forge-text-dim)}.forge-ability-heading>span:first-child{text-align:left}
+.forge-ability-row{padding:15px 0;border-top:1px solid var(--forge-line)}.forge-ability-row small{display:none}
+.forge-ability-name{text-align:left}.forge-ability-name strong{font:500 20px/1.3 Georgia,serif}.forge-ability-name small{display:block;font-size:11px;color:var(--forge-text-dim);margin-top:4px}
+.forge-ability-stepper{display:flex;gap:4px;align-items:center;justify-content:center}.forge-ability-stepper button{width:32px;height:36px;border:1px solid var(--forge-line);border-radius:6px;background:var(--forge-panel-2);color:var(--forge-gold);font-size:19px;cursor:pointer}
+.forge-ability-row input{min-height:36px;border:1px solid var(--forge-line);border-radius:6px;color:var(--forge-text);background:var(--forge-panel);font-size:16px;padding:4px;width:100%;box-sizing:border-box;text-align:center}
+.forge-base-input-wrap{position:relative;display:inline-flex;width:48px;flex:0 0 auto}.forge-ability-stepper .forge-base-input{border:0;border-radius:0;background:transparent;box-shadow:none;padding:0;font-weight:600;font-size:18px;cursor:text;outline:none}.forge-base-input:focus-visible{outline:1px solid var(--forge-gold);outline-offset:2px;border-radius:3px}.forge-base-input-error{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);width:150px;z-index:2;color:var(--forge-gold);background:var(--forge-panel);font-size:11px;padding:4px;line-height:1.3}
+.forge-ability-stepper button:disabled{opacity:.3;cursor:default}.forge-ability-stepper button:not(:disabled):hover{border-color:var(--forge-gold)}
+.forge-ability-bonus{color:var(--forge-gold-dim)}.forge-ability-total{font:500 27px/1 Georgia,serif;color:var(--forge-text)}.forge-ability-mod{font-size:20px;color:var(--forge-gold)}
+.forge-ability-bonus-buttons{display:flex;justify-content:center;gap:6px}.forge-ability-bonus-buttons button{width:38px;min-height:36px;border:1px solid var(--forge-line);border-radius:6px;background:transparent;color:var(--forge-gold);font-size:16px;cursor:pointer}.forge-ability-bonus-buttons button.on{background:var(--forge-gold);color:var(--forge-panel);border-color:var(--forge-gold)}.forge-ability-bonus-buttons button:disabled{opacity:.3;cursor:default}.forge-ability-bonus-buttons button:not(:disabled):hover{border-color:var(--forge-gold)}.forge-ability-bonus-buttons button:focus-visible{outline:2px solid var(--forge-gold);outline-offset:2px}
+@media(max-width:1100px){.forge-ability-heading,.forge-ability-row{grid-template-columns:minmax(96px,.8fr) 120px 86px 40px 72px;gap:8px}}
+@media(max-width:700px){
+ .forge-ability-workbench{padding:0}.forge-ability-heading{display:none}.forge-ability-row{grid-template-columns:116px 84px minmax(30px,1fr) minmax(30px,1fr);gap:6px;padding:16px 0}
+ .forge-ability-name{grid-column:1/-1;margin-bottom:4px}.forge-ability-name small{font-size:12px}.forge-ability-row small{display:block;font:400 9px/1.3 Inter,sans-serif;color:var(--forge-text-dim);margin-bottom:7px;overflow-wrap:anywhere}
+ .forge-ability-name small{font-size:12px;margin-bottom:0}.forge-points-budget strong{font-size:34px}.forge-ability-stepper{padding-top:18px}
+}
+@media(prefers-reduced-motion:reduce){.forge-point-meter>span{transition:none}}
+.forge-selection-grid>div{animation:forge-grid-return .26s ease both}
+.forge-selection-grid>div:nth-child(3n+2){animation-delay:30ms}.forge-selection-grid>div:nth-child(3n){animation-delay:60ms}
+@keyframes forge-grid-return{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.forge-selection-grid>div{animation:none}}

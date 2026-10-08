@@ -15,7 +15,7 @@ import HoverCard from './HoverCard';
 import CanonicalEntityPreview from './CanonicalEntityPreview';
 import './EntityReferences.css';
 
-function loadReferenceEntity(type: ReferenceEntityType, id: string): Promise<Record<string, unknown> | undefined> {
+export function loadReferenceEntity(type: ReferenceEntityType, id: string): Promise<Record<string, unknown> | undefined> {
   if (type === 'passive') return cachedCatalogRead('/api/passive-presentations', 60_000,
     async () => (await apiClient.get<{ passives: { key: string }[] }>('/api/passive-presentations')).data)
     .then(data => data.passives.find(row => row.key === id));
@@ -28,7 +28,7 @@ function loadReferenceEntity(type: ReferenceEntityType, id: string): Promise<Rec
 
 const REFERENCE_PREFIXES = [...Object.values(REFERENCE_KIND).map(kind => `/api/${kind}`), '/api/passive-presentations', '/api/entity-references'];
 
-function ReferenceItem({ reference, onNavigate }: { reference: EntityReference; onNavigate?: () => void }) {
+export function ReferenceItem({ reference, onNavigate, compact = false }: { reference: EntityReference; onNavigate?: () => void; compact?: boolean }) {
   const { entity_type: type, entity_id: id } = reference;
   const [entity, setEntity] = useState<Record<string, unknown> | null>(null);
   const [failed, setFailed] = useState(false);
@@ -55,8 +55,8 @@ function ReferenceItem({ reference, onNavigate }: { reference: EntityReference; 
       : <HoverCard content={<CanonicalEntityPreview kind={REFERENCE_KIND[type]} entity={entity} />}>
         <SheetEntityRow name={name} imageUrl={shared.imageUrl} detail={detail} onClick={open} />
       </HoverCard>}
-    {reference.level != null && ['card', 'action', 'effect', 'spell'].includes(type) && <small>Уровень {reference.level}</small>}
-    {reference.paths.length > 0 && <details className="entity-references__paths"><summary>Поля механики</summary><ul>{reference.paths.map(path => <li key={path}><code>{path}</code></li>)}</ul></details>}
+    {!compact && reference.level != null && ['card', 'action', 'effect', 'spell'].includes(type) && <small>Уровень {reference.level}</small>}
+    {!compact && reference.paths.length > 0 && <details className="entity-references__paths"><summary>Поля механики</summary><ul>{reference.paths.map(path => <li key={path}><code>{path}</code></li>)}</ul></details>}
   </div>;
 }
 

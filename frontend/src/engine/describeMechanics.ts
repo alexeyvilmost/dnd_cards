@@ -293,7 +293,7 @@ const ABILITY_FULL_RU: Record<string, string> = {
 };
 /** Полное русское название характеристики ('dex' → 'Ловкость'). */
 export function abilityFullRu(a: string | null | undefined): string {
-  return a ? (ABILITY_FULL_RU[a] ?? String(a)) : '';
+  return a ? (ABILITY_FULL_RU[a.toLowerCase()] ?? String(a)) : '';
 }
 
 export interface MechanicsStats {
