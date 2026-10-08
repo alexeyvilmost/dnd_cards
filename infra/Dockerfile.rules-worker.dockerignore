@@ -13,6 +13,8 @@
 !frontend/worker/native-hash.mjs
 !frontend/worker/combat-frames.mjs
 !frontend/worker/speculative-transitions.mjs
+!frontend/worker/state-delta.mjs
+!frontend/worker/partial-mirrors.mjs
 !frontend/worker/replay.mjs
 !backend/animationpresentation/catalog.json
 !scripts/release/plan-components.mjs
