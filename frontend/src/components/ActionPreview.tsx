@@ -1,11 +1,11 @@
 import ReviewStatusCorner from './ReviewStatusCorner';
 import React from 'react';
 import type { Action } from '../types';
-import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { ACTION_TYPE_OPTIONS } from '../types';
 import type { WeaponAttackPreview } from '../engine/weapon';
 import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
-import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
+import { describeMechanics, parseMechanicsStats } from '../engine/describeMechanics';
 import { formatFormulaDisplay } from '../engine/formula';
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
@@ -17,6 +17,9 @@ import { getPropertyLabel } from '../utils/propertyLabels';
 import {actionUsagePreview} from '../engine/actionUsagePreview';
 import type {RuntimeState} from '../mvp/contracts';
 import UiIcon from './UiIcon';
+import SaveDamagePreview from './SaveDamagePreview';
+import RollPreviewMeta from './RollPreviewMeta';
+import { recoveryPreview } from '../engine/recoveryPreview';
 
 interface ActionPreviewProps {
   action: Action;
@@ -42,9 +45,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
   const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const actionTypeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type || '';
-  const rechargeLabel = action.recharge
-    ? (ACTION_RECHARGE_OPTIONS.find((o) => o.value === action.recharge)?.label || action.recharge)
-    : '';
+  const rechargeLabel = recoveryPreview(action);
 
   const subtype = sourceLabel || actionTypeLabel;
 
@@ -54,7 +55,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
   const dmgEntries = wp && wp.damages.length
     ? wp.damages.map((d) => ({ value: `${d.dice}${d.bonus !== 0 ? ` ${fmtBonus(d.bonus)}` : ''}`, type: d.type }))
     : stats.damage;
-  const hasStats = showAttack || stats.save || dmgEntries.length > 0 || stats.heal.length > 0;
+  const hasStats = dmgEntries.length > 0 || stats.heal.length > 0 || !!stats.damageOnSaveSuccess?.length;
 
   // Парадигма №2: описание МЕХАНИКИ из данных (единый describeMechanics), не свободный текст.
   const mechDesc = describeMechanics(action.mechanics as Record<string, unknown> | null | undefined, formulaCtx);
@@ -62,12 +63,13 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
   // Стоимость: единый источник — mechanics.activation.cost (что списывает движок),
   // откат на устаревшие resources/resource, если стоимости в механике нет.
   const resourceIds: string[] = actionCostResourceIds(action);
+  const usages = actionUsagePreview(action, runtime);
 
   // Мета-строка
   const meta: Array<[string, string]> = [];
   if (action.distance) meta.push(['range', action.distance]);
   if (rechargeLabel) {
-    meta.push(['⟳', rechargeLabel + (action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : '')]);
+    meta.push(['⟳', rechargeLabel]);
   }
 
   return (
@@ -93,19 +95,6 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
 
       {hasStats && (
         <div className="sp-stats">
-          {showAttack && (
-            <div className="sp-srow">
-              <span className="sp-lbl">Атака:</span>
-              <div className="sp-die">к20</div>
-              {wp && <span className="sp-bonus">{fmtBonus(wp.attack)}</span>}
-            </div>
-          )}
-          {stats.save && (
-            <div className="sp-srow">
-              <span className="sp-lbl">Спасбросок:</span>
-              <span className="sp-bonus">{abilityFullRu(stats.saveAbility) || 'спасбросок'}</span>
-            </div>
-          )}
           {dmgEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Урон:</span>
@@ -125,6 +114,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
               </span>
             </div>
           )}
+          {!wp && <SaveDamagePreview stats={stats} />}
           {stats.heal.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
@@ -173,19 +163,20 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
         </div>
       )}
 
-      {meta.length > 0 && (
+      {(meta.length > 0 || usages.length > 0 || showAttack || stats.save) && (
         <div className="sp-meta">
+          <RollPreviewMeta stats={{ ...stats, attack: showAttack }} attackBonus={wp?.attack} />
           {meta.map(([icon, label], i) => (
             <span key={i}><UiIcon symbol={icon} />{label}</span>
           ))}
+          {usages.map(usage => (
+            <span className="sp-usage" role="status" key={usage.key}>
+              <UiIcon symbol="uses" />
+              {usage.key.startsWith('uses_') ? 'Использования' : resourceLabel(resources, usage.key)}: {usage.remaining}/{usage.maximum}
+            </span>
+          ))}
         </div>
       )}
-
-      {actionUsagePreview(action,runtime).map(usage=><div className="sp-desc sp-usage" role="status" key={usage.key}
-        style={{borderTop:'1px solid #a68a454d',paddingTop:12,marginTop:12}}>
-        <strong>{usage.key.startsWith('uses_')?'Использования':resourceLabel(resources,usage.key)}: осталось {usage.remaining} из {usage.maximum}</strong>
-        <div>Израсходовано: {usage.spent}</div>
-      </div>)}
       {resourceIds.length > 0 ? (
         <div className="sp-costbar">
           {resourceIds.map((id, i) => (

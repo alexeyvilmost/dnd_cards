@@ -16,7 +16,7 @@ import MobileOverlay from './MobileOverlay';
 
 export type MobileEntityView =
   | { kind: 'card'; entity: Card }
-  | { kind: 'spell'; entity: Spell; spellcasting?: { saveDC?: number; attack?: number } }
+  | { kind: 'spell'; entity: Spell; hideAvailability?: boolean; spellcasting?: { saveDC?: number; attack?: number } }
   | { kind: 'action'; entity: Action; sourceLabel?: string }
   | { kind: 'effect'; entity: PassiveEffect; sourceLabel?: string }
   | { kind: 'feat'; entity: Feat }
@@ -30,7 +30,7 @@ export function MobileEntityPreview({ view }: { view: MobileEntityView }) {
     case 'card':
       return <CardPreview card={view.entity} disableHover />;
     case 'spell':
-      return <SpellPreview spell={view.entity} spellcasting={view.spellcasting} disableHover />;
+      return <SpellPreview spell={view.entity} spellcasting={view.spellcasting} hideAvailability={view.hideAvailability} disableHover />;
     case 'action':
       return <ActionPreview action={view.entity} sourceLabel={view.sourceLabel} disableHover />;
     case 'effect':

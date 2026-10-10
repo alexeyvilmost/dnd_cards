@@ -11,6 +11,9 @@ import { actionCostResourceIds, resourceCostIcon, resourceLabel, useResourceOpti
 import { useSiteSettings } from '../settings';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
+import SaveDamagePreview from './SaveDamagePreview';
+import UiIcon from './UiIcon';
+import { recoveryPreview } from '../engine/recoveryPreview';
 
 // Превью эффекта в едином стиле карточек заклинаний/действий/предметов (SPELL_CARD_CSS, классы .sp-*).
 // Тип эффекта → sp-subtype (или sourceLabel в контексте листа/кузни), условие → sp-saveline,
@@ -47,6 +50,7 @@ const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', di
 
   // Стоимость активируемого эффекта (mechanics.activation.cost) — плашкой снизу, как у действий.
   const resourceIds: string[] = actionCostResourceIds(effect as { mechanics?: Record<string, unknown> | null });
+  const recovery = recoveryPreview(effect);
 
   const descStyle: React.CSSProperties = {
     ...(effect.description_font_size ? { fontSize: `${effect.description_font_size}px` } : {}),
@@ -103,6 +107,7 @@ const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', di
               </span>
             </div>
           )}
+          <SaveDamagePreview stats={stats} />
           {stats.heal.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
@@ -137,6 +142,8 @@ const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', di
       {effect.condition_description && (
         <div className="sp-saveline">Условие: {effect.condition_description}</div>
       )}
+
+      {recovery && <div className="sp-meta"><span><UiIcon symbol="⟳" />{recovery}</span></div>}
 
       {resourceIds.length > 0 ? (
         <div className="sp-costbar">

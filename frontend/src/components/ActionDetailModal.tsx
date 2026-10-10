@@ -2,13 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Edit, Trash2, Copy } from 'lucide-react';
 import type { Action } from '../types';
-import { ACTION_RECHARGE_OPTIONS, ACTION_TYPE_OPTIONS } from '../types';
+import { ACTION_TYPE_OPTIONS } from '../types';
 import { actionsApi } from '../api/client';
 import { resourceIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { FormattedText } from '../utils/formattedText';
 import ActionPreview from './ActionPreview';
 import EntityImageEditor from './EntityImageEditor';
 import { EntityDetailShell, EdmField, EdmFields, EdmDesc, EdmBlock } from './EntityDetailShell';
+import { recoveryPreview } from '../engine/recoveryPreview';
 
 interface ActionDetailModalProps {
   action: Action | null;
@@ -30,10 +31,7 @@ const ActionDetailModal: React.FC<ActionDetailModalProps> = ({
   if (!isOpen || !action) return null;
 
   const typeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type;
-  const rechargeLabel = action.recharge
-    ? (ACTION_RECHARGE_OPTIONS.find((o) => o.value === action.recharge)?.label || action.recharge)
-      + (action.recharge === 'custom' && action.recharge_custom ? ` (${action.recharge_custom})` : '')
-    : null;
+  const rechargeLabel = recoveryPreview(action);
 
   const resourceIds = action.resources && action.resources.length > 0
     ? action.resources

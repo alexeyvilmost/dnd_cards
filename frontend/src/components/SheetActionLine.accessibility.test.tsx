@@ -18,12 +18,13 @@ describe('character action readability',()=>{
    await act(async()=>host.querySelector('button')!.focus());
    expect(document.querySelector('.forge-effect-popover')?.textContent).toContain('Восстанавливает здоровье');
    await act(async()=>root.render(<SheetActionLine name={ability.name} actionRef={ability} variant="icon" runtime={{resources:{'uses_ACT-breath':1},maxResources:{'uses_ACT-breath':2}}} onActivate={()=>{}}/>));
-   expect(document.querySelector('.forge-effect-popover')?.textContent).toContain('осталось 1 из 2');
+   expect(document.querySelector('.forge-effect-popover')?.textContent).toContain('Использования: 1/2');
    const usage=document.querySelector('.sp-usage')!;
    expect(usage).not.toBeNull();
-   expect(usage.nextElementSibling?.classList.contains('sp-costbar')).toBe(true);
+   expect(usage.parentElement?.classList.contains('sp-meta')).toBe(true);
    await act(async()=>root.render(<SheetActionLine name={ability.name} actionRef={ability} variant="icon" disabled runtime={{resources:{'uses_ACT-breath':0},maxResources:{'uses_ACT-breath':2}}} onActivate={()=>{}}/>));
-   expect(document.querySelector('.forge-effect-popover')?.textContent).toContain('Израсходовано: 2');
+   expect(document.querySelector('.forge-effect-popover')?.textContent).toContain('Использования: 0/2');
+   expect(document.querySelector('.forge-effect-popover')?.textContent).not.toContain('Израсходовано');
   } finally {await act(async()=>root.unmount());host.remove();}
  });
  it('explains disabled actions inline and supports keyboard inspection without activating',async()=>{

@@ -215,6 +215,24 @@ describe('formula.describe', () => {
 });
 
 describe('formatFormulaDisplay', () => {
+  it('shows resolved modifiers without source abbreviations', async () => {
+    const { formatFormulaDisplay } = await import('./formula');
+    const ctx = { abilityMods: { str: 3, dex: 2, con: 1, int: -1, wis: 4, cha: 0 }, profBonus: 2, spellcastingMod: 4 };
+    for (const [ability, value] of Object.entries(ctx.abilityMods)) {
+      expect(formatFormulaDisplay(`1d8 + ${ability}`, ctx)).toBe(`1к8 ${value < 0 ? '-' : '+'} ${Math.abs(value)}`);
+    }
+    expect(formatFormulaDisplay('1d8 + prof_bonus', ctx)).toBe('1к8 + 2');
+    expect(formatFormulaDisplay('1d8 + spellcasting', ctx)).toBe('1к8 + 4');
+    expect(formatFormulaDisplay('1 + wis', ctx)).toBe('5');
+    expect(formatFormulaDisplay('1d8 + wis')).toBe('1к8 + МДР');
+  });
+  it('explains half damage without rolling dice or rounding details', async () => {
+    const { formatFormulaDisplay } = await import('./formula');
+    expect(formatFormulaDisplay('floor((1d8 + wis)/2)', { abilityMods: { wis: 3 }, rng: () => { throw Error('Preview must not roll'); } }))
+      .toBe('Половина (1к8 + 3)');
+    expect(formatFormulaDisplay('floor((8d6)/2)')).toBe('Половина (8к6)');
+    expect(formatFormulaDisplay('floor((5)/2)')).toBe('2');
+  });
   it('без контекста показывает понятные имена, с контекстом — значения', async () => {
     const { formatFormulaDisplay } = await import('./formula');
     expect(formatFormulaDisplay('1d10 + self_level')).toBe('1к10 + уровень');

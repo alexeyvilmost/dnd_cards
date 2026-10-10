@@ -43,7 +43,8 @@ describe('MobileEntityPreview formulas', () => {
       ),
     );
 
-    expect(html).toContain('1к8 + 1к6 + 3 [СИЛ]');
+    expect(html).toContain('1к8 + 1к6 + 3');
+    expect(html).not.toContain('[СИЛ]');
     expect(html).not.toContain('martial_arts_die');
   });
 });

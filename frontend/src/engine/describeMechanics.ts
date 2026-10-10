@@ -301,7 +301,12 @@ export interface MechanicsStats {
   save: boolean;
   /** Характеристика спасброска ('dex' и т.п.) — из механики, для показа «Ловкость». */
   saveAbility: string | null;
+  saveRequirements?: Array<{ ability: string | null; dc: string | number | null }>;
+  attackAbility?: string;
+  attackBonusOverride?: number;
   damage: Array<{ value: string; type: string }>;
+  /** Alternative save outcome, never added to the failed-save damage. */
+  damageOnSaveSuccess?: Array<{ value: string; type: string }>;
   heal: string[];
 }
 
@@ -314,15 +319,15 @@ export function parseMechanicsStats(mechanics: Dict | null | undefined): Mechani
   const out: MechanicsStats = { attack: false, save: false, saveAbility: null, damage: [], heal: [] };
   const effects = Array.isArray((mechanics as Dict | undefined)?.effects) ? ((mechanics as Dict).effects as Dict[]) : [];
 
-  const readDmg = (arr: unknown, skipDamageKeys: ReadonlySet<string> = new Set()): void => {
+  const readDmg = (arr: unknown, damage = out.damage, saveSuccess = false): void => {
     (Array.isArray(arr) ? (arr as Dict[]) : []).forEach((p) => {
       if (p?.kind === 'damage') {
         const v = p.dice ?? p.formula ?? p.amount;
         // dice:"weapon" — плейсхолдер, значение резолвится из оружия в руке (см. weaponAttackPreview).
         // Без контекста оружия показывать нечего, поэтому пропускаем (иначе рисуется литерал «weapon»).
         if (v != null && v !== '' && v !== 'weapon') {
-          const entry = { value: String(v), type: String(p.type ?? p.damage_type ?? 'damage') };
-          if (!skipDamageKeys.has(`${entry.value}\u0000${entry.type}`)) out.damage.push(entry);
+          const value = saveSuccess && p.on_success === 'half' ? `floor((${v})/2)` : String(v);
+          damage.push({ value, type: String(p.type ?? p.damage_type ?? 'damage') });
         }
       } else if (p?.kind === 'healing') {
         const v = p.amount ?? p.dice ?? p.formula;
@@ -333,17 +338,26 @@ export function parseMechanicsStats(mechanics: Dict | null | undefined): Mechani
 
   for (const eff of effects) {
     const res = String(eff.resolution ?? '');
-    if (res === 'attack_roll') { out.attack = true; readDmg(eff.on_hit); readDmg(eff.on_crit); }
+    if (res === 'attack_roll') {
+      out.attack = true;
+      if (out.attackAbility === undefined && typeof eff.ability === 'string') out.attackAbility = eff.ability;
+      if (typeof eff.attack_bonus_override === 'number') out.attackBonusOverride = eff.attack_bonus_override;
+      readDmg(eff.on_hit); readDmg(eff.on_crit);
+    }
     else if (res === 'save') {
       out.save = true;
       if (!out.saveAbility && eff.ability) out.saveAbility = String(eff.ability);
-      const beforeFail = out.damage.length;
+      const requirement = {
+        ability: typeof eff.ability === 'string' ? eff.ability : null,
+        dc: typeof eff.dc === 'string' || typeof eff.dc === 'number' ? eff.dc : null,
+      };
+      if (!out.saveRequirements?.some(entry => entry.ability === requirement.ability && entry.dc === requirement.dc)) {
+        (out.saveRequirements ??= []).push(requirement);
+      }
       readDmg(eff.on_fail);
-      // Save branches are mutually exclusive. PHB payloads commonly repeat
-      // the same dice in on_fail and on_success to express half damage; the
-      // card must display that damage once, not as an additive second hit.
-      const failDamageKeys = new Set(out.damage.slice(beforeFail).map(({ value, type }) => `${value}\u0000${type}`));
-      readDmg(eff.on_success, failDamageKeys);
+      const successDamage: MechanicsStats['damage'] = [];
+      readDmg(eff.on_success, successDamage, true);
+      if (successDamage.length) (out.damageOnSaveSuccess ??= []).push(...successDamage);
     }
     else readDmg(eff.result ?? eff.results);
   }

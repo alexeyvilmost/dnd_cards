@@ -267,8 +267,8 @@ const renderParsedNodes = (
           aria-description={info?.label ?? node.dmg}
           style={{
             display: 'inline-block',
-            height: '1em',
-            width: '1em',
+            height: 'var(--formatted-damage-icon-size, 1em)',
+            width: 'var(--formatted-damage-icon-size, 1em)',
             verticalAlign: '-0.15em',
             objectFit: 'contain',
             margin: '0 0.05em',

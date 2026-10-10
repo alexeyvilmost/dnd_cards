@@ -40,6 +40,7 @@ type Props = {
   runtime?: Pick<RuntimeState,'resources'|'maxResources'>;
   effectRef?: PassiveEffect;
   spellRef?: Spell;
+  hideSpellAvailability?: boolean;
   /** Контекст заклинателя (лист): СЛ спасброска и бонус атаки заклинаниями для превью. */
   spellcasting?: { saveDC?: number; attack?: number };
   /** Числа оружейной атаки (из оружия в руке) для подсказки действия-атаки. */
@@ -69,6 +70,7 @@ const SheetActionLine = ({
   itemRef, runtime,
   effectRef,
   spellRef,
+  hideSpellAvailability = false,
   spellcasting,
   weaponAttackPreview,
   variant = 'row',
@@ -153,7 +155,7 @@ const SheetActionLine = ({
           {effectRef && <EffectPreview effect={effectRef} sourceLabel={sourceLabel} disableHover />}
           {itemRef && (settings.itemPreview==='interface'?<ItemPreview card={itemRef} disableHover/>:<CardPreview card={itemRef} disableHover/>)}
           {actionRef && <ActionPreview action={actionRef} runtime={runtime} sourceLabel={sourceLabel} weaponAttackPreview={weaponAttackPreview} disableHover />}
-          {spellRef && <SpellPreview spell={spellRef} disableHover spellcasting={spellcasting} />}
+          {spellRef && <SpellPreview spell={spellRef} disableHover spellcasting={spellcasting} hideAvailability={hideSpellAvailability} />}
           {!itemRef && !effectRef && !actionRef && !spellRef && description && (
             <div className="sp-tip">
               <style>{SPELL_CARD_CSS}</style>

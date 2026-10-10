@@ -30,6 +30,8 @@ export const SPELL_CARD_CSS = `
   .sp-dmgval{display:inline-flex; align-items:center; gap:.32rem; font-weight:700; font-size:1.02rem; flex-wrap:wrap;}
   .sp-dmgitem{display:inline-flex; align-items:center; gap:.28em; white-space:nowrap;}
   .sp-dmgval .sp-dmgicon{height:1.15em; width:1.15em; object-fit:contain; flex:0 0 auto;}
+  .sp-spelltip{--formatted-damage-icon-size:1.2em;}
+  .sp-spelltip .sp-dmgval .sp-dmgicon{height:1.38em; width:1.38em;}
   .sp-dmgsep{color:#a59886; font-weight:400; margin:0 .15rem;}
   .sp-tip .sp-desc{font-size:.92rem; line-height:1.5; color:#d8cdb9; margin:.2rem 0 .9rem; white-space:pre-wrap;}
   .sp-tip .sp-desc b, .sp-tip .sp-desc .font-bold{color:#f0d98a; font-weight:600;}

@@ -107,6 +107,7 @@ export default function SheetActionList({actions, allActions, spellsOnly, action
                   runtime={runtime}
                   effectRef={action.effectRef}
                   spellRef={action.spellRef}
+                  hideSpellAvailability
                   spellcasting={spellcasting
                     ? { saveDC: spellcasting.saveDC, attack: spellcasting.attack }
                     : undefined}

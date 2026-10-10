@@ -1,7 +1,9 @@
-import {Ruler, Swords, Shield, FlaskConical, Leaf, Gem, Wrench, Zap, Sparkles, ScrollText, User, GraduationCap, Shirt, Footprints, Feather, Waves, Mountain, Shovel, Pin, Lightbulb, Heart, Crown, BookOpen, Hourglass, Focus, Circle, RefreshCw, PawPrint, Package, type LucideIcon} from 'lucide-react';
+import {Ruler, Swords, Shield, ShieldCheck, Crosshair, FlaskConical, Leaf, Gem, Wrench, Zap, Sparkles, ScrollText, User, GraduationCap, Shirt, Footprints, Feather, Waves, Mountain, Shovel, Pin, Lightbulb, Heart, Crown, BookOpen, Hourglass, Focus, Circle, CircleDot, RefreshCw, PawPrint, Package, type LucideIcon} from 'lucide-react';
 
 // Site controls and metadata share monochrome engraving-style strokes.
 const ICONS: Record<string, LucideIcon> = {
+  uses:CircleDot,
+  attack:Crosshair, save:ShieldCheck,
   range:Ruler, '🎯':Ruler, '🎽':Shirt, '📖':BookOpen, '⏱':Hourglass, '◈':Focus, '⊙':Circle, '⟳':RefreshCw, '✦':Sparkles,
   '⚔️':Swords, '⚔':Swords, '🏹':Ruler, '🛡️':Shield, '🧪':FlaskConical, '🌿':Leaf, '💎':Gem, '🔧':Wrench,
   '⚡':Zap, '✨':Sparkles, '🔮':Sparkles, '🏅':Shield, '📜':ScrollText, '🧬':User, '🎓':GraduationCap,

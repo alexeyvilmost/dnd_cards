@@ -144,6 +144,17 @@ describe('parseMechanicsStats (превью из механики, не из л�
       on_success: [{ kind: 'damage', dice: '8d6', type: 'fire', on_success: 'half' }],
     }] };
     expect(parseMechanicsStats(fireball).damage).toEqual([{ value: '8d6', type: 'fire' }]);
+    expect(parseMechanicsStats(fireball).damageOnSaveSuccess).toEqual([{ value: 'floor((8d6)/2)', type: 'fire' }]);
+  });
+
+  it('separates explicit success formulas from failed-save damage', () => {
+    const stats = parseMechanicsStats({ effects: [{
+      resolution: 'save', ability: 'con',
+      on_fail: [{ kind: 'damage', amount: '1d8 + wis', type: 'radiant' }],
+      on_success: [{ kind: 'damage', amount: 'floor((1d8 + wis)/2)', type: 'radiant' }],
+    }] });
+    expect(stats.damage).toEqual([{ value: '1d8 + wis', type: 'radiant' }]);
+    expect(stats.damageOnSaveSuccess).toEqual([{ value: 'floor((1d8 + wis)/2)', type: 'radiant' }]);
   });
 
   it('пустая механика', () => {

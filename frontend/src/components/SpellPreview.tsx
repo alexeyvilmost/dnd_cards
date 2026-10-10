@@ -11,11 +11,14 @@ import { getDamageColor, getDamageColorOnDark, getDamageLabel, getDamageIconPath
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
-import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
+import { parseMechanicsStats } from '../engine/describeMechanics';
 import { formatFormulaDisplay } from '../engine/formula';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 import UiIcon from './UiIcon';
+import SaveDamagePreview from './SaveDamagePreview';
+import RollPreviewMeta from './RollPreviewMeta';
+import { recoveryPreview } from '../engine/recoveryPreview';
 
 // Класс → русская подпись
 const SPELL_CLASS_LABEL: Record<string, string> = Object.fromEntries(
@@ -26,12 +29,12 @@ interface SpellPreviewProps {
   spell: Spell;
   className?: string;
   disableHover?: boolean;
+  /** Hide class availability when inspecting a spell already owned by a character. */
+  hideAvailability?: boolean;
   onClick?: () => void;
   /** Контекст заклинателя (лист персонажа): обогащает превью СЛ спасброска и бонусом атаки. */
   spellcasting?: { saveDC?: number; attack?: number };
 }
-
-const fmtBonus = (n: number) => (n >= 0 ? `+${n}` : String(n));
 
 const schoolLabel = (school?: string | null) =>
   SPELL_SCHOOL_OPTIONS.find((s) => s.value === school)?.label || school || '';
@@ -40,6 +43,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   spell,
   className = '',
   disableHover = false,
+  hideAvailability = false,
   onClick,
   spellcasting,
 }) => {
@@ -61,8 +65,6 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   // Статистика превью — из МЕХАНИКИ (единственный источник истины; легаси-флаги удалены).
   const mstats = parseMechanicsStats((spell as { mechanics?: Record<string, unknown> | null }).mechanics);
   const showAttack = mstats.attack;
-  const showSave = mstats.save;
-  const saveAbilityText = abilityFullRu(mstats.saveAbility);
   const dmgEntries = mstats.damage.length
     ? mstats.damage
     : (spell.damage || []).map((d) => ({ value: d.dice, type: d.damage_type }));
@@ -72,10 +74,11 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
   // Meta-элементы (только релевантные)
   const meta: Array<[string, string]> = [];
+  const recovery = recoveryPreview(spell);
+  if (recovery) meta.push(['⟳', recovery]);
   if (spell.range) meta.push(['range', spell.range]);
   if (spell.area) meta.push(['⊙', spell.area]);
   if (spell.duration) meta.push(['⏱', spell.duration]);
-  if (spell.concentration) meta.push(['◈', 'Концентрация']);
   if (spell.ritual) meta.push(['📖', 'Ритуал']);
   if (components.length) meta.push(['✦', components.join(', ')]);
 
@@ -104,11 +107,11 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
     costs.push({ iconSrc: resourceCostIcon(spellResourceOptions, id), label: resourceLabel(spellResourceOptions, id) });
   }
 
-  const hasStats = showAttack || showSave || dmgEntries.length > 0 || healEntries.length > 0;
+  const hasStats = dmgEntries.length > 0 || healEntries.length > 0 || !!mstats.damageOnSaveSuccess?.length;
 
   return (
     <div
-      className={`sp-tip ${disableHover ? '' : 'sp-hoverable'} ${className}`}
+      className={`sp-tip sp-spelltip ${disableHover ? '' : 'sp-hoverable'} ${className}`}
       onClick={onClick}
       style={onClick ? { cursor: 'pointer' } : undefined}
     >
@@ -131,22 +134,6 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
       {hasStats && (
         <div className="sp-stats">
-          {showAttack && (
-            <div className="sp-srow">
-              <span className="sp-lbl">Атака:</span>
-              <div className="sp-die">к20</div>
-              {spellcasting?.attack != null && <span className="sp-bonus">{fmtBonus(spellcasting.attack)}</span>}
-            </div>
-          )}
-          {showSave && (
-            <div className="sp-srow">
-              <span className="sp-lbl">Спасбросок:</span>
-              <span className="sp-bonus">
-                {saveAbilityText || 'спасбросок'}
-                {spellcasting?.saveDC != null ? ` (СЛ ${spellcasting.saveDC})` : ''}
-              </span>
-            </div>
-          )}
           {dmgEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Урон:</span>
@@ -164,6 +151,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
               </span>
             </div>
           )}
+          <SaveDamagePreview stats={mstats} />
           {healEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
@@ -194,7 +182,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 
       {spell.save_outcome && <div className="sp-saveline">{spell.save_outcome}</div>}
 
-      {spell.classes && spell.classes.length > 0 && (
+      {!hideAvailability && spell.classes && spell.classes.length > 0 && (
         <div className="sp-classes">
           <b>Классы:</b>{' '}
           {spell.classes
@@ -203,8 +191,9 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         </div>
       )}
 
-      {meta.length > 0 && (
+      {(meta.length > 0 || showAttack || mstats.save) && (
         <div className="sp-meta">
+          <RollPreviewMeta stats={mstats} attackBonus={spellcasting?.attack} spellcasting={spellcasting} />
           {meta.map(([icon, label], i) => (
             <span key={i}>
               <UiIcon symbol={icon} />

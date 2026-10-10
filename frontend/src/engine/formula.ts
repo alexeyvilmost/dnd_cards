@@ -607,7 +607,7 @@ export function rollFormula(
   };
 }
 
-function describeId(id: string, ctx: FormulaContext): string {
+function describeId(id: string, ctx: FormulaContext, showSources = true): string {
   const lower = id.toLowerCase();
   if (MARKERS.has(lower)) return lower === 'weapon' ? 'оружие' : 'авто';
 
@@ -654,7 +654,7 @@ function describeId(id: string, ctx: FormulaContext): string {
   if (lower === 'prof_bonus' || lower === 'prof') {
     if (ctx.profBonus === undefined) return 'БМ';
     const v = ctx.profBonus;
-    return v >= 0 ? `+${v} БМ` : `${v} БМ`;
+    return `${v >= 0 ? '+' : ''}${v}${showSources ? ' БМ' : ''}`;
   }
   if (lower === 'self_level') {
     if (ctx.selfLevel === undefined) return 'уровень';
@@ -663,7 +663,11 @@ function describeId(id: string, ctx: FormulaContext): string {
   if (lower === 'spellcasting') {
     if (ctx.spellcastingMod === undefined) return 'модификатор заклинаний';
     const v = ctx.spellcastingMod;
-    return v >= 0 ? `+${v} заклин.` : `${v} заклин.`;
+    return `${v >= 0 ? '+' : ''}${v}${showSources ? ' заклин.' : ''}`;
+  }
+  if (lower === 'spell_save_dc') {
+    return ctx.profBonus !== undefined && ctx.spellcastingMod !== undefined
+      ? String(resolveNumericScalar(lower, ctx)) : 'СЛ заклинаний';
   }
   if (lower === 'spell_slot_above') {
     if (ctx.spellSlotAbove === undefined) return 'уровень ячейки выше базового';
@@ -694,7 +698,7 @@ function describeId(id: string, ctx: FormulaContext): string {
     if (!ctx.abilityMods || ctx.abilityMods[ability] === undefined) return ABILITY_LABEL_RU[ability];
     const v = ctx.abilityMods[ability] ?? 0;
     const label = ABILITY_LABEL_RU[ability];
-    return v >= 0 ? `+${v} [${label}]` : `${v} [${label}]`;
+    return `${v >= 0 ? '+' : ''}${v}${showSources ? ` [${label}]` : ''}`;
   }
 
   const variable = ctx.variables?.[lower] ?? ctx.variables?.[id];
@@ -707,7 +711,7 @@ function describeId(id: string, ctx: FormulaContext): string {
 }
 
 /** Человекочитаемое описание формулы для лога бросков / превью. */
-export function describe(formula: string | number, ctx: FormulaContext = {}): string {
+export function describe(formula: string | number, ctx: FormulaContext = {}, { showSources = true } = {}): string {
   if (typeof formula === 'number') return String(formula);
   const trimmed = formula.trim();
   if (!trimmed) return '';
@@ -769,7 +773,7 @@ export function describe(formula: string | number, ctx: FormulaContext = {}): st
     }
     if (tok.t === 'num') parts.push(String(tok.v));
     else if (tok.t === 'dice') parts.push(`${tok.count}к${tok.sides}`);
-    else if (tok.t === 'id') parts.push(describeId(tok.v, ctx));
+    else if (tok.t === 'id') parts.push(describeId(tok.v, ctx, showSources));
     else if (tok.t === 'op') parts.push(tok.v);
     else if (tok.t === 'lparen') parts.push('(');
     else if (tok.t === 'rparen') parts.push(')');
@@ -780,6 +784,21 @@ export function describe(formula: string | number, ctx: FormulaContext = {}): st
     // Идентификаторы сохраняют ведущий «+» для самостоятельного показа
     // («+3 [СИЛ]»), но после бинарного оператора он был бы продублирован.
     .replace(/([+\-*/(])\s+\+(?=\d)/g, '$1 ');
+}
+
+/** Recognize the authored half-damage expression without evaluating its dice. */
+export function halfDamageFormulaBase(formula: string): string | null {
+  const match = formula.trim().match(/^floor\s*\(\s*\((.+)\)\s*\/\s*2\s*\)$/s);
+  if (!match) return null;
+  try {
+    const tokens = tokenize(match[1]);
+    let depth = 0;
+    for (const token of tokens) {
+      if (token.t === 'lparen') depth++;
+      if (token.t === 'rparen' && --depth < 0) return null;
+    }
+    return tokens.length && depth === 0 ? match[1].trim() : null;
+  } catch { return null; }
 }
 
 /** Превью формулы: известные переменные → значения, кости → «NкM». Без ctx — только кости. */
@@ -810,8 +829,13 @@ export function formatFormulaDisplay(formula: string | number, ctx?: FormulaCont
   } catch {
     // Invalid authoring data still follows the existing readable fallback.
   }
+  const halfBase = halfDamageFormulaBase(raw);
+  if (halfBase && tokenize(halfBase).some(token => token.t === 'dice'
+    || (token.t === 'id' && !isNumericScalarKnown(token.v, ctx ?? {})))) {
+    return `Половина (${formatFormulaDisplay(halfBase, ctx)})`;
+  }
   try {
-    return describe(raw, ctx ?? {});
+    return describe(raw, ctx ?? {}, { showSources: false });
   } catch {
     /* битая формула — ниже деградация до кости */
   }

@@ -17,6 +17,7 @@ import { useContainerTotals, useResolvedRefs } from './RelatedItems';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
+import SaveDamagePreview from './SaveDamagePreview';
 import UiIcon from './UiIcon';
 
 // Третий режим отображения предмета (entityDisplay.items='interface'): стат-блок в стиле превью
@@ -147,6 +148,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
               </span>
             </div>
           )}
+          <SaveDamagePreview stats={mstats} />
           {healEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>

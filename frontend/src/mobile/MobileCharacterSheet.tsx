@@ -310,6 +310,7 @@ export default function MobileCharacterSheet() {
     const view: MobileEntityView = action.spellRef
       ? {
           kind: 'spell',
+          hideAvailability: true,
           entity: action.spellRef,
           spellcasting: ruleState.spellcasting
             ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack }

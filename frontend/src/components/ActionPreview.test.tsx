@@ -26,6 +26,28 @@ const secondWind = {
 } as unknown as Action;
 
 describe('ActionPreview contextual formulas and costs', () => {
+  it('shows save damage and its successful outcome as alternatives', () => {
+    const action = { ...secondWind, mechanics: { effects: [{
+      resolution: 'save', ability: 'con', dc: '8 + prof + spellcasting',
+      on_fail: [{ kind: 'damage', type: 'radiant', amount: '1d8 + wis' }],
+      on_success: [{ kind: 'damage', type: 'radiant', amount: 'floor((1d8 + wis)/2)' }],
+    }] } } as unknown as Action;
+    const html = renderToStaticMarkup(createElement(CharacterFormulaProvider, {
+      value: { abilityMods: { wis: 3 }, profBonus: 2, spellcastingMod: 3 },
+      children: createElement(ActionPreview, { action, resources: [] }),
+    }));
+    expect(html).toContain('1к8 + 3');
+    expect(html).not.toContain('[МДР]');
+    expect(html).toContain('половина урона');
+    expect(html).not.toContain('округление');
+    expect(html).not.toContain('floor');
+    expect(html).not.toContain('class="sp-dmgsep"');
+    const meta = html.split('<div class="sp-meta">')[1].split('</div>')[0];
+    expect(meta).toContain('Спасбросок');
+    expect(meta).toContain('Телосложение');
+    expect(meta).toContain('(СЛ 13)');
+    expect(html.split('<div class="sp-meta">')[0]).not.toContain('Спасбросок:');
+  });
   it('renders Second Wind with character values and human resource labels', () => {
     const html = renderToStaticMarkup(
       createElement(
@@ -61,5 +83,7 @@ describe('ActionPreview contextual formulas and costs', () => {
     expect(html).toContain('универсальное');
     expect(html).toContain('+5');
     expect(html).toContain('1к8 + 3');
+    expect(html.split('<div class="sp-meta">')[1]).toContain('Бросок атаки (+5)');
+    expect(html).not.toContain('<span class="sp-lbl">Атака:</span>');
   });
 });

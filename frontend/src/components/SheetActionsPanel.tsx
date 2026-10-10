@@ -2396,7 +2396,7 @@ export default function SheetActionsPanel({
     // Превью действия/заклинания для диалога кубов (видно, ради чего бросок).
     const previewFor = (a: SheetAction): ReactNode => {
       if (a.spellRef) {
-        return <SpellPreview spell={a.spellRef} disableHover spellcasting={ruleState.spellcasting
+        return <SpellPreview spell={a.spellRef} disableHover hideAvailability spellcasting={ruleState.spellcasting
           ? { saveDC: ruleState.spellcasting.saveDC, attack: ruleState.spellcasting.attack } : undefined} />;
       }
       if (a.actionRef) {
