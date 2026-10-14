@@ -2,6 +2,7 @@ import type { MechanicsStats } from '../engine/describeMechanics';
 import { formatFormulaDisplay, halfDamageFormulaBase } from '../engine/formula';
 import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import { getDamageLabel } from '../utils/damageTypes';
+import FormulaValue from './FormulaValue';
 
 /** Save outcomes are alternatives, not additional hits in the damage row. */
 export default function SaveDamagePreview({ stats }: { stats: MechanicsStats }) {
@@ -15,7 +16,7 @@ export default function SaveDamagePreview({ stats }: { stats: MechanicsStats }) 
       return base != null && failed.type === entry.type && fmt(base) === fmt(failed.value);
     });
   return <div className="sp-saveline">
-    При успехе: {isHalf ? 'половина урона' : stats.damageOnSaveSuccess.map(entry =>
-      `${fmt(entry.value)} ${getDamageLabel(entry.type).toLowerCase()}`).join(' + ')}
+    При успехе: {isHalf ? 'половина урона' : stats.damageOnSaveSuccess.map((entry,index) =>
+      <span key={index}>{index>0&&' + '}<FormulaValue formula={entry.value} /> {getDamageLabel(entry.type).toLowerCase()}</span>)}
   </div>;
 }

@@ -2,7 +2,7 @@
 // Используется и SpellPreview, и ActionPreview, чтобы карточки выглядели одинаково.
 export const SPELL_CARD_CSS = `
   .sp-tip{
-    position:relative; width:340px; max-width:100%; border-radius:12px; color:#ece3d4;
+    position:relative; width:min(340px,calc(100vw - 32px)); max-width:100%; box-sizing:border-box; border-radius:12px; color:#ece3d4;
     background:linear-gradient(160deg,#2b2520,#191410);
     border:1px solid #8a7320;
     box-shadow:0 12px 40px rgba(0,0,0,.6), inset 0 0 0 1px rgba(201,162,39,.08);
@@ -27,15 +27,19 @@ export const SPELL_CARD_CSS = `
     display:flex; align-items:center; justify-content:center; font-weight:700; color:#cfeac0; font-size:.72rem;}
   .sp-die.sp-save{background:radial-gradient(circle at 50% 40%,#5a4a7a,#2a2140); border-color:#6a5a9a; color:#d8c8f0;}
   .sp-srow .sp-bonus{font-weight:700; font-size:1.02rem; color:#f3ead4;}
-  .sp-dmgval{display:inline-flex; align-items:center; gap:.32rem; font-weight:700; font-size:1.02rem; flex-wrap:wrap;}
-  .sp-dmgitem{display:inline-flex; align-items:center; gap:.28em; white-space:nowrap;}
+  .sp-dmgval{display:inline-flex; align-items:center; gap:.32rem; font-weight:700; font-size:1.02rem; flex-wrap:wrap; min-width:0;}
+  .sp-dmgitem{display:inline-flex; align-items:center; gap:.28em; flex-wrap:wrap; min-width:0; overflow-wrap:anywhere;}
+  .sp-formula-trigger{font:inherit; color:inherit; padding:0; border:0; background:none; cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px;}
+  .sp-formula-trigger:focus-visible{outline:2px solid currentColor; outline-offset:3px; border-radius:2px;}
+  .sp-formula-preview{padding:14px 16px;}
+  .sp-formula-detail{display:block; margin-top:.35rem; font-weight:400; white-space:pre-wrap; overflow-wrap:anywhere;}
   .sp-dmgval .sp-dmgicon{height:1.15em; width:1.15em; object-fit:contain; flex:0 0 auto;}
   .sp-spelltip{--formatted-damage-icon-size:1.2em;}
   .sp-spelltip .sp-dmgval .sp-dmgicon{height:1.38em; width:1.38em;}
   .sp-dmgsep{color:#a59886; font-weight:400; margin:0 .15rem;}
   .sp-tip .sp-desc{font-size:.92rem; line-height:1.5; color:#d8cdb9; margin:.2rem 0 .9rem; white-space:pre-wrap;}
   .sp-tip .sp-desc b, .sp-tip .sp-desc .font-bold{color:#f0d98a; font-weight:600;}
-  .sp-tip .sp-upcast{font-size:.88rem; line-height:1.45; color:#cdbf9a; margin:0 0 .9rem;}
+  .sp-tip .sp-upcast{font-size:.88rem; line-height:1.45; color:#cdbf9a; margin:0 0 .9rem; white-space:pre-wrap;}
   .sp-tip .sp-upcast .font-bold{color:#e7cf9a; font-weight:600;}
   .sp-tip .sp-upcast .sp-uplbl{color:#e7cf9a; font-weight:600;}
   .sp-tip .sp-saveline{font-size:.88rem; color:#e7cf9a; margin:0 0 .9rem; font-weight:600;}
@@ -54,4 +58,5 @@ export const SPELL_CARD_CSS = `
   .sp-tip .sp-pagelink{display:inline-block; margin:0 0 .7rem; font-size:.82rem; color:#d8b978;
     text-decoration:none; border:1px solid #6b5836; border-radius:6px; padding:3px 10px; transition:.12s;}
   .sp-tip .sp-pagelink:hover{background:rgba(216,185,120,.12); border-color:#d8b978;}
+  @media(max-width:480px){.sp-tip .sp-bigicon{right:0;}.sp-srow .sp-lbl{min-width:76px;}}
 `;

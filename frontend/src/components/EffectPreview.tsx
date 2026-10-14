@@ -6,10 +6,10 @@ import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../util
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { describeMechanics, parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
-import { formatFormulaDisplay } from '../engine/formula';
+import FormulaValue from './FormulaValue';
+import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { useSiteSettings } from '../settings';
-import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 import SaveDamagePreview from './SaveDamagePreview';
 import UiIcon from './UiIcon';
@@ -32,10 +32,9 @@ interface EffectPreviewProps {
 }
 
 const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', disableHover = false, onClick, sourceLabel, footer }: EffectPreviewProps) => {
+  const formulaCtx = useCharacterFormulaCtx();
   const resources = useResourceOptions();
   const { playerMode, showDetailedPreview } = useSiteSettings();
-  const formulaCtx = useCharacterFormulaCtx();
-  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const subtype = [sourceLabel || effectTypeLabel(effect.effect_type), effect.type]
     .filter(Boolean)
@@ -98,7 +97,7 @@ const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', di
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {fmt(d.value)}
+                      <FormulaValue formula={d.value} />
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
@@ -111,7 +110,7 @@ const EffectPreview = ({ effect, reviewEntityType = 'effect', className = '', di
           {stats.heal.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
-              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>{fmt(stats.heal.join(' + '))} лечение</span></span>
+              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}><FormulaValue formula={stats.heal.join(' + ')} /> лечение</span></span>
             </div>
           )}
         </div>

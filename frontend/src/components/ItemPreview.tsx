@@ -12,10 +12,9 @@ import { hasElementalDamage } from '../utils/elementalDamage';
 import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { parseMechanicsStats, abilityFullRu } from '../engine/describeMechanics';
-import { formatFormulaDisplay } from '../engine/formula';
+import FormulaValue from './FormulaValue';
 import { useContainerTotals, useResolvedRefs } from './RelatedItems';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
-import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 import SaveDamagePreview from './SaveDamagePreview';
 import UiIcon from './UiIcon';
@@ -57,8 +56,6 @@ type MetaEntry = { img?: string; imgStyle?: React.CSSProperties; emoji?: string;
 const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disableHover = false, onClick }) => {
   const { showDetailedPreview } = useSiteSettings();
   const containerSum = useContainerTotals(card);
-  const formulaCtx = useCharacterFormulaCtx();
-  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
   // Содержимое контейнера рисуем ИНЛАЙН в тёмной теме стат-блока (не через RelatedCardsList —
   // тот несёт свой светлый заголовок «Связанные карты» и светлое CardPreview-превью, чужеродные тут).
   const contents = useResolvedRefs(card.type === 'container' ? (card.contents ?? []) : []);
@@ -139,7 +136,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {fmt(d.value)}
+                      <FormulaValue formula={d.value} />
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
@@ -152,7 +149,7 @@ const ItemPreview: React.FC<ItemPreviewProps> = ({ card, className = '', disable
           {healEntries.length > 0 && (
             <div className="sp-srow">
               <span className="sp-lbl">Лечение:</span>
-              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>{fmt(healEntries.join(' + '))} лечение</span></span>
+              <span className="sp-dmgval"><span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}><FormulaValue formula={healEntries.join(' + ')} /> лечение</span></span>
             </div>
           )}
         </div>

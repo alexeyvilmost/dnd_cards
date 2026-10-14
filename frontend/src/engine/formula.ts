@@ -661,9 +661,8 @@ function describeId(id: string, ctx: FormulaContext, showSources = true): string
     return String(ctx.selfLevel);
   }
   if (lower === 'spellcasting') {
-    if (ctx.spellcastingMod === undefined) return 'модификатор заклинаний';
-    const v = ctx.spellcastingMod;
-    return `${v >= 0 ? '+' : ''}${v}${showSources ? ' заклин.' : ''}`;
+    if (ctx.spellcastingMod === undefined) return 'МЗ';
+    return String(ctx.spellcastingMod);
   }
   if (lower === 'spell_save_dc') {
     return ctx.profBonus !== undefined && ctx.spellcastingMod !== undefined

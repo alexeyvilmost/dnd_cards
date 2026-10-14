@@ -12,8 +12,7 @@ import { FormattedText } from '../utils/formattedText';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { resourceCostIcon, resourceLabel, useResourceOptions } from '../utils/resources';
 import { parseMechanicsStats } from '../engine/describeMechanics';
-import { formatFormulaDisplay } from '../engine/formula';
-import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
+import FormulaValue from './FormulaValue';
 import OriginalName from './OriginalName';
 import UiIcon from './UiIcon';
 import SaveDamagePreview from './SaveDamagePreview';
@@ -49,8 +48,6 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
 }) => {
   const { showDetailedPreview } = useSiteSettings();
   const spellResourceOptions = useResourceOptions();
-  const formulaCtx = useCharacterFormulaCtx();
-  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const subtype = [getSpellLevelLabel(spell.level), schoolLabel(spell.school)]
     .filter(Boolean)
@@ -79,6 +76,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
   if (spell.range) meta.push(['range', spell.range]);
   if (spell.area) meta.push(['⊙', spell.area]);
   if (spell.duration) meta.push(['⏱', spell.duration]);
+  if (spell.concentration && !spell.duration?.toLocaleLowerCase('ru').includes('концентраци')) meta.push(['◈', 'Концентрация']);
   if (spell.ritual) meta.push(['📖', 'Ритуал']);
   if (components.length) meta.push(['✦', components.join(', ')]);
 
@@ -142,7 +140,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {fmt(d.value)}
+                      <FormulaValue formula={d.value} />
                       <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" />
                       {getDamageLabel(d.type).toLowerCase()}
                     </span>
@@ -157,7 +155,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
               <span className="sp-lbl">Лечение:</span>
               <span className="sp-dmgval">
                 <span className="sp-dmgitem" style={{ color: getDamageColor('healing') }}>
-                  {fmt(healEntries.join(' + '))}
+                  <FormulaValue formula={healEntries.join(' + ')} />
                   <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
                   лечение
                 </span>
@@ -178,7 +176,7 @@ const SpellPreview: React.FC<SpellPreviewProps> = ({
         </div>
       )}
 
-      {showDetailedPreview && spell.detailed_description && <div className="sp-upcast"><FormattedText onDark text={spell.detailed_description} emptyText="" /></div>}
+      {showDetailedPreview && spell.detailed_description && spell.detailed_description !== spell.description && <div className="sp-upcast"><FormattedText onDark text={spell.detailed_description} emptyText="" /></div>}
 
       {spell.save_outcome && <div className="sp-saveline">{spell.save_outcome}</div>}
 

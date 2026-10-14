@@ -6,11 +6,11 @@ import type { WeaponAttackPreview } from '../engine/weapon';
 import { getDamageColorOnDark, getDamageLabel, getDamageIconPath } from '../utils/damageTypes';
 import { FormattedText } from '../utils/formattedText';
 import { describeMechanics, parseMechanicsStats } from '../engine/describeMechanics';
-import { formatFormulaDisplay } from '../engine/formula';
+import FormulaValue from './FormulaValue';
+import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import { actionCostResourceIds, resourceCostIcon, resourceLabel, type ResourceOption, useResourceOptions } from '../utils/resources';
 import { SPELL_CARD_CSS } from './spellCardStyle';
 import { useSiteSettings } from '../settings';
-import { useCharacterFormulaCtx } from '../contexts/CharacterFormulaContext';
 import OriginalName from './OriginalName';
 import { findMastery, useMasteryEffects } from '../utils/mastery';
 import { getPropertyLabel } from '../utils/propertyLabels';
@@ -42,7 +42,6 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
   const { playerMode, showDetailedPreview } = useSiteSettings();
   const formulaCtx = useCharacterFormulaCtx();
   const mastery = findMastery(useMasteryEffects(), wp?.masteryId);
-  const fmt = (s: string) => formatFormulaDisplay(s, formulaCtx);
 
   const actionTypeLabel = ACTION_TYPE_OPTIONS.find((o) => o.value === action.action_type)?.label || action.action_type || '';
   const rechargeLabel = recoveryPreview(action);
@@ -103,7 +102,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
                   <React.Fragment key={i}>
                     {i > 0 && <span className="sp-dmgsep">+</span>}
                     <span className="sp-dmgitem" style={{ color: getDamageColorOnDark(d.type) }}>
-                      {fmt(d.value)}
+                      <FormulaValue formula={d.value} />
                       {d.type === 'triggering_attack' ? ' к урону исходной атаки' : <>
                         <img className="sp-dmgicon" src={getDamageIconPath(d.type)} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                         {getDamageLabel(d.type).toLowerCase()}
@@ -120,7 +119,7 @@ const ActionPreview = ({ action, runtime, className = '', disableHover = false, 
               <span className="sp-lbl">Лечение:</span>
               <span className="sp-dmgval">
                 <span className="sp-dmgitem" style={{ color: getDamageColorOnDark('healing') }}>
-                  {fmt(stats.heal.join(' + '))}
+                  <FormulaValue formula={stats.heal.join(' + ')} />
                   <img className="sp-dmgicon" src={getDamageIconPath('healing')} alt="" />
                   лечение
                 </span>
