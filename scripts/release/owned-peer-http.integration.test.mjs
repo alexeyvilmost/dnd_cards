@@ -30,7 +30,7 @@ test('real local Docker probes follow the current generation while the old addre
     const row=inspect(kind,name),labels=kind==='container'?row.Config.Labels:row.Labels;
     assert.equal(labels['bagofholding.compact-writer'],owner);
     docker(kind==='container'?['container','rm','--force',name]:[kind,'rm',name]);
-    resources.find(r=>r.kind===kind&&r.name===name).removed=true;
+    resources.find(r=>r.kind===kind&&r.name===name&&!r.removed).removed=true;
   };
   let proxy;
   const request=url=>{
@@ -39,7 +39,15 @@ test('real local Docker probes follow the current generation while the old addre
   };
   try{
     resources.push({kind:'network',name:network});docker(['network','create','--internal','--label',label,network]);
-    assert.equal(inspect('network',network).Internal,true);
+    const allocated=inspect('network',network);assert.equal(allocated.Internal,true);
+    const subnet=allocated.IPAM.Config?.find(row=>/^\d+\.\d+\.\d+\.\d+\/\d+$/.test(row.Subnet))?.Subnet;
+    assert.ok(subnet,'Owned Docker network must have an allocated IPv4 subnet');
+    // Older daemons permit --ip only with explicit IPAM. Reserve a free subnet
+    // using the daemon allocator, then recreate only our empty owned network.
+    remove('network',network);resources.push({kind:'network',name:network});
+    docker(['network','create','--internal','--subnet',subnet,'--label',label,network]);
+    const explicit=inspect('network',network);assert.equal(explicit.Internal,true);
+    assert.equal(explicit.IPAM.Config.find(row=>row.Subnet===subnet)?.Subnet,subnet);
     proxy=owner+'_probe';resources.push({kind:'container',name:proxy});
     docker(['run','-d','--name',proxy,'--label',label,'--network',network,'--read-only','--cap-drop','ALL','--entrypoint','node',imageId,'-e','setInterval(()=>{},1000)']);
     const first=owner+'_api_1',old=server(first,'backend',8080,1),oldIP=old.NetworkSettings.Networks[network].IPAddress;
