@@ -8,6 +8,7 @@ import path from 'node:path';
 import {imageProtocolEmulatorProgram} from './image-protocol-emulator.mjs';
 import {startOwnedBrowserRelay,ownedBrowserForwardProgram} from './owned-browser-relay.mjs';
 import {safeExecutionEnvironment} from './ui-execution-profile.mjs';
+import {ownedPeerHttpURL} from './owned-peer-http.mjs';
 const hashPattern=/^sha256:[a-f0-9]{64}$/;
 const hash=async file=>{const h=createHash('sha256');for await(const bytes of createReadStream(file))h.update(bytes);return 'sha256:'+h.digest('hex');};
 const read=async p=>JSON.parse(await readFile(p,'utf8'));
@@ -106,7 +107,21 @@ export async function createCompactOciAdapter({directory,dump,backend,worker,fro
  async function envFile(name,values){const file=path.join(directory,name+'.env');await writeFile(file,Object.entries(values).map(([k,v])=>k+'='+v).join('\n')+'\n',{flag:'wx',mode:0o600});secretFiles.push(file);return file;}
  async function wait(probe){const deadline=Date.now()+120000;while(Date.now()<deadline){try{if(await probe())return;}catch{}await new Promise(r=>setTimeout(r,250));}throw Error('Owned OCI readiness failed');}
  async function query(sql){if(!ready)throw Error('Owned database not ready');await ownedResource('container',names.postgres);return docker(['exec','-i',names.postgres,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','test_runner','-d',activeDatabase],{input:sql});}
- async function http(url,{method='GET',body,token,headers={}}={}){await ownedResource('container',names.proxy);return JSON.parse(await docker(['exec','-i',names.proxy,'node','--input-type=module','-e',httpProgram],{input:JSON.stringify({url,method,body,headers:{'content-type':'application/json',...headers,...(token?{authorization:'Bearer '+token}:{})}})}));}
+ async function http(url,{method='GET',body,token,headers={}}={}){
+  await ownedResource('container',names.proxy);
+  const requested=new URL(url),peers={
+   backend:apps&&{name:apps.backend,imageId:apps.records.backend.imageId,port:8080},
+   'rules-worker':apps&&{name:apps.worker,imageId:apps.records.worker.imageId,port:8090},
+   frontend:browser&&{name:browser.frontend,imageId:browser.record.imageId,port:3000},
+  };
+  if(Object.hasOwn(peers,requested.hostname)){
+   const peer=peers[requested.hostname];if(!peer)throw Error('Owned peer is stopped');
+   const container=await ownedResource('container',peer.name);
+   url=ownedPeerHttpURL(url,{alias:requested.hostname,...peer,owner,network:names.network,container});
+   if(!Object.keys(headers).some(key=>key.toLowerCase()==='host'))headers={host:requested.host,...headers};
+  }
+  return JSON.parse(await docker(['exec','-i',names.proxy,'node','--input-type=module','-e',httpProgram],{input:JSON.stringify({url,method,body,headers:{'content-type':'application/json',...headers,...(token?{authorization:'Bearer '+token}:{})}})}));
+ }
  async function initialize(){
   const endpoint=JSON.parse(await docker(['context','inspect','--format','{{json .Endpoints.docker.Host}}']));if(!/^(unix:\/\/|npipe:\/\/)/.test(endpoint)||process.env.DOCKER_HOST||process.env.DOCKER_CONTEXT)throw Error('Default local Docker socket required');
   const loaded=new Map();for(const [,row]of imageRecords){const reference=row.image??row.imageId;if(!loaded.has(reference)){if(imageInputKind(row)==='registry')await docker(['pull',row.image],{timeout:300000});else await docker(['load','--input',row.archive],{timeout:300000});const actual=JSON.parse(await docker(['image','inspect',reference]))[0];if(!hashPattern.test(actual.Id)||(!row.image&&actual.Id!==row.imageId)||(row.image&&!actual.RepoDigests?.includes(row.image)))throw Error('Loaded immutable image identity differs');loaded.set(reference,actual.Id);}row.imageId=loaded.get(reference);}
