@@ -213,6 +213,14 @@ Deployment receipt различает releaseCommit приложения и cont
 workflow_run может выполняться на более новом default branch SHA. Baseline consumer
 проверяет оба значения и hash manifest, а не подменяет один другим.
 
+При повторной проверке отказавшего ручного выпуска sourceCommit связывается
+с manifest кандидата, а controlCommit — с фактическим workflow. Отказ на
+четвёртом этапе проверки прошлых отказов можно отдельно зафиксировать как
+`reviewed-followon-pre-capture-refusal-audit` только после read-only аудита:
+ровно четыре исходных phase-файла, отсутствие capture/rehearsal/journal,
+остановленный validator и неизменные действующие сервисы/защищённые файлы.
+Такой запуск остаётся failed; следующий выпуск заново проходит все gates.
+
 Разрешение пользователя уже получено. Полный путь перед заменой требует Linux/OCI
 проверки, restore актуального backup, exact-candidate rehearsal и registry pull access.
 Типизированный frontend-only путь проверяется по отдельному контракту выше.

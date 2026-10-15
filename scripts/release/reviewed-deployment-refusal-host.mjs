@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';import {readFileSync,lstatSync,realpathSync,existsSync,readdirSync}from'node:fs';
 import path from'node:path';import {fileURLToPath}from'node:url';import {createHash}from'node:crypto';
 import {evidenceHash}from'./validate-manifest.mjs';import {validateHostPacket}from'./ssh-host-release.mjs';import {observeUIHost,localDockerRead}from'./ui-host-observation.mjs';
-import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,reviewedRefusalPhaseScripts,isCompletedRestoreRefusal,isDetailedRehearsalRefusal,assertReviewedRehearsalRefusal}from'./reviewed-deployment-refusal.mjs';
+import {validateReviewedDeploymentRefusal,loadReviewedDeploymentRefusal,reviewedRefusalPhaseScripts,isCompletedRestoreRefusal,isPreCaptureRefusal,isDetailedRehearsalRefusal,assertReviewedRehearsalRefusal}from'./reviewed-deployment-refusal.mjs';
 import {observeCompletedRestoreRefusal}from'./completed-restore-refusal.mjs';
 const hash=b=>'sha256:'+createHash('sha256').update(b).digest('hex');
 function bytes(file){assert.equal(realpathSync(file),path.resolve(file));const s=lstatSync(file);assert.ok(s.isFile()&&!s.isSymbolicLink()&&s.size<=32*1024*1024);if(process.platform!=='win32')assert.equal(s.mode&0o077,0);return readFileSync(file);}
@@ -17,7 +17,7 @@ export function snapshotRefusalOperations(directory,{recursive=false}={}){
 }
 export function assertReviewedRefusalObservation(proof,observed){
  validateReviewedDeploymentRefusal(proof);
- for(const key of ['hostConfigHash','transferHash',isCompletedRestoreRefusal(proof)?'expiry':'rehearsalHash','phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash'])assert.equal(evidenceHash(observed[key]),evidenceHash(proof[key]),'Reviewed refusal host state changed: '+key);
+ for(const key of ['hostConfigHash','transferHash',...(isPreCaptureRefusal(proof)?[]:[isCompletedRestoreRefusal(proof)?'expiry':'rehearsalHash']),'phaseHashes','retained','operations','services','protectedRuntime','databaseBindingHash','routingSecurityHash'])assert.equal(evidenceHash(observed[key]),evidenceHash(proof[key]),'Reviewed refusal host state changed: '+key);
  if(isDetailedRehearsalRefusal(proof))assert.deepEqual(observed.rehearsalFailure,proof.rehearsalFailure);
  assert.equal(observed.activeHash,proof.baseline.activeHash);assert.equal(observed.cleanupComplete,true);return {status:'verified-reviewed-pre-cutover-refusal',failedRunId:proof.failed.id,baselineRunId:proof.baseline.id,proofHash:evidenceHash(proof),applicationMutations:0};
 }
@@ -38,12 +38,15 @@ export async function assertHostReviewedDeploymentRefusal({directory,underLock=f
  for(const proof of proofs){
   assert.equal(evidenceHash(active.manifest),proof.baseline.manifestHash);assert.equal(evidenceHash(active),proof.baseline.activeHash);
   const old=path.join(request.attemptRoot,`deploy-${proof.failed.id}-${proof.failed.attempt}`),previous=read(path.join(old,'transfer.json')),oldRequest=validateHostPacket(previous,old);
-  assert.equal(oldRequest.mode,'apply');assert.equal(oldRequest.repository,proof.repository);assert.equal(oldRequest.sourceCommit,proof.failed.controlCommit);assert.equal(oldRequest.controlCommit,proof.failed.controlCommit);assert.equal(String(oldRequest.runId),String(proof.failed.id));assert.equal(Number(oldRequest.attempt),proof.failed.attempt);assert.equal(oldRequest.eventName,proof.failed.event??'workflow_dispatch');
-  const oldCandidate=JSON.parse(previous.files['candidate.json'].text);assert.equal(evidenceHash(oldCandidate.manifest),proof.candidateManifestHash);assert.equal(oldCandidate.manifest.releaseId,proof.failedReleaseId);
+  assert.equal(oldRequest.mode,'apply');assert.equal(oldRequest.repository,proof.repository);assert.equal(oldRequest.controlCommit,proof.failed.controlCommit);assert.equal(String(oldRequest.runId),String(proof.failed.id));assert.equal(Number(oldRequest.attempt),proof.failed.attempt);assert.equal(oldRequest.eventName,proof.failed.event??'workflow_dispatch');
+  const oldCandidate=JSON.parse(previous.files['candidate.json'].text);assert.equal(oldRequest.sourceCommit,oldCandidate.manifest.releaseCommit);assert.equal(evidenceHash(oldCandidate.manifest),proof.candidateManifestHash);assert.equal(oldCandidate.manifest.releaseId,proof.failedReleaseId);
   const scripts=reviewedRefusalPhaseScripts(proof);assert.deepEqual(readdirSync(old).filter(n=>n.startsWith('phase-')).sort(),proof.phaseHashes.map(r=>r.file));for(const[i,row]of proof.phaseHashes.entries())assert.deepEqual(read(path.join(old,row.file)),{script:scripts[i],status:'started'});
   for(const name of ['ready','deployed-release','deployment-operation.json','docker-auth'])assert.equal(existsSync(path.join(old,name)),false);assert.equal(existsSync(path.join(config.root,'operations',proof.failedReleaseId+'.json')),false);
   let rehearsalEvidence;
-  if(isCompletedRestoreRefusal(proof))rehearsalEvidence={expiry:await observeCompletedRestoreRefusal({proof,old,root:config.root,active,candidate:oldCandidate})};
+  if(isPreCaptureRefusal(proof)){
+   assert.equal(existsSync(path.join(old,'rehearsal')),false);assert.equal(existsSync(path.join(config.backupDirectory??path.join(config.root,'backups'),`capture-${proof.failed.id}-${proof.failed.attempt}`)),false);rehearsalEvidence={};
+  }
+  else if(isCompletedRestoreRefusal(proof))rehearsalEvidence={expiry:await observeCompletedRestoreRefusal({proof,old,root:config.root,active,candidate:oldCandidate})};
   else if(isDetailedRehearsalRefusal(proof)){
    const inputFile=path.join(old,'rehearsal','input.json'),captureDirectory=path.join(config.backupDirectory??path.join(config.root,'backups'),`capture-${proof.failed.id}-${proof.failed.attempt}`),captureFile=path.join(captureDirectory,'capture.json');
    assert.equal(existsSync(path.join(old,'rehearsal','verified-backup.json')),false);assert.equal(existsSync(path.join(captureDirectory,'restore-report.json')),false);
