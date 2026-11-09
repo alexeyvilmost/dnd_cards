@@ -4,19 +4,23 @@ import {assertRuntimeWriterPolicy} from './writer-environment.mjs';
 import {assertRetainedWriterHistory} from './writer-retained-history.mjs';
 import {writerPublication} from './writer-browser-consumption.mjs';
 import {retirementWriterBaseline} from './candidate-rehearsal.mjs';
+import {markWriterFailure} from './writer-failure-diagnostics.mjs';
+
+async function writerStep(phase, action) {
+  try { return await action(); }
+  catch (error) { throw markWriterFailure(error, {phase}); }
+}
 
 /** Collect executable traces, never accept an arbitrary external receipt file.
  * All required drivers are checked BEFORE any probe. Absent drivers refuse the
  * stage; consumers cannot substitute an eight-stage OFF report for ON.
  */
 export async function collectWriterCompatibility(input,io,{runId}) {
-  const before=await io.observeCandidate();
-  assertRuntimeWriterPolicy(before.environment,{manifest:input.manifest});
-  const previous=input.previousManifest?await io.observePrevious():null;
+  const before=await writerStep('candidate-observation',async()=>{const value=await io.observeCandidate();assertRuntimeWriterPolicy(value.environment,{manifest:input.manifest});return value;});
+  const previous=input.previousManifest?await writerStep('previous-observation',async()=>{const value=await io.observePrevious();assertRuntimeWriterPolicy(value.environment,input.active);return value;}):null;
   const check={id:'writer-compatibility',status:'passed',compositionFingerprint:compositionFingerprint(input.manifest),writerPolicy:writerPolicy(input.manifest),
     candidate:{images:before.images,identities:before.identities},previous:previous?{state:input.active,images:previous.images,identities:previous.identities}:null,
     executionProfile:{candidate:before.executionProfile,previous:previous?.executionProfile??null},outcomes:[],traces:[]};
-  if(previous)assertRuntimeWriterPolicy(previous.environment,input.active);
   const receipt={runId,activeHash:input.activeHash,backupHash:input.backupHash},binding=writerTraceBinding(input.manifest,check,receipt);
   const bundle={previousManifest:input.previousManifest,images:before.images,identities:before.identities,rehearsalReceipt:receipt,...retirementWriterBaseline(input)};
   const required=writerCompatibilityRequirements(input.manifest,bundle,check);
@@ -26,25 +30,29 @@ export async function collectWriterCompatibility(input,io,{runId}) {
   // Validate exact observed identities/readers BEFORE executing a format probe.
   // The final validator below checks all observations/traces again. This guard
   // cannot use fabricated outcome hashes to authorize a bundle.
-  await io.assertOwnedImages(binding);
+  await writerStep('ownership',()=>io.assertOwnedImages(binding));
   let failure;
   try{
-    if(required.length)check.retainedHistory=assertRetainedWriterHistory(await io.retainedHistory(),input.backupHash);
+    if(required.length)check.retainedHistory=await writerStep('retained-history',async()=>assertRetainedWriterHistory(await io.retainedHistory(),input.backupHash));
     for(const id of required){
-      const trace=await io.drivers[id](binding);
-      validateWriterTrace(trace,id,binding);
-      check.traces.push(trace);check.outcomes.push({id,status:'passed',traceHash:evidenceHash(trace)});
+      try{
+        const trace=await io.drivers[id](binding);
+        validateWriterTrace(trace,id,binding);
+        check.traces.push(trace);check.outcomes.push({id,status:'passed',traceHash:evidenceHash(trace)});
+      }catch(error){throw markWriterFailure(error,{phase:'outcome',outcome:id});}
     }
   }catch(error){failure=error;}
   finally{
     try{
-      const after=await io.restoreCandidateAndObserve();
-      assertRuntimeWriterPolicy(after.environment,{manifest:input.manifest});
-      if(evidenceHash({images:after.images,identities:after.identities})!==evidenceHash(check.candidate))throw Error('Writer probe failed to restore exact candidate');
-      if(evidenceHash(after.executionProfile)!==evidenceHash(check.executionProfile.candidate))throw Error('Writer probe failed to restore candidate runtime profile');
-    }catch(error){failure??=error;}
+      await writerStep('candidate-restore',async()=>{
+        const after=await io.restoreCandidateAndObserve();
+        assertRuntimeWriterPolicy(after.environment,{manifest:input.manifest});
+        if(evidenceHash({images:after.images,identities:after.identities})!==evidenceHash(check.candidate))throw Error('Writer probe failed to restore exact candidate');
+        if(evidenceHash(after.executionProfile)!==evidenceHash(check.executionProfile.candidate))throw Error('Writer probe failed to restore candidate runtime profile');
+      });
+    }catch(error){if(failure)markWriterFailure(failure,{candidateRestoreFailed:true});else failure=error;}
   }
   if(failure)throw failure;
-  assertWriterCompatibility(input.manifest,bundle,check);
+  await writerStep('final-validation',()=>assertWriterCompatibility(input.manifest,bundle,check));
   return check;
 }

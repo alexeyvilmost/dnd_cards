@@ -8,6 +8,7 @@ import {compositionFingerprint,evidenceHash,assertReleaseReady} from './validate
 import {migrationScenarios} from './migration-transition.mjs';
 import {createDockerCommand} from './rehearsal-command.mjs';
 import {spawn} from 'node:child_process';
+import {markWriterFailure} from './writer-failure-diagnostics.mjs';
 const hash=char=>`sha256:${char.repeat(64)}`;
 function fixture({additive=false}={}){
   const previous={schemaVersion:1,releaseId:'previous',releaseCommit:'a'.repeat(40),previousReleaseId:null,createdAt:'2026-10-04T10:00:00Z',
@@ -117,6 +118,19 @@ test('failure diagnostics keep the private cause in memory and persist only fixe
  await assert.rejects(collectRehearsal(input,{execution:'simulation',start:async()=>{throw cause;},cleanup:async()=>({status:'stopped',errors:[]})},{onReport:async report=>{saved=report;}}),error=>error.cause===cause);
  assert.equal(saved.failureStage,'start');assert.deepEqual(saved.migrationFailure,{stage:'unavailable',completedScenarios:['atomic-ddl-ledger'],cleanup:'incomplete'});
  assert.ok(!JSON.stringify(saved).includes(secret));
+});
+
+test('writer refusal persists only trusted fixed substage identifiers and never approves release',async()=>{
+ for(const trusted of [false,true]){
+  const {input}=fixture(),secret='PRIVATE_WRITER_RECEIPT_CANARY';input.manifest.writerPolicy={compactReceipts:false,imageJobs:false,frozenCatalogs:false};
+  let failure=Object.assign(Error(secret),{writerFailure:{phase:secret},cause:Error(secret)}),saved;
+  if(trusted)failure=markWriterFailure(failure,{phase:'probe-execution',outcome:'compact-receipt-cross-image-retry'});
+  const adapter={execution:'simulation',start:async()=>{},check:async id=>{if(id==='writer-compatibility')throw failure;return {status:'passed'};},cleanup:async()=>({status:'stopped',errors:[]})};
+  await assert.rejects(collectRehearsal(input,adapter,{onReport:async report=>{saved=report;}}),error=>error.cause===failure);
+  assert.equal(saved.status,'failed');assert.equal(saved.failureStage,'writer-compatibility');assert.equal(saved.cleanup.status,'stopped');
+  if(trusted)assert.deepEqual(saved.writerFailure,{phase:'probe-execution',outcome:'compact-receipt-cross-image-retry'});else assert.equal(saved.writerFailure,undefined);
+  assert.ok(!JSON.stringify(saved).includes(secret));
+ }
 });
 
 test('actual subprocess failure keeps only safe diagnosis in the persisted rehearsal receipt',async()=>{

@@ -15,6 +15,7 @@ import {unitWriterTrace,unitHostedBrowserTrace,unitWriterPublication} from './un
 import {retirementStateUnitFixture} from './retirement-state-unit-fixture.mjs';
 import {retirementDatabaseStateFromInspection} from './retirement-state.mjs';
 import {databaseMigrationSet} from './migration-transition.mjs';
+import {markWriterFailure,safeWriterFailure} from './writer-failure-diagnostics.mjs';
 const env=policy=>Object.entries(writerEnvironment({writerPolicy:policy})).map(([k,v])=>k+'='+v);
 test('runtime environment is exact, rejects duplicate flags and preserves legacy absent OFF',()=>{
   const f=pair();assert.deepEqual(Object.fromEntries(Object.entries(deploymentEnvironment(f.active)).filter(([k])=>k.startsWith('DB_')||k==='IMAGE_JOBS_ENABLED')),writerEnvironment(f.active.manifest));
@@ -94,6 +95,22 @@ test('producer validates each actual observation contract and fails when candida
     const bad=collectorFixture();if(fault==='trace')bad.io.drivers['compact-receipt-cross-image-retry']=async()=>({status:'passed'});else bad.io.restoreCandidateAndObserve=async()=>{throw Error('cleanup');};
     await assert.rejects(collectWriterCompatibility(bad.input,bad.io,{runId:bad.f.bundle.rehearsalReceipt.runId}));
   }
+});
+test('writer probe diagnostics identify the fixed outcome while preserving the original failure and cleanup',async()=>{
+ const t=collectorFixture(),secret='PRIVATE_WRITER_CAUSE_CANARY',cause=Error(secret);
+ t.io.drivers['compact-receipt-cross-image-retry']=async()=>{throw markWriterFailure(cause,{phase:'probe-fixture'});};
+ await assert.rejects(collectWriterCompatibility(t.input,t.io,{runId:t.f.bundle.rehearsalReceipt.runId}),error=>error===cause);
+ assert.equal(t.counts().restored,1);
+ assert.deepEqual(safeWriterFailure(cause),{phase:'probe-fixture',outcome:'compact-receipt-cross-image-retry'});
+ assert.ok(!JSON.stringify(safeWriterFailure(cause)).includes(secret));
+});
+test('failed candidate restoration is reported without hiding an earlier failed outcome',async()=>{
+ const t=collectorFixture(),cause=Error('private-primary'),restore=Error('private-restore');
+ t.io.drivers['compact-receipt-cross-image-retry']=async()=>{throw cause;};
+ t.io.restoreCandidateAndObserve=async()=>{throw restore;};
+ await assert.rejects(collectWriterCompatibility(t.input,t.io,{runId:t.f.bundle.rehearsalReceipt.runId}),error=>error===cause);
+ assert.deepEqual(safeWriterFailure(cause),{phase:'outcome',outcome:'compact-receipt-cross-image-retry',candidateRestoreFailed:true});
+ assert.ok(!JSON.stringify(safeWriterFailure(cause)).includes('private'));
 });
 test('producer rejects missing actual preview and changed restored runtime settings despite identical images',async()=>{
  const missing=collectorFixture();missing.io.observeCandidate=async()=>({...missing.f.check.candidate,environment:env(on)});
