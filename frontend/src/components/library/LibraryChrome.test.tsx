@@ -87,6 +87,19 @@ describe('shared library chrome', () => {
     for (const { id } of LIBRARY_CATALOG) expect(librarySectionPath(id)).toMatch(id === 'monsters' ? /^\/monsters$/ : /^\/library(?:\?|$)/);
   });
 
+  it('offers all sections in the mobile selector and keeps the shared route and content handlers', async () => {
+    const change = vi.fn();
+    await act(async () => root.render(<MemoryRouter initialEntries={['/library?type=spells']}><HistoryProbe /><LibrarySidebar active="spells" onSelectContent={change} /></MemoryRouter>));
+    const select = container.querySelector<HTMLSelectElement>('select[id$="-mobile"]')!;
+    expect(select.value).toBe('spells');
+    expect([...select.options].map(option => option.value)).toEqual(LIBRARY_CATALOG.map(item => item.id));
+    expect(container.querySelector(`label[for="${select.id}"]`)?.textContent).toBe('Раздел библиотеки');
+    await act(async () => { select.value = 'actions'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+    expect(change).toHaveBeenLastCalledWith('actions');
+    await act(async () => { select.value = 'monsters'; select.dispatchEvent(new Event('change', { bubbles: true })); });
+    expect(container.querySelector('[data-location]')?.textContent).toBe('/monsters');
+  });
+
   it('debounces a burst, retains filters and restores input with back/forward history', async () => {
     await act(async () => root.render(<MemoryRouter initialEntries={['/monsters?tag=stable&q=old']}><HistoryProbe /><SearchHarness /></MemoryRouter>));
     expect(input().value).toBe('old');

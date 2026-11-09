@@ -9,6 +9,7 @@
   transition: width 200ms ease;
 }
 .library-sidebar[data-collapsed=true] { width: 68px; }
+.library-sidebar__mobile-selector { display: none; }
 .library-sidebar__toggle {
   display: flex; flex: 0 0 auto; align-items: center; gap: 12px; min-height: 48px;
   margin: 4px; padding: 10px 18px; border: 0; border-radius: 9px; font: inherit;
@@ -87,6 +88,13 @@
   .library-shell { flex-direction: column; gap: 12px; }
   .library-shell__content { width: 100%; gap: 16px; }
   .library-sidebar, .library-sidebar[data-collapsed=true] { position: static; width: 100%; max-height: none; }
+  .library-sidebar__mobile-selector { display: grid; gap: 6px; padding: 10px 12px 12px; }
+  .library-sidebar__mobile-selector label { font-size: 12px; color: var(--site-muted, #a9b0a5); }
+  .library-sidebar__select-wrap { position: relative; }
+  .library-sidebar__select-wrap select { appearance: none; width: 100%; min-height: 44px; padding: 9px 42px 9px 12px; border: 1px solid var(--site-line, #bfa6714a); border-radius: 9px; background: var(--site-bg, #101513); color: var(--site-text, #efe6d3); font: inherit; cursor: pointer; }
+  .library-sidebar__select-wrap select:focus-visible { outline: 2px solid var(--site-gold, #c9ad74); outline-offset: 2px; }
+  .library-sidebar__select-wrap svg { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--site-gold, #c9ad74); pointer-events: none; }
+  .library-sidebar__toggle, .library-sidebar__sections { display: none; }
   .library-sidebar__toggle { padding: 8px 12px; min-height: 44px; align-self: flex-start; }
   .library-sidebar__sections { overflow: hidden; }
   .library-sidebar__nav .navrail-track { flex-direction: row; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 4px 6px 8px; }

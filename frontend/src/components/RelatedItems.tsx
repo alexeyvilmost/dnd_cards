@@ -3,29 +3,45 @@ import { useEffect, useState } from 'react';
 import type { Card, CardRef } from '../types';
 import { getCardsIndex } from '../utils/cardsIndex';
 import { containerTotals } from '../utils/containerTotals';
+import { useOptionalAuth } from '../contexts/AuthContext';
+import { readPersistedAuthToken } from '../api/authSession';
 import CardPreview from './CardPreview';
+
+const EMPTY_INDEX = new Map<string, Card>();
+
+function useNeededCardsIndex(needed: boolean): Map<string, Card> {
+  const auth = useOptionalAuth();
+  const identity = auth ? auth.token : readPersistedAuthToken();
+  const [snapshot, setSnapshot] = useState<{ identity: string | null; index: Map<string, Card> } | null>(null);
+  useEffect(() => {
+    if (!needed) { setSnapshot(null); return; }
+    let alive = true;
+    // An earlier index is never shown while revalidating a new set of refs.
+    setSnapshot(null);
+    const requestedIdentity = readPersistedAuthToken();
+    void getCardsIndex().then(index => {
+      if (alive && requestedIdentity === readPersistedAuthToken() && requestedIdentity === identity) {
+        setSnapshot({ identity, index });
+      }
+    });
+    return () => { alive = false; };
+  }, [needed, identity]);
+  return needed && snapshot?.identity === identity ? snapshot.index : EMPTY_INDEX;
+}
 
 /** S6 контейнеры: суммарные вес (фунты) и цена (ЗМ) содержимого контейнера, деривация над card.contents
  *  через общий индекс карт (рекурсия+cycle-guard). null — если карта не контейнер / без содержимого. */
 export function useContainerTotals(card: Card | null | undefined): { weight: number; gold: number } | null {
-  const [index, setIndex] = useState<Map<string, Card>>(new Map());
-  useEffect(() => {
-    let alive = true;
-    getCardsIndex().then((m) => alive && setIndex(m));
-    return () => { alive = false; };
-  }, []);
-  if (!card || !Array.isArray(card.contents) || !card.contents.length) return null;
+  const hasContents = Array.isArray(card?.contents) && card.contents.length > 0;
+  const index = useNeededCardsIndex(hasContents);
+  if (!card || !hasContents) return null;
   return containerTotals(card, (id) => index.get(id));
 }
 
 /** Резолвит CardRef[] в пары {ref, card} по общему индексу карт (нерезолвленные отбрасываются). */
 export function useResolvedRefs(refs: CardRef[]) {
-  const [index, setIndex] = useState<Map<string, Card>>(new Map());
-  useEffect(() => {
-    let alive = true;
-    getCardsIndex().then((m) => alive && setIndex(m));
-    return () => { alive = false; };
-  }, []);
+  const hasRefs = refs.length > 0;
+  const index = useNeededCardsIndex(hasRefs);
   return refs
     .map((r) => ({ ref: r, card: index.get(r.card_id) }))
     .filter((x): x is { ref: CardRef; card: Card } => !!x.card);

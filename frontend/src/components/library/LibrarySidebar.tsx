@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { ChevronDown, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NavRail from '../NavRail';
 import type { LibraryContentType } from '../../utils/libraryUrlParams';
@@ -32,7 +32,22 @@ export default function LibrarySidebar({ active, onSelectContent }: {
     setCollapsed(next);
     try { localStorage.setItem(LIBRARY_SIDEBAR_STORAGE_KEY, String(next)); } catch { /* Navigation still works without storage. */ }
   };
+  const selectSection = (id: string) => {
+    const section = LIBRARY_CATALOG.find(item => item.id === id)?.id;
+    if (!section || section === active) return;
+    if (section !== 'monsters' && onSelectContent) onSelectContent(section);
+    else navigate(librarySectionPath(section));
+  };
   return <aside className="library-sidebar" data-collapsed={collapsed}>
+    <div className="library-sidebar__mobile-selector">
+      <label htmlFor={`${sectionsID}-mobile`}>Раздел библиотеки</label>
+      <div className="library-sidebar__select-wrap">
+        <select id={`${sectionsID}-mobile`} value={active} onChange={event => selectSection(event.target.value)}>
+          {LIBRARY_CATALOG.map(section => <option key={section.id} value={section.id}>{section.label}</option>)}
+        </select>
+        <ChevronDown size={18} aria-hidden />
+      </div>
+    </div>
     <button type="button" className="library-sidebar__toggle" onClick={toggle}
       aria-label={collapsed ? 'Развернуть разделы библиотеки' : 'Свернуть разделы библиотеки'}
       aria-expanded={!collapsed} aria-controls={sectionsID}>
@@ -42,12 +57,7 @@ export default function LibrarySidebar({ active, onSelectContent }: {
     <div id={sectionsID} className="library-sidebar__sections">
       <NavRail items={LIBRARY_CATALOG} active={active} layout="wide" variant="dark" mobileDock="top"
         ariaLabel="Тип содержимого" className="library-sidebar__nav"
-        onSelect={id => {
-          const section = LIBRARY_CATALOG.find(item => item.id === id)?.id;
-          if (!section || section === active) return;
-          if (section !== 'monsters' && onSelectContent) onSelectContent(section);
-          else navigate(librarySectionPath(section));
-        }} />
+        onSelect={selectSection} />
     </div>
   </aside>;
 }
