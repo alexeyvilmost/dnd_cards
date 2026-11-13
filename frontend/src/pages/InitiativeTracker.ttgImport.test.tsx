@@ -3,6 +3,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import InitiativeTracker from './InitiativeTracker';
+import { createEmptyCharacter } from '../types/initiative';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -31,7 +32,7 @@ function changeInput(input: HTMLInputElement, value: string): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-describe('/initiative TTG happy path', () => {
+describe('/initiative', () => {
   let container: HTMLDivElement;
   let root: Root | null;
 
@@ -49,6 +50,39 @@ describe('/initiative TTG happy path', () => {
     vi.restoreAllMocks();
     localStorage.clear();
     document.body.replaceChildren();
+  });
+
+  it('resets every initiative and the turn, keeps participants intact, and saves the reset', async () => {
+    const characters = [
+      createEmptyCharacter({ name: 'Ада', type: 'player', initiative: 17, initiativeBonus: 3, currentHp: 7, notes: 'Щит' }),
+      createEmptyCharacter({ name: 'Скелет', initiative: -1, initiativeBonus: -2, currentHp: 0, description: 'Короткий меч' }),
+    ];
+    const before = { characters, activeIndex: 1, round: 4 };
+    const storageKey = 'initiative-tracker-v1';
+    localStorage.setItem(storageKey, JSON.stringify(before));
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    await act(async () => root?.render(<InitiativeTracker />));
+    const reset = Array.from(container.querySelectorAll('button'))
+      .find((button) => button.textContent?.trim() === 'Сбросить инициативу');
+    expect(reset?.disabled).toBe(false);
+
+    await act(async () => reset!.click());
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual(before);
+
+    await act(async () => reset!.click());
+    expect(confirm).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(localStorage.getItem(storageKey)!)).toEqual({
+      characters: characters.map((character) => ({ ...character, initiative: 0 })),
+      activeIndex: 0,
+      round: 1,
+    });
+    expect(container.textContent).toContain('раунд 1');
+    await act(async () => root?.unmount());
+    root = createRoot(container);
+    await act(async () => root?.render(<InitiativeTracker />));
+    expect(container.textContent).toContain('раунд 1');
+    expect(Array.from(container.querySelectorAll<HTMLInputElement>('input[placeholder="Имя"]'), (input) => input.value))
+      .toEqual(['Ада', 'Скелет']);
   });
 
   it('imports a current canonical TTG link into persisted initiative state', async () => {

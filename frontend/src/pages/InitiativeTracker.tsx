@@ -336,6 +336,17 @@ const InitiativeTracker: React.FC = () => {
     setManualOrder(null);
   };
 
+  const resetInitiative = () => {
+    if (!window.confirm('Обнулить инициативу всех участников и вернуться к первому раунду?')) return;
+    setState((prev) => ({
+      ...prev,
+      characters: prev.characters.map((character) => ({ ...character, initiative: 0 })),
+      activeIndex: 0,
+      round: 1,
+    }));
+    setManualOrder(null);
+  };
+
   const clearAll = () => {
     if (!window.confirm('Удалить всех участников?')) return;
     setState(defaultState);
@@ -384,6 +395,15 @@ const InitiativeTracker: React.FC = () => {
           >
             <RotateCcw size={18} />
             Сброс раунда
+          </button>
+          <button
+            type="button"
+            onClick={resetInitiative}
+            disabled={orderedCharacters.length === 0}
+            className="btn-secondary flex items-center justify-center gap-2 flex-1 sm:flex-none disabled:opacity-50"
+          >
+            <RotateCcw size={18} />
+            Сбросить инициативу
           </button>
           <button
             type="button"
